@@ -1,0 +1,53 @@
+# Build outputs
+build/
+out/
+dist/
+
+# Native artifacts
+*.dll
+*.so
+*.so.*
+*.dylib
+*.lib
+*.exp
+*.ilk
+*.map
+*.a
+*.la
+*.lo
+*.o
+*.obj
+*.elf
+
+# Executables and debug symbols
+*.exe
+*.out
+*.app
+*.pdb
+*.idb
+*.dSYM/
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+
+# Node/Electron
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+

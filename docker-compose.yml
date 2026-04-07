@@ -1,0 +1,68 @@
+services:
+  native-build:
+    build:
+      context: .
+      dockerfile: docker/native-builder.Dockerfile
+    command: ["bash", "-lc", "mkdir -p /artifacts && cp -f /workspace/out/native/bin/libcinterop_native.so /artifacts/libcinterop_native.so && ls -l /artifacts"]
+    volumes:
+      - native-artifacts:/artifacts
+    profiles: ["runtime", "tests", "all", "electron"]
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    depends_on:
+      native-build:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      CINTEROP_NATIVE_PATH: /native
+    ports:
+      - "8080:8080"
+    volumes:
+      - native-artifacts:/native:ro
+    profiles: ["runtime", "all"]
+
+  test-unit:
+    build:
+      context: .
+      dockerfile: docker/tests.Dockerfile
+    command: ["bash", "-lc", "dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release"]
+    profiles: ["tests", "all"]
+
+  test-integration:
+    build:
+      context: .
+      dockerfile: docker/tests.Dockerfile
+    environment:
+      CINTEROP_NATIVE_PATH: /workspace/build/native/bin
+    command: ["bash", "-lc", "dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release"]
+    profiles: ["tests", "all"]
+
+  test-all:
+    build:
+      context: .
+      dockerfile: docker/tests.Dockerfile
+    environment:
+      CINTEROP_NATIVE_PATH: /workspace/build/native/bin
+    command: ["bash", "-lc", "dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release && dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release"]
+    profiles: ["tests", "all"]
+
+  electron-example:
+    build:
+      context: .
+      dockerfile: docker/electron.Dockerfile
+    depends_on:
+      native-build:
+        condition: service_completed_successfully
+    environment:
+      CINTEROP_NATIVE_PATH: /native
+    command: ["npm", "run", "example"]
+    volumes:
+      - native-artifacts:/native:ro
+    profiles: ["electron", "all"]
+
+volumes:
+  native-artifacts:
