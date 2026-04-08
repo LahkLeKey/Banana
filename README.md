@@ -31,6 +31,11 @@ scripts/
 docs/
 ```
 
+## New Developer Setup
+
+- Start with `docs/developer-onboarding.md` for a guided first pass through the codebase.
+- Includes a visual request-flow diagram for the controller → pipeline → native interop path.
+
 ## Interop Boundary
 
 - Legacy logic remains isolated in `src/native/legacy`.
@@ -38,6 +43,51 @@ docs/
 - Wrapper exports primitive signatures and fixed-layout structs.
 - Native memory created by wrapper must be released with `cinterop_free`.
 - Managed code does not call legacy functions directly.
+
+## Pipeline Pattern (API Orchestration)
+
+The `/points` flow now runs through a composable pipeline inside the API service layer:
+
+```text
+Controller
+  -> PointsService
+      -> PipelineExecutor<PipelineContext>
+          1) ValidationStep
+          2) NativeCalculationStep (calls existing INativePointsClient / P/Invoke path)
+          3) PostProcessingStep (bonus enrichment metadata)
+          4) AuditStep (structured logging)
+```
+
+Why this was introduced:
+
+- Keeps the legacy/native boundary intact while modernizing orchestration.
+- Decouples input rules, native execution, enrichment, and audit concerns.
+- Enables additive extension by registering new pipeline steps without changing executor logic.
+- Preserves backward compatibility because native bindings and wrapper ABI are unchanged.
+
+Extension points:
+
+- Implement `IPipelineStep<PipelineContext>` in `src/api/Pipeline/Steps`.
+- Set `Order` to control deterministic execution.
+- Register the step in DI (`Program.cs`) as `IPipelineStep<PipelineContext>`.
+
+## Developer Walkthrough (Start Here)
+
+If you are new to middleware/pipeline patterns, read these files in order:
+
+1. `src/api/Controllers/PointsController.cs`
+  - Accepts HTTP input and calls the service.
+2. `src/api/Services/PointsService.cs`
+  - Builds `PipelineContext` and runs `PipelineExecutor<PipelineContext>`.
+3. `src/api/Pipeline/PipelineExecutor.cs`
+  - Composes steps into one chain and executes in deterministic order.
+4. `src/api/Pipeline/Steps/*`
+  - `ValidationStep` → validates input
+  - `NativeCalculationStep` → calls native interop
+  - `PostProcessingStep` → enrichment logic
+  - `AuditStep` → final structured logging
+5. `src/api/NativeInterop/*`
+  - Contains the P/Invoke boundary and native error mapping.
 
 ## Build Native (Windows)
 
@@ -134,3 +184,17 @@ dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj
 ```
 
 Integration tests call the real API and native wrapper. Build native artifacts first.
+
+## Coverage
+
+Run coverage locally with the built-in `XPlat Code Coverage` collector:
+
+```bash
+dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release --collect:"XPlat Code Coverage" --results-directory .artifacts/test-results/unit
+dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release --collect:"XPlat Code Coverage" --results-directory .artifacts/test-results/integration
+```
+
+CI/CD (`.github/workflows/compose-ci.yml`) now runs unit and integration tests with coverage, then publishes:
+
+- `test-results` artifact (`.trx` + raw coverage files)
+- `coverage-report` artifact (Cobertura + HTML + text summary)

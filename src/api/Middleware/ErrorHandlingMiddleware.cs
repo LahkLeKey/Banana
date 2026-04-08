@@ -6,17 +6,29 @@ using CInteropSharp.Api.Services;
 
 namespace CInteropSharp.Api.Middleware;
 
+/// <summary>
+/// Converts known exceptions into consistent JSON HTTP error responses.
+/// </summary>
 public sealed class ErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ErrorHandlingMiddleware> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ErrorHandlingMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">Next middleware in the ASP.NET Core request pipeline.</param>
+    /// <param name="logger">Logger used for server-side error telemetry.</param>
     public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Executes the middleware and maps known exception types to appropriate status codes.
+    /// </summary>
+    /// <param name="context">Current HTTP context.</param>
     public async Task Invoke(HttpContext context)
     {
         try
@@ -39,6 +51,9 @@ public sealed class ErrorHandlingMiddleware
         }
     }
 
+    /// <summary>
+    /// Writes a minimal JSON error payload to the response body.
+    /// </summary>
     private static Task WriteProblem(HttpContext context, HttpStatusCode code, string message)
     {
         context.Response.StatusCode = (int)code;

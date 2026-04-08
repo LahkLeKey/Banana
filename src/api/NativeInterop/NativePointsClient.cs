@@ -5,8 +5,12 @@ using CInteropSharp.Api.Services;
 
 namespace CInteropSharp.Api.NativeInterop;
 
+/// <summary>
+/// Concrete interop client that calls exported C wrapper functions via P/Invoke.
+/// </summary>
 public sealed class NativePointsClient : INativePointsClient
 {
+    /// <inheritdoc />
     public PointsResult Calculate(int purchases, int multiplier)
     {
         var status = (NativeStatusCode)NativeMethods.CalculatePointsWithBreakdown(
@@ -40,6 +44,11 @@ public sealed class NativePointsClient : INativePointsClient
         }
     }
 
+    /// <summary>
+    /// Reads a UTF-8 null-terminated native string from unmanaged memory.
+    /// </summary>
+    /// <param name="messagePtr">Pointer returned from native code.</param>
+    /// <returns>Raw UTF-8 bytes without the terminating zero byte.</returns>
     private static byte[] ReadNullTerminatedUtf8(nint messagePtr)
     {
         if (messagePtr == nint.Zero)
@@ -65,6 +74,10 @@ public sealed class NativePointsClient : INativePointsClient
         return bytes.ToArray();
     }
 
+    /// <summary>
+    /// Maps native status codes to managed exceptions.
+    /// </summary>
+    /// <param name="status">Native return status.</param>
     private static void EnsureSuccess(NativeStatusCode status)
     {
         if (status == NativeStatusCode.Ok)
@@ -81,8 +94,15 @@ public sealed class NativePointsClient : INativePointsClient
     }
 }
 
+/// <summary>
+/// Represents failures that occur at the native interop boundary.
+/// </summary>
 public sealed class NativeInteropException : Exception
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NativeInteropException"/> class.
+    /// </summary>
+    /// <param name="message">Failure details for diagnostics.</param>
     public NativeInteropException(string message) : base(message)
     {
     }
