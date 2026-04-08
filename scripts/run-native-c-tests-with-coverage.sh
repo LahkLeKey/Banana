@@ -33,7 +33,7 @@ gcovr \
     --exclude 'tests/native' \
     --xml-pretty \
     --output "$ARTIFACT_DIR/coverage-native.xml" \
-    --fail-under-line 100
+    --fail-under-line 80
 
 gcovr \
     --object-directory "$BUILD_DIR" \

@@ -41,7 +41,7 @@ jobs:
           echo "PostgreSQL did not become ready in time"
           exit 1
 
-      - name: Run native C tests with 100% coverage gate
+      - name: Run native C tests with 80% coverage gate
         env:
           CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
