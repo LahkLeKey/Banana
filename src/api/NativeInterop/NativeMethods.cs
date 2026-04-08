@@ -28,6 +28,12 @@ internal static partial class NativeMethods
     internal static partial int CreatePointsMessage(int purchases, int multiplier, out nint message);
 
     /// <summary>
+    /// Executes native DB stage query and returns UTF-8 JSON payload allocated by native code.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "cinterop_db_query_points")]
+    internal static partial int QueryDbPoints(int purchases, int multiplier, out nint payload, out int rowCount);
+
+    /// <summary>
     /// Releases unmanaged memory allocated by the native wrapper.
     /// </summary>
     [LibraryImport(LibraryName, EntryPoint = "cinterop_free")]

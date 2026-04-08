@@ -21,6 +21,7 @@ The `/points` endpoint follows this sequence:
 2. `PointsService` builds a `PipelineContext`.
 3. `PipelineExecutor<PipelineContext>` runs ordered steps:
 	- `ValidationStep`
+	- `DatabaseAccessStep`
 	- `NativeCalculationStep`
 	- `PostProcessingStep`
 	- `AuditStep`
@@ -33,9 +34,15 @@ flowchart TD
 	B --> C[PointsService]
 	C --> D[PipelineExecutor<PipelineContext>]
 	D --> E[ValidationStep]
-	E --> F[NativeCalculationStep]
+	E --> E1[DatabaseAccessStep]
+	E1 --> F[NativeCalculationStep]
 	F --> G[PostProcessingStep]
 	G --> H[AuditStep]
+	E1 --> DB[IDataAccessPipelineClient]
+	DB --> DB1[LegacyNativeDbDataAccessClient]
+	DB --> DB2[ManagedNpgsqlDataAccessClient]
+	DB1 --> DBN[Native DB wrapper ABI]
+	DB2 --> DBM[Npgsql]
 	F --> I[INativePointsClient]
 	I --> J[NativePointsClient]
 	J --> K[NativeMethods / C wrapper DLL]
@@ -44,6 +51,37 @@ flowchart TD
 ```
 
 This keeps transport, orchestration, interop, and enrichment responsibilities separated.
+
+## Database Access Pipeline Stage
+
+When PostgreSQL integration is required, database interaction is treated as a dedicated pipeline stage.
+The stage is atomic at the pipeline level: input mapping, query execution, raw result capture, and context write-back happen inside one step.
+
+### Legacy Path: Native C PostgreSQL
+
+- Implemented by `LegacyNativeDbDataAccessClient`.
+- SQL ownership remains in native C code.
+- C# code does not reimplement legacy SQL logic.
+- Goal is behavior preservation and minimal migration risk.
+
+### Modern Path: Managed Npgsql
+
+- Implemented by `ManagedNpgsqlDataAccessClient`.
+- Enabled through configuration mode switching.
+- SQL ownership moves to managed code for this path.
+- Goal is easier maintainability and observability for future evolution.
+
+## Tradeoffs
+
+- Performance:
+	- Native path can preserve existing optimized behavior and avoid query-logic drift.
+	- Managed path can perform well with pooling, but parity must be validated.
+- Maintainability:
+	- Native path minimizes immediate disruption but keeps interop complexity.
+	- Managed path improves .NET-first operability and onboarding.
+- Risk:
+	- Native path is lower regression risk because SQL behavior stays in legacy layer.
+	- Managed path introduces migration risk; use runtime switch for safe rollout and rollback.
 
 ## Boundary Rules
 

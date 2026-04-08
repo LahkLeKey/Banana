@@ -1,10 +1,12 @@
 using System.Net;
 using System.Text.Json;
 
+using CInteropSharp.Api.DataAccess;
 using CInteropSharp.Api.NativeInterop;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -79,6 +81,61 @@ public sealed class PointsPipelineIntegrationTests : IClassFixture<WebApplicatio
         Assert.Contains("Unexpected server error.", body, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task GetPoints_WhenDatabaseStepThrowsDatabaseAccessException_ReturnsServiceUnavailable()
+    {
+        using var client = CreateFactoryWithFailingDatabase().CreateClient();
+
+        var response = await client.GetAsync("/points?purchases=10&multiplier=2");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Database access failure.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DataAccessClientResolution_UsesManagedClient_WhenConfigured()
+    {
+        using var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((_, configBuilder) =>
+            {
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["DbAccess:Mode"] = "ManagedNpgsql"
+                });
+            });
+        });
+
+        using var scope = factory.Services.CreateScope();
+        var client = scope.ServiceProvider.GetRequiredService<IDataAccessPipelineClient>();
+
+        Assert.IsType<ManagedNpgsqlDataAccessClient>(client);
+    }
+
+    [Fact]
+    public void DataAccessClientResolution_FallsBackToLegacy_WhenModeIsOutOfRange()
+    {
+        using var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((_, configBuilder) =>
+            {
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["DbAccess:Mode"] = "99"
+                });
+            });
+        });
+
+        using var scope = factory.Services.CreateScope();
+        var client = scope.ServiceProvider.GetRequiredService<IDataAccessPipelineClient>();
+
+        Assert.IsType<LegacyNativeDbDataAccessClient>(client);
+    }
+
     private WebApplicationFactory<Program> CreateFactoryWithFakeNative()
     {
         return _factory.WithWebHostBuilder(static builder =>
@@ -87,6 +144,21 @@ public sealed class PointsPipelineIntegrationTests : IClassFixture<WebApplicatio
             builder.ConfigureServices(static services =>
             {
                 services.RemoveAll<INativePointsClient>();
+                services.AddScoped<INativePointsClient, FakeNativePointsClient>();
+            });
+        });
+    }
+
+    private WebApplicationFactory<Program> CreateFactoryWithFailingDatabase()
+    {
+        return _factory.WithWebHostBuilder(static builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(static services =>
+            {
+                services.RemoveAll<IDataAccessPipelineClient>();
+                services.RemoveAll<INativePointsClient>();
+                services.AddScoped<IDataAccessPipelineClient, ThrowingDataAccessPipelineClient>();
                 services.AddScoped<INativePointsClient, FakeNativePointsClient>();
             });
         });
@@ -106,6 +178,14 @@ public sealed class PointsPipelineIntegrationTests : IClassFixture<WebApplicatio
                     purchases * multiplier,
                     $"purchases={purchases} multiplier={multiplier} points={purchases * multiplier}")
             };
+        }
+    }
+
+    private sealed class ThrowingDataAccessPipelineClient : IDataAccessPipelineClient
+    {
+        public RawDbAccessResult Execute(DbAccessRequest request)
+        {
+            throw new DatabaseAccessException("Injected database-stage failure");
         }
     }
 }

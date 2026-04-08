@@ -52,3 +52,4 @@ pnpm-debug.log*
 Thumbs.db
 
 /.artifacts
+/artifacts

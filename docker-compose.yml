@@ -1,4 +1,17 @@
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: cinterop
+      POSTGRES_PASSWORD: cinterop
+      POSTGRES_DB: cinterop
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinterop -d cinterop"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    profiles: ["runtime", "tests", "all"]
+
   native-build:
     build:
       context: .
@@ -15,10 +28,13 @@ services:
     depends_on:
       native-build:
         condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       CINTEROP_NATIVE_PATH: /native
+      CINTEROP_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
     ports:
       - "8080:8080"
     volumes:
@@ -29,25 +45,40 @@ services:
     build:
       context: .
       dockerfile: docker/tests.Dockerfile
-    command: ["bash", "-lc", "dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      CINTEROP_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+    command: ["bash", "-lc", "dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release --collect:\"XPlat Code Coverage\""]
     profiles: ["tests", "all"]
 
   test-integration:
     build:
       context: .
       dockerfile: docker/tests.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       CINTEROP_NATIVE_PATH: /workspace/build/native/bin
-    command: ["bash", "-lc", "dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release"]
+      CINTEROP_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+    command: ["bash", "-lc", "dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release --collect:\"XPlat Code Coverage\""]
     profiles: ["tests", "all"]
 
   test-all:
     build:
       context: .
       dockerfile: docker/tests.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       CINTEROP_NATIVE_PATH: /workspace/build/native/bin
-    command: ["bash", "-lc", "dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release && dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release"]
+      CINTEROP_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+    volumes:
+      - ./artifacts:/artifacts
+    command: ["bash", "-lc", "/workspace/scripts/run-tests-with-coverage.sh"]
     profiles: ["tests", "all"]
 
   electron-example:

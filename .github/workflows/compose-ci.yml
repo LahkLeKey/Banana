@@ -5,8 +5,76 @@ on:
   workflow_dispatch:
 
 jobs:
+  native-c-tests-coverage:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: cinterop
+          POSTGRES_PASSWORD: cinterop
+          POSTGRES_DB: cinterop
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cinterop -d cinterop"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install native coverage dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake gcovr libpq-dev postgresql-client
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h 127.0.0.1 -p 5432 -U cinterop -d cinterop; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL did not become ready in time"
+          exit 1
+
+      - name: Run native C tests with 100% coverage gate
+        env:
+          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
+        run: |
+          chmod +x scripts/run-native-c-tests-with-coverage.sh
+          scripts/run-native-c-tests-with-coverage.sh
+
+      - name: Print native C summary in job output
+        if: always()
+        run: |
+          echo "===== Native C Coverage Summary ====="
+          cat .artifacts/native-c/Summary.txt
+
+      - name: Add native C summary to GitHub Actions summary
+        if: always()
+        run: |
+          {
+            echo "## Native C Coverage Summary"
+            echo
+            echo '```text'
+            cat .artifacts/native-c/Summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload native C coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-c-coverage
+          path: .artifacts/native-c
+
   dotnet-tests-coverage:
     runs-on: ubuntu-latest
+    needs: native-c-tests-coverage
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,6 +115,23 @@ jobs:
             -reports:".artifacts/test-results/**/coverage.cobertura.xml" \
             -targetdir:".artifacts/coverage/report" \
             -reporttypes:"Cobertura;HtmlInline;TextSummary"
+
+      - name: Print .NET coverage summary in job output
+        if: always()
+        run: |
+          echo "===== .NET Coverage Summary ====="
+          cat .artifacts/coverage/report/Summary.txt
+
+      - name: Add .NET coverage summary to GitHub Actions summary
+        if: always()
+        run: |
+          {
+            echo "## .NET Coverage Summary"
+            echo
+            echo '```text'
+            cat .artifacts/coverage/report/Summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload test results
         if: always()

@@ -23,5 +23,15 @@ public enum NativeStatusCode
     /// <summary>
     /// Native code failed unexpectedly.
     /// </summary>
-    InternalError = 3
+    InternalError = 3,
+
+    /// <summary>
+    /// Database query execution failed in native layer.
+    /// </summary>
+    DbError = 4,
+
+    /// <summary>
+    /// Native DB support is not configured.
+    /// </summary>
+    DbNotConfigured = 5
 }

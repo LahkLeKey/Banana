@@ -53,9 +53,10 @@ Controller
   -> PointsService
       -> PipelineExecutor<PipelineContext>
           1) ValidationStep
-          2) NativeCalculationStep (calls existing INativePointsClient / P/Invoke path)
-          3) PostProcessingStep (bonus enrichment metadata)
-          4) AuditStep (structured logging)
+          2) DatabaseAccessStep (atomic DB stage: input -> query -> raw result -> context)
+          3) NativeCalculationStep (calls existing INativePointsClient / P/Invoke path)
+          4) PostProcessingStep (bonus enrichment metadata)
+          5) AuditStep (structured logging)
 ```
 
 Why this was introduced:
@@ -64,6 +65,11 @@ Why this was introduced:
 - Decouples input rules, native execution, enrichment, and audit concerns.
 - Enables additive extension by registering new pipeline steps without changing executor logic.
 - Preserves backward compatibility because native bindings and wrapper ABI are unchanged.
+
+DB mode options:
+
+- Legacy native mode (default): C wrapper calls legacy C DB path.
+- Managed mode (optional): C# uses Npgsql through `ManagedNpgsqlDataAccessClient`.
 
 Extension points:
 
@@ -124,6 +130,13 @@ Run test flows:
 ```bash
 docker compose --profile tests up --build --abort-on-container-exit --exit-code-from test-all test-all
 ```
+
+This test flow now includes:
+
+- PostgreSQL service (`postgres:16`) used by the native C DB path.
+- Native C tests via CTest.
+- .NET unit + integration tests with coverage collectors.
+- Coverage artifacts copied to `./artifacts` on the host.
 
 Run optional Electron flow:
 

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
+using CInteropSharp.Api.DataAccess;
 using CInteropSharp.Api.NativeInterop;
 using CInteropSharp.Api.Services;
 
@@ -43,6 +44,11 @@ public sealed class ErrorHandlingMiddleware
         {
             _logger.LogError(ex, "Native interop failure");
             await WriteProblem(context, HttpStatusCode.InternalServerError, "Native interop failure.");
+        }
+        catch (DatabaseAccessException ex)
+        {
+            _logger.LogError(ex, "Database access failure");
+            await WriteProblem(context, HttpStatusCode.ServiceUnavailable, "Database access failure.");
         }
         catch (Exception ex)
         {
