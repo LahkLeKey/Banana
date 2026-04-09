@@ -4,6 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+if [[ -z "${CINTEROP_PG_CONNECTION:-}" ]]; then
+	echo "CINTEROP_PG_CONNECTION is required for Docker test runs with native DB enabled."
+	exit 1
+fi
+
 cmake --build build/native --config Release
 
 if ! ctest --test-dir build/native -C Release --output-on-failure; then

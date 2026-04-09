@@ -41,6 +41,25 @@ jobs:
           echo "PostgreSQL did not become ready in time"
           exit 1
 
+      - name: Assert native DB connection target
+        env:
+          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
+        run: |
+          if [[ -z "${CINTEROP_PG_CONNECTION:-}" ]]; then
+            echo "CINTEROP_PG_CONNECTION is not set"
+            exit 1
+          fi
+
+          host="$(tr ' ' '\n' <<< "$CINTEROP_PG_CONNECTION" | awk -F= '$1=="host" { print $2; exit }')"
+          port="$(tr ' ' '\n' <<< "$CINTEROP_PG_CONNECTION" | awk -F= '$1=="port" { print $2; exit }')"
+
+          if [[ -z "$host" || -z "$port" ]]; then
+            echo "CINTEROP_PG_CONNECTION must include host and port"
+            exit 1
+          fi
+
+          echo "Native DB target: host=$host port=$port"
+
       - name: Run native C tests with 80% coverage gate
         env:
           CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
@@ -75,6 +94,20 @@ jobs:
   dotnet-tests-coverage:
     runs-on: ubuntu-latest
     needs: native-c-tests-coverage
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: cinterop
+          POSTGRES_PASSWORD: cinterop
+          POSTGRES_DB: cinterop
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cinterop -d cinterop"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -84,12 +117,49 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake libpq-dev postgresql-client
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h 127.0.0.1 -p 5432 -U cinterop -d cinterop; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL did not become ready in time"
+          exit 1
+
+      - name: Assert native DB connection target
+        env:
+          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
+        run: |
+          if [[ -z "${CINTEROP_PG_CONNECTION:-}" ]]; then
+            echo "CINTEROP_PG_CONNECTION is not set"
+            exit 1
+          fi
+
+          host="$(tr ' ' '\n' <<< "$CINTEROP_PG_CONNECTION" | awk -F= '$1=="host" { print $2; exit }')"
+          port="$(tr ' ' '\n' <<< "$CINTEROP_PG_CONNECTION" | awk -F= '$1=="port" { print $2; exit }')"
+
+          if [[ -z "$host" || -z "$port" ]]; then
+            echo "CINTEROP_PG_CONNECTION must include host and port"
+            exit 1
+          fi
+
+          echo "Native DB target: host=$host port=$port"
+
       - name: Build native library
         run: |
-          cmake -S . -B build/native -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build/native -DCMAKE_BUILD_TYPE=Release -DCINTEROP_ENABLE_POSTGRES=ON
           cmake --build build/native --config Release
 
       - name: Run unit tests with coverage
+        env:
+          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
           dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release \
             --collect:"XPlat Code Coverage" \
@@ -99,6 +169,7 @@ jobs:
       - name: Run integration tests with coverage
         env:
           CINTEROP_NATIVE_PATH: ${{ github.workspace }}/build/native/bin
+          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
           dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release \
             --collect:"XPlat Code Coverage" \
