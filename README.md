@@ -2,6 +2,8 @@
 
 Modernization baseline for a legacy C system without rewriting core logic.
 
+https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig
+
 ## Architecture
 
 ```mermaid
