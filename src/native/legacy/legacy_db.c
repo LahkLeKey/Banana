@@ -1,41 +1,13 @@
 #include "legacy_db.h"
 
+#include "../testing/native_test_hooks.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #if defined(CINTEROP_ENABLE_POSTGRES)
 #include <libpq-fe.h>
 #endif
-
-static int try_forced_db_result(int* out_forced_result) {
-    const char* forced = getenv("CINTEROP_FORCE_DB_RESULT");
-    if (forced == 0 || forced[0] == '\0') {
-        return 0;
-    }
-
-    *out_forced_result = atoi(forced);
-    return 1;
-}
-
-static int should_force_payload_alloc_failure(void) {
-    const char* flag = getenv("CINTEROP_FORCE_PAYLOAD_ALLOC_FAIL");
-    return flag != 0 && flag[0] == '1';
-}
-
-static int should_force_payload_malloc_null(void) {
-    const char* flag = getenv("CINTEROP_FORCE_PAYLOAD_MALLOC_NULL");
-    return flag != 0 && flag[0] == '1';
-}
-
-static int should_force_db_bad_result(void) {
-    const char* flag = getenv("CINTEROP_FORCE_DB_BAD_RESULT");
-    return flag != 0 && flag[0] == '1';
-}
-
-static int should_force_db_status_mismatch(void) {
-    const char* flag = getenv("CINTEROP_FORCE_DB_STATUS_MISMATCH");
-    return flag != 0 && flag[0] == '1';
-}
 
 static char* build_json_payload(int purchases, int multiplier, int points) {
     int required = snprintf(0, 0,
@@ -49,11 +21,11 @@ static char* build_json_payload(int purchases, int multiplier, int points) {
         return 0; /* GCOVR_EXCL_LINE */
     }
 
-    if (should_force_payload_alloc_failure()) {
+    if (cinterop_test_hook_force_payload_alloc_failure()) {
         return 0;
     }
 
-    if (should_force_payload_malloc_null()) {
+    if (cinterop_test_hook_force_payload_malloc_null()) {
         payload = 0;
     } else {
         payload = (char*)malloc((size_t)required + 1U);
@@ -82,7 +54,7 @@ int legacy_db_query_points(int purchases, int multiplier, char** out_payload, in
         return 1;
     }
 
-    if (try_forced_db_result(&forced_result)) {
+    if (cinterop_test_hook_try_forced_db_result(&forced_result)) {
         return forced_result;
     }
 
@@ -125,13 +97,13 @@ int legacy_db_query_points(int purchases, int multiplier, char** out_payload, in
             0,
             0);
 
-        if (should_force_db_bad_result()) {
+        if (cinterop_test_hook_force_db_bad_result()) {
             PQclear(result);
             PQfinish(connection);
             return 3;
         }
 
-        if (should_force_db_status_mismatch()) {
+        if (cinterop_test_hook_force_db_status_mismatch()) {
             PQclear(result);
             result = PQexec(connection, "SELECT 1 WHERE 1 = 0");
         }

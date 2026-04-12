@@ -6,11 +6,7 @@
 
 #include "../legacy/legacy_db.h"
 #include "../legacy/legacy_points.h"
-
-static int should_force_message_alloc_failure(void) {
-    const char* flag = getenv("CINTEROP_FORCE_MESSAGE_ALLOC_FAIL");
-    return flag != 0 && flag[0] == '1';
-}
+#include "../testing/native_test_hooks.h"
 
 static int validate_input(int purchases, int multiplier) {
     if (purchases < 0 || multiplier < 0) {
@@ -86,7 +82,7 @@ int cinterop_create_points_message(int purchases, int multiplier, char** out_mes
         return CINTEROP_STATUS_INTERNAL_ERROR; /* GCOVR_EXCL_LINE */
     }
 
-    if (should_force_message_alloc_failure()) {
+    if (cinterop_test_hook_force_message_alloc_failure()) {
         message = 0;
     } else {
         message = (char*)malloc((size_t)required_bytes + 1U);

@@ -30,6 +30,7 @@ if(CINTEROP_BUILD_SHARED_LIBRARY)
     add_library(cinterop_native SHARED
         src/native/legacy/legacy_points.c
         src/native/legacy/legacy_db.c
+        src/native/testing/native_test_hooks_default.c
         src/native/wrapper/cinterop_wrapper.c
     )
 
@@ -38,6 +39,7 @@ if(CINTEROP_BUILD_SHARED_LIBRARY)
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/legacy
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
     )
 
     if(MSVC)
@@ -65,6 +67,7 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
 
     add_executable(native_wrapper_tests
         tests/native/native_wrapper_tests.c
+        tests/native/native_test_hooks_env.c
         src/native/legacy/legacy_points.c
         src/native/legacy/legacy_db.c
         src/native/wrapper/cinterop_wrapper.c
@@ -74,6 +77,7 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/legacy
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
     )
 
     if(MSVC)

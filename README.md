@@ -59,23 +59,32 @@ Controller
           5) AuditStep (structured logging)
 ```
 
+Current step responsibilities:
+
+- `ValidationStep`: validates request inputs and blocks invalid execution paths early.
+- `DatabaseAccessStep`: executes one atomic data-access operation and stores raw DB result + DB metadata in the pipeline context.
+- `NativeCalculationStep`: executes native points calculation through the stable wrapper ABI.
+- `PostProcessingStep`: applies managed enrichment that does not alter native calculation semantics.
+- `AuditStep`: emits structured pipeline telemetry for diagnostics and observability.
+
 Why this was introduced:
 
 - Keeps the legacy/native boundary intact while modernizing orchestration.
-- Decouples input rules, native execution, enrichment, and audit concerns.
+- Decouples validation, data access, native execution, enrichment, and audit concerns.
 - Enables additive extension by registering new pipeline steps without changing executor logic.
-- Preserves backward compatibility because native bindings and wrapper ABI are unchanged.
+- Preserves backward compatibility because wrapper ABI and native calculation contract remain stable.
 
 DB mode options:
 
-- Legacy native mode (default): C wrapper calls legacy C DB path.
-- Managed mode (optional): C# uses Npgsql through `ManagedNpgsqlDataAccessClient`.
+- Legacy native mode (default): `DatabaseAccessStep` resolves `LegacyNativeDbDataAccessClient`, which calls the native DB wrapper path.
+- Managed mode (optional): `DatabaseAccessStep` resolves `ManagedNpgsqlDataAccessClient`, which executes managed PostgreSQL queries via Npgsql.
 
 Extension points:
 
 - Implement `IPipelineStep<PipelineContext>` in `src/api/Pipeline/Steps`.
 - Set `Order` to control deterministic execution.
 - Register the step in DI (`Program.cs`) as `IPipelineStep<PipelineContext>`.
+- Keep DB concerns inside `DatabaseAccessStep` and its data-access clients to preserve stage boundaries.
 
 ## Developer Walkthrough (Start Here)
 
@@ -87,13 +96,23 @@ If you are new to middleware/pipeline patterns, read these files in order:
   - Builds `PipelineContext` and runs `PipelineExecutor<PipelineContext>`.
 3. `src/api/Pipeline/PipelineExecutor.cs`
   - Composes steps into one chain and executes in deterministic order.
-4. `src/api/Pipeline/Steps/*`
+4. `src/api/Program.cs`
+  - Registers pipeline steps and selects DB access implementation (`LegacyNative` vs `ManagedNpgsql`) via `DbAccessOptions`.
+5. `src/api/Pipeline/Steps/*`
   - `ValidationStep` → validates input
+  - `DatabaseAccessStep` → executes atomic DB stage
   - `NativeCalculationStep` → calls native interop
   - `PostProcessingStep` → enrichment logic
   - `AuditStep` → final structured logging
-5. `src/api/NativeInterop/*`
+6. `src/api/DataAccess/*`
+  - Defines the DB stage contract and concrete clients (`LegacyNativeDbDataAccessClient`, `ManagedNpgsqlDataAccessClient`).
+7. `src/api/NativeInterop/*`
   - Contains the P/Invoke boundary and native error mapping.
+8. `src/native/wrapper/*` and `src/native/legacy/*`
+  - Wrapper owns exported ABI, validation, and status mapping.
+  - Legacy layer owns calculation and SQL behavior.
+9. `src/native/testing/native_test_hooks_default.c` and `tests/native/native_test_hooks_env.c`
+  - Shows how test-only native branch forcing is isolated from production runtime code.
 
 ## Build Native (Windows)
 
@@ -163,6 +182,20 @@ On every push, CI runs the same compose profiles used locally:
 Workflow file:
 
 - `.github/workflows/compose-ci.yml`
+
+CI notes:
+
+- Native C coverage job provisions PostgreSQL and runs native tests with `CINTEROP_PG_CONNECTION` configured.
+- .NET coverage job also provisions PostgreSQL and runs with explicit native DB connection settings.
+- CI prints only DB target host/port (no credentials) before test execution for visibility.
+
+## Native Test Hook Isolation
+
+Test-only native behavior is isolated from legacy runtime files:
+
+- Production native builds use `src/native/testing/native_test_hooks_default.c` (no-op hooks).
+- Native test builds use `tests/native/native_test_hooks_env.c` (env-driven forced paths).
+- Legacy/runtime files (`src/native/legacy/*`, `src/native/wrapper/*`) now call hook functions instead of parsing test env vars directly.
 
 ## Run API
 

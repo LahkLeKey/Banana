@@ -1,11 +1,6 @@
 #include "legacy_points.h"
 
-#include <stdlib.h>
-
-static int should_force_summary_failure(void) {
-    const char* flag = getenv("CINTEROP_FORCE_SUMMARY_FAIL");
-    return flag != 0 && flag[0] == '1';
-}
+#include "../testing/native_test_hooks.h"
 
 int legacy_calculate_points(int purchases, int multiplier) {
     int base_points = purchases * 10;
@@ -18,7 +13,7 @@ int legacy_calculate_summary(int purchases, int multiplier, LegacyPointsSummary*
         return -1;
     }
 
-    if (should_force_summary_failure()) {
+    if (cinterop_test_hook_force_summary_failure()) {
         return -1;
     }
 
