@@ -45,6 +45,18 @@ docs/
 - Start with `docs/developer-onboarding.md` for a guided first pass through the codebase.
 - Includes a visual request-flow diagram for the controller → pipeline → native interop path.
 
+## What Is an ABI?
+
+An ABI (Application Binary Interface) is the low-level contract that lets separately compiled code talk to each other at runtime.
+
+It defines details like:
+
+- Exported function names and calling conventions.
+- Primitive type sizes and struct memory layout.
+- Ownership rules for allocated memory across module boundaries.
+
+In this repository, the ABI is the stable C wrapper boundary in `src/native/wrapper` that both .NET (P/Invoke) and optional Node/Electron consumers call into. Keeping this ABI stable lets us modernize managed orchestration without rewriting or tightly coupling to the legacy C internals.
+
 ## Interop Boundary
 
 - Legacy logic remains isolated in `src/native/legacy`.
@@ -101,7 +113,7 @@ Extension points:
 - Register the step in DI (`Program.cs`) as `IPipelineStep<PipelineContext>`.
 - Keep DB concerns inside `DatabaseAccessStep` and its data-access clients to preserve stage boundaries.
 
-## Developer Walkthrough (Start Here)
+## Developer Interop Middleware / DI Walkthrough
 
 If you are new to middleware/pipeline patterns, read these files in order:
 
