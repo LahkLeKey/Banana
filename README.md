@@ -6,10 +6,14 @@ Modernization baseline for a legacy C system without rewriting core logic.
 
 ```mermaid
 flowchart LR
-    Legacy[legacy C logic] --> Wrapper[C wrapper ABI boundary]
-    Wrapper --> Api[C# .NET 8 Web API via P/Invoke]
-    Wrapper --> Node[Optional Node/Electron ffi-napi bridge]
-    Api --> Client[REST clients]
+  Legacy[Legacy C logic] --> Wrapper[C wrapper ABI boundary]
+  Wrapper --> Api[C# .NET 8 Web API via P/Invoke]
+  Wrapper --> Node[Optional Node/Electron ffi-napi bridge]
+  Api --> Client[REST clients]
+  Api --> ManagedDb[Managed PostgreSQL via Npgsql]
+  Wrapper --> NativeDb[Legacy native PostgreSQL path]
+  HookDefault[Native test hooks default no-op] -.linked in runtime build.-> Wrapper
+  HookEnv[Native test hooks env forced-paths] -.linked in native test build.-> Wrapper
 ```
 
 ## Repository Structure
@@ -19,12 +23,17 @@ src/
   native/
     legacy/
     wrapper/
+    testing/
   api/
     Controllers/
+    DataAccess/
+    Pipeline/
     Services/
     NativeInterop/
+    Middleware/
   electron/
 tests/
+  native/
   unit/
   integration/
 scripts/
@@ -48,15 +57,21 @@ docs/
 
 The `/points` flow now runs through a composable pipeline inside the API service layer:
 
-```text
-Controller
-  -> PointsService
-      -> PipelineExecutor<PipelineContext>
-          1) ValidationStep
-          2) DatabaseAccessStep (atomic DB stage: input -> query -> raw result -> context)
-          3) NativeCalculationStep (calls existing INativePointsClient / P/Invoke path)
-          4) PostProcessingStep (bonus enrichment metadata)
-          5) AuditStep (structured logging)
+```mermaid
+flowchart TD
+  A[PointsController] --> B[PointsService]
+  B --> C[PipelineExecutor PipelineContext]
+  C --> D[ValidationStep]
+  D --> E[DatabaseAccessStep]
+  E --> F[NativeCalculationStep]
+  F --> G[PostProcessingStep]
+  G --> H[AuditStep]
+
+  E --> I[IDataAccessPipelineClient]
+  I --> J[LegacyNativeDbDataAccessClient]
+  I --> K[ManagedNpgsqlDataAccessClient]
+  J --> L[Native wrapper DB export]
+  K --> M[Npgsql]
 ```
 
 Current step responsibilities:
