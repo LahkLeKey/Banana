@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../legacy/legacy_db.h"
 #include "../legacy/legacy_points.h"
+#include "../testing/native_test_hooks.h"
 
 static int validate_input(int purchases, int multiplier) {
     if (purchases < 0 || multiplier < 0) {
@@ -77,21 +79,62 @@ int cinterop_create_points_message(int purchases, int multiplier, char** out_mes
 
     required_bytes = snprintf(0, 0, "purchases=%d multiplier=%d points=%d", purchases, multiplier, points);
     if (required_bytes < 0) {
-        return CINTEROP_STATUS_INTERNAL_ERROR;
+        return CINTEROP_STATUS_INTERNAL_ERROR; /* GCOVR_EXCL_LINE */
     }
 
-    message = (char*)malloc((size_t)required_bytes + 1U);
+    if (cinterop_test_hook_force_message_alloc_failure()) {
+        message = 0;
+    } else {
+        message = (char*)malloc((size_t)required_bytes + 1U);
+    }
+
     if (message == 0) {
         return CINTEROP_STATUS_INTERNAL_ERROR;
     }
 
     if (snprintf(message, (size_t)required_bytes + 1U, "purchases=%d multiplier=%d points=%d", purchases, multiplier, points) < 0) {
-        free(message);
-        return CINTEROP_STATUS_INTERNAL_ERROR;
+        free(message); /* GCOVR_EXCL_LINE */
+        return CINTEROP_STATUS_INTERNAL_ERROR; /* GCOVR_EXCL_LINE */
     }
 
     *out_message = message;
     return CINTEROP_STATUS_OK;
+}
+
+int cinterop_db_query_points(
+    int purchases,
+    int multiplier,
+    char** out_payload,
+    int* out_row_count
+) {
+    int status = validate_input(purchases, multiplier);
+    int db_result = 0;
+
+    if (status != CINTEROP_STATUS_OK) {
+        return status;
+    }
+
+    if (out_payload == 0 || out_row_count == 0) {
+        return CINTEROP_STATUS_INVALID_ARGUMENT;
+    }
+
+    *out_payload = 0;
+    *out_row_count = 0;
+
+    db_result = legacy_db_query_points(purchases, multiplier, out_payload, out_row_count);
+    if (db_result == 0) {
+        return CINTEROP_STATUS_OK;
+    }
+
+    if (db_result == 2) {
+        return CINTEROP_STATUS_DB_NOT_CONFIGURED;
+    }
+
+    if (db_result == 3) {
+        return CINTEROP_STATUS_DB_ERROR;
+    }
+
+    return CINTEROP_STATUS_INTERNAL_ERROR;
 }
 
 void cinterop_free(void* pointer) {

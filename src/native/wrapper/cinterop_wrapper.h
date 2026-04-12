@@ -11,7 +11,9 @@ typedef enum CInteropStatus {
     CINTEROP_STATUS_OK = 0,
     CINTEROP_STATUS_INVALID_ARGUMENT = 1,
     CINTEROP_STATUS_OVERFLOW = 2,
-    CINTEROP_STATUS_INTERNAL_ERROR = 3
+    CINTEROP_STATUS_INTERNAL_ERROR = 3,
+    CINTEROP_STATUS_DB_ERROR = 4,
+    CINTEROP_STATUS_DB_NOT_CONFIGURED = 5
 } CInteropStatus;
 
 typedef struct CInteropPointsBreakdown {
@@ -42,6 +44,18 @@ CINTEROP_API int cinterop_calculate_points_with_breakdown(
  * - Wrapper allocates UTF-8 bytes and caller must release with cinterop_free.
  */
 CINTEROP_API int cinterop_create_points_message(int purchases, int multiplier, char** out_message);
+
+/*
+ * Executes one atomic DB stage operation.
+ * - Inputs are mapped to one SQL execution.
+ * - Wrapper allocates UTF-8 JSON and caller must release with cinterop_free.
+ */
+CINTEROP_API int cinterop_db_query_points(
+    int purchases,
+    int multiplier,
+    char** out_payload,
+    int* out_row_count
+);
 
 CINTEROP_API void cinterop_free(void* pointer);
 

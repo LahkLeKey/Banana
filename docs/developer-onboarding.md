@@ -37,9 +37,13 @@ flowchart TD
    B --> C[PointsService]
    C --> D[PipelineExecutor<PipelineContext>]
    D --> E[ValidationStep]
-   E --> F[NativeCalculationStep]
+   E --> E1[DatabaseAccessStep]
+   E1 --> F[NativeCalculationStep]
    F --> G[PostProcessingStep]
    G --> H[AuditStep]
+   E1 --> DB[IDataAccessPipelineClient]
+   DB --> DB1[LegacyNativeDbDataAccessClient]
+   DB --> DB2[ManagedNpgsqlDataAccessClient]
    F --> I[INativePointsClient]
    I --> J[NativePointsClient]
    J --> K[NativeMethods / C wrapper DLL]
@@ -63,6 +67,9 @@ Read the diagram left-to-right/top-to-bottom as one request. The API stays decou
 - If native load fails:
   - Verify `CINTEROP_NATIVE_PATH` points to the directory containing the platform library.
   - Check `NativeLibraryResolver` logs for where loading was attempted.
+- If legacy native DB tests fail with not-configured errors:
+   - Verify `CINTEROP_PG_CONNECTION` is set and points to reachable PostgreSQL host/port.
+   - In CI, check the "Assert native DB connection target" step output for host/port confirmation.
 - If pipeline order looks wrong:
   - Confirm `Order` values.
   - Confirm the step is registered in DI.

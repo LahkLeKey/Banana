@@ -1,4 +1,5 @@
 using CInteropSharp.Api.NativeInterop;
+using CInteropSharp.Api.DataAccess;
 
 namespace CInteropSharp.Api.Pipeline;
 
@@ -31,4 +32,9 @@ public sealed class PipelineContext
     /// Gets or sets extensible key/value data used for enrichment, diagnostics, and future steps.
     /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the raw data access result produced by the database pipeline stage.
+    /// </summary>
+    public RawDbAccessResult? DatabaseRawResult { get; set; }
 }

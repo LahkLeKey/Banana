@@ -13,6 +13,11 @@ RUN dotnet publish src/api/CInteropSharp.Api.csproj -c Release -o /app/publish -
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
+RUN apt-get update \
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+		libpq5 \
+	&& rm -rf /var/lib/apt/lists/*
+
 ENV ASPNETCORE_URLS=http://+:8080
 
 COPY --from=build /app/publish ./

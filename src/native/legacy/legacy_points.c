@@ -1,5 +1,7 @@
 #include "legacy_points.h"
 
+#include "../testing/native_test_hooks.h"
+
 int legacy_calculate_points(int purchases, int multiplier) {
     int base_points = purchases * 10;
     int bonus_points = (purchases >= 10) ? (multiplier * 25) : 0;
@@ -8,6 +10,10 @@ int legacy_calculate_points(int purchases, int multiplier) {
 
 int legacy_calculate_summary(int purchases, int multiplier, LegacyPointsSummary* summary) {
     if (summary == 0) {
+        return -1;
+    }
+
+    if (cinterop_test_hook_force_summary_failure()) {
         return -1;
     }
 
