@@ -1,0 +1,66 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Native Library",
+      "type": "shell",
+      "windows": {
+        "command": "scripts\\build-native.bat"
+      },
+      "linux": {
+        "command": "bash",
+        "args": [
+          "-lc",
+          "cmake -S . -B build/native && cmake --build build/native --config Release"
+        ]
+      },
+      "osx": {
+        "command": "bash",
+        "args": [
+          "-lc",
+          "cmake -S . -B build/native && cmake --build build/native --config Release"
+        ]
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Banana API",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "src/c-sharp/asp.net/Banana.Api.csproj",
+        "-c",
+        "Debug"
+      ],
+      "dependsOn": [
+        "Build Native Library"
+      ],
+      "dependsOrder": "sequence",
+      "group": "build",
+      "problemMatcher": [
+        "$msCompile"
+      ]
+    },
+    {
+      "label": "Start Compose Apps",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/compose-apps.sh"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop Compose Apps",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/compose-apps-down.sh"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

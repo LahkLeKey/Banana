@@ -1,0 +1,93 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Banana API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build Banana API",
+      "program": "${workspaceFolder}/src/c-sharp/asp.net/bin/Debug/net8.0/Banana.Api.dll",
+      "cwd": "${workspaceFolder}/src/c-sharp/asp.net",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://127.0.0.1:8080",
+        "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin/Release",
+        "BANANA_PG_CONNECTION": "host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop"
+      },
+      "linux": {
+        "env": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "ASPNETCORE_URLS": "http://127.0.0.1:8080",
+          "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin",
+          "BANANA_PG_CONNECTION": "host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop"
+        }
+      },
+      "osx": {
+        "env": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "ASPNETCORE_URLS": "http://127.0.0.1:8080",
+          "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin",
+          "BANANA_PG_CONNECTION": "host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop"
+        }
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      }
+    },
+    {
+      "name": "Electron QA Desktop",
+      "type": "pwa-node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/src/typescript/electron",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start"
+      ],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "env": {
+        "BANANA_API_URL": "http://127.0.0.1:8080",
+        "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin/Release"
+      },
+      "linux": {
+        "env": {
+          "BANANA_API_URL": "http://127.0.0.1:8080",
+          "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin"
+        }
+      },
+      "osx": {
+        "env": {
+          "BANANA_API_URL": "http://127.0.0.1:8080",
+          "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin"
+        }
+      }
+    },
+    {
+      "name": "Compose Apps Stack",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bash scripts/compose-apps.sh"
+    },
+    {
+      "name": "Compose Apps Stack Down",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bash scripts/compose-apps-down.sh"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Banana API + Electron QA",
+      "configurations": [
+        "Banana API",
+        "Electron QA Desktop"
+      ],
+      "stopAll": true
+    }
+  ]
+}
