@@ -157,7 +157,11 @@ static void test_db_query_points_missing_connection(void) {
 
     require_true(UNSET_ENV("CINTEROP_PG_CONNECTION") == 0, "failed to unset CINTEROP_PG_CONNECTION");
     status = cinterop_db_query_points(10, 2, &payload, &row_count);
+#if defined(CINTEROP_ENABLE_POSTGRES)
     require_true(status == CINTEROP_STATUS_DB_NOT_CONFIGURED, "expected DB_NOT_CONFIGURED when connection string is missing");
+#else
+    require_true(status == CINTEROP_STATUS_OK, "expected OK when PostgreSQL support is disabled");
+#endif
     require_true(SET_ENV("CINTEROP_PG_CONNECTION", "host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop") == 0, "failed to restore CINTEROP_PG_CONNECTION");
 }
 
@@ -168,7 +172,11 @@ static void test_db_query_points_bad_connection(void) {
 
     require_true(SET_ENV("CINTEROP_PG_CONNECTION", "host=invalid-host-name port=5432 user=cinterop password=cinterop dbname=cinterop connect_timeout=1") == 0, "failed to set bad CINTEROP_PG_CONNECTION");
     status = cinterop_db_query_points(10, 2, &payload, &row_count);
+#if defined(CINTEROP_ENABLE_POSTGRES)
     require_true(status == CINTEROP_STATUS_DB_ERROR, "expected DB_ERROR when connection fails");
+#else
+    require_true(status == CINTEROP_STATUS_OK, "expected OK when PostgreSQL support is disabled");
+#endif
     require_true(SET_ENV("CINTEROP_PG_CONNECTION", "host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop") == 0, "failed to restore CINTEROP_PG_CONNECTION");
 }
 
@@ -180,7 +188,11 @@ static void test_db_query_points_forced_bad_result_branch(void) {
     require_true(SET_ENV("CINTEROP_FORCE_DB_BAD_RESULT", "1") == 0, "failed to set CINTEROP_FORCE_DB_BAD_RESULT");
     status = cinterop_db_query_points(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("CINTEROP_FORCE_DB_BAD_RESULT") == 0, "failed to unset CINTEROP_FORCE_DB_BAD_RESULT");
+#if defined(CINTEROP_ENABLE_POSTGRES)
     require_true(status == CINTEROP_STATUS_DB_ERROR, "expected DB_ERROR for forced bad query result branch");
+#else
+    require_true(status == CINTEROP_STATUS_OK, "expected OK for forced bad query result branch when PostgreSQL support is disabled");
+#endif
 }
 
 static void test_db_query_points_forced_status_mismatch_branch(void) {
@@ -191,7 +203,11 @@ static void test_db_query_points_forced_status_mismatch_branch(void) {
     require_true(SET_ENV("CINTEROP_FORCE_DB_STATUS_MISMATCH", "1") == 0, "failed to set CINTEROP_FORCE_DB_STATUS_MISMATCH");
     status = cinterop_db_query_points(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("CINTEROP_FORCE_DB_STATUS_MISMATCH") == 0, "failed to unset CINTEROP_FORCE_DB_STATUS_MISMATCH");
+#if defined(CINTEROP_ENABLE_POSTGRES)
     require_true(status == CINTEROP_STATUS_DB_ERROR, "expected DB_ERROR for forced status mismatch branch");
+#else
+    require_true(status == CINTEROP_STATUS_OK, "expected OK for forced status mismatch branch when PostgreSQL support is disabled");
+#endif
 }
 
 static void test_db_query_points_forced_internal_error(void) {
