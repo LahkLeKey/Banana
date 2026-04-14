@@ -1,11 +1,11 @@
-using CInteropSharp.Api.DataAccess;
+using Banana.Api.DataAccess;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class ManagedNpgsqlDataAccessClientTests
 {

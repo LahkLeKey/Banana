@@ -1,8 +1,8 @@
-using CInteropSharp.Api.Models;
+using Banana.Api.Models;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class BananaResponseTests
 {

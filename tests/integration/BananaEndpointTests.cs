@@ -2,13 +2,13 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
-using CInteropSharp.Api.NativeInterop;
+using Banana.Api.NativeInterop;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 
 using Xunit;
 
-namespace CInteropSharp.IntegrationTests;
+namespace Banana.IntegrationTests;
 
 public sealed class BananaEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
@@ -57,17 +57,22 @@ public sealed class BananaEndpointTests : IClassFixture<WebApplicationFactory<Pr
 
     private static bool EnsureNativePathConfigured()
     {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-        var candidate = Path.Combine(root, "build", "native", "bin", "Release");
-
-        if (Directory.Exists(candidate))
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../"));
+        var fileName = NativeLibraryResolver.GetPlatformLibraryName();
+        var candidates = new[]
         {
-            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", candidate);
+            Path.Combine(root, "build", "native", "bin", "Release"),
+            Path.Combine(root, "build", "native", "bin")
+        };
+
+        var libraryDir = candidates.FirstOrDefault(path => File.Exists(Path.Combine(path, fileName)));
+        if (libraryDir is not null)
+        {
+            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", libraryDir);
             return true;
         }
 
-        var localName = NativeLibraryResolver.GetPlatformLibraryName();
-        var localPath = Path.Combine(AppContext.BaseDirectory, localName);
+        var localPath = Path.Combine(AppContext.BaseDirectory, fileName);
         return File.Exists(localPath);
     }
 }

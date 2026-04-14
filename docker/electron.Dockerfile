@@ -1,5 +1,7 @@
 FROM node:14-bullseye
 
+ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
+
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         python3 \

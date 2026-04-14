@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-using CInteropSharp.Api.Services;
+using Banana.Api.Services;
 
-namespace CInteropSharp.Api.NativeInterop;
+namespace Banana.Api.NativeInterop;
 
 /// <summary>
 /// Concrete interop client that calls exported C wrapper functions via P/Invoke.

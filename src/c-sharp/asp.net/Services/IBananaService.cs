@@ -1,6 +1,6 @@
-using CInteropSharp.Api.NativeInterop;
+using Banana.Api.NativeInterop;
 
-namespace CInteropSharp.Api.Services;
+namespace Banana.Api.Services;
 
 /// <summary>
 /// Application-level contract for calculating banana for API consumers.

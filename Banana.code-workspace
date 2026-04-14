@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {},
+	"extensions": {
+		"recommendations": [
+			"ms-dotnettools.csharp",
+			"ms-dotnettools.csdevkit",
+			"ms-vscode.cpptools",
+			"ms-vscode.cmake-tools",
+			"ms-azuretools.vscode-docker"
+		]
+	}
+}

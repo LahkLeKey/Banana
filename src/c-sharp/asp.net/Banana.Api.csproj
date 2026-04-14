@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <RootNamespace>CInteropSharp.Api</RootNamespace>
-    <AssemblyName>CInteropSharp.Api</AssemblyName>
+    <RootNamespace>Banana.Api</RootNamespace>
+    <AssemblyName>Banana.Api</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 

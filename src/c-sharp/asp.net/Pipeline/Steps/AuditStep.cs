@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.Pipeline.Steps;
+namespace Banana.Api.Pipeline.Steps;
 
 /// <summary>
 /// Final pipeline stage that emits structured logs for diagnostics and auditability.

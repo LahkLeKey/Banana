@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace CInteropSharp.Api.NativeInterop;
+namespace Banana.Api.NativeInterop;
 
 /// <summary>
 /// Configures and executes runtime resolution of the native library used by P/Invoke.

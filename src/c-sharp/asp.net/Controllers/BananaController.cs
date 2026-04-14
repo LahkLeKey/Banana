@@ -1,9 +1,9 @@
-using CInteropSharp.Api.Models;
-using CInteropSharp.Api.Services;
+using Banana.Api.Models;
+using Banana.Api.Services;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace CInteropSharp.Api.Controllers;
+namespace Banana.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]

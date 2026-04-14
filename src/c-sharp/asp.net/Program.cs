@@ -1,9 +1,9 @@
-using CInteropSharp.Api.Middleware;
-using CInteropSharp.Api.DataAccess;
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.Pipeline;
-using CInteropSharp.Api.Pipeline.Steps;
-using CInteropSharp.Api.Services;
+using Banana.Api.Middleware;
+using Banana.Api.DataAccess;
+using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline;
+using Banana.Api.Pipeline.Steps;
+using Banana.Api.Services;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +44,7 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 
 app.Run();

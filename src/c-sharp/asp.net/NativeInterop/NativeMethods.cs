@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace CInteropSharp.Api.NativeInterop;
+namespace Banana.Api.NativeInterop;
 
 /// <summary>
 /// Low-level P/Invoke signatures exposed by the C wrapper library.

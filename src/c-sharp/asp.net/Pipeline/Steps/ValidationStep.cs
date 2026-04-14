@@ -1,6 +1,6 @@
-using CInteropSharp.Api.Services;
+using Banana.Api.Services;
 
-namespace CInteropSharp.Api.Pipeline.Steps;
+namespace Banana.Api.Pipeline.Steps;
 
 /// <summary>
 /// Validates request values before expensive work (such as native interop) begins.

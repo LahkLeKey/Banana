@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-using CInteropSharp.Api.NativeInterop;
+using Banana.Api.NativeInterop;
 
-namespace CInteropSharp.Api.DataAccess;
+namespace Banana.Api.DataAccess;
 
 /// <summary>
 /// Default data-access mode that uses the native DAL behind the DB stage boundary.

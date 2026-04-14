@@ -1,7 +1,7 @@
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.Pipeline;
+using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline;
 
-namespace CInteropSharp.Api.Services;
+namespace Banana.Api.Services;
 
 /// <summary>
 /// Orchestrates the banana workflow by delegating execution to the configured pipeline.

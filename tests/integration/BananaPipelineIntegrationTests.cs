@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text.Json;
 
-using CInteropSharp.Api.DataAccess;
-using CInteropSharp.Api.NativeInterop;
+using Banana.Api.DataAccess;
+using Banana.Api.NativeInterop;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using Xunit;
 
-namespace CInteropSharp.IntegrationTests;
+namespace Banana.IntegrationTests;
 
 public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 {

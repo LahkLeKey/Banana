@@ -1,12 +1,12 @@
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.Services;
+using Banana.Api.NativeInterop;
+using Banana.Api.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class NativeBananaClientTests
 {
@@ -66,25 +66,25 @@ public sealed class NativeBananaClientTests
                 return true;
             }
 
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-        var fileName = NativeLibraryResolver.GetPlatformLibraryName();
-        var candidates = new[]
-        {
-            Path.Combine(root, "build", "native", "bin", "Release"),
-            Path.Combine(root, "build", "native", "bin")
-        };
+            var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../"));
+            var fileName = NativeLibraryResolver.GetPlatformLibraryName();
+            var candidates = new[]
+            {
+                Path.Combine(root, "build", "native", "bin", "Release"),
+                Path.Combine(root, "build", "native", "bin")
+            };
 
-        var libraryDir = candidates.FirstOrDefault(path => File.Exists(Path.Combine(path, fileName)));
-        if (libraryDir is null)
-        {
-            return false;
-        }
+            var libraryDir = candidates.FirstOrDefault(path => File.Exists(Path.Combine(path, fileName)));
+            if (libraryDir is null)
+            {
+                return false;
+            }
 
-        Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", libraryDir);
+            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", libraryDir);
 
-        var configuration = new ConfigurationBuilder().Build();
-        using var loggerFactory = LoggerFactory.Create(_ => { });
-        var logger = loggerFactory.CreateLogger("NativeBananaClientTests");
+            var configuration = new ConfigurationBuilder().Build();
+            using var loggerFactory = LoggerFactory.Create(_ => { });
+            var logger = loggerFactory.CreateLogger("NativeBananaClientTests");
 
             try
             {

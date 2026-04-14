@@ -1,10 +1,10 @@
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.Pipeline;
-using CInteropSharp.Api.Services;
+using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline;
+using Banana.Api.Services;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class BananaServiceTests
 {

@@ -18,8 +18,8 @@ fi
 gcovr --object-directory build/native --root . --filter 'src/native' --exclude 'tests/native' --xml-pretty --output build/native/coverage-native.xml
 gcovr --object-directory build/native --root . --filter 'src/native' --exclude 'tests/native' --txt > build/native/Summary.txt
 
-dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release --collect:"XPlat Code Coverage"
-dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release --collect:"XPlat Code Coverage"
+dotnet test tests/unit/Banana.UnitTests.csproj -c Release --collect:"XPlat Code Coverage"
+dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release --collect:"XPlat Code Coverage"
 
 if [[ -d /artifacts ]]; then
 	mkdir -p /artifacts

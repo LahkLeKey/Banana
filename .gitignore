@@ -44,8 +44,6 @@ pnpm-debug.log*
 # Docker
 .docker/
 
-# IDE
-.vscode/
 
 # OS
 .DS_Store

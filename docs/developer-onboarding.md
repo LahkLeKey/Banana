@@ -18,8 +18,8 @@ This guide is for developers who are new to this repository and to C# ↔ native
    - `src/c-sharp/asp.net/NativeInterop/NativeMethods.cs`
    - `src/native/wrapper/*`
 5. Run tests locally:
-   - `dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release`
-   - `dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release`
+   - `dotnet test tests/unit/Banana.UnitTests.csproj -c Release`
+   - `dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release`
 
 ## Mental Model
 

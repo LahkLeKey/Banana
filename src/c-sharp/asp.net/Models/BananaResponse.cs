@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.Models;
+namespace Banana.Api.Models;
 
 /// <summary>
 /// HTTP response contract returned by the <c>/banana</c> endpoint.

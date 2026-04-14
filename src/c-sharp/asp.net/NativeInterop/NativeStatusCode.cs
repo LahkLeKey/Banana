@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.NativeInterop;
+namespace Banana.Api.NativeInterop;
 
 /// <summary>
 /// Status codes returned by the native wrapper ABI.

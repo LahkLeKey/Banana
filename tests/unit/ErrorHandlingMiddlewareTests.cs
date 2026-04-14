@@ -1,16 +1,16 @@
 using System.Text;
 
-using CInteropSharp.Api.DataAccess;
-using CInteropSharp.Api.Middleware;
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.Services;
+using Banana.Api.DataAccess;
+using Banana.Api.Middleware;
+using Banana.Api.NativeInterop;
+using Banana.Api.Services;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class ErrorHandlingMiddlewareTests
 {

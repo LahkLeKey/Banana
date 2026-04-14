@@ -1,3 +1,5 @@
+name: banana-container
+
 services:
   postgres:
     image: postgres:16
@@ -10,7 +12,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    profiles: ["runtime", "tests", "all"]
+    profiles: ["runtime", "tests", "electron", "apps", "all"]
 
   native-build:
     build:
@@ -19,7 +21,7 @@ services:
     command: ["bash", "-lc", "mkdir -p /artifacts && cp -f /workspace/out/native/bin/libbanana_native.so /artifacts/libbanana_native.so && ls -l /artifacts"]
     volumes:
       - native-artifacts:/artifacts
-    profiles: ["runtime", "tests", "all", "electron"]
+    profiles: ["runtime", "tests", "all", "electron", "apps"]
 
   api:
     build:
@@ -39,7 +41,12 @@ services:
       - "8080:8080"
     volumes:
       - native-artifacts:/native:ro
-    profiles: ["runtime", "all"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    profiles: ["runtime", "electron", "apps", "all"]
 
   test-unit:
     build:
@@ -86,14 +93,17 @@ services:
       context: .
       dockerfile: docker/electron.Dockerfile
     depends_on:
+      api:
+        condition: service_healthy
       native-build:
         condition: service_completed_successfully
     environment:
+      BANANA_API_URL: http://api:8080
       BANANA_NATIVE_PATH: /native
-    command: ["npm", "run", "example"]
+    command: ["npm", "run", "smoke"]
     volumes:
       - native-artifacts:/native:ro
-    profiles: ["electron", "all"]
+    profiles: ["electron", "apps", "all"]
 
 volumes:
   native-artifacts:

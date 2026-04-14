@@ -1,0 +1,66 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Native Library",
+      "type": "shell",
+      "windows": {
+        "command": "rm -f build/native/CMakeCache.txt && rm -rf build/native/CMakeFiles && cmake -S . -B build/native -G \"Visual Studio 17 2022\" -A x64 && cmake --build build/native --config Release"
+      },
+      "linux": {
+        "command": "bash",
+        "args": [
+          "-lc",
+          "rm -f build/native/CMakeCache.txt && rm -rf build/native/CMakeFiles && cmake -S . -B build/native && cmake --build build/native --config Release"
+        ]
+      },
+      "osx": {
+        "command": "bash",
+        "args": [
+          "-lc",
+          "rm -f build/native/CMakeCache.txt && rm -rf build/native/CMakeFiles && cmake -S . -B build/native && cmake --build build/native --config Release"
+        ]
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Banana API",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "src/c-sharp/asp.net/Banana.Api.csproj",
+        "-c",
+        "Debug"
+      ],
+      "dependsOn": [
+        "Build Native Library"
+      ],
+      "dependsOrder": "sequence",
+      "group": "build",
+      "problemMatcher": [
+        "$msCompile"
+      ]
+    },
+    {
+      "label": "Start Compose Apps",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/compose-apps.sh"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop Compose Apps",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/compose-apps-down.sh"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
