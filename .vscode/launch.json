@@ -3,32 +3,15 @@
   "configurations": [
     {
       "name": "Banana API",
-      "type": "coreclr",
+      "type": "node-terminal",
       "request": "launch",
       "preLaunchTask": "Build Banana API",
-      "program": "${workspaceFolder}/src/c-sharp/asp.net/bin/Debug/net8.0/Banana.Api.dll",
-      "cwd": "${workspaceFolder}/src/c-sharp/asp.net",
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://127.0.0.1:8080",
-        "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin/Release",
-        "BANANA_PG_CONNECTION": "host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop"
-      },
+      "command": "bash -lc 'cd src/c-sharp/asp.net && ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:8080 BANANA_NATIVE_PATH=\"$PWD/../../../build/native/bin/Release\" BANANA_PG_CONNECTION=\"host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop\" dotnet run -c Debug --no-build'",
       "linux": {
-        "env": {
-          "ASPNETCORE_ENVIRONMENT": "Development",
-          "ASPNETCORE_URLS": "http://127.0.0.1:8080",
-          "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin",
-          "BANANA_PG_CONNECTION": "host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop"
-        }
+        "command": "bash -lc 'cd src/c-sharp/asp.net && ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:8080 BANANA_NATIVE_PATH=\"$PWD/../../../build/native/bin\" BANANA_PG_CONNECTION=\"host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop\" dotnet run -c Debug --no-build'"
       },
       "osx": {
-        "env": {
-          "ASPNETCORE_ENVIRONMENT": "Development",
-          "ASPNETCORE_URLS": "http://127.0.0.1:8080",
-          "BANANA_NATIVE_PATH": "${workspaceFolder}/build/native/bin",
-          "BANANA_PG_CONNECTION": "host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop"
-        }
+        "command": "bash -lc 'cd src/c-sharp/asp.net && ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:8080 BANANA_NATIVE_PATH=\"$PWD/../../../build/native/bin\" BANANA_PG_CONNECTION=\"host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop\" dotnet run -c Debug --no-build'"
       },
       "serverReadyAction": {
         "action": "openExternally",

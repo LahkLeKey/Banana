@@ -5,20 +5,20 @@
       "label": "Build Native Library",
       "type": "shell",
       "windows": {
-        "command": "scripts\\build-native.bat"
+        "command": "rm -f build/native/CMakeCache.txt && rm -rf build/native/CMakeFiles && cmake -S . -B build/native -G \"Visual Studio 17 2022\" -A x64 && cmake --build build/native --config Release"
       },
       "linux": {
         "command": "bash",
         "args": [
           "-lc",
-          "cmake -S . -B build/native && cmake --build build/native --config Release"
+          "rm -f build/native/CMakeCache.txt && rm -rf build/native/CMakeFiles && cmake -S . -B build/native && cmake --build build/native --config Release"
         ]
       },
       "osx": {
         "command": "bash",
         "args": [
           "-lc",
-          "cmake -S . -B build/native && cmake --build build/native --config Release"
+          "rm -f build/native/CMakeCache.txt && rm -rf build/native/CMakeFiles && cmake -S . -B build/native && cmake --build build/native --config Release"
         ]
       },
       "group": "build",
