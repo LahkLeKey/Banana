@@ -4,23 +4,23 @@ using CInteropSharp.Api.Pipeline;
 namespace CInteropSharp.Api.Services;
 
 /// <summary>
-/// Orchestrates the points workflow by delegating execution to the configured pipeline.
+/// Orchestrates the banana workflow by delegating execution to the configured pipeline.
 /// </summary>
-public sealed class PointsService : IPointsService
+public sealed class BananaService : IBananaService
 {
     private readonly PipelineExecutor<PipelineContext> _pipelineExecutor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="PointsService"/> class.
+    /// Initializes a new instance of the <see cref="BananaService"/> class.
     /// </summary>
-    /// <param name="pipelineExecutor">Executor that runs all configured points pipeline steps.</param>
-    public PointsService(PipelineExecutor<PipelineContext> pipelineExecutor)
+    /// <param name="pipelineExecutor">Executor that runs all configured banana pipeline steps.</param>
+    public BananaService(PipelineExecutor<PipelineContext> pipelineExecutor)
     {
         _pipelineExecutor = pipelineExecutor;
     }
 
     /// <inheritdoc />
-    public PointsResult Calculate(int purchases, int multiplier)
+    public BananaResult Calculate(int purchases, int multiplier)
     {
         var context = new PipelineContext
         {
@@ -30,12 +30,12 @@ public sealed class PointsService : IPointsService
 
         var pipelineResult = _pipelineExecutor.Execute(context);
 
-        if (pipelineResult.NativePointsResult is null)
+        if (pipelineResult.NativeBananaResult is null)
         {
             throw new NativeInteropException("Pipeline completed without a native calculation result.");
         }
 
-        return pipelineResult.NativePointsResult;
+        return pipelineResult.NativeBananaResult;
     }
 }
 

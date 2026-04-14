@@ -6,15 +6,15 @@ This guide is for developers who are new to this repository and to C# ↔ native
 
 1. Read the architecture overview:
    - `docs/architecture.md`
-2. Skim the API flow entry points:
-   - `src/c-sharp/asp.net/Controllers/PointsController.cs`
-   - `src/c-sharp/asp.net/Services/PointsService.cs`
+2. Skim the API flow entry files:
+   - `src/c-sharp/asp.net/Controllers/BananaController.cs`
+   - `src/c-sharp/asp.net/Services/BananaService.cs`
 3. Understand pipeline orchestration:
    - `src/c-sharp/asp.net/Pipeline/PipelineExecutor.cs`
    - `src/c-sharp/asp.net/Pipeline/IPipelineStep.cs`
    - `src/c-sharp/asp.net/Pipeline/Steps/*`
 4. Inspect native interop boundary:
-   - `src/c-sharp/asp.net/NativeInterop/NativePointsClient.cs`
+   - `src/c-sharp/asp.net/NativeInterop/NativeBananaClient.cs`
    - `src/c-sharp/asp.net/NativeInterop/NativeMethods.cs`
    - `src/native/wrapper/*`
 5. Run tests locally:
@@ -33,8 +33,8 @@ This guide is for developers who are new to this repository and to C# ↔ native
 
 ```mermaid
 flowchart TD
-   A[HTTP GET /points] --> B[PointsController]
-   B --> C[PointsService]
+   A[HTTP GET /banana] --> B[BananaController]
+   B --> C[BananaService]
    C --> D[PipelineExecutor<PipelineContext>]
    D --> E[ValidationStep]
    E --> E1[DatabaseAccessStep]
@@ -42,13 +42,13 @@ flowchart TD
    F --> G[PostProcessingStep]
    G --> H[AuditStep]
    E1 --> DB[IDataAccessPipelineClient]
-   DB --> DB1[LegacyNativeDbDataAccessClient]
+   DB --> DB1[NativeDalDbDataAccessClient]
    DB --> DB2[ManagedNpgsqlDataAccessClient]
-   F --> I[INativePointsClient]
-   I --> J[NativePointsClient]
+   F --> I[INativeBananaClient]
+   I --> J[NativeBananaClient]
    J --> K[NativeMethods / C wrapper DLL]
-   H --> L[PointsResult]
-   L --> M[PointsResponse]
+   H --> L[BananaResult]
+   L --> M[BananaResponse]
 ```
 
 Read the diagram left-to-right/top-to-bottom as one request. The API stays decoupled because each step has one job and the executor coordinates order.
@@ -65,10 +65,10 @@ Read the diagram left-to-right/top-to-bottom as one request. The API stays decou
 ## Common Debugging Tips
 
 - If native load fails:
-  - Verify `CINTEROP_NATIVE_PATH` points to the directory containing the platform library.
+   - Verify `BANANA_NATIVE_PATH` targets the directory containing the platform library.
   - Check `NativeLibraryResolver` logs for where loading was attempted.
-- If legacy native DB tests fail with not-configured errors:
-   - Verify `CINTEROP_PG_CONNECTION` is set and points to reachable PostgreSQL host/port.
+- If native DAL DB tests fail with not-configured errors:
+   - Verify `BANANA_PG_CONNECTION` is set and targets a reachable PostgreSQL host/port.
    - In CI, check the "Assert native DB connection target" step output for host/port confirmation.
 - If pipeline order looks wrong:
   - Confirm `Order` values.

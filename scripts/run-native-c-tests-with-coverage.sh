@@ -7,8 +7,8 @@ cd "$ROOT_DIR"
 BUILD_DIR="build/native-coverage"
 ARTIFACT_DIR=".artifacts/native-c"
 
-if [[ -z "${CINTEROP_PG_CONNECTION:-}" ]]; then
-    echo "CINTEROP_PG_CONNECTION is required for PostgreSQL-first native coverage runs."
+if [[ -z "${BANANA_PG_CONNECTION:-}" ]]; then
+    echo "BANANA_PG_CONNECTION is required for PostgreSQL-first native coverage runs."
     exit 1
 fi
 
@@ -16,10 +16,10 @@ rm -rf "$BUILD_DIR"
 
 cmake -S . -B "$BUILD_DIR" \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCINTEROP_ENABLE_POSTGRES=ON \
-    -DCINTEROP_ENABLE_NATIVE_TESTS=ON \
-    -DCINTEROP_BUILD_SHARED_LIBRARY=OFF \
-    -DCINTEROP_ENABLE_COVERAGE=ON
+    -DBANANA_ENABLE_POSTGRES=ON \
+    -DBANANA_ENABLE_NATIVE_TESTS=ON \
+    -DBANANA_BUILD_SHARED_LIBRARY=OFF \
+    -DBANANA_ENABLE_COVERAGE=ON
 
 cmake --build "$BUILD_DIR"
 ctest --test-dir "$BUILD_DIR" --output-on-failure

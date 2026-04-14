@@ -8,19 +8,19 @@ namespace CInteropSharp.Api.NativeInterop;
 /// <summary>
 /// Concrete interop client that calls exported C wrapper functions via P/Invoke.
 /// </summary>
-public sealed class NativePointsClient : INativePointsClient
+public sealed class NativeBananaClient : INativeBananaClient
 {
     /// <inheritdoc />
-    public PointsResult Calculate(int purchases, int multiplier)
+    public BananaResult Calculate(int purchases, int multiplier)
     {
-        var status = (NativeStatusCode)NativeMethods.CalculatePointsWithBreakdown(
+        var status = (NativeStatusCode)NativeMethods.CalculateBananaWithBreakdown(
             purchases,
             multiplier,
             out var breakdown);
 
         EnsureSuccess(status);
 
-        status = (NativeStatusCode)NativeMethods.CreatePointsMessage(
+        status = (NativeStatusCode)NativeMethods.CreateBananaMessage(
             purchases,
             multiplier,
             out var messagePtr);
@@ -32,10 +32,10 @@ public sealed class NativePointsClient : INativePointsClient
             var bytes = ReadNullTerminatedUtf8(messagePtr);
             var message = Encoding.UTF8.GetString(bytes);
 
-            return new PointsResult(
+            return new BananaResult(
                 breakdown.Purchases,
                 breakdown.Multiplier,
-                breakdown.Points,
+                breakdown.Banana,
                 message);
         }
         finally

@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using CInteropSharp.Api.DataAccess;
 using CInteropSharp.Api.NativeInterop;
 
@@ -8,7 +10,7 @@ using Xunit;
 
 namespace CInteropSharp.UnitTests;
 
-public sealed class LegacyNativeDbDataAccessClientTests
+public sealed class NativeDalDbDataAccessClientTests
 {
     private static readonly object Sync = new();
     private static bool IsConfigured;
@@ -21,7 +23,7 @@ public sealed class LegacyNativeDbDataAccessClientTests
             return;
         }
 
-        var client = new LegacyNativeDbDataAccessClient();
+        var client = new NativeDalDbDataAccessClient();
 
         RawDbAccessResult result;
         try
@@ -34,10 +36,10 @@ public sealed class LegacyNativeDbDataAccessClientTests
             return;
         }
 
-        Assert.Equal("legacy-native", result.Source);
+        Assert.Equal("native-dal", result.Source);
         Assert.Equal(1, result.RowCount);
         Assert.Contains("\"purchases\":10", result.Payload, StringComparison.Ordinal);
-        Assert.Contains("\"points\":150", result.Payload, StringComparison.Ordinal);
+        Assert.Contains("\"banana\":150", result.Payload, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -48,9 +50,34 @@ public sealed class LegacyNativeDbDataAccessClientTests
             return;
         }
 
-        var client = new LegacyNativeDbDataAccessClient();
+        var client = new NativeDalDbDataAccessClient();
 
         Assert.Throws<DatabaseAccessException>(() => client.Execute(new DbAccessRequest(-1, 2)));
+    }
+
+    [Fact]
+    public void EnsureSuccess_ThrowsMappedMessages()
+    {
+        var ensureSuccess = typeof(NativeDalDbDataAccessClient)
+            .GetMethod("EnsureSuccess", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(ensureSuccess);
+
+        AssertStatusMessage(ensureSuccess, NativeStatusCode.InvalidArgument, "invalid input");
+        AssertStatusMessage(ensureSuccess, NativeStatusCode.DbNotConfigured, "not configured");
+        AssertStatusMessage(ensureSuccess, NativeStatusCode.DbError, "query execution failed");
+        AssertStatusMessage(ensureSuccess, NativeStatusCode.InternalError, "Native DB call failed");
+    }
+
+    [Fact]
+    public void ReadNullTerminatedUtf8_ThrowsWhenPointerIsZero()
+    {
+        var method = typeof(NativeDalDbDataAccessClient)
+            .GetMethod("ReadNullTerminatedUtf8", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, new object?[] { nint.Zero }));
+        var inner = Assert.IsType<DatabaseAccessException>(ex.InnerException);
+        Assert.Contains("null payload", inner.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool EnsureNativePathConfigured()
@@ -76,11 +103,11 @@ public sealed class LegacyNativeDbDataAccessClientTests
                 return false;
             }
 
-            Environment.SetEnvironmentVariable("CINTEROP_NATIVE_PATH", libraryDir);
+            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", libraryDir);
 
             var configuration = new ConfigurationBuilder().Build();
             using var loggerFactory = LoggerFactory.Create(_ => { });
-            var logger = loggerFactory.CreateLogger("LegacyNativeDbDataAccessClientTests");
+            var logger = loggerFactory.CreateLogger("NativeDalDbDataAccessClientTests");
 
             try
             {
@@ -93,5 +120,12 @@ public sealed class LegacyNativeDbDataAccessClientTests
             IsConfigured = true;
             return true;
         }
+    }
+
+    private static void AssertStatusMessage(MethodInfo ensureSuccess, NativeStatusCode status, string expectedMessageFragment)
+    {
+        var exception = Assert.Throws<TargetInvocationException>(() => ensureSuccess.Invoke(null, new object?[] { status }));
+        var inner = Assert.IsType<DatabaseAccessException>(exception.InnerException);
+        Assert.Contains(expectedMessageFragment, inner.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

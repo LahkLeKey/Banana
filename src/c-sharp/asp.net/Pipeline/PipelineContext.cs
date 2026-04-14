@@ -19,14 +19,14 @@ public sealed class PipelineContext
     public int Multiplier { get; set; }
 
     /// <summary>
-    /// Gets or sets the numeric points produced by native calculation.
+    /// Gets or sets the numeric banana produced by native calculation.
     /// </summary>
     public int NativeResult { get; set; }
 
     /// <summary>
     /// Gets or sets the complete native response mapped to managed types.
     /// </summary>
-    public PointsResult? NativePointsResult { get; set; }
+    public BananaResult? NativeBananaResult { get; set; }
 
     /// <summary>
     /// Gets or sets extensible key/value data used for enrichment, diagnostics, and future steps.

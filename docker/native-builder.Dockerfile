@@ -12,7 +12,7 @@ WORKDIR /workspace
 COPY CMakeLists.txt ./
 COPY src/native ./src/native
 
-RUN cmake -S . -B /workspace/out/native -DCMAKE_BUILD_TYPE=Release -DCINTEROP_ENABLE_POSTGRES=ON -DCINTEROP_ENABLE_NATIVE_TESTS=OFF \
+RUN cmake -S . -B /workspace/out/native -DCMAKE_BUILD_TYPE=Release -DBANANA_ENABLE_POSTGRES=ON -DBANANA_ENABLE_NATIVE_TESTS=OFF \
     && cmake --build /workspace/out/native --config Release
 
 CMD ["bash", "-lc", "ls -l /workspace/out/native/bin"]

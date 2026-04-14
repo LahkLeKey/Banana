@@ -3,11 +3,11 @@ using System.Runtime.InteropServices;
 namespace CInteropSharp.Api.NativeInterop;
 
 /// <summary>
-/// Native-compatible struct for detailed points output.
+/// Native-compatible struct for detailed banana output.
 /// Field order must remain aligned with the C wrapper definition.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
-public struct PointsBreakdownNative
+public struct BananaBreakdownNative
 {
     /// <summary>
     /// Purchase count echoed from native logic.
@@ -20,7 +20,7 @@ public struct PointsBreakdownNative
     public int Multiplier;
 
     /// <summary>
-    /// Calculated points total from native logic.
+    /// Calculated banana total from native logic.
     /// </summary>
-    public int Points;
+    public int Banana;
 }

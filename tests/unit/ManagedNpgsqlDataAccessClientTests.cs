@@ -41,4 +41,20 @@ public sealed class ManagedNpgsqlDataAccessClientTests
 
         Assert.Throws<DatabaseAccessException>(() => client.Execute(new DbAccessRequest(10, 2)));
     }
+
+    [Fact]
+    public void Execute_UsesGenericExceptionPath_ForMalformedConnectionString()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:PostgreSQL"] = "Host=;Port=not-a-number"
+            })
+            .Build();
+        var options = Options.Create(new DbAccessOptions { ManagedQuery = "select 1" });
+        var client = new ManagedNpgsqlDataAccessClient(configuration, options);
+
+        var ex = Assert.Throws<DatabaseAccessException>(() => client.Execute(new DbAccessRequest(1, 1)));
+        Assert.Contains("connection failed", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }

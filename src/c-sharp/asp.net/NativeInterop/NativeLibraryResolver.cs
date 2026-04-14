@@ -73,14 +73,14 @@ public static class NativeLibraryResolver
         TryLoadDefaultDelegate tryLoadDefault,
         Func<string> getPlatformLibraryName)
     {
-        if (!string.Equals(libraryName, "cinterop_native", StringComparison.Ordinal))
+        if (!string.Equals(libraryName, "banana_native", StringComparison.Ordinal))
         {
             return nint.Zero;
         }
 
         var candidateDirectories = new[]
         {
-            Environment.GetEnvironmentVariable("CINTEROP_NATIVE_PATH"),
+            Environment.GetEnvironmentVariable("BANANA_NATIVE_PATH"),
             configuration["Native:LibraryPath"],
             AppContext.BaseDirectory
         };
@@ -125,14 +125,14 @@ public static class NativeLibraryResolver
     {
         if (isOSPlatform(OSPlatform.Windows))
         {
-            return "cinterop_native.dll";
+            return "banana_native.dll";
         }
 
         if (isOSPlatform(OSPlatform.OSX))
         {
-            return "libcinterop_native.dylib";
+            return "libbanana_native.dylib";
         }
 
-        return "libcinterop_native.so";
+        return "libbanana_native.so";
     }
 }
