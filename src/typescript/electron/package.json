@@ -2,12 +2,15 @@
     "name": "banana-native-electron-bridge",
     "version": "1.0.0",
     "private": true,
-    "description": "Optional ffi-napi bridge for banana_native",
-    "main": "nativeBridge.js",
+    "description": "Banana QA desktop app with native and API smoke paths",
+    "main": "main.js",
     "scripts": {
-        "example": "node example.js"
+        "start": "electron .",
+        "smoke": "node smoke.js",
+        "example": "npm run smoke"
     },
     "dependencies": {
+        "electron": "^28.3.3",
         "ffi-napi": "^4.0.3",
         "ref-napi": "^3.0.3"
     }

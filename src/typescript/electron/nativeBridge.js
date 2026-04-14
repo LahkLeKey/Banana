@@ -4,6 +4,7 @@ const ref = require("ref-napi");
 
 const intType = ref.types.int;
 const intPtr = ref.refType(intType);
+const charPtr = ref.refType(ref.types.char);
 
 const STATUS = {
   OK: 0,
@@ -33,6 +34,10 @@ const libraryPath = process.platform === "win32"
 
 const native = ffi.Library(libraryPath, {
   banana_calculate_banana: ["int", ["int", "int", intPtr]],
+  banana_calculate_banana_with_breakdown: ["int", ["int", "int", "pointer"]],
+  banana_create_banana_message: ["int", ["int", "int", "pointer"]],
+  banana_db_query_banana: ["int", ["int", "int", "pointer", intPtr]],
+  banana_free: ["void", ["pointer"]],
 });
 
 function assertInt32(name, value) {
@@ -64,8 +69,85 @@ function calculateBanana(purchases, multiplier) {
   return out.deref();
 }
 
+function calculateBananaWithBreakdown(purchases, multiplier) {
+  assertInt32("purchases", purchases);
+  assertInt32("multiplier", multiplier);
+
+  const out = Buffer.alloc(12);
+  const status = native.banana_calculate_banana_with_breakdown(purchases, multiplier, out);
+  if (status !== STATUS.OK) {
+    throw toStatusError(status);
+  }
+
+  return {
+    purchases: out.readInt32LE(0),
+    multiplier: out.readInt32LE(4),
+    banana: out.readInt32LE(8),
+  };
+}
+
+function readNativeString(pointerRef) {
+  const pointer = pointerRef.deref();
+  if (ref.isNull(pointer)) {
+    return "";
+  }
+
+  const value = ref.readCString(pointer, 0);
+  native.banana_free(pointer);
+  return value;
+}
+
+function createBananaMessage(purchases, multiplier) {
+  assertInt32("purchases", purchases);
+  assertInt32("multiplier", multiplier);
+
+  const out = ref.alloc(charPtr);
+  const status = native.banana_create_banana_message(purchases, multiplier, out);
+  if (status !== STATUS.OK) {
+    throw toStatusError(status);
+  }
+
+  return readNativeString(out);
+}
+
+function queryBananaDatabase(purchases, multiplier) {
+  assertInt32("purchases", purchases);
+  assertInt32("multiplier", multiplier);
+
+  const payloadPtr = ref.alloc(charPtr);
+  const rowCount = ref.alloc(intType);
+  const status = native.banana_db_query_banana(purchases, multiplier, payloadPtr, rowCount);
+  if (status !== STATUS.OK) {
+    throw toStatusError(status);
+  }
+
+  const payloadText = readNativeString(payloadPtr);
+  return {
+    payload: payloadText,
+    rowCount: rowCount.deref(),
+  };
+}
+
+function runNativeScenario(purchases, multiplier, options = {}) {
+  const result = {
+    calculation: calculateBanana(purchases, multiplier),
+    breakdown: calculateBananaWithBreakdown(purchases, multiplier),
+    message: createBananaMessage(purchases, multiplier),
+  };
+
+  if (options.includeDatabase) {
+    result.database = queryBananaDatabase(purchases, multiplier);
+  }
+
+  return result;
+}
+
 module.exports = {
   calculateBanana,
+  calculateBananaWithBreakdown,
+  createBananaMessage,
   libraryPath,
+  queryBananaDatabase,
+  runNativeScenario,
   STATUS,
 };
