@@ -1,7 +1,7 @@
 namespace CInteropSharp.Api.Pipeline;
 
 /// <summary>
-/// Represents a single middleware-like stage in the points processing pipeline.
+/// Represents a single middleware-like stage in the banana processing pipeline.
 /// </summary>
 /// <typeparam name="T">The shared context object that flows through every pipeline step.</typeparam>
 public interface IPipelineStep<T>

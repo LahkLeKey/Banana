@@ -13,27 +13,27 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<DbAccessOptions>(builder.Configuration.GetSection(DbAccessOptions.SectionName));
-builder.Services.AddScoped<LegacyNativeDbDataAccessClient>();
+builder.Services.AddScoped<NativeDalDbDataAccessClient>();
 builder.Services.AddScoped<ManagedNpgsqlDataAccessClient>();
 builder.Services.AddScoped<IDataAccessPipelineClient>(static serviceProvider =>
 {
 	var options = serviceProvider.GetRequiredService<IOptions<DbAccessOptions>>().Value;
 	return options.Mode switch
 	{
-		DbAccessMode.LegacyNative => serviceProvider.GetRequiredService<LegacyNativeDbDataAccessClient>(),
+		DbAccessMode.NativeDal => serviceProvider.GetRequiredService<NativeDalDbDataAccessClient>(),
 		DbAccessMode.ManagedNpgsql => serviceProvider.GetRequiredService<ManagedNpgsqlDataAccessClient>(),
-		_ => serviceProvider.GetRequiredService<LegacyNativeDbDataAccessClient>()
+		_ => serviceProvider.GetRequiredService<NativeDalDbDataAccessClient>()
 	};
 });
 
-builder.Services.AddScoped<INativePointsClient, NativePointsClient>();
+builder.Services.AddScoped<INativeBananaClient, NativeBananaClient>();
 builder.Services.AddScoped<PipelineExecutor<PipelineContext>>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, ValidationStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, DatabaseAccessStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, NativeCalculationStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, PostProcessingStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, AuditStep>();
-builder.Services.AddScoped<IPointsService, PointsService>();
+builder.Services.AddScoped<IBananaService, BananaService>();
 
 var app = builder.Build();
 

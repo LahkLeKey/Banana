@@ -43,18 +43,18 @@ jobs:
 
       - name: Assert native DB connection target
         env:
-          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
+          BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
-          if [[ -z "${CINTEROP_PG_CONNECTION:-}" ]]; then
-            echo "CINTEROP_PG_CONNECTION is not set"
+          if [[ -z "${BANANA_PG_CONNECTION:-}" ]]; then
+            echo "BANANA_PG_CONNECTION is not set"
             exit 1
           fi
 
-          host="$(tr ' ' '\n' <<< "$CINTEROP_PG_CONNECTION" | awk -F= '$1=="host" { print $2; exit }')"
-          port="$(tr ' ' '\n' <<< "$CINTEROP_PG_CONNECTION" | awk -F= '$1=="port" { print $2; exit }')"
+          host="$(tr ' ' '\n' <<< "$BANANA_PG_CONNECTION" | awk -F= '$1=="host" { print $2; exit }')"
+          port="$(tr ' ' '\n' <<< "$BANANA_PG_CONNECTION" | awk -F= '$1=="port" { print $2; exit }')"
 
           if [[ -z "$host" || -z "$port" ]]; then
-            echo "CINTEROP_PG_CONNECTION must include host and port"
+            echo "BANANA_PG_CONNECTION must include host and port"
             exit 1
           fi
 
@@ -62,7 +62,7 @@ jobs:
 
       - name: Run native C tests with 80% coverage gate
         env:
-          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
+          BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
           chmod +x scripts/run-native-c-tests-with-coverage.sh
           scripts/run-native-c-tests-with-coverage.sh
@@ -135,18 +135,18 @@ jobs:
 
       - name: Assert native DB connection target
         env:
-          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
+          BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
-          if [[ -z "${CINTEROP_PG_CONNECTION:-}" ]]; then
-            echo "CINTEROP_PG_CONNECTION is not set"
+          if [[ -z "${BANANA_PG_CONNECTION:-}" ]]; then
+            echo "BANANA_PG_CONNECTION is not set"
             exit 1
           fi
 
-          host="$(tr ' ' '\n' <<< "$CINTEROP_PG_CONNECTION" | awk -F= '$1=="host" { print $2; exit }')"
-          port="$(tr ' ' '\n' <<< "$CINTEROP_PG_CONNECTION" | awk -F= '$1=="port" { print $2; exit }')"
+          host="$(tr ' ' '\n' <<< "$BANANA_PG_CONNECTION" | awk -F= '$1=="host" { print $2; exit }')"
+          port="$(tr ' ' '\n' <<< "$BANANA_PG_CONNECTION" | awk -F= '$1=="port" { print $2; exit }')"
 
           if [[ -z "$host" || -z "$port" ]]; then
-            echo "CINTEROP_PG_CONNECTION must include host and port"
+            echo "BANANA_PG_CONNECTION must include host and port"
             exit 1
           fi
 
@@ -154,12 +154,12 @@ jobs:
 
       - name: Build native library
         run: |
-          cmake -S . -B build/native -DCMAKE_BUILD_TYPE=Release -DCINTEROP_ENABLE_POSTGRES=ON
+          cmake -S . -B build/native -DCMAKE_BUILD_TYPE=Release -DBANANA_ENABLE_POSTGRES=ON
           cmake --build build/native --config Release
 
       - name: Run unit tests with coverage
         env:
-          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
+          BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
           dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release \
             --collect:"XPlat Code Coverage" \
@@ -168,8 +168,8 @@ jobs:
 
       - name: Run integration tests with coverage
         env:
-          CINTEROP_NATIVE_PATH: ${{ github.workspace }}/build/native/bin
-          CINTEROP_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
+          BANANA_NATIVE_PATH: ${{ github.workspace }}/build/native/bin
+          BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
           dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release \
             --collect:"XPlat Code Coverage" \
@@ -246,7 +246,7 @@ jobs:
       - name: Wait for API
         run: |
           for i in {1..30}; do
-            if curl -fsS "http://localhost:8080/points?purchases=10&multiplier=2"; then
+            if curl -fsS "http://localhost:8080/banana?purchases=10&multiplier=2"; then
               exit 0
             fi
             sleep 2

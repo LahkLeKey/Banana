@@ -13,7 +13,7 @@ public sealed class DbAccessOptions
     /// <summary>
     /// Gets or sets the active data access mode.
     /// </summary>
-    public DbAccessMode Mode { get; set; } = DbAccessMode.LegacyNative;
+    public DbAccessMode Mode { get; set; } = DbAccessMode.NativeDal;
 
     /// <summary>
     /// Gets or sets the SQL query template used by the managed Npgsql mode.

@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-if [[ -z "${CINTEROP_PG_CONNECTION:-}" ]]; then
-	echo "CINTEROP_PG_CONNECTION is required for Docker test runs with native DB enabled."
+if [[ -z "${BANANA_PG_CONNECTION:-}" ]]; then
+	echo "BANANA_PG_CONNECTION is required for Docker test runs with native DB enabled."
 	exit 1
 fi
 

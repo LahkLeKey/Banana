@@ -9,6 +9,13 @@ namespace CInteropSharp.UnitTests;
 public sealed class DatabaseAccessStepTests
 {
     [Fact]
+    public void Order_IsExpected()
+    {
+        var step = new DatabaseAccessStep(new FakeDataAccessPipelineClient());
+        Assert.Equal(150, step.Order);
+    }
+
+    [Fact]
     public void Execute_PopulatesRawDatabaseResultAndMetadata()
     {
         var context = new PipelineContext
@@ -22,9 +29,9 @@ public sealed class DatabaseAccessStepTests
         var result = step.Execute(context, static current => current);
 
         Assert.NotNull(result.DatabaseRawResult);
-        Assert.Equal("legacy-native", result.DatabaseRawResult!.Source);
+        Assert.Equal("native-dal", result.DatabaseRawResult!.Source);
         Assert.Equal(1, result.DatabaseRawResult.RowCount);
-        Assert.Equal("legacy-native", result.Metadata["db.source"]);
+        Assert.Equal("native-dal", result.Metadata["db.source"]);
         Assert.Equal(1, result.Metadata["db.rowCount"]);
     }
 
@@ -33,7 +40,7 @@ public sealed class DatabaseAccessStepTests
         public RawDbAccessResult Execute(DbAccessRequest request)
         {
             return new RawDbAccessResult(
-                "legacy-native",
+                "native-dal",
                 $"{{\"purchases\":{request.Purchases},\"multiplier\":{request.Multiplier}}}",
                 1);
         }

@@ -13,10 +13,10 @@ WORKDIR /workspace
 
 COPY . ./
 
-RUN cmake -S . -B /workspace/build/native -DCMAKE_BUILD_TYPE=Debug -DCINTEROP_ENABLE_POSTGRES=ON -DCINTEROP_ENABLE_NATIVE_TESTS=ON -DCINTEROP_ENABLE_COVERAGE=ON \
+RUN cmake -S . -B /workspace/build/native -DCMAKE_BUILD_TYPE=Debug -DBANANA_ENABLE_POSTGRES=ON -DBANANA_ENABLE_NATIVE_TESTS=ON -DBANANA_ENABLE_COVERAGE=ON \
     && cmake --build /workspace/build/native --config Release
 
-ENV CINTEROP_NATIVE_PATH=/workspace/build/native/bin
+ENV BANANA_NATIVE_PATH=/workspace/build/native/bin
 
 COPY scripts/run-tests-with-coverage.sh /workspace/scripts/run-tests-with-coverage.sh
 RUN chmod +x /workspace/scripts/run-tests-with-coverage.sh

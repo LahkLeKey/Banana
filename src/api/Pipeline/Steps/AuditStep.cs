@@ -24,14 +24,14 @@ public sealed class AuditStep : IPipelineStep<PipelineContext>
     {
         var output = next(input);
 
-        output.Metadata.TryGetValue("bonus.points", out var bonusPoints);
+        output.Metadata.TryGetValue("bonus.banana", out var bonusBanana);
 
         _logger.LogInformation(
-            "Points pipeline executed for purchases={Purchases}, multiplier={Multiplier}, nativePoints={NativePoints}, bonusPoints={BonusPoints}",
+            "Banana pipeline executed for purchases={Purchases}, multiplier={Multiplier}, nativeBanana={NativeBanana}, bonusBanana={BonusBanana}",
             output.Purchases,
             output.Multiplier,
             output.NativeResult,
-            bonusPoints ?? 0);
+            bonusBanana ?? 0);
 
         return output;
     }

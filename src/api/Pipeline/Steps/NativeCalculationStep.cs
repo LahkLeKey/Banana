@@ -7,15 +7,15 @@ namespace CInteropSharp.Api.Pipeline.Steps;
 /// </summary>
 public sealed class NativeCalculationStep : IPipelineStep<PipelineContext>
 {
-    private readonly INativePointsClient _nativePointsClient;
+    private readonly INativeBananaClient _nativeBananaClient;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NativeCalculationStep"/> class.
     /// </summary>
-    /// <param name="nativePointsClient">Interop client that wraps P/Invoke calls.</param>
-    public NativeCalculationStep(INativePointsClient nativePointsClient)
+    /// <param name="nativeBananaClient">Interop client that wraps P/Invoke calls.</param>
+    public NativeCalculationStep(INativeBananaClient nativeBananaClient)
     {
-        _nativePointsClient = nativePointsClient;
+        _nativeBananaClient = nativeBananaClient;
     }
 
     /// <inheritdoc />
@@ -24,10 +24,10 @@ public sealed class NativeCalculationStep : IPipelineStep<PipelineContext>
     /// <inheritdoc />
     public PipelineContext Execute(PipelineContext input, Func<PipelineContext, PipelineContext> next)
     {
-        var nativeResult = _nativePointsClient.Calculate(input.Purchases, input.Multiplier);
+        var nativeResult = _nativeBananaClient.Calculate(input.Purchases, input.Multiplier);
 
-        input.NativeResult = nativeResult.Points;
-        input.NativePointsResult = nativeResult;
+        input.NativeResult = nativeResult.Banana;
+        input.NativeBananaResult = nativeResult;
 
         return next(input);
     }

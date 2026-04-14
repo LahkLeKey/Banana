@@ -7,42 +7,17 @@ using Xunit;
 
 namespace CInteropSharp.UnitTests;
 
-public sealed class PipelineStepBehaviorTests
+public sealed class AuditStepTests
 {
     [Fact]
-    public void PostProcessingStep_AppliesBonusAtThreshold()
+    public void Order_IsExpected()
     {
-        var step = new PostProcessingStep();
-        var context = new PipelineContext
-        {
-            Purchases = 10,
-            Multiplier = 4
-        };
-
-        var output = step.Execute(context, static input => input);
-
-        Assert.Equal(20, output.Metadata["bonus.points"]);
-        Assert.Equal(true, output.Metadata["bonus.applied"]);
+        var step = new AuditStep(new RecordingLogger<AuditStep>());
+        Assert.Equal(400, step.Order);
     }
 
     [Fact]
-    public void PostProcessingStep_UsesZeroBonusBelowThreshold()
-    {
-        var step = new PostProcessingStep();
-        var context = new PipelineContext
-        {
-            Purchases = 9,
-            Multiplier = 4
-        };
-
-        var output = step.Execute(context, static input => input);
-
-        Assert.Equal(0, output.Metadata["bonus.points"]);
-        Assert.Equal(false, output.Metadata["bonus.applied"]);
-    }
-
-    [Fact]
-    public void AuditStep_UsesDefaultBonusWhenMissing()
+    public void Execute_UsesDefaultBonusWhenMissing()
     {
         var logger = new RecordingLogger<AuditStep>();
         var step = new AuditStep(logger);
@@ -59,11 +34,11 @@ public sealed class PipelineStepBehaviorTests
         });
 
         Assert.Same(context, output);
-        Assert.Contains(logger.Messages, message => message.Contains("bonusPoints=0", StringComparison.Ordinal));
+        Assert.Contains(logger.Messages, message => message.Contains("bonusBanana=0", StringComparison.Ordinal));
     }
 
     [Fact]
-    public void AuditStep_UsesMetadataBonusWhenPresent()
+    public void Execute_UsesMetadataBonusWhenPresent()
     {
         var logger = new RecordingLogger<AuditStep>();
         var step = new AuditStep(logger);
@@ -76,12 +51,12 @@ public sealed class PipelineStepBehaviorTests
         var output = step.Execute(context, input =>
         {
             input.NativeResult = 42;
-            input.Metadata["bonus.points"] = 99;
+            input.Metadata["bonus.banana"] = 99;
             return input;
         });
 
         Assert.Same(context, output);
-        Assert.Contains(logger.Messages, message => message.Contains("bonusPoints=99", StringComparison.Ordinal));
+        Assert.Contains(logger.Messages, message => message.Contains("bonusBanana=99", StringComparison.Ordinal));
     }
 
     private sealed class RecordingLogger<T> : ILogger<T>

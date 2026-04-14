@@ -1,6 +1,10 @@
-# CInteropSharp
+# Banana Flavor (High Level Language) ↔ C Native Interop Example
+
+> Previously CInteropSharp (CoI Refactor)
 
 Modernization baseline for a legacy C system without rewriting core logic.
+
+Using a banana as the single source of truth.
 
 https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig
 
@@ -39,12 +43,12 @@ tests/
   unit/
   integration/
 scripts/
-docs/
+.wiki/
 ```
 
 ## New Developer Setup
 
-- Start with `docs/developer-onboarding.md` for a guided first pass through the codebase.
+- Start with `.wiki/developer-onboarding.md` for a guided first pass through the codebase.
 - Includes a visual request-flow diagram for the controller → pipeline → native interop path.
 
 ## What Is an ABI?
@@ -57,23 +61,24 @@ It defines details like:
 - Primitive type sizes and struct memory layout.
 - Ownership rules for allocated memory across module boundaries.
 
-In this repository, the ABI is the stable C wrapper boundary in `src/native/wrapper` that both .NET (P/Invoke) and optional Node/Electron consumers call into. Keeping this ABI stable lets us modernize managed orchestration without rewriting or tightly coupling to the legacy C internals.
+In this repository, the ABI is the stable C wrapper boundary in `src/native/wrapper` that both .NET (P/Invoke) and optional Node/Electron consumers call into. Keeping this ABI stable lets us modernize managed orchestration while keeping domain logic and data access modular in native `core` and `dal` layers.
 
 ## Interop Boundary
 
-- Legacy logic remains isolated in `src/native/legacy`.
+- Core calculation logic lives in `src/native/core`.
+- Native database interactions live in `src/native/dal`.
 - Wrapper in `src/native/wrapper` is the only exported native API.
 - Wrapper exports primitive signatures and fixed-layout structs.
-- Native memory created by wrapper must be released with `cinterop_free`.
-- Managed code does not call legacy functions directly.
+- Native memory created by wrapper must be released with `banana_free`.
+- Managed code does not call core or dal functions directly.
 
 ## Pipeline Pattern (API Orchestration)
 
-The `/points` flow now runs through a composable pipeline inside the API service layer:
+The `/banana` flow now runs through a composable pipeline inside the API service layer:
 
 ```mermaid
 flowchart TD
-  A[PointsController] --> B[PointsService]
+  A[BananaController] --> B[BananaService]
   B --> C[PipelineExecutor PipelineContext]
   C --> D[ValidationStep]
   D --> E[DatabaseAccessStep]
@@ -82,7 +87,7 @@ flowchart TD
   G --> H[AuditStep]
 
   E --> I[IDataAccessPipelineClient]
-  I --> J[LegacyNativeDbDataAccessClient]
+  I --> J[NativeDalDbDataAccessClient]
   I --> K[ManagedNpgsqlDataAccessClient]
   J --> L[Native wrapper DB export]
   K --> M[Npgsql]
@@ -92,23 +97,23 @@ Current step responsibilities:
 
 - `ValidationStep`: validates request inputs and blocks invalid execution paths early.
 - `DatabaseAccessStep`: executes one atomic data-access operation and stores raw DB result + DB metadata in the pipeline context.
-- `NativeCalculationStep`: executes native points calculation through the stable wrapper ABI.
+- `NativeCalculationStep`: executes native banana calculation through the stable wrapper ABI.
 - `PostProcessingStep`: applies managed enrichment that does not alter native calculation semantics.
 - `AuditStep`: emits structured pipeline telemetry for diagnostics and observability.
 
 Why this was introduced:
 
-- Keeps the legacy/native boundary intact while modernizing orchestration.
+- Keeps the native wrapper boundary intact while modernizing orchestration.
 - Decouples validation, data access, native execution, enrichment, and audit concerns.
 - Enables additive extension by registering new pipeline steps without changing executor logic.
 - Preserves backward compatibility because wrapper ABI and native calculation contract remain stable.
 
 DB mode options:
 
-- Legacy native mode (default): `DatabaseAccessStep` resolves `LegacyNativeDbDataAccessClient`, which calls the native DB wrapper path.
+- Native DAL mode (default): `DatabaseAccessStep` resolves `NativeDalDbDataAccessClient`, which calls the native DB wrapper path.
 - Managed mode (optional): `DatabaseAccessStep` resolves `ManagedNpgsqlDataAccessClient`, which executes managed PostgreSQL queries via Npgsql.
 
-Extension points:
+Extension hooks:
 
 - Implement `IPipelineStep<PipelineContext>` in `src/api/Pipeline/Steps`.
 - Set `Order` to control deterministic execution.
@@ -119,14 +124,14 @@ Extension points:
 
 If you are new to middleware/pipeline patterns, read these files in order:
 
-1. `src/api/Controllers/PointsController.cs`
+1. `src/api/Controllers/BananaController.cs`
   - Accepts HTTP input and calls the service.
-2. `src/api/Services/PointsService.cs`
+2. `src/api/Services/BananaService.cs`
   - Builds `PipelineContext` and runs `PipelineExecutor<PipelineContext>`.
 3. `src/api/Pipeline/PipelineExecutor.cs`
   - Composes steps into one chain and executes in deterministic order.
 4. `src/api/Program.cs`
-  - Registers pipeline steps and selects DB access implementation (`LegacyNative` vs `ManagedNpgsql`) via `DbAccessOptions`.
+  - Registers pipeline steps and selects DB access implementation (`NativeDal` vs `ManagedNpgsql`) via `DbAccessOptions`.
 5. `src/api/Pipeline/Steps/*`
   - `ValidationStep` → validates input
   - `DatabaseAccessStep` → executes atomic DB stage
@@ -134,12 +139,13 @@ If you are new to middleware/pipeline patterns, read these files in order:
   - `PostProcessingStep` → enrichment logic
   - `AuditStep` → final structured logging
 6. `src/api/DataAccess/*`
-  - Defines the DB stage contract and concrete clients (`LegacyNativeDbDataAccessClient`, `ManagedNpgsqlDataAccessClient`).
+  - Defines the DB stage contract and concrete clients (`NativeDalDbDataAccessClient`, `ManagedNpgsqlDataAccessClient`).
 7. `src/api/NativeInterop/*`
   - Contains the P/Invoke boundary and native error mapping.
-8. `src/native/wrapper/*` and `src/native/legacy/*`
+8. `src/native/wrapper/*`, `src/native/core/*`, and `src/native/dal/*`
   - Wrapper owns exported ABI, validation, and status mapping.
-  - Legacy layer owns calculation and SQL behavior.
+  - Core owns calculation behavior.
+  - DAL owns native SQL behavior.
 9. `src/native/testing/native_test_hooks_default.c` and `tests/native/native_test_hooks_env.c`
   - Shows how test-only native branch forcing is isolated from production runtime code.
 
@@ -151,7 +157,7 @@ scripts\build-native.bat
 
 Expected output directory:
 
-- `build/native/bin/Release/cinterop_native.dll`
+- `build/native/bin/Release/banana_native.dll`
 
 ## Build Everything (bash)
 
@@ -205,7 +211,7 @@ Convenience wrappers:
 On every push, CI runs the same compose profiles used locally:
 
 - `tests` profile via `test-all`
-- `runtime` profile with `/points` endpoint smoke test
+- `runtime` profile with `/banana` endpoint smoke test
 - `electron` profile optional bridge smoke test
 
 Workflow file:
@@ -214,22 +220,22 @@ Workflow file:
 
 CI notes:
 
-- Native C coverage job provisions PostgreSQL and runs native tests with `CINTEROP_PG_CONNECTION` configured.
+- Native C coverage job provisions PostgreSQL and runs native tests with `BANANA_PG_CONNECTION` configured.
 - .NET coverage job also provisions PostgreSQL and runs with explicit native DB connection settings.
 - CI prints only DB target host/port (no credentials) before test execution for visibility.
 
 ## Native Test Hook Isolation
 
-Test-only native behavior is isolated from legacy runtime files:
+Test-only native behavior is isolated from runtime files:
 
 - Production native builds use `src/native/testing/native_test_hooks_default.c` (no-op hooks).
 - Native test builds use `tests/native/native_test_hooks_env.c` (env-driven forced paths).
-- Legacy/runtime files (`src/native/legacy/*`, `src/native/wrapper/*`) now call hook functions instead of parsing test env vars directly.
+- Runtime files (`src/native/core/*`, `src/native/dal/*`, `src/native/wrapper/*`) now call hook functions instead of parsing test env vars directly.
 
 ## Run API
 
 ```bash
-export CINTEROP_NATIVE_PATH="$(pwd)/build/native/bin/Release"
+export BANANA_NATIVE_PATH="$(pwd)/build/native/bin/Release"
 ./scripts/run-api.sh
 ```
 
@@ -239,7 +245,7 @@ Open Swagger:
 
 Example endpoint:
 
-- `GET /points?purchases=10&multiplier=2`
+- `GET /banana?purchases=10&multiplier=2`
 
 ## Optional Node/Electron Bridge
 
@@ -248,7 +254,7 @@ For `ffi-napi` compatibility, use Node 14/16 for local non-container runs.
 ```bash
 cd src/electron
 npm install
-CINTEROP_NATIVE_PATH="$(pwd)/../../build/native/bin/Release" npm run example
+BANANA_NATIVE_PATH="$(pwd)/../../build/native/bin/Release" npm run example
 ```
 
 ## Tests
