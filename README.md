@@ -254,7 +254,7 @@ For `ffi-napi` compatibility, use Node 14/16 for local non-container runs.
 ```bash
 cd src/typescript/electron
 npm install
-BANANA_NATIVE_PATH="$(pwd)/../../build/native/bin/Release" npm run example
+BANANA_ENV_NATIVE_PATH="$(pwd)/../../build/native/bin/Release" npm run example
 ```
 
 ## Tests
