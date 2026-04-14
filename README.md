@@ -1,4 +1,6 @@
-# CInteropSharp (Banana SST Edition)
+# Banana Flavor (High Level Language) ↔ C Native Interop Example
+
+> Previously CInteropSharp (CoI Refactor)
 
 Modernization baseline for a legacy C system without rewriting core logic.
 

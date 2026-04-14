@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using CInteropSharp.Api.DataAccess;
 using CInteropSharp.Api.NativeInterop;
 
@@ -53,6 +55,31 @@ public sealed class LegacyNativeDbDataAccessClientTests
         Assert.Throws<DatabaseAccessException>(() => client.Execute(new DbAccessRequest(-1, 2)));
     }
 
+    [Fact]
+    public void EnsureSuccess_ThrowsMappedMessages()
+    {
+        var ensureSuccess = typeof(LegacyNativeDbDataAccessClient)
+            .GetMethod("EnsureSuccess", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(ensureSuccess);
+
+        AssertStatusMessage(ensureSuccess, NativeStatusCode.InvalidArgument, "invalid input");
+        AssertStatusMessage(ensureSuccess, NativeStatusCode.DbNotConfigured, "not configured");
+        AssertStatusMessage(ensureSuccess, NativeStatusCode.DbError, "query execution failed");
+        AssertStatusMessage(ensureSuccess, NativeStatusCode.InternalError, "Native DB call failed");
+    }
+
+    [Fact]
+    public void ReadNullTerminatedUtf8_ThrowsWhenPointerIsZero()
+    {
+        var method = typeof(LegacyNativeDbDataAccessClient)
+            .GetMethod("ReadNullTerminatedUtf8", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, new object?[] { nint.Zero }));
+        var inner = Assert.IsType<DatabaseAccessException>(ex.InnerException);
+        Assert.Contains("null payload", inner.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool EnsureNativePathConfigured()
     {
         lock (Sync)
@@ -93,5 +120,12 @@ public sealed class LegacyNativeDbDataAccessClientTests
             IsConfigured = true;
             return true;
         }
+    }
+
+    private static void AssertStatusMessage(MethodInfo ensureSuccess, NativeStatusCode status, string expectedMessageFragment)
+    {
+        var exception = Assert.Throws<TargetInvocationException>(() => ensureSuccess.Invoke(null, new object?[] { status }));
+        var inner = Assert.IsType<DatabaseAccessException>(exception.InnerException);
+        Assert.Contains(expectedMessageFragment, inner.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

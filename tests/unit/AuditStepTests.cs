@@ -7,42 +7,17 @@ using Xunit;
 
 namespace CInteropSharp.UnitTests;
 
-public sealed class PipelineStepBehaviorTests
+public sealed class AuditStepTests
 {
     [Fact]
-    public void PostProcessingStep_AppliesBonusAtThreshold()
+    public void Order_IsExpected()
     {
-        var step = new PostProcessingStep();
-        var context = new PipelineContext
-        {
-            Purchases = 10,
-            Multiplier = 4
-        };
-
-        var output = step.Execute(context, static input => input);
-
-        Assert.Equal(20, output.Metadata["bonus.banana"]);
-        Assert.Equal(true, output.Metadata["bonus.applied"]);
+        var step = new AuditStep(new RecordingLogger<AuditStep>());
+        Assert.Equal(400, step.Order);
     }
 
     [Fact]
-    public void PostProcessingStep_UsesZeroBonusBelowThreshold()
-    {
-        var step = new PostProcessingStep();
-        var context = new PipelineContext
-        {
-            Purchases = 9,
-            Multiplier = 4
-        };
-
-        var output = step.Execute(context, static input => input);
-
-        Assert.Equal(0, output.Metadata["bonus.banana"]);
-        Assert.Equal(false, output.Metadata["bonus.applied"]);
-    }
-
-    [Fact]
-    public void AuditStep_UsesDefaultBonusWhenMissing()
+    public void Execute_UsesDefaultBonusWhenMissing()
     {
         var logger = new RecordingLogger<AuditStep>();
         var step = new AuditStep(logger);
@@ -63,7 +38,7 @@ public sealed class PipelineStepBehaviorTests
     }
 
     [Fact]
-    public void AuditStep_UsesMetadataBonusWhenPresent()
+    public void Execute_UsesMetadataBonusWhenPresent()
     {
         var logger = new RecordingLogger<AuditStep>();
         var step = new AuditStep(logger);

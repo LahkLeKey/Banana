@@ -85,8 +85,8 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
 
     add_test(NAME native_test_hooks_default_tests COMMAND native_test_hooks_default_tests)
 
-    add_executable(native_wrapper_tests
-        tests/native/native_wrapper_tests.c
+    add_executable(cinterop_wrapper_tests
+        tests/native/cinterop_wrapper_tests.c
         tests/native/native_test_hooks_env.c
         src/native/core/banana.c
         src/native/legacy/legacy_banana.c
@@ -94,7 +94,7 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
         src/native/wrapper/cinterop_wrapper.c
     )
 
-    target_include_directories(native_wrapper_tests
+    target_include_directories(cinterop_wrapper_tests
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
@@ -103,18 +103,18 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
     )
 
     if(MSVC)
-        target_compile_options(native_wrapper_tests PRIVATE /W4)
+        target_compile_options(cinterop_wrapper_tests PRIVATE /W4)
     else()
-        target_compile_options(native_wrapper_tests PRIVATE -Wall -Wextra -Wpedantic)
+        target_compile_options(cinterop_wrapper_tests PRIVATE -Wall -Wextra -Wpedantic)
     endif()
 
     if(CINTEROP_POSTGRES_ENABLED)
-        target_compile_definitions(native_wrapper_tests PRIVATE CINTEROP_ENABLE_POSTGRES)
-        target_include_directories(native_wrapper_tests PRIVATE ${PostgreSQL_INCLUDE_DIRS})
-        target_link_libraries(native_wrapper_tests PRIVATE ${PostgreSQL_LIBRARIES})
+        target_compile_definitions(cinterop_wrapper_tests PRIVATE CINTEROP_ENABLE_POSTGRES)
+        target_include_directories(cinterop_wrapper_tests PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+        target_link_libraries(cinterop_wrapper_tests PRIVATE ${PostgreSQL_LIBRARIES})
     endif()
 
-    add_test(NAME native_wrapper_tests COMMAND native_wrapper_tests)
+    add_test(NAME cinterop_wrapper_tests COMMAND cinterop_wrapper_tests)
 
     add_executable(banana_core_tests
         tests/native/banana_core_tests.c

@@ -9,6 +9,13 @@ namespace CInteropSharp.UnitTests;
 public sealed class DatabaseAccessStepTests
 {
     [Fact]
+    public void Order_IsExpected()
+    {
+        var step = new DatabaseAccessStep(new FakeDataAccessPipelineClient());
+        Assert.Equal(150, step.Order);
+    }
+
+    [Fact]
     public void Execute_PopulatesRawDatabaseResultAndMetadata()
     {
         var context = new PipelineContext
