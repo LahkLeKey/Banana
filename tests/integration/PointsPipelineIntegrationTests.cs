@@ -95,6 +95,49 @@ public sealed class PointsPipelineIntegrationTests : IClassFixture<WebApplicatio
     }
 
     [Fact]
+    public async Task GetPoints_UsesManagedNpgsqlClient_WhenPostgresConnectionIsConfigured()
+    {
+        var connectionString = Environment.GetEnvironmentVariable("CINTEROP_PG_CONNECTION");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return;
+        }
+
+        using var client = CreateFactoryWithManagedDbAndFakeNative(
+            connectionString,
+            "select @purchases::int as purchases, @multiplier::int as multiplier, null::text as tag").CreateClient();
+
+        var response = await client.GetAsync("/points?purchases=6&multiplier=3");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+        Assert.Equal(6, root.GetProperty("purchases").GetInt32());
+        Assert.Equal(3, root.GetProperty("multiplier").GetInt32());
+        Assert.Equal(18, root.GetProperty("points").GetInt32());
+    }
+
+    [Fact]
+    public async Task GetPoints_UsesManagedNpgsqlClient_WhenQueryReturnsNoRows()
+    {
+        var connectionString = Environment.GetEnvironmentVariable("CINTEROP_PG_CONNECTION");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return;
+        }
+
+        using var client = CreateFactoryWithManagedDbAndFakeNative(
+            connectionString,
+            "select @purchases::int as purchases where false").CreateClient();
+
+        var response = await client.GetAsync("/points?purchases=2&multiplier=4");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public void DataAccessClientResolution_UsesManagedClient_WhenConfigured()
     {
         using var factory = _factory.WithWebHostBuilder(builder =>
@@ -159,6 +202,29 @@ public sealed class PointsPipelineIntegrationTests : IClassFixture<WebApplicatio
                 services.RemoveAll<IDataAccessPipelineClient>();
                 services.RemoveAll<INativePointsClient>();
                 services.AddScoped<IDataAccessPipelineClient, ThrowingDataAccessPipelineClient>();
+                services.AddScoped<INativePointsClient, FakeNativePointsClient>();
+            });
+        });
+    }
+
+    private WebApplicationFactory<Program> CreateFactoryWithManagedDbAndFakeNative(string connectionString, string managedQuery)
+    {
+        return _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((_, configBuilder) =>
+            {
+                configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["DbAccess:Mode"] = "ManagedNpgsql",
+                    ["DbAccess:ManagedQuery"] = managedQuery,
+                    ["ConnectionStrings:PostgreSQL"] = connectionString
+                });
+            });
+
+            builder.ConfigureServices(static services =>
+            {
+                services.RemoveAll<INativePointsClient>();
                 services.AddScoped<INativePointsClient, FakeNativePointsClient>();
             });
         });

@@ -65,6 +65,24 @@ endif()
 if(CINTEROP_ENABLE_NATIVE_TESTS)
     enable_testing()
 
+    add_executable(native_test_hooks_default_tests
+        tests/native/native_test_hooks_default_tests.c
+        src/native/testing/native_test_hooks_default.c
+    )
+
+    target_include_directories(native_test_hooks_default_tests
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
+    )
+
+    if(MSVC)
+        target_compile_options(native_test_hooks_default_tests PRIVATE /W4)
+    else()
+        target_compile_options(native_test_hooks_default_tests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME native_test_hooks_default_tests COMMAND native_test_hooks_default_tests)
+
     add_executable(native_wrapper_tests
         tests/native/native_wrapper_tests.c
         tests/native/native_test_hooks_env.c
