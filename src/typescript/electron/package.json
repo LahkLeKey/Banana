@@ -5,7 +5,7 @@
     "description": "Banana QA desktop app with native and API smoke paths",
     "main": "main.js",
     "scripts": {
-        "start": "electron .",
+        "start": "node ./node_modules/electron/cli.js .",
         "smoke": "node smoke.js",
         "example": "npm run smoke"
     },

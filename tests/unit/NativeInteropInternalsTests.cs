@@ -147,7 +147,7 @@ public sealed class NativeInteropInternalsTests
                 return true;
             }
 
-            var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
+            var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../"));
             var fileName = NativeLibraryResolver.GetPlatformLibraryName();
             var candidates = new[]
             {

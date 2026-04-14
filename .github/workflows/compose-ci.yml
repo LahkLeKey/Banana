@@ -159,6 +159,7 @@ jobs:
 
       - name: Run unit tests with coverage
         env:
+          BANANA_NATIVE_PATH: ${{ github.workspace }}/build/native/bin
           BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
           dotnet test tests/unit/Banana.UnitTests.csproj -c Release \
