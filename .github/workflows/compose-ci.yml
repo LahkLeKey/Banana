@@ -246,7 +246,7 @@ jobs:
       - name: Wait for API
         run: |
           for i in {1..30}; do
-            if curl -fsS "http://localhost:8080/points?purchases=10&multiplier=2"; then
+            if curl -fsS "http://localhost:8080/banana?purchases=10&multiplier=2"; then
               exit 0
             fi
             sleep 2
