@@ -12,6 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/api/CInteropSharp.Api.csproj" />
+    <ProjectReference Include="../../src/c-sharp/asp.net/CInteropSharp.Api.csproj" />
   </ItemGroup>
 </Project>

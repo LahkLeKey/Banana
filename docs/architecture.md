@@ -10,8 +10,8 @@ Legacy C remains untouched and isolated behind a dedicated wrapper boundary.
 - `src/native/legacy`: existing stable C logic (no direct managed consumption)
 - `src/native/wrapper`: C ABI-safe exports, validation, and memory ownership rules
 - `src/native/testing`: native hook interface + production default hook implementation
-- `src/api`: ASP.NET Core Web API + P/Invoke adapter
-- `src/electron`: optional ffi-napi bridge
+- `src/c-sharp/asp.net`: ASP.NET Core Web API + P/Invoke adapter
+- `src/typescript/electron`: optional ffi-napi bridge
 - `tests`: unit and integration suites
 
 ## Request Flow
@@ -110,7 +110,7 @@ The stage is atomic at the pipeline level: input mapping, query execution, raw r
 
 ## Documentation Standards
 
-- Core classes in `src/api` use XML doc comments (`///`) to explain intent, inputs, and outputs.
+- Core classes in `src/c-sharp/asp.net` use XML doc comments (`///`) to explain intent, inputs, and outputs.
 - New pipeline steps should include:
 	- a class summary describing business purpose,
 	- method/parameter docs for `Execute`,

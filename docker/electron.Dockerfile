@@ -8,11 +8,11 @@ RUN apt-get update \
         libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /workspace/src/electron
+WORKDIR /workspace/src/typescript/electron
 
-COPY src/electron/package.json ./
+COPY src/typescript/electron/package.json ./
 RUN npm install
 
-COPY src/electron ./
+COPY src/typescript/electron ./
 
 CMD ["npm", "run", "example"]
