@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.DataAccess;
+namespace Banana.Api.DataAccess;
 
 /// <summary>
 /// Represents database-stage failures that should be surfaced consistently to API callers.

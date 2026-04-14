@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.DataAccess;
+namespace Banana.Api.DataAccess;
 
 /// <summary>
 /// Selects which implementation backs the database pipeline stage.

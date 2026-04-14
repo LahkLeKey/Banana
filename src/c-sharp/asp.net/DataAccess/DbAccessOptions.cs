@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.DataAccess;
+namespace Banana.Api.DataAccess;
 
 /// <summary>
 /// Configuration for selecting and parameterizing data access mode.

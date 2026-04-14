@@ -2,14 +2,14 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using CInteropSharp.Api.NativeInterop;
+using Banana.Api.NativeInterop;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class NativeInteropInternalsTests
 {
@@ -114,7 +114,7 @@ public sealed class NativeInteropInternalsTests
 
     private static Type GetNativeMethodsType()
     {
-        return typeof(NativeLibraryResolver).Assembly.GetType("CInteropSharp.Api.NativeInterop.NativeMethods")
+        return typeof(NativeLibraryResolver).Assembly.GetType("Banana.Api.NativeInterop.NativeMethods")
             ?? throw new InvalidOperationException("NativeMethods type not found.");
     }
 

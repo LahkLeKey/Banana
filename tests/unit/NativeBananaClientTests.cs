@@ -1,12 +1,12 @@
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.Services;
+using Banana.Api.NativeInterop;
+using Banana.Api.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class NativeBananaClientTests
 {

@@ -1,6 +1,6 @@
-using CInteropSharp.Api.DataAccess;
+using Banana.Api.DataAccess;
 
-namespace CInteropSharp.Api.Pipeline.Steps;
+namespace Banana.Api.Pipeline.Steps;
 
 /// <summary>
 /// Executes a single atomic database stage and writes the raw result into pipeline context.

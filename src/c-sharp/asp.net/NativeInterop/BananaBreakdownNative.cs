@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace CInteropSharp.Api.NativeInterop;
+namespace Banana.Api.NativeInterop;
 
 /// <summary>
 /// Native-compatible struct for detailed banana output.

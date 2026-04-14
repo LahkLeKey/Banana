@@ -1,8 +1,8 @@
-using CInteropSharp.Api.DataAccess;
+using Banana.Api.DataAccess;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class DbAccessOptionsTests
 {

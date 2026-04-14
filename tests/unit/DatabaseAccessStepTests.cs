@@ -1,10 +1,10 @@
-using CInteropSharp.Api.DataAccess;
-using CInteropSharp.Api.Pipeline;
-using CInteropSharp.Api.Pipeline.Steps;
+using Banana.Api.DataAccess;
+using Banana.Api.Pipeline;
+using Banana.Api.Pipeline.Steps;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class DatabaseAccessStepTests
 {

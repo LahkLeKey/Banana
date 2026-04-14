@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 using Npgsql;
 
-namespace CInteropSharp.Api.DataAccess;
+namespace Banana.Api.DataAccess;
 
 /// <summary>
 /// Optional managed implementation of the DB stage using Npgsql.

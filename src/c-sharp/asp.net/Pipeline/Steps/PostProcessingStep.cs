@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.Pipeline.Steps;
+namespace Banana.Api.Pipeline.Steps;
 
 /// <summary>
 /// Applies simple business enrichment after native calculation, without changing native behavior.

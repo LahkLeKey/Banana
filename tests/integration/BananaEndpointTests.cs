@@ -2,13 +2,13 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
-using CInteropSharp.Api.NativeInterop;
+using Banana.Api.NativeInterop;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 
 using Xunit;
 
-namespace CInteropSharp.IntegrationTests;
+namespace Banana.IntegrationTests;
 
 public sealed class BananaEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {

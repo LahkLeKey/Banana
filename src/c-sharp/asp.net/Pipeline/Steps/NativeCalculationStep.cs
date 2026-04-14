@@ -1,6 +1,6 @@
-using CInteropSharp.Api.NativeInterop;
+using Banana.Api.NativeInterop;
 
-namespace CInteropSharp.Api.Pipeline.Steps;
+namespace Banana.Api.Pipeline.Steps;
 
 /// <summary>
 /// Executes the existing native interop call and stores its output on the shared pipeline context.

@@ -35,7 +35,6 @@ const native = ffi.Library(libraryPath, {
   banana_calculate_banana: ["int", ["int", "int", intPtr]],
 });
 
-function calculateBanana(purchases, multiplier) {
 function assertInt32(name, value) {
   if (!Number.isInteger(value)) {
     throw new TypeError(`${name} must be an integer`);

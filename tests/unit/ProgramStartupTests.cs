@@ -1,7 +1,7 @@
 using System.Net;
 
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.DataAccess;
+using Banana.Api.NativeInterop;
+using Banana.Api.DataAccess;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class ProgramStartupTests : IClassFixture<WebApplicationFactory<Program>>
 {

@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.DataAccess;
+namespace Banana.Api.DataAccess;
 
 /// <summary>
 /// Raw database output produced by a single data access stage execution.

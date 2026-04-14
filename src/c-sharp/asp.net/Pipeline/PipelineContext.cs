@@ -1,7 +1,7 @@
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.DataAccess;
+using Banana.Api.NativeInterop;
+using Banana.Api.DataAccess;
 
-namespace CInteropSharp.Api.Pipeline;
+namespace Banana.Api.Pipeline;
 
 /// <summary>
 /// Mutable state container shared by all pipeline steps in a single request.

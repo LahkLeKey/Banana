@@ -1,14 +1,14 @@
 using System.Reflection;
 
-using CInteropSharp.Api.DataAccess;
-using CInteropSharp.Api.NativeInterop;
+using Banana.Api.DataAccess;
+using Banana.Api.NativeInterop;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class NativeDalDbDataAccessClientTests
 {

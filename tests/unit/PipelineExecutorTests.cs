@@ -1,8 +1,8 @@
-using CInteropSharp.Api.Pipeline;
+using Banana.Api.Pipeline;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class PipelineExecutorTests
 {

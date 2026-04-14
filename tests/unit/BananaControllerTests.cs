@@ -1,13 +1,13 @@
-using CInteropSharp.Api.Controllers;
-using CInteropSharp.Api.Models;
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.Services;
+using Banana.Api.Controllers;
+using Banana.Api.Models;
+using Banana.Api.NativeInterop;
+using Banana.Api.Services;
 
 using Microsoft.AspNetCore.Mvc;
 
 using Xunit;
 
-namespace CInteropSharp.UnitTests;
+namespace Banana.UnitTests;
 
 public sealed class BananaControllerTests
 {

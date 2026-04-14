@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.Pipeline;
+namespace Banana.Api.Pipeline;
 
 /// <summary>
 /// Composes registered <see cref="IPipelineStep{T}"/> instances into one deterministic execution chain.

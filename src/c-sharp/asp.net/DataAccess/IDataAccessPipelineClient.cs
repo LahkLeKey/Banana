@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.DataAccess;
+namespace Banana.Api.DataAccess;
 
 /// <summary>
 /// Executes one atomic database access operation for the current pipeline request.

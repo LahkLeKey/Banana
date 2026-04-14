@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.Pipeline;
+namespace Banana.Api.Pipeline;
 
 /// <summary>
 /// Represents a single middleware-like stage in the banana processing pipeline.

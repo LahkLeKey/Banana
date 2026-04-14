@@ -161,7 +161,7 @@ jobs:
         env:
           BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
-          dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release \
+          dotnet test tests/unit/Banana.UnitTests.csproj -c Release \
             --collect:"XPlat Code Coverage" \
             --results-directory .artifacts/test-results/unit \
             --logger "trx;LogFileName=unit.trx"
@@ -171,7 +171,7 @@ jobs:
           BANANA_NATIVE_PATH: ${{ github.workspace }}/build/native/bin
           BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
-          dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release \
+          dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release \
             --collect:"XPlat Code Coverage" \
             --results-directory .artifacts/test-results/integration \
             --logger "trx;LogFileName=integration.trx"

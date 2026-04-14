@@ -1,4 +1,4 @@
-namespace CInteropSharp.Api.NativeInterop;
+namespace Banana.Api.NativeInterop;
 
 /// <summary>
 /// Managed representation of calculated banana returned by the interop client.

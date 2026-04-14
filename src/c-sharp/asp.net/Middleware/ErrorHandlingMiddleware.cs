@@ -1,11 +1,11 @@
 using System.Net;
 using System.Text.Json;
 
-using CInteropSharp.Api.DataAccess;
-using CInteropSharp.Api.NativeInterop;
-using CInteropSharp.Api.Services;
+using Banana.Api.DataAccess;
+using Banana.Api.NativeInterop;
+using Banana.Api.Services;
 
-namespace CInteropSharp.Api.Middleware;
+namespace Banana.Api.Middleware;
 
 /// <summary>
 /// Converts known exceptions into consistent JSON HTTP error responses.
