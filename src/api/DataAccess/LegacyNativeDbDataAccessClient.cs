@@ -13,7 +13,7 @@ public sealed class LegacyNativeDbDataAccessClient : IDataAccessPipelineClient
     /// <inheritdoc />
     public RawDbAccessResult Execute(DbAccessRequest request)
     {
-        var status = (NativeStatusCode)NativeMethods.QueryDbPoints(
+        var status = (NativeStatusCode)NativeMethods.QueryDbBanana(
             request.Purchases,
             request.Multiplier,
             out var payloadPtr,

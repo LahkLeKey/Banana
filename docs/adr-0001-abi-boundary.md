@@ -15,7 +15,7 @@ Directly exposing legacy functions to higher-level runtimes couples callers to h
 2. Introduce `src/native/wrapper` as the only exported ABI.
 3. Use primitive parameters and fixed-layout structs for interop.
 4. Standardize wrapper return statuses for deterministic error translation.
-5. Standardize allocation/free via `cinterop_create_points_message` and `cinterop_free`.
+5. Standardize allocation/free via `cinterop_create_banana_message` and `cinterop_free`.
 
 ## Consequences
 

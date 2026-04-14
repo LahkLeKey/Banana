@@ -26,14 +26,14 @@ builder.Services.AddScoped<IDataAccessPipelineClient>(static serviceProvider =>
 	};
 });
 
-builder.Services.AddScoped<INativePointsClient, NativePointsClient>();
+builder.Services.AddScoped<INativeBananaClient, NativeBananaClient>();
 builder.Services.AddScoped<PipelineExecutor<PipelineContext>>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, ValidationStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, DatabaseAccessStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, NativeCalculationStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, PostProcessingStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, AuditStep>();
-builder.Services.AddScoped<IPointsService, PointsService>();
+builder.Services.AddScoped<IBananaService, BananaService>();
 
 var app = builder.Build();
 

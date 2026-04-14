@@ -28,7 +28,8 @@ endif()
 
 if(CINTEROP_BUILD_SHARED_LIBRARY)
     add_library(cinterop_native SHARED
-        src/native/legacy/legacy_points.c
+        src/native/core/banana.c
+        src/native/legacy/legacy_banana.c
         src/native/legacy/legacy_db.c
         src/native/testing/native_test_hooks_default.c
         src/native/wrapper/cinterop_wrapper.c
@@ -38,6 +39,7 @@ if(CINTEROP_BUILD_SHARED_LIBRARY)
         PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
         PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/legacy
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
     )
@@ -86,13 +88,15 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
     add_executable(native_wrapper_tests
         tests/native/native_wrapper_tests.c
         tests/native/native_test_hooks_env.c
-        src/native/legacy/legacy_points.c
+        src/native/core/banana.c
+        src/native/legacy/legacy_banana.c
         src/native/legacy/legacy_db.c
         src/native/wrapper/cinterop_wrapper.c
     )
 
     target_include_directories(native_wrapper_tests
         PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/legacy
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
@@ -111,4 +115,22 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
     endif()
 
     add_test(NAME native_wrapper_tests COMMAND native_wrapper_tests)
+
+    add_executable(banana_core_tests
+        tests/native/banana_core_tests.c
+        src/native/core/banana.c
+    )
+
+    target_include_directories(banana_core_tests
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
+    )
+
+    if(MSVC)
+        target_compile_options(banana_core_tests PRIVATE /W4)
+    else()
+        target_compile_options(banana_core_tests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME banana_core_tests COMMAND banana_core_tests)
 endif()

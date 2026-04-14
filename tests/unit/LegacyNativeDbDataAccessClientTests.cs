@@ -37,7 +37,7 @@ public sealed class LegacyNativeDbDataAccessClientTests
         Assert.Equal("legacy-native", result.Source);
         Assert.Equal(1, result.RowCount);
         Assert.Contains("\"purchases\":10", result.Payload, StringComparison.Ordinal);
-        Assert.Contains("\"points\":150", result.Payload, StringComparison.Ordinal);
+        Assert.Contains("\"banana\":150", result.Payload, StringComparison.Ordinal);
     }
 
     [Fact]

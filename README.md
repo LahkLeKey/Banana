@@ -1,6 +1,8 @@
-# CInteropSharp
+# CInteropSharp (Banana SST Edition)
 
 Modernization baseline for a legacy C system without rewriting core logic.
+
+Using a banana as the single source of truth.
 
 https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig
 
@@ -69,11 +71,11 @@ In this repository, the ABI is the stable C wrapper boundary in `src/native/wrap
 
 ## Pipeline Pattern (API Orchestration)
 
-The `/points` flow now runs through a composable pipeline inside the API service layer:
+The `/banana` flow now runs through a composable pipeline inside the API service layer:
 
 ```mermaid
 flowchart TD
-  A[PointsController] --> B[PointsService]
+  A[BananaController] --> B[BananaService]
   B --> C[PipelineExecutor PipelineContext]
   C --> D[ValidationStep]
   D --> E[DatabaseAccessStep]
@@ -92,7 +94,7 @@ Current step responsibilities:
 
 - `ValidationStep`: validates request inputs and blocks invalid execution paths early.
 - `DatabaseAccessStep`: executes one atomic data-access operation and stores raw DB result + DB metadata in the pipeline context.
-- `NativeCalculationStep`: executes native points calculation through the stable wrapper ABI.
+- `NativeCalculationStep`: executes native banana calculation through the stable wrapper ABI.
 - `PostProcessingStep`: applies managed enrichment that does not alter native calculation semantics.
 - `AuditStep`: emits structured pipeline telemetry for diagnostics and observability.
 
@@ -108,7 +110,7 @@ DB mode options:
 - Legacy native mode (default): `DatabaseAccessStep` resolves `LegacyNativeDbDataAccessClient`, which calls the native DB wrapper path.
 - Managed mode (optional): `DatabaseAccessStep` resolves `ManagedNpgsqlDataAccessClient`, which executes managed PostgreSQL queries via Npgsql.
 
-Extension points:
+Extension hooks:
 
 - Implement `IPipelineStep<PipelineContext>` in `src/api/Pipeline/Steps`.
 - Set `Order` to control deterministic execution.
@@ -119,9 +121,9 @@ Extension points:
 
 If you are new to middleware/pipeline patterns, read these files in order:
 
-1. `src/api/Controllers/PointsController.cs`
+1. `src/api/Controllers/BananaController.cs`
   - Accepts HTTP input and calls the service.
-2. `src/api/Services/PointsService.cs`
+2. `src/api/Services/BananaService.cs`
   - Builds `PipelineContext` and runs `PipelineExecutor<PipelineContext>`.
 3. `src/api/Pipeline/PipelineExecutor.cs`
   - Composes steps into one chain and executes in deterministic order.
@@ -205,7 +207,7 @@ Convenience wrappers:
 On every push, CI runs the same compose profiles used locally:
 
 - `tests` profile via `test-all`
-- `runtime` profile with `/points` endpoint smoke test
+- `runtime` profile with `/banana` endpoint smoke test
 - `electron` profile optional bridge smoke test
 
 Workflow file:
@@ -239,7 +241,7 @@ Open Swagger:
 
 Example endpoint:
 
-- `GET /points?purchases=10&multiplier=2`
+- `GET /banana?purchases=10&multiplier=2`
 
 ## Optional Node/Electron Bridge
 

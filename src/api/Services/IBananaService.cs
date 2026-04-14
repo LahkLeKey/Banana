@@ -3,15 +3,15 @@ using CInteropSharp.Api.NativeInterop;
 namespace CInteropSharp.Api.Services;
 
 /// <summary>
-/// Application-level contract for calculating points for API consumers.
+/// Application-level contract for calculating banana for API consumers.
 /// </summary>
-public interface IPointsService
+public interface IBananaService
 {
     /// <summary>
-    /// Calculates points for the given purchase inputs.
+    /// Calculates banana for the given purchase inputs.
     /// </summary>
     /// <param name="purchases">Number of purchases.</param>
     /// <param name="multiplier">Business multiplier applied by native logic.</param>
-    /// <returns>Calculated points and a message.</returns>
-    PointsResult Calculate(int purchases, int multiplier);
+    /// <returns>Calculated banana and a message.</returns>
+    BananaResult Calculate(int purchases, int multiplier);
 }

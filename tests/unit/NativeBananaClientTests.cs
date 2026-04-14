@@ -8,7 +8,7 @@ using Xunit;
 
 namespace CInteropSharp.UnitTests;
 
-public sealed class NativePointsClientTests
+public sealed class NativeBananaClientTests
 {
     private static readonly object Sync = new();
     private static bool IsConfigured;
@@ -21,14 +21,14 @@ public sealed class NativePointsClientTests
             return;
         }
 
-        var client = new NativePointsClient();
+        var client = new NativeBananaClient();
 
         var result = client.Calculate(10, 2);
 
         Assert.Equal(10, result.Purchases);
         Assert.Equal(2, result.Multiplier);
-        Assert.Equal(150, result.Points);
-        Assert.Contains("points=150", result.Message, StringComparison.Ordinal);
+        Assert.Equal(150, result.Banana);
+        Assert.Contains("banana=150", result.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public sealed class NativePointsClientTests
             return;
         }
 
-        var client = new NativePointsClient();
+        var client = new NativeBananaClient();
 
         Assert.Throws<ClientInputException>(() => client.Calculate(-1, 2));
     }
@@ -52,7 +52,7 @@ public sealed class NativePointsClientTests
             return;
         }
 
-        var client = new NativePointsClient();
+        var client = new NativeBananaClient();
 
         Assert.Throws<ClientInputException>(() => client.Calculate(214748365, 1));
     }
@@ -84,7 +84,7 @@ public sealed class NativePointsClientTests
 
         var configuration = new ConfigurationBuilder().Build();
         using var loggerFactory = LoggerFactory.Create(_ => { });
-        var logger = loggerFactory.CreateLogger("NativePointsClientTests");
+        var logger = loggerFactory.CreateLogger("NativeBananaClientTests");
 
             try
             {

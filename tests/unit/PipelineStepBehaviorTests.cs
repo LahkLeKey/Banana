@@ -21,7 +21,7 @@ public sealed class PipelineStepBehaviorTests
 
         var output = step.Execute(context, static input => input);
 
-        Assert.Equal(20, output.Metadata["bonus.points"]);
+        Assert.Equal(20, output.Metadata["bonus.banana"]);
         Assert.Equal(true, output.Metadata["bonus.applied"]);
     }
 
@@ -37,7 +37,7 @@ public sealed class PipelineStepBehaviorTests
 
         var output = step.Execute(context, static input => input);
 
-        Assert.Equal(0, output.Metadata["bonus.points"]);
+        Assert.Equal(0, output.Metadata["bonus.banana"]);
         Assert.Equal(false, output.Metadata["bonus.applied"]);
     }
 
@@ -59,7 +59,7 @@ public sealed class PipelineStepBehaviorTests
         });
 
         Assert.Same(context, output);
-        Assert.Contains(logger.Messages, message => message.Contains("bonusPoints=0", StringComparison.Ordinal));
+        Assert.Contains(logger.Messages, message => message.Contains("bonusBanana=0", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -76,12 +76,12 @@ public sealed class PipelineStepBehaviorTests
         var output = step.Execute(context, input =>
         {
             input.NativeResult = 42;
-            input.Metadata["bonus.points"] = 99;
+            input.Metadata["bonus.banana"] = 99;
             return input;
         });
 
         Assert.Same(context, output);
-        Assert.Contains(logger.Messages, message => message.Contains("bonusPoints=99", StringComparison.Ordinal));
+        Assert.Contains(logger.Messages, message => message.Contains("bonusBanana=99", StringComparison.Ordinal));
     }
 
     private sealed class RecordingLogger<T> : ILogger<T>

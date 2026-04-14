@@ -17,7 +17,7 @@ public sealed class NativeInteropInternalsTests
     private static bool IsConfigured;
 
     [Fact]
-    public void NativeMethods_CalculatePoints_ReturnsOk()
+    public void NativeMethods_CalculateBanana_ReturnsOk()
     {
         if (!EnsureNativePathConfigured())
         {
@@ -25,7 +25,7 @@ public sealed class NativeInteropInternalsTests
         }
 
         var nativeMethodsType = GetNativeMethodsType();
-        var method = nativeMethodsType.GetMethod("CalculatePoints", BindingFlags.NonPublic | BindingFlags.Static);
+        var method = nativeMethodsType.GetMethod("CalculateBanana", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(method);
 
         var args = new object?[] { 10, 2, 0 };
@@ -36,7 +36,7 @@ public sealed class NativeInteropInternalsTests
     }
 
     [Fact]
-    public void NativeMethods_CalculatePointsWithBreakdown_ReturnsOk()
+    public void NativeMethods_CalculateBananaWithBreakdown_ReturnsOk()
     {
         if (!EnsureNativePathConfigured())
         {
@@ -44,21 +44,21 @@ public sealed class NativeInteropInternalsTests
         }
 
         var nativeMethodsType = GetNativeMethodsType();
-        var method = nativeMethodsType.GetMethod("CalculatePointsWithBreakdown", BindingFlags.NonPublic | BindingFlags.Static);
+        var method = nativeMethodsType.GetMethod("CalculateBananaWithBreakdown", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(method);
 
         var args = new object?[] { 10, 2, null };
         var status = (int)method.Invoke(null, args)!;
-        var breakdown = Assert.IsType<PointsBreakdownNative>(args[2]);
+        var breakdown = Assert.IsType<BananaBreakdownNative>(args[2]);
 
         Assert.Equal((int)NativeStatusCode.Ok, status);
         Assert.Equal(10, breakdown.Purchases);
         Assert.Equal(2, breakdown.Multiplier);
-        Assert.Equal(150, breakdown.Points);
+        Assert.Equal(150, breakdown.Banana);
     }
 
     [Fact]
-    public void NativeMethods_CreatePointsMessage_AllocatesMessageAndCanBeFreed()
+    public void NativeMethods_CreateBananaMessage_AllocatesMessageAndCanBeFreed()
     {
         if (!EnsureNativePathConfigured())
         {
@@ -66,7 +66,7 @@ public sealed class NativeInteropInternalsTests
         }
 
         var nativeMethodsType = GetNativeMethodsType();
-        var createMethod = nativeMethodsType.GetMethod("CreatePointsMessage", BindingFlags.NonPublic | BindingFlags.Static);
+        var createMethod = nativeMethodsType.GetMethod("CreateBananaMessage", BindingFlags.NonPublic | BindingFlags.Static);
         var freeMethod = nativeMethodsType.GetMethod("Free", BindingFlags.NonPublic | BindingFlags.Static);
 
         Assert.NotNull(createMethod);
@@ -83,7 +83,7 @@ public sealed class NativeInteropInternalsTests
         {
             var bytes = ReadNullTerminatedUtf8(ptr);
             var message = Encoding.UTF8.GetString(bytes);
-            Assert.Contains("points=150", message, StringComparison.Ordinal);
+            Assert.Contains("banana=150", message, StringComparison.Ordinal);
         }
         finally
         {
@@ -93,9 +93,9 @@ public sealed class NativeInteropInternalsTests
     }
 
     [Fact]
-    public void NativePointsClient_PrivateEnsureSuccess_ThrowsForInternalError()
+    public void NativeBananaClient_PrivateEnsureSuccess_ThrowsForInternalError()
     {
-        var method = typeof(NativePointsClient).GetMethod("EnsureSuccess", BindingFlags.NonPublic | BindingFlags.Static);
+        var method = typeof(NativeBananaClient).GetMethod("EnsureSuccess", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(method);
 
         var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, new object?[] { NativeStatusCode.InternalError }));
@@ -103,9 +103,9 @@ public sealed class NativeInteropInternalsTests
     }
 
     [Fact]
-    public void NativePointsClient_PrivateReadNullTerminatedUtf8_ThrowsForZeroPointer()
+    public void NativeBananaClient_PrivateReadNullTerminatedUtf8_ThrowsForZeroPointer()
     {
-        var method = typeof(NativePointsClient).GetMethod("ReadNullTerminatedUtf8", BindingFlags.NonPublic | BindingFlags.Static);
+        var method = typeof(NativeBananaClient).GetMethod("ReadNullTerminatedUtf8", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(method);
 
         var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, new object?[] { nint.Zero }));

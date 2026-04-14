@@ -16,23 +16,23 @@ Legacy C remains untouched and isolated behind a dedicated wrapper boundary.
 
 ## Request Flow
 
-The `/points` endpoint follows this sequence:
+The `/banana` endpoint follows this sequence:
 
-1. `PointsController` accepts query parameters.
-2. `PointsService` builds a `PipelineContext`.
+1. `BananaController` accepts query parameters.
+2. `BananaService` builds a `PipelineContext`.
 3. `PipelineExecutor<PipelineContext>` runs ordered steps:
 	- `ValidationStep`
 	- `DatabaseAccessStep`
 	- `NativeCalculationStep`
 	- `PostProcessingStep`
 	- `AuditStep`
-4. Native interop is executed through `INativePointsClient` / `NativePointsClient`.
-5. Result is mapped to `PointsResponse` and returned.
+4. Native interop is executed through `INativeBananaClient` / `NativeBananaClient`.
+5. Result is mapped to `BananaResponse` and returned.
 
 ```mermaid
 flowchart TD
-	A[HTTP GET /points] --> B[PointsController]
-	B --> C[PointsService]
+	A[HTTP GET /banana] --> B[BananaController]
+	B --> C[BananaService]
 	C --> D[PipelineExecutor<PipelineContext>]
 	D --> E[ValidationStep]
 	E --> E1[DatabaseAccessStep]
@@ -44,11 +44,11 @@ flowchart TD
 	DB --> DB2[ManagedNpgsqlDataAccessClient]
 	DB1 --> DBN[Native DB wrapper ABI]
 	DB2 --> DBM[Npgsql]
-	F --> I[INativePointsClient]
-	I --> J[NativePointsClient]
+	F --> I[INativeBananaClient]
+	I --> J[NativeBananaClient]
 	J --> K[NativeMethods / C wrapper DLL]
-	H --> L[PointsResult]
-	L --> M[PointsResponse]
+	H --> L[BananaResult]
+	L --> M[BananaResponse]
 ```
 
 This keeps transport, orchestration, interop, and enrichment responsibilities separated.

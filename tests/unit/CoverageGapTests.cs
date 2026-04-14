@@ -77,21 +77,21 @@ public sealed class CoverageGapTests
     [Fact]
     public void NativeCalculationStep_Order_IsExpected()
     {
-        var step = new NativeCalculationStep(new FakeNativePointsClient());
+        var step = new NativeCalculationStep(new FakeNativeBananaClient());
         Assert.Equal(200, step.Order);
     }
 
     [Fact]
     public void NativeCalculationStep_Execute_StoresNativeResultOnContext()
     {
-        var step = new NativeCalculationStep(new FakeNativePointsClient());
+        var step = new NativeCalculationStep(new FakeNativeBananaClient());
         var input = new PipelineContext { Purchases = 3, Multiplier = 7 };
 
         var result = step.Execute(input, static context => context);
 
         Assert.Equal(21, result.NativeResult);
-        Assert.NotNull(result.NativePointsResult);
-        Assert.Equal("purchases=3 multiplier=7 points=21", result.NativePointsResult!.Message);
+        Assert.NotNull(result.NativeBananaResult);
+        Assert.Equal("purchases=3 multiplier=7 banana=21", result.NativeBananaResult!.Message);
     }
 
     [Fact]
@@ -109,28 +109,28 @@ public sealed class CoverageGapTests
     }
 
     [Fact]
-    public void PointsController_Get_ReturnsExpectedPayload()
+    public void BananaController_Get_ReturnsExpectedPayload()
     {
-        var controller = new PointsController(new FakePointsService());
+        var controller = new BananaController(new FakeBananaService());
 
         var actionResult = controller.Get(8, 4);
 
         var ok = Assert.IsType<OkObjectResult>(actionResult.Result);
-        var payload = Assert.IsType<PointsResponse>(ok.Value);
+        var payload = Assert.IsType<BananaResponse>(ok.Value);
         Assert.Equal(8, payload.Purchases);
         Assert.Equal(4, payload.Multiplier);
-        Assert.Equal(32, payload.Points);
+        Assert.Equal(32, payload.Banana);
         Assert.Equal("ok", payload.Message);
     }
 
     [Fact]
-    public void PointsResponse_ExposesRecordProperties()
+    public void BananaResponse_ExposesRecordProperties()
     {
-        var response = new PointsResponse(10, 2, 150, "done");
+        var response = new BananaResponse(10, 2, 150, "done");
 
         Assert.Equal(10, response.Purchases);
         Assert.Equal(2, response.Multiplier);
-        Assert.Equal(150, response.Points);
+        Assert.Equal(150, response.Banana);
         Assert.Equal("done", response.Message);
     }
 
@@ -267,12 +267,12 @@ public sealed class CoverageGapTests
         Assert.Contains(expectedMessageFragment, inner.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    private sealed class FakeNativePointsClient : INativePointsClient
+    private sealed class FakeNativeBananaClient : INativeBananaClient
     {
-        public PointsResult Calculate(int purchases, int multiplier)
+        public BananaResult Calculate(int purchases, int multiplier)
         {
-            var points = purchases * multiplier;
-            return new PointsResult(purchases, multiplier, points, $"purchases={purchases} multiplier={multiplier} points={points}");
+            var banana = purchases * multiplier;
+            return new BananaResult(purchases, multiplier, banana, $"purchases={purchases} multiplier={multiplier} banana={banana}");
         }
     }
 
@@ -284,11 +284,11 @@ public sealed class CoverageGapTests
         }
     }
 
-    private sealed class FakePointsService : IPointsService
+    private sealed class FakeBananaService : IBananaService
     {
-        public PointsResult Calculate(int purchases, int multiplier)
+        public BananaResult Calculate(int purchases, int multiplier)
         {
-            return new PointsResult(purchases, multiplier, purchases * multiplier, "ok");
+            return new BananaResult(purchases, multiplier, purchases * multiplier, "ok");
         }
     }
 }

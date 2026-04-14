@@ -4,17 +4,47 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(CINTEROP_ENABLE_POSTGRES)
 #include <libpq-fe.h>
+
+static char* create_connection_string_with_timeout(const char* connection_string) {
+    static const char timeout_key[] = "connect_timeout=";
+    static const char timeout_suffix[] = " connect_timeout=5";
+    size_t connection_length = 0U;
+    size_t suffix_length = sizeof(timeout_suffix) - 1U;
+    char* with_timeout = 0;
+
+    if (connection_string == 0 || connection_string[0] == '\0') {
+        return 0;
+    }
+
+    if (strstr(connection_string, timeout_key) != 0) {
+        return 0;
+    }
+
+    connection_length = strlen(connection_string);
+    with_timeout = (char*)malloc(connection_length + suffix_length + 1U);
+    if (with_timeout == 0) {
+        return 0;
+    }
+
+    if (snprintf(with_timeout, connection_length + suffix_length + 1U, "%s%s", connection_string, timeout_suffix) < 0) {
+        free(with_timeout);
+        return 0;
+    }
+
+    return with_timeout;
+}
 #endif
 
-static char* build_json_payload(int purchases, int multiplier, int points) {
+static char* build_json_payload(int purchases, int multiplier, int banana) {
     int required = snprintf(0, 0,
-        "{\"purchases\":%d,\"multiplier\":%d,\"points\":%d}",
+        "{\"purchases\":%d,\"multiplier\":%d,\"banana\":%d}",
         purchases,
         multiplier,
-        points);
+        banana);
     char* payload = 0;
 
     if (required < 0) {
@@ -36,10 +66,10 @@ static char* build_json_payload(int purchases, int multiplier, int points) {
     }
 
     if (snprintf(payload, (size_t)required + 1U,
-        "{\"purchases\":%d,\"multiplier\":%d,\"points\":%d}",
+        "{\"purchases\":%d,\"multiplier\":%d,\"banana\":%d}",
         purchases,
         multiplier,
-        points) < 0) {
+        banana) < 0) {
         free(payload); /* GCOVR_EXCL_LINE */
         return 0; /* GCOVR_EXCL_LINE */
     }
@@ -47,7 +77,7 @@ static char* build_json_payload(int purchases, int multiplier, int points) {
     return payload;
 }
 
-int legacy_db_query_points(int purchases, int multiplier, char** out_payload, int* out_row_count) {
+int legacy_db_query_banana(int purchases, int multiplier, char** out_payload, int* out_row_count) {
     int forced_result = 0;
 
     if (out_payload == 0 || out_row_count == 0) {
@@ -64,15 +94,22 @@ int legacy_db_query_points(int purchases, int multiplier, char** out_payload, in
 #if defined(CINTEROP_ENABLE_POSTGRES)
     {
         const char* connection_string = getenv("CINTEROP_PG_CONNECTION");
+        const char* resolved_connection_string = connection_string;
+        char* connection_with_timeout = 0;
         PGconn* connection = 0;
         PGresult* result = 0;
         const char* params[2];
         char purchases_buffer[32];
         char multiplier_buffer[32];
-        int points = 0;
+        int banana = 0;
 
         if (connection_string == 0 || connection_string[0] == '\0') {
             return 2;
+        }
+
+        connection_with_timeout = create_connection_string_with_timeout(connection_string);
+        if (connection_with_timeout != 0) {
+            resolved_connection_string = connection_with_timeout;
         }
 
         snprintf(purchases_buffer, sizeof(purchases_buffer), "%d", purchases);
@@ -80,15 +117,16 @@ int legacy_db_query_points(int purchases, int multiplier, char** out_payload, in
         params[0] = purchases_buffer;
         params[1] = multiplier_buffer;
 
-        connection = PQconnectdb(connection_string);
+        connection = PQconnectdb(resolved_connection_string);
         if (PQstatus(connection) != CONNECTION_OK) {
             PQfinish(connection);
+            free(connection_with_timeout);
             return 3;
         }
 
         result = PQexecParams(
             connection,
-            "SELECT purchases, multiplier, (purchases * 10) + CASE WHEN purchases >= 10 THEN multiplier * 25 ELSE 0 END AS points "
+            "SELECT purchases, multiplier, (purchases * 10) + CASE WHEN purchases >= 10 THEN multiplier * 25 ELSE 0 END AS banana "
             "FROM (SELECT $1::int AS purchases, $2::int AS multiplier) q",
             2,
             0,
@@ -100,6 +138,7 @@ int legacy_db_query_points(int purchases, int multiplier, char** out_payload, in
         if (cinterop_test_hook_force_db_bad_result()) {
             PQclear(result);
             PQfinish(connection);
+            free(connection_with_timeout);
             return 3;
         }
 
@@ -111,15 +150,17 @@ int legacy_db_query_points(int purchases, int multiplier, char** out_payload, in
         if (PQresultStatus(result) != PGRES_TUPLES_OK || PQntuples(result) != 1) {
             PQclear(result);
             PQfinish(connection);
+            free(connection_with_timeout);
             return 3;
         }
 
         *out_row_count = PQntuples(result);
-        points = atoi(PQgetvalue(result, 0, 2));
-        *out_payload = build_json_payload(purchases, multiplier, points);
+        banana = atoi(PQgetvalue(result, 0, 2));
+        *out_payload = build_json_payload(purchases, multiplier, banana);
 
         PQclear(result);
         PQfinish(connection);
+        free(connection_with_timeout);
 
         if (*out_payload == 0) {
             return 3;
@@ -129,8 +170,8 @@ int legacy_db_query_points(int purchases, int multiplier, char** out_payload, in
     }
 #else
     {
-        int points = (purchases * 10) + ((purchases >= 10) ? (multiplier * 25) : 0);
-        *out_payload = build_json_payload(purchases, multiplier, points);
+        int banana = (purchases * 10) + ((purchases >= 10) ? (multiplier * 25) : 0);
+        *out_payload = build_json_payload(purchases, multiplier, banana);
         *out_row_count = 1;
         if (*out_payload == 0) {
             return 3;
