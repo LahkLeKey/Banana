@@ -1,4 +1,6 @@
-#include "legacy_db.h"
+#include "banana_db.h"
+
+#include "../core/banana.h"
 
 #include "../testing/native_test_hooks.h"
 
@@ -77,7 +79,7 @@ static char* build_json_payload(int purchases, int multiplier, int banana) {
     return payload;
 }
 
-int legacy_db_query_banana(int purchases, int multiplier, char** out_payload, int* out_row_count) {
+int banana_db_query(int purchases, int multiplier, char** out_payload, int* out_row_count) {
     int forced_result = 0;
 
     if (out_payload == 0 || out_row_count == 0) {
@@ -170,8 +172,16 @@ int legacy_db_query_banana(int purchases, int multiplier, char** out_payload, in
     }
 #else
     {
-        int banana = (purchases * 10) + ((purchases >= 10) ? (multiplier * 25) : 0);
-        *out_payload = build_json_payload(purchases, multiplier, banana);
+        BananaInput input;
+        BananaResult result;
+
+        input.purchases = purchases;
+        input.multiplier = multiplier;
+        if (banana_calculate(&input, &result) != BANANA_OK) {
+            return 3;
+        }
+
+        *out_payload = build_json_payload(purchases, multiplier, result.banana);
         *out_row_count = 1;
         if (*out_payload == 0) {
             return 3;

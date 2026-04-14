@@ -3,8 +3,7 @@
 #include <string.h>
 
 #include "banana_wrapper.h"
-#include "legacy_db.h"
-#include "legacy_banana.h"
+#include "banana_db.h"
 
 #if defined(_WIN32)
 #include <stdlib.h>
@@ -265,19 +264,14 @@ static void test_create_banana_message_forced_alloc_failure(void) {
     require_true(status == BANANA_STATUS_INTERNAL_ERROR, "expected INTERNAL_ERROR when message alloc is forced to fail");
 }
 
-static void test_legacy_summary_direct_null_pointer(void) {
-    int status = legacy_calculate_summary(10, 2, 0);
-    require_true(status == -1, "expected legacy_calculate_summary null pointer failure");
-}
-
-static void test_legacy_db_direct_null_output_validation(void) {
+static void test_dal_db_direct_null_output_validation(void) {
     int row_count = 0;
     char* payload = 0;
-    int status = legacy_db_query_banana(1, 1, 0, &row_count);
-    require_true(status == 1, "expected direct legacy_db_query_banana null payload status");
+    int status = banana_db_query(1, 1, 0, &row_count);
+    require_true(status == 1, "expected direct banana_db_query null payload status");
 
-    status = legacy_db_query_banana(1, 1, &payload, 0);
-    require_true(status == 1, "expected direct legacy_db_query_banana null row_count status");
+    status = banana_db_query(1, 1, &payload, 0);
+    require_true(status == 1, "expected direct banana_db_query null row_count status");
 }
 
 static void test_free_null_is_safe(void) {
@@ -311,8 +305,7 @@ int main(void) {
     test_db_query_banana_forced_internal_error();
     test_db_query_banana_forced_payload_alloc_fail();
     test_db_query_banana_forced_payload_malloc_null();
-    test_legacy_db_direct_null_output_validation();
-    test_legacy_summary_direct_null_pointer();
+    test_dal_db_direct_null_output_validation();
     test_free_null_is_safe();
 
     puts("native_wrapper_tests: all tests passed");

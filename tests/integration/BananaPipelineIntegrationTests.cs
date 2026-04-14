@@ -159,7 +159,7 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
     }
 
     [Fact]
-    public void DataAccessClientResolution_FallsBackToLegacy_WhenModeIsOutOfRange()
+    public void DataAccessClientResolution_FallsBackToNativeDal_WhenModeIsOutOfRange()
     {
         using var factory = _factory.WithWebHostBuilder(builder =>
         {
@@ -176,7 +176,7 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
         using var scope = factory.Services.CreateScope();
         var client = scope.ServiceProvider.GetRequiredService<IDataAccessPipelineClient>();
 
-        Assert.IsType<LegacyNativeDbDataAccessClient>(client);
+        Assert.IsType<NativeDalDbDataAccessClient>(client);
     }
 
     private WebApplicationFactory<Program> CreateFactoryWithFakeNative()

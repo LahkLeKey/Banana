@@ -33,14 +33,14 @@ public sealed class ProgramStartupTests : IClassFixture<WebApplicationFactory<Pr
     }
 
     [Fact]
-    public void Program_ResolvesLegacyClient_WhenModeIsLegacyNative()
+    public void Program_ResolvesNativeDalClient_WhenModeIsNativeDal()
     {
-        using var factory = CreateFactoryForMode("LegacyNative");
+        using var factory = CreateFactoryForMode("NativeDal");
         using var scope = factory.Services.CreateScope();
 
         var client = scope.ServiceProvider.GetRequiredService<IDataAccessPipelineClient>();
 
-        Assert.IsType<LegacyNativeDbDataAccessClient>(client);
+        Assert.IsType<NativeDalDbDataAccessClient>(client);
     }
 
     [Fact]
@@ -55,14 +55,14 @@ public sealed class ProgramStartupTests : IClassFixture<WebApplicationFactory<Pr
     }
 
     [Fact]
-    public void Program_FallsBackToLegacyClient_WhenModeIsOutOfRange()
+    public void Program_FallsBackToNativeDalClient_WhenModeIsOutOfRange()
     {
         using var factory = CreateFactoryForMode("99");
         using var scope = factory.Services.CreateScope();
 
         var client = scope.ServiceProvider.GetRequiredService<IDataAccessPipelineClient>();
 
-        Assert.IsType<LegacyNativeDbDataAccessClient>(client);
+        Assert.IsType<NativeDalDbDataAccessClient>(client);
     }
 
     private WebApplicationFactory<Program> CreateFactoryForMode(string mode)

@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../legacy/legacy_db.h"
-#include "../legacy/legacy_banana.h"
+#include "../core/banana.h"
+#include "../dal/banana_db.h"
 #include "../testing/native_test_hooks.h"
 
 static int validate_input(int purchases, int multiplier) {
@@ -34,6 +34,8 @@ static int validate_input(int purchases, int multiplier) {
 }
 
 int banana_calculate_banana(int purchases, int multiplier, int* out_banana) {
+    BananaInput input;
+    BananaResult result;
     int status = validate_input(purchases, multiplier);
     if (status != BANANA_STATUS_OK) {
         return status;
@@ -43,7 +45,13 @@ int banana_calculate_banana(int purchases, int multiplier, int* out_banana) {
         return BANANA_STATUS_INVALID_ARGUMENT;
     }
 
-    *out_banana = legacy_calculate_banana(purchases, multiplier);
+    input.purchases = purchases;
+    input.multiplier = multiplier;
+    if (banana_calculate(&input, &result) != BANANA_OK) {
+        return BANANA_STATUS_INTERNAL_ERROR;
+    }
+
+    *out_banana = result.banana;
     return BANANA_STATUS_OK;
 }
 
@@ -52,7 +60,8 @@ int banana_calculate_banana_with_breakdown(
     int multiplier,
     CInteropBananaBreakdown* out_breakdown
 ) {
-    LegacyBananaSummary summary;
+    BananaInput input;
+    BananaResult result;
     int status = validate_input(purchases, multiplier);
     if (status != BANANA_STATUS_OK) {
         return status;
@@ -66,13 +75,15 @@ int banana_calculate_banana_with_breakdown(
         return BANANA_STATUS_INTERNAL_ERROR;
     }
 
-    if (legacy_calculate_summary(purchases, multiplier, &summary) != 0) {
+    input.purchases = purchases;
+    input.multiplier = multiplier;
+    if (banana_calculate(&input, &result) != BANANA_OK) {
         return BANANA_STATUS_INTERNAL_ERROR;
     }
 
-    out_breakdown->purchases = summary.purchases;
-    out_breakdown->multiplier = summary.multiplier;
-    out_breakdown->banana = summary.banana;
+    out_breakdown->purchases = purchases;
+    out_breakdown->multiplier = multiplier;
+    out_breakdown->banana = result.banana;
 
     return BANANA_STATUS_OK;
 }
@@ -138,7 +149,7 @@ int banana_db_query_banana(
     *out_payload = 0;
     *out_row_count = 0;
 
-    db_result = legacy_db_query_banana(purchases, multiplier, out_payload, out_row_count);
+    db_result = banana_db_query(purchases, multiplier, out_payload, out_row_count);
     if (db_result == 0) {
         return BANANA_STATUS_OK;
     }

@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
-option(BANANA_ENABLE_POSTGRES "Enable legacy PostgreSQL access in native C layer" ON)
+option(BANANA_ENABLE_POSTGRES "Enable PostgreSQL access in native DAL layer" ON)
 option(BANANA_ENABLE_NATIVE_TESTS "Build native C tests" ON)
 option(BANANA_ENABLE_COVERAGE "Build with coverage instrumentation" OFF)
 option(BANANA_BUILD_SHARED_LIBRARY "Build the banana_native shared library target" ON)
@@ -29,8 +29,7 @@ endif()
 if(BANANA_BUILD_SHARED_LIBRARY)
     add_library(banana_native SHARED
         src/native/core/banana.c
-        src/native/legacy/legacy_banana.c
-        src/native/legacy/legacy_db.c
+        src/native/dal/banana_db.c
         src/native/testing/native_test_hooks_default.c
         src/native/wrapper/banana_wrapper.c
     )
@@ -40,7 +39,7 @@ if(BANANA_BUILD_SHARED_LIBRARY)
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/legacy
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/dal
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
     )
 
@@ -89,8 +88,7 @@ if(BANANA_ENABLE_NATIVE_TESTS)
         tests/native/banana_wrapper_tests.c
         tests/native/native_test_hooks_env.c
         src/native/core/banana.c
-        src/native/legacy/legacy_banana.c
-        src/native/legacy/legacy_db.c
+        src/native/dal/banana_db.c
         src/native/wrapper/banana_wrapper.c
     )
 
@@ -98,7 +96,7 @@ if(BANANA_ENABLE_NATIVE_TESTS)
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/legacy
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/dal
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
     )
 

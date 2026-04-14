@@ -8,7 +8,7 @@ public enum DbAccessMode
     /// <summary>
     /// Uses native C interop as the source of SQL behavior.
     /// </summary>
-    LegacyNative = 0,
+    NativeDal = 0,
 
     /// <summary>
     /// Uses managed PostgreSQL access via Npgsql.

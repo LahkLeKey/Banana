@@ -10,7 +10,7 @@ using Xunit;
 
 namespace CInteropSharp.UnitTests;
 
-public sealed class LegacyNativeDbDataAccessClientTests
+public sealed class NativeDalDbDataAccessClientTests
 {
     private static readonly object Sync = new();
     private static bool IsConfigured;
@@ -23,7 +23,7 @@ public sealed class LegacyNativeDbDataAccessClientTests
             return;
         }
 
-        var client = new LegacyNativeDbDataAccessClient();
+        var client = new NativeDalDbDataAccessClient();
 
         RawDbAccessResult result;
         try
@@ -36,7 +36,7 @@ public sealed class LegacyNativeDbDataAccessClientTests
             return;
         }
 
-        Assert.Equal("legacy-native", result.Source);
+        Assert.Equal("native-dal", result.Source);
         Assert.Equal(1, result.RowCount);
         Assert.Contains("\"purchases\":10", result.Payload, StringComparison.Ordinal);
         Assert.Contains("\"banana\":150", result.Payload, StringComparison.Ordinal);
@@ -50,7 +50,7 @@ public sealed class LegacyNativeDbDataAccessClientTests
             return;
         }
 
-        var client = new LegacyNativeDbDataAccessClient();
+        var client = new NativeDalDbDataAccessClient();
 
         Assert.Throws<DatabaseAccessException>(() => client.Execute(new DbAccessRequest(-1, 2)));
     }
@@ -58,7 +58,7 @@ public sealed class LegacyNativeDbDataAccessClientTests
     [Fact]
     public void EnsureSuccess_ThrowsMappedMessages()
     {
-        var ensureSuccess = typeof(LegacyNativeDbDataAccessClient)
+        var ensureSuccess = typeof(NativeDalDbDataAccessClient)
             .GetMethod("EnsureSuccess", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(ensureSuccess);
 
@@ -71,7 +71,7 @@ public sealed class LegacyNativeDbDataAccessClientTests
     [Fact]
     public void ReadNullTerminatedUtf8_ThrowsWhenPointerIsZero()
     {
-        var method = typeof(LegacyNativeDbDataAccessClient)
+        var method = typeof(NativeDalDbDataAccessClient)
             .GetMethod("ReadNullTerminatedUtf8", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(method);
 
@@ -107,7 +107,7 @@ public sealed class LegacyNativeDbDataAccessClientTests
 
             var configuration = new ConfigurationBuilder().Build();
             using var loggerFactory = LoggerFactory.Create(_ => { });
-            var logger = loggerFactory.CreateLogger("LegacyNativeDbDataAccessClientTests");
+            var logger = loggerFactory.CreateLogger("NativeDalDbDataAccessClientTests");
 
             try
             {

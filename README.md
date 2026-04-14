@@ -61,15 +61,16 @@ It defines details like:
 - Primitive type sizes and struct memory layout.
 - Ownership rules for allocated memory across module boundaries.
 
-In this repository, the ABI is the stable C wrapper boundary in `src/native/wrapper` that both .NET (P/Invoke) and optional Node/Electron consumers call into. Keeping this ABI stable lets us modernize managed orchestration without rewriting or tightly coupling to the legacy C internals.
+In this repository, the ABI is the stable C wrapper boundary in `src/native/wrapper` that both .NET (P/Invoke) and optional Node/Electron consumers call into. Keeping this ABI stable lets us modernize managed orchestration while keeping domain logic and data access modular in native `core` and `dal` layers.
 
 ## Interop Boundary
 
-- Legacy logic remains isolated in `src/native/legacy`.
+- Core calculation logic lives in `src/native/core`.
+- Native database interactions live in `src/native/dal`.
 - Wrapper in `src/native/wrapper` is the only exported native API.
 - Wrapper exports primitive signatures and fixed-layout structs.
 - Native memory created by wrapper must be released with `banana_free`.
-- Managed code does not call legacy functions directly.
+- Managed code does not call core or dal functions directly.
 
 ## Pipeline Pattern (API Orchestration)
 
@@ -86,7 +87,7 @@ flowchart TD
   G --> H[AuditStep]
 
   E --> I[IDataAccessPipelineClient]
-  I --> J[LegacyNativeDbDataAccessClient]
+  I --> J[NativeDalDbDataAccessClient]
   I --> K[ManagedNpgsqlDataAccessClient]
   J --> L[Native wrapper DB export]
   K --> M[Npgsql]
@@ -102,14 +103,14 @@ Current step responsibilities:
 
 Why this was introduced:
 
-- Keeps the legacy/native boundary intact while modernizing orchestration.
+- Keeps the native wrapper boundary intact while modernizing orchestration.
 - Decouples validation, data access, native execution, enrichment, and audit concerns.
 - Enables additive extension by registering new pipeline steps without changing executor logic.
 - Preserves backward compatibility because wrapper ABI and native calculation contract remain stable.
 
 DB mode options:
 
-- Legacy native mode (default): `DatabaseAccessStep` resolves `LegacyNativeDbDataAccessClient`, which calls the native DB wrapper path.
+- Native DAL mode (default): `DatabaseAccessStep` resolves `NativeDalDbDataAccessClient`, which calls the native DB wrapper path.
 - Managed mode (optional): `DatabaseAccessStep` resolves `ManagedNpgsqlDataAccessClient`, which executes managed PostgreSQL queries via Npgsql.
 
 Extension hooks:
@@ -130,7 +131,7 @@ If you are new to middleware/pipeline patterns, read these files in order:
 3. `src/api/Pipeline/PipelineExecutor.cs`
   - Composes steps into one chain and executes in deterministic order.
 4. `src/api/Program.cs`
-  - Registers pipeline steps and selects DB access implementation (`LegacyNative` vs `ManagedNpgsql`) via `DbAccessOptions`.
+  - Registers pipeline steps and selects DB access implementation (`NativeDal` vs `ManagedNpgsql`) via `DbAccessOptions`.
 5. `src/api/Pipeline/Steps/*`
   - `ValidationStep` → validates input
   - `DatabaseAccessStep` → executes atomic DB stage
@@ -138,12 +139,13 @@ If you are new to middleware/pipeline patterns, read these files in order:
   - `PostProcessingStep` → enrichment logic
   - `AuditStep` → final structured logging
 6. `src/api/DataAccess/*`
-  - Defines the DB stage contract and concrete clients (`LegacyNativeDbDataAccessClient`, `ManagedNpgsqlDataAccessClient`).
+  - Defines the DB stage contract and concrete clients (`NativeDalDbDataAccessClient`, `ManagedNpgsqlDataAccessClient`).
 7. `src/api/NativeInterop/*`
   - Contains the P/Invoke boundary and native error mapping.
-8. `src/native/wrapper/*` and `src/native/legacy/*`
+8. `src/native/wrapper/*`, `src/native/core/*`, and `src/native/dal/*`
   - Wrapper owns exported ABI, validation, and status mapping.
-  - Legacy layer owns calculation and SQL behavior.
+  - Core owns calculation behavior.
+  - DAL owns native SQL behavior.
 9. `src/native/testing/native_test_hooks_default.c` and `tests/native/native_test_hooks_env.c`
   - Shows how test-only native branch forcing is isolated from production runtime code.
 
@@ -224,11 +226,11 @@ CI notes:
 
 ## Native Test Hook Isolation
 
-Test-only native behavior is isolated from legacy runtime files:
+Test-only native behavior is isolated from runtime files:
 
 - Production native builds use `src/native/testing/native_test_hooks_default.c` (no-op hooks).
 - Native test builds use `tests/native/native_test_hooks_env.c` (env-driven forced paths).
-- Legacy/runtime files (`src/native/legacy/*`, `src/native/wrapper/*`) now call hook functions instead of parsing test env vars directly.
+- Runtime files (`src/native/core/*`, `src/native/dal/*`, `src/native/wrapper/*`) now call hook functions instead of parsing test env vars directly.
 
 ## Run API
 

@@ -13,16 +13,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<DbAccessOptions>(builder.Configuration.GetSection(DbAccessOptions.SectionName));
-builder.Services.AddScoped<LegacyNativeDbDataAccessClient>();
+builder.Services.AddScoped<NativeDalDbDataAccessClient>();
 builder.Services.AddScoped<ManagedNpgsqlDataAccessClient>();
 builder.Services.AddScoped<IDataAccessPipelineClient>(static serviceProvider =>
 {
 	var options = serviceProvider.GetRequiredService<IOptions<DbAccessOptions>>().Value;
 	return options.Mode switch
 	{
-		DbAccessMode.LegacyNative => serviceProvider.GetRequiredService<LegacyNativeDbDataAccessClient>(),
+		DbAccessMode.NativeDal => serviceProvider.GetRequiredService<NativeDalDbDataAccessClient>(),
 		DbAccessMode.ManagedNpgsql => serviceProvider.GetRequiredService<ManagedNpgsqlDataAccessClient>(),
-		_ => serviceProvider.GetRequiredService<LegacyNativeDbDataAccessClient>()
+		_ => serviceProvider.GetRequiredService<NativeDalDbDataAccessClient>()
 	};
 });
 

@@ -6,9 +6,9 @@ using CInteropSharp.Api.NativeInterop;
 namespace CInteropSharp.Api.DataAccess;
 
 /// <summary>
-/// Default data-access mode that preserves legacy native behavior behind the DB stage boundary.
+/// Default data-access mode that uses the native DAL behind the DB stage boundary.
 /// </summary>
-public sealed class LegacyNativeDbDataAccessClient : IDataAccessPipelineClient
+public sealed class NativeDalDbDataAccessClient : IDataAccessPipelineClient
 {
     /// <inheritdoc />
     public RawDbAccessResult Execute(DbAccessRequest request)
@@ -24,7 +24,7 @@ public sealed class LegacyNativeDbDataAccessClient : IDataAccessPipelineClient
         try
         {
             var payload = Encoding.UTF8.GetString(ReadNullTerminatedUtf8(payloadPtr));
-            return new RawDbAccessResult("legacy-native", payload, rowCount);
+            return new RawDbAccessResult("native-dal", payload, rowCount);
         }
         finally
         {

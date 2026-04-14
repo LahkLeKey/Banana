@@ -7,11 +7,11 @@ namespace CInteropSharp.UnitTests;
 public sealed class DbAccessOptionsTests
 {
     [Fact]
-    public void DefaultsToLegacyModeAndHasQueryTemplate()
+    public void DefaultsToNativeDalModeAndHasQueryTemplate()
     {
         var options = new DbAccessOptions();
 
-        Assert.Equal(DbAccessMode.LegacyNative, options.Mode);
+        Assert.Equal(DbAccessMode.NativeDal, options.Mode);
         Assert.Contains("@purchases", options.ManagedQuery, StringComparison.Ordinal);
     }
 }
