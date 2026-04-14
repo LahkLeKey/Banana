@@ -7,15 +7,15 @@ This guide is for developers who are new to this repository and to C# ↔ native
 1. Read the architecture overview:
    - `docs/architecture.md`
 2. Skim the API flow entry files:
-   - `src/api/Controllers/BananaController.cs`
-   - `src/api/Services/BananaService.cs`
+   - `src/c-sharp/asp.net/Controllers/BananaController.cs`
+   - `src/c-sharp/asp.net/Services/BananaService.cs`
 3. Understand pipeline orchestration:
-   - `src/api/Pipeline/PipelineExecutor.cs`
-   - `src/api/Pipeline/IPipelineStep.cs`
-   - `src/api/Pipeline/Steps/*`
+   - `src/c-sharp/asp.net/Pipeline/PipelineExecutor.cs`
+   - `src/c-sharp/asp.net/Pipeline/IPipelineStep.cs`
+   - `src/c-sharp/asp.net/Pipeline/Steps/*`
 4. Inspect native interop boundary:
-   - `src/api/NativeInterop/NativeBananaClient.cs`
-   - `src/api/NativeInterop/NativeMethods.cs`
+   - `src/c-sharp/asp.net/NativeInterop/NativeBananaClient.cs`
+   - `src/c-sharp/asp.net/NativeInterop/NativeMethods.cs`
    - `src/native/wrapper/*`
 5. Run tests locally:
    - `dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release`
@@ -55,10 +55,10 @@ Read the diagram left-to-right/top-to-bottom as one request. The API stays decou
 
 ## How To Add a New Pipeline Step
 
-1. Create a class in `src/api/Pipeline/Steps` implementing `IPipelineStep<PipelineContext>`.
+1. Create a class in `src/c-sharp/asp.net/Pipeline/Steps` implementing `IPipelineStep<PipelineContext>`.
 2. Set an `Order` value for deterministic sequencing.
 3. Add XML docs (`///`) for class and `Execute` method.
-4. Register in `src/api/Program.cs` as:
+4. Register in `src/c-sharp/asp.net/Program.cs` as:
    - `services.AddScoped<IPipelineStep<PipelineContext>, YourStep>();`
 5. Add unit/integration tests proving behavior and ordering.
 

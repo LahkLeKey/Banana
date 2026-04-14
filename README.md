@@ -115,7 +115,7 @@ DB mode options:
 
 Extension hooks:
 
-- Implement `IPipelineStep<PipelineContext>` in `src/api/Pipeline/Steps`.
+- Implement `IPipelineStep<PipelineContext>` in `src/c-sharp/asp.net/Pipeline/Steps`.
 - Set `Order` to control deterministic execution.
 - Register the step in DI (`Program.cs`) as `IPipelineStep<PipelineContext>`.
 - Keep DB concerns inside `DatabaseAccessStep` and its data-access clients to preserve stage boundaries.
@@ -124,23 +124,23 @@ Extension hooks:
 
 If you are new to middleware/pipeline patterns, read these files in order:
 
-1. `src/api/Controllers/BananaController.cs`
+1. `src/c-sharp/asp.net/Controllers/BananaController.cs`
   - Accepts HTTP input and calls the service.
-2. `src/api/Services/BananaService.cs`
+2. `src/c-sharp/asp.net/Services/BananaService.cs`
   - Builds `PipelineContext` and runs `PipelineExecutor<PipelineContext>`.
-3. `src/api/Pipeline/PipelineExecutor.cs`
+3. `src/c-sharp/asp.net/Pipeline/PipelineExecutor.cs`
   - Composes steps into one chain and executes in deterministic order.
-4. `src/api/Program.cs`
+4. `src/c-sharp/asp.net/Program.cs`
   - Registers pipeline steps and selects DB access implementation (`NativeDal` vs `ManagedNpgsql`) via `DbAccessOptions`.
-5. `src/api/Pipeline/Steps/*`
+5. `src/c-sharp/asp.net/Pipeline/Steps/*`
   - `ValidationStep` → validates input
   - `DatabaseAccessStep` → executes atomic DB stage
   - `NativeCalculationStep` → calls native interop
   - `PostProcessingStep` → enrichment logic
   - `AuditStep` → final structured logging
-6. `src/api/DataAccess/*`
+6. `src/c-sharp/asp.net/DataAccess/*`
   - Defines the DB stage contract and concrete clients (`NativeDalDbDataAccessClient`, `ManagedNpgsqlDataAccessClient`).
-7. `src/api/NativeInterop/*`
+7. `src/c-sharp/asp.net/NativeInterop/*`
   - Contains the P/Invoke boundary and native error mapping.
 8. `src/native/wrapper/*`, `src/native/core/*`, and `src/native/dal/*`
   - Wrapper owns exported ABI, validation, and status mapping.
@@ -252,9 +252,9 @@ Example endpoint:
 For `ffi-napi` compatibility, use Node 14/16 for local non-container runs.
 
 ```bash
-cd src/electron
+cd src/typescript/electron
 npm install
-BANANA_NATIVE_PATH="$(pwd)/../../build/native/bin/Release" npm run example
+BANANA_ENV_NATIVE_PATH="$(pwd)/../../build/native/bin/Release" npm run example
 ```
 
 ## Tests

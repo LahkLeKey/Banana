@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "api", "api", "{81034408-37C8-1011-444E-4C15C2FADA8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CInteropSharp.Api", "src\api\CInteropSharp.Api.csproj", "{50D46980-64D8-40AD-90EA-BC5CE81AA2C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CInteropSharp.Api", "src\c-sharp\asp.net\CInteropSharp.Api.csproj", "{50D46980-64D8-40AD-90EA-BC5CE81AA2C0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CInteropSharp.UnitTests", "tests\unit\CInteropSharp.UnitTests.csproj", "{B2CFFD29-F623-450F-B929-42F9E47B8FFF}"
 EndProject

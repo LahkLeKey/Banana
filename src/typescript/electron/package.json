@@ -1,5 +1,5 @@
 {
-    "name": "cinteropsharp-electron-bridge",
+    "name": "banana-native-electron-bridge",
     "version": "1.0.0",
     "private": true,
     "description": "Optional ffi-napi bridge for banana_native",
