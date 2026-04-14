@@ -80,7 +80,7 @@ public sealed class NativeBananaClientTests
             return false;
         }
 
-        Environment.SetEnvironmentVariable("CINTEROP_NATIVE_PATH", libraryDir);
+        Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", libraryDir);
 
         var configuration = new ConfigurationBuilder().Build();
         using var loggerFactory = LoggerFactory.Create(_ => { });

@@ -62,7 +62,7 @@ public sealed class BananaEndpointTests : IClassFixture<WebApplicationFactory<Pr
 
         if (Directory.Exists(candidate))
         {
-            Environment.SetEnvironmentVariable("CINTEROP_NATIVE_PATH", candidate);
+            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", candidate);
             return true;
         }
 

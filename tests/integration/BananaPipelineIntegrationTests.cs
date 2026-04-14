@@ -97,7 +97,7 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
     [Fact]
     public async Task GetBanana_UsesManagedNpgsqlClient_WhenPostgresConnectionIsConfigured()
     {
-        var connectionString = Environment.GetEnvironmentVariable("CINTEROP_PG_CONNECTION");
+        var connectionString = ResolveManagedConnectionString();
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             return;
@@ -122,7 +122,7 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
     [Fact]
     public async Task GetBanana_UsesManagedNpgsqlClient_WhenQueryReturnsNoRows()
     {
-        var connectionString = Environment.GetEnvironmentVariable("CINTEROP_PG_CONNECTION");
+        var connectionString = ResolveManagedConnectionString();
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             return;
@@ -228,6 +228,53 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
                 services.AddScoped<INativeBananaClient, FakeNativeBananaClient>();
             });
         });
+    }
+
+    private static string? ResolveManagedConnectionString()
+    {
+        var configured = Environment.GetEnvironmentVariable("ConnectionStrings__PostgreSQL");
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured;
+        }
+
+        var pgConnection = Environment.GetEnvironmentVariable("BANANA_PG_CONNECTION");
+        if (string.IsNullOrWhiteSpace(pgConnection))
+        {
+            return pgConnection;
+        }
+
+        if (pgConnection.Contains(';', StringComparison.Ordinal))
+        {
+            return pgConnection;
+        }
+
+        var segments = pgConnection.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0 || segments.Any(static segment => !segment.Contains('=', StringComparison.Ordinal)))
+        {
+            return pgConnection;
+        }
+
+        static string MapKey(string key)
+        {
+            return key.ToLowerInvariant() switch
+            {
+                "user" => "Username",
+                "dbname" => "Database",
+                "password" => "Password",
+                "host" => "Host",
+                "port" => "Port",
+                _ => key
+            };
+        }
+
+        var mapped = segments.Select(static segment =>
+        {
+            var split = segment.Split('=', 2, StringSplitOptions.None);
+            return $"{MapKey(split[0])}={split[1]}";
+        });
+
+        return string.Join(';', mapped);
     }
 
     private sealed class FakeNativeBananaClient : INativeBananaClient

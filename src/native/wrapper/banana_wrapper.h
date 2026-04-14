@@ -1,21 +1,21 @@
-#ifndef CINTEROP_WRAPPER_H
-#define CINTEROP_WRAPPER_H
+#ifndef BANANA_WRAPPER_H
+#define BANANA_WRAPPER_H
 
 #include <stddef.h>
 
 #ifdef _WIN32
-#define CINTEROP_API __declspec(dllexport)
+#define BANANA_API __declspec(dllexport)
 #else
-#define CINTEROP_API __attribute__((visibility("default")))
+#define BANANA_API __attribute__((visibility("default")))
 #endif
 
 typedef enum CInteropStatus {
-    CINTEROP_STATUS_OK = 0,
-    CINTEROP_STATUS_INVALID_ARGUMENT = 1,
-    CINTEROP_STATUS_OVERFLOW = 2,
-    CINTEROP_STATUS_INTERNAL_ERROR = 3,
-    CINTEROP_STATUS_DB_ERROR = 4,
-    CINTEROP_STATUS_DB_NOT_CONFIGURED = 5
+    BANANA_STATUS_OK = 0,
+    BANANA_STATUS_INVALID_ARGUMENT = 1,
+    BANANA_STATUS_OVERFLOW = 2,
+    BANANA_STATUS_INTERNAL_ERROR = 3,
+    BANANA_STATUS_DB_ERROR = 4,
+    BANANA_STATUS_DB_NOT_CONFIGURED = 5
 } CInteropStatus;
 
 typedef struct CInteropBananaBreakdown {
@@ -35,13 +35,13 @@ _Static_assert(offsetof(CInteropBananaBreakdown, banana) == 8, "CInteropBananaBr
  * - Wrapper keeps ABI primitive (int + pointer out params).
  * - Legacy module remains isolated and untouched behind this boundary.
  */
-CINTEROP_API int cinterop_calculate_banana(int purchases, int multiplier, int* out_banana);
+BANANA_API int banana_calculate_banana(int purchases, int multiplier, int* out_banana);
 
 /*
  * Interop decision:
  * - Struct is blittable and fixed-layout for safe marshaling.
  */
-CINTEROP_API int cinterop_calculate_banana_with_breakdown(
+BANANA_API int banana_calculate_banana_with_breakdown(
     int purchases,
     int multiplier,
     CInteropBananaBreakdown* out_breakdown
@@ -49,22 +49,22 @@ CINTEROP_API int cinterop_calculate_banana_with_breakdown(
 
 /*
  * Interop decision:
- * - Wrapper allocates UTF-8 bytes and caller must release with cinterop_free.
+ * - Wrapper allocates UTF-8 bytes and caller must release with banana_free.
  */
-CINTEROP_API int cinterop_create_banana_message(int purchases, int multiplier, char** out_message);
+BANANA_API int banana_create_banana_message(int purchases, int multiplier, char** out_message);
 
 /*
  * Executes one atomic DB stage operation.
  * - Inputs are mapped to one SQL execution.
- * - Wrapper allocates UTF-8 JSON and caller must release with cinterop_free.
+ * - Wrapper allocates UTF-8 JSON and caller must release with banana_free.
  */
-CINTEROP_API int cinterop_db_query_banana(
+BANANA_API int banana_db_query_banana(
     int purchases,
     int multiplier,
     char** out_payload,
     int* out_row_count
 );
 
-CINTEROP_API void cinterop_free(void* pointer);
+BANANA_API void banana_free(void* pointer);
 
 #endif

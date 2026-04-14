@@ -43,12 +43,12 @@ tests/
   unit/
   integration/
 scripts/
-docs/
+.wiki/
 ```
 
 ## New Developer Setup
 
-- Start with `docs/developer-onboarding.md` for a guided first pass through the codebase.
+- Start with `.wiki/developer-onboarding.md` for a guided first pass through the codebase.
 - Includes a visual request-flow diagram for the controller → pipeline → native interop path.
 
 ## What Is an ABI?
@@ -68,7 +68,7 @@ In this repository, the ABI is the stable C wrapper boundary in `src/native/wrap
 - Legacy logic remains isolated in `src/native/legacy`.
 - Wrapper in `src/native/wrapper` is the only exported native API.
 - Wrapper exports primitive signatures and fixed-layout structs.
-- Native memory created by wrapper must be released with `cinterop_free`.
+- Native memory created by wrapper must be released with `banana_free`.
 - Managed code does not call legacy functions directly.
 
 ## Pipeline Pattern (API Orchestration)
@@ -155,7 +155,7 @@ scripts\build-native.bat
 
 Expected output directory:
 
-- `build/native/bin/Release/cinterop_native.dll`
+- `build/native/bin/Release/banana_native.dll`
 
 ## Build Everything (bash)
 
@@ -218,7 +218,7 @@ Workflow file:
 
 CI notes:
 
-- Native C coverage job provisions PostgreSQL and runs native tests with `CINTEROP_PG_CONNECTION` configured.
+- Native C coverage job provisions PostgreSQL and runs native tests with `BANANA_PG_CONNECTION` configured.
 - .NET coverage job also provisions PostgreSQL and runs with explicit native DB connection settings.
 - CI prints only DB target host/port (no credentials) before test execution for visibility.
 
@@ -233,7 +233,7 @@ Test-only native behavior is isolated from legacy runtime files:
 ## Run API
 
 ```bash
-export CINTEROP_NATIVE_PATH="$(pwd)/build/native/bin/Release"
+export BANANA_NATIVE_PATH="$(pwd)/build/native/bin/Release"
 ./scripts/run-api.sh
 ```
 
@@ -252,7 +252,7 @@ For `ffi-napi` compatibility, use Node 14/16 for local non-container runs.
 ```bash
 cd src/electron
 npm install
-CINTEROP_NATIVE_PATH="$(pwd)/../../build/native/bin/Release" npm run example
+BANANA_NATIVE_PATH="$(pwd)/../../build/native/bin/Release" npm run example
 ```
 
 ## Tests

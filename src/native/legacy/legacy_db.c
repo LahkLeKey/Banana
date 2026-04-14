@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(CINTEROP_ENABLE_POSTGRES)
+#if defined(BANANA_ENABLE_POSTGRES)
 #include <libpq-fe.h>
 
 static char* create_connection_string_with_timeout(const char* connection_string) {
@@ -51,11 +51,11 @@ static char* build_json_payload(int purchases, int multiplier, int banana) {
         return 0; /* GCOVR_EXCL_LINE */
     }
 
-    if (cinterop_test_hook_force_payload_alloc_failure()) {
+    if (banana_test_hook_force_payload_alloc_failure()) {
         return 0;
     }
 
-    if (cinterop_test_hook_force_payload_malloc_null()) {
+    if (banana_test_hook_force_payload_malloc_null()) {
         payload = 0;
     } else {
         payload = (char*)malloc((size_t)required + 1U);
@@ -84,16 +84,16 @@ int legacy_db_query_banana(int purchases, int multiplier, char** out_payload, in
         return 1;
     }
 
-    if (cinterop_test_hook_try_forced_db_result(&forced_result)) {
+    if (banana_test_hook_try_forced_db_result(&forced_result)) {
         return forced_result;
     }
 
     *out_payload = 0;
     *out_row_count = 0;
 
-#if defined(CINTEROP_ENABLE_POSTGRES)
+#if defined(BANANA_ENABLE_POSTGRES)
     {
-        const char* connection_string = getenv("CINTEROP_PG_CONNECTION");
+        const char* connection_string = getenv("BANANA_PG_CONNECTION");
         const char* resolved_connection_string = connection_string;
         char* connection_with_timeout = 0;
         PGconn* connection = 0;
@@ -135,14 +135,14 @@ int legacy_db_query_banana(int purchases, int multiplier, char** out_payload, in
             0,
             0);
 
-        if (cinterop_test_hook_force_db_bad_result()) {
+        if (banana_test_hook_force_db_bad_result()) {
             PQclear(result);
             PQfinish(connection);
             free(connection_with_timeout);
             return 3;
         }
 
-        if (cinterop_test_hook_force_db_status_mismatch()) {
+        if (banana_test_hook_force_db_status_mismatch()) {
             PQclear(result);
             result = PQexec(connection, "SELECT 1 WHERE 1 = 0");
         }

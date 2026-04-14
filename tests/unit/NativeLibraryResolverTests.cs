@@ -21,38 +21,38 @@ public sealed class NativeLibraryResolverTests
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            Assert.Equal("cinterop_native.dll", name);
+            Assert.Equal("banana_native.dll", name);
             return;
         }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            Assert.Equal("libcinterop_native.dylib", name);
+            Assert.Equal("libbanana_native.dylib", name);
             return;
         }
 
-        Assert.Equal("libcinterop_native.so", name);
+        Assert.Equal("libbanana_native.so", name);
     }
 
     [Fact]
     public void GetPlatformLibraryName_WhenWindows_ReturnsDllName()
     {
         var value = NativeLibraryResolver.GetPlatformLibraryName(static os => os == OSPlatform.Windows);
-        Assert.Equal("cinterop_native.dll", value);
+        Assert.Equal("banana_native.dll", value);
     }
 
     [Fact]
     public void GetPlatformLibraryName_WhenOsx_ReturnsDylibName()
     {
         var value = NativeLibraryResolver.GetPlatformLibraryName(static os => os == OSPlatform.OSX);
-        Assert.Equal("libcinterop_native.dylib", value);
+        Assert.Equal("libbanana_native.dylib", value);
     }
 
     [Fact]
     public void GetPlatformLibraryName_WhenNeitherWindowsNorOsx_ReturnsSoName()
     {
         var value = NativeLibraryResolver.GetPlatformLibraryName(static _ => false);
-        Assert.Equal("libcinterop_native.so", value);
+        Assert.Equal("libbanana_native.so", value);
     }
 
     [Fact]
@@ -83,18 +83,18 @@ public sealed class NativeLibraryResolverTests
     [Fact]
     public void ResolveLibrary_WhenCandidatePathLoads_ReturnsPathHandle()
     {
-        const string libraryFile = "cinterop_native.dll";
+        const string libraryFile = "banana_native.dll";
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
 
         try
         {
-            Environment.SetEnvironmentVariable("CINTEROP_NATIVE_PATH", tempDir);
+            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", tempDir);
             var expectedPath = Path.Combine(tempDir, libraryFile);
             var configuredPath = Path.Combine(tempDir, libraryFile);
 
             var result = NativeLibraryResolver.ResolveLibrary(
-                "cinterop_native",
+                "banana_native",
                 typeof(NativeLibraryResolver).Assembly,
                 null,
                 new ConfigurationBuilder().Build(),
@@ -116,7 +116,7 @@ public sealed class NativeLibraryResolverTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("CINTEROP_NATIVE_PATH", null);
+            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", null);
             Directory.Delete(tempDir, true);
         }
     }
@@ -124,17 +124,17 @@ public sealed class NativeLibraryResolverTests
     [Fact]
     public void ResolveLibrary_WhenPathLoadFails_UsesDefaultLoader()
     {
-        const string libraryFile = "cinterop_native.dll";
+        const string libraryFile = "banana_native.dll";
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
 
         try
         {
-            Environment.SetEnvironmentVariable("CINTEROP_NATIVE_PATH", tempDir);
+            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", tempDir);
             var expectedPath = Path.Combine(tempDir, libraryFile);
 
             var result = NativeLibraryResolver.ResolveLibrary(
-                "cinterop_native",
+                "banana_native",
                 typeof(NativeLibraryResolver).Assembly,
                 null,
                 new ConfigurationBuilder().Build(),
@@ -156,7 +156,7 @@ public sealed class NativeLibraryResolverTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("CINTEROP_NATIVE_PATH", null);
+            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", null);
             Directory.Delete(tempDir, true);
         }
     }
@@ -165,7 +165,7 @@ public sealed class NativeLibraryResolverTests
     public void ResolveLibrary_WhenNoCandidateOrDefaultLoad_ReturnsZero()
     {
         var result = NativeLibraryResolver.ResolveLibrary(
-            "cinterop_native",
+            "banana_native",
             typeof(NativeLibraryResolver).Assembly,
             null,
             new ConfigurationBuilder().Build(),
@@ -181,7 +181,7 @@ public sealed class NativeLibraryResolverTests
                 handle = nint.Zero;
                 return false;
             },
-            () => "cinterop_native.dll");
+            () => "banana_native.dll");
 
         Assert.Equal(nint.Zero, result);
     }

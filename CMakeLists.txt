@@ -6,36 +6,36 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
-option(CINTEROP_ENABLE_POSTGRES "Enable legacy PostgreSQL access in native C layer" ON)
-option(CINTEROP_ENABLE_NATIVE_TESTS "Build native C tests" ON)
-option(CINTEROP_ENABLE_COVERAGE "Build with coverage instrumentation" OFF)
-option(CINTEROP_BUILD_SHARED_LIBRARY "Build the cinterop_native shared library target" ON)
+option(BANANA_ENABLE_POSTGRES "Enable legacy PostgreSQL access in native C layer" ON)
+option(BANANA_ENABLE_NATIVE_TESTS "Build native C tests" ON)
+option(BANANA_ENABLE_COVERAGE "Build with coverage instrumentation" OFF)
+option(BANANA_BUILD_SHARED_LIBRARY "Build the banana_native shared library target" ON)
 
-if(CINTEROP_ENABLE_COVERAGE AND NOT MSVC)
+if(BANANA_ENABLE_COVERAGE AND NOT MSVC)
     add_compile_options(--coverage -O0)
     add_link_options(--coverage)
 endif()
 
-set(CINTEROP_POSTGRES_ENABLED OFF)
-if(CINTEROP_ENABLE_POSTGRES)
+set(BANANA_POSTGRES_ENABLED OFF)
+if(BANANA_ENABLE_POSTGRES)
     find_package(PostgreSQL)
     if(PostgreSQL_FOUND)
-        set(CINTEROP_POSTGRES_ENABLED ON)
+        set(BANANA_POSTGRES_ENABLED ON)
     else()
-        message(WARNING "CINTEROP_ENABLE_POSTGRES is ON, but PostgreSQL client libraries were not found. Falling back to non-PostgreSQL native mode for this build.")
+        message(WARNING "BANANA_ENABLE_POSTGRES is ON, but PostgreSQL client libraries were not found. Falling back to non-PostgreSQL native mode for this build.")
     endif()
 endif()
 
-if(CINTEROP_BUILD_SHARED_LIBRARY)
-    add_library(cinterop_native SHARED
+if(BANANA_BUILD_SHARED_LIBRARY)
+    add_library(banana_native SHARED
         src/native/core/banana.c
         src/native/legacy/legacy_banana.c
         src/native/legacy/legacy_db.c
         src/native/testing/native_test_hooks_default.c
-        src/native/wrapper/cinterop_wrapper.c
+        src/native/wrapper/banana_wrapper.c
     )
 
-    target_include_directories(cinterop_native
+    target_include_directories(banana_native
         PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
         PRIVATE
@@ -45,26 +45,26 @@ if(CINTEROP_BUILD_SHARED_LIBRARY)
     )
 
     if(MSVC)
-        target_compile_options(cinterop_native PRIVATE /W4)
+        target_compile_options(banana_native PRIVATE /W4)
     else()
-        target_compile_options(cinterop_native PRIVATE -Wall -Wextra -Wpedantic)
+        target_compile_options(banana_native PRIVATE -Wall -Wextra -Wpedantic)
     endif()
 
-    if(CINTEROP_POSTGRES_ENABLED)
-        target_compile_definitions(cinterop_native PRIVATE CINTEROP_ENABLE_POSTGRES)
-        target_include_directories(cinterop_native PRIVATE ${PostgreSQL_INCLUDE_DIRS})
-        target_link_libraries(cinterop_native PRIVATE ${PostgreSQL_LIBRARIES})
+    if(BANANA_POSTGRES_ENABLED)
+        target_compile_definitions(banana_native PRIVATE BANANA_ENABLE_POSTGRES)
+        target_include_directories(banana_native PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+        target_link_libraries(banana_native PRIVATE ${PostgreSQL_LIBRARIES})
     endif()
 
-    set_target_properties(cinterop_native PROPERTIES
-        OUTPUT_NAME "cinterop_native"
+    set_target_properties(banana_native PROPERTIES
+        OUTPUT_NAME "banana_native"
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     )
 endif()
 
-if(CINTEROP_ENABLE_NATIVE_TESTS)
+if(BANANA_ENABLE_NATIVE_TESTS)
     enable_testing()
 
     add_executable(native_test_hooks_default_tests
@@ -85,16 +85,16 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
 
     add_test(NAME native_test_hooks_default_tests COMMAND native_test_hooks_default_tests)
 
-    add_executable(cinterop_wrapper_tests
-        tests/native/cinterop_wrapper_tests.c
+    add_executable(banana_wrapper_tests
+        tests/native/banana_wrapper_tests.c
         tests/native/native_test_hooks_env.c
         src/native/core/banana.c
         src/native/legacy/legacy_banana.c
         src/native/legacy/legacy_db.c
-        src/native/wrapper/cinterop_wrapper.c
+        src/native/wrapper/banana_wrapper.c
     )
 
-    target_include_directories(cinterop_wrapper_tests
+    target_include_directories(banana_wrapper_tests
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
@@ -103,18 +103,18 @@ if(CINTEROP_ENABLE_NATIVE_TESTS)
     )
 
     if(MSVC)
-        target_compile_options(cinterop_wrapper_tests PRIVATE /W4)
+        target_compile_options(banana_wrapper_tests PRIVATE /W4)
     else()
-        target_compile_options(cinterop_wrapper_tests PRIVATE -Wall -Wextra -Wpedantic)
+        target_compile_options(banana_wrapper_tests PRIVATE -Wall -Wextra -Wpedantic)
     endif()
 
-    if(CINTEROP_POSTGRES_ENABLED)
-        target_compile_definitions(cinterop_wrapper_tests PRIVATE CINTEROP_ENABLE_POSTGRES)
-        target_include_directories(cinterop_wrapper_tests PRIVATE ${PostgreSQL_INCLUDE_DIRS})
-        target_link_libraries(cinterop_wrapper_tests PRIVATE ${PostgreSQL_LIBRARIES})
+    if(BANANA_POSTGRES_ENABLED)
+        target_compile_definitions(banana_wrapper_tests PRIVATE BANANA_ENABLE_POSTGRES)
+        target_include_directories(banana_wrapper_tests PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+        target_link_libraries(banana_wrapper_tests PRIVATE ${PostgreSQL_LIBRARIES})
     endif()
 
-    add_test(NAME cinterop_wrapper_tests COMMAND cinterop_wrapper_tests)
+    add_test(NAME banana_wrapper_tests COMMAND banana_wrapper_tests)
 
     add_executable(banana_core_tests
         tests/native/banana_core_tests.c
