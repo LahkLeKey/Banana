@@ -1,4 +1,4 @@
 #### Pass the Banana
 ------------------
 
-> Read the [Wiki](.wiki/Home.md) for more details
+> Read the [Wiki](https://github.com/LahkLeKey/Banana/wiki) for more details
