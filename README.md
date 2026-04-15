@@ -1,4 +1,4 @@
-#### Pass the Banana
+#### Pass the Banana from C into various different Applications. (APIs, Desktop, Frontend, Mobile, etc.)
 ------------------
 
 > Read the [Wiki](https://github.com/LahkLeKey/Banana/wiki) for more details
