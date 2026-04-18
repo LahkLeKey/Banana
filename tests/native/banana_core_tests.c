@@ -9,7 +9,7 @@
 #include "domain/banana_inventory.h"
 #include "domain/banana_logistics.h"
 #include "domain/banana_processing.h"
-#include "domain/banana_projection_legacy.h"
+#include "domain/banana_profile.h"
 #include "domain/banana_read_models.h"
 #include "domain/banana_repositories.h"
 #include "domain/banana_retail.h"
@@ -33,7 +33,7 @@ static void add_loyalty_step(BananaResult* result) {
     result->banana += 3;
 }
 
-static void test_legacy_compatibility_projection_ok(void) {
+static void test_banana_profile_ok(void) {
     BananaInput input;
     BananaResult output;
     BananaStatus status;
@@ -46,7 +46,7 @@ static void test_legacy_compatibility_projection_ok(void) {
     require_true(output.banana == 150, "expected banana=150");
 }
 
-static void test_legacy_compatibility_input_validation(void) {
+static void test_banana_profile_input_validation(void) {
     BananaInput input;
     BananaResult output;
     BananaStatus status;
@@ -64,7 +64,7 @@ static void test_legacy_compatibility_input_validation(void) {
     require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null output");
 }
 
-static void test_legacy_projection_overflow_paths(void) {
+static void test_banana_profile_overflow_paths(void) {
     BananaInput input;
     BananaRules rules;
     BananaResult output;
@@ -98,7 +98,7 @@ static void test_legacy_projection_overflow_paths(void) {
     require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow for base+bonus total calculation");
 }
 
-static void test_legacy_projection_custom_rules_and_pipeline(void) {
+static void test_banana_profile_custom_rules_and_pipeline(void) {
     BananaInput input;
     BananaRules rules;
     BananaResult output;
@@ -214,7 +214,7 @@ static void test_predict_ripeness_progresses_through_real_banana_stages(void) {
     require_true(prediction.shelf_life_hours < 200, "expected reduced shelf life for more ripe batch");
 }
 
-static void test_predict_ripeness_for_legacy_input_returns_profile(void) {
+static void test_predict_ripeness_for_profile_input_returns_profile(void) {
     BananaInput input;
     BananaRipenessPrediction prediction;
     BananaStatus status;
@@ -222,9 +222,9 @@ static void test_predict_ripeness_for_legacy_input_returns_profile(void) {
     input.purchases = 10;
     input.multiplier = 2;
 
-    status = banana_predict_ripeness_for_legacy_input(&input, &prediction);
-    require_true(status == BANANA_OK, "expected BANANA_OK for legacy banana profile prediction");
-    require_true(prediction.predicted_stage == BANANA_STAGE_YELLOW, "expected YELLOW stage for default legacy banana scenario");
+    status = banana_predict_ripeness_for_profile_input(&input, &prediction);
+    require_true(status == BANANA_OK, "expected BANANA_OK for banana profile prediction");
+    require_true(prediction.predicted_stage == BANANA_STAGE_YELLOW, "expected YELLOW stage for default banana profile scenario");
     require_true(prediction.shelf_life_hours > 0, "expected positive remaining shelf life");
     require_true(prediction.spoilage_probability > 0.0, "expected non-zero spoilage probability");
 }
@@ -1142,15 +1142,15 @@ static void test_pipeline_null_safety(void) {
 }
 
 int main(void) {
-    test_legacy_compatibility_projection_ok();
-    test_legacy_compatibility_input_validation();
-    test_legacy_projection_overflow_paths();
-    test_legacy_projection_custom_rules_and_pipeline();
+    test_banana_profile_ok();
+    test_banana_profile_input_validation();
+    test_banana_profile_overflow_paths();
+    test_banana_profile_custom_rules_and_pipeline();
     test_prepare_execution_context_and_breakdown();
     test_shared_validation_rejects_invalid_rules_and_context();
     test_domain_capacity_constants();
     test_predict_ripeness_progresses_through_real_banana_stages();
-    test_predict_ripeness_for_legacy_input_returns_profile();
+    test_predict_ripeness_for_profile_input_returns_profile();
     test_batch_registry_create_get_and_predict();
     test_batch_registry_returns_not_found();
     test_batch_registry_persists_mutations();

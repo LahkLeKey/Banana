@@ -1,9 +1,9 @@
 #include "../banana_wrapper_internal.h"
 
 #include "../../core/dal/banana_db.h"
-#include "../../core/domain/banana_projection_legacy.h"
+#include "../../core/domain/banana_profile.h"
 
-int banana_db_query_banana(
+int banana_db_query_banana_profile(
     int purchases,
     int multiplier,
     char** out_payload,
@@ -43,4 +43,13 @@ int banana_db_query_banana(
     }
 
     return BANANA_STATUS_INTERNAL_ERROR;
+}
+
+int banana_db_query_banana(
+    int purchases,
+    int multiplier,
+    char** out_payload,
+    int* out_row_count
+) {
+    return banana_db_query_banana_profile(purchases, multiplier, out_payload, out_row_count);
 }

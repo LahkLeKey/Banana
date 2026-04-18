@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../core/domain/banana_projection_legacy.h"
+#include "../../core/domain/banana_profile.h"
 #include "../../testing/native_test_hooks.h"
 
-static int try_calculate_legacy_projection_context(
+static int try_calculate_profile_context(
     int purchases,
     int multiplier,
     BananaExecutionContext* context
@@ -39,7 +39,7 @@ int banana_calculate_banana(int purchases, int multiplier, int* out_banana) {
         return BANANA_STATUS_INVALID_ARGUMENT;
     }
 
-    status = try_calculate_legacy_projection_context(purchases, multiplier, &context);
+    status = try_calculate_profile_context(purchases, multiplier, &context);
     if (status != BANANA_STATUS_OK) {
         return status;
     }
@@ -60,7 +60,7 @@ int banana_calculate_banana_with_breakdown(
         return BANANA_STATUS_INVALID_ARGUMENT;
     }
 
-    status = try_calculate_legacy_projection_context(purchases, multiplier, &context);
+    status = try_calculate_profile_context(purchases, multiplier, &context);
     if (status != BANANA_STATUS_OK) {
         return status;
     }
@@ -98,7 +98,7 @@ int banana_create_banana_message(int purchases, int multiplier, char** out_messa
 
     input.purchases = purchases;
     input.multiplier = multiplier;
-    if (banana_predict_ripeness_for_legacy_input(&input, &prediction) != BANANA_OK) {
+    if (banana_predict_ripeness_for_profile_input(&input, &prediction) != BANANA_OK) {
         return BANANA_STATUS_INTERNAL_ERROR;
     }
 

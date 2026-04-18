@@ -35,7 +35,7 @@ set(BANANA_CORE_SOURCES
     src/native/core/domain/banana_inventory.c
     src/native/core/domain/banana_lifecycle.c
     src/native/core/domain/banana_logistics.c
-    src/native/core/domain/banana_projection_legacy.c
+    src/native/core/domain/banana_profile.c
     src/native/core/domain/banana_processing.c
     src/native/core/domain/banana_read_models.c
     src/native/core/domain/banana_repositories.c
@@ -50,7 +50,7 @@ set(BANANA_DAL_SOURCES
     src/native/core/dal/domain/banana_cultivation.c
     src/native/core/dal/domain/banana_inventory.c
     src/native/core/dal/domain/banana_processing.c
-    src/native/core/dal/domain/banana_projection_legacy.c
+    src/native/core/dal/domain/banana_profile_projection.c
     src/native/core/dal/domain/banana_supply_chain.c
     src/native/core/dal/internal/banana_postgres.c
 )
@@ -60,7 +60,7 @@ set(BANANA_WRAPPER_SOURCES
     src/native/wrapper/dal/banana_db.c
     src/native/wrapper/domain/banana_logistics.c
     src/native/wrapper/domain/banana_processing.c
-    src/native/wrapper/domain/banana_projection_legacy.c
+    src/native/wrapper/domain/banana_profile.c
     src/native/wrapper/domain/banana_ripeness.c
     src/native/wrapper/domain/banana_supply_chain.c
 )

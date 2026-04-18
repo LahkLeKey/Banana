@@ -31,7 +31,7 @@ internal static partial class NativeMethods
     /// <summary>
     /// Executes the native banana profile projection and returns a UTF-8 JSON payload allocated by native code.
     /// </summary>
-    [LibraryImport(LibraryName, EntryPoint = "banana_db_query_banana")]
+    [LibraryImport(LibraryName, EntryPoint = "banana_db_query_banana_profile")]
     internal static partial int QueryBananaProfileProjection(int purchases, int multiplier, out nint payload, out int rowCount);
 
     /// <summary>

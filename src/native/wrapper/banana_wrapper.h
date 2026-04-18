@@ -85,7 +85,7 @@ _Static_assert(offsetof(CInteropBananaRipenessPrediction, cold_chain_risk) == 24
 /*
  * Interop decision:
  * - Wrapper keeps ABI primitive (int + pointer out params).
- * - Legacy module remains isolated and untouched behind this boundary.
+ * - Profile calculation logic remains isolated behind this boundary.
  */
 BANANA_API int banana_calculate_banana(int purchases, int multiplier, int* out_banana);
 
@@ -106,9 +106,19 @@ BANANA_API int banana_calculate_banana_with_breakdown(
 BANANA_API int banana_create_banana_message(int purchases, int multiplier, char** out_message);
 
 /*
- * Executes one atomic DB stage operation.
+ * Executes one atomic banana profile DB stage operation.
  * - Inputs are mapped to one SQL execution.
  * - Wrapper allocates UTF-8 JSON and caller must release with banana_free.
+ */
+BANANA_API int banana_db_query_banana_profile(
+    int purchases,
+    int multiplier,
+    char** out_payload,
+    int* out_row_count
+);
+
+/*
+ * Compatibility alias for existing callers that still bind the older export name.
  */
 BANANA_API int banana_db_query_banana(
     int purchases,

@@ -1,9 +1,9 @@
-#include "banana_projection_legacy.h"
+#include "banana_profile_projection.h"
 
 #include "../internal/banana_postgres.h"
 
 #include "../../domain/banana_lifecycle.h"
-#include "../../domain/banana_projection_legacy.h"
+#include "../../domain/banana_profile.h"
 #include "../../testing/native_test_hooks.h"
 
 #include <stdio.h>
@@ -20,7 +20,7 @@ static char* build_json_payload(int purchases, int multiplier, int banana) {
 
     input.purchases = purchases;
     input.multiplier = multiplier;
-    status = banana_predict_ripeness_for_legacy_input(&input, &prediction);
+    status = banana_predict_ripeness_for_profile_input(&input, &prediction);
     if (status != BANANA_OK) {
         return 0;
     }
@@ -70,7 +70,7 @@ static char* build_json_payload(int purchases, int multiplier, int banana) {
     return payload;
 }
 
-int banana_projection_db_query_banana_profile(int purchases, int multiplier, char** out_payload, int* out_row_count) {
+int banana_profile_projection_db_query(int purchases, int multiplier, char** out_payload, int* out_row_count) {
     int forced_result = 0;
 
     if (out_payload == 0 || out_row_count == 0) {

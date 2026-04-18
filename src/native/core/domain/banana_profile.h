@@ -1,5 +1,5 @@
-#ifndef BANANA_PROJECTION_LEGACY_H
-#define BANANA_PROJECTION_LEGACY_H
+#ifndef BANANA_PROFILE_H
+#define BANANA_PROFILE_H
 
 #include "banana_lifecycle.h"
 
@@ -75,7 +75,7 @@ void banana_run_pipeline(
     const BananaPipeline* pipeline
 );
 
-BananaStatus banana_predict_ripeness_for_legacy_input(
+BananaStatus banana_predict_ripeness_for_profile_input(
     const BananaInput* input,
     BananaRipenessPrediction* prediction
 );

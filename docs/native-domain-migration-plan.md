@@ -6,11 +6,11 @@ This plan keeps the native core organized around banana domain contexts while re
 
 ## Domain Layout
 
-### Legacy Projection Compatibility
+### Banana Profile Compatibility
 
 - Owns the purchases and multiplier projection path that the wrapper and DAL still call.
-- Lives in `src/native/core/domain/banana_projection_legacy.h` and `src/native/core/domain/banana_projection_legacy.c`.
-- Exists only to preserve current interop behavior while the wrapper contract is redesigned around real banana requests.
+- Lives in `src/native/core/domain/banana_profile.h` and `src/native/core/domain/banana_profile.c`.
+- Exists as a compatibility-focused banana profile context while the wrapper contract is redesigned around richer banana requests.
 
 ### Banana Lifecycle
 
@@ -87,11 +87,11 @@ This plan keeps the native core organized around banana domain contexts while re
 1. Put all new native logic in `src/native/core/domain` unless it is a true shared core entry-point concern.
 2. Keep callers on the narrowest domain headers they need instead of reintroducing umbrella includes.
 3. Keep wrapper ABI changes explicit and coordinated; naming cleanup alone should not change the interop contract.
-4. Remove legacy projection once wrapper and managed callers stop depending on purchases and multiplier inputs.
+4. Remove the temporary purchases-and-multiplier profile path once wrapper and managed callers stop depending on those inputs.
 
 ## Incremental Replacement Path
 
-### Phase 1: Remove Legacy Compatibility Naming
+### Phase 1: Remove Compatibility Naming
 
 - Delete the old compatibility-named core files.
 - Replace them with domain-owned source files.
@@ -102,10 +102,10 @@ This plan keeps the native core organized around banana domain contexts while re
 - Move wrapper and DAL includes to the narrowest domain headers they actually need.
 - Do not add new umbrella headers back into the native core.
 
-### Phase 3: Replace Legacy Projection Contracts
+### Phase 3: Replace Temporary Profile Contracts
 
 - Introduce banana-native request models at the wrapper boundary.
-- Keep the legacy projection context as an anti-corruption layer until no external caller depends on it.
+- Keep the temporary banana profile context as an anti-corruption layer until no external caller depends on it.
 
 ### Phase 4: Deepen Aggregates
 
@@ -143,5 +143,5 @@ This plan keeps the native core organized around banana domain contexts while re
 
 - No legacy compatibility file names remain in the repo.
 - Native core code lives in explicit domain files under `src/native/core/domain`, with DAL-specific code under `src/native/core/dal`.
-- Wrapper ABI remains stable while the domain model keeps replacing the legacy projection path.
+- Wrapper ABI remains stable while the domain model keeps replacing the temporary banana profile path.
 - The Banana DDD feature surface described in `docs/banana-ddd.md` is covered inside native core, except for the explicitly out-of-scope consumer context.

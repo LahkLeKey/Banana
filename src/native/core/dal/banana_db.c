@@ -3,11 +3,11 @@
 #include "domain/banana_cultivation.h"
 #include "domain/banana_inventory.h"
 #include "domain/banana_processing.h"
-#include "domain/banana_projection_legacy.h"
+#include "domain/banana_profile_projection.h"
 #include "domain/banana_supply_chain.h"
 
 int banana_db_query(int purchases, int multiplier, char** out_payload, int* out_row_count) {
-    return banana_projection_db_query_banana_profile(purchases, multiplier, out_payload, out_row_count);
+    return banana_profile_projection_db_query(purchases, multiplier, out_payload, out_row_count);
 }
 
 int banana_db_save_plant(const BananaPlant* plant) {
