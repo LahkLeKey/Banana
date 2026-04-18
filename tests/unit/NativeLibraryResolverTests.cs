@@ -89,15 +89,20 @@ public sealed class NativeLibraryResolverTests
 
         try
         {
-            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", tempDir);
             var expectedPath = Path.Combine(tempDir, libraryFile);
             var configuredPath = Path.Combine(tempDir, libraryFile);
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Native:LibraryPath"] = tempDir
+                })
+                .Build();
 
             var result = NativeLibraryResolver.ResolveLibrary(
                 "banana_native",
                 typeof(NativeLibraryResolver).Assembly,
                 null,
-                new ConfigurationBuilder().Build(),
+                configuration,
                 CreateLogger(),
                 path => path == expectedPath,
                 (string path, out nint handle) =>
@@ -116,7 +121,6 @@ public sealed class NativeLibraryResolverTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", null);
             Directory.Delete(tempDir, true);
         }
     }
@@ -130,14 +134,19 @@ public sealed class NativeLibraryResolverTests
 
         try
         {
-            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", tempDir);
             var expectedPath = Path.Combine(tempDir, libraryFile);
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Native:LibraryPath"] = tempDir
+                })
+                .Build();
 
             var result = NativeLibraryResolver.ResolveLibrary(
                 "banana_native",
                 typeof(NativeLibraryResolver).Assembly,
                 null,
-                new ConfigurationBuilder().Build(),
+                configuration,
                 CreateLogger(),
                 path => path == expectedPath,
                 static (string _, out nint handle) =>
@@ -156,7 +165,6 @@ public sealed class NativeLibraryResolverTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", null);
             Directory.Delete(tempDir, true);
         }
     }
