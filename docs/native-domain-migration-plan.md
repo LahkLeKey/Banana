@@ -22,10 +22,25 @@ This plan keeps the native core organized around banana domain contexts while re
 - Owns cultivar names, plant identity, bunch biology, and ripeness prediction.
 - Lives in `src/native/core/domain/banana_lifecycle.h` and `src/native/core/domain/banana_ripeness.c`.
 
+### Cultivation
+
+- Owns plant registration, sucker growth, bunch harvest, bunch ripeness progression, and spoilage transitions.
+- Lives in `src/native/core/domain/banana_cultivation.h` and `src/native/core/domain/banana_cultivation.c`.
+
+### Domain Events
+
+- Owns the native event vocabulary for planted, harvested, shipped, arrived, ripened, sold, spoiled, and inventory-received flows.
+- Lives in `src/native/core/domain/banana_events.h` and `src/native/core/domain/banana_events.c`.
+
 ### Supply Chain
 
-- Owns batch registration, distribution node state, and batch-level ripeness lookups.
+- Owns batch registration, batch composition, export transitions, shipment state, distribution node state, and batch-level ripeness lookups.
 - Lives in `src/native/core/domain/banana_supply_chain.h` and `src/native/core/domain/banana_supply_chain.c`.
+
+### Inventory
+
+- Owns retail inventory receipt, sell-through, spoilage discard, and reorder signaling.
+- Lives in `src/native/core/domain/banana_inventory.h` and `src/native/core/domain/banana_inventory.c`.
 
 ## Migration Rules
 
@@ -56,6 +71,13 @@ This plan keeps the native core organized around banana domain contexts while re
 
 - Add plant, bunch, and shipment invariants directly inside lifecycle and supply-chain code.
 - Replace the in-memory batch registry with persistence-backed recovery.
+
+## Current Native Coverage
+
+- Cultivation aggregates: plant registration, sucker propagation, bunch harvest, ripeness progression, and spoilage.
+- Supply chain aggregates: batch registration, batch-to-bunch composition, export transitions, shipment dispatch and arrival, and node inventory movement.
+- Retail inventory aggregates: inventory receipt, sale, spoilage discard, and reorder thresholds.
+- Domain events: native event payloads now capture planted, harvested, shipped, arrived, ripened, sold, spoiled, and inventory-received actions.
 
 ## Validation Matrix
 
