@@ -1,35 +1,14 @@
-#include "banana_bms.h"
+#include "banana_supply_chain.h"
 
 #include <string.h>
 
-static BananaBatch batch_registry[BANANA_BMS_MAX_BATCH_REGISTRY];
+static BananaBatch batch_registry[BANANA_MAX_BATCH_REGISTRY];
 static int batch_registry_count = 0;
-
-static int identifier_length_valid(const char* value) {
-    size_t length = 0U;
-
-    if (value == 0 || value[0] == '\0') {
-        return 0;
-    }
-
-    length = strlen(value);
-    return length > 0U && length < BANANA_BMS_ID_CAPACITY;
-}
-
-static BananaStatus copy_identifier(BananaIdentifier* identifier, const char* value) {
-    if (identifier == 0 || !identifier_length_valid(value)) {
-        return BANANA_ERROR_INVALID_INPUT;
-    }
-
-    memset(identifier->value, 0, sizeof(identifier->value));
-    memcpy(identifier->value, value, strlen(value));
-    return BANANA_OK;
-}
 
 static int find_batch_index(const char* batch_id) {
     int index = 0;
 
-    if (!identifier_length_valid(batch_id)) {
+    if (!banana_identifier_is_valid(batch_id)) {
         return -1;
     }
 
@@ -64,12 +43,12 @@ BananaStatus banana_batch_register(
 
     memset(&candidate, 0, sizeof(candidate));
 
-    status = copy_identifier(&candidate.batch_id, batch_id);
+    status = banana_identifier_copy(&candidate.batch_id, batch_id);
     if (status != BANANA_OK) {
         return status;
     }
 
-    status = copy_identifier(&candidate.origin_farm, origin_farm);
+    status = banana_identifier_copy(&candidate.origin_farm, origin_farm);
     if (status != BANANA_OK) {
         return status;
     }
@@ -87,7 +66,7 @@ BananaStatus banana_batch_register(
         return BANANA_OK;
     }
 
-    if (batch_registry_count >= BANANA_BMS_MAX_BATCH_REGISTRY) {
+    if (batch_registry_count >= BANANA_MAX_BATCH_REGISTRY) {
         return BANANA_ERROR_OVERFLOW;
     }
 

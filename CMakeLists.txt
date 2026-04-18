@@ -27,10 +27,10 @@ if(BANANA_ENABLE_POSTGRES)
 endif()
 
 set(BANANA_CORE_SOURCES
-    src/native/core/banana_bms.c
-    src/native/core/banana_bms_batch_registry.c
-    src/native/core/banana_bms_legacy.c
-    src/native/core/banana_bms_ripeness.c
+    src/native/core/main.c
+    src/native/core/domain/banana_projection_legacy.c
+    src/native/core/domain/banana_ripeness.c
+    src/native/core/domain/banana_supply_chain.c
 )
 
 if(BANANA_BUILD_SHARED_LIBRARY)

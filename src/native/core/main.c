@@ -1,4 +1,27 @@
-#include "banana_bms.h"
+#include "main.h"
+
+#include <string.h>
+
+int banana_identifier_is_valid(const char* value) {
+    size_t length = 0U;
+
+    if (value == 0 || value[0] == '\0') {
+        return 0;
+    }
+
+    length = strlen(value);
+    return length > 0U && length < BANANA_ID_CAPACITY;
+}
+
+BananaStatus banana_identifier_copy(BananaIdentifier* identifier, const char* value) {
+    if (identifier == 0 || !banana_identifier_is_valid(value)) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    memset(identifier->value, 0, sizeof(identifier->value));
+    memcpy(identifier->value, value, strlen(value));
+    return BANANA_OK;
+}
 
 const char* banana_species_name(BananaSpecies species) {
     switch (species) {

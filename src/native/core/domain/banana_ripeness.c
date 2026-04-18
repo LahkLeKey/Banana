@@ -1,4 +1,4 @@
-#include "banana_bms.h"
+#include "banana_lifecycle.h"
 
 static double clamp_double(double value, double min, double max) {
     if (value < min) {

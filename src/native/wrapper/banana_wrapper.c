@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../core/banana_bms.h"
+#include "../core/main.h"
 #include "../dal/banana_db.h"
 #include "../testing/native_test_hooks.h"
 

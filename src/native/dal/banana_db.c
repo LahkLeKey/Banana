@@ -1,6 +1,6 @@
 #include "banana_db.h"
 
-#include "../core/banana_bms.h"
+#include "../core/main.h"
 
 #include "../testing/native_test_hooks.h"
 

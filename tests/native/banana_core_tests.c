@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "banana_bms.h"
+#include "domain/banana_projection_legacy.h"
+#include "domain/banana_supply_chain.h"
 
 static void require_true(int condition, const char* message) {
     if (!condition) {
@@ -162,6 +163,14 @@ static void test_shared_validation_rejects_invalid_rules_and_context(void) {
     require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when calculating invalid execution context");
 }
 
+static void test_domain_capacity_constants(void) {
+    require_true(BANANA_ID_CAPACITY == 37, "expected identifier capacity constant to remain stable");
+    require_true(BANANA_MAX_SUCKER_OFFSPRING == 8, "expected sucker offspring capacity constant to remain stable");
+    require_true(BANANA_MAX_BUNCHES_PER_BATCH == 16, "expected batch-size constant to remain stable");
+    require_true(BANANA_MAX_BATCHES_PER_NODE == 32, "expected node-capacity constant to remain stable");
+    require_true(BANANA_MAX_BATCH_REGISTRY == 64, "expected registry capacity constant to remain stable");
+}
+
 static void test_predict_ripeness_progresses_through_real_banana_stages(void) {
     double green_history[3] = { 12.5, 12.7, 12.9 };
     double yellow_history[3] = { 15.2, 16.1, 17.0 };
@@ -262,6 +271,7 @@ int main(void) {
     test_legacy_projection_custom_rules_and_pipeline();
     test_prepare_execution_context_and_breakdown();
     test_shared_validation_rejects_invalid_rules_and_context();
+    test_domain_capacity_constants();
     test_predict_ripeness_progresses_through_real_banana_stages();
     test_predict_ripeness_for_legacy_input_returns_profile();
     test_batch_registry_create_get_and_predict();
