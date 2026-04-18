@@ -4,6 +4,7 @@
 
 #include "banana_wrapper.h"
 #include "banana_db.h"
+#include "internal/banana_postgres.h"
 
 #if defined(_WIN32)
 #include <stdlib.h>
@@ -440,6 +441,68 @@ static void test_dal_db_direct_null_output_validation(void) {
     require_true(status == 1, "expected direct banana_db_query_profile_projection null row_count status");
 }
 
+static void test_postgres_query_direct_validation_paths(void) {
+    int banana = 0;
+    int status = banana_postgres_query_banana_profile(1, 1, 0);
+
+    require_true(status == BANANA_DB_INVALID_ARGUMENT, "expected invalid argument for null direct postgres out_banana");
+
+    require_true(UNSET_ENV("BANANA_PG_CONNECTION") == 0, "failed to unset BANANA_PG_CONNECTION for direct postgres query");
+    status = banana_postgres_query_banana_profile(1, 1, &banana);
+    require_true(status == BANANA_DB_NOT_CONFIGURED, "expected not configured when direct postgres query has no connection string");
+    require_true(SET_ENV("BANANA_PG_CONNECTION", "host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop") == 0, "failed to restore BANANA_PG_CONNECTION for direct postgres query");
+}
+
+static void test_postgres_snapshot_validation_paths(void) {
+    char snapshot[4] = { 't', 'e', 's', 't' };
+    char loaded_snapshot[4] = { 0, 0, 0, 0 };
+    int status = banana_postgres_upsert_snapshot(0, "aggregate-1", snapshot, sizeof(snapshot));
+
+    require_true(status == BANANA_DB_INVALID_ARGUMENT, "expected invalid argument for null aggregate type in direct postgres upsert");
+
+    status = banana_postgres_upsert_snapshot("aggregate-type", 0, snapshot, sizeof(snapshot));
+    require_true(status == BANANA_DB_INVALID_ARGUMENT, "expected invalid argument for null aggregate id in direct postgres upsert");
+
+    status = banana_postgres_upsert_snapshot("aggregate-type", "aggregate-1", 0, sizeof(snapshot));
+    require_true(status == BANANA_DB_INVALID_ARGUMENT, "expected invalid argument for null snapshot in direct postgres upsert");
+
+    status = banana_postgres_get_snapshot(0, "aggregate-1", loaded_snapshot, sizeof(loaded_snapshot));
+    require_true(status == BANANA_DB_INVALID_ARGUMENT, "expected invalid argument for null aggregate type in direct postgres get");
+
+    status = banana_postgres_get_snapshot("aggregate-type", 0, loaded_snapshot, sizeof(loaded_snapshot));
+    require_true(status == BANANA_DB_INVALID_ARGUMENT, "expected invalid argument for null aggregate id in direct postgres get");
+
+    status = banana_postgres_get_snapshot("aggregate-type", "aggregate-1", 0, sizeof(loaded_snapshot));
+    require_true(status == BANANA_DB_INVALID_ARGUMENT, "expected invalid argument for null output snapshot in direct postgres get");
+
+    status = banana_postgres_clear_snapshots(0);
+    require_true(status == BANANA_DB_INVALID_ARGUMENT, "expected invalid argument for null aggregate type in direct postgres clear");
+}
+
+static void test_postgres_snapshot_forced_results(void) {
+    char snapshot[4] = { 'd', 'a', 't', 'a' };
+    char loaded_snapshot[4] = { 0, 0, 0, 0 };
+    int status;
+
+    require_true(SET_ENV("BANANA_FORCE_DB_RESULT", "3") == 0, "failed to set BANANA_FORCE_DB_RESULT=3 for direct postgres snapshot tests");
+
+    status = banana_postgres_upsert_snapshot("aggregate-type", "aggregate-1", snapshot, sizeof(snapshot));
+    require_true(status == BANANA_DB_ERROR, "expected forced DB_ERROR for direct postgres upsert snapshot");
+
+    status = banana_postgres_get_snapshot("aggregate-type", "aggregate-1", loaded_snapshot, sizeof(loaded_snapshot));
+    require_true(status == BANANA_DB_ERROR, "expected forced DB_ERROR for direct postgres get snapshot");
+
+    status = banana_postgres_clear_snapshots("aggregate-type");
+    require_true(status == BANANA_DB_ERROR, "expected forced DB_ERROR for direct postgres clear snapshots");
+
+    require_true(UNSET_ENV("BANANA_FORCE_DB_RESULT") == 0, "failed to unset BANANA_FORCE_DB_RESULT=3 for direct postgres snapshot tests");
+
+    require_true(SET_ENV("BANANA_FORCE_DB_RESULT", "4") == 0, "failed to set BANANA_FORCE_DB_RESULT=4 for direct postgres snapshot tests");
+    status = banana_postgres_get_snapshot("aggregate-type", "aggregate-1", loaded_snapshot, sizeof(loaded_snapshot));
+    require_true(status == BANANA_DB_NOT_FOUND, "expected forced DB_NOT_FOUND for direct postgres get snapshot");
+    require_true(UNSET_ENV("BANANA_FORCE_DB_RESULT") == 0, "failed to unset BANANA_FORCE_DB_RESULT=4 for direct postgres snapshot tests");
+}
+
 static void test_free_null_is_safe(void) {
     banana_free(0);
 }
@@ -482,6 +545,9 @@ int main(void) {
     test_db_query_banana_forced_payload_alloc_fail();
     test_db_query_banana_forced_payload_malloc_null();
     test_dal_db_direct_null_output_validation();
+    test_postgres_query_direct_validation_paths();
+    test_postgres_snapshot_validation_paths();
+    test_postgres_snapshot_forced_results();
     test_free_null_is_safe();
 
     puts("native_wrapper_tests: all tests passed");

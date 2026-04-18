@@ -38,6 +38,9 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
         using var document = JsonDocument.Parse(body);
         var root = document.RootElement;
 
+        Assert.Equal("BananaProfileProjection", response.Headers.GetValues("X-Banana-Db-Contract").Single());
+        Assert.Equal("integration-fake", response.Headers.GetValues("X-Banana-Db-Source").Single());
+        Assert.Equal("1", response.Headers.GetValues("X-Banana-Db-RowCount").Single());
         Assert.Equal(10, root.GetProperty("purchases").GetInt32());
         Assert.Equal(2, root.GetProperty("multiplier").GetInt32());
         Assert.Equal(20, root.GetProperty("banana").GetInt32());
@@ -116,6 +119,9 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
         var root = document.RootElement;
+        Assert.Equal("BananaProfileProjection", response.Headers.GetValues("X-Banana-Db-Contract").Single());
+        Assert.Equal("managed-npgsql", response.Headers.GetValues("X-Banana-Db-Source").Single());
+        Assert.Equal("1", response.Headers.GetValues("X-Banana-Db-RowCount").Single());
         Assert.Equal(6, root.GetProperty("purchases").GetInt32());
         Assert.Equal(3, root.GetProperty("multiplier").GetInt32());
         Assert.Equal(18, root.GetProperty("banana").GetInt32());
@@ -136,7 +142,31 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
 
         var response = await client.GetAsync("/banana?purchases=2&multiplier=4");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Database access failure.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetBanana_UsesManagedNpgsqlClient_WhenQueryReturnsMoreThanOneRow()
+    {
+        var connectionString = ResolveManagedConnectionString();
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return;
+        }
+
+        using var client = CreateFactoryWithManagedDbAndFakeNative(
+            connectionString,
+            "select @purchases::int as purchases, @multiplier::int as multiplier union all select @purchases::int, @multiplier::int").CreateClient();
+
+        var response = await client.GetAsync("/banana?purchases=2&multiplier=4");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Database access failure.", body, StringComparison.Ordinal);
     }
 
     [Fact]

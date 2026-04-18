@@ -82,7 +82,7 @@ public sealed class ProgramStartupTests : IClassFixture<WebApplicationFactory<Pr
 
     private static void EnsureNativePathConfigured()
     {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../"));
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
         var fileName = NativeLibraryResolver.GetPlatformLibraryName();
         var candidates = new[]
         {

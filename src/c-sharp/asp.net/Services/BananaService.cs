@@ -20,7 +20,7 @@ public sealed class BananaService : IBananaService
     }
 
     /// <inheritdoc />
-    public BananaResult Calculate(int purchases, int multiplier)
+    public BananaCalculationResult Calculate(int purchases, int multiplier)
     {
         var context = new PipelineContext
         {
@@ -35,7 +35,7 @@ public sealed class BananaService : IBananaService
             throw new NativeInteropException("Pipeline completed without a native calculation result.");
         }
 
-        return pipelineResult.NativeBananaResult;
+        return new BananaCalculationResult(pipelineResult.NativeBananaResult, pipelineResult.Metadata);
     }
 }
 

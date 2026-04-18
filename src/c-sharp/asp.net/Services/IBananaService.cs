@@ -12,6 +12,6 @@ public interface IBananaService
     /// </summary>
     /// <param name="purchases">Number of purchases.</param>
     /// <param name="multiplier">Business multiplier applied by native logic.</param>
-    /// <returns>Calculated banana and a message.</returns>
-    BananaResult Calculate(int purchases, int multiplier);
+    /// <returns>Calculated banana payload plus pipeline metadata.</returns>
+    BananaCalculationResult Calculate(int purchases, int multiplier);
 }

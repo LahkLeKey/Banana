@@ -12,6 +12,10 @@ namespace Banana.Api.Controllers;
 /// </summary>
 public sealed class BananaController : ControllerBase
 {
+    private const string DbContractHeader = "X-Banana-Db-Contract";
+    private const string DbSourceHeader = "X-Banana-Db-Source";
+    private const string DbRowCountHeader = "X-Banana-Db-RowCount";
+
     private readonly IBananaService _bananaService;
 
     /// <summary>
@@ -37,10 +41,24 @@ public sealed class BananaController : ControllerBase
     {
         var result = _bananaService.Calculate(purchases, multiplier);
 
+        WriteMetadataHeader(DbContractHeader, result.Metadata, "db.contract");
+        WriteMetadataHeader(DbSourceHeader, result.Metadata, "db.source");
+        WriteMetadataHeader(DbRowCountHeader, result.Metadata, "db.rowCount");
+
         return Ok(new BananaResponse(
-            result.Purchases,
-            result.Multiplier,
-            result.Banana,
-            result.Message));
+            result.BananaResult.Purchases,
+            result.BananaResult.Multiplier,
+            result.BananaResult.Banana,
+            result.BananaResult.Message));
+    }
+
+    private void WriteMetadataHeader(string headerName, IReadOnlyDictionary<string, object> metadata, string metadataKey)
+    {
+        if (!metadata.TryGetValue(metadataKey, out var value) || value is null)
+        {
+            return;
+        }
+
+        Response.Headers[headerName] = value.ToString();
     }
 }

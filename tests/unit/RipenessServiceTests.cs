@@ -9,6 +9,23 @@ namespace Banana.UnitTests;
 public sealed class RipenessServiceTests
 {
     [Fact]
+    public void Predict_WithNullRequest_ThrowsClientInputException()
+    {
+        var service = new RipenessService(new FakeNativeBananaClient());
+
+        Assert.Throws<ClientInputException>(() => service.Predict(null!));
+    }
+
+    [Fact]
+    public void Predict_WithMissingBatchId_ThrowsClientInputException()
+    {
+        var service = new RipenessService(new FakeNativeBananaClient());
+
+        Assert.Throws<ClientInputException>(() => service.Predict(
+            new BananaRipenessRequest("", [12.5], 5, 1.0, 0.0, null)));
+    }
+
+    [Fact]
     public void Predict_DelegatesToNativeInteropAndReturnsMappedResponse()
     {
         var service = new RipenessService(new FakeNativeBananaClient());
@@ -28,6 +45,42 @@ public sealed class RipenessServiceTests
 
         Assert.Throws<ClientInputException>(() => service.Predict(
             new BananaRipenessRequest("batch-1", [], 5, 1.0, 0.0, null)));
+    }
+
+    [Fact]
+    public void Predict_WithNullHistory_ThrowsClientInputException()
+    {
+        var service = new RipenessService(new FakeNativeBananaClient());
+
+        Assert.Throws<ClientInputException>(() => service.Predict(
+            new BananaRipenessRequest("batch-1", null!, 5, 1.0, 0.0, null)));
+    }
+
+    [Fact]
+    public void Predict_WithNegativeDaysSinceHarvest_ThrowsClientInputException()
+    {
+        var service = new RipenessService(new FakeNativeBananaClient());
+
+        Assert.Throws<ClientInputException>(() => service.Predict(
+            new BananaRipenessRequest("batch-1", [12.5], -1, 1.0, 0.0, null)));
+    }
+
+    [Fact]
+    public void Predict_WithNegativeEthyleneExposure_ThrowsClientInputException()
+    {
+        var service = new RipenessService(new FakeNativeBananaClient());
+
+        Assert.Throws<ClientInputException>(() => service.Predict(
+            new BananaRipenessRequest("batch-1", [12.5], 5, -0.1, 0.0, null)));
+    }
+
+    [Fact]
+    public void Predict_WithNegativeMechanicalDamage_ThrowsClientInputException()
+    {
+        var service = new RipenessService(new FakeNativeBananaClient());
+
+        Assert.Throws<ClientInputException>(() => service.Predict(
+            new BananaRipenessRequest("batch-1", [12.5], 5, 1.0, -0.1, null)));
     }
 
     private sealed class FakeNativeBananaClient : INativeBananaClient

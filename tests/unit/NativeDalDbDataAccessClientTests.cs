@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Banana.Api.DataAccess;
 using Banana.Api.NativeInterop;
@@ -99,7 +100,7 @@ public sealed class NativeDalDbDataAccessClientTests
                 return true;
             }
 
-            var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../"));
+            var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
             var fileName = NativeLibraryResolver.GetPlatformLibraryName();
             var candidates = new[]
             {
@@ -112,6 +113,14 @@ public sealed class NativeDalDbDataAccessClientTests
             {
                 return false;
             }
+
+            var libraryPath = Path.Combine(libraryDir, fileName);
+            if (!NativeLibrary.TryLoad(libraryPath, out var probeHandle))
+            {
+                return false;
+            }
+
+            NativeLibrary.Free(probeHandle);
 
             Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", libraryDir);
 
