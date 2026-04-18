@@ -6,6 +6,10 @@ applyTo: "{CMakeLists.txt,src/native/**/*.c,src/native/**/*.h,tests/native/**/*.
 
 # Native C Standards
 
+- Use `native-core-agent` for `src/native/core` logic, execution context, and focused native tests.
+- Use `native-dal-agent` for `src/native/dal`, PostgreSQL-gated behavior, and DB payload shaping.
+- Use `native-wrapper-agent` for `src/native/wrapper`, ABI exports, statuses, and interop-facing contracts.
+- Use `native-c-agent` only when more than one native helper-owned surface must move together.
 - Preserve the wrapper ABI in `src/native/wrapper/banana_wrapper.h` unless the task explicitly requires a contract change.
 - Keep PostgreSQL support behind the existing `BANANA_ENABLE_POSTGRES` build option and related compile definitions.
 - Prefer updating CMake targets and existing native tests over adding ad-hoc shell build logic.

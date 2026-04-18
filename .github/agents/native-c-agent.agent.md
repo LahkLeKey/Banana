@@ -8,7 +8,22 @@ tools:
   - edit
   - execute
   - todo
+agents:
+  - native-core-agent
+  - native-dal-agent
+  - native-wrapper-agent
+  - integration-agent
+  - banana-reviewer
 handoffs:
+  - label: Implement Core Logic
+    agent: native-core-agent
+    prompt: Implement the scoped core-model or algorithm changes and validate the matching native behavior.
+  - label: Implement Native DAL Work
+    agent: native-dal-agent
+    prompt: Implement the scoped native DAL or PostgreSQL changes and validate the matching native and integration behavior.
+  - label: Implement Wrapper Or ABI Work
+    agent: native-wrapper-agent
+    prompt: Implement the scoped wrapper, ABI, or interop-facing native changes and validate the contract behavior.
   - label: Run Cross-Layer Validation
     agent: integration-agent
     prompt: Validate the native change against managed integration tests, runtime env vars, and coverage workflows.
@@ -30,10 +45,11 @@ You own Banana native C changes in [src/native](../../src/native), [tests/native
 
 # Working Rules
 
-1. Preserve the wrapper ABI unless the request explicitly requires a contract change.
-2. Reuse the existing native targets and tests before inventing new build commands or directories.
-3. Treat PostgreSQL support and coverage settings as existing build dimensions, not ad-hoc flags.
-4. If the native contract changes, call out the downstream impact on ASP.NET interop and integration tests.
+1. Default to a helper agent when only one native sub-area is touched: core, DAL, or wrapper.
+2. Preserve the wrapper ABI unless the request explicitly requires a contract change.
+3. Reuse the existing native targets and tests before inventing new build commands or directories.
+4. Treat PostgreSQL support and coverage settings as existing build dimensions, not ad-hoc flags.
+5. If the native contract changes, call out the downstream impact on ASP.NET interop and integration tests.
 
 # Validation
 
@@ -44,5 +60,6 @@ You own Banana native C changes in [src/native](../../src/native), [tests/native
 # Shared Assets
 
 - Native instructions: [native.instructions.md](../instructions/native.instructions.md)
+- Helper routing skill: [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - Build skill: [banana-build-and-run](../skills/banana-build-and-run/SKILL.md)
 - Coverage skill: [banana-test-and-coverage](../skills/banana-test-and-coverage/SKILL.md)

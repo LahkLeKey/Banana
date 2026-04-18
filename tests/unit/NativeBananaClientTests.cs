@@ -28,7 +28,58 @@ public sealed class NativeBananaClientTests
         Assert.Equal(10, result.Purchases);
         Assert.Equal(2, result.Multiplier);
         Assert.Equal(150, result.Banana);
+        Assert.Contains("banana_profile", result.Message, StringComparison.Ordinal);
         Assert.Contains("banana=150", result.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PredictRipeness_ReturnsExpectedResult_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+
+        var result = client.PredictRipeness([12.5, 13.0, 14.2], 5, 2.5, 0.1, 13.2);
+
+        Assert.False(string.IsNullOrWhiteSpace(result.PredictedStage));
+        Assert.True(result.ShelfLifeHours > 0);
+        Assert.True(result.RipeningIndex > 0.0);
+    }
+
+    [Fact]
+    public void CreateBatch_AndGetBatchStatus_ReturnExpectedResult_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        var created = client.CreateBatch("batch-1", "farm-1", 13.2, 2.5, 3);
+        var loaded = client.GetBatchStatus("batch-1");
+
+        Assert.Equal("batch-1", created.BatchId);
+        Assert.Equal("farm-1", loaded.OriginFarm);
+    }
+
+    [Fact]
+    public void PredictBatchRipeness_ReturnsExpectedResult_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        client.CreateBatch("batch-1", "farm-1", 13.2, 2.5, 3);
+
+        var result = client.PredictBatchRipeness("batch-1", [12.5, 13.0, 14.2], 5, 0.1);
+
+        Assert.True(result.ShelfLifeHours > 0);
+        Assert.True(result.RipeningIndex > 0.0);
     }
 
     [Fact]

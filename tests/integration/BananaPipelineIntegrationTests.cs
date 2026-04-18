@@ -1,8 +1,10 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 
 using Banana.Api.DataAccess;
 using Banana.Api.NativeInterop;
+using Banana.Api.Services;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -138,6 +140,66 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
     }
 
     [Fact]
+    public async Task PredictRipeness_ReturnsExpectedBody()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        await client.PostAsJsonAsync("/batches/create", new
+        {
+            batchId = "batch-1",
+            originFarm = "farm-1",
+            storageTempC = 13.2,
+            ethyleneExposure = 2.5,
+            estimatedShelfLifeDays = 3
+        });
+
+        var response = await client.PostAsJsonAsync("/ripeness/predict", new
+        {
+            batchId = "batch-1",
+            temperatureHistory = new[] { 12.5, 13.0, 14.2 },
+            daysSinceHarvest = 5,
+            ethyleneExposure = 2.5,
+            mechanicalDamage = 0.1,
+            storageTempC = 13.2
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+        Assert.Equal("batch-1", root.GetProperty("batchId").GetString());
+        Assert.Equal("YELLOW", root.GetProperty("predictedStage").GetString());
+        Assert.Equal(48, root.GetProperty("shelfLifeHours").GetInt32());
+    }
+
+    [Fact]
+    public async Task CreateBatch_AndGetBatchStatus_ReturnExpectedBody()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var createResponse = await client.PostAsJsonAsync("/batches/create", new
+        {
+            batchId = "batch-1",
+            originFarm = "farm-1",
+            storageTempC = 13.2,
+            ethyleneExposure = 2.5,
+            estimatedShelfLifeDays = 3
+        });
+
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+
+        var statusResponse = await client.GetAsync("/batches/batch-1/status");
+        Assert.Equal(HttpStatusCode.OK, statusResponse.StatusCode);
+
+        var body = await statusResponse.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+        Assert.Equal("batch-1", root.GetProperty("batchId").GetString());
+        Assert.Equal("farm-1", root.GetProperty("originFarm").GetString());
+    }
+
+    [Fact]
     public void DataAccessClientResolution_UsesManagedClient_WhenConfigured()
     {
         using var factory = _factory.WithWebHostBuilder(builder =>
@@ -186,8 +248,10 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
             builder.UseEnvironment("Testing");
             builder.ConfigureServices(static services =>
             {
+                services.RemoveAll<IDataAccessPipelineClient>();
                 services.RemoveAll<INativeBananaClient>();
-                services.AddScoped<INativeBananaClient, FakeNativeBananaClient>();
+                services.AddSingleton<IDataAccessPipelineClient, SuccessfulDataAccessPipelineClient>();
+                services.AddSingleton<INativeBananaClient, FakeNativeBananaClient>();
             });
         });
     }
@@ -279,6 +343,8 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
 
     private sealed class FakeNativeBananaClient : INativeBananaClient
     {
+        private readonly Dictionary<string, BananaBatchRecord> _batches = new(StringComparer.Ordinal);
+
         public BananaResult Calculate(int purchases, int multiplier)
         {
             return multiplier switch
@@ -292,6 +358,47 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
                     $"purchases={purchases} multiplier={multiplier} banana={purchases * multiplier}")
             };
         }
+
+        public BananaBatchRecord CreateBatch(string batchId, string originFarm, double storageTempC, double ethyleneExposure, int estimatedShelfLifeDays)
+        {
+            var batch = new BananaBatchRecord(batchId, originFarm, "PACKED", storageTempC, ethyleneExposure, estimatedShelfLifeDays);
+            _batches[batchId] = batch;
+            return batch;
+        }
+
+        public BananaBatchRecord GetBatchStatus(string batchId)
+        {
+            if (_batches.TryGetValue(batchId, out var batch))
+            {
+                return batch;
+            }
+
+            throw new EntityNotFoundException("Batch was not found.");
+        }
+
+        public BananaRipenessPrediction PredictRipeness(
+            IReadOnlyList<double> temperatureHistoryC,
+            int daysSinceHarvest,
+            double ethyleneExposure,
+            double mechanicalDamage,
+            double storageTempC)
+        {
+            return new BananaRipenessPrediction("YELLOW", 48, 180.0, 0.3, 0.15);
+        }
+
+        public BananaRipenessPrediction PredictBatchRipeness(
+            string batchId,
+            IReadOnlyList<double> temperatureHistoryC,
+            int daysSinceHarvest,
+            double mechanicalDamage)
+        {
+            if (!_batches.ContainsKey(batchId))
+            {
+                throw new EntityNotFoundException("Batch was not found.");
+            }
+
+            return new BananaRipenessPrediction("YELLOW", 48, 180.0, 0.3, 0.15);
+        }
     }
 
     private sealed class ThrowingDataAccessPipelineClient : IDataAccessPipelineClient
@@ -299,6 +406,15 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
         public RawDbAccessResult Execute(DbAccessRequest request)
         {
             throw new DatabaseAccessException("Injected database-stage failure");
+        }
+    }
+
+    private sealed class SuccessfulDataAccessPipelineClient : IDataAccessPipelineClient
+    {
+        public RawDbAccessResult Execute(DbAccessRequest request)
+        {
+            var payload = $"{{\"purchases\":{request.Purchases},\"multiplier\":{request.Multiplier}}}";
+            return new RawDbAccessResult("integration-fake", payload, 1);
         }
     }
 }

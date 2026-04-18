@@ -12,9 +12,10 @@ Requirements:
 - Choose the narrowest existing validation path that still matches the change risk.
 - Expand to integration, compose, or coverage validation if the change crosses layers.
 - Make env var and runtime assumptions explicit.
-- Report the exact stage that passed or failed and any gaps that remain.
+- Report the exact stage that passed or failed, the likely helper owner of any failure, and any gaps that remain.
 
 Relevant assets:
 
+- [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - [banana-test-and-coverage](../skills/banana-test-and-coverage/SKILL.md)
 - [banana-ci-debugging](../skills/banana-ci-debugging/SKILL.md)

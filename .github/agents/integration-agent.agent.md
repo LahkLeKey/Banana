@@ -8,10 +8,21 @@ tools:
   - edit
   - execute
   - todo
+agents:
+  - test-triage-agent
+  - compose-runtime-agent
+  - workflow-agent
+  - banana-reviewer
 handoffs:
-  - label: Debug CI Or Runtime
-    agent: infrastructure-agent
-    prompt: Investigate the failing runtime, compose, or CI path and adjust the delivery surface if needed.
+  - label: Triage Test Failure
+    agent: test-triage-agent
+    prompt: Isolate the failing validation stage, identify the real owner, and return the narrowest safe fix path.
+  - label: Debug Compose Or Runtime
+    agent: compose-runtime-agent
+    prompt: Investigate the failing runtime or compose path and adjust the delivery surface if needed.
+  - label: Debug Workflow Or Coverage Path
+    agent: workflow-agent
+    prompt: Investigate the failing workflow or coverage path and adjust the CI surface if needed.
   - label: Review Validation Outcome
     agent: banana-reviewer
     prompt: Review the current implementation and validation results for bugs, gaps, and release risk.
@@ -27,6 +38,7 @@ You handle cross-layer validation, test strategy, coverage, and integration tria
 - Expand from focused tests to aggregate coverage and compose validation when the change crosses layers.
 - Keep environment assumptions explicit, especially `BANANA_PG_CONNECTION`, `BANANA_NATIVE_PATH`, and frontend API base URL settings.
 - Separate product regressions from environment/configuration failures.
+- Route fixes to the narrowest helper agent after the failing stage is identified.
 
 # Preferred Entry Points
 
@@ -39,11 +51,13 @@ You handle cross-layer validation, test strategy, coverage, and integration tria
 
 1. Identify whether the change is native-only, API-only, frontend-only, or cross-layer.
 2. Start with the narrowest existing tests or tasks.
-3. Escalate to coverage scripts or compose validation when the request affects runtime behavior or CI parity.
-4. Report exact failing stage, dependency, and environment requirement.
+3. Separate harness or environment failures from product defects before editing code.
+4. Escalate to coverage scripts or compose validation when the request affects runtime behavior or CI parity.
+5. Report exact failing stage, dependency, environment requirement, and likely helper owner.
 
 # Shared Assets
 
 - Testing instructions: [testing.instructions.md](../instructions/testing.instructions.md)
+- Helper routing skill: [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - Coverage skill: [banana-test-and-coverage](../skills/banana-test-and-coverage/SKILL.md)
 - CI debugging skill: [banana-ci-debugging](../skills/banana-ci-debugging/SKILL.md)

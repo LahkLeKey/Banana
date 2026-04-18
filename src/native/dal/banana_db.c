@@ -1,6 +1,6 @@
 #include "banana_db.h"
 
-#include "../core/banana.h"
+#include "../core/banana_bms.h"
 
 #include "../testing/native_test_hooks.h"
 
@@ -42,12 +42,31 @@ static char* create_connection_string_with_timeout(const char* connection_string
 #endif
 
 static char* build_json_payload(int purchases, int multiplier, int banana) {
-    int required = snprintf(0, 0,
-        "{\"purchases\":%d,\"multiplier\":%d,\"banana\":%d}",
+    BananaInput input;
+    BananaRipenessPrediction prediction;
+    BananaStatus status;
+    const char* cultivar = banana_species_name(BANANA_SPECIES_CAVENDISH);
+    const char* stage_name = "UNKNOWN";
+    int required = 0;
+    char* payload = 0;
+
+    input.purchases = purchases;
+    input.multiplier = multiplier;
+    status = banana_predict_ripeness_for_legacy_input(&input, &prediction);
+    if (status != BANANA_OK) {
+        return 0;
+    }
+
+    stage_name = banana_ripeness_stage_name(prediction.predicted_stage);
+    required = snprintf(0, 0,
+        "{\"purchases\":%d,\"multiplier\":%d,\"banana\":%d,\"cultivar\":\"%s\",\"predicted_stage\":\"%s\",\"shelf_life_hours\":%d,\"spoilage_probability\":%.3f}",
         purchases,
         multiplier,
-        banana);
-    char* payload = 0;
+        banana,
+        cultivar,
+        stage_name,
+        prediction.shelf_life_hours,
+        prediction.spoilage_probability);
 
     if (required < 0) {
         return 0; /* GCOVR_EXCL_LINE */
@@ -68,10 +87,14 @@ static char* build_json_payload(int purchases, int multiplier, int banana) {
     }
 
     if (snprintf(payload, (size_t)required + 1U,
-        "{\"purchases\":%d,\"multiplier\":%d,\"banana\":%d}",
+        "{\"purchases\":%d,\"multiplier\":%d,\"banana\":%d,\"cultivar\":\"%s\",\"predicted_stage\":\"%s\",\"shelf_life_hours\":%d,\"spoilage_probability\":%.3f}",
         purchases,
         multiplier,
-        banana) < 0) {
+        banana,
+        cultivar,
+        stage_name,
+        prediction.shelf_life_hours,
+        prediction.spoilage_probability) < 0) {
         free(payload); /* GCOVR_EXCL_LINE */
         return 0; /* GCOVR_EXCL_LINE */
     }

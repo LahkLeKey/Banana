@@ -15,6 +15,9 @@ Bun + React + Tailwind starter application for Banana API integration.
 
 - `GET /health`
 - `GET /banana?purchases=<int>&multiplier=<int>`
+- `POST /batches/create`
+- `GET /batches/{id}/status`
+- `POST /ripeness/predict`
 
 ## Scripts
 

@@ -11,11 +11,13 @@ Use this skill near the end of a task to make sure the delivered change is actua
 ## Review Procedure
 
 1. Confirm the change stayed within the intended domain boundaries.
-2. Verify that affected build, test, and runtime entry points were exercised.
-3. Check whether environment contracts or public behavior changed.
-4. Update the nearest docs, prompts, or skill references when workflows changed.
-5. Call out unresolved risks, deferred tests, or rollout concerns explicitly.
+2. Confirm the broad agent delegated to narrower helpers when the scope allowed it.
+3. Verify that affected build, test, and runtime entry points were exercised.
+4. Check whether environment contracts or public behavior changed.
+5. Update the nearest docs, prompts, or skill references when workflows changed.
+6. Call out unresolved risks, deferred tests, or rollout concerns explicitly.
 
 ## Resources
 
 - Release checklist: [release-checklist.md](./release-checklist.md)
+- Helper routing: [../banana-agent-decomposition/helper-matrix.md](../banana-agent-decomposition/helper-matrix.md)

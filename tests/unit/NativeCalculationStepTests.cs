@@ -35,5 +35,34 @@ public sealed class NativeCalculationStepTests
             var banana = purchases * multiplier;
             return new BananaResult(purchases, multiplier, banana, $"purchases={purchases} multiplier={multiplier} banana={banana}");
         }
+
+        public BananaBatchRecord CreateBatch(string batchId, string originFarm, double storageTempC, double ethyleneExposure, int estimatedShelfLifeDays)
+        {
+            return new BananaBatchRecord(batchId, originFarm, "PACKED", storageTempC, ethyleneExposure, estimatedShelfLifeDays);
+        }
+
+        public BananaBatchRecord GetBatchStatus(string batchId)
+        {
+            return new BananaBatchRecord(batchId, "farm-1", "PACKED", 13.2, 2.5, 3);
+        }
+
+        public BananaRipenessPrediction PredictRipeness(
+            IReadOnlyList<double> temperatureHistoryC,
+            int daysSinceHarvest,
+            double ethyleneExposure,
+            double mechanicalDamage,
+            double storageTempC)
+        {
+            return new BananaRipenessPrediction("GREEN", 96, 40.0, 0.1, 0.05);
+        }
+
+        public BananaRipenessPrediction PredictBatchRipeness(
+            string batchId,
+            IReadOnlyList<double> temperatureHistoryC,
+            int daysSinceHarvest,
+            double mechanicalDamage)
+        {
+            return new BananaRipenessPrediction("GREEN", 96, 40.0, 0.1, 0.05);
+        }
     }
 }

@@ -26,9 +26,16 @@ if(BANANA_ENABLE_POSTGRES)
     endif()
 endif()
 
+set(BANANA_CORE_SOURCES
+    src/native/core/banana_bms.c
+    src/native/core/banana_bms_batch_registry.c
+    src/native/core/banana_bms_legacy.c
+    src/native/core/banana_bms_ripeness.c
+)
+
 if(BANANA_BUILD_SHARED_LIBRARY)
     add_library(banana_native SHARED
-        src/native/core/banana.c
+        ${BANANA_CORE_SOURCES}
         src/native/dal/banana_db.c
         src/native/testing/native_test_hooks_default.c
         src/native/wrapper/banana_wrapper.c
@@ -87,7 +94,7 @@ if(BANANA_ENABLE_NATIVE_TESTS)
     add_executable(banana_wrapper_tests
         tests/native/banana_wrapper_tests.c
         tests/native/native_test_hooks_env.c
-        src/native/core/banana.c
+        ${BANANA_CORE_SOURCES}
         src/native/dal/banana_db.c
         src/native/wrapper/banana_wrapper.c
     )
@@ -116,7 +123,7 @@ if(BANANA_ENABLE_NATIVE_TESTS)
 
     add_executable(banana_core_tests
         tests/native/banana_core_tests.c
-        src/native/core/banana.c
+        ${BANANA_CORE_SOURCES}
     )
 
     target_include_directories(banana_core_tests

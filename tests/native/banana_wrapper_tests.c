@@ -63,6 +63,9 @@ static void test_create_banana_message_ok(void) {
     int status = banana_create_banana_message(10, 2, &message);
     require_true(status == BANANA_STATUS_OK, "expected status OK for create_banana_message");
     require_true(message != 0, "expected message pointer");
+    require_true(strstr(message, "banana_profile") != 0, "expected banana profile prefix in message");
+    require_true(strstr(message, "cultivar=Cavendish") != 0, "expected cultivar token in message");
+    require_true(strstr(message, "stage=YELLOW") != 0, "expected ripeness stage token in message");
     require_true(strstr(message, "banana=150") != 0, "expected banana token in message");
     banana_free(message);
 }
@@ -86,6 +89,12 @@ static void test_breakdown_ok(void) {
     require_true(breakdown.purchases == 10, "expected purchases=10 in breakdown");
     require_true(breakdown.multiplier == 2, "expected multiplier=2 in breakdown");
     require_true(breakdown.banana == 150, "expected banana=150 in breakdown");
+}
+
+static void test_breakdown_uses_shared_core_validation_for_large_values(void) {
+    CInteropBananaBreakdown breakdown;
+    int status = banana_calculate_banana_with_breakdown(214748365, 1, &breakdown);
+    require_true(status == BANANA_STATUS_OVERFLOW, "expected overflow for breakdown when core validation rejects large values");
 }
 
 static void test_breakdown_invalid_input(void) {
@@ -117,9 +126,68 @@ static void test_db_query_banana_ok(void) {
     require_true(status == BANANA_STATUS_OK, "expected status OK for db_query_banana");
     require_true(payload != 0, "expected payload pointer");
     require_true(row_count == 1, "expected row_count=1");
+    require_true(strstr(payload, "\"cultivar\":\"Cavendish\"") != 0, "expected cultivar in payload");
+    require_true(strstr(payload, "\"predicted_stage\":\"YELLOW\"") != 0, "expected ripeness stage in payload");
+    require_true(strstr(payload, "\"shelf_life_hours\":") != 0, "expected shelf life in payload");
     require_true(strstr(payload, "\"banana\":150") != 0, "expected banana token in payload");
 
     banana_free(payload);
+}
+
+static void test_predict_banana_ripeness_ok(void) {
+    double history[3] = { 12.5, 13.0, 14.2 };
+    CInteropBananaRipenessPrediction prediction;
+    int status = banana_predict_banana_ripeness(history, 3, 5, 2.5, 0.1, 13.2, &prediction);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for ripeness prediction");
+    require_true(prediction.predicted_stage >= 0, "expected a valid predicted stage");
+    require_true(prediction.shelf_life_hours > 0, "expected positive shelf life hours");
+    require_true(prediction.ripening_index > 0.0, "expected positive ripening index");
+}
+
+static void test_predict_banana_ripeness_invalid_args(void) {
+    double history[1] = { 13.0 };
+    int status = banana_predict_banana_ripeness(history, 1, -1, 0.0, 0.0, 13.0, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null prediction");
+
+    status = banana_predict_banana_ripeness(history, 1, -1, 0.0, 0.0, 13.0, (CInteropBananaRipenessPrediction*)&history[0]);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for invalid ripeness input");
+}
+
+static void test_batch_create_and_status_ok(void) {
+    char* payload = 0;
+    char* status_payload = 0;
+    int status = banana_create_batch("batch-1", "farm-1", 13.2, 2.5, 3, &payload);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for create_batch");
+    require_true(payload != 0, "expected payload for create_batch");
+    require_true(strstr(payload, "\"batchId\":\"batch-1\"") != 0, "expected batchId in batch payload");
+    banana_free(payload);
+
+    status = banana_get_batch_status("batch-1", &status_payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for get_batch_status");
+    require_true(status_payload != 0, "expected payload for get_batch_status");
+    require_true(strstr(status_payload, "\"originFarm\":\"farm-1\"") != 0, "expected originFarm in status payload");
+    banana_free(status_payload);
+}
+
+static void test_predict_batch_ripeness_ok(void) {
+    double history[3] = { 12.5, 13.0, 14.2 };
+    CInteropBananaRipenessPrediction prediction;
+    int status = banana_predict_batch_ripeness("batch-1", history, 3, 5, 0.1, &prediction);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for batch ripeness prediction");
+    require_true(prediction.shelf_life_hours > 0, "expected positive shelf life for batch ripeness prediction");
+}
+
+static void test_batch_not_found_paths(void) {
+    char* payload = 0;
+    CInteropBananaRipenessPrediction prediction;
+    int status = banana_get_batch_status("missing-batch", &payload);
+    require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing batch status");
+
+    status = banana_predict_batch_ripeness("missing-batch", 0, 0, 1, 0.0, &prediction);
+    require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing batch ripeness");
 }
 
 static void test_db_query_banana_invalid_args(void) {
@@ -290,10 +358,16 @@ int main(void) {
     test_create_banana_message_invalid_input();
     test_create_banana_message_forced_alloc_failure();
     test_breakdown_ok();
+    test_breakdown_uses_shared_core_validation_for_large_values();
     test_breakdown_invalid_input();
     test_breakdown_null_pointer();
     test_breakdown_internal_error();
     test_db_query_banana_ok();
+    test_predict_banana_ripeness_ok();
+    test_predict_banana_ripeness_invalid_args();
+    test_batch_create_and_status_ok();
+    test_predict_batch_ripeness_ok();
+    test_batch_not_found_paths();
     test_db_query_banana_invalid_args();
     test_db_query_banana_invalid_input();
     test_db_query_banana_missing_connection();

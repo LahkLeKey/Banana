@@ -13,7 +13,8 @@ Use this skill to select the correct validation surface for Banana changes.
 1. Identify the narrowest existing tests that cover the change.
 2. Escalate to integration or aggregate coverage when contracts or runtime behavior change.
 3. Make environment requirements explicit before running the command.
-4. Report exact failing stage, not just the final error.
+4. Report exact failing stage and likely helper owner, not just the final error.
+5. Route fixes to the narrowest helper once the failure surface is isolated.
 
 ## Required Contracts
 
@@ -24,3 +25,4 @@ Use this skill to select the correct validation surface for Banana changes.
 ## Resources
 
 - Validation matrix: [validation-matrix.md](./validation-matrix.md)
+- Helper routing: [../banana-agent-decomposition/helper-matrix.md](../banana-agent-decomposition/helper-matrix.md)
