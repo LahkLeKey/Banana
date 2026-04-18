@@ -271,7 +271,7 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
         });
     }
 
-    private WebApplicationFactory<Program> CreateFactoryWithManagedDbAndFakeNative(string connectionString, string managedQuery)
+    private WebApplicationFactory<Program> CreateFactoryWithManagedDbAndFakeNative(string connectionString, string bananaProfileQuery)
     {
         return _factory.WithWebHostBuilder(builder =>
         {
@@ -281,7 +281,7 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
                 configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["DbAccess:Mode"] = "ManagedNpgsql",
-                    ["DbAccess:ManagedQuery"] = managedQuery,
+                    ["DbAccess:BananaProfileQuery"] = bananaProfileQuery,
                     ["ConnectionStrings:PostgreSQL"] = connectionString
                 });
             });

@@ -29,7 +29,7 @@ int banana_db_query_banana_profile(
     *out_payload = 0;
     *out_row_count = 0;
 
-    db_result = banana_db_query(purchases, multiplier, out_payload, out_row_count);
+    db_result = banana_db_query_profile_projection(purchases, multiplier, out_payload, out_row_count);
     if (db_result == BANANA_DB_OK) {
         return BANANA_STATUS_OK;
     }
@@ -43,13 +43,4 @@ int banana_db_query_banana_profile(
     }
 
     return BANANA_STATUS_INTERNAL_ERROR;
-}
-
-int banana_db_query_banana(
-    int purchases,
-    int multiplier,
-    char** out_payload,
-    int* out_row_count
-) {
-    return banana_db_query_banana_profile(purchases, multiplier, out_payload, out_row_count);
 }

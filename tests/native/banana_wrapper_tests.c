@@ -121,9 +121,9 @@ static void test_breakdown_null_pointer(void) {
 static void test_db_query_banana_ok(void) {
     char* payload = 0;
     int row_count = 0;
-    int status = banana_db_query_banana(10, 2, &payload, &row_count);
+    int status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
 
-    require_true(status == BANANA_STATUS_OK, "expected status OK for db_query_banana");
+    require_true(status == BANANA_STATUS_OK, "expected status OK for db_query_banana_profile");
     require_true(payload != 0, "expected payload pointer");
     require_true(row_count == 1, "expected row_count=1");
     require_true(strstr(payload, "\"cultivar\":\"Cavendish\"") != 0, "expected cultivar in payload");
@@ -291,18 +291,18 @@ static void test_truck_not_found_paths(void) {
 static void test_db_query_banana_invalid_args(void) {
     int row_count = 0;
     char* payload = 0;
-    int status = banana_db_query_banana(10, 2, 0, &row_count);
+    int status = banana_db_query_banana_profile(10, 2, 0, &row_count);
     require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null payload output");
 
-    status = banana_db_query_banana(10, 2, &payload, 0);
+    status = banana_db_query_banana_profile(10, 2, &payload, 0);
     require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null row_count output");
 }
 
 static void test_db_query_banana_invalid_input(void) {
     char* payload = 0;
     int row_count = 0;
-    int status = banana_db_query_banana(-1, 2, &payload, &row_count);
-    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for negative db_query_banana input");
+    int status = banana_db_query_banana_profile(-1, 2, &payload, &row_count);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for negative db_query_banana_profile input");
 }
 
 static void test_db_query_banana_forced_not_configured(void) {
@@ -311,7 +311,7 @@ static void test_db_query_banana_forced_not_configured(void) {
     int status;
 
     require_true(SET_ENV("BANANA_FORCE_DB_RESULT", "2") == 0, "failed to set BANANA_FORCE_DB_RESULT=2");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("BANANA_FORCE_DB_RESULT") == 0, "failed to unset BANANA_FORCE_DB_RESULT");
     require_true(status == BANANA_STATUS_DB_NOT_CONFIGURED, "expected DB_NOT_CONFIGURED for forced db result 2");
 }
@@ -322,7 +322,7 @@ static void test_db_query_banana_forced_db_error(void) {
     int status;
 
     require_true(SET_ENV("BANANA_FORCE_DB_RESULT", "3") == 0, "failed to set BANANA_FORCE_DB_RESULT=3");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("BANANA_FORCE_DB_RESULT") == 0, "failed to unset BANANA_FORCE_DB_RESULT");
     require_true(status == BANANA_STATUS_DB_ERROR, "expected DB_ERROR for forced db result 3");
 }
@@ -333,7 +333,7 @@ static void test_db_query_banana_missing_connection(void) {
     int status;
 
     require_true(UNSET_ENV("BANANA_PG_CONNECTION") == 0, "failed to unset BANANA_PG_CONNECTION");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
 #if defined(BANANA_ENABLE_POSTGRES)
     require_true(status == BANANA_STATUS_DB_NOT_CONFIGURED, "expected DB_NOT_CONFIGURED when connection string is missing");
 #else
@@ -348,7 +348,7 @@ static void test_db_query_banana_bad_connection(void) {
     int status;
 
     require_true(SET_ENV("BANANA_PG_CONNECTION", "host=invalid-host-name port=5432 user=cinterop password=cinterop dbname=cinterop connect_timeout=1") == 0, "failed to set bad BANANA_PG_CONNECTION");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
 #if defined(BANANA_ENABLE_POSTGRES)
     require_true(status == BANANA_STATUS_DB_ERROR, "expected DB_ERROR when connection fails");
 #else
@@ -363,7 +363,7 @@ static void test_db_query_banana_forced_bad_result_branch(void) {
     int status;
 
     require_true(SET_ENV("BANANA_FORCE_DB_BAD_RESULT", "1") == 0, "failed to set BANANA_FORCE_DB_BAD_RESULT");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("BANANA_FORCE_DB_BAD_RESULT") == 0, "failed to unset BANANA_FORCE_DB_BAD_RESULT");
 #if defined(BANANA_ENABLE_POSTGRES)
     require_true(status == BANANA_STATUS_DB_ERROR, "expected DB_ERROR for forced bad query result branch");
@@ -378,7 +378,7 @@ static void test_db_query_banana_forced_status_mismatch_branch(void) {
     int status;
 
     require_true(SET_ENV("BANANA_FORCE_DB_STATUS_MISMATCH", "1") == 0, "failed to set BANANA_FORCE_DB_STATUS_MISMATCH");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("BANANA_FORCE_DB_STATUS_MISMATCH") == 0, "failed to unset BANANA_FORCE_DB_STATUS_MISMATCH");
 #if defined(BANANA_ENABLE_POSTGRES)
     require_true(status == BANANA_STATUS_DB_ERROR, "expected DB_ERROR for forced status mismatch branch");
@@ -393,7 +393,7 @@ static void test_db_query_banana_forced_internal_error(void) {
     int status;
 
     require_true(SET_ENV("BANANA_FORCE_DB_RESULT", "9") == 0, "failed to set BANANA_FORCE_DB_RESULT=9");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("BANANA_FORCE_DB_RESULT") == 0, "failed to unset BANANA_FORCE_DB_RESULT");
     require_true(status == BANANA_STATUS_INTERNAL_ERROR, "expected INTERNAL_ERROR for forced db result 9");
 }
@@ -404,7 +404,7 @@ static void test_db_query_banana_forced_payload_alloc_fail(void) {
     int status;
 
     require_true(SET_ENV("BANANA_FORCE_PAYLOAD_ALLOC_FAIL", "1") == 0, "failed to set BANANA_FORCE_PAYLOAD_ALLOC_FAIL");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("BANANA_FORCE_PAYLOAD_ALLOC_FAIL") == 0, "failed to unset BANANA_FORCE_PAYLOAD_ALLOC_FAIL");
     require_true(status == BANANA_STATUS_DB_ERROR, "expected DB_ERROR when payload allocation is forced to fail");
 }
@@ -415,7 +415,7 @@ static void test_db_query_banana_forced_payload_malloc_null(void) {
     int status;
 
     require_true(SET_ENV("BANANA_FORCE_PAYLOAD_MALLOC_NULL", "1") == 0, "failed to set BANANA_FORCE_PAYLOAD_MALLOC_NULL");
-    status = banana_db_query_banana(10, 2, &payload, &row_count);
+    status = banana_db_query_banana_profile(10, 2, &payload, &row_count);
     require_true(UNSET_ENV("BANANA_FORCE_PAYLOAD_MALLOC_NULL") == 0, "failed to unset BANANA_FORCE_PAYLOAD_MALLOC_NULL");
     require_true(status == BANANA_STATUS_DB_ERROR, "expected DB_ERROR when payload malloc null is forced");
 }
@@ -433,11 +433,11 @@ static void test_create_banana_message_forced_alloc_failure(void) {
 static void test_dal_db_direct_null_output_validation(void) {
     int row_count = 0;
     char* payload = 0;
-    int status = banana_db_query(1, 1, 0, &row_count);
-    require_true(status == 1, "expected direct banana_db_query null payload status");
+    int status = banana_db_query_profile_projection(1, 1, 0, &row_count);
+    require_true(status == 1, "expected direct banana_db_query_profile_projection null payload status");
 
-    status = banana_db_query(1, 1, &payload, 0);
-    require_true(status == 1, "expected direct banana_db_query null row_count status");
+    status = banana_db_query_profile_projection(1, 1, &payload, 0);
+    require_true(status == 1, "expected direct banana_db_query_profile_projection null row_count status");
 }
 
 static void test_free_null_is_safe(void) {

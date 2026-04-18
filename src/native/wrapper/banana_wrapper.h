@@ -117,16 +117,6 @@ BANANA_API int banana_db_query_banana_profile(
     int* out_row_count
 );
 
-/*
- * Compatibility alias for existing callers that still bind the older export name.
- */
-BANANA_API int banana_db_query_banana(
-    int purchases,
-    int multiplier,
-    char** out_payload,
-    int* out_row_count
-);
-
 BANANA_API int banana_predict_banana_ripeness(
     const double* temperature_history_c,
     int temperature_history_count,

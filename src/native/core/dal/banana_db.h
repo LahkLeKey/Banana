@@ -16,7 +16,7 @@ typedef enum BananaDbResult {
 	BANANA_DB_NOT_FOUND = 4
 } BananaDbResult;
 
-int banana_db_query(int purchases, int multiplier, char** out_payload, int* out_row_count);
+int banana_db_query_profile_projection(int purchases, int multiplier, char** out_payload, int* out_row_count);
 
 int banana_db_save_plant(const BananaPlant* plant);
 int banana_db_get_plant(const char* plant_id, BananaPlant* plant);
