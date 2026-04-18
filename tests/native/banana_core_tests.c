@@ -2,9 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "domain/banana_application.h"
 #include "domain/banana_cultivation.h"
+#include "domain/banana_integration.h"
 #include "domain/banana_inventory.h"
+#include "domain/banana_processing.h"
 #include "domain/banana_projection_legacy.h"
+#include "domain/banana_read_models.h"
+#include "domain/banana_repositories.h"
+#include "domain/banana_services.h"
 #include "domain/banana_supply_chain.h"
 
 static void require_true(int condition, const char* message) {
@@ -292,6 +298,62 @@ static void test_cultivation_registers_plants_and_harvests_bunches(void) {
     require_true(event.type == BANANA_EVENT_HARVESTED, "expected harvested event for bunch harvest");
 }
 
+static void test_processing_factory_creates_individual_banana_entities(void) {
+    BananaPlant plant;
+    BananaGeoCoordinates location;
+    BananaBunchSpec spec;
+    BananaFruitSpec fruit_specs[3];
+    BananaBunchRecord record;
+    BananaDomainEvent bloom_event;
+    BananaDomainEvent harvest_event;
+    BananaStatus status;
+
+    location.latitude = 15.5;
+    location.longitude = -61.4;
+    status = banana_plant_register("plant-processing-1", BANANA_SPECIES_CAVENDISH, location, 7, 2, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for processing plant registration");
+
+    status = banana_plant_record_bloom(&plant, "bunch-processing-1", 55, &bloom_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for bloom event recording");
+    require_true(bloom_event.type == BANANA_EVENT_BLOOMED, "expected bloomed event type");
+
+    spec.harvest_day_ordinal = 90;
+    spec.weight_kg = 1.35;
+    spec.finger_count = 3;
+    spec.maturity_stage = BANANA_STAGE_GREEN;
+    spec.quality_score = 0.95;
+
+    fruit_specs[0].fruit_id = "fruit-1";
+    fruit_specs[0].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[0].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[0].weight_kg = 0.45;
+    fruit_specs[1].fruit_id = "fruit-2";
+    fruit_specs[1].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[1].weight_kg = 0.45;
+    fruit_specs[2].fruit_id = "fruit-3";
+    fruit_specs[2].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[2].ripeness_stage = BANANA_STAGE_BREAKING;
+    fruit_specs[2].weight_kg = 0.45;
+
+    status = banana_bunch_factory_create(
+        &plant,
+        "bunch-processing-1",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        fruit_specs,
+        3,
+        &record,
+        &harvest_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for bunch factory creation");
+    require_true(harvest_event.type == BANANA_EVENT_HARVESTED, "expected harvested event from bunch factory");
+    require_true(record.banana_count == 3, "expected fruit count in bunch record");
+    require_true(banana_bunch_record_validate(&record) == BANANA_OK, "expected valid bunch record");
+    require_true(banana_bunch_record_all_same_cultivar(&record), "expected all fruit to share cultivar");
+    require_true(banana_bunch_record_uniform_ripeness(&record), "expected fruit ripeness to be within one stage");
+    require_true(banana_bunch_record_total_weight_kg(&record) > 1.34 && banana_bunch_record_total_weight_kg(&record) < 1.36, "expected total weight to match bunch record");
+}
+
 static void test_cultivation_ripening_is_monotonic_and_spoilage_is_tracked(void) {
     BananaPlant plant;
     BananaGeoCoordinates location;
@@ -394,6 +456,342 @@ static void test_supply_chain_tracks_shipments_nodes_and_batch_transitions(void)
     require_true(destination.inventory_batch_count == 1, "expected destination inventory to contain the batch");
 }
 
+static void test_repositories_persist_aggregates(void) {
+    BananaPlant plant;
+    BananaPlant loaded_plant;
+    BananaGeoCoordinates location;
+    BananaBunchSpec spec;
+    BananaFruitSpec fruit_specs[2];
+    BananaBunchRecord bunch;
+    BananaBunchRecord loaded_bunch;
+    BananaShipment shipment;
+    BananaShipment loaded_shipment;
+    BananaInventoryItem item;
+    BananaInventoryItem loaded_item;
+    BananaStatus status;
+
+    banana_plant_repository_clear();
+    banana_bunch_repository_clear();
+    banana_shipment_repository_clear();
+    banana_inventory_repository_clear();
+
+    location.latitude = 12.0;
+    location.longitude = -70.0;
+    status = banana_plant_register("repo-plant-1", BANANA_SPECIES_OTHER, location, 3, 1, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for repository plant registration");
+    status = banana_plant_repository_save(&plant);
+    require_true(status == BANANA_OK, "expected BANANA_OK when saving plant to repository");
+    status = banana_plant_repository_get("repo-plant-1", &loaded_plant);
+    require_true(status == BANANA_OK, "expected BANANA_OK when loading plant from repository");
+    require_true(strcmp(loaded_plant.plant_id.value, "repo-plant-1") == 0, "expected loaded plant identifier");
+
+    spec.harvest_day_ordinal = 60;
+    spec.weight_kg = 0.8;
+    spec.finger_count = 2;
+    spec.maturity_stage = BANANA_STAGE_GREEN;
+    spec.quality_score = 0.8;
+    fruit_specs[0].fruit_id = "repo-fruit-1";
+    fruit_specs[0].cultivar = BANANA_SPECIES_OTHER;
+    fruit_specs[0].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[0].weight_kg = 0.4;
+    fruit_specs[1].fruit_id = "repo-fruit-2";
+    fruit_specs[1].cultivar = BANANA_SPECIES_OTHER;
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[1].weight_kg = 0.4;
+
+    status = banana_bunch_factory_create(&plant, "repo-bunch-1", &spec, BANANA_SPECIES_OTHER, fruit_specs, 2, &bunch, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for repository bunch factory creation");
+    status = banana_bunch_repository_save(&bunch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when saving bunch to repository");
+    status = banana_bunch_repository_get("repo-bunch-1", &loaded_bunch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when loading bunch from repository");
+    require_true(loaded_bunch.banana_count == 2, "expected loaded bunch fruit count");
+
+    status = banana_shipment_create("repo-shipment-1", "origin-a", "destination-a", &shipment);
+    require_true(status == BANANA_OK, "expected BANANA_OK for repository shipment creation");
+    status = banana_shipment_repository_save(&shipment);
+    require_true(status == BANANA_OK, "expected BANANA_OK when saving shipment to repository");
+    status = banana_shipment_repository_get("repo-shipment-1", &loaded_shipment);
+    require_true(status == BANANA_OK, "expected BANANA_OK when loading shipment from repository");
+    require_true(strcmp(loaded_shipment.shipment_id.value, "repo-shipment-1") == 0, "expected loaded shipment identifier");
+
+    status = banana_inventory_receive("repo-inventory-1", "store-a", "repo-batch-1", BANANA_STAGE_YELLOW, 10, 2, 2.0, 90, &item, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for repository inventory creation");
+    status = banana_inventory_repository_save(&item);
+    require_true(status == BANANA_OK, "expected BANANA_OK when saving inventory to repository");
+    status = banana_inventory_repository_get("repo-inventory-1", &loaded_item);
+    require_true(status == BANANA_OK, "expected BANANA_OK when loading inventory from repository");
+    require_true(loaded_item.quantity_on_hand == 10, "expected loaded inventory quantity");
+}
+
+static void test_domain_services_apply_ripening_and_quality_control(void) {
+    BananaPlant plant;
+    BananaGeoCoordinates location;
+    BananaBunchSpec spec;
+    BananaFruitSpec fruit_specs[2];
+    BananaBunchRecord bunch;
+    BananaRipenessInput input;
+    BananaRipenessPrediction prediction;
+    BananaDomainEvent event;
+    BananaStatus status;
+
+    location.latitude = -10.0;
+    location.longitude = 33.0;
+    status = banana_plant_register("service-plant-1", BANANA_SPECIES_PLANTAIN, location, 8, 1, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for service plant registration");
+
+    spec.harvest_day_ordinal = 80;
+    spec.weight_kg = 0.6;
+    spec.finger_count = 2;
+    spec.maturity_stage = BANANA_STAGE_GREEN;
+    spec.quality_score = 0.78;
+    fruit_specs[0].fruit_id = "service-fruit-1";
+    fruit_specs[0].cultivar = BANANA_SPECIES_PLANTAIN;
+    fruit_specs[0].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[0].weight_kg = 0.3;
+    fruit_specs[1].fruit_id = "service-fruit-2";
+    fruit_specs[1].cultivar = BANANA_SPECIES_PLANTAIN;
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[1].weight_kg = 0.3;
+
+    status = banana_bunch_factory_create(&plant, "service-bunch-1", &spec, BANANA_SPECIES_PLANTAIN, fruit_specs, 2, &bunch, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for service bunch factory creation");
+    require_true(banana_quality_control_average_fruit_weight_kg(&bunch) > 0.29, "expected measurable average fruit weight");
+    require_true(banana_quality_control_is_underweight(&bunch, 0.35), "expected underweight bunch under stricter threshold");
+
+    input.temperature_history_c = 0;
+    input.temperature_history_count = 0;
+    input.days_since_harvest = 7;
+    input.ethylene_exposure = 7.0;
+    input.mechanical_damage = 0.0;
+    input.storage_temp_c = 16.0;
+
+    status = banana_ripening_service_evaluate_bunch(&bunch, &input, &prediction);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ripening service evaluation");
+    require_true(prediction.predicted_stage >= BANANA_STAGE_BREAKING, "expected ripening service to advance stage");
+
+    status = banana_ripening_service_apply(&bunch, &input, 88, &prediction, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ripening service apply");
+    require_true(event.type == BANANA_EVENT_RIPENED, "expected ripened event from ripening service apply");
+    require_true(bunch.bananas[0].ripeness_stage == bunch.aggregate.bunch.maturity_stage, "expected child banana stage sync after ripening apply");
+}
+
+static void test_application_services_execute_commands(void) {
+    BananaPlant plant;
+    BananaGeoCoordinates location;
+    BananaHarvestCommand harvest_command;
+    BananaFruitSpec fruit_specs[2];
+    BananaBunchRecord bunch;
+    BananaRipenCommand ripen_command;
+    BananaRipenessPrediction prediction;
+    BananaShipCommand ship_command;
+    BananaBatch batch;
+    BananaShipment shipment;
+    BananaInventoryReceiveCommand inventory_receive_command;
+    BananaInventoryItem item;
+    BananaSellCommand sell_command;
+    BananaDiscardSpoiledCommand discard_command;
+    BananaDomainEvent first_event;
+    BananaDomainEvent second_event;
+    BananaStatus status;
+
+    banana_plant_repository_clear();
+    banana_bunch_repository_clear();
+    banana_shipment_repository_clear();
+    banana_inventory_repository_clear();
+
+    location.latitude = 13.1;
+    location.longitude = -59.6;
+    status = banana_plant_register("app-plant-1", BANANA_SPECIES_CAVENDISH, location, 10, 2, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for application plant registration");
+    status = banana_plant_repository_save(&plant);
+    require_true(status == BANANA_OK, "expected BANANA_OK when saving application plant");
+
+    fruit_specs[0].fruit_id = "app-fruit-1";
+    fruit_specs[0].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[0].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[0].weight_kg = 0.4;
+    fruit_specs[1].fruit_id = "app-fruit-2";
+    fruit_specs[1].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[1].weight_kg = 0.4;
+
+    harvest_command.bunch_id = "app-bunch-1";
+    harvest_command.bloom_day_ordinal = 45;
+    harvest_command.bunch_spec.harvest_day_ordinal = 70;
+    harvest_command.bunch_spec.weight_kg = 0.8;
+    harvest_command.bunch_spec.finger_count = 2;
+    harvest_command.bunch_spec.maturity_stage = BANANA_STAGE_GREEN;
+    harvest_command.bunch_spec.quality_score = 0.9;
+    harvest_command.cultivar = BANANA_SPECIES_CAVENDISH;
+    harvest_command.fruit_specs = fruit_specs;
+    harvest_command.fruit_count = 2;
+
+    status = banana_application_harvest_bunch("app-plant-1", &harvest_command, &bunch, &first_event, &second_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for harvest application service");
+    require_true(first_event.type == BANANA_EVENT_BLOOMED, "expected bloom event from harvest application service");
+    require_true(second_event.type == BANANA_EVENT_HARVESTED, "expected harvest event from harvest application service");
+
+    ripen_command.bunch_id = "app-bunch-1";
+    ripen_command.input.temperature_history_c = 0;
+    ripen_command.input.temperature_history_count = 0;
+    ripen_command.input.days_since_harvest = 8;
+    ripen_command.input.ethylene_exposure = 8.0;
+    ripen_command.input.mechanical_damage = 0.0;
+    ripen_command.input.storage_temp_c = 16.0;
+    ripen_command.event_day_ordinal = 78;
+
+    status = banana_application_ripen_bunch(&ripen_command, &bunch, &prediction, &first_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ripen application service");
+    require_true(first_event.type == BANANA_EVENT_RIPENED, "expected ripened event from application service");
+
+    ship_command.bunch_id = "app-bunch-1";
+    ship_command.batch_id = "app-batch-1";
+    ship_command.origin_farm = "app-farm-1";
+    ship_command.storage_temp_c = 13.0;
+    ship_command.ethylene_exposure = 2.5;
+    ship_command.estimated_shelf_life_days = 4;
+    ship_command.shipment_id = "app-shipment-1";
+    ship_command.origin_node_id = "app-origin-1";
+    ship_command.destination_node_id = "app-destination-1";
+    ship_command.departure_day_ordinal = 79;
+
+    status = banana_application_ship_bunch(&ship_command, &batch, &shipment, &first_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ship application service");
+    require_true(first_event.type == BANANA_EVENT_SHIPPED, "expected shipped event from application ship service");
+
+    inventory_receive_command.inventory_id = "app-inventory-1";
+    inventory_receive_command.location_id = "app-retail-1";
+    inventory_receive_command.source_batch_id = batch.batch_id.value;
+    inventory_receive_command.ripeness_stage = BANANA_STAGE_YELLOW;
+    inventory_receive_command.quantity_on_hand = 20;
+    inventory_receive_command.reorder_threshold = 5;
+    inventory_receive_command.total_weight_kg = 4.0;
+    inventory_receive_command.event_day_ordinal = 82;
+
+    status = banana_application_receive_inventory(&inventory_receive_command, &item, &first_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for inventory receive application service");
+    require_true(first_event.type == BANANA_EVENT_INVENTORY_RECEIVED, "expected inventory-received event from application service");
+
+    sell_command.inventory_id = "app-inventory-1";
+    sell_command.quantity = 16;
+    sell_command.event_day_ordinal = 83;
+    status = banana_application_sell_bananas(&sell_command, &item, &first_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for sell application service");
+    require_true(item.quantity_on_hand == 4, "expected reduced inventory after sell application service");
+    require_true(first_event.type == BANANA_EVENT_SOLD, "expected sold event from application service");
+
+    item.ripeness_stage = BANANA_STAGE_OVERRIPE;
+    status = banana_inventory_repository_save(&item);
+    require_true(status == BANANA_OK, "expected BANANA_OK when persisting overripe inventory for discard");
+
+    discard_command.inventory_id = "app-inventory-1";
+    discard_command.quantity = 2;
+    discard_command.event_day_ordinal = 84;
+    status = banana_application_discard_spoiled(&discard_command, &item, &first_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for discard application service");
+    require_true(item.quantity_on_hand == 2, "expected reduced inventory after discard application service");
+    require_true(first_event.type == BANANA_EVENT_SPOILED, "expected spoiled event from discard application service");
+}
+
+static void test_integration_adapters_translate_external_inputs(void) {
+    BananaExternalSensorTelemetry telemetry;
+    BananaSensorTelemetryContext telemetry_context;
+    BananaExternalRetailInventoryRecord external_inventory;
+    BananaInventoryItem item;
+    BananaDomainEvent event;
+    BananaStatus status;
+
+    telemetry.temperature_history_f[0] = 57.2;
+    telemetry.temperature_history_f[1] = 59.0;
+    telemetry.temperature_history_count = 2;
+    telemetry.transit_days = 5;
+    telemetry.ethylene_ppm = 40.0;
+    telemetry.bruise_percent = 10.0;
+    telemetry.storage_temp_f = 57.2;
+
+    status = banana_sensor_adapter_normalize(&telemetry, &telemetry_context);
+    require_true(status == BANANA_OK, "expected BANANA_OK for telemetry normalization");
+    require_true(telemetry_context.input.storage_temp_c > 13.9 && telemetry_context.input.storage_temp_c < 14.1, "expected Fahrenheit to Celsius conversion for storage temperature");
+    require_true(telemetry_context.input.ethylene_exposure == 4.0, "expected ppm normalization for ethylene exposure");
+
+    external_inventory.product_code = "banana-cav-retail";
+    external_inventory.batch_id = "ext-batch-1";
+    external_inventory.store_code = "store-ext-1";
+    external_inventory.units_available = 12;
+    external_inventory.total_weight_lb = 6.0;
+    external_inventory.ripeness_level = 5;
+
+    status = banana_inventory_acl_translate(&external_inventory, "ext-inventory-1", 3, 90, &item, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for external inventory translation");
+    require_true(item.ripeness_stage == BANANA_STAGE_YELLOW, "expected translated ripeness stage from external inventory level");
+    require_true(item.total_weight_kg > 2.7 && item.total_weight_kg < 2.73, "expected pound-to-kilogram conversion for inventory weight");
+    require_true(event.type == BANANA_EVENT_INVENTORY_RECEIVED, "expected inventory-received event from ACL translation");
+}
+
+static void test_read_models_project_stock_and_stats(void) {
+    BananaStockView stock_view;
+    BananaAverageRipenessReport report;
+    BananaCultivarStats stats;
+    BananaInventoryItem item;
+    BananaDomainEvent inventory_event;
+    BananaPlant plant;
+    BananaGeoCoordinates location;
+    BananaBunchSpec spec;
+    BananaFruitSpec fruit_specs[2];
+    BananaBunchRecord bunch;
+    BananaRipenessPrediction prediction;
+    BananaStatus status;
+
+    status = banana_inventory_receive("view-inventory-1", "view-store-1", "view-batch-1", BANANA_STAGE_SPOTTED, 14, 4, 3.0, 100, &item, &inventory_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for read-model inventory setup");
+
+    banana_stock_view_clear(&stock_view);
+    status = banana_stock_view_project_inventory_event(&stock_view, &item, &inventory_event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for stock-view projection");
+    require_true(stock_view.stage_quantities[BANANA_STAGE_SPOTTED] == 14, "expected spotted stage quantity in stock view");
+
+    banana_average_ripeness_report_clear(&report);
+    memset(&prediction, 0, sizeof(prediction));
+    prediction.predicted_stage = BANANA_STAGE_YELLOW;
+    status = banana_average_ripeness_report_record_prediction(&report, &prediction);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ripeness report prediction recording");
+    require_true(report.average_stage_score > 1.9 && report.average_stage_score < 2.1, "expected average stage score for yellow prediction");
+
+    location.latitude = 11.2;
+    location.longitude = -60.0;
+    status = banana_plant_register("view-plant-1", BANANA_SPECIES_CAVENDISH, location, 2, 1, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for stats plant setup");
+    spec.harvest_day_ordinal = 50;
+    spec.weight_kg = 0.7;
+    spec.finger_count = 2;
+    spec.maturity_stage = BANANA_STAGE_GREEN;
+    spec.quality_score = 0.88;
+    fruit_specs[0].fruit_id = "view-fruit-1";
+    fruit_specs[0].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[0].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[0].weight_kg = 0.35;
+    fruit_specs[1].fruit_id = "view-fruit-2";
+    fruit_specs[1].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[1].weight_kg = 0.35;
+
+    status = banana_bunch_factory_create(&plant, "view-bunch-1", &spec, BANANA_SPECIES_CAVENDISH, fruit_specs, 2, &bunch, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for stats bunch setup");
+
+    status = banana_average_ripeness_report_record_bunch(&report, &bunch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for bunch-based ripeness report recording");
+    require_true(report.observation_count == 2, "expected two ripeness observations in report");
+
+    banana_cultivar_stats_clear(&stats, BANANA_SPECIES_CAVENDISH);
+    status = banana_cultivar_stats_record_harvest(&stats, &bunch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for cultivar harvest stats recording");
+    status = banana_cultivar_stats_record_sale(&stats, 2, 0.7);
+    require_true(status == BANANA_OK, "expected BANANA_OK for cultivar sale stats recording");
+    require_true(stats.harvested_bunch_count == 1, "expected harvested bunch count in cultivar stats");
+    require_true(stats.sold_fruit_count == 2, "expected sold fruit count in cultivar stats");
+}
+
 static void test_inventory_receive_sell_and_discard_spoiled_bananas(void) {
     BananaInventoryItem item;
     BananaDomainEvent event;
@@ -456,8 +854,14 @@ int main(void) {
     test_batch_registry_create_get_and_predict();
     test_batch_registry_returns_not_found();
     test_cultivation_registers_plants_and_harvests_bunches();
+    test_processing_factory_creates_individual_banana_entities();
     test_cultivation_ripening_is_monotonic_and_spoilage_is_tracked();
     test_supply_chain_tracks_shipments_nodes_and_batch_transitions();
+    test_repositories_persist_aggregates();
+    test_domain_services_apply_ripening_and_quality_control();
+    test_application_services_execute_commands();
+    test_integration_adapters_translate_external_inputs();
+    test_read_models_project_stock_and_stats();
     test_inventory_receive_sell_and_discard_spoiled_bananas();
     test_pipeline_null_safety();
 

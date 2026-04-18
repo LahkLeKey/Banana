@@ -28,11 +28,17 @@ endif()
 
 set(BANANA_CORE_SOURCES
     src/native/core/main.c
+    src/native/core/domain/banana_application.c
     src/native/core/domain/banana_cultivation.c
     src/native/core/domain/banana_events.c
+    src/native/core/domain/banana_integration.c
     src/native/core/domain/banana_inventory.c
     src/native/core/domain/banana_projection_legacy.c
+    src/native/core/domain/banana_processing.c
+    src/native/core/domain/banana_read_models.c
+    src/native/core/domain/banana_repositories.c
     src/native/core/domain/banana_ripeness.c
+    src/native/core/domain/banana_services.c
     src/native/core/domain/banana_supply_chain.c
 )
 

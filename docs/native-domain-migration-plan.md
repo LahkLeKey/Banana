@@ -27,9 +27,14 @@ This plan keeps the native core organized around banana domain contexts while re
 - Owns plant registration, sucker growth, bunch harvest, bunch ripeness progression, and spoilage transitions.
 - Lives in `src/native/core/domain/banana_cultivation.h` and `src/native/core/domain/banana_cultivation.c`.
 
+### Processing
+
+- Owns individual banana entities inside bunch aggregates, bunch factory rules, and harvest-time invariant validation.
+- Lives in `src/native/core/domain/banana_processing.h` and `src/native/core/domain/banana_processing.c`.
+
 ### Domain Events
 
-- Owns the native event vocabulary for planted, harvested, shipped, arrived, ripened, sold, spoiled, and inventory-received flows.
+- Owns the native event vocabulary for planted, bloomed, harvested, shipped, arrived, ripened, sold, spoiled, and inventory-received flows.
 - Lives in `src/native/core/domain/banana_events.h` and `src/native/core/domain/banana_events.c`.
 
 ### Supply Chain
@@ -41,6 +46,31 @@ This plan keeps the native core organized around banana domain contexts while re
 
 - Owns retail inventory receipt, sell-through, spoilage discard, and reorder signaling.
 - Lives in `src/native/core/domain/banana_inventory.h` and `src/native/core/domain/banana_inventory.c`.
+
+### Repositories
+
+- Owns in-memory repository interfaces for plants, bunch aggregates, shipments, and inventory items.
+- Lives in `src/native/core/domain/banana_repositories.h` and `src/native/core/domain/banana_repositories.c`.
+
+### Domain Services
+
+- Owns ripening orchestration for bunch aggregates and quality-control calculations such as average fruit weight and underweight detection.
+- Lives in `src/native/core/domain/banana_services.h` and `src/native/core/domain/banana_services.c`.
+
+### Application Services
+
+- Owns command-style orchestration for harvest, ripen, ship, receive, sell, and spoilage-discard workflows against the repositories.
+- Lives in `src/native/core/domain/banana_application.h` and `src/native/core/domain/banana_application.c`.
+
+### Integration Adapters
+
+- Owns anti-corruption helpers for external telemetry normalization and external retail inventory translation.
+- Lives in `src/native/core/domain/banana_integration.h` and `src/native/core/domain/banana_integration.c`.
+
+### Read Models
+
+- Owns CQRS-style stock views, ripeness reports, and cultivar statistics projections.
+- Lives in `src/native/core/domain/banana_read_models.h` and `src/native/core/domain/banana_read_models.c`.
 
 ## Migration Rules
 
@@ -75,9 +105,13 @@ This plan keeps the native core organized around banana domain contexts while re
 ## Current Native Coverage
 
 - Cultivation aggregates: plant registration, sucker propagation, bunch harvest, ripeness progression, and spoilage.
+- Harvesting and processing aggregates: individual banana entities, bunch factory creation rules, cultivar invariants, ripeness uniformity checks, and aggregate weight validation.
 - Supply chain aggregates: batch registration, batch-to-bunch composition, export transitions, shipment dispatch and arrival, and node inventory movement.
 - Retail inventory aggregates: inventory receipt, sale, spoilage discard, and reorder thresholds.
-- Domain events: native event payloads now capture planted, harvested, shipped, arrived, ripened, sold, spoiled, and inventory-received actions.
+- Domain events: native event payloads now capture planted, bloomed, harvested, shipped, arrived, ripened, sold, spoiled, and inventory-received actions.
+- Repositories: native in-memory repository interfaces now exist for plants, bunches, shipments, and inventory.
+- Domain and application services: native command handlers now orchestrate harvest, ripen, ship, receive, sell, and discard workflows through repository-backed operations.
+- Anti-corruption and CQRS support: native adapters translate external telemetry and inventory records, and native read models project stock, ripeness, and cultivar statistics.
 
 ## Validation Matrix
 
@@ -98,3 +132,4 @@ This plan keeps the native core organized around banana domain contexts while re
 - No legacy compatibility file names remain in the repo.
 - Native core code lives either in `src/native/core/domain` or `src/native/core/main.*`.
 - Wrapper ABI remains stable while the domain model keeps replacing the legacy projection path.
+- The Banana DDD feature surface described in `docs/banana-ddd.md` is covered inside native core, except for the explicitly out-of-scope consumer context.

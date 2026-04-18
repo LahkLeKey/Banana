@@ -19,6 +19,8 @@ const char* banana_domain_event_type_name(BananaDomainEventType type) {
     switch (type) {
         case BANANA_EVENT_PLANTED:
             return "PLANTED";
+        case BANANA_EVENT_BLOOMED:
+            return "BLOOMED";
         case BANANA_EVENT_HARVESTED:
             return "HARVESTED";
         case BANANA_EVENT_SHIPPED:

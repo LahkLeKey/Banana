@@ -98,6 +98,27 @@ BananaStatus banana_plant_add_sucker(
     return BANANA_OK;
 }
 
+BananaStatus banana_plant_record_bloom(
+    const BananaPlant* plant,
+    const char* bunch_id,
+    int bloom_day_ordinal,
+    BananaDomainEvent* event
+) {
+    if (plant == 0 || bloom_day_ordinal < plant->planted_day_ordinal) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    return banana_domain_event_record(
+        event,
+        BANANA_EVENT_BLOOMED,
+        bunch_id,
+        plant->plant_id.value,
+        BANANA_STAGE_GREEN,
+        0,
+        bloom_day_ordinal,
+        0.0);
+}
+
 BananaStatus banana_bunch_harvest(
     const BananaPlant* plant,
     const char* bunch_id,

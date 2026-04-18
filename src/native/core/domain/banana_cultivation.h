@@ -44,6 +44,13 @@ BananaStatus banana_plant_add_sucker(
     const char* sucker_id
 );
 
+BananaStatus banana_plant_record_bloom(
+    const BananaPlant* plant,
+    const char* bunch_id,
+    int bloom_day_ordinal,
+    BananaDomainEvent* event
+);
+
 BananaStatus banana_bunch_harvest(
     const BananaPlant* plant,
     const char* bunch_id,
