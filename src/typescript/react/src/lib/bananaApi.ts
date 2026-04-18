@@ -1,4 +1,4 @@
-import type {BananaRequest, BananaResponse, HealthResponse} from '../types/api';
+import type {BananaBatchCreateRequest, BananaBatchResponse, BananaRequest, BananaResponse, BananaRipenessRequest, BananaRipenessResponse, HealthResponse,} from '../types/api';
 
 const DEFAULT_BASE_URL = 'http://localhost:5000';
 
@@ -45,4 +45,51 @@ export async function fetchBanana(
       endpoint, {method: 'GET', headers: {Accept: 'application/json'}, signal});
 
   return unwrap<BananaResponse>(response);
+}
+
+export async function createBatch(
+    request: BananaBatchCreateRequest,
+    signal?: AbortSignal): Promise<BananaBatchResponse> {
+  const endpoint = new URL('/batches/create', getBaseUrl());
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+    signal,
+  });
+
+  return unwrap<BananaBatchResponse>(response);
+}
+
+export async function fetchBatchStatus(
+    batchId: string, signal?: AbortSignal): Promise<BananaBatchResponse> {
+  const endpoint =
+      new URL(`/batches/${encodeURIComponent(batchId)}/status`, getBaseUrl());
+  const response = await fetch(endpoint, {
+    method: 'GET',
+    headers: {Accept: 'application/json'},
+    signal,
+  });
+
+  return unwrap<BananaBatchResponse>(response);
+}
+
+export async function predictRipeness(
+    request: BananaRipenessRequest,
+    signal?: AbortSignal): Promise<BananaRipenessResponse> {
+  const endpoint = new URL('/ripeness/predict', getBaseUrl());
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+    signal,
+  });
+
+  return unwrap<BananaRipenessResponse>(response);
 }

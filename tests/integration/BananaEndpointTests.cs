@@ -57,7 +57,7 @@ public sealed class BananaEndpointTests : IClassFixture<WebApplicationFactory<Pr
 
     private static bool EnsureNativePathConfigured()
     {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../"));
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
         var fileName = NativeLibraryResolver.GetPlatformLibraryName();
         var candidates = new[]
         {

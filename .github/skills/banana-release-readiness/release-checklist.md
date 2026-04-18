@@ -3,6 +3,7 @@
 ## Code And Contract
 
 - The changed area matches the intended domain scope
+- The narrowest practical helper agent owned each implementation slice
 - Cross-layer contracts were preserved or explicitly documented
 - Native interop changes were paired with managed validation when needed
 

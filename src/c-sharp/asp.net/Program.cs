@@ -27,6 +27,7 @@ builder.Services.AddScoped<IDataAccessPipelineClient>(static serviceProvider =>
 });
 
 builder.Services.AddScoped<INativeBananaClient, NativeBananaClient>();
+builder.Services.AddScoped<IBatchService, BatchService>();
 builder.Services.AddScoped<PipelineExecutor<PipelineContext>>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, ValidationStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, DatabaseAccessStep>();
@@ -34,6 +35,7 @@ builder.Services.AddScoped<IPipelineStep<PipelineContext>, NativeCalculationStep
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, PostProcessingStep>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, AuditStep>();
 builder.Services.AddScoped<IBananaService, BananaService>();
+builder.Services.AddScoped<IRipenessService, RipenessService>();
 
 var app = builder.Build();
 

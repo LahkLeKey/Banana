@@ -62,6 +62,19 @@ public sealed class ErrorHandlingMiddlewareTests
     }
 
     [Fact]
+    public async Task Invoke_MapsEntityNotFoundExceptionToNotFound()
+    {
+        var middleware = CreateMiddleware(_ => throw new EntityNotFoundException("missing batch"));
+        var context = CreateHttpContext();
+
+        await middleware.Invoke(context);
+
+        Assert.Equal(StatusCodes.Status404NotFound, context.Response.StatusCode);
+        var body = await ReadResponseBody(context);
+        Assert.Contains("missing batch", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Invoke_MapsNativeInteropExceptionToInternalServerError()
     {
         var middleware = CreateMiddleware(_ => throw new NativeInteropException("native fail"));

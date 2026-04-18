@@ -33,5 +33,10 @@ public enum NativeStatusCode
     /// <summary>
     /// Native DB support is not configured.
     /// </summary>
-    DbNotConfigured = 5
+    DbNotConfigured = 5,
+
+    /// <summary>
+    /// Requested native resource was not found.
+    /// </summary>
+    NotFound = 6
 }

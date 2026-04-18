@@ -11,10 +11,13 @@ Requirements:
 
 - Use the repo architecture and runtime contracts already defined in the workspace.
 - Identify the touched domains, exact files or folders likely involved, and the smallest safe implementation order.
+- Recommend the narrowest helper agent for each slice before naming a broader coordinating agent.
+- Make helper handoffs explicit when more than one slice is required.
 - Reuse existing build, test, coverage, and compose entry points.
 - Provide a validation matrix and call out required env vars, runtime assumptions, and risks.
 
 Relevant assets:
 
+- [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - [banana-discovery](../skills/banana-discovery/SKILL.md)
 - [banana-release-readiness](../skills/banana-release-readiness/SKILL.md)

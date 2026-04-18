@@ -9,7 +9,18 @@ tools:
   - execute
   - web
   - todo
+agents:
+  - compose-runtime-agent
+  - workflow-agent
+  - integration-agent
+  - banana-reviewer
 handoffs:
+  - label: Implement Compose Or Runtime Work
+    agent: compose-runtime-agent
+    prompt: Implement the scoped compose or local runtime change and validate the nearest matching runtime path.
+  - label: Implement Workflow Or Coverage Work
+    agent: workflow-agent
+    prompt: Implement the scoped GitHub Actions or coverage automation change and validate the nearest local mirror path.
   - label: Run Validation
     agent: integration-agent
     prompt: Validate the updated infrastructure path against the relevant tests, compose profiles, or runtime checks.
@@ -24,10 +35,11 @@ You own Banana's delivery surface: [docker-compose.yml](../../docker-compose.yml
 
 # Working Rules
 
-1. Preserve existing profile names, ports, health checks, and environment contracts unless the task explicitly changes them.
-2. Prefer updating existing scripts and workflows rather than creating duplicate automation paths.
-3. Keep runtime assumptions visible in docs, prompts, or skills whenever entry points change.
-4. Treat Windows workspace tasks and bash-based CI as equal first-class paths.
+1. Default to a helper agent when the change is isolated to local runtime or workflow automation.
+2. Preserve existing profile names, ports, health checks, and environment contracts unless the task explicitly changes them.
+3. Prefer updating existing scripts and workflows rather than creating duplicate automation paths.
+4. Keep runtime assumptions visible in docs, prompts, or skills whenever entry points change.
+5. Treat Windows workspace tasks and bash-based CI as equal first-class paths.
 
 # Validation
 
@@ -38,6 +50,7 @@ You own Banana's delivery surface: [docker-compose.yml](../../docker-compose.yml
 # Shared Assets
 
 - Infra instructions: [infra.instructions.md](../instructions/infra.instructions.md)
+- Helper routing skill: [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - Build and run skill: [banana-build-and-run](../skills/banana-build-and-run/SKILL.md)
 - CI debugging skill: [banana-ci-debugging](../skills/banana-ci-debugging/SKILL.md)
 - Release checklist skill: [banana-release-readiness](../skills/banana-release-readiness/SKILL.md)

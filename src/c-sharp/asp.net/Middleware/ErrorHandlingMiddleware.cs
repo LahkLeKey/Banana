@@ -40,6 +40,10 @@ public sealed class ErrorHandlingMiddleware
         {
             await WriteProblem(context, HttpStatusCode.BadRequest, ex.Message);
         }
+        catch (EntityNotFoundException ex)
+        {
+            await WriteProblem(context, HttpStatusCode.NotFound, ex.Message);
+        }
         catch (NativeInteropException ex)
         {
             _logger.LogError(ex, "Native interop failure");

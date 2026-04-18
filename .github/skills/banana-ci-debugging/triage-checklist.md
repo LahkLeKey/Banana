@@ -8,6 +8,14 @@
 - Profile mismatch between local compose script and workflow stage
 - Coverage tool output path missing or changed unexpectedly
 
+## Likely Helper Owners
+
+- `native-core-agent` or `native-wrapper-agent` for native build or ABI failures
+- `api-interop-agent` for `BANANA_NATIVE_PATH` loading failures or managed/native contract drift
+- `compose-runtime-agent` for local runtime and compose health-check failures
+- `workflow-agent` for artifact paths, coverage jobs, or workflow-only breakage
+- `test-triage-agent` when the owner is still unclear or a harness failure is suspected
+
 ## Workflow Map
 
 - Native coverage stage: `.github/workflows/compose-ci.yml` job `native-c-tests-coverage`

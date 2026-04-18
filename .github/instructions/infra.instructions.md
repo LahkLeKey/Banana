@@ -6,6 +6,9 @@ applyTo: "{docker-compose.yml,docker/**/*,.github/workflows/**/*.yml,scripts/**/
 
 # Infrastructure And Delivery Standards
 
+- Use `compose-runtime-agent` for `docker-compose.yml`, `docker`, local runtime scripts, and health-check behavior.
+- Use `workflow-agent` for `.github/workflows`, coverage automation, and CI artifact handling.
+- Use `infrastructure-agent` only when local runtime and workflow surfaces need coordination.
 - Prefer existing compose profiles and scripts instead of introducing parallel orchestration paths.
 - Keep service contracts aligned with `docker-compose.yml`, especially ports, health checks, and shared environment variables.
 - Reuse current CI stages in `.github/workflows/compose-ci.yml` for build, coverage, and runtime validation.

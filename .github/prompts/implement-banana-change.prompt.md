@@ -10,12 +10,14 @@ Implement this Banana change end to end.
 Requirements:
 
 - Discover the impacted domains first and keep the change scoped.
-- Delegate to the most specific domain agent when that reduces risk.
+- Split the work into helper-owned slices whenever a narrower helper clearly owns the files or risk.
+- Use a parent domain agent only when multiple helpers in the same domain must move together.
 - Reuse existing tasks, scripts, workflows, and compose profiles before adding new automation.
 - Run the relevant validation for the touched layers.
 - Summarize changed behavior, verification, assumptions, and residual risks.
 
 Relevant assets:
 
+- [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - [banana-build-and-run](../skills/banana-build-and-run/SKILL.md)
 - [banana-test-and-coverage](../skills/banana-test-and-coverage/SKILL.md)

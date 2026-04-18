@@ -36,7 +36,7 @@ const native = ffi.Library(libraryPath, {
   banana_calculate_banana: ["int", ["int", "int", intPtr]],
   banana_calculate_banana_with_breakdown: ["int", ["int", "int", "pointer"]],
   banana_create_banana_message: ["int", ["int", "int", "pointer"]],
-  banana_db_query_banana: ["int", ["int", "int", "pointer", intPtr]],
+  banana_db_query_banana_profile: ["int", ["int", "int", "pointer", intPtr]],
   banana_free: ["void", ["pointer"]],
 });
 
@@ -116,7 +116,7 @@ function queryBananaDatabase(purchases, multiplier) {
 
   const payloadPtr = ref.alloc(charPtr);
   const rowCount = ref.alloc(intType);
-  const status = native.banana_db_query_banana(purchases, multiplier, payloadPtr, rowCount);
+  const status = native.banana_db_query_banana_profile(purchases, multiplier, payloadPtr, rowCount);
   if (status !== STATUS.OK) {
     throw toStatusError(status);
   }

@@ -13,11 +13,11 @@ public sealed class NativeDalDbDataAccessClient : IDataAccessPipelineClient
     /// <inheritdoc />
     public RawDbAccessResult Execute(DbAccessRequest request)
     {
-        var status = (NativeStatusCode)NativeMethods.QueryDbBanana(
-            request.Purchases,
-            request.Multiplier,
-            out var payloadPtr,
-            out var rowCount);
+        var (status, payloadPtr, rowCount) = request.Contract switch
+        {
+            DbAccessContract.BananaProfileProjection => ExecuteBananaProfileProjection(request),
+            _ => throw new DatabaseAccessException($"Native DAL does not expose contract '{request.Contract}'.")
+        };
 
         EnsureSuccess(status);
 
@@ -30,6 +30,17 @@ public sealed class NativeDalDbDataAccessClient : IDataAccessPipelineClient
         {
             NativeMethods.Free(payloadPtr);
         }
+    }
+
+    private static (NativeStatusCode Status, nint PayloadPtr, int RowCount) ExecuteBananaProfileProjection(DbAccessRequest request)
+    {
+        var status = (NativeStatusCode)NativeMethods.QueryBananaProfileProjection(
+            request.Purchases,
+            request.Multiplier,
+            out var payloadPtr,
+            out var rowCount);
+
+        return (status, payloadPtr, rowCount);
     }
 
     private static byte[] ReadNullTerminatedUtf8(nint pointer)

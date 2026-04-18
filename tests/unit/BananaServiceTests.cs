@@ -21,8 +21,9 @@ public sealed class BananaServiceTests
 
         var result = service.Calculate(10, 2);
 
-        Assert.Equal(150, result.Banana);
-        Assert.Equal("ok", result.Message);
+        Assert.Equal(150, result.BananaResult.Banana);
+        Assert.Equal("ok", result.BananaResult.Message);
+        Assert.Equal("native-dal", result.Metadata["db.source"]);
     }
 
     [Fact]
@@ -78,6 +79,9 @@ public sealed class BananaServiceTests
         {
             input.NativeResult = _result.Banana;
             input.NativeBananaResult = _result;
+            input.Metadata["db.contract"] = "BananaProfileProjection";
+            input.Metadata["db.source"] = "native-dal";
+            input.Metadata["db.rowCount"] = 1;
             return next(input);
         }
     }

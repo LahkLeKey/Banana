@@ -28,6 +28,7 @@ public sealed class DatabaseAccessStep : IPipelineStep<PipelineContext>
         var result = _dataAccessClient.Execute(request);
 
         input.DatabaseRawResult = result;
+        input.Metadata["db.contract"] = request.Contract.ToString();
         input.Metadata["db.source"] = result.Source;
         input.Metadata["db.rowCount"] = result.RowCount;
 

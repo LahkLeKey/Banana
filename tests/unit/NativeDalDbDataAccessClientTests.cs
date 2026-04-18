@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Banana.Api.DataAccess;
 using Banana.Api.NativeInterop;
@@ -80,6 +81,16 @@ public sealed class NativeDalDbDataAccessClientTests
         Assert.Contains("null payload", inner.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Execute_ThrowsDatabaseAccessException_ForUnsupportedContract()
+    {
+        var client = new NativeDalDbDataAccessClient();
+
+        var ex = Assert.Throws<DatabaseAccessException>(() => client.Execute(new DbAccessRequest(10, 2, (DbAccessContract)99)));
+
+        Assert.Contains("does not expose contract", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool EnsureNativePathConfigured()
     {
         lock (Sync)
@@ -89,7 +100,7 @@ public sealed class NativeDalDbDataAccessClientTests
                 return true;
             }
 
-            var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../"));
+            var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
             var fileName = NativeLibraryResolver.GetPlatformLibraryName();
             var candidates = new[]
             {
@@ -102,6 +113,14 @@ public sealed class NativeDalDbDataAccessClientTests
             {
                 return false;
             }
+
+            var libraryPath = Path.Combine(libraryDir, fileName);
+            if (!NativeLibrary.TryLoad(libraryPath, out var probeHandle))
+            {
+                return false;
+            }
+
+            NativeLibrary.Free(probeHandle);
 
             Environment.SetEnvironmentVariable("BANANA_NATIVE_PATH", libraryDir);
 

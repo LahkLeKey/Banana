@@ -31,6 +31,7 @@ public sealed class DatabaseAccessStepTests
         Assert.NotNull(result.DatabaseRawResult);
         Assert.Equal("native-dal", result.DatabaseRawResult!.Source);
         Assert.Equal(1, result.DatabaseRawResult.RowCount);
+        Assert.Equal(DbAccessContract.BananaProfileProjection.ToString(), result.Metadata["db.contract"]);
         Assert.Equal("native-dal", result.Metadata["db.source"]);
         Assert.Equal(1, result.Metadata["db.rowCount"]);
     }

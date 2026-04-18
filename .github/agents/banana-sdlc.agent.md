@@ -13,15 +13,49 @@ tools:
 agents:
   - banana-planner
   - native-c-agent
+  - native-core-agent
+  - native-dal-agent
+  - native-wrapper-agent
   - csharp-api-agent
+  - api-pipeline-agent
+  - api-interop-agent
   - react-agent
+  - react-ui-agent
+  - electron-agent
   - integration-agent
+  - test-triage-agent
   - infrastructure-agent
+  - compose-runtime-agent
+  - workflow-agent
   - banana-reviewer
 handoffs:
   - label: Plan The Change
     agent: banana-planner
     prompt: Analyze the request, identify impacted domains, list risks, and produce an implementation and validation plan.
+  - label: Implement Native Core Slice
+    agent: native-core-agent
+    prompt: Implement the scoped native core changes, keep the work focused, and validate the matching native behavior.
+  - label: Implement Native Wrapper Slice
+    agent: native-wrapper-agent
+    prompt: Implement the scoped wrapper or ABI changes, coordinate downstream interop only as needed, and validate the contract.
+  - label: Implement API Pipeline Slice
+    agent: api-pipeline-agent
+    prompt: Implement the scoped controller, service, middleware, or pipeline changes and validate the matching backend behavior.
+  - label: Implement API Interop Slice
+    agent: api-interop-agent
+    prompt: Implement the scoped managed interop or data-access changes and validate the matching contract behavior.
+  - label: Implement React UI Slice
+    agent: react-ui-agent
+    prompt: Implement the scoped React UI changes, preserve typed API boundaries, and validate the frontend behavior.
+  - label: Implement Compose Slice
+    agent: compose-runtime-agent
+    prompt: Implement the scoped compose or runtime changes and validate the nearest local runtime path.
+  - label: Implement Workflow Slice
+    agent: workflow-agent
+    prompt: Implement the scoped workflow or coverage automation changes and validate the nearest local mirror path.
+  - label: Triage Failing Tests
+    agent: test-triage-agent
+    prompt: Isolate the failing validation stage, identify the real owner, and propose the narrowest useful fix path.
   - label: Validate Across Layers
     agent: integration-agent
     prompt: Validate the current change across impacted layers, including tests, coverage, runtime assumptions, and environment variables.
@@ -46,18 +80,20 @@ Use this agent when the request spans more than one phase of delivery or more th
 
 1. Start by mapping the request to affected domains, entry points, and risks.
 2. Use [banana-planner](./banana-planner.agent.md) first when the scope is ambiguous or spans multiple layers.
-3. Delegate implementation work to the most specific domain agent whenever that reduces risk.
-4. Reuse existing tasks, scripts, tests, compose profiles, and workflows before creating new automation.
-5. End with validation and review, not just code edits.
+3. Delegate implementation work to the narrowest helper agent that clearly owns the touched files and contracts.
+4. Use parent domain agents only when more than one helper in the same domain must move together.
+5. Reuse existing tasks, scripts, tests, compose profiles, and workflows before creating new automation.
+6. End with validation and review, not just code edits.
 
 # Shared Assets
 
 - Always-on repo guidance: [copilot-instructions.md](../copilot-instructions.md)
 - File-scoped rules: [instructions](../instructions)
+- Helper routing skill: [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - Reusable skills: [banana-discovery](../skills/banana-discovery/SKILL.md), [banana-build-and-run](../skills/banana-build-and-run/SKILL.md), [banana-test-and-coverage](../skills/banana-test-and-coverage/SKILL.md), [banana-ci-debugging](../skills/banana-ci-debugging/SKILL.md), [banana-release-readiness](../skills/banana-release-readiness/SKILL.md)
 
 # Definition Of Done
 
-- The impacted domains are identified and handled by the right specialized agent or workflow.
+- The impacted domains are identified and handled by the right helper or coordinating agent.
 - Validation matches the actual risk surface of the change.
 - The final summary captures assumptions, verification, and any release follow-up.
