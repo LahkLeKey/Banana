@@ -190,6 +190,104 @@ static void test_batch_not_found_paths(void) {
     require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing batch ripeness");
 }
 
+static void test_harvest_batch_create_add_and_status_ok(void) {
+    char* payload = 0;
+    char* updated_payload = 0;
+    char* status_payload = 0;
+    int status = banana_create_harvest_batch("harvest-1", "field-7", 42, &payload);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for create_harvest_batch");
+    require_true(payload != 0, "expected payload for create_harvest_batch");
+    require_true(strstr(payload, "\"harvestBatchId\":\"harvest-1\"") != 0, "expected harvestBatchId in harvest batch payload");
+    banana_free(payload);
+
+    status = banana_add_bunch_to_harvest_batch("harvest-1", "bunch-1", 42, 18.5, &updated_payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for add_bunch_to_harvest_batch");
+    require_true(updated_payload != 0, "expected payload for add_bunch_to_harvest_batch");
+    require_true(strstr(updated_payload, "\"bunchCount\":1") != 0, "expected bunchCount=1 after add_bunch_to_harvest_batch");
+    require_true(strstr(updated_payload, "\"totalWeightKg\":18.50") != 0, "expected totalWeightKg after add_bunch_to_harvest_batch");
+    banana_free(updated_payload);
+
+    status = banana_get_harvest_batch_status("harvest-1", &status_payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for get_harvest_batch_status");
+    require_true(status_payload != 0, "expected payload for get_harvest_batch_status");
+    require_true(strstr(status_payload, "\"fieldId\":\"field-7\"") != 0, "expected fieldId in harvest batch status payload");
+    banana_free(status_payload);
+}
+
+static void test_harvest_batch_not_found_paths(void) {
+    char* payload = 0;
+    int status = banana_get_harvest_batch_status("missing-harvest", &payload);
+    require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing harvest batch status");
+
+    status = banana_add_bunch_to_harvest_batch("missing-harvest", "bunch-9", 2, 3.5, &payload);
+    require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing harvest batch add");
+}
+
+static void test_truck_register_load_relocate_unload_and_status_ok(void) {
+    char* payload = 0;
+    char* loaded_payload = 0;
+    char* relocated_payload = 0;
+    char* unloaded_payload = 0;
+    char* status_payload = 0;
+    int status = banana_register_truck(
+        "truck-1",
+        "warehouse-1",
+        CINTEROP_DISTRIBUTION_NODE_WAREHOUSE,
+        9.90,
+        -79.60,
+        60.0,
+        &payload);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for register_truck");
+    require_true(payload != 0, "expected payload for register_truck");
+    require_true(strstr(payload, "\"truckId\":\"truck-1\"") != 0, "expected truckId in truck payload");
+    require_true(strstr(payload, "\"nodeType\":\"WAREHOUSE\"") != 0, "expected WAREHOUSE nodeType in truck payload");
+    banana_free(payload);
+
+    status = banana_load_truck_container("truck-1", "container-1", 18.5, &loaded_payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for load_truck_container");
+    require_true(loaded_payload != 0, "expected payload for load_truck_container");
+    require_true(strstr(loaded_payload, "\"containerCount\":1") != 0, "expected containerCount=1 after load_truck_container");
+    require_true(strstr(loaded_payload, "\"currentLoadKg\":18.50") != 0, "expected currentLoadKg after load_truck_container");
+    banana_free(loaded_payload);
+
+    status = banana_relocate_truck(
+        "truck-1",
+        "port-3",
+        CINTEROP_DISTRIBUTION_NODE_PORT,
+        8.95,
+        -79.55,
+        &relocated_payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for relocate_truck");
+    require_true(relocated_payload != 0, "expected payload for relocate_truck");
+    require_true(strstr(relocated_payload, "\"currentNodeId\":\"port-3\"") != 0, "expected currentNodeId after relocate_truck");
+    require_true(strstr(relocated_payload, "\"nodeType\":\"PORT\"") != 0, "expected PORT nodeType after relocate_truck");
+    banana_free(relocated_payload);
+
+    status = banana_unload_truck_container("truck-1", "container-1", 18.5, &unloaded_payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for unload_truck_container");
+    require_true(unloaded_payload != 0, "expected payload for unload_truck_container");
+    require_true(strstr(unloaded_payload, "\"containerCount\":0") != 0, "expected containerCount=0 after unload_truck_container");
+    require_true(strstr(unloaded_payload, "\"currentLoadKg\":0.00") != 0, "expected currentLoadKg=0.00 after unload_truck_container");
+    banana_free(unloaded_payload);
+
+    status = banana_get_truck_status("truck-1", &status_payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for get_truck_status");
+    require_true(status_payload != 0, "expected payload for get_truck_status");
+    require_true(strstr(status_payload, "\"truckId\":\"truck-1\"") != 0, "expected truckId in truck status payload");
+    banana_free(status_payload);
+}
+
+static void test_truck_not_found_paths(void) {
+    char* payload = 0;
+    int status = banana_get_truck_status("missing-truck", &payload);
+    require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing truck status");
+
+    status = banana_load_truck_container("missing-truck", "container-1", 10.0, &payload);
+    require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing truck load");
+}
+
 static void test_db_query_banana_invalid_args(void) {
     int row_count = 0;
     char* payload = 0;
@@ -368,6 +466,10 @@ int main(void) {
     test_batch_create_and_status_ok();
     test_predict_batch_ripeness_ok();
     test_batch_not_found_paths();
+    test_harvest_batch_create_add_and_status_ok();
+    test_harvest_batch_not_found_paths();
+    test_truck_register_load_relocate_unload_and_status_ok();
+    test_truck_not_found_paths();
     test_db_query_banana_invalid_args();
     test_db_query_banana_invalid_input();
     test_db_query_banana_missing_connection();

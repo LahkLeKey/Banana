@@ -66,6 +66,53 @@ public sealed class NativeBananaClientTests
     }
 
     [Fact]
+    public void CreateHarvestBatch_AddBunch_AndGetHarvestBatchStatus_ReturnExpectedResult_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        var created = client.CreateHarvestBatch("harvest-1", "field-7", 42);
+        var updated = client.AddBunchToHarvestBatch("harvest-1", "bunch-1", 42, 18.5);
+        var loaded = client.GetHarvestBatchStatus("harvest-1");
+
+        Assert.Equal("harvest-1", created.HarvestBatchId);
+        Assert.Equal("field-7", loaded.FieldId);
+        Assert.Equal(1, updated.BunchCount);
+        Assert.Equal(18.5, updated.TotalWeightKg, 3);
+    }
+
+    [Fact]
+    public void RegisterTruck_LoadRelocateUnload_AndGetTruckStatus_ReturnExpectedResult_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        var created = client.RegisterTruck(
+            "truck-1",
+            "warehouse-1",
+            BananaDistributionNodeType.Warehouse,
+            9.90,
+            -79.60,
+            60.0);
+        var loaded = client.LoadTruckContainer("truck-1", "container-1", 18.5);
+        var relocated = client.RelocateTruck("truck-1", "port-3", BananaDistributionNodeType.Port, 8.95, -79.55);
+        var unloaded = client.UnloadTruckContainer("truck-1", "container-1", 18.5);
+        var current = client.GetTruckStatus("truck-1");
+
+        Assert.Equal("truck-1", created.TruckId);
+        Assert.Equal(1, loaded.ContainerCount);
+        Assert.Equal("PORT", relocated.NodeType);
+        Assert.Equal(0, unloaded.ContainerCount);
+        Assert.Equal("port-3", current.CurrentNodeId);
+    }
+
+    [Fact]
     public void PredictBatchRipeness_ReturnsExpectedResult_WhenNativeLibraryIsAvailable()
     {
         if (!EnsureNativePathConfigured())
@@ -106,6 +153,19 @@ public sealed class NativeBananaClientTests
         var client = new NativeBananaClient();
 
         Assert.Throws<ClientInputException>(() => client.Calculate(214748365, 1));
+    }
+
+    [Fact]
+    public void GetHarvestBatchStatus_WithMissingBatch_ThrowsEntityNotFoundException_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+
+        Assert.Throws<EntityNotFoundException>(() => client.GetHarvestBatchStatus("missing-harvest"));
     }
 
     private static bool EnsureNativePathConfigured()

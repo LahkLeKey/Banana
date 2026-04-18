@@ -66,6 +66,84 @@ internal static partial class NativeMethods
     internal static partial int GetBatchStatus(string batchId, out nint batchJson);
 
     /// <summary>
+    /// Creates a tracked harvest batch and returns a JSON snapshot.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_create_harvest_batch", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int CreateHarvestBatch(
+        string harvestBatchId,
+        string fieldId,
+        int harvestDayOrdinal,
+        out nint harvestBatchJson);
+
+    /// <summary>
+    /// Adds a bunch to a tracked harvest batch and returns a JSON snapshot.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_add_bunch_to_harvest_batch", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int AddBunchToHarvestBatch(
+        string harvestBatchId,
+        string bunchId,
+        int harvestDayOrdinal,
+        double bunchWeightKg,
+        out nint harvestBatchJson);
+
+    /// <summary>
+    /// Retrieves a tracked harvest batch as a JSON snapshot.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_get_harvest_batch_status", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int GetHarvestBatchStatus(string harvestBatchId, out nint harvestBatchJson);
+
+    /// <summary>
+    /// Registers a tracked truck and returns a JSON snapshot.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_register_truck", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int RegisterTruck(
+        string truckId,
+        string nodeId,
+        BananaDistributionNodeType nodeType,
+        double latitude,
+        double longitude,
+        double capacityKg,
+        out nint truckJson);
+
+    /// <summary>
+    /// Loads a container onto a tracked truck and returns a JSON snapshot.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_load_truck_container", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int LoadTruckContainer(
+        string truckId,
+        string containerId,
+        double containerWeightKg,
+        out nint truckJson);
+
+    /// <summary>
+    /// Unloads a container from a tracked truck and returns a JSON snapshot.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_unload_truck_container", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int UnloadTruckContainer(
+        string truckId,
+        string containerId,
+        double containerWeightKg,
+        out nint truckJson);
+
+    /// <summary>
+    /// Relocates a tracked truck and returns a JSON snapshot.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_relocate_truck", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int RelocateTruck(
+        string truckId,
+        string nodeId,
+        BananaDistributionNodeType nodeType,
+        double latitude,
+        double longitude,
+        out nint truckJson);
+
+    /// <summary>
+    /// Retrieves a tracked truck as a JSON snapshot.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_get_truck_status", StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int GetTruckStatus(string truckId, out nint truckJson);
+
+    /// <summary>
     /// Predicts ripeness for a tracked native batch using stored telemetry defaults.
     /// </summary>
     [LibraryImport(LibraryName, EntryPoint = "banana_predict_batch_ripeness", StringMarshalling = StringMarshalling.Utf8)]

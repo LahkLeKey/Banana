@@ -130,6 +130,7 @@ public sealed class NativeInteropInternalsTests
         var prediction = Assert.IsType<BananaRipenessPredictionNative>(args[6]);
 
         Assert.Equal((int)NativeStatusCode.Ok, status);
+        Assert.True(Enum.IsDefined(typeof(BananaRipenessStage), prediction.PredictedStage));
         Assert.True(prediction.ShelfLifeHours > 0);
         Assert.True(prediction.RipeningIndex > 0.0);
     }
@@ -161,6 +162,109 @@ public sealed class NativeInteropInternalsTests
 
         var freeMethod = nativeMethodsType.GetMethod("Free", BindingFlags.NonPublic | BindingFlags.Static);
         freeMethod!.Invoke(null, new object?[] { (IntPtr)payloadPtr });
+        freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)getArgs[1]! });
+    }
+
+    [Fact]
+    public void NativeMethods_CreateHarvestBatch_AddBunch_AndGetHarvestBatchStatus_ReturnOk()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var nativeMethodsType = GetNativeMethodsType();
+        var createMethod = nativeMethodsType.GetMethod("CreateHarvestBatch", BindingFlags.NonPublic | BindingFlags.Static);
+        var addMethod = nativeMethodsType.GetMethod("AddBunchToHarvestBatch", BindingFlags.NonPublic | BindingFlags.Static);
+        var getMethod = nativeMethodsType.GetMethod("GetHarvestBatchStatus", BindingFlags.NonPublic | BindingFlags.Static);
+        var freeMethod = nativeMethodsType.GetMethod("Free", BindingFlags.NonPublic | BindingFlags.Static);
+
+        Assert.NotNull(createMethod);
+        Assert.NotNull(addMethod);
+        Assert.NotNull(getMethod);
+        Assert.NotNull(freeMethod);
+
+        var createArgs = new object?[] { "harvest-1", "field-7", 42, IntPtr.Zero };
+        var createStatus = (int)createMethod.Invoke(null, createArgs)!;
+        Assert.Equal((int)NativeStatusCode.Ok, createStatus);
+
+        var addArgs = new object?[] { "harvest-1", "bunch-1", 42, 18.5, IntPtr.Zero };
+        var addStatus = (int)addMethod.Invoke(null, addArgs)!;
+        Assert.Equal((int)NativeStatusCode.Ok, addStatus);
+
+        var getArgs = new object?[] { "harvest-1", IntPtr.Zero };
+        var getStatus = (int)getMethod.Invoke(null, getArgs)!;
+        Assert.Equal((int)NativeStatusCode.Ok, getStatus);
+
+        freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)createArgs[3]! });
+        freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)addArgs[4]! });
+        freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)getArgs[1]! });
+    }
+
+    [Fact]
+    public void NativeMethods_RegisterTruck_LoadRelocateUnload_AndGetTruckStatus_ReturnOk()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var nativeMethodsType = GetNativeMethodsType();
+        var registerMethod = nativeMethodsType.GetMethod("RegisterTruck", BindingFlags.NonPublic | BindingFlags.Static);
+        var loadMethod = nativeMethodsType.GetMethod("LoadTruckContainer", BindingFlags.NonPublic | BindingFlags.Static);
+        var relocateMethod = nativeMethodsType.GetMethod("RelocateTruck", BindingFlags.NonPublic | BindingFlags.Static);
+        var unloadMethod = nativeMethodsType.GetMethod("UnloadTruckContainer", BindingFlags.NonPublic | BindingFlags.Static);
+        var getMethod = nativeMethodsType.GetMethod("GetTruckStatus", BindingFlags.NonPublic | BindingFlags.Static);
+        var freeMethod = nativeMethodsType.GetMethod("Free", BindingFlags.NonPublic | BindingFlags.Static);
+
+        Assert.NotNull(registerMethod);
+        Assert.NotNull(loadMethod);
+        Assert.NotNull(relocateMethod);
+        Assert.NotNull(unloadMethod);
+        Assert.NotNull(getMethod);
+        Assert.NotNull(freeMethod);
+
+        var registerArgs = new object?[]
+        {
+            "truck-1",
+            "warehouse-1",
+            BananaDistributionNodeType.Warehouse,
+            9.90,
+            -79.60,
+            60.0,
+            IntPtr.Zero
+        };
+        var registerStatus = (int)registerMethod.Invoke(null, registerArgs)!;
+        Assert.Equal((int)NativeStatusCode.Ok, registerStatus);
+
+        var loadArgs = new object?[] { "truck-1", "container-1", 18.5, IntPtr.Zero };
+        var loadStatus = (int)loadMethod.Invoke(null, loadArgs)!;
+        Assert.Equal((int)NativeStatusCode.Ok, loadStatus);
+
+        var relocateArgs = new object?[]
+        {
+            "truck-1",
+            "port-3",
+            BananaDistributionNodeType.Port,
+            8.95,
+            -79.55,
+            IntPtr.Zero
+        };
+        var relocateStatus = (int)relocateMethod.Invoke(null, relocateArgs)!;
+        Assert.Equal((int)NativeStatusCode.Ok, relocateStatus);
+
+        var unloadArgs = new object?[] { "truck-1", "container-1", 18.5, IntPtr.Zero };
+        var unloadStatus = (int)unloadMethod.Invoke(null, unloadArgs)!;
+        Assert.Equal((int)NativeStatusCode.Ok, unloadStatus);
+
+        var getArgs = new object?[] { "truck-1", IntPtr.Zero };
+        var getStatus = (int)getMethod.Invoke(null, getArgs)!;
+        Assert.Equal((int)NativeStatusCode.Ok, getStatus);
+
+        freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)registerArgs[6]! });
+        freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)loadArgs[3]! });
+        freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)relocateArgs[5]! });
+        freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)unloadArgs[3]! });
         freeMethod.Invoke(null, new object?[] { (IntPtr)(nint)(IntPtr)getArgs[1]! });
     }
 

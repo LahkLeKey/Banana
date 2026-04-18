@@ -45,12 +45,22 @@ set(BANANA_CORE_SOURCES
     src/native/core/domain/banana_supply_chain.c
 )
 
+set(BANANA_WRAPPER_SOURCES
+    src/native/wrapper/banana_wrapper.c
+    src/native/wrapper/dal/banana_db.c
+    src/native/wrapper/domain/banana_logistics.c
+    src/native/wrapper/domain/banana_processing.c
+    src/native/wrapper/domain/banana_projection_legacy.c
+    src/native/wrapper/domain/banana_ripeness.c
+    src/native/wrapper/domain/banana_supply_chain.c
+)
+
 if(BANANA_BUILD_SHARED_LIBRARY)
     add_library(banana_native SHARED
         ${BANANA_CORE_SOURCES}
         src/native/core/dal/banana_db.c
         src/native/testing/native_test_hooks_default.c
-        src/native/wrapper/banana_wrapper.c
+        ${BANANA_WRAPPER_SOURCES}
     )
 
     target_include_directories(banana_native
@@ -108,7 +118,7 @@ if(BANANA_ENABLE_NATIVE_TESTS)
         tests/native/native_test_hooks_env.c
         ${BANANA_CORE_SOURCES}
         src/native/core/dal/banana_db.c
-        src/native/wrapper/banana_wrapper.c
+        ${BANANA_WRAPPER_SOURCES}
     )
 
     target_include_directories(banana_wrapper_tests

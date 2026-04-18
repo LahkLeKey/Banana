@@ -8,7 +8,7 @@ namespace Banana.Api.NativeInterop;
 [StructLayout(LayoutKind.Sequential)]
 public struct BananaRipenessPredictionNative
 {
-    public int PredictedStage;
+    public BananaRipenessStage PredictedStage;
     public int ShelfLifeHours;
     public double RipeningIndex;
     public double SpoilageProbability;

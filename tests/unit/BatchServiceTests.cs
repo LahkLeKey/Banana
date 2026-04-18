@@ -45,6 +45,46 @@ public sealed class BatchServiceTests
             return new BananaBatchRecord(batchId, "farm-1", "PACKED", 13.2, 2.5, 3);
         }
 
+        public BananaHarvestBatchRecord CreateHarvestBatch(string harvestBatchId, string fieldId, int harvestDayOrdinal)
+        {
+            return new BananaHarvestBatchRecord(harvestBatchId, fieldId, harvestDayOrdinal, 0, 0.0);
+        }
+
+        public BananaHarvestBatchRecord AddBunchToHarvestBatch(string harvestBatchId, string bunchId, int harvestDayOrdinal, double bunchWeightKg)
+        {
+            return new BananaHarvestBatchRecord(harvestBatchId, "field-1", harvestDayOrdinal, 1, bunchWeightKg);
+        }
+
+        public BananaHarvestBatchRecord GetHarvestBatchStatus(string harvestBatchId)
+        {
+            return new BananaHarvestBatchRecord(harvestBatchId, "field-1", 1, 1, 12.5);
+        }
+
+        public BananaTruckRecord RegisterTruck(string truckId, string nodeId, BananaDistributionNodeType nodeType, double latitude, double longitude, double capacityKg)
+        {
+            return new BananaTruckRecord(truckId, nodeId, nodeType.ToString().ToUpperInvariant(), latitude, longitude, capacityKg, 0.0, 0);
+        }
+
+        public BananaTruckRecord LoadTruckContainer(string truckId, string containerId, double containerWeightKg)
+        {
+            return new BananaTruckRecord(truckId, "warehouse-1", "WAREHOUSE", 9.90, -79.60, 60.0, containerWeightKg, 1);
+        }
+
+        public BananaTruckRecord UnloadTruckContainer(string truckId, string containerId, double containerWeightKg)
+        {
+            return new BananaTruckRecord(truckId, "warehouse-1", "WAREHOUSE", 9.90, -79.60, 60.0, 0.0, 0);
+        }
+
+        public BananaTruckRecord RelocateTruck(string truckId, string nodeId, BananaDistributionNodeType nodeType, double latitude, double longitude)
+        {
+            return new BananaTruckRecord(truckId, nodeId, nodeType.ToString().ToUpperInvariant(), latitude, longitude, 60.0, 0.0, 0);
+        }
+
+        public BananaTruckRecord GetTruckStatus(string truckId)
+        {
+            return new BananaTruckRecord(truckId, "warehouse-1", "WAREHOUSE", 9.90, -79.60, 60.0, 0.0, 0);
+        }
+
         public BananaRipenessPrediction PredictRipeness(IReadOnlyList<double> temperatureHistoryC, int daysSinceHarvest, double ethyleneExposure, double mechanicalDamage, double storageTempC)
         {
             return new BananaRipenessPrediction("YELLOW", 48, 180.0, 0.3, 0.15);

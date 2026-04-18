@@ -70,7 +70,7 @@ public sealed class NativeBananaClient : INativeBananaClient
 
         try
         {
-            return DeserializeBatchRecord(batchJsonPtr);
+            return DeserializeRecord<BananaBatchRecord>(batchJsonPtr, "Native returned an invalid batch payload.");
         }
         finally
         {
@@ -87,11 +87,207 @@ public sealed class NativeBananaClient : INativeBananaClient
 
         try
         {
-            return DeserializeBatchRecord(batchJsonPtr);
+            return DeserializeRecord<BananaBatchRecord>(batchJsonPtr, "Native returned an invalid batch payload.");
         }
         finally
         {
             NativeMethods.Free(batchJsonPtr);
+        }
+    }
+
+    /// <inheritdoc />
+    public BananaHarvestBatchRecord CreateHarvestBatch(
+        string harvestBatchId,
+        string fieldId,
+        int harvestDayOrdinal)
+    {
+        var status = (NativeStatusCode)NativeMethods.CreateHarvestBatch(
+            harvestBatchId,
+            fieldId,
+            harvestDayOrdinal,
+            out var harvestBatchJsonPtr);
+
+        EnsureSuccess(status);
+
+        try
+        {
+            return DeserializeRecord<BananaHarvestBatchRecord>(
+                harvestBatchJsonPtr,
+                "Native returned an invalid harvest batch payload.");
+        }
+        finally
+        {
+            NativeMethods.Free(harvestBatchJsonPtr);
+        }
+    }
+
+    /// <inheritdoc />
+    public BananaHarvestBatchRecord AddBunchToHarvestBatch(
+        string harvestBatchId,
+        string bunchId,
+        int harvestDayOrdinal,
+        double bunchWeightKg)
+    {
+        var status = (NativeStatusCode)NativeMethods.AddBunchToHarvestBatch(
+            harvestBatchId,
+            bunchId,
+            harvestDayOrdinal,
+            bunchWeightKg,
+            out var harvestBatchJsonPtr);
+
+        EnsureSuccess(status);
+
+        try
+        {
+            return DeserializeRecord<BananaHarvestBatchRecord>(
+                harvestBatchJsonPtr,
+                "Native returned an invalid harvest batch payload.");
+        }
+        finally
+        {
+            NativeMethods.Free(harvestBatchJsonPtr);
+        }
+    }
+
+    /// <inheritdoc />
+    public BananaHarvestBatchRecord GetHarvestBatchStatus(string harvestBatchId)
+    {
+        var status = (NativeStatusCode)NativeMethods.GetHarvestBatchStatus(harvestBatchId, out var harvestBatchJsonPtr);
+
+        EnsureSuccess(status);
+
+        try
+        {
+            return DeserializeRecord<BananaHarvestBatchRecord>(
+                harvestBatchJsonPtr,
+                "Native returned an invalid harvest batch payload.");
+        }
+        finally
+        {
+            NativeMethods.Free(harvestBatchJsonPtr);
+        }
+    }
+
+    /// <inheritdoc />
+    public BananaTruckRecord RegisterTruck(
+        string truckId,
+        string nodeId,
+        BananaDistributionNodeType nodeType,
+        double latitude,
+        double longitude,
+        double capacityKg)
+    {
+        var status = (NativeStatusCode)NativeMethods.RegisterTruck(
+            truckId,
+            nodeId,
+            nodeType,
+            latitude,
+            longitude,
+            capacityKg,
+            out var truckJsonPtr);
+
+        EnsureSuccess(status);
+
+        try
+        {
+            return DeserializeRecord<BananaTruckRecord>(truckJsonPtr, "Native returned an invalid truck payload.");
+        }
+        finally
+        {
+            NativeMethods.Free(truckJsonPtr);
+        }
+    }
+
+    /// <inheritdoc />
+    public BananaTruckRecord LoadTruckContainer(
+        string truckId,
+        string containerId,
+        double containerWeightKg)
+    {
+        var status = (NativeStatusCode)NativeMethods.LoadTruckContainer(
+            truckId,
+            containerId,
+            containerWeightKg,
+            out var truckJsonPtr);
+
+        EnsureSuccess(status);
+
+        try
+        {
+            return DeserializeRecord<BananaTruckRecord>(truckJsonPtr, "Native returned an invalid truck payload.");
+        }
+        finally
+        {
+            NativeMethods.Free(truckJsonPtr);
+        }
+    }
+
+    /// <inheritdoc />
+    public BananaTruckRecord UnloadTruckContainer(
+        string truckId,
+        string containerId,
+        double containerWeightKg)
+    {
+        var status = (NativeStatusCode)NativeMethods.UnloadTruckContainer(
+            truckId,
+            containerId,
+            containerWeightKg,
+            out var truckJsonPtr);
+
+        EnsureSuccess(status);
+
+        try
+        {
+            return DeserializeRecord<BananaTruckRecord>(truckJsonPtr, "Native returned an invalid truck payload.");
+        }
+        finally
+        {
+            NativeMethods.Free(truckJsonPtr);
+        }
+    }
+
+    /// <inheritdoc />
+    public BananaTruckRecord RelocateTruck(
+        string truckId,
+        string nodeId,
+        BananaDistributionNodeType nodeType,
+        double latitude,
+        double longitude)
+    {
+        var status = (NativeStatusCode)NativeMethods.RelocateTruck(
+            truckId,
+            nodeId,
+            nodeType,
+            latitude,
+            longitude,
+            out var truckJsonPtr);
+
+        EnsureSuccess(status);
+
+        try
+        {
+            return DeserializeRecord<BananaTruckRecord>(truckJsonPtr, "Native returned an invalid truck payload.");
+        }
+        finally
+        {
+            NativeMethods.Free(truckJsonPtr);
+        }
+    }
+
+    /// <inheritdoc />
+    public BananaTruckRecord GetTruckStatus(string truckId)
+    {
+        var status = (NativeStatusCode)NativeMethods.GetTruckStatus(truckId, out var truckJsonPtr);
+
+        EnsureSuccess(status);
+
+        try
+        {
+            return DeserializeRecord<BananaTruckRecord>(truckJsonPtr, "Native returned an invalid truck payload.");
+        }
+        finally
+        {
+            NativeMethods.Free(truckJsonPtr);
         }
     }
 
@@ -116,7 +312,7 @@ public sealed class NativeBananaClient : INativeBananaClient
         EnsureSuccess(status);
 
         return new BananaRipenessPrediction(
-            MapStageName((BananaRipenessStage)prediction.PredictedStage),
+            MapStageName(prediction.PredictedStage),
             prediction.ShelfLifeHours,
             prediction.RipeningIndex,
             prediction.SpoilageProbability,
@@ -142,7 +338,7 @@ public sealed class NativeBananaClient : INativeBananaClient
         EnsureSuccess(status);
 
         return new BananaRipenessPrediction(
-            MapStageName((BananaRipenessStage)prediction.PredictedStage),
+            MapStageName(prediction.PredictedStage),
             prediction.ShelfLifeHours,
             prediction.RipeningIndex,
             prediction.SpoilageProbability,
@@ -179,11 +375,11 @@ public sealed class NativeBananaClient : INativeBananaClient
         return bytes.ToArray();
     }
 
-    private static BananaBatchRecord DeserializeBatchRecord(nint batchJsonPtr)
+    private static TRecord DeserializeRecord<TRecord>(nint payloadPtr, string invalidPayloadMessage)
     {
-        var json = Encoding.UTF8.GetString(ReadNullTerminatedUtf8(batchJsonPtr));
-        return JsonSerializer.Deserialize<BananaBatchRecord>(json, JsonOptions)
-            ?? throw new NativeInteropException("Native returned an invalid batch payload.");
+        var json = Encoding.UTF8.GetString(ReadNullTerminatedUtf8(payloadPtr));
+        return JsonSerializer.Deserialize<TRecord>(json, JsonOptions)
+            ?? throw new NativeInteropException(invalidPayloadMessage);
     }
 
     private static string MapStageName(BananaRipenessStage stage)

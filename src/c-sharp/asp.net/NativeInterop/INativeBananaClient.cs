@@ -22,6 +22,46 @@ public interface INativeBananaClient
 
     BananaBatchRecord GetBatchStatus(string batchId);
 
+    BananaHarvestBatchRecord CreateHarvestBatch(
+        string harvestBatchId,
+        string fieldId,
+        int harvestDayOrdinal);
+
+    BananaHarvestBatchRecord AddBunchToHarvestBatch(
+        string harvestBatchId,
+        string bunchId,
+        int harvestDayOrdinal,
+        double bunchWeightKg);
+
+    BananaHarvestBatchRecord GetHarvestBatchStatus(string harvestBatchId);
+
+    BananaTruckRecord RegisterTruck(
+        string truckId,
+        string nodeId,
+        BananaDistributionNodeType nodeType,
+        double latitude,
+        double longitude,
+        double capacityKg);
+
+    BananaTruckRecord LoadTruckContainer(
+        string truckId,
+        string containerId,
+        double containerWeightKg);
+
+    BananaTruckRecord UnloadTruckContainer(
+        string truckId,
+        string containerId,
+        double containerWeightKg);
+
+    BananaTruckRecord RelocateTruck(
+        string truckId,
+        string nodeId,
+        BananaDistributionNodeType nodeType,
+        double latitude,
+        double longitude);
+
+    BananaTruckRecord GetTruckStatus(string truckId);
+
     /// <summary>
     /// Calls native lifecycle logic and returns a ripeness prediction.
     /// </summary>

@@ -344,6 +344,8 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
     private sealed class FakeNativeBananaClient : INativeBananaClient
     {
         private readonly Dictionary<string, BananaBatchRecord> _batches = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, BananaHarvestBatchRecord> _harvestBatches = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, BananaTruckRecord> _trucks = new(StringComparer.Ordinal);
 
         public BananaResult Calculate(int purchases, int multiplier)
         {
@@ -374,6 +376,111 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
             }
 
             throw new EntityNotFoundException("Batch was not found.");
+        }
+
+        public BananaHarvestBatchRecord CreateHarvestBatch(string harvestBatchId, string fieldId, int harvestDayOrdinal)
+        {
+            var harvestBatch = new BananaHarvestBatchRecord(harvestBatchId, fieldId, harvestDayOrdinal, 0, 0.0);
+            _harvestBatches[harvestBatchId] = harvestBatch;
+            return harvestBatch;
+        }
+
+        public BananaHarvestBatchRecord AddBunchToHarvestBatch(string harvestBatchId, string bunchId, int harvestDayOrdinal, double bunchWeightKg)
+        {
+            if (!_harvestBatches.TryGetValue(harvestBatchId, out var harvestBatch))
+            {
+                throw new EntityNotFoundException("Harvest batch was not found.");
+            }
+
+            var updated = harvestBatch with
+            {
+                HarvestDayOrdinal = harvestDayOrdinal,
+                BunchCount = harvestBatch.BunchCount + 1,
+                TotalWeightKg = harvestBatch.TotalWeightKg + bunchWeightKg
+            };
+
+            _harvestBatches[harvestBatchId] = updated;
+            return updated;
+        }
+
+        public BananaHarvestBatchRecord GetHarvestBatchStatus(string harvestBatchId)
+        {
+            if (_harvestBatches.TryGetValue(harvestBatchId, out var harvestBatch))
+            {
+                return harvestBatch;
+            }
+
+            throw new EntityNotFoundException("Harvest batch was not found.");
+        }
+
+        public BananaTruckRecord RegisterTruck(string truckId, string nodeId, BananaDistributionNodeType nodeType, double latitude, double longitude, double capacityKg)
+        {
+            var truck = new BananaTruckRecord(truckId, nodeId, nodeType.ToString().ToUpperInvariant(), latitude, longitude, capacityKg, 0.0, 0);
+            _trucks[truckId] = truck;
+            return truck;
+        }
+
+        public BananaTruckRecord LoadTruckContainer(string truckId, string containerId, double containerWeightKg)
+        {
+            if (!_trucks.TryGetValue(truckId, out var truck))
+            {
+                throw new EntityNotFoundException("Truck was not found.");
+            }
+
+            var updated = truck with
+            {
+                CurrentLoadKg = truck.CurrentLoadKg + containerWeightKg,
+                ContainerCount = truck.ContainerCount + 1
+            };
+
+            _trucks[truckId] = updated;
+            return updated;
+        }
+
+        public BananaTruckRecord UnloadTruckContainer(string truckId, string containerId, double containerWeightKg)
+        {
+            if (!_trucks.TryGetValue(truckId, out var truck))
+            {
+                throw new EntityNotFoundException("Truck was not found.");
+            }
+
+            var updated = truck with
+            {
+                CurrentLoadKg = Math.Max(0.0, truck.CurrentLoadKg - containerWeightKg),
+                ContainerCount = Math.Max(0, truck.ContainerCount - 1)
+            };
+
+            _trucks[truckId] = updated;
+            return updated;
+        }
+
+        public BananaTruckRecord RelocateTruck(string truckId, string nodeId, BananaDistributionNodeType nodeType, double latitude, double longitude)
+        {
+            if (!_trucks.TryGetValue(truckId, out var truck))
+            {
+                throw new EntityNotFoundException("Truck was not found.");
+            }
+
+            var updated = truck with
+            {
+                CurrentNodeId = nodeId,
+                NodeType = nodeType.ToString().ToUpperInvariant(),
+                Latitude = latitude,
+                Longitude = longitude
+            };
+
+            _trucks[truckId] = updated;
+            return updated;
+        }
+
+        public BananaTruckRecord GetTruckStatus(string truckId)
+        {
+            if (_trucks.TryGetValue(truckId, out var truck))
+            {
+                return truck;
+            }
+
+            throw new EntityNotFoundException("Truck was not found.");
         }
 
         public BananaRipenessPrediction PredictRipeness(
