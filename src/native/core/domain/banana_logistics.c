@@ -284,3 +284,96 @@ BananaStatus banana_ripening_room_apply(
         days_since_harvest,
         0.0);
 }
+
+BananaStatus banana_truck_register(
+    const char* truck_id,
+    BananaCurrentLocation location,
+    double capacity_kg,
+    BananaTruck* truck
+) {
+    BananaStatus status = BANANA_OK;
+
+    if (truck == 0 || capacity_kg <= 0.0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    memset(truck, 0, sizeof(*truck));
+    status = banana_identifier_copy(&truck->truck_id, truck_id);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    truck->current_location = location;
+    truck->capacity_kg = capacity_kg;
+    return BANANA_OK;
+}
+
+BananaStatus banana_truck_load_container(
+    BananaTruck* truck,
+    const BananaContainer* container
+) {
+    BananaStatus status = BANANA_OK;
+
+    if (truck == 0 || container == 0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    if (truck->container_count >= BANANA_MAX_CONTAINERS_PER_TRUCK
+        || identifier_index(truck->container_ids, truck->container_count, container->container_id.value) >= 0
+        || truck->current_load_kg + container->current_weight_kg > truck->capacity_kg) {
+        return BANANA_ERROR_OVERFLOW;
+    }
+
+    status = banana_identifier_copy(&truck->container_ids[truck->container_count], container->container_id.value);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    truck->container_count++;
+    truck->current_load_kg += container->current_weight_kg;
+    return BANANA_OK;
+}
+
+BananaStatus banana_truck_unload_container(
+    BananaTruck* truck,
+    const char* container_id,
+    double container_weight_kg
+) {
+    int index = -1;
+    int current = 0;
+
+    if (truck == 0 || container_weight_kg < 0.0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    index = identifier_index(truck->container_ids, truck->container_count, container_id);
+    if (index < 0) {
+        return BANANA_ERROR_NOT_FOUND;
+    }
+
+    for (current = index; current < truck->container_count - 1; current++) {
+        truck->container_ids[current] = truck->container_ids[current + 1];
+    }
+
+    memset(&truck->container_ids[truck->container_count - 1], 0, sizeof(BananaIdentifier));
+    truck->container_count--;
+    if (truck->current_load_kg >= container_weight_kg) {
+        truck->current_load_kg -= container_weight_kg;
+    } else {
+        truck->current_load_kg = 0.0;
+    }
+
+    return BANANA_OK;
+}
+
+BananaStatus banana_truck_relocate(
+    BananaTruck* truck,
+    BananaCurrentLocation location
+) {
+    if (truck == 0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    truck->current_location = location;
+    return BANANA_OK;
+}

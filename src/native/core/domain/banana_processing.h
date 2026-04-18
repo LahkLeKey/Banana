@@ -9,6 +9,7 @@ extern "C" {
 
 #define BANANA_MAX_FRUIT_PER_BUNCH 256
 #define BANANA_MAX_BUNCHES_PER_CRATE 8
+#define BANANA_MAX_BUNCHES_PER_HARVEST_BATCH 16
 
 typedef struct BananaDimensions {
     double length_cm;
@@ -52,6 +53,15 @@ typedef struct BananaInspection {
     double quality_score;
     int defect_count;
 } BananaInspection;
+
+typedef struct BananaHarvestBatch {
+    BananaIdentifier harvest_batch_id;
+    BananaIdentifier field_id;
+    int harvest_day_ordinal;
+    int bunch_count;
+    BananaIdentifier bunch_ids[BANANA_MAX_BUNCHES_PER_HARVEST_BATCH];
+    double total_weight_kg;
+} BananaHarvestBatch;
 
 BananaStatus banana_dimensions_validate(const BananaDimensions* dimensions);
 
@@ -97,6 +107,18 @@ BananaStatus banana_inspection_record(
     double minimum_quality_score,
     int defect_count,
     BananaInspection* inspection
+);
+
+BananaStatus banana_harvest_batch_create(
+    const char* harvest_batch_id,
+    const char* field_id,
+    int harvest_day_ordinal,
+    BananaHarvestBatch* harvest_batch
+);
+
+BananaStatus banana_harvest_batch_add_bunch(
+    BananaHarvestBatch* harvest_batch,
+    const BananaBunchRecord* bunch
 );
 
 double banana_bunch_record_total_weight_kg(const BananaBunchRecord* record);

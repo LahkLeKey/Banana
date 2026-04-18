@@ -9,6 +9,7 @@ extern "C" {
 
 #define BANANA_MAX_BATCHES_PER_CONTAINER 8
 #define BANANA_MAX_BATCHES_PER_RIPENING_ROOM 16
+#define BANANA_MAX_CONTAINERS_PER_TRUCK 8
 
 typedef struct BananaTemperatureSetting {
     double set_point_c;
@@ -40,6 +41,15 @@ typedef struct BananaRipeningRoom {
     int batch_count;
     BananaIdentifier batch_ids[BANANA_MAX_BATCHES_PER_RIPENING_ROOM];
 } BananaRipeningRoom;
+
+typedef struct BananaTruck {
+    BananaIdentifier truck_id;
+    BananaCurrentLocation current_location;
+    double capacity_kg;
+    double current_load_kg;
+    int container_count;
+    BananaIdentifier container_ids[BANANA_MAX_CONTAINERS_PER_TRUCK];
+} BananaTruck;
 
 BananaStatus banana_temperature_setting_validate(const BananaTemperatureSetting* setting);
 
@@ -95,6 +105,29 @@ BananaStatus banana_ripening_room_apply(
     int days_since_harvest,
     BananaRipenessPrediction* prediction,
     BananaDomainEvent* event
+);
+
+BananaStatus banana_truck_register(
+    const char* truck_id,
+    BananaCurrentLocation location,
+    double capacity_kg,
+    BananaTruck* truck
+);
+
+BananaStatus banana_truck_load_container(
+    BananaTruck* truck,
+    const BananaContainer* container
+);
+
+BananaStatus banana_truck_unload_container(
+    BananaTruck* truck,
+    const char* container_id,
+    double container_weight_kg
+);
+
+BananaStatus banana_truck_relocate(
+    BananaTruck* truck,
+    BananaCurrentLocation location
 );
 
 #ifdef __cplusplus

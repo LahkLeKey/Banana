@@ -29,7 +29,7 @@ This plan keeps the native core organized around banana domain contexts while re
 
 ### Processing
 
-- Owns individual banana entities inside bunch aggregates, bunch factory rules, and harvest-time invariant validation.
+- Owns individual banana entities inside bunch aggregates, harvest batches, bunch factory rules, and harvest-time invariant validation.
 - Lives in `src/native/core/domain/banana_processing.h` and `src/native/core/domain/banana_processing.c`.
 
 ### Domain Events
@@ -44,7 +44,7 @@ This plan keeps the native core organized around banana domain contexts while re
 
 ### Logistics
 
-- Owns containers, ripening rooms, temperature settings, and current-location modeling around batch movement.
+- Owns containers, trucks, ripening rooms, temperature settings, and current-location modeling around batch movement.
 - Lives in `src/native/core/domain/banana_logistics.h` and `src/native/core/domain/banana_logistics.c`.
 
 ### Inventory
@@ -116,9 +116,9 @@ This plan keeps the native core organized around banana domain contexts while re
 
 - Agriculture aggregates: farm and field registration, soil validation, seedling transplants, and planting or harvest planning.
 - Cultivation aggregates: plant registration, sucker propagation, bunch harvest, ripeness progression, and spoilage.
-- Harvesting and processing aggregates: individual banana entities, bunch factory creation rules, cultivar invariants, ripeness uniformity checks, aggregate weight validation, crate packing, and inspection records.
+- Harvesting and processing aggregates: individual banana entities, harvest batches, bunch factory creation rules, cultivar invariants, ripeness uniformity checks, aggregate weight validation, crate packing, and inspection records.
 - Supply chain aggregates: batch registration, batch-to-bunch composition, export transitions, shipment dispatch and arrival, and node inventory movement.
-- Logistics aggregates: containers, temperature settings, ripening rooms, and room-driven ripeness projections.
+- Logistics aggregates: containers, trucks, temperature settings, ripening rooms, and room-driven ripeness projections.
 - Retail inventory aggregates: inventory receipt, sale, spoilage discard, reorder thresholds, store sections, pricing, barcodes, and retail order fulfillment.
 - Domain events: native event payloads now capture planted, bloomed, harvested, shipped, arrived, ripened, sold, spoiled, and inventory-received actions.
 - Repositories: native in-memory repository interfaces now exist for plants, bunches, shipments, and inventory.

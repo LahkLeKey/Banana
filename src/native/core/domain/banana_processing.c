@@ -245,6 +245,62 @@ BananaStatus banana_inspection_record(
     return BANANA_OK;
 }
 
+BananaStatus banana_harvest_batch_create(
+    const char* harvest_batch_id,
+    const char* field_id,
+    int harvest_day_ordinal,
+    BananaHarvestBatch* harvest_batch
+) {
+    BananaStatus status = BANANA_OK;
+
+    if (harvest_batch == 0 || harvest_day_ordinal < 0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    memset(harvest_batch, 0, sizeof(*harvest_batch));
+    status = banana_identifier_copy(&harvest_batch->harvest_batch_id, harvest_batch_id);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    status = banana_identifier_copy(&harvest_batch->field_id, field_id);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    harvest_batch->harvest_day_ordinal = harvest_day_ordinal;
+    return BANANA_OK;
+}
+
+BananaStatus banana_harvest_batch_add_bunch(
+    BananaHarvestBatch* harvest_batch,
+    const BananaBunchRecord* bunch
+) {
+    BananaStatus status = BANANA_OK;
+
+    if (harvest_batch == 0
+        || bunch == 0
+        || bunch->aggregate.bunch.harvest_day_ordinal != harvest_batch->harvest_day_ordinal) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    if (harvest_batch->bunch_count >= BANANA_MAX_BUNCHES_PER_HARVEST_BATCH
+        || identifier_index(harvest_batch->bunch_ids, harvest_batch->bunch_count, bunch->aggregate.bunch.bunch_id.value) >= 0) {
+        return BANANA_ERROR_OVERFLOW;
+    }
+
+    status = banana_identifier_copy(
+        &harvest_batch->bunch_ids[harvest_batch->bunch_count],
+        bunch->aggregate.bunch.bunch_id.value);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    harvest_batch->bunch_count++;
+    harvest_batch->total_weight_kg += bunch->total_weight_kg;
+    return BANANA_OK;
+}
+
 double banana_bunch_record_total_weight_kg(const BananaBunchRecord* record) {
     if (record == 0) {
         return 0.0;

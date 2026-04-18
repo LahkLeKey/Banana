@@ -449,6 +449,45 @@ static void test_processing_supports_dimensions_crates_and_inspection(void) {
     require_true(inspection.accepted, "expected accepted inspection for high-quality bunch");
 }
 
+static void test_processing_supports_harvest_batches(void) {
+    BananaPlant plant;
+    BananaGeoCoordinates location;
+    BananaBunchSpec spec;
+    BananaFruitSpec fruit_specs[2];
+    BananaBunchRecord bunch;
+    BananaHarvestBatch harvest_batch;
+    BananaStatus status;
+
+    location.latitude = 10.0;
+    location.longitude = -84.0;
+    status = banana_plant_register("harvest-plant-1", BANANA_SPECIES_PLANTAIN, location, 8, 1, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for harvest-batch plant registration");
+
+    spec.harvest_day_ordinal = 70;
+    spec.weight_kg = 0.7;
+    spec.finger_count = 2;
+    spec.maturity_stage = BANANA_STAGE_GREEN;
+    spec.quality_score = 0.91;
+    fruit_specs[0].fruit_id = "harvest-fruit-1";
+    fruit_specs[0].cultivar = BANANA_SPECIES_PLANTAIN;
+    fruit_specs[0].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[0].weight_kg = 0.35;
+    fruit_specs[1].fruit_id = "harvest-fruit-2";
+    fruit_specs[1].cultivar = BANANA_SPECIES_PLANTAIN;
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[1].weight_kg = 0.35;
+
+    status = banana_bunch_factory_create(&plant, "harvest-bunch-1", &spec, BANANA_SPECIES_PLANTAIN, fruit_specs, 2, &bunch, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for harvest-batch bunch creation");
+
+    status = banana_harvest_batch_create("harvest-batch-1", "field-harvest-1", 70, &harvest_batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for harvest batch creation");
+    status = banana_harvest_batch_add_bunch(&harvest_batch, &bunch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when adding bunch to harvest batch");
+    require_true(harvest_batch.bunch_count == 1, "expected one bunch in harvest batch");
+    require_true(harvest_batch.total_weight_kg > 0.69 && harvest_batch.total_weight_kg < 0.71, "expected harvest batch total weight to accumulate bunch weight");
+}
+
 static void test_cultivation_ripening_is_monotonic_and_spoilage_is_tracked(void) {
     BananaPlant plant;
     BananaGeoCoordinates location;
@@ -591,6 +630,54 @@ static void test_logistics_supports_containers_and_ripening_rooms(void) {
     require_true(status == BANANA_OK, "expected BANANA_OK when releasing batch from ripening room");
     status = banana_container_unload_batch(&container, batch.batch_id.value);
     require_true(status == BANANA_OK, "expected BANANA_OK when unloading batch from container");
+}
+
+static void test_logistics_supports_trucks(void) {
+    BananaBatch batch;
+    BananaGeoCoordinates origin_coordinates;
+    BananaGeoCoordinates destination_coordinates;
+    BananaCurrentLocation origin_location;
+    BananaCurrentLocation destination_location;
+    BananaTemperatureSetting temperature;
+    BananaContainer container;
+    BananaTruck truck;
+    BananaStatus status;
+
+    origin_coordinates.latitude = 9.9;
+    origin_coordinates.longitude = -79.6;
+    destination_coordinates.latitude = 9.0;
+    destination_coordinates.longitude = -79.5;
+
+    status = banana_batch_register("truck-batch-1", "truck-farm-1", 13.0, 2.0, 6, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for truck batch registration");
+    status = banana_batch_add_bunch(&batch, "truck-bunch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when adding bunch for truck test");
+
+    status = banana_current_location_set("truck-node-origin", origin_coordinates, BANANA_NODE_WAREHOUSE, &origin_location);
+    require_true(status == BANANA_OK, "expected BANANA_OK for truck origin location");
+    status = banana_current_location_set("truck-node-destination", destination_coordinates, BANANA_NODE_RETAIL, &destination_location);
+    require_true(status == BANANA_OK, "expected BANANA_OK for truck destination location");
+
+    temperature.set_point_c = 13.0;
+    temperature.tolerance_c = 1.0;
+    status = banana_container_register("truck-container-1", origin_location, temperature, 40.0, &container);
+    require_true(status == BANANA_OK, "expected BANANA_OK for truck container registration");
+    status = banana_container_load_batch(&container, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when loading truck container batch");
+
+    status = banana_truck_register("truck-1", origin_location, 60.0, &truck);
+    require_true(status == BANANA_OK, "expected BANANA_OK for truck registration");
+    status = banana_truck_load_container(&truck, &container);
+    require_true(status == BANANA_OK, "expected BANANA_OK when loading container onto truck");
+    require_true(truck.container_count == 1, "expected one container on truck");
+
+    status = banana_truck_relocate(&truck, destination_location);
+    require_true(status == BANANA_OK, "expected BANANA_OK when relocating truck");
+    require_true(strcmp(truck.current_location.node_id.value, "truck-node-destination") == 0, "expected truck to track destination location");
+
+    status = banana_truck_unload_container(&truck, container.container_id.value, container.current_weight_kg);
+    require_true(status == BANANA_OK, "expected BANANA_OK when unloading container from truck");
+    require_true(truck.container_count == 0, "expected no containers on truck after unload");
 }
 
 static void test_repositories_persist_aggregates(void) {
@@ -1043,9 +1130,11 @@ int main(void) {
     test_cultivation_registers_plants_and_harvests_bunches();
     test_processing_factory_creates_individual_banana_entities();
     test_processing_supports_dimensions_crates_and_inspection();
+    test_processing_supports_harvest_batches();
     test_cultivation_ripening_is_monotonic_and_spoilage_is_tracked();
     test_supply_chain_tracks_shipments_nodes_and_batch_transitions();
     test_logistics_supports_containers_and_ripening_rooms();
+    test_logistics_supports_trucks();
     test_repositories_persist_aggregates();
     test_domain_services_apply_ripening_and_quality_control();
     test_application_services_execute_commands();
