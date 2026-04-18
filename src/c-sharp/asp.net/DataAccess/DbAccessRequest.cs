@@ -5,4 +5,8 @@ namespace Banana.Api.DataAccess;
 /// </summary>
 /// <param name="Purchases">Purchase count from request context.</param>
 /// <param name="Multiplier">Multiplier from request context.</param>
-public sealed record DbAccessRequest(int Purchases, int Multiplier);
+/// <param name="Contract">Named DAL contract executed for this request.</param>
+public sealed record DbAccessRequest(
+	int Purchases,
+	int Multiplier,
+	DbAccessContract Contract = DbAccessContract.BananaProfileProjection);

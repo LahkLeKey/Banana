@@ -70,7 +70,7 @@ static char* build_json_payload(int purchases, int multiplier, int banana) {
     return payload;
 }
 
-int banana_projection_legacy_db_query(int purchases, int multiplier, char** out_payload, int* out_row_count) {
+int banana_projection_db_query_banana_profile(int purchases, int multiplier, char** out_payload, int* out_row_count) {
     int forced_result = 0;
 
     if (out_payload == 0 || out_row_count == 0) {
@@ -87,7 +87,7 @@ int banana_projection_legacy_db_query(int purchases, int multiplier, char** out_
 #if defined(BANANA_ENABLE_POSTGRES)
     {
         int banana = 0;
-        int status = banana_postgres_query_legacy_projection(purchases, multiplier, &banana);
+        int status = banana_postgres_query_banana_profile(purchases, multiplier, &banana);
 
         if (status != BANANA_DB_OK) {
             return status;

@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-int banana_postgres_query_legacy_projection(int purchases, int multiplier, int* out_banana);
+int banana_postgres_query_banana_profile(int purchases, int multiplier, int* out_banana);
 
 int banana_postgres_upsert_snapshot(
     const char* aggregate_type,

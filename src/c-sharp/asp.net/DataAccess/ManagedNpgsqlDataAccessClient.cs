@@ -26,6 +26,7 @@ public sealed class ManagedNpgsqlDataAccessClient : IDataAccessPipelineClient
     /// <inheritdoc />
     public RawDbAccessResult Execute(DbAccessRequest request)
     {
+        var query = ResolveQuery(request.Contract);
         var connectionString = _configuration.GetConnectionString("PostgreSQL");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -38,27 +39,28 @@ public sealed class ManagedNpgsqlDataAccessClient : IDataAccessPipelineClient
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = _options.ManagedQuery;
+            command.CommandText = query;
             command.Parameters.AddWithValue("purchases", request.Purchases);
             command.Parameters.AddWithValue("multiplier", request.Multiplier);
 
             using var reader = command.ExecuteReader();
-            var rows = new List<Dictionary<string, object?>>();
-
-            while (reader.Read())
+            if (!reader.Read())
             {
-                var row = new Dictionary<string, object?>(StringComparer.Ordinal);
-                for (var index = 0; index < reader.FieldCount; index++)
-                {
-                    var value = reader.IsDBNull(index) ? null : reader.GetValue(index);
-                    row[reader.GetName(index)] = value;
-                }
-
-                rows.Add(row);
+                throw new DatabaseAccessException($"Managed PostgreSQL query for contract '{request.Contract}' returned no rows.");
             }
 
-            var payload = JsonSerializer.Serialize(rows);
-            return new RawDbAccessResult("managed-npgsql", payload, rows.Count);
+            var row = ReadRow(reader);
+            if (reader.Read())
+            {
+                throw new DatabaseAccessException($"Managed PostgreSQL query for contract '{request.Contract}' returned more than one row.");
+            }
+
+            var payload = JsonSerializer.Serialize(row);
+            return new RawDbAccessResult("managed-npgsql", payload, 1);
+        }
+        catch (DatabaseAccessException)
+        {
+            throw;
         }
         catch (NpgsqlException ex)
         {
@@ -68,5 +70,29 @@ public sealed class ManagedNpgsqlDataAccessClient : IDataAccessPipelineClient
         {
             throw new DatabaseAccessException("Managed PostgreSQL connection failed.", ex);
         }
+    }
+
+    private string ResolveQuery(DbAccessContract contract)
+    {
+        try
+        {
+            return _options.GetManagedQuery(contract);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new DatabaseAccessException($"Managed PostgreSQL mode does not support contract '{contract}'.", ex);
+        }
+    }
+
+    private static Dictionary<string, object?> ReadRow(NpgsqlDataReader reader)
+    {
+        var row = new Dictionary<string, object?>(StringComparer.Ordinal);
+        for (var index = 0; index < reader.FieldCount; index++)
+        {
+            var value = reader.IsDBNull(index) ? null : reader.GetValue(index);
+            row[reader.GetName(index)] = value;
+        }
+
+        return row;
     }
 }

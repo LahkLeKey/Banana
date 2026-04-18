@@ -153,7 +153,7 @@ static int ensure_snapshot_table(PGconn* connection) {
 }
 #endif
 
-int banana_postgres_query_legacy_projection(int purchases, int multiplier, int* out_banana) {
+int banana_postgres_query_banana_profile(int purchases, int multiplier, int* out_banana) {
     if (out_banana == 0) {
         return BANANA_DB_INVALID_ARGUMENT;
     }
@@ -179,12 +179,12 @@ int banana_postgres_query_legacy_projection(int purchases, int multiplier, int* 
 
         result = PQexecParams(
             connection,
-            "WITH purchase_input AS (SELECT $1::int AS purchases, $2::int AS multiplier), "
-            "point_breakdown AS ("
-            "SELECT purchases, multiplier, purchases * 10 AS base_points, "
-            "CASE WHEN purchases >= 10 THEN multiplier * 25 ELSE 0 END AS bonus_points "
-            "FROM purchase_input) "
-            "SELECT purchases, multiplier, (base_points + bonus_points) AS banana FROM point_breakdown",
+            "WITH banana_input AS (SELECT $1::int AS purchases, $2::int AS multiplier), "
+            "banana_yield AS ("
+            "SELECT purchases, multiplier, purchases * 10 AS base_banana, "
+            "CASE WHEN purchases >= 10 THEN multiplier * 25 ELSE 0 END AS bonus_banana "
+            "FROM banana_input) "
+            "SELECT purchases, multiplier, (base_banana + bonus_banana) AS banana FROM banana_yield",
             2,
             0,
             params,

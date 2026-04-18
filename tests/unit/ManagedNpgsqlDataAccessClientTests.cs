@@ -17,7 +17,7 @@ public sealed class ManagedNpgsqlDataAccessClientTests
             .Build();
         var options = Options.Create(new DbAccessOptions
         {
-            ManagedQuery = "select 1"
+            BananaProfileQuery = "select 1"
         });
         var client = new ManagedNpgsqlDataAccessClient(configuration, options);
 
@@ -35,7 +35,7 @@ public sealed class ManagedNpgsqlDataAccessClientTests
             .Build();
         var options = Options.Create(new DbAccessOptions
         {
-            ManagedQuery = "select @purchases::int as purchases, @multiplier::int as multiplier"
+            BananaProfileQuery = "select @purchases::int as purchases, @multiplier::int as multiplier"
         });
         var client = new ManagedNpgsqlDataAccessClient(configuration, options);
 
@@ -51,10 +51,24 @@ public sealed class ManagedNpgsqlDataAccessClientTests
                 ["ConnectionStrings:PostgreSQL"] = "Host=;Port=not-a-number"
             })
             .Build();
-        var options = Options.Create(new DbAccessOptions { ManagedQuery = "select 1" });
+        var options = Options.Create(new DbAccessOptions { BananaProfileQuery = "select 1" });
         var client = new ManagedNpgsqlDataAccessClient(configuration, options);
 
         var ex = Assert.Throws<DatabaseAccessException>(() => client.Execute(new DbAccessRequest(1, 1)));
         Assert.Contains("connection failed", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Execute_ThrowsDatabaseAccessException_ForUnsupportedContract()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>())
+            .Build();
+        var options = Options.Create(new DbAccessOptions());
+        var client = new ManagedNpgsqlDataAccessClient(configuration, options);
+
+        var ex = Assert.Throws<DatabaseAccessException>(() => client.Execute(new DbAccessRequest(10, 2, (DbAccessContract)99)));
+
+        Assert.Contains("does not support contract", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

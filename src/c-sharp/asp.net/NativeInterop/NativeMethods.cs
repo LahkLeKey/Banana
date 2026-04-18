@@ -29,10 +29,10 @@ internal static partial class NativeMethods
     internal static partial int CreateBananaMessage(int purchases, int multiplier, out nint message);
 
     /// <summary>
-    /// Executes native DB stage query and returns UTF-8 JSON payload allocated by native code.
+    /// Executes the native banana profile projection and returns a UTF-8 JSON payload allocated by native code.
     /// </summary>
     [LibraryImport(LibraryName, EntryPoint = "banana_db_query_banana")]
-    internal static partial int QueryDbBanana(int purchases, int multiplier, out nint payload, out int rowCount);
+    internal static partial int QueryBananaProfileProjection(int purchases, int multiplier, out nint payload, out int rowCount);
 
     /// <summary>
     /// Predicts banana ripeness from supply-chain telemetry.

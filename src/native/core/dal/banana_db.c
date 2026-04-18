@@ -7,7 +7,7 @@
 #include "domain/banana_supply_chain.h"
 
 int banana_db_query(int purchases, int multiplier, char** out_payload, int* out_row_count) {
-    return banana_projection_legacy_db_query(purchases, multiplier, out_payload, out_row_count);
+    return banana_projection_db_query_banana_profile(purchases, multiplier, out_payload, out_row_count);
 }
 
 int banana_db_save_plant(const BananaPlant* plant) {
