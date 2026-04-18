@@ -81,3 +81,31 @@ BananaStatus banana_inventory_acl_translate(
         item,
         event);
 }
+
+BananaStatus banana_weather_acl_translate(
+    const BananaExternalWeatherObservation* weather,
+    const BananaSoilConditions* soil_conditions,
+    BananaCultivationAdvice* advice
+) {
+    BananaStatus status = BANANA_OK;
+
+    if (weather == 0
+        || advice == 0
+        || weather->rainfall_mm < 0.0
+        || weather->humidity_pct < 0.0
+        || weather->humidity_pct > 100.0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    status = banana_soil_conditions_validate(soil_conditions);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    advice->should_irrigate = soil_conditions->moisture_pct < 35.0 || weather->rainfall_mm < 10.0;
+    advice->should_harvest_early = weather->average_temp_c > 32.0 && weather->humidity_pct > 80.0;
+    advice->projected_health = (weather->average_temp_c > 36.0 || soil_conditions->moisture_pct < 20.0)
+        ? BANANA_HEALTH_STRESSED
+        : BANANA_HEALTH_GOOD;
+    return BANANA_OK;
+}

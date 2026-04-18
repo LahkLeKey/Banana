@@ -1,5 +1,7 @@
 #include "banana_processing.h"
 
+#include <string.h>
+
 static double absolute_difference(double left, double right) {
     return (left > right) ? (left - right) : (right - left);
 }
@@ -10,6 +12,45 @@ static int ripeness_distance(BananaRipenessStage left, BananaRipenessStage right
 
 static int ripeness_stage_is_valid(BananaRipenessStage stage) {
     return stage >= BANANA_STAGE_GREEN && stage <= BANANA_STAGE_BIODEGRADATION;
+}
+
+static int identifier_index(const BananaIdentifier* identifiers, int count, const char* value) {
+    int index = 0;
+
+    if (identifiers == 0 || value == 0) {
+        return -1;
+    }
+
+    for (index = 0; index < count; index++) {
+        if (strcmp(identifiers[index].value, value) == 0) {
+            return index;
+        }
+    }
+
+    return -1;
+}
+
+BananaStatus banana_dimensions_validate(const BananaDimensions* dimensions) {
+    if (dimensions == 0
+        || dimensions->length_cm <= 0.0
+        || dimensions->girth_cm <= 0.0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    return BANANA_OK;
+}
+
+BananaStatus banana_fruit_estimate_dimensions(
+    const BananaFruit* fruit,
+    BananaDimensions* dimensions
+) {
+    if (fruit == 0 || dimensions == 0 || fruit->weight_kg <= 0.0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    dimensions->length_cm = 12.0 + (fruit->weight_kg * 18.0);
+    dimensions->girth_cm = 7.0 + (fruit->weight_kg * 7.0);
+    return banana_dimensions_validate(dimensions);
 }
 
 BananaStatus banana_bunch_factory_create(
@@ -126,6 +167,81 @@ BananaStatus banana_bunch_record_update_ripeness(
         record->bananas[index].ripeness_stage = new_stage;
     }
 
+    return BANANA_OK;
+}
+
+BananaStatus banana_crate_register(
+    const char* crate_id,
+    double capacity_kg,
+    BananaCrate* crate
+) {
+    BananaStatus status = BANANA_OK;
+
+    if (crate == 0 || capacity_kg <= 0.0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    memset(crate, 0, sizeof(*crate));
+    status = banana_identifier_copy(&crate->crate_id, crate_id);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    crate->capacity_kg = capacity_kg;
+    crate->current_weight_kg = 0.0;
+    crate->bunch_count = 0;
+    return BANANA_OK;
+}
+
+BananaStatus banana_crate_pack_bunch(
+    BananaCrate* crate,
+    const BananaBunchRecord* bunch
+) {
+    BananaStatus status = BANANA_OK;
+
+    if (crate == 0 || bunch == 0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    if (crate->bunch_count >= BANANA_MAX_BUNCHES_PER_CRATE
+        || identifier_index(crate->bunch_ids, crate->bunch_count, bunch->aggregate.bunch.bunch_id.value) >= 0
+        || crate->current_weight_kg + bunch->total_weight_kg > crate->capacity_kg) {
+        return BANANA_ERROR_OVERFLOW;
+    }
+
+    status = banana_identifier_copy(&crate->bunch_ids[crate->bunch_count], bunch->aggregate.bunch.bunch_id.value);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    crate->bunch_count++;
+    crate->current_weight_kg += bunch->total_weight_kg;
+    return BANANA_OK;
+}
+
+BananaStatus banana_inspection_record(
+    const char* inspector_id,
+    const BananaBunchRecord* bunch,
+    double minimum_quality_score,
+    int defect_count,
+    BananaInspection* inspection
+) {
+    BananaStatus status = BANANA_OK;
+
+    if (inspection == 0 || bunch == 0 || minimum_quality_score < 0.0 || minimum_quality_score > 1.0 || defect_count < 0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    memset(inspection, 0, sizeof(*inspection));
+    status = banana_identifier_copy(&inspection->inspector_id, inspector_id);
+    if (status != BANANA_OK) {
+        return status;
+    }
+
+    inspection->bunch_id = bunch->aggregate.bunch.bunch_id;
+    inspection->quality_score = bunch->aggregate.bunch.quality_score;
+    inspection->defect_count = defect_count;
+    inspection->accepted = bunch->aggregate.bunch.quality_score >= minimum_quality_score && defect_count == 0;
     return BANANA_OK;
 }
 

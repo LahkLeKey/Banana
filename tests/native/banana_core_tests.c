@@ -2,14 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "domain/banana_agriculture.h"
 #include "domain/banana_application.h"
 #include "domain/banana_cultivation.h"
 #include "domain/banana_integration.h"
 #include "domain/banana_inventory.h"
+#include "domain/banana_logistics.h"
 #include "domain/banana_processing.h"
 #include "domain/banana_projection_legacy.h"
 #include "domain/banana_read_models.h"
 #include "domain/banana_repositories.h"
+#include "domain/banana_retail.h"
 #include "domain/banana_services.h"
 #include "domain/banana_supply_chain.h"
 
@@ -256,6 +259,50 @@ static void test_batch_registry_returns_not_found(void) {
     require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status for unknown batch prediction");
 }
 
+static void test_agriculture_registers_farms_fields_and_seedling_transplants(void) {
+    BananaFarm farm;
+    BananaField field;
+    BananaSoilConditions soil_conditions;
+    BananaGeoCoordinates location;
+    BananaSeedling seedling;
+    BananaPlant plant;
+    BananaDomainEvent event;
+    BananaStatus status;
+    int recommended_plant_count = 0;
+    int recommended_pick_count = 0;
+
+    soil_conditions.moisture_pct = 42.0;
+    soil_conditions.ph = 6.2;
+    soil_conditions.organic_matter_pct = 5.0;
+    location.latitude = 14.6;
+    location.longitude = -90.5;
+
+    status = banana_farm_register("farm-core-1", "North Farm", &farm);
+    require_true(status == BANANA_OK, "expected BANANA_OK for farm registration");
+
+    status = banana_field_register("field-core-1", farm.farm_id.value, location, soil_conditions, 2.5, &field);
+    require_true(status == BANANA_OK, "expected BANANA_OK for field registration");
+    status = banana_farm_add_field(&farm, &field);
+    require_true(status == BANANA_OK, "expected BANANA_OK when adding field to farm");
+    require_true(farm.field_count == 1, "expected one field on farm");
+
+    status = banana_seedling_register("seedling-1", BANANA_SPECIES_CAVENDISH, 4, &seedling);
+    require_true(status == BANANA_OK, "expected BANANA_OK for seedling registration");
+
+    status = banana_seedling_transplant(&seedling, &field, "plant-seedling-1", 12, 2, &plant, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for seedling transplant");
+    require_true(field.active_plant_count == 1, "expected active plant count on field after transplant");
+    require_true(event.type == BANANA_EVENT_PLANTED, "expected planted event from transplant");
+
+    status = banana_field_plan_planting(&field, &recommended_plant_count);
+    require_true(status == BANANA_OK, "expected BANANA_OK for planting plan");
+    require_true(recommended_plant_count > 2500, "expected planting recommendation based on area and soil");
+
+    status = banana_field_plan_harvest(&field, 20, &recommended_pick_count);
+    require_true(status == BANANA_OK, "expected BANANA_OK for harvest plan");
+    require_true(recommended_pick_count >= 15, "expected strong harvest recommendation for healthy soil conditions");
+}
+
 static void test_cultivation_registers_plants_and_harvests_bunches(void) {
     BananaPlant plant;
     BananaGeoCoordinates location;
@@ -352,6 +399,54 @@ static void test_processing_factory_creates_individual_banana_entities(void) {
     require_true(banana_bunch_record_all_same_cultivar(&record), "expected all fruit to share cultivar");
     require_true(banana_bunch_record_uniform_ripeness(&record), "expected fruit ripeness to be within one stage");
     require_true(banana_bunch_record_total_weight_kg(&record) > 1.34 && banana_bunch_record_total_weight_kg(&record) < 1.36, "expected total weight to match bunch record");
+}
+
+static void test_processing_supports_dimensions_crates_and_inspection(void) {
+    BananaPlant plant;
+    BananaGeoCoordinates location;
+    BananaBunchSpec spec;
+    BananaFruitSpec fruit_specs[2];
+    BananaBunchRecord bunch;
+    BananaDimensions dimensions;
+    BananaCrate crate;
+    BananaInspection inspection;
+    BananaStatus status;
+
+    location.latitude = 17.0;
+    location.longitude = -88.0;
+    status = banana_plant_register("process-plant-2", BANANA_SPECIES_CAVENDISH, location, 3, 1, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for crate test plant registration");
+
+    spec.harvest_day_ordinal = 45;
+    spec.weight_kg = 0.9;
+    spec.finger_count = 2;
+    spec.maturity_stage = BANANA_STAGE_GREEN;
+    spec.quality_score = 0.97;
+    fruit_specs[0].fruit_id = "crate-fruit-1";
+    fruit_specs[0].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[0].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[0].weight_kg = 0.45;
+    fruit_specs[1].fruit_id = "crate-fruit-2";
+    fruit_specs[1].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[1].weight_kg = 0.45;
+
+    status = banana_bunch_factory_create(&plant, "crate-bunch-1", &spec, BANANA_SPECIES_CAVENDISH, fruit_specs, 2, &bunch, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for crate test bunch creation");
+
+    status = banana_fruit_estimate_dimensions(&bunch.bananas[0], &dimensions);
+    require_true(status == BANANA_OK, "expected BANANA_OK for fruit dimension estimate");
+    require_true(dimensions.length_cm > 20.0, "expected positive fruit length estimate");
+
+    status = banana_crate_register("crate-1", 5.0, &crate);
+    require_true(status == BANANA_OK, "expected BANANA_OK for crate registration");
+    status = banana_crate_pack_bunch(&crate, &bunch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when packing bunch into crate");
+    require_true(crate.bunch_count == 1, "expected one bunch in crate");
+
+    status = banana_inspection_record("inspector-1", &bunch, 0.9, 0, &inspection);
+    require_true(status == BANANA_OK, "expected BANANA_OK for inspection record");
+    require_true(inspection.accepted, "expected accepted inspection for high-quality bunch");
 }
 
 static void test_cultivation_ripening_is_monotonic_and_spoilage_is_tracked(void) {
@@ -454,6 +549,48 @@ static void test_supply_chain_tracks_shipments_nodes_and_batch_transitions(void)
     status = banana_distribution_node_receive_batch(&destination, batch.batch_id.value);
     require_true(status == BANANA_OK, "expected BANANA_OK when destination receives distributed batch");
     require_true(destination.inventory_batch_count == 1, "expected destination inventory to contain the batch");
+}
+
+static void test_logistics_supports_containers_and_ripening_rooms(void) {
+    BananaBatch batch;
+    BananaCurrentLocation location;
+    BananaTemperatureSetting temperature;
+    BananaContainer container;
+    BananaRipeningRoom room;
+    BananaGeoCoordinates coordinates;
+    BananaRipenessPrediction prediction;
+    BananaDomainEvent event;
+    BananaStatus status;
+    double history[2] = { 16.0, 17.0 };
+
+    coordinates.latitude = 25.0;
+    coordinates.longitude = -80.0;
+    status = banana_batch_register("logistics-batch-1", "logistics-farm-1", 13.0, 2.0, 5, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for logistics batch registration");
+
+    status = banana_current_location_set("node-logistics-1", coordinates, BANANA_NODE_PORT, &location);
+    require_true(status == BANANA_OK, "expected BANANA_OK for current location setup");
+
+    temperature.set_point_c = 13.0;
+    temperature.tolerance_c = 1.0;
+    status = banana_container_register("container-1", location, temperature, 40.0, &container);
+    require_true(status == BANANA_OK, "expected BANANA_OK for container registration");
+    status = banana_container_load_batch(&container, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for loading batch into container");
+    require_true(container.batch_count == 1, "expected one batch in container");
+
+    status = banana_ripening_room_register("room-1", location, 16.5, 5.0, BANANA_STAGE_YELLOW, &room);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ripening room registration");
+    status = banana_ripening_room_admit_batch(&room, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when admitting batch to ripening room");
+    status = banana_ripening_room_apply(&room, &batch, history, 2, 6, &prediction, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ripening room application");
+    require_true(event.type == BANANA_EVENT_RIPENED, "expected ripened event from ripening room");
+    require_true(prediction.predicted_stage >= BANANA_STAGE_BREAKING, "expected ripening room prediction to advance stage");
+    status = banana_ripening_room_release_batch(&room, batch.batch_id.value);
+    require_true(status == BANANA_OK, "expected BANANA_OK when releasing batch from ripening room");
+    status = banana_container_unload_batch(&container, batch.batch_id.value);
+    require_true(status == BANANA_OK, "expected BANANA_OK when unloading batch from container");
 }
 
 static void test_repositories_persist_aggregates(void) {
@@ -729,6 +866,26 @@ static void test_integration_adapters_translate_external_inputs(void) {
     require_true(event.type == BANANA_EVENT_INVENTORY_RECEIVED, "expected inventory-received event from ACL translation");
 }
 
+static void test_weather_acl_translates_growing_conditions(void) {
+    BananaExternalWeatherObservation weather;
+    BananaSoilConditions soil_conditions;
+    BananaCultivationAdvice advice;
+    BananaStatus status;
+
+    weather.rainfall_mm = 5.0;
+    weather.humidity_pct = 82.0;
+    weather.average_temp_c = 33.5;
+    soil_conditions.moisture_pct = 18.0;
+    soil_conditions.ph = 6.0;
+    soil_conditions.organic_matter_pct = 4.2;
+
+    status = banana_weather_acl_translate(&weather, &soil_conditions, &advice);
+    require_true(status == BANANA_OK, "expected BANANA_OK for weather ACL translation");
+    require_true(advice.should_irrigate, "expected irrigation advice for dry soil and low rainfall");
+    require_true(advice.should_harvest_early, "expected early-harvest advice for hot humid conditions");
+    require_true(advice.projected_health == BANANA_HEALTH_STRESSED, "expected stressed projected health for harsh conditions");
+}
+
 static void test_read_models_project_stock_and_stats(void) {
     BananaStockView stock_view;
     BananaAverageRipenessReport report;
@@ -792,6 +949,35 @@ static void test_read_models_project_stock_and_stats(void) {
     require_true(stats.sold_fruit_count == 2, "expected sold fruit count in cultivar stats");
 }
 
+static void test_retail_supports_store_sections_pricing_barcodes_and_orders(void) {
+    BananaPrice price;
+    BananaBarcode barcode;
+    BananaStoreSection section;
+    BananaRetailOrder order;
+    BananaInventoryItem item;
+    BananaDomainEvent event;
+    BananaStatus status;
+
+    status = banana_price_set(199, "USD", &price);
+    require_true(status == BANANA_OK, "expected BANANA_OK for price creation");
+    status = banana_barcode_set("0123456789012", &barcode);
+    require_true(status == BANANA_OK, "expected BANANA_OK for barcode creation");
+    status = banana_store_section_register("section-1", "store-1", barcode, price, BANANA_STAGE_YELLOW, 20, &section);
+    require_true(status == BANANA_OK, "expected BANANA_OK for store-section registration");
+
+    status = banana_inventory_receive("retail-inventory-1", "store-1", "retail-batch-1", BANANA_STAGE_YELLOW, 12, 3, 2.4, 60, &item, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for retail inventory setup");
+    require_true(banana_store_section_can_face_inventory(&section, &item), "expected store section to accept matching inventory");
+
+    status = banana_retail_order_create("order-1", "store-1", "section-1", 10, price, &order);
+    require_true(status == BANANA_OK, "expected BANANA_OK for retail order creation");
+    status = banana_retail_order_fulfill(&order, &item, 10, 61, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for retail order fulfillment");
+    require_true(order.status == BANANA_ORDER_FULFILLED, "expected fulfilled retail order state");
+    require_true(item.quantity_on_hand == 2, "expected reduced inventory after order fulfillment");
+    require_true(event.type == BANANA_EVENT_SOLD, "expected sold event for retail order fulfillment");
+}
+
 static void test_inventory_receive_sell_and_discard_spoiled_bananas(void) {
     BananaInventoryItem item;
     BananaDomainEvent event;
@@ -853,15 +1039,20 @@ int main(void) {
     test_predict_ripeness_for_legacy_input_returns_profile();
     test_batch_registry_create_get_and_predict();
     test_batch_registry_returns_not_found();
+    test_agriculture_registers_farms_fields_and_seedling_transplants();
     test_cultivation_registers_plants_and_harvests_bunches();
     test_processing_factory_creates_individual_banana_entities();
+    test_processing_supports_dimensions_crates_and_inspection();
     test_cultivation_ripening_is_monotonic_and_spoilage_is_tracked();
     test_supply_chain_tracks_shipments_nodes_and_batch_transitions();
+    test_logistics_supports_containers_and_ripening_rooms();
     test_repositories_persist_aggregates();
     test_domain_services_apply_ripening_and_quality_control();
     test_application_services_execute_commands();
     test_integration_adapters_translate_external_inputs();
+    test_weather_acl_translates_growing_conditions();
     test_read_models_project_stock_and_stats();
+    test_retail_supports_store_sections_pricing_barcodes_and_orders();
     test_inventory_receive_sell_and_discard_spoiled_bananas();
     test_pipeline_null_safety();
 

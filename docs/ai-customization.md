@@ -17,7 +17,7 @@ This repository now includes a workspace-level GitHub Copilot customization laye
 - `banana-reviewer`: review-mode agent for findings, regressions, and release risk
 - `native-c-agent`: coordinating native domain agent when core, DAL, and wrapper move together
 - `native-core-agent`: focused helper for `src/native/core` logic and tests
-- `native-dal-agent`: focused helper for `src/native/dal` and PostgreSQL-gated behavior
+- `native-dal-agent`: focused helper for `src/native/core/dal` and PostgreSQL-gated behavior
 - `native-wrapper-agent`: focused helper for wrapper ABI, exports, and interop-facing native contracts
 - `csharp-api-agent`: coordinating ASP.NET domain agent when pipeline and interop move together
 - `api-pipeline-agent`: focused helper for controllers, services, middleware, DI, and pipeline steps

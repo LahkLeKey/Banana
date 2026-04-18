@@ -1,6 +1,7 @@
 #include "banana_db.h"
 
-#include "../core/main.h"
+#include "../domain/banana_lifecycle.h"
+#include "../domain/banana_projection_legacy.h"
 
 #include "../testing/native_test_hooks.h"
 

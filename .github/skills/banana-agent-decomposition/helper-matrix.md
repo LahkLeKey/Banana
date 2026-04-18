@@ -3,7 +3,7 @@
 ## Native Helpers
 
 - `native-core-agent`: `src/native/core`, core models, algorithms, execution context, and focused native tests
-- `native-dal-agent`: `src/native/dal`, PostgreSQL-gated native data access, payload shaping, and `BANANA_PG_CONNECTION` behavior
+- `native-dal-agent`: `src/native/core/dal`, PostgreSQL-gated native data access, payload shaping, and `BANANA_PG_CONNECTION` behavior
 - `native-wrapper-agent`: `src/native/wrapper`, ABI exports, status codes, memory ownership, and managed interop coordination
 
 ## ASP.NET Helpers

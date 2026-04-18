@@ -39,7 +39,7 @@ You own Banana native C changes in [src/native](../../src/native), [tests/native
 # Scope
 
 - Core algorithm and domain logic under `src/native/core`
-- PostgreSQL-backed native DAL under `src/native/dal`
+- PostgreSQL-backed native DAL under `src/native/core/dal`
 - Wrapper ABI and native interop boundary under `src/native/wrapper`
 - Native testing hooks and CMake-native test targets
 

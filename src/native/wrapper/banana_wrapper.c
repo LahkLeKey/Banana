@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../core/main.h"
-#include "../dal/banana_db.h"
+#include "../core/dal/banana_db.h"
+#include "../core/domain/banana_lifecycle.h"
+#include "../core/domain/banana_projection_legacy.h"
+#include "../core/domain/banana_supply_chain.h"
 #include "../testing/native_test_hooks.h"
 
 static int map_calculation_status(BananaStatus status) {

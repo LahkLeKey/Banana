@@ -27,16 +27,19 @@ if(BANANA_ENABLE_POSTGRES)
 endif()
 
 set(BANANA_CORE_SOURCES
-    src/native/core/main.c
+    src/native/core/domain/banana_agriculture.c
     src/native/core/domain/banana_application.c
     src/native/core/domain/banana_cultivation.c
     src/native/core/domain/banana_events.c
     src/native/core/domain/banana_integration.c
     src/native/core/domain/banana_inventory.c
+    src/native/core/domain/banana_lifecycle.c
+    src/native/core/domain/banana_logistics.c
     src/native/core/domain/banana_projection_legacy.c
     src/native/core/domain/banana_processing.c
     src/native/core/domain/banana_read_models.c
     src/native/core/domain/banana_repositories.c
+    src/native/core/domain/banana_retail.c
     src/native/core/domain/banana_ripeness.c
     src/native/core/domain/banana_services.c
     src/native/core/domain/banana_supply_chain.c
@@ -45,7 +48,7 @@ set(BANANA_CORE_SOURCES
 if(BANANA_BUILD_SHARED_LIBRARY)
     add_library(banana_native SHARED
         ${BANANA_CORE_SOURCES}
-        src/native/dal/banana_db.c
+        src/native/core/dal/banana_db.c
         src/native/testing/native_test_hooks_default.c
         src/native/wrapper/banana_wrapper.c
     )
@@ -55,7 +58,7 @@ if(BANANA_BUILD_SHARED_LIBRARY)
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/dal
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core/dal
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
     )
 
@@ -104,7 +107,7 @@ if(BANANA_ENABLE_NATIVE_TESTS)
         tests/native/banana_wrapper_tests.c
         tests/native/native_test_hooks_env.c
         ${BANANA_CORE_SOURCES}
-        src/native/dal/banana_db.c
+        src/native/core/dal/banana_db.c
         src/native/wrapper/banana_wrapper.c
     )
 
@@ -112,7 +115,7 @@ if(BANANA_ENABLE_NATIVE_TESTS)
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/wrapper
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/dal
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core/dal
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
     )
 

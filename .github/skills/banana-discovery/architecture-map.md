@@ -13,12 +13,12 @@
 - Orchestration lives in `Services/BananaService.cs`
 - Ordered work runs through `Pipeline/PipelineExecutor.cs` and `Pipeline/Steps/*`
 - Native interop crosses through `NativeInterop/NativeBananaClient.cs` and `NativeMethods.cs`
-- Native implementation lives in `src/native/core`, `src/native/dal`, and `src/native/wrapper`
+- Native implementation lives in `src/native/core`, `src/native/core/dal`, and `src/native/wrapper`
 
 ## Helper Routing
 
 - `native-core-agent`: `src/native/core` and focused native tests
-- `native-dal-agent`: `src/native/dal` and PostgreSQL-gated native behavior
+- `native-dal-agent`: `src/native/core/dal` and PostgreSQL-gated native behavior
 - `native-wrapper-agent`: `src/native/wrapper` and downstream ABI coordination
 - `api-pipeline-agent`: controllers, services, middleware, pipeline, and `Program.cs`
 - `api-interop-agent`: `NativeInterop`, `DataAccess`, and managed/native contract mapping

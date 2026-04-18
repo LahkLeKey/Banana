@@ -1,6 +1,7 @@
 #ifndef BANANA_INTEGRATION_H
 #define BANANA_INTEGRATION_H
 
+#include "banana_agriculture.h"
 #include "banana_inventory.h"
 
 #ifdef __cplusplus
@@ -32,6 +33,18 @@ typedef struct BananaExternalRetailInventoryRecord {
     int ripeness_level;
 } BananaExternalRetailInventoryRecord;
 
+typedef struct BananaExternalWeatherObservation {
+    double rainfall_mm;
+    double humidity_pct;
+    double average_temp_c;
+} BananaExternalWeatherObservation;
+
+typedef struct BananaCultivationAdvice {
+    int should_irrigate;
+    int should_harvest_early;
+    BananaPlantHealthStatus projected_health;
+} BananaCultivationAdvice;
+
 BananaStatus banana_sensor_adapter_normalize(
     const BananaExternalSensorTelemetry* telemetry,
     BananaSensorTelemetryContext* context
@@ -44,6 +57,12 @@ BananaStatus banana_inventory_acl_translate(
     int event_day_ordinal,
     BananaInventoryItem* item,
     BananaDomainEvent* event
+);
+
+BananaStatus banana_weather_acl_translate(
+    const BananaExternalWeatherObservation* weather,
+    const BananaSoilConditions* soil_conditions,
+    BananaCultivationAdvice* advice
 );
 
 #ifdef __cplusplus

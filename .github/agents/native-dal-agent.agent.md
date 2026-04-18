@@ -1,6 +1,6 @@
 ---
 name: native-dal-agent
-description: Implements Banana native DAL, PostgreSQL-gated behavior, and database payload shaping under src/native/dal.
+description: Implements Banana native DAL, PostgreSQL-gated behavior, and database payload shaping under src/native/core/dal.
 argument-hint: Describe the query path, PostgreSQL behavior, DB payload, or native DAL issue you need to change.
 tools:
   - search
@@ -22,7 +22,7 @@ handoffs:
 
 # Purpose
 
-You own Banana native data access in [src/native/dal](../../src/native/dal) and the native tests that exercise DAL-backed behavior.
+You own Banana native data access in [src/native/core/dal](../../src/native/core/dal) and the native tests that exercise DAL-backed behavior.
 
 # Use This Helper When
 
