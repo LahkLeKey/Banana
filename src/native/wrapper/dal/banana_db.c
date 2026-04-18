@@ -30,15 +30,15 @@ int banana_db_query_banana(
     *out_row_count = 0;
 
     db_result = banana_db_query(purchases, multiplier, out_payload, out_row_count);
-    if (db_result == 0) {
+    if (db_result == BANANA_DB_OK) {
         return BANANA_STATUS_OK;
     }
 
-    if (db_result == 2) {
+    if (db_result == BANANA_DB_NOT_CONFIGURED) {
         return BANANA_STATUS_DB_NOT_CONFIGURED;
     }
 
-    if (db_result == 3) {
+    if (db_result == BANANA_DB_ERROR) {
         return BANANA_STATUS_DB_ERROR;
     }
 

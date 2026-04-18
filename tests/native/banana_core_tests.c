@@ -259,6 +259,29 @@ static void test_batch_registry_returns_not_found(void) {
     require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status for unknown batch prediction");
 }
 
+static void test_batch_registry_persists_mutations(void) {
+    BananaBatch batch;
+    BananaBatch loaded;
+    BananaStatus status = banana_batch_register("persisted-batch-1", "persisted-farm-1", 13.1, 2.0, 6, &batch);
+
+    require_true(status == BANANA_OK, "expected BANANA_OK for persisted batch registration");
+
+    status = banana_batch_add_bunch(&batch, "persisted-bunch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when adding bunch to persisted batch");
+
+    status = banana_batch_get("persisted-batch-1", &loaded);
+    require_true(status == BANANA_OK, "expected BANANA_OK when reloading persisted batch after bunch add");
+    require_true(loaded.bunch_count == 1, "expected persisted batch to retain bunch count");
+    require_true(strcmp(loaded.bunch_ids[0].value, "persisted-bunch-1") == 0, "expected persisted batch to retain bunch identifier");
+
+    status = banana_batch_advance_export_status(&batch, BANANA_EXPORT_SHIPPED);
+    require_true(status == BANANA_OK, "expected BANANA_OK when advancing persisted batch export status");
+
+    status = banana_batch_get("persisted-batch-1", &loaded);
+    require_true(status == BANANA_OK, "expected BANANA_OK when reloading persisted batch after export transition");
+    require_true(loaded.export_status == BANANA_EXPORT_SHIPPED, "expected persisted batch export status to remain updated");
+}
+
 static void test_agriculture_registers_farms_fields_and_seedling_transplants(void) {
     BananaFarm farm;
     BananaField field;
@@ -746,6 +769,10 @@ static void test_repositories_persist_aggregates(void) {
     status = banana_inventory_repository_get("repo-inventory-1", &loaded_item);
     require_true(status == BANANA_OK, "expected BANANA_OK when loading inventory from repository");
     require_true(loaded_item.quantity_on_hand == 10, "expected loaded inventory quantity");
+
+    banana_plant_repository_clear();
+    status = banana_plant_repository_get("repo-plant-1", &loaded_plant);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected cleared plant repository to drop persisted plant");
 }
 
 static void test_domain_services_apply_ripening_and_quality_control(void) {
@@ -1126,6 +1153,7 @@ int main(void) {
     test_predict_ripeness_for_legacy_input_returns_profile();
     test_batch_registry_create_get_and_predict();
     test_batch_registry_returns_not_found();
+    test_batch_registry_persists_mutations();
     test_agriculture_registers_farms_fields_and_seedling_transplants();
     test_cultivation_registers_plants_and_harvests_bunches();
     test_processing_factory_creates_individual_banana_entities();

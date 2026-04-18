@@ -45,6 +45,16 @@ set(BANANA_CORE_SOURCES
     src/native/core/domain/banana_supply_chain.c
 )
 
+set(BANANA_DAL_SOURCES
+    src/native/core/dal/banana_db.c
+    src/native/core/dal/domain/banana_cultivation.c
+    src/native/core/dal/domain/banana_inventory.c
+    src/native/core/dal/domain/banana_processing.c
+    src/native/core/dal/domain/banana_projection_legacy.c
+    src/native/core/dal/domain/banana_supply_chain.c
+    src/native/core/dal/internal/banana_postgres.c
+)
+
 set(BANANA_WRAPPER_SOURCES
     src/native/wrapper/banana_wrapper.c
     src/native/wrapper/dal/banana_db.c
@@ -58,7 +68,7 @@ set(BANANA_WRAPPER_SOURCES
 if(BANANA_BUILD_SHARED_LIBRARY)
     add_library(banana_native SHARED
         ${BANANA_CORE_SOURCES}
-        src/native/core/dal/banana_db.c
+        ${BANANA_DAL_SOURCES}
         src/native/testing/native_test_hooks_default.c
         ${BANANA_WRAPPER_SOURCES}
     )
@@ -117,7 +127,7 @@ if(BANANA_ENABLE_NATIVE_TESTS)
         tests/native/banana_wrapper_tests.c
         tests/native/native_test_hooks_env.c
         ${BANANA_CORE_SOURCES}
-        src/native/core/dal/banana_db.c
+        ${BANANA_DAL_SOURCES}
         ${BANANA_WRAPPER_SOURCES}
     )
 
@@ -145,18 +155,28 @@ if(BANANA_ENABLE_NATIVE_TESTS)
 
     add_executable(banana_core_tests
         tests/native/banana_core_tests.c
+        ${BANANA_DAL_SOURCES}
+        src/native/testing/native_test_hooks_default.c
         ${BANANA_CORE_SOURCES}
     )
 
     target_include_directories(banana_core_tests
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core/dal
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/testing
     )
 
     if(MSVC)
         target_compile_options(banana_core_tests PRIVATE /W4)
     else()
         target_compile_options(banana_core_tests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    if(BANANA_POSTGRES_ENABLED)
+        target_compile_definitions(banana_core_tests PRIVATE BANANA_ENABLE_POSTGRES)
+        target_include_directories(banana_core_tests PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+        target_link_libraries(banana_core_tests PRIVATE ${PostgreSQL_LIBRARIES})
     endif()
 
     add_test(NAME banana_core_tests COMMAND banana_core_tests)

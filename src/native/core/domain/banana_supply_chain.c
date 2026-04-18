@@ -1,5 +1,7 @@
 #include "banana_supply_chain.h"
 
+#include "../dal/banana_db.h"
+
 #include <string.h>
 
 static BananaBatch batch_registry[BANANA_MAX_BATCH_REGISTRY];
@@ -64,6 +66,37 @@ static int export_transition_is_valid(BananaExportStatus current, BananaExportSt
     return 0;
 }
 
+static BananaStatus cache_batch(const BananaBatch* batch) {
+    int index = -1;
+
+    if (batch == 0) {
+        return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    index = find_batch_index(batch->batch_id.value);
+    if (index >= 0) {
+        batch_registry[index] = *batch;
+        return BANANA_OK;
+    }
+
+    if (batch_registry_count >= BANANA_MAX_BATCH_REGISTRY) {
+        return BANANA_ERROR_OVERFLOW;
+    }
+
+    batch_registry[batch_registry_count] = *batch;
+    batch_registry_count++;
+    return BANANA_OK;
+}
+
+static void persist_batch_state(const BananaBatch* batch) {
+    if (batch == 0 || batch->batch_id.value[0] == '\0') {
+        return;
+    }
+
+    (void)cache_batch(batch);
+    (void)banana_db_save_batch(batch);
+}
+
 BananaStatus banana_batch_register(
     const char* batch_id,
     const char* origin_farm,
@@ -74,7 +107,6 @@ BananaStatus banana_batch_register(
 ) {
     BananaBatch candidate;
     BananaStatus status = BANANA_OK;
-    int index = -1;
 
     if (batch == 0
         || storage_temp_c < 0.0
@@ -102,20 +134,13 @@ BananaStatus banana_batch_register(
     candidate.ethylene_exposure = ethylene_exposure;
     candidate.estimated_shelf_life_days = estimated_shelf_life_days;
 
-    index = find_batch_index(batch_id);
-    if (index >= 0) {
-        batch_registry[index] = candidate;
-        *batch = candidate;
-        return BANANA_OK;
+    status = cache_batch(&candidate);
+    if (status != BANANA_OK) {
+        return status;
     }
 
-    if (batch_registry_count >= BANANA_MAX_BATCH_REGISTRY) {
-        return BANANA_ERROR_OVERFLOW;
-    }
-
-    batch_registry[batch_registry_count] = candidate;
     *batch = candidate;
-    batch_registry_count++;
+    (void)banana_db_save_batch(&candidate);
     return BANANA_OK;
 }
 
@@ -123,10 +148,19 @@ BananaStatus banana_batch_get(
     const char* batch_id,
     BananaBatch* batch
 ) {
+    int db_status = BANANA_DB_NOT_CONFIGURED;
     int index = -1;
 
     if (batch == 0) {
         return BANANA_ERROR_INVALID_INPUT;
+    }
+
+    if (batch_id != 0 && batch_id[0] != '\0') {
+        db_status = banana_db_get_batch(batch_id, batch);
+        if (db_status == BANANA_DB_OK) {
+            (void)cache_batch(batch);
+            return BANANA_OK;
+        }
     }
 
     index = find_batch_index(batch_id);
@@ -159,6 +193,7 @@ BananaStatus banana_batch_add_bunch(
     }
 
     batch->bunch_count++;
+    persist_batch_state(batch);
     return BANANA_OK;
 }
 
@@ -171,6 +206,7 @@ BananaStatus banana_batch_advance_export_status(
     }
 
     batch->export_status = next_status;
+    persist_batch_state(batch);
     return BANANA_OK;
 }
 
