@@ -105,5 +105,18 @@ services:
       - native-artifacts:/native:ro
     profiles: ["electron", "apps", "all"]
 
+  react-app:
+    build:
+      context: .
+      dockerfile: docker/react.Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      VITE_BANANA_API_BASE_URL: http://api:8080
+    ports:
+      - "5173:5173"
+    profiles: ["apps", "all"]
+
 volumes:
   native-artifacts:
