@@ -1,0 +1,13 @@
+---
+name: Infrastructure And Delivery Standards
+description: Guidance for Docker Compose, GitHub Actions, shell scripts, and local runtime orchestration.
+applyTo: "{docker-compose.yml,docker/**/*,.github/workflows/**/*.yml,scripts/**/*.sh,scripts/**/*.bat,.vscode/**/*.json}"
+---
+
+# Infrastructure And Delivery Standards
+
+- Prefer existing compose profiles and scripts instead of introducing parallel orchestration paths.
+- Keep service contracts aligned with `docker-compose.yml`, especially ports, health checks, and shared environment variables.
+- Reuse current CI stages in `.github/workflows/compose-ci.yml` for build, coverage, and runtime validation.
+- Preserve cross-platform awareness: Windows task/build helpers exist alongside bash-based CI and compose scripts.
+- If you change a workflow or script entry point, update the closest human-facing docs or prompt/skill references.

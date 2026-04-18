@@ -1,0 +1,27 @@
+# Build And Run Entry Points
+
+## Native
+
+- Workspace task: `Build Native Library`
+- Script: `scripts/build-native.bat` on Windows
+- Coverage build path: `scripts/run-native-c-tests-with-coverage.sh`
+
+## ASP.NET
+
+- Workspace task: `Build Banana API`
+- Full build script: `scripts/build-all.sh`
+- Local run helper: `scripts/run-api.sh` when available in the current environment
+
+## Frontend
+
+- React dev: `bun run dev` in `src/typescript/react`
+- React build: `bun run build` in `src/typescript/react`
+- Electron smoke: `npm run smoke` in `src/typescript/electron`
+
+## Compose And Runtime
+
+- Full apps stack: `bash scripts/compose-apps.sh`
+- Detached full apps stack: `DETACH=1 bash scripts/compose-apps.sh`
+- Stop apps stack: `bash scripts/compose-apps-down.sh`
+- Test profile: `bash scripts/compose-tests.sh`
+- Runtime profile: `bash scripts/compose-runtime.sh`
