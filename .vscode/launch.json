@@ -2,73 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Banana Full Stack (Compose Up)",
+      "name": "Banana Channels (Container Driven)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bash -lc 'DETACH=1 scripts/compose-apps.sh'"
-    },
-    {
-      "name": "Banana Full Stack (Browser)",
-      "type": "pwa-chrome",
-      "request": "launch",
-      "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/src/typescript/react"
-    },
-    {
-      "name": "Banana Full Stack (Compose Down)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bash scripts/compose-apps-down.sh"
-    },
-    {
-      "name": "Banana Electron Renderer (Bun Dev)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun run --cwd src/typescript/electron/renderer dev"
-    },
-    {
-      "name": "Banana Electron Renderer (Browser)",
-      "type": "pwa-chrome",
-      "request": "launch",
-      "url": "http://127.0.0.1:4173",
-      "webRoot": "${workspaceFolder}/src/typescript/electron/renderer"
-    },
-    {
-      "name": "Banana Electron Desktop (Dev Renderer)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bash -lc 'cd src/typescript/electron && BANANA_ELECTRON_RENDERER_URL=http://127.0.0.1:4173 npm run start'"
-    },
-    {
-      "name": "Banana Electron Desktop (Build UI + Run)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bash -lc 'cd src/typescript/electron && npm run start:ui'"
-    },
-    {
-      "name": "Banana Electron Smoke",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bash -lc 'cd src/typescript/electron && npm run smoke'"
+      "command": "bash -lc 'set -euo pipefail; DETACH=1 scripts/compose-apps.sh; echo; echo Banana channels are running:; echo API health: http://localhost:8080/health; echo Web app: http://localhost:5173; echo Electron smoke logs: docker compose logs -f electron-example'"
     }
   ],
-  "compounds": [
-    {
-      "name": "Banana Full Stack (One Click)",
-      "configurations": [
-        "Banana Full Stack (Compose Up)",
-        "Banana Full Stack (Browser)"
-      ],
-      "stopAll": true
-    },
-    {
-      "name": "Banana Electron (One Click)",
-      "configurations": [
-        "Banana Electron Renderer (Bun Dev)",
-        "Banana Electron Desktop (Dev Renderer)",
-        "Banana Electron Renderer (Browser)"
-      ],
-      "stopAll": true
-    }
-  ]
+  "compounds": []
 }

@@ -21,6 +21,15 @@ This guide is for developers who are new to this repository and to C# ↔ native
    - `dotnet test tests/unit/Banana.UnitTests.csproj -c Release`
    - `dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release`
 
+## Local Runtime Launch (VS Code)
+
+- Use Run and Debug profile `Banana Channels (Container Driven)` from `.vscode/launch.json`.
+- This one-click profile runs `DETACH=1 scripts/compose-apps.sh` and starts the containerized app channels through Docker Compose.
+- Expected local endpoints after startup:
+   - API health: `http://localhost:8080/health`
+   - React app: `http://localhost:5173`
+- To stop containers, run `bash scripts/compose-apps-down.sh` (or the `Stop Compose Apps` task).
+
 ## Mental Model
 
 - Controller handles transport concerns (HTTP).
