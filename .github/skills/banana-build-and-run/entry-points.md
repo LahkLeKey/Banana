@@ -28,7 +28,9 @@
 - Stop apps stack: `bash scripts/compose-apps-down.sh`
 - Test profile: `bash scripts/compose-tests.sh`
 - Runtime profile: `bash scripts/compose-runtime.sh`
-- Primary helpers: `compose-runtime-agent`, `workflow-agent`
+- Electron desktop channel: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-electron.sh'`
+- Mobile emulator channel: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-mobile.sh'`
+- Primary helpers: `compose-runtime-agent`, `mobile-runtime-agent`, `workflow-agent`
 
 ## Shared Frontend Contract
 

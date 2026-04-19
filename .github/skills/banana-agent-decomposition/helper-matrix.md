@@ -19,6 +19,7 @@
 ## Runtime And Validation Helpers
 
 - `compose-runtime-agent`: `docker-compose.yml`, `docker`, runtime scripts, local stack bring-up, and health-check behavior
+- `mobile-runtime-agent`: mobile emulator launch scripts, Ubuntu WSL2/WSLg preflight, Android AVD startup, and iOS-preview fallback behavior
 - `workflow-agent`: `.github/workflows`, coverage automation, CI artifact handling, and job structure
 - `test-triage-agent`: test failure isolation, harness fixes, validation expansion, and fix-owner routing
 

@@ -1,9 +1,9 @@
 # Banana Copilot Instructions
 
-- Treat Banana as a multi-language monorepo with four primary domains: native C under `src/native`, ASP.NET under `src/c-sharp/asp.net`, React/Electron under `src/typescript`, and delivery/runtime assets under `docker`, `scripts`, and `.github/workflows`.
+- Treat Banana as a multi-language monorepo with four primary domains: native C under `src/native`, ASP.NET under `src/c-sharp/asp.net`, React/Electron/Mobile under `src/typescript`, and delivery/runtime assets under `docker`, `scripts`, and `.github/workflows`.
 - Preserve the controller -> service -> pipeline -> native interop flow documented in `docs/developer-onboarding.md`.
 - Keep changes scoped to the touched domain unless a cross-layer contract actually changes.
-- Break broad work into helper-sized slices and prefer the narrowest helper agent that owns the touched files: native core, native DAL, native wrapper, API pipeline, API interop, React UI, Electron, compose runtime, workflow, or test triage.
+- Break broad work into helper-sized slices and prefer the narrowest helper agent that owns the touched files: native core, native DAL, native wrapper, API pipeline, API interop, React UI, Electron, mobile runtime, compose runtime, workflow, or test triage.
 - Use parent domain agents only when more than one helper in the same domain must move together.
 - Prefer existing entry points over inventing new ones: workspace tasks, `scripts/*.sh`, CMake targets, `dotnet` test projects, Bun scripts, and Docker Compose profiles.
 - For native or integration work, assume `BANANA_PG_CONNECTION` is required whenever PostgreSQL-backed flows are exercised.
@@ -19,6 +19,7 @@
 - For React container builds that consume `@banana/ui` via file dependency, keep `.dockerignore` excluding `**/node_modules` so host Windows symlinks do not overwrite Linux container installs.
 - In `docker/react.Dockerfile`, copy shared UI package files before install and run `bun install --cwd /workspace/src/typescript/shared/ui` before app-level install so shared deps resolve at runtime.
 - Keep Electron container builds reproducible with lockfile install (`npm ci --omit=dev`) and compatibility flags required by current native modules (`CXXFLAGS=-fpermissive`).
+- Keep mobile emulator channels explicit in Ubuntu WSL2: Android emulator may launch through WSLg when SDK tools are installed; Apple iOS Simulator remains macOS-only and must stay a web-preview fallback on Ubuntu.
 - Base-image scanner highs on Debian slim may remain; mitigate drift by pinning immutable image digests and tracking residual base CVEs as platform risk when no direct runtime exploit path is introduced.
 
 
@@ -26,6 +27,7 @@
 
 - Enforce the standard Windows + Docker Desktop + Ubuntu (Microsoft Store) workflow described in [ubuntu-wsl2-runtime-contract.md](./ubuntu-wsl2-runtime-contract.md).
 - Keep `scripts/launch-container-channels-with-wsl2-electron.sh` as the Windows-shell entry point and `scripts/compose-electron-desktop-wsl2.sh` as the Ubuntu entry point.
+- Keep `scripts/launch-container-channels-with-wsl2-mobile.sh` as the Windows-shell entry point and `scripts/compose-mobile-emulators-wsl2.sh` as the Ubuntu entry point for mobile emulator channels.
 - Preserve Ubuntu-first distro selection order: `BANANA_WSL_DISTRO` override, then `Ubuntu-24.04`, then `Ubuntu`.
 - Preserve strict direct container-to-WSLg rendering behavior and fail fast with actionable setup guidance when display or Docker integration prerequisites are missing.
 - Treat missing Ubuntu Docker server/socket as an environment contract failure first; surface clear remediation and keep exit code `42` for integration preflight failures.

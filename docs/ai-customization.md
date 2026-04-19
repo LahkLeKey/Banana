@@ -29,6 +29,7 @@ This repository now includes a workspace-level GitHub Copilot customization laye
 - `test-triage-agent`: focused helper for failing tests, harness repairs, and fix-owner routing
 - `infrastructure-agent`: coordinating delivery agent when compose/runtime and workflow surfaces move together
 - `compose-runtime-agent`: focused helper for Docker Compose, local runtime scripts, and health checks
+- `mobile-runtime-agent`: focused helper for Android emulator launch and iOS preview fallback runtime on Ubuntu WSL2/WSLg
 - `workflow-agent`: focused helper for GitHub Actions, coverage automation, and CI job structure
 
 ## Shared Skills
@@ -38,6 +39,7 @@ This repository now includes a workspace-level GitHub Copilot customization laye
 - `banana-build-and-run`: correct build and local runtime selection
 - `banana-test-and-coverage`: focused-to-broad validation and coverage guidance
 - `banana-ci-debugging`: workflow, compose, and runtime failure triage
+- `banana-mobile-runtime`: Ubuntu WSL2 mobile emulator launch and fallback guidance
 - `banana-release-readiness`: final merge and release checklist
 
 Each skill includes a `SKILL.md` file plus a referenced checklist or map so the agent can load more detail only when needed.
@@ -52,10 +54,12 @@ Each skill includes a `SKILL.md` file plus a referenced checklist or map so the 
 - `/implement-banana-api-interop-change`
 - `/implement-banana-react-ui-change`
 - `/implement-banana-compose-change`
+- `/implement-banana-mobile-runtime-change`
 - `/implement-banana-workflow-change`
 - `/validate-banana-change`
 - `/debug-banana-test-failure`
 - `/debug-banana-ci`
+- `/debug-banana-mobile-runtime`
 - `/review-banana-change`
 
 These prompts route to the custom agents above and preload the right SDLC framing for common tasks.

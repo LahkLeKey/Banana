@@ -11,6 +11,7 @@ tools:
   - todo
 agents:
   - compose-runtime-agent
+  - mobile-runtime-agent
   - workflow-agent
   - integration-agent
   - banana-reviewer
@@ -18,6 +19,9 @@ handoffs:
   - label: Implement Compose Or Runtime Work
     agent: compose-runtime-agent
     prompt: Implement the scoped compose or local runtime change and validate the nearest matching runtime path.
+  - label: Implement Mobile Runtime Work
+    agent: mobile-runtime-agent
+    prompt: Implement the scoped mobile emulator runtime change and validate the matching WSL2 launcher behavior.
   - label: Implement Workflow Or Coverage Work
     agent: workflow-agent
     prompt: Implement the scoped GitHub Actions or coverage automation change and validate the nearest local mirror path.

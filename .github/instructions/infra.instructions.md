@@ -7,6 +7,7 @@ applyTo: "{docker-compose.yml,docker/**/*,.github/workflows/**/*.yml,scripts/**/
 # Infrastructure And Delivery Standards
 
 - Use `compose-runtime-agent` for `docker-compose.yml`, `docker`, local runtime scripts, and health-check behavior.
+- Use `mobile-runtime-agent` for Ubuntu WSL2/WSLg Android emulator launch and iOS preview runtime scripts.
 - Use `workflow-agent` for `.github/workflows`, coverage automation, and CI artifact handling.
 - Use `infrastructure-agent` only when local runtime and workflow surfaces need coordination.
 - Prefer existing compose profiles and scripts instead of introducing parallel orchestration paths.

@@ -4,7 +4,7 @@
 
 - Native C: `src/native`, `tests/native`, `CMakeLists.txt`
 - ASP.NET: `src/c-sharp/asp.net`, `tests/unit`, `tests/integration`
-- Frontend/Electron: `src/typescript/react`, `src/typescript/electron`
+- Frontend/Electron/Mobile: `src/typescript/react`, `src/typescript/electron`, `src/typescript/react-native`
 - Delivery/runtime: `docker`, `scripts`, `docker-compose.yml`, `.github/workflows`
 
 ## Core Flow
@@ -25,6 +25,7 @@
 - `react-ui-agent`: `src/typescript/react/src`
 - `electron-agent`: `src/typescript/electron`
 - `compose-runtime-agent`: `docker-compose.yml`, `docker`, and local runtime scripts
+- `mobile-runtime-agent`: mobile runtime scripts and Ubuntu WSL2/WSLg emulator launch behavior
 - `workflow-agent`: `.github/workflows` and coverage automation
 - `test-triage-agent`: failing tests, harness issues, and validation ownership mapping
 
@@ -39,6 +40,7 @@
 - Native build task: `Build Native Library`
 - API build task: `Build Banana API`
 - Compose stack task: `Start Compose Apps`
+- Mobile emulator launcher: `scripts/launch-container-channels-with-wsl2-mobile.sh`
 - Aggregate tests: `scripts/run-tests-with-coverage.sh`
 - Native coverage gate: `scripts/run-native-c-tests-with-coverage.sh`
 - CI workflow: `.github/workflows/compose-ci.yml`

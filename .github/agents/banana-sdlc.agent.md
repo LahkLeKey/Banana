@@ -26,6 +26,7 @@ agents:
   - test-triage-agent
   - infrastructure-agent
   - compose-runtime-agent
+  - mobile-runtime-agent
   - workflow-agent
   - banana-reviewer
 handoffs:
@@ -50,6 +51,9 @@ handoffs:
   - label: Implement Compose Slice
     agent: compose-runtime-agent
     prompt: Implement the scoped compose or runtime changes and validate the nearest local runtime path.
+  - label: Implement Mobile Runtime Slice
+    agent: mobile-runtime-agent
+    prompt: Implement the scoped mobile emulator runtime changes and validate the matching Ubuntu WSL2 launch path.
   - label: Implement Workflow Slice
     agent: workflow-agent
     prompt: Implement the scoped workflow or coverage automation changes and validate the nearest local mirror path.
