@@ -50,6 +50,10 @@ compose_desktop() {
     "$DOCKER_BIN" compose --profile apps --profile electron-desktop up --build --no-recreate -d electron-desktop
 }
 
+remove_existing_desktop_container() {
+    "$DOCKER_BIN" compose --profile apps --profile electron-desktop rm --force --stop electron-desktop >/dev/null 2>&1 || true
+}
+
 FALLBACK_DOCKER_CONFIG=""
 COMPOSE_LOG=""
 
@@ -75,6 +79,7 @@ export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-banana-container}"
 cd "$ROOT_DIR"
 
 COMPOSE_LOG="$(mktemp)"
+remove_existing_desktop_container
 
 if compose_desktop 2> >(tee "$COMPOSE_LOG" >&2); then
     exit 0
