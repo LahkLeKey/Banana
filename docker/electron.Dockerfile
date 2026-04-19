@@ -1,4 +1,4 @@
-FROM node:14-bullseye
+FROM node:18-bookworm-slim
 
 ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
 
@@ -12,8 +12,8 @@ RUN apt-get update \
 
 WORKDIR /workspace/src/typescript/electron
 
-COPY src/typescript/electron/package.json ./
-RUN npm install
+COPY src/typescript/electron/package.json src/typescript/electron/package-lock.json ./
+RUN npm ci --omit=dev
 
 COPY src/typescript/electron ./
 
