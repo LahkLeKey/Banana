@@ -1,82 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Banana QA Desktop</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <main class="shell">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Banana QA Channel</p>
-        <h1>Desktop checks for native and API flows.</h1>
-        <p class="lede">Run the native bridge, hit the ASP.NET API, or compare both paths from one window.</p>
-      </div>
-      <div class="status-strip">
-        <div>
-          <span class="status-label">API target</span>
-          <strong id="api-url-label">Loading...</strong>
-        </div>
-        <button id="health-button" class="ghost-button" type="button">Check API</button>
-      </div>
-    </section>
-
-    <section class="panel control-panel">
-      <form id="scenario-form" class="scenario-grid">
-        <label>
-          <span>Purchases</span>
-          <input id="purchases" name="purchases" type="number" min="0" value="10" required>
-        </label>
-        <label>
-          <span>Multiplier</span>
-          <input id="multiplier" name="multiplier" type="number" min="0" value="2" required>
-        </label>
-        <label class="api-url-field">
-          <span>API URL</span>
-          <input id="api-url" name="apiUrl" type="url" value="http://127.0.0.1:8080" required>
-        </label>
-        <label class="checkbox-row">
-          <input id="include-database" name="includeDatabase" type="checkbox">
-          <span>Include native DB query</span>
-        </label>
-      </form>
-
-      <div class="button-row">
-        <button id="native-button" class="primary-button" type="button">Run Native</button>
-        <button id="api-button" class="secondary-button" type="button">Run API</button>
-        <button id="compare-button" class="accent-button" type="button">Run Both</button>
-      </div>
-    </section>
-
-    <section class="results-grid">
-      <article class="panel result-card">
-        <div class="card-header">
-          <h2>Native</h2>
-          <span id="native-status" class="pill neutral">Idle</span>
-        </div>
-        <pre id="native-output">Run a native scenario to inspect calculation, breakdown, and message output.</pre>
-      </article>
-
-      <article class="panel result-card">
-        <div class="card-header">
-          <h2>API</h2>
-          <span id="api-status" class="pill neutral">Idle</span>
-        </div>
-        <pre id="api-output">Run an API scenario to inspect the server response.</pre>
-      </article>
-    </section>
-
-    <section class="panel comparison-panel">
-      <div class="card-header">
-        <h2>Comparison</h2>
-        <span id="comparison-status" class="pill neutral">Waiting</span>
-      </div>
-      <pre id="comparison-output">Run both paths to compare native and API outputs.</pre>
-    </section>
-  </main>
-
-  <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Banana Desktop</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

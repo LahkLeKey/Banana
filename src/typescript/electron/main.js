@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 const { app, BrowserWindow, ipcMain } = require("electron");
 const { spawn } = require("child_process");
 
@@ -6,6 +7,36 @@ const apiClient = require("./apiClient");
 
 const defaultApiUrl = process.env.BANANA_API_URL || "http://127.0.0.1:8080";
 const nodeExecutable = process.env.BANANA_NODE_PATH || "node";
+const rendererDevUrl = process.env.BANANA_ELECTRON_RENDERER_URL || "";
+const rendererDistPath = path.join(__dirname, "renderer", "dist", "index.html");
+
+function loadRenderer(window) {
+  if (rendererDevUrl) {
+    return window.loadURL(rendererDevUrl);
+  }
+
+  if (fs.existsSync(rendererDistPath)) {
+    return window.loadFile(rendererDistPath);
+  }
+
+  const missingBuildHtml = encodeURIComponent(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="UTF-8" />
+        <title>Banana Electron Renderer Missing</title>
+      </head>
+      <body style="font-family: system-ui, sans-serif; margin: 24px; line-height: 1.4;">
+        <h2>Renderer build not found</h2>
+        <p>Build the Bun React renderer before launching Electron:</p>
+        <pre>bun install --cwd src/typescript/electron/renderer
+      bun run --cwd src/typescript/electron/renderer build</pre>
+      </body>
+    </html>
+  `);
+
+  return window.loadURL(`data:text/html;charset=utf-8,${missingBuildHtml}`);
+}
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -21,7 +52,9 @@ function createWindow() {
     },
   });
 
-  window.loadFile(path.join(__dirname, "renderer", "index.html"));
+  loadRenderer(window).catch((error) => {
+    console.error("failed to load electron renderer", error);
+  });
 }
 
 function runNativeWorker(request) {
