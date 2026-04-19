@@ -11,7 +11,12 @@
 			"ms-dotnettools.csdevkit",
 			"ms-vscode.cpptools",
 			"ms-vscode.cmake-tools",
-			"ms-azuretools.vscode-docker"
+			"ms-azuretools.vscode-docker",
+			"bradlc.vscode-tailwindcss",
+			"timonwong.shellcheck",
+			"redhat.vscode-yaml",
+			"ms-vscode-remote.remote-wsl",
+			"github.vscode-github-actions"
 		]
 	}
 }

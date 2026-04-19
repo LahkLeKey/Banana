@@ -3,12 +3,16 @@
 
 ## Local Runtime Launch (VS Code) + Docker Desktop [Press F5]
 
-- Use Run and Debug profile `Banana Channels (Container Driven)` from `.vscode/launch.json`.
-- This one-click profile launches all Banana channels through Docker Compose, including the Electron desktop window via WSL2/WSLg forwarding.
+- Use Run and Debug profile `Demo Channel` from `.vscode/launch.json`.
+- This one-click profile launches the demo-ready Banana channel through Docker Compose, including the Electron desktop window via WSL2/WSLg forwarding.
 - Android startup in the standard profile now prefers an Ubuntu-installed Android SDK emulator (WSLg native window) and falls back to the Android emulator container channel when local SDK launch is unavailable.
 - When container fallback is used, the launcher attempts to open the emulator noVNC UI with auto-connect (`http://localhost:6080/vnc.html?autoconnect=1&resize=remote&reconnect=1`) in a WSLg window automatically.
 - If Ubuntu has no GUI browser handler configured, the launcher falls back to opening the noVNC URL in the host Windows browser.
-- Launch profiles are consolidated into this single main Banana channel profile.
+- Additional targeted Run and Debug workflows are available:
+   - `Build, API + Electron`
+   - `Build, API + React-Native[Web]`
+   - `Build, API + React-Native[Android]`
+   - `Build, API + React`
 - For optional mobile helper flows, launch from a terminal:
    - iOS-style preview + mobile helpers: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-mobile.sh'`
    - Ephemeral mobile session: `bash -lc 'set -eo pipefail; BANANA_MOBILE_EPHEMERAL_SESSION=1 scripts/launch-container-channels-with-wsl2-mobile.sh'`
@@ -24,6 +28,7 @@
 - Optional Android WSLg window URL override: set `BANANA_ANDROID_WSLG_WINDOW_URL=<url>` (default `http://localhost:6080/vnc.html?autoconnect=1&resize=remote&reconnect=1`).
 - Optional Android noVNC readiness timeout override (seconds): set `BANANA_ANDROID_NOVNC_TIMEOUT_SEC=<seconds>`.
 - Optional runtime window fan-out override for the standard profile: set `BANANA_OPEN_RUNTIME_WINDOWS=0` to disable automatic opening of API/React/React Native windows in the host browser.
+- Optional targeted compose service override: set `BANANA_COMPOSE_APPS_SERVICES="api react-app"` (space-delimited services) before running `scripts/compose-apps.sh`.
 - Requirements for mobile emulator window channel:
    - WSL2 with WSLg enabled
    - Ubuntu Android SDK + at least one AVD for local emulator mode
