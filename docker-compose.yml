@@ -103,12 +103,12 @@ services:
     command: ["npm", "run", "smoke"]
     volumes:
       - native-artifacts:/native:ro
-    profiles: ["electron", "apps", "all"]
+    profiles: ["electron", "all"]
 
   electron-desktop:
     build:
       context: .
-      dockerfile: docker/electron-desktop.Dockerfile
+      dockerfile: docker/electron.Dockerfile
     depends_on:
       api:
         condition: service_healthy
@@ -127,6 +127,7 @@ services:
       LIBGL_ALWAYS_SOFTWARE: ${LIBGL_ALWAYS_SOFTWARE:-1}
       ELECTRON_DISABLE_SANDBOX: "1"
       ELECTRON_ENABLE_LOGGING: "1"
+    command: ["bash", "-lc", "bash ./run-desktop.sh"]
     volumes:
       - native-artifacts:/native:ro
       - /tmp/.X11-unix:/tmp/.X11-unix
