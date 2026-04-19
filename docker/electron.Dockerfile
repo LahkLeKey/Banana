@@ -1,6 +1,7 @@
-FROM node:18-bookworm-slim
+FROM node:20-bookworm-slim
 
-ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
+ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1 \
+    CXXFLAGS=-fpermissive
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
