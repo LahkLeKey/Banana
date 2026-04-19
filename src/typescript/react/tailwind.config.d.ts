@@ -6,7 +6,7 @@ declare const _default: {
                 center: true;
                 padding: string;
                 screens: {
-                    "2xl": string;
+                    '2xl': string;
                 };
             };
             extend: {

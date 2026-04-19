@@ -15,3 +15,10 @@ applyTo: "{CMakeLists.txt,src/native/**/*.c,src/native/**/*.h,tests/native/**/*.
 - Prefer updating CMake targets and existing native tests over adding ad-hoc shell build logic.
 - Validate native changes with the existing CMake test flow or the `Build Native Library` workspace task when appropriate.
 - When coverage is relevant, use `scripts/run-native-c-tests-with-coverage.sh` and respect the 80% line coverage gate.
+
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.

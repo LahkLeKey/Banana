@@ -29,3 +29,10 @@
 - Test profile: `bash scripts/compose-tests.sh`
 - Runtime profile: `bash scripts/compose-runtime.sh`
 - Primary helpers: `compose-runtime-agent`, `workflow-agent`
+
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.

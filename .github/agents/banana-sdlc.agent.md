@@ -97,3 +97,10 @@ Use this agent when the request spans more than one phase of delivery or more th
 - The impacted domains are identified and handled by the right helper or coordinating agent.
 - Validation matches the actual risk surface of the change.
 - The final summary captures assumptions, verification, and any release follow-up.
+
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.

@@ -1,7 +1,10 @@
 import bananaUiPreset from '@banana/ui/tailwind/preset';
 export default {
     presets: [bananaUiPreset],
-    content: ['./index.html', './src/**/*.{ts,tsx}', './node_modules/@banana/ui/src/**/*.{ts,tsx}'],
+    content: [
+        './index.html', './src/**/*.{ts,tsx}',
+        './node_modules/@banana/ui/src/**/*.{ts,tsx}'
+    ],
     theme: {
         extend: {
             fontFamily: {
