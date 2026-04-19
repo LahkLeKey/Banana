@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$ROOT_DIR"
+scripts/compose-apps-down.sh
 DETACH=1 scripts/compose-apps.sh
 
 if grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
