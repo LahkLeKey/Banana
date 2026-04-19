@@ -19,6 +19,7 @@ RUN cmake -S . -B /workspace/build/native -DCMAKE_BUILD_TYPE=Debug -DBANANA_ENAB
 ENV BANANA_NATIVE_PATH=/workspace/build/native/bin
 
 COPY scripts/run-tests-with-coverage.sh /workspace/scripts/run-tests-with-coverage.sh
-RUN chmod +x /workspace/scripts/run-tests-with-coverage.sh
+RUN sed -i 's/\r$//' /workspace/scripts/run-tests-with-coverage.sh \
+    && chmod +x /workspace/scripts/run-tests-with-coverage.sh
 
 CMD ["bash", "-lc", "/workspace/scripts/run-tests-with-coverage.sh"]

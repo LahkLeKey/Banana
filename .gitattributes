@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Ensure shell scripts keep Linux shebang compatibility.
+*.sh text eol=lf

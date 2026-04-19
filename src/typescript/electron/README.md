@@ -51,3 +51,54 @@ cd src/typescript/electron
 npm install
 npm run smoke
 ```
+
+## Dockerized Desktop Window (WSL2)
+
+Run from WSL2 to launch Electron desktop through Docker Compose with WSLg display forwarding:
+
+```bash
+cd /mnt/c/Github/Banana
+bash scripts/compose-electron-desktop-wsl2.sh
+```
+
+Or from VS Code use the main launch profile `Banana Channels (Container Driven)`.
+
+Direct container-to-WSLg rendering requires Docker Desktop WSL integration enabled for the target distro.
+
+### Reproducible Windows + Docker Desktop + Ubuntu Workflow
+
+Use this path for the standard Microsoft Store Ubuntu + Docker Desktop workflow used across teams.
+
+1. Install Ubuntu (or Ubuntu 24.04) from Microsoft Store.
+2. In PowerShell, set Ubuntu as the default distro:
+
+```powershell
+wsl --set-default Ubuntu
+```
+
+3. In Docker Desktop:
+	- Enable `Use the WSL 2 based engine`.
+	- Enable `Settings > Resources > WSL Integration` for your Ubuntu distro.
+4. Restart WSL:
+
+```powershell
+wsl --shutdown
+```
+
+5. Validate inside Ubuntu:
+
+```bash
+command -v docker
+docker version
+ls -l /var/run/docker.sock
+```
+
+6. Launch Banana desktop from Ubuntu:
+
+```bash
+cd /mnt/c/Github/Banana
+bash scripts/compose-electron-desktop-wsl2.sh
+```
+
+From a Windows shell, the launcher now prefers Ubuntu distros automatically (`Ubuntu-24.04`, then `Ubuntu`).
+Set `BANANA_WSL_DISTRO` to override if your team uses a different distro name.

@@ -26,6 +26,7 @@ agents:
   - test-triage-agent
   - infrastructure-agent
   - compose-runtime-agent
+  - mobile-runtime-agent
   - workflow-agent
   - banana-reviewer
 handoffs:
@@ -50,6 +51,9 @@ handoffs:
   - label: Implement Compose Slice
     agent: compose-runtime-agent
     prompt: Implement the scoped compose or runtime changes and validate the nearest local runtime path.
+  - label: Implement Mobile Runtime Slice
+    agent: mobile-runtime-agent
+    prompt: Implement the scoped mobile emulator runtime changes and validate the matching Ubuntu WSL2 launch path.
   - label: Implement Workflow Slice
     agent: workflow-agent
     prompt: Implement the scoped workflow or coverage automation changes and validate the nearest local mirror path.
@@ -114,3 +118,21 @@ Use this agent when the request spans more than one phase of delivery or more th
 - Include objective, owning domain, touched files, contract impacts, validation state, and open risks in every handoff.
 - Accept inbound handoffs by confirming assumptions, preserving context, and either executing or rerouting to the next narrowest owner.
 - Escalate to `banana-sdlc` for multi-domain implementation orchestration and `integration-agent` for multi-domain validation orchestration.
+
+## Runtime Contract Lessons (2026-04)
+
+- Treat `Banana Channels (Container Driven)` as the canonical one-click local runtime entry point: launch from a Windows shell with `scripts/launch-container-channels-with-wsl2-electron.sh` (or the VS Code profile) so Docker Desktop + Ubuntu-24.04/Ubuntu WSL2 runtime contracts stay enforced.
+- Distinguish channels clearly: compose `electron-example` is a smoke container (`npm run smoke`) and is not the desktop UI runtime channel.
+- For React container builds that consume `@banana/ui` via file dependency, keep `.dockerignore` excluding `**/node_modules` so host Windows symlinks do not overwrite Linux container installs.
+- In `docker/react.Dockerfile`, copy shared UI package files before install and run `bun install --cwd /workspace/src/typescript/shared/ui` before app-level install so shared deps resolve at runtime.
+- Keep Electron container builds reproducible with lockfile install (`npm ci --omit=dev`) and compatibility flags required by current native modules (`CXXFLAGS=-fpermissive`).
+- Base-image scanner highs on Debian slim may remain; mitigate drift by pinning immutable image digests and tracking residual base CVEs as platform risk when no direct runtime exploit path is introduced.
+
+
+## Ubuntu WSL2 Reproducible Contract (2026-04)
+
+- Enforce the standard Windows + Docker Desktop + Ubuntu (Microsoft Store) workflow described in [ubuntu-wsl2-runtime-contract.md](../ubuntu-wsl2-runtime-contract.md).
+- Keep `scripts/launch-container-channels-with-wsl2-electron.sh` as the Windows-shell entry point and `scripts/compose-electron-desktop-wsl2.sh` as the Ubuntu entry point.
+- Preserve Ubuntu-first distro selection order: `BANANA_WSL_DISTRO` override, then `Ubuntu-24.04`, then `Ubuntu`.
+- Preserve strict direct container-to-WSLg rendering behavior and fail fast with actionable setup guidance when display or Docker integration prerequisites are missing.
+- Treat missing Ubuntu Docker server/socket as an environment contract failure first; surface clear remediation and keep exit code `42` for integration preflight failures.

@@ -47,3 +47,11 @@ Before coding on a received handoff:
 - Escalate to `banana-sdlc` when more than two domains must move together.
 - Escalate to `integration-agent` when validation spans multiple domains.
 - Escalate to `banana-reviewer` when residual risk remains after implementation.
+
+## Ubuntu WSL2 Reproducible Contract (2026-04)
+
+- Enforce the standard Windows + Docker Desktop + Ubuntu (Microsoft Store) workflow described in [ubuntu-wsl2-runtime-contract.md](../ubuntu-wsl2-runtime-contract.md).
+- Keep `scripts/launch-container-channels-with-wsl2-electron.sh` as the Windows-shell entry point and `scripts/compose-electron-desktop-wsl2.sh` as the Ubuntu entry point.
+- Preserve Ubuntu-first distro selection order: `BANANA_WSL_DISTRO` override, then `Ubuntu-24.04`, then `Ubuntu`.
+- Preserve strict direct container-to-WSLg rendering behavior and fail fast with actionable setup guidance when display or Docker integration prerequisites are missing.
+- Treat missing Ubuntu Docker server/socket as an environment contract failure first; surface clear remediation and keep exit code `42` for integration preflight failures.
