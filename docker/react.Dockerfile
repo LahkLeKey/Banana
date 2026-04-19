@@ -3,7 +3,11 @@ FROM oven/bun:1.3.9
 WORKDIR /workspace/src/typescript/react
 
 COPY src/typescript/react/package.json src/typescript/react/bun.lock ./
-RUN bun install
+COPY src/typescript/shared/ui/package.json /workspace/src/typescript/shared/ui/package.json
+COPY src/typescript/shared/ui/bun.lock /workspace/src/typescript/shared/ui/bun.lock
+COPY src/typescript/shared/ui/src /workspace/src/typescript/shared/ui/src
+RUN bun install --cwd /workspace/src/typescript/shared/ui \
+	&& bun install
 
 COPY src/typescript/react/ ./
 

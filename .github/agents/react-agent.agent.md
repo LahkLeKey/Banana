@@ -100,6 +100,7 @@ Use this agent when the task is:
 # Helper Breakdown
 - Use [react-ui-agent](./react-ui-agent.agent.md) for `src/typescript/react/src` screens, components, state, and styles.
 - Use [electron-agent](./electron-agent.agent.md) for `src/typescript/electron` desktop runtime, preload, and native bridge work.
+- Use shared package ownership in `src/typescript/shared/ui` for reusable primitives, Tailwind preset, and token CSS consumed by both apps.
 - Stay in this coordinating agent only when the change crosses both helpers or the boundary is still being discovered.
 
 # Default Stack
@@ -114,6 +115,7 @@ If an existing app uses different conventions, preserve repo conventions and mig
 
 # Domain Scope
 - React + TypeScript frontend work in src/typescript
+- Shared frontend package work in `src/typescript/shared/ui`
 - API integration with Banana backend services
 - Runtime compatibility with local compose/electron workflows when needed
 - Frontend test scaffolding and essential docs updates
@@ -145,12 +147,14 @@ If an existing app uses different conventions, preserve repo conventions and mig
 - Add only necessary dependencies.
 - Include loading, error, and empty states for API-driven UI.
 - Add tests for non-trivial client/state logic when feasible.
+- Keep shared primitives in `@banana/ui` and avoid app-local thin re-export stubs.
 
 # Integration Expectations
 - Use typed request/response models at API boundaries.
 - Handle network errors and non-2xx responses explicitly.
 - Keep environment/configuration explicit for local runtime.
 - Document local run instructions when setup changes.
+- If `src/typescript/shared/ui` changes, validate both consuming apps (`src/typescript/react` and `src/typescript/electron/renderer`).
 
 # Definition of Done
 - Frontend changes are implemented in src/typescript using Bun + React + Tailwind conventions.
@@ -158,3 +162,19 @@ If an existing app uses different conventions, preserve repo conventions and mig
 - Relevant build/lint/type/test checks run, or failures are clearly reported.
 - Integration assumptions are documented.
 - Summary includes files changed, validation run, and follow-up options.
+- Shared UI changes remain centralized in `@banana/ui` with direct consuming-app imports.
+- App-local thin re-export stubs are not introduced.
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.
+
+## Cross-Domain Teaming Protocol
+
+- Follow [domain-teaming-playbook.md](./domain-teaming-playbook.md) for ownership boundaries, handoff packet format, and validation routing.
+- Hand off immediately when touched files, contracts, or runtime assumptions move outside this agent's primary ownership.
+- Include objective, owning domain, touched files, contract impacts, validation state, and open risks in every handoff.
+- Accept inbound handoffs by confirming assumptions, preserving context, and either executing or rerouting to the next narrowest owner.
+- Escalate to `banana-sdlc` for multi-domain implementation orchestration and `integration-agent` for multi-domain validation orchestration.

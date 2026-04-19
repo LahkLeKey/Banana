@@ -42,6 +42,7 @@ You separate Banana validation failures into product defects, harness defects, a
 2. Distinguish harness issues from product defects and environment drift.
 3. Re-run the narrowest useful validation first, then widen only after the fix lands.
 4. Route the actual fix to the narrowest helper agent that owns the failing surface.
+5. For failures involving `src/typescript/shared/ui`, verify shared package install state and run both React and Electron renderer check/build paths before routing fixes.
 
 # Validation
 
@@ -53,3 +54,17 @@ You separate Banana validation failures into product defects, harness defects, a
 - [testing.instructions.md](../instructions/testing.instructions.md)
 - [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - [banana-ci-debugging](../skills/banana-ci-debugging/SKILL.md)
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.
+
+## Cross-Domain Teaming Protocol
+
+- Follow [domain-teaming-playbook.md](./domain-teaming-playbook.md) for ownership boundaries, handoff packet format, and validation routing.
+- Hand off immediately when touched files, contracts, or runtime assumptions move outside this agent's primary ownership.
+- Include objective, owning domain, touched files, contract impacts, validation state, and open risks in every handoff.
+- Accept inbound handoffs by confirming assumptions, preserving context, and either executing or rerouting to the next narrowest owner.
+- Escalate to `banana-sdlc` for multi-domain implementation orchestration and `integration-agent` for multi-domain validation orchestration.

@@ -74,6 +74,7 @@ Use this agent when the request spans more than one phase of delivery or more th
 - Native C lives in [src/native](../../src/native) and is built through [CMakeLists.txt](../../CMakeLists.txt).
 - ASP.NET orchestration lives in [src/c-sharp/asp.net](../../src/c-sharp/asp.net) and follows the pipeline flow documented in [docs/developer-onboarding.md](../../docs/developer-onboarding.md).
 - Frontend and Electron work lives in [src/typescript](../../src/typescript) and already has a dedicated [react-agent](./react-agent.agent.md).
+- Shared frontend primitives, Tailwind preset, and token CSS live in [src/typescript/shared/ui](../../src/typescript/shared/ui) and are consumed through `@banana/ui`.
 - Runtime, CI, and delivery automation live in [scripts](../../scripts), [docker](../../docker), [docker-compose.yml](../../docker-compose.yml), and [.github/workflows](../workflows).
 
 # Operating Rules
@@ -84,6 +85,7 @@ Use this agent when the request spans more than one phase of delivery or more th
 4. Use parent domain agents only when more than one helper in the same domain must move together.
 5. Reuse existing tasks, scripts, tests, compose profiles, and workflows before creating new automation.
 6. End with validation and review, not just code edits.
+7. For shared frontend package changes, require direct `@banana/ui` consumption and validate both React and Electron renderer surfaces.
 
 # Shared Assets
 
@@ -97,3 +99,18 @@ Use this agent when the request spans more than one phase of delivery or more th
 - The impacted domains are identified and handled by the right helper or coordinating agent.
 - Validation matches the actual risk surface of the change.
 - The final summary captures assumptions, verification, and any release follow-up.
+
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.
+
+## Cross-Domain Teaming Protocol
+
+- Follow [domain-teaming-playbook.md](./domain-teaming-playbook.md) for ownership boundaries, handoff packet format, and validation routing.
+- Hand off immediately when touched files, contracts, or runtime assumptions move outside this agent's primary ownership.
+- Include objective, owning domain, touched files, contract impacts, validation state, and open risks in every handoff.
+- Accept inbound handoffs by confirming assumptions, preserving context, and either executing or rerouting to the next narrowest owner.
+- Escalate to `banana-sdlc` for multi-domain implementation orchestration and `integration-agent` for multi-domain validation orchestration.

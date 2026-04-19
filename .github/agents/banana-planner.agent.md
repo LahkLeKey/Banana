@@ -69,6 +69,8 @@ You produce implementation plans for Banana without editing code.
 - Follow the controller -> service -> pipeline -> native interop flow from [docs/developer-onboarding.md](../../docs/developer-onboarding.md) when backend behavior changes.
 - Treat [docker-compose.yml](../../docker-compose.yml), [scripts](../../scripts), and [.github/workflows/compose-ci.yml](../workflows/compose-ci.yml) as the delivery surface for runtime and CI work.
 - If the task crosses layers, explicitly call out shared contracts such as `BANANA_PG_CONNECTION`, `BANANA_NATIVE_PATH`, and `VITE_BANANA_API_BASE_URL`.
+- If the task touches reusable frontend primitives, plan updates in `src/typescript/shared/ui` and direct consuming-app imports from `@banana/ui` instead of local re-export stubs.
+- If `src/typescript/shared/ui` changes, include validation for both `src/typescript/react` and `src/typescript/electron/renderer`.
 - Prefer the smallest set of changes that preserves current entry points and workflows.
 
 # Output Format
@@ -86,3 +88,18 @@ You produce implementation plans for Banana without editing code.
 - Discovery skill: [banana-discovery](../skills/banana-discovery/SKILL.md)
 - Helper routing skill: [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - Release checklist skill: [banana-release-readiness](../skills/banana-release-readiness/SKILL.md)
+
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.
+
+## Cross-Domain Teaming Protocol
+
+- Follow [domain-teaming-playbook.md](./domain-teaming-playbook.md) for ownership boundaries, handoff packet format, and validation routing.
+- Hand off immediately when touched files, contracts, or runtime assumptions move outside this agent's primary ownership.
+- Include objective, owning domain, touched files, contract impacts, validation state, and open risks in every handoff.
+- Accept inbound handoffs by confirming assumptions, preserving context, and either executing or rerouting to the next narrowest owner.
+- Escalate to `banana-sdlc` for multi-domain implementation orchestration and `integration-agent` for multi-domain validation orchestration.

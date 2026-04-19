@@ -60,3 +60,18 @@ You own Banana ASP.NET work in [src/c-sharp/asp.net](../../src/c-sharp/asp.net) 
 - Helper routing skill: [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - Build skill: [banana-build-and-run](../skills/banana-build-and-run/SKILL.md)
 - Test skill: [banana-test-and-coverage](../skills/banana-test-and-coverage/SKILL.md)
+
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.
+
+## Cross-Domain Teaming Protocol
+
+- Follow [domain-teaming-playbook.md](./domain-teaming-playbook.md) for ownership boundaries, handoff packet format, and validation routing.
+- Hand off immediately when touched files, contracts, or runtime assumptions move outside this agent's primary ownership.
+- Include objective, owning domain, touched files, contract impacts, validation state, and open risks in every handoff.
+- Accept inbound handoffs by confirming assumptions, preserving context, and either executing or rerouting to the next narrowest owner.
+- Escalate to `banana-sdlc` for multi-domain implementation orchestration and `integration-agent` for multi-domain validation orchestration.

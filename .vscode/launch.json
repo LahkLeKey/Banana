@@ -2,33 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Banana Full Stack (Compose Up)",
+      "name": "Banana Channels (Container Driven)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bash -lc 'DETACH=1 scripts/compose-apps.sh'"
-    },
-    {
-      "name": "Banana Full Stack (Browser)",
-      "type": "pwa-chrome",
-      "request": "launch",
-      "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/src/typescript/react"
-    },
-    {
-      "name": "Banana Full Stack (Compose Down)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bash scripts/compose-apps-down.sh"
+      "command": "bash -lc 'set -euo pipefail; DETACH=1 scripts/compose-apps.sh; echo; echo Banana channels are running:; echo API health: http://localhost:8080/health; echo Web app: http://localhost:5173; echo Starting local Electron desktop app...; cd src/typescript/electron; npm run start:ui'"
     }
   ],
-  "compounds": [
-    {
-      "name": "Banana Full Stack (One Click)",
-      "configurations": [
-        "Banana Full Stack (Compose Up)",
-        "Banana Full Stack (Browser)"
-      ],
-      "stopAll": true
-    }
-  ]
+  "compounds": []
 }

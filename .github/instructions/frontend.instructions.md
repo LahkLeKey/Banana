@@ -14,3 +14,10 @@ applyTo: "src/typescript/**/*.{ts,tsx,js,json,css}"
 - Maintain compatibility with the compose-based local runtime described in `README.md` and `docker-compose.yml`.
 - Prefer minimal, typed UI changes and avoid introducing frontend dependencies without clear need.
 - If a frontend change affects backend payload shape, document the contract assumption and coordinate with API tests or prompts.
+
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.

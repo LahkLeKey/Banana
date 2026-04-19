@@ -1,0 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap");
+@import "@banana/ui/styles/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-background font-[Archivo] text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 92% -10%, rgba(242, 172, 50, 0.35), transparent 42%),
+      radial-gradient(circle at -15% 95%, rgba(137, 166, 76, 0.28), transparent 38%),
+      linear-gradient(155deg, #fffaf0 0%, #fff2d7 52%, #fdeccf 100%);
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer utilities {
+  .noise-overlay {
+    background-image: radial-gradient(rgba(0, 0, 0, 0.035) 0.5px, transparent 0.5px);
+    background-size: 6px 6px;
+  }
+}

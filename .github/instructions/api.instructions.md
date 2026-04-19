@@ -14,3 +14,10 @@ applyTo: "src/c-sharp/asp.net/**/*.cs"
 - Keep HTTP concerns in controllers, orchestration in services/pipeline steps, and native boundary logic in `NativeInterop`.
 - Route error translation through `ErrorHandlingMiddleware` rather than ad-hoc controller handling.
 - Prefer DI + options binding patterns already used by `DbAccessOptions` instead of static configuration reads.
+
+## Shared Frontend Contract
+
+- If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
+- Reference .github/shared-typescript-ui.md for the full contract.
