@@ -24,10 +24,14 @@ This guide is for developers who are new to this repository and to C# ↔ native
 ## Local Runtime Launch (VS Code)
 
 - Use Run and Debug profile `Banana Channels (Container Driven)` from `.vscode/launch.json`.
-- This one-click profile runs `DETACH=1 scripts/compose-apps.sh` and starts the containerized app channels through Docker Compose.
+- This one-click profile launches all Banana channels through Docker Compose, including the Electron desktop window via WSL2/WSLg forwarding.
 - Expected local endpoints after startup:
    - API health: `http://localhost:8080/health`
    - React app: `http://localhost:5173`
+   - React Native web: `http://localhost:19006`
+- Requirements for desktop window channel:
+   - WSL2 with WSLg enabled
+   - Docker Desktop with WSL integration enabled
 - To stop containers, run `bash scripts/compose-apps-down.sh` (or the `Stop Compose Apps` task).
 
 ## Mental Model

@@ -8,8 +8,10 @@ applyTo: "src/typescript/**/*.{ts,tsx,js,json,css}"
 
 - Use `react-ui-agent` for `src/typescript/react/src` UI, state, and styling work.
 - Use `electron-agent` for `src/typescript/electron` runtime, preload, and desktop bridge work.
+- Use `react-agent` for `src/typescript/react-native` app scaffolding, Expo config, and mobile UI integration.
 - Use `react-agent` only when React and Electron or multiple frontend helpers need coordination.
 - Use Bun-first workflows in `src/typescript/react`; do not replace them with npm unless the existing app already requires npm, such as Electron.
+- Keep npm/Expo workflows scoped to `src/typescript/react-native` and avoid introducing npm into Bun-based web apps.
 - Keep API access centralized and typed, and preserve `VITE_BANANA_API_BASE_URL` as the React runtime contract.
 - Maintain compatibility with the compose-based local runtime described in `README.md` and `docker-compose.yml`.
 - Prefer minimal, typed UI changes and avoid introducing frontend dependencies without clear need.
@@ -18,7 +20,9 @@ applyTo: "src/typescript/**/*.{ts,tsx,js,json,css}"
 ## Shared Frontend Contract
 
 - If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
+- If a task touches src/typescript/react, src/typescript/electron, src/typescript/react-native, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.
 - Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
+- Keep React Native consumption on @banana/ui/native so mobile builds resolve native component contracts explicitly.
 - Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
 - Reference .github/shared-typescript-ui.md for the full contract.
 

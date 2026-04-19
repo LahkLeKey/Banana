@@ -3,23 +3,55 @@
     "version": "0.1.0",
     "private": true,
     "type": "module",
+    "react-native": "./src/native/index.ts",
     "sideEffects": [
         "**/*.css"
     ],
     "exports": {
-        ".": "./src/index.ts",
-        "./components/ui/badge": "./src/components/ui/badge.tsx",
-        "./components/ui/button": "./src/components/ui/button.tsx",
-        "./components/ui/card": "./src/components/ui/card.tsx",
-        "./components/ui/input": "./src/components/ui/input.tsx",
-        "./components/ui/label": "./src/components/ui/label.tsx",
-        "./lib/utils": "./src/lib/utils.ts",
+        ".": {
+            "react-native": "./src/native/index.ts",
+            "default": "./src/index.ts"
+        },
+        "./native": "./src/native/index.ts",
+        "./components/ui/badge": {
+            "react-native": "./src/native/components/ui/badge.tsx",
+            "default": "./src/components/ui/badge.tsx"
+        },
+        "./components/ui/button": {
+            "react-native": "./src/native/components/ui/button.tsx",
+            "default": "./src/components/ui/button.tsx"
+        },
+        "./components/ui/card": {
+            "react-native": "./src/native/components/ui/card.tsx",
+            "default": "./src/components/ui/card.tsx"
+        },
+        "./components/ui/input": {
+            "react-native": "./src/native/components/ui/input.tsx",
+            "default": "./src/components/ui/input.tsx"
+        },
+        "./components/ui/label": {
+            "react-native": "./src/native/components/ui/label.tsx",
+            "default": "./src/components/ui/label.tsx"
+        },
+        "./lib/utils": {
+            "react-native": "./src/native/lib/cn.ts",
+            "default": "./src/lib/utils.ts"
+        },
         "./tailwind/preset": "./src/tailwind/preset.ts",
         "./styles/tokens.css": "./src/styles/tokens.css"
     },
     "peerDependencies": {
         "react": "^18.3.1",
-        "react-dom": "^18.3.1"
+        "react-dom": "^18.3.1",
+        "react-native": "^0.74.0"
+    },
+    "peerDependenciesMeta": {
+        "react-dom": {
+            "optional": true
+        },
+        "react-native": {
+            "optional": true
+        }
     },
     "dependencies": {
         "class-variance-authority": "^0.7.1",
@@ -31,6 +63,7 @@
         "@types/react-dom": "^18.3.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
+        "react-native": "^0.74.5",
         "tailwindcss": "^3.4.4"
     }
 }

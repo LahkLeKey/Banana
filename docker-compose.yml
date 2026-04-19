@@ -105,6 +105,35 @@ services:
       - native-artifacts:/native:ro
     profiles: ["electron", "apps", "all"]
 
+  electron-desktop:
+    build:
+      context: .
+      dockerfile: docker/electron-desktop.Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+      native-build:
+        condition: service_completed_successfully
+      react-app:
+        condition: service_started
+    environment:
+      BANANA_API_URL: http://api:8080
+      BANANA_NATIVE_PATH: /native
+      BANANA_ELECTRON_RENDERER_URL: http://react-app:5173
+      DISPLAY: ${DISPLAY:-:0}
+      WAYLAND_DISPLAY: ${WAYLAND_DISPLAY:-wayland-0}
+      XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR:-/mnt/wslg/runtime-dir}
+      PULSE_SERVER: ${PULSE_SERVER:-/mnt/wslg/PulseServer}
+      LIBGL_ALWAYS_SOFTWARE: ${LIBGL_ALWAYS_SOFTWARE:-1}
+      ELECTRON_DISABLE_SANDBOX: "1"
+      ELECTRON_ENABLE_LOGGING: "1"
+    volumes:
+      - native-artifacts:/native:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /mnt/wslg:/mnt/wslg
+    shm_size: "1gb"
+    profiles: ["electron-desktop"]
+
   react-app:
     build:
       context: .
@@ -116,6 +145,19 @@ services:
       VITE_BANANA_API_BASE_URL: http://api:8080
     ports:
       - "5173:5173"
+    profiles: ["apps", "all"]
+
+  react-native-web:
+    build:
+      context: .
+      dockerfile: docker/react-native.Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      EXPO_PUBLIC_BANANA_API_BASE_URL: http://localhost:8080
+    ports:
+      - "19006:8081"
     profiles: ["apps", "all"]
 
 volumes:

@@ -51,3 +51,14 @@ cd src/typescript/electron
 npm install
 npm run smoke
 ```
+
+## Dockerized Desktop Window (WSL2)
+
+Run from WSL2 to launch Electron desktop through Docker Compose with WSLg display forwarding:
+
+```bash
+cd /mnt/c/Github/Banana
+bash scripts/compose-electron-desktop-wsl2.sh
+```
+
+Or from VS Code use the main launch profile `Banana Channels (Container Driven)`.
