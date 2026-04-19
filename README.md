@@ -1,7 +1,7 @@
 #### Pass the Banana from C into various different Applications. (APIs, Desktop, Frontend, Mobile, etc.)
 ------------------
 
-## Local Runtime Launch (VS Code) + Docker Desktop
+## Local Runtime Launch (VS Code) + Docker Desktop [Press F5]
 
 - Use Run and Debug profile `Banana Channels (Container Driven)` from `.vscode/launch.json`.
 - This one-click profile launches all Banana channels through Docker Compose, including the Electron desktop window via WSL2/WSLg forwarding.
