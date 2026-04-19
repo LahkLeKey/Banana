@@ -34,3 +34,11 @@ Use this skill when a Banana request is broad, crosses subdomains, or would be s
 - Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
 - Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
 - Reference .github/shared-typescript-ui.md for the full contract.
+
+## Cross-Domain Teaming Protocol
+
+- Follow [domain-teaming-playbook.md](../../agents/domain-teaming-playbook.md) for ownership boundaries, handoff packet expectations, and escalation rules.
+- Identify the primary owner, supporting helpers, and validation owner before implementation.
+- When handing work to another agent, include objective, ownership reason, touched files, contract impacts, validation state, and open risks.
+- Preserve context continuity by carrying forward confirmed assumptions and prior validation signals.
+- Escalate to `banana-sdlc` for multi-domain implementation orchestration and `integration-agent` for multi-domain validation orchestration.

@@ -70,3 +70,11 @@ You own Banana native C changes in [src/native](../../src/native), [tests/native
 - Reuse @banana/ui/tailwind/preset and @banana/ui/styles/tokens.css from consuming apps.
 - Install dependencies in src/typescript/shared/ui before running app-level bun check/build flows.
 - Reference .github/shared-typescript-ui.md for the full contract.
+
+## Cross-Domain Teaming Protocol
+
+- Follow [domain-teaming-playbook.md](./domain-teaming-playbook.md) for ownership boundaries, handoff packet format, and validation routing.
+- Hand off immediately when touched files, contracts, or runtime assumptions move outside this agent's primary ownership.
+- Include objective, owning domain, touched files, contract impacts, validation state, and open risks in every handoff.
+- Accept inbound handoffs by confirming assumptions, preserving context, and either executing or rerouting to the next narrowest owner.
+- Escalate to `banana-sdlc` for multi-domain implementation orchestration and `integration-agent` for multi-domain validation orchestration.
