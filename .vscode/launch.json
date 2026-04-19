@@ -5,7 +5,7 @@
       "name": "Banana Channels (Container Driven)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bash -lc 'set -euo pipefail; DETACH=1 scripts/compose-apps.sh; echo; echo Banana channels are running:; echo API health: http://localhost:8080/health; echo Web app: http://localhost:5173; echo Electron smoke logs: docker compose logs -f electron-example'"
+      "command": "bash -lc 'set -euo pipefail; DETACH=1 scripts/compose-apps.sh; echo; echo Banana channels are running:; echo API health: http://localhost:8080/health; echo Web app: http://localhost:5173; echo Starting local Electron desktop app...; cd src/typescript/electron; npm run start:ui'"
     }
   ],
   "compounds": []
