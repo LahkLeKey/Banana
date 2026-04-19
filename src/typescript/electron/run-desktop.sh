@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_CMD=(npm run start -- --no-sandbox --disable-gpu-sandbox)
+BASE_CMD=(npm run start -- --no-sandbox --disable-gpu --disable-gpu-sandbox)
 
 # Prefer Wayland when the socket is available (WSLg path).
 if [[ -n "${WAYLAND_DISPLAY:-}" ]] && [[ -n "${XDG_RUNTIME_DIR:-}" ]] && [[ -S "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}" ]]; then

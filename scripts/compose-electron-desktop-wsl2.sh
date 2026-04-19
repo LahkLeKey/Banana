@@ -42,8 +42,15 @@ if ! "$DOCKER_BIN" version >/dev/null 2>&1; then
 fi
 
 if [[ "$DOCKER_BIN" == /mnt/c/* ]]; then
-    echo "Using Docker CLI from Windows PATH: $DOCKER_BIN"
-    echo "WSL integration normally provides /usr/bin/docker in Ubuntu."
+    echo "Docker CLI resolves to a Windows path in this Ubuntu distro: $DOCKER_BIN"
+    echo "Enable Docker Desktop > Settings > Resources > WSL Integration for this distro so Ubuntu uses a Linux docker CLI path."
+    exit 42
+fi
+
+if [[ ! -S /var/run/docker.sock ]]; then
+    echo "Docker socket /var/run/docker.sock was not found in this Ubuntu distro."
+    echo "Enable Docker Desktop > Settings > Resources > WSL Integration for this distro and retry."
+    exit 42
 fi
 
 compose_desktop() {
@@ -52,6 +59,75 @@ compose_desktop() {
 
 remove_existing_desktop_container() {
     "$DOCKER_BIN" compose --profile apps --profile electron-desktop rm --force --stop electron-desktop >/dev/null 2>&1 || true
+}
+
+ensure_wslg_display_socket() {
+    local display_num
+    local x11_socket
+    local wayland_socket
+
+    display_num="${DISPLAY:-:0}"
+    display_num="${display_num#:}"
+    wayland_socket="${XDG_RUNTIME_DIR:-/mnt/wslg/runtime-dir}/${WAYLAND_DISPLAY:-wayland-0}"
+    x11_socket="/tmp/.X11-unix/X${display_num}"
+
+    if [[ -S "$wayland_socket" || -S "$x11_socket" ]]; then
+        return 0
+    fi
+
+    echo "No Wayland or X11 display socket was found in this WSL session."
+    echo "Expected one of:"
+    echo "  - $wayland_socket"
+    echo "  - $x11_socket"
+    echo "Start Ubuntu from Windows with WSLg enabled and retry."
+    return 42
+}
+
+verify_electron_desktop_container() {
+    local timeout_seconds="${BANANA_ELECTRON_START_TIMEOUT_SEC:-30}"
+    local start
+    local container_id
+    local state
+    local exit_code
+
+    start="$(date +%s)"
+
+    while true; do
+        container_id="$("$DOCKER_BIN" compose --profile apps --profile electron-desktop ps -q electron-desktop 2>/dev/null | tr -d '\r' | tail -n 1)"
+
+        if [[ -n "$container_id" ]]; then
+            state="$("$DOCKER_BIN" inspect --format '{{.State.Status}}' "$container_id" 2>/dev/null || true)"
+
+            case "$state" in
+                running)
+                    return 0
+                    ;;
+                exited|dead)
+                    exit_code="$("$DOCKER_BIN" inspect --format '{{.State.ExitCode}}' "$container_id" 2>/dev/null || true)"
+
+                    echo "Electron desktop container exited before startup completed (exit code: ${exit_code:-unknown})."
+                    "$DOCKER_BIN" compose --profile apps --profile electron-desktop logs --no-color --tail=120 electron-desktop || true
+
+                    if [[ "$exit_code" == "42" ]]; then
+                        echo "No WSLg display socket was available for direct container-to-WSLg rendering."
+                        echo "Open a GUI-backed Ubuntu WSL session and retry."
+                        return 42
+                    fi
+
+                    return 1
+                    ;;
+            esac
+        fi
+
+        if (( "$(date +%s)" - start >= timeout_seconds )); then
+            echo "Timed out waiting for electron-desktop container to reach running state."
+            "$DOCKER_BIN" compose --profile apps --profile electron-desktop ps -a electron-desktop || true
+            "$DOCKER_BIN" compose --profile apps --profile electron-desktop logs --no-color --tail=120 electron-desktop || true
+            return 1
+        fi
+
+        sleep 1
+    done
 }
 
 FALLBACK_DOCKER_CONFIG=""
@@ -76,13 +152,21 @@ export PULSE_SERVER="${PULSE_SERVER:-/mnt/wslg/PulseServer}"
 export LIBGL_ALWAYS_SOFTWARE="${LIBGL_ALWAYS_SOFTWARE:-1}"
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-banana-container}"
 
+if ! ensure_wslg_display_socket; then
+    exit $?
+fi
+
 cd "$ROOT_DIR"
 
 COMPOSE_LOG="$(mktemp)"
 remove_existing_desktop_container
 
 if compose_desktop 2> >(tee "$COMPOSE_LOG" >&2); then
-    exit 0
+    if verify_electron_desktop_container; then
+        exit 0
+    fi
+
+    COMPOSE_STATUS=$?
 else
     COMPOSE_STATUS=$?
 fi
@@ -94,8 +178,15 @@ if grep -qiE "docker-credential-desktop\.exe: exec format error|error getting cr
     FALLBACK_DOCKER_CONFIG="$(mktemp -d)"
     printf '{}\n' > "$FALLBACK_DOCKER_CONFIG/config.json"
 
-    DOCKER_CONFIG="$FALLBACK_DOCKER_CONFIG" compose_desktop
-    exit 0
+    if DOCKER_CONFIG="$FALLBACK_DOCKER_CONFIG" compose_desktop; then
+        if DOCKER_CONFIG="$FALLBACK_DOCKER_CONFIG" verify_electron_desktop_container; then
+            exit 0
+        fi
+
+        exit $?
+    fi
+
+    exit $?
 fi
 
 exit "$COMPOSE_STATUS"

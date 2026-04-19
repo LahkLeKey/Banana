@@ -161,5 +161,23 @@ services:
       - "19006:8081"
     profiles: ["apps", "all"]
 
+  android-emulator:
+    image: budtmo/docker-android:emulator_14.0
+    depends_on:
+      react-native-web:
+        condition: service_started
+    environment:
+      DEVICE: "Samsung Galaxy S10"
+      APPIUM: "false"
+      WEB_VNC: "true"
+      EMULATOR_ARGS: "-gpu swiftshader_indirect -no-snapshot-save -no-boot-anim"
+    privileged: true
+    shm_size: "2gb"
+    ports:
+      - "6080:6080"
+      - "5554:5554"
+      - "5555:5555"
+    profiles: ["android-emulator"]
+
 volumes:
   native-artifacts:

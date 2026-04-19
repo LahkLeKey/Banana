@@ -30,15 +30,21 @@ If no supported Ubuntu distro is available, fail with actionable setup guidance.
 ## Rendering Contract
 
 - Desktop rendering must remain direct container-to-WSLg (Wayland/X11).
-- Mobile preview windows (Android emulator and iOS-style web fallback) must render directly through WSLg.
+- When container Android runtime is used, standard profile access should attempt to open the noVNC UI (`http://localhost:6080`) in a WSLg window.
+- iOS-style web preview windows (when using the mobile launcher) must render directly through WSLg.
 - Keep strict fail-fast behavior when display sockets are unavailable.
-- Do not change default behavior to browser/noVNC fallback for this standard workflow.
 
 ## Mobile Platform Contract
 
-- Android emulator launch on Ubuntu is supported when Android SDK emulator + platform-tools and an AVD are installed in the target distro.
+- Standard Banana launcher (`scripts/launch-container-channels-with-wsl2-electron.sh`) defaults Android runtime to `auto`: prefer Ubuntu local SDK emulator with WSLg, then fallback to Docker Compose service `android-emulator` (profile `android-emulator`).
+- Optional standard-launcher override remains supported with `BANANA_SKIP_ANDROID_EMULATOR=1`.
+- Optional Android WSLg auto-open override remains supported with `BANANA_ANDROID_OPEN_WINDOW=0`.
+- Explicit runtime override remains supported with `BANANA_ANDROID_RUNTIME_MODE=local` or `BANANA_ANDROID_RUNTIME_MODE=container`.
 - Apple iOS Simulator is not supported on Ubuntu and must remain documented as macOS + Xcode only.
 - Ubuntu mobile path should provide an iOS-style web preview fallback without claiming native iOS simulator parity.
+- iOS preview execution in this contract remains local to Windows + Ubuntu WSL2 (no remote macOS dependency).
+- Optional local iOS preview engine override: `BANANA_IOS_PREVIEW_ENGINE=webkit` when Ubuntu has a local WebKit launcher.
+- Optional ephemeral lifecycle control: `BANANA_MOBILE_EPHEMERAL_SESSION=1` to tear down compose apps when the session ends.
 
 ## Docker Integration Preflight Contract
 
@@ -60,5 +66,5 @@ If preflight fails, return clear integration guidance and fail with exit code `4
 1. `wsl --set-default Ubuntu-24.04` (or `Ubuntu`)
 2. In Docker Desktop, enable WSL Integration for the selected Ubuntu distro.
 3. `wsl --shutdown`
-4. Launch Banana from Windows shell using `scripts/launch-container-channels-with-wsl2-electron.sh`.
-5. Launch Banana mobile channels from Windows shell using `scripts/launch-container-channels-with-wsl2-mobile.sh`.
+4. Launch Banana from Windows shell using `scripts/launch-container-channels-with-wsl2-electron.sh` (includes Android emulator container channel).
+5. Launch Banana mobile channels from Windows shell using `scripts/launch-container-channels-with-wsl2-mobile.sh` when iOS-style preview and mobile helper flows are needed.

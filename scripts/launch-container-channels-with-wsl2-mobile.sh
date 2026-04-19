@@ -3,6 +3,16 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+cleanup_ephemeral_mobile_session() {
+    if [[ "${BANANA_MOBILE_EPHEMERAL_SESSION:-0}" != "1" ]]; then
+        return 0
+    fi
+
+    echo
+    echo "Stopping ephemeral Banana mobile session..."
+    scripts/compose-apps-down.sh || true
+}
+
 resolve_wsl_distro() {
     local listed
 
@@ -36,10 +46,14 @@ build_wsl_mobile_env_exports() {
     vars=(
         BANANA_SKIP_ANDROID_EMULATOR
         BANANA_SKIP_IOS_PREVIEW
+        BANANA_ANDROID_RUNTIME_MODE
         BANANA_ANDROID_AVD
         BANANA_ANDROID_BOOT_TIMEOUT_SEC
         BANANA_ANDROID_PREVIEW_URL
+        BANANA_ANDROID_CONTAINER_PREVIEW_URL
+        BANANA_ANDROID_CONTAINER_SERVICE
         BANANA_IOS_PREVIEW_URL
+        BANANA_IOS_PREVIEW_ENGINE
         BANANA_MOBILE_ENDPOINT_TIMEOUT_SEC
         ANDROID_SDK_ROOT
         ANDROID_HOME
@@ -58,6 +72,10 @@ build_wsl_mobile_env_exports() {
 
     printf '%s' "$exports"
 }
+
+if [[ "${BANANA_MOBILE_EPHEMERAL_SESSION:-0}" == "1" ]]; then
+    trap cleanup_ephemeral_mobile_session EXIT
+fi
 
 cd "$ROOT_DIR"
 scripts/compose-apps-down.sh
@@ -109,9 +127,33 @@ else
 fi
 
 echo
+ANDROID_CHANNEL_STATUS="started"
+IOS_CHANNEL_STATUS="opened"
+
+if [[ "${BANANA_SKIP_ANDROID_EMULATOR:-0}" == "1" ]]; then
+    ANDROID_CHANNEL_STATUS="skipped"
+fi
+
+if [[ "${BANANA_SKIP_IOS_PREVIEW:-0}" == "1" ]]; then
+    IOS_CHANNEL_STATUS="skipped"
+fi
+
 echo "Banana channels are running:"
 echo "API health: http://localhost:8080/health"
 echo "React app: http://localhost:5173"
 echo "React Native web: http://localhost:19006"
-echo "Android emulator (WSLg): started"
-echo "iOS-style preview window (WSLg): opened"
+echo "Android emulator: $ANDROID_CHANNEL_STATUS"
+echo "Android runtime mode: ${BANANA_ANDROID_RUNTIME_MODE:-container}"
+echo "iOS-style preview window: $IOS_CHANNEL_STATUS"
+
+if [[ "${BANANA_MOBILE_EPHEMERAL_SESSION:-0}" == "1" ]]; then
+    echo
+    echo "Ephemeral session mode is enabled."
+    echo "Press Enter to tear down Banana mobile channels."
+
+    if [[ -t 0 ]]; then
+        read -r
+    else
+        echo "Non-interactive shell detected; tearing down immediately."
+    fi
+fi

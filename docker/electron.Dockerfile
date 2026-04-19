@@ -9,6 +9,7 @@ RUN apt-get update \
         make \
         g++ \
         libffi-dev \
+        libpq5 \
         xauth \
         ca-certificates \
         libasound2 \
@@ -18,6 +19,7 @@ RUN apt-get update \
         libdbus-1-3 \
         libdrm2 \
         libgbm1 \
+        libgl1 \
         libgtk-3-0 \
         libnspr4 \
         libnss3 \

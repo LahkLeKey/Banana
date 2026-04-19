@@ -6,12 +6,6 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-electron.sh'"
-    },
-    {
-      "name": "Banana Channels + Mobile Emulators (Container Driven)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-mobile.sh'"
     }
   ],
   "compounds": []
