@@ -1,14 +1,7 @@
-import bananaUiPreset from '@banana/ui/tailwind/preset';
 import type {Config} from 'tailwindcss';
 
-export default {
-  presets: [bananaUiPreset],
+export const bananaUiPreset = {
   darkMode: ['class'],
-  content:
-      [
-        './index.html', './src/**/*.{ts,tsx}',
-        './node_modules/@banana/ui/src/**/*.{ts,tsx}'
-      ],
   theme: {
     container: {center: true, padding: '1rem', screens: {'2xl': '1400px'}},
     extend: {
@@ -52,4 +45,6 @@ export default {
     }
   },
   plugins: []
-} satisfies Config;
+} satisfies Partial<Config>;
+
+export default bananaUiPreset;

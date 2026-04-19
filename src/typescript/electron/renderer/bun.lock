@@ -5,6 +5,7 @@
     "": {
       "name": "banana-electron-renderer",
       "dependencies": {
+        "@banana/ui": "file:../../shared/ui",
         "@radix-ui/react-label": "^2.1.7",
         "@radix-ui/react-slot": "^1.1.1",
         "class-variance-authority": "^0.7.1",
@@ -66,6 +67,8 @@
     "@babel/traverse": ["@babel/traverse@7.29.0", "", { "dependencies": { "@babel/code-frame": "^7.29.0", "@babel/generator": "^7.29.0", "@babel/helper-globals": "^7.28.0", "@babel/parser": "^7.29.0", "@babel/template": "^7.28.6", "@babel/types": "^7.29.0", "debug": "^4.3.1" } }, "sha512-4HPiQr0X7+waHfyXPZpWPfWL/J7dcN1mx9gL6WdQVMbPnF3+ZhSMs8tCxN7oHddJE9fhNE7+lxdnlyemKfJRuA=="],
 
     "@babel/types": ["@babel/types@7.29.0", "", { "dependencies": { "@babel/helper-string-parser": "^7.27.1", "@babel/helper-validator-identifier": "^7.28.5" } }, "sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A=="],
+
+    "@banana/ui": ["@banana/ui@file:../../shared/ui", { "dependencies": { "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "tailwind-merge": "^2.6.0" }, "devDependencies": { "@types/react": "^18.3.11", "@types/react-dom": "^18.3.0", "react": "^18.3.1", "react-dom": "^18.3.1", "tailwindcss": "^3.4.4" }, "peerDependencies": { "react": "^18.3.1", "react-dom": "^18.3.1" } }],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.21.5", "", { "os": "aix", "cpu": "ppc64" }, "sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ=="],
 

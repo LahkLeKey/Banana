@@ -8,6 +8,9 @@ Banana Desktop runtime with two surfaces:
 ## Renderer Setup (Bun)
 
 ```bash
+cd src/typescript/shared/ui
+bun install
+
 cd src/typescript/electron/renderer
 bun install
 bun run dev
@@ -23,12 +26,21 @@ BANANA_ELECTRON_RENDERER_URL=http://127.0.0.1:4173 npm run start
 ## Build Desktop Renderer
 
 ```bash
+cd src/typescript/shared/ui
+bun install
+
 cd src/typescript/electron
 bun run renderer:build
 npm run start
 ```
 
 `main.js` loads `renderer/dist/index.html` by default and shows a guidance page if the renderer has not been built.
+
+## Shared UI Suite
+
+- Shared renderer/ui primitives are provided by `@banana/ui` from `src/typescript/shared/ui`.
+- Renderer Tailwind config consumes `@banana/ui/tailwind/preset` and scans `./node_modules/@banana/ui/src/**/*.{ts,tsx}`.
+- Renderer global CSS imports `@banana/ui/styles/tokens.css`.
 
 ## Existing Smoke Flow
 

@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Button, Input } from "@banana/ui";
 
 import { createBatch, fetchBanana, fetchBatchStatus, fetchHealth, predictRipeness } from "./lib/bananaApi";
 import type {
@@ -194,7 +195,7 @@ function App(): JSX.Element {
                         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
                             <label className="block">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Purchases</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300"
                                     min={0}
                                     name="purchases"
@@ -206,7 +207,7 @@ function App(): JSX.Element {
 
                             <label className="block">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Multiplier</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300"
                                     min={0}
                                     name="multiplier"
@@ -216,13 +217,13 @@ function App(): JSX.Element {
                                 />
                             </label>
 
-                            <button
+                            <Button
                                 className="w-full rounded-xl bg-gradient-to-r from-amber-300 to-orange-400 px-4 py-3 font-semibold text-slate-950 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                                 disabled={banana.status === "loading"}
                                 type="submit"
                             >
                                 {banana.status === "loading" ? "Calculating..." : "Calculate Banana"}
-                            </button>
+                            </Button>
                         </form>
                     </article>
 
@@ -233,7 +234,7 @@ function App(): JSX.Element {
                         <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleBatchCreate}>
                             <label className="block md:col-span-1">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Batch ID</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-emerald-300"
                                     name="batchId"
                                     onChange={(event) => {
@@ -248,7 +249,7 @@ function App(): JSX.Element {
 
                             <label className="block md:col-span-1">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Origin Farm</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-emerald-300"
                                     name="originFarm"
                                     onChange={(event) => setBatchForm((current) => ({ ...current, originFarm: event.target.value }))}
@@ -259,7 +260,7 @@ function App(): JSX.Element {
 
                             <label className="block">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Storage Temp C</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-emerald-300"
                                     min={0}
                                     onChange={(event) => setBatchForm((current) => ({ ...current, storageTempC: Number(event.target.value) }))}
@@ -270,7 +271,7 @@ function App(): JSX.Element {
 
                             <label className="block">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Ethylene Exposure</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-emerald-300"
                                     min={0}
                                     onChange={(event) => setBatchForm((current) => ({ ...current, ethyleneExposure: Number(event.target.value) }))}
@@ -281,7 +282,7 @@ function App(): JSX.Element {
 
                             <label className="block md:col-span-2">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Estimated Shelf Life Days</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-emerald-300"
                                     min={0}
                                     onChange={(event) => setBatchForm((current) => ({ ...current, estimatedShelfLifeDays: Number(event.target.value) }))}
@@ -290,15 +291,16 @@ function App(): JSX.Element {
                                 />
                             </label>
 
-                            <button
+                            <Button
                                 className="rounded-xl bg-gradient-to-r from-emerald-300 to-lime-300 px-4 py-3 font-semibold text-slate-950 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                                 disabled={batch.status === "loading"}
                                 type="submit"
                             >
                                 {batch.status === "loading" ? "Saving..." : "Create Batch"}
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
+                                variant="outline"
                                 className="rounded-xl border border-emerald-300/40 bg-emerald-300/10 px-4 py-3 font-semibold text-emerald-100 transition hover:bg-emerald-300/20"
                                 onClick={() => {
                                     void handleBatchLookup();
@@ -306,7 +308,7 @@ function App(): JSX.Element {
                                 type="button"
                             >
                                 Fetch Batch Status
-                            </button>
+                            </Button>
                         </form>
                     </article>
 
@@ -317,7 +319,7 @@ function App(): JSX.Element {
                         <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleRipenessPredict}>
                             <label className="block md:col-span-2">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Batch ID</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-rose-200"
                                     onChange={(event) => setRipenessForm((current) => ({ ...current, batchId: event.target.value }))}
                                     type="text"
@@ -327,7 +329,7 @@ function App(): JSX.Element {
 
                             <label className="block md:col-span-2">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Temperature History</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-rose-200"
                                     onChange={(event) => setRipenessForm((current) => ({
                                         ...current,
@@ -343,7 +345,7 @@ function App(): JSX.Element {
 
                             <label className="block">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Days Since Harvest</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-rose-200"
                                     min={0}
                                     onChange={(event) => setRipenessForm((current) => ({ ...current, daysSinceHarvest: Number(event.target.value) }))}
@@ -354,7 +356,7 @@ function App(): JSX.Element {
 
                             <label className="block">
                                 <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-300">Mechanical Damage</span>
-                                <input
+                                <Input
                                     className="w-full rounded-xl border border-slate-600 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-rose-200"
                                     min={0}
                                     step="0.01"
@@ -364,13 +366,13 @@ function App(): JSX.Element {
                                 />
                             </label>
 
-                            <button
+                            <Button
                                 className="md:col-span-2 rounded-xl bg-gradient-to-r from-rose-200 to-orange-300 px-4 py-3 font-semibold text-slate-950 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                                 disabled={ripeness.status === "loading"}
                                 type="submit"
                             >
                                 {ripeness.status === "loading" ? "Predicting..." : "Predict Ripeness"}
-                            </button>
+                            </Button>
                         </form>
                     </article>
                 </div>
