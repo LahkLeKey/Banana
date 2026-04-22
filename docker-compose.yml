@@ -12,7 +12,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    profiles: ["runtime", "tests", "electron", "apps", "all"]
+    profiles: ["runtime", "tests", "electron", "apps", "all", "api-fastify"]
 
   native-build:
     build:
@@ -21,7 +21,7 @@ services:
     command: ["bash", "-lc", "mkdir -p /artifacts && cp -f /workspace/out/native/bin/libbanana_native.so /artifacts/libbanana_native.so && ls -l /artifacts"]
     volumes:
       - native-artifacts:/artifacts
-    profiles: ["runtime", "tests", "all", "electron", "apps"]
+    profiles: ["runtime", "tests", "all", "electron", "apps", "api-fastify"]
 
   api:
     build:
@@ -46,7 +46,38 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    profiles: ["runtime", "electron", "apps", "all"]
+    profiles: ["runtime", "electron", "apps", "all", "api-fastify"]
+
+  api-fastify:
+    build:
+      context: .
+      dockerfile: docker/api-fastify.Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+      native-build:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    environment:
+      BANANA_API_HOST: 0.0.0.0
+      BANANA_API_PORT: 8180
+      BANANA_BANANA_DOMAIN_MODE: auto
+      BANANA_BATCH_DOMAIN_MODE: auto
+      BANANA_NATIVE_PATH: /native
+      BANANA_LEGACY_API_BASE_URL: http://api:8080
+      BANANA_LEGACY_ML_API_BASE_URL: http://api:8080
+      DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
+    ports:
+      - "8180:8180"
+    volumes:
+      - native-artifacts:/native:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8180/health >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    profiles: ["api-fastify"]
 
   test-unit:
     build:

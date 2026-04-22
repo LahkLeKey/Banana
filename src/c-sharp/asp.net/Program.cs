@@ -36,6 +36,7 @@ builder.Services.AddScoped<IPipelineStep<PipelineContext>, PostProcessingStep>()
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, AuditStep>();
 builder.Services.AddScoped<IBananaService, BananaService>();
 builder.Services.AddScoped<IRipenessService, RipenessService>();
+builder.Services.AddScoped<INotBananaService, NotBananaService>();
 
 var app = builder.Build();
 

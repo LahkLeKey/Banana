@@ -1,0 +1,165 @@
+name: Train Not-Banana Model
+
+on:
+  workflow_dispatch:
+    inputs:
+      vocab_size:
+        description: Maximum learned vocabulary size
+        required: false
+        default: "24"
+      min_signal_score:
+        description: Minimum BANANA-vs-NOT_BANANA signal score
+        required: false
+        default: "0.7"
+      min_f1:
+        description: Minimum hold-out F1 score required to pass
+        required: false
+        default: "0.7"
+  push:
+    paths:
+      - data/not-banana/**
+      - scripts/train-not-banana-model.py
+      - .github/workflows/train-not-banana-model.yml
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Train not-banana vocabulary
+        env:
+          BANANA_TRAIN_VOCAB_SIZE: ${{ github.event.inputs.vocab_size || '24' }}
+          BANANA_TRAIN_MIN_SIGNAL: ${{ github.event.inputs.min_signal_score || '0.7' }}
+          BANANA_TRAIN_MIN_F1: ${{ github.event.inputs.min_f1 || '0.7' }}
+        run: |
+          python scripts/train-not-banana-model.py \
+            --corpus data/not-banana/corpus.json \
+            --output artifacts/not-banana-model \
+            --vocab-size "$BANANA_TRAIN_VOCAB_SIZE" \
+            --min-signal-score "$BANANA_TRAIN_MIN_SIGNAL" \
+            --min-f1 "$BANANA_TRAIN_MIN_F1"
+
+      - name: Print metrics
+        run: |
+          echo "===== Trained Vocabulary Metrics ====="
+          cat artifacts/not-banana-model/metrics.json
+
+      - name: Detect drift vs current native vocabulary
+        id: drift
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          generated = Path("artifacts/not-banana-model/vocabulary.json")
+          native = Path("src/native/core/domain/banana_not_banana.c")
+
+          model = json.loads(generated.read_text(encoding="utf-8"))
+          learned = {entry["token"] for entry in model["vocabulary"]}
+
+          source = native.read_text(encoding="utf-8")
+          match = re.search(
+              r"k_banana_signal_tokens\[\]\s*=\s*\{(.*?)\};", source, re.DOTALL
+          )
+          if not match:
+              raise SystemExit("Failed to locate k_banana_signal_tokens in native source.")
+
+          inline = set(re.findall(r"\"([^\"]+)\"", match.group(1)))
+
+          added = sorted(learned - inline)
+          removed = sorted(inline - learned)
+
+          drift = {
+              "learned_tokens": sorted(learned),
+              "inline_tokens": sorted(inline),
+              "added": added,
+              "removed": removed,
+              "metrics": model["metrics"],
+          }
+
+          Path("artifacts/not-banana-model/drift.json").write_text(
+              json.dumps(drift, indent=2) + "\n", encoding="utf-8"
+          )
+
+          if added or removed:
+              print(f"::warning::Vocabulary drift detected (added={len(added)}, removed={len(removed)})")
+          else:
+              print("No vocabulary drift detected.")
+          PY
+
+      - name: Upload trained model artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: not-banana-model
+          path: artifacts/not-banana-model
+
+      - name: Add summary
+        if: always()
+        run: |
+          {
+            echo "## Not-Banana Trainer Run"
+            echo
+            echo '```json'
+            cat artifacts/not-banana-model/metrics.json
+            echo '```'
+            if [ -f artifacts/not-banana-model/drift.json ]; then
+              echo
+              echo "### Vocabulary Drift"
+              echo '```json'
+              cat artifacts/not-banana-model/drift.json
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  verify-native-rebuild:
+    runs-on: ubuntu-latest
+    needs: train
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake libpq-dev
+
+      - name: Re-train (deterministic) to regenerate header
+        run: |
+          python scripts/train-not-banana-model.py \
+            --corpus data/not-banana/corpus.json \
+            --output artifacts/not-banana-model
+
+      - name: Stage generated header next to native source
+        run: |
+          mkdir -p src/native/core/domain/generated
+          cp artifacts/not-banana-model/banana_signal_tokens.h \
+             src/native/core/domain/generated/banana_signal_tokens.h
+
+      - name: Configure and build native library with current vocabulary
+        env:
+          BANANA_ENABLE_POSTGRES: "OFF"
+        run: |
+          cmake -S . -B build/native \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBANANA_ENABLE_POSTGRES=OFF
+          cmake --build build/native --config Release
+
+      - name: Run native tests
+        run: |
+          ctest --test-dir build/native -C Release --output-on-failure

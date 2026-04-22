@@ -136,6 +136,137 @@ public sealed class NativeInteropInternalsTests
     }
 
     [Fact]
+    public void NativeMethods_PredictBananaRegressionScore_ReturnsOk()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var nativeMethodsType = GetNativeMethodsType();
+        var method = nativeMethodsType.GetMethod("PredictBananaRegressionScore", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var args = new object?[] { new[] { 0.72, 0.08, 0.11, 0.09, 0.84, 0.88, 0.41, 0.37 }, 8, 0.0 };
+        var status = (int)method.Invoke(null, args)!;
+        var score = (double)args[2]!;
+
+        Assert.Equal((int)NativeStatusCode.Ok, status);
+        Assert.InRange(score, 0.0, 1.0);
+    }
+
+    [Fact]
+    public void NativeMethods_ClassifyBananaBinary_ReturnsOk()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var nativeMethodsType = GetNativeMethodsType();
+        var method = nativeMethodsType.GetMethod("ClassifyBananaBinary", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var args = new object?[] { new[] { 0.72, 0.08, 0.11, 0.09, 0.84, 0.88, 0.41, 0.37 }, 8, null };
+        var status = (int)method.Invoke(null, args)!;
+        var classification = Assert.IsType<BananaMlBinaryClassificationNative>(args[2]);
+
+        Assert.Equal((int)NativeStatusCode.Ok, status);
+        Assert.True(Enum.IsDefined(typeof(BananaMlLabel), classification.PredictedLabel));
+        Assert.InRange(classification.BananaProbability, 0.0, 1.0);
+        Assert.InRange(classification.NotBananaProbability, 0.0, 1.0);
+        Assert.InRange(classification.JaccardSimilarity, 0.0, 1.0);
+
+        var confusionTotal = classification.ConfusionTruePositive +
+            classification.ConfusionFalsePositive +
+            classification.ConfusionFalseNegative +
+            classification.ConfusionTrueNegative;
+        Assert.InRange(confusionTotal, 0.999999, 1.000001);
+    }
+
+    [Fact]
+    public void NativeMethods_ClassifyBananaTransformer_ReturnsOk()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var nativeMethodsType = GetNativeMethodsType();
+        var method = nativeMethodsType.GetMethod("ClassifyBananaTransformer", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var args = new object?[]
+        {
+            new[]
+            {
+                0.70, 0.07, 0.10, 0.08,
+                0.82, 0.84, 0.36, 0.34
+            },
+            8,
+            null
+        };
+        var status = (int)method.Invoke(null, args)!;
+        var classification = Assert.IsType<BananaMlTransformerClassificationNative>(args[2]);
+
+        Assert.Equal((int)NativeStatusCode.Ok, status);
+        Assert.True(Enum.IsDefined(typeof(BananaMlLabel), classification.PredictedLabel));
+        Assert.InRange(classification.BananaProbability, 0.0, 1.0);
+        Assert.InRange(classification.NotBananaProbability, 0.0, 1.0);
+        Assert.InRange(classification.AttentionFocus, 0.0, 1.0);
+    }
+
+    [Fact]
+    public void NativeMethods_ClassifyBananaTransformer_WithSequenceAboveAbiLimit_ReturnsInvalidArgument()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var nativeMethodsType = GetNativeMethodsType();
+        var method = nativeMethodsType.GetMethod("ClassifyBananaTransformer", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var tokenFeatureValueCount = 4 * (16 + 1);
+        var args = new object?[]
+        {
+            new double[tokenFeatureValueCount],
+            tokenFeatureValueCount,
+            null
+        };
+        var status = (int)method.Invoke(null, args)!;
+
+        Assert.Equal((int)NativeStatusCode.InvalidArgument, status);
+    }
+
+    [Fact]
+    public void BananaMlInteropNativeTypes_MatchExpectedAbiLayout()
+    {
+        Assert.Equal(0, (int)BananaMlLabel.NotBanana);
+        Assert.Equal(1, (int)BananaMlLabel.Banana);
+
+        Assert.Equal(typeof(int), Enum.GetUnderlyingType(typeof(BananaMlLabel)));
+        Assert.Equal(72, Marshal.SizeOf<BananaMlBinaryClassificationNative>());
+        Assert.Equal(32, Marshal.SizeOf<BananaMlTransformerClassificationNative>());
+
+        Assert.Equal(0, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.PredictedLabel)));
+        Assert.Equal(8, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.BananaProbability)));
+        Assert.Equal(16, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.NotBananaProbability)));
+        Assert.Equal(24, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.DecisionMargin)));
+        Assert.Equal(32, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.JaccardSimilarity)));
+        Assert.Equal(40, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.ConfusionTruePositive)));
+        Assert.Equal(48, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.ConfusionFalsePositive)));
+        Assert.Equal(56, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.ConfusionFalseNegative)));
+        Assert.Equal(64, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.ConfusionTrueNegative)));
+
+        Assert.Equal(0, (int)Marshal.OffsetOf<BananaMlTransformerClassificationNative>(nameof(BananaMlTransformerClassificationNative.PredictedLabel)));
+        Assert.Equal(8, (int)Marshal.OffsetOf<BananaMlTransformerClassificationNative>(nameof(BananaMlTransformerClassificationNative.BananaProbability)));
+        Assert.Equal(16, (int)Marshal.OffsetOf<BananaMlTransformerClassificationNative>(nameof(BananaMlTransformerClassificationNative.NotBananaProbability)));
+        Assert.Equal(24, (int)Marshal.OffsetOf<BananaMlTransformerClassificationNative>(nameof(BananaMlTransformerClassificationNative.AttentionFocus)));
+    }
+
+    [Fact]
     public void NativeMethods_CreateBatch_AndGetBatchStatus_ReturnOk()
     {
         if (!EnsureNativePathConfigured())

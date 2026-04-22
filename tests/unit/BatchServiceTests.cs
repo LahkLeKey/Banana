@@ -162,5 +162,20 @@ public sealed class BatchServiceTests
         {
             return new BananaRipenessPrediction("YELLOW", 48, 180.0, 0.3, 0.15);
         }
+
+        public double PredictBananaRegressionScore(IReadOnlyList<double> features)
+        {
+            return 0.75;
+        }
+
+        public BananaMlBinaryClassification PredictBananaBinaryClassification(IReadOnlyList<double> features)
+        {
+            return new BananaMlBinaryClassification("BANANA", 0.8, 0.2, 1.0);
+        }
+
+        public BananaMlTransformerClassification PredictBananaTransformerClassification(IReadOnlyList<double> tokenFeatures)
+        {
+            return new BananaMlTransformerClassification("BANANA", 0.9, 0.1, 0.6);
+        }
     }
 }

@@ -77,4 +77,31 @@ public interface INativeBananaClient
         IReadOnlyList<double> temperatureHistoryC,
         int daysSinceHarvest,
         double mechanicalDamage);
+
+    /// <summary>
+    /// Predicts banana-likeness as a bounded regression score in the range [0, 1].
+    /// </summary>
+    double PredictBananaRegressionScore(IReadOnlyList<double> features);
+
+    /// <summary>
+    /// Classifies whether features represent a banana using a binary classifier.
+    /// </summary>
+    BananaMlBinaryClassification PredictBananaBinaryClassification(IReadOnlyList<double> features);
+
+    /// <summary>
+    /// Classifies a flattened token sequence using the native transformer-style model.
+    /// </summary>
+    BananaMlTransformerClassification PredictBananaTransformerClassification(IReadOnlyList<double> tokenFeatures);
+
+    /// <summary>
+    /// Scores a polymorphic actor/entity/junk payload against the native banana
+    /// signal vocabulary. The caller is expected to flatten arbitrary payload
+    /// values into ASCII tokens before invocation; see
+    /// <see cref="Banana.Api.Services.NotBananaService"/> for the canonical
+    /// tokeniser used by the HTTP surface.
+    /// </summary>
+    BananaNotBananaClassification ClassifyNotBananaJunk(
+        IReadOnlyList<string> tokens,
+        int actorCount,
+        int entityCount);
 }

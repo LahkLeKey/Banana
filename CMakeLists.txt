@@ -35,6 +35,8 @@ set(BANANA_CORE_SOURCES
     src/native/core/domain/banana_inventory.c
     src/native/core/domain/banana_lifecycle.c
     src/native/core/domain/banana_logistics.c
+    src/native/core/domain/banana_ml_models.c
+    src/native/core/domain/banana_not_banana.c
     src/native/core/domain/banana_profile.c
     src/native/core/domain/banana_processing.c
     src/native/core/domain/banana_read_models.c
@@ -59,6 +61,8 @@ set(BANANA_WRAPPER_SOURCES
     src/native/wrapper/banana_wrapper.c
     src/native/wrapper/dal/banana_db.c
     src/native/wrapper/domain/banana_logistics.c
+    src/native/wrapper/domain/banana_ml_models.c
+    src/native/wrapper/domain/banana_not_banana.c
     src/native/wrapper/domain/banana_processing.c
     src/native/wrapper/domain/banana_profile.c
     src/native/wrapper/domain/banana_ripeness.c

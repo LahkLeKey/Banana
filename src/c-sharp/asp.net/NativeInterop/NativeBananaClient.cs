@@ -51,6 +51,63 @@ public sealed class NativeBananaClient : INativeBananaClient
     }
 
     /// <inheritdoc />
+    public double PredictBananaRegressionScore(IReadOnlyList<double> features)
+    {
+        var normalized = NormalizeFeatureVector(features);
+        var status = (NativeStatusCode)NativeMethods.PredictBananaRegressionScore(
+            normalized,
+            normalized.Length,
+            out var score);
+
+        EnsureSuccess(status);
+        return score;
+    }
+
+    /// <inheritdoc />
+    public BananaMlBinaryClassification PredictBananaBinaryClassification(IReadOnlyList<double> features)
+    {
+        var normalized = NormalizeFeatureVector(features);
+        var status = (NativeStatusCode)NativeMethods.ClassifyBananaBinary(
+            normalized,
+            normalized.Length,
+            out var classification);
+
+        EnsureSuccess(status);
+
+        return new BananaMlBinaryClassification(
+            MapMlLabelName(classification.PredictedLabel),
+            classification.BananaProbability,
+            classification.NotBananaProbability,
+            classification.DecisionMargin)
+        {
+            JaccardSimilarity = classification.JaccardSimilarity,
+            ConfusionMatrix = new BananaMlBinaryConfusionMatrix(
+                classification.ConfusionTruePositive,
+                classification.ConfusionFalsePositive,
+                classification.ConfusionFalseNegative,
+                classification.ConfusionTrueNegative)
+        };
+    }
+
+    /// <inheritdoc />
+    public BananaMlTransformerClassification PredictBananaTransformerClassification(IReadOnlyList<double> tokenFeatures)
+    {
+        var normalized = NormalizeTransformerTokenValues(tokenFeatures);
+        var status = (NativeStatusCode)NativeMethods.ClassifyBananaTransformer(
+            normalized,
+            normalized.Length,
+            out var classification);
+
+        EnsureSuccess(status);
+
+        return new BananaMlTransformerClassification(
+            MapMlLabelName(classification.PredictedLabel),
+            classification.BananaProbability,
+            classification.NotBananaProbability,
+            classification.AttentionFocus);
+    }
+
+    /// <inheritdoc />
     public BananaBatchRecord CreateBatch(
         string batchId,
         string originFarm,
@@ -375,6 +432,69 @@ public sealed class NativeBananaClient : INativeBananaClient
         return bytes.ToArray();
     }
 
+    private static double[] NormalizeFeatureVector(IReadOnlyList<double> features)
+    {
+        if (features is null)
+        {
+            throw new ClientInputException("features are required.");
+        }
+
+        if (features.Count != BananaMlInteropContract.FeatureCount)
+        {
+            throw new ClientInputException($"features must contain exactly {BananaMlInteropContract.FeatureCount} values.");
+        }
+
+        var normalized = new double[BananaMlInteropContract.FeatureCount];
+        for (var index = 0; index < BananaMlInteropContract.FeatureCount; index++)
+        {
+            if (!double.IsFinite(features[index]))
+            {
+                throw new ClientInputException("features must contain finite numeric values.");
+            }
+
+            normalized[index] = features[index];
+        }
+
+        return normalized;
+    }
+
+    private static double[] NormalizeTransformerTokenValues(IReadOnlyList<double> tokenFeatures)
+    {
+        if (tokenFeatures is null)
+        {
+            throw new ClientInputException("tokenFeatures are required.");
+        }
+
+        if (tokenFeatures.Count == 0)
+        {
+            throw new ClientInputException("tokenFeatures must contain at least one token.");
+        }
+
+        if ((tokenFeatures.Count % BananaMlInteropContract.TokenFeatureCount) != 0)
+        {
+            throw new ClientInputException($"tokenFeatures must be divisible by {BananaMlInteropContract.TokenFeatureCount} values per token.");
+        }
+
+        var tokenCount = tokenFeatures.Count / BananaMlInteropContract.TokenFeatureCount;
+        if (tokenCount > BananaMlInteropContract.MaxSequenceLength)
+        {
+            throw new ClientInputException($"tokenFeatures exceed the maximum sequence length of {BananaMlInteropContract.MaxSequenceLength}.");
+        }
+
+        var normalized = new double[tokenFeatures.Count];
+        for (var index = 0; index < tokenFeatures.Count; index++)
+        {
+            if (!double.IsFinite(tokenFeatures[index]))
+            {
+                throw new ClientInputException("tokenFeatures must contain finite numeric values.");
+            }
+
+            normalized[index] = tokenFeatures[index];
+        }
+
+        return normalized;
+    }
+
     private static TRecord DeserializeRecord<TRecord>(nint payloadPtr, string invalidPayloadMessage)
     {
         var json = Encoding.UTF8.GetString(ReadNullTerminatedUtf8(payloadPtr));
@@ -394,6 +514,105 @@ public sealed class NativeBananaClient : INativeBananaClient
             BananaRipenessStage.Biodegradation => "BIODEGRADATION",
             _ => throw new NativeInteropException($"Native returned unknown ripeness stage: {(int)stage}")
         };
+    }
+
+    private static string MapMlLabelName(BananaMlLabel label)
+    {
+        return label switch
+        {
+            BananaMlLabel.Banana => "BANANA",
+            BananaMlLabel.NotBanana => "NOT_BANANA",
+            _ => throw new NativeInteropException($"Native returned unknown banana model label: {(int)label}")
+        };
+    }
+
+    private static string MapNotBananaLabelName(BananaNotBananaLabel label)
+    {
+        return label switch
+        {
+            BananaNotBananaLabel.Banana => "BANANA",
+            BananaNotBananaLabel.NotBanana => "NOT_BANANA",
+            BananaNotBananaLabel.Indeterminate => "INDETERMINATE",
+            _ => throw new NativeInteropException($"Native returned unknown not-banana label: {(int)label}")
+        };
+    }
+
+    /// <inheritdoc />
+    public BananaNotBananaClassification ClassifyNotBananaJunk(
+        IReadOnlyList<string> tokens,
+        int actorCount,
+        int entityCount)
+    {
+        if (tokens is null)
+        {
+            throw new ClientInputException("tokens are required.");
+        }
+
+        if (actorCount < 0 || entityCount < 0)
+        {
+            throw new ClientInputException("actorCount and entityCount must be non-negative.");
+        }
+
+        var tokenCount = tokens.Count;
+
+        // Allocate a single contiguous unmanaged buffer of UTF-8 byte arrays and
+        // an array of pointers into it. The native contract is `const char* const*`.
+        var stringPointers = tokenCount == 0 ? Array.Empty<nint>() : new nint[tokenCount];
+        try
+        {
+            for (var index = 0; index < tokenCount; index++)
+            {
+                var token = tokens[index] ?? string.Empty;
+                stringPointers[index] = Marshal.StringToCoTaskMemUTF8(token);
+            }
+
+            nint tokensPtr = nint.Zero;
+            var pinnedHandle = default(GCHandle);
+            try
+            {
+                if (tokenCount > 0)
+                {
+                    pinnedHandle = GCHandle.Alloc(stringPointers, GCHandleType.Pinned);
+                    tokensPtr = pinnedHandle.AddrOfPinnedObject();
+                }
+
+                var status = (NativeStatusCode)NativeMethods.ClassifyNotBananaJunk(
+                    tokensPtr,
+                    tokenCount,
+                    actorCount,
+                    entityCount,
+                    out var classification);
+
+                EnsureSuccess(status);
+
+                return new BananaNotBananaClassification(
+                    MapNotBananaLabelName(classification.PredictedLabel),
+                    classification.ActorCount,
+                    classification.EntityCount,
+                    classification.SignalTokenCount,
+                    classification.TotalTokenCount,
+                    classification.BananaProbability,
+                    classification.NotBananaProbability,
+                    classification.JunkConfidence);
+            }
+            finally
+            {
+                if (pinnedHandle.IsAllocated)
+                {
+                    pinnedHandle.Free();
+                }
+            }
+        }
+        finally
+        {
+            for (var index = 0; index < stringPointers.Length; index++)
+            {
+                if (stringPointers[index] != nint.Zero)
+                {
+                    Marshal.FreeCoTaskMem(stringPointers[index]);
+                }
+            }
+        }
     }
 
     /// <summary>

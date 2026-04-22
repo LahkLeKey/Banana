@@ -35,6 +35,33 @@ internal static partial class NativeMethods
     internal static partial int QueryBananaProfileProjection(int purchases, int multiplier, out nint payload, out int rowCount);
 
     /// <summary>
+    /// Predicts a bounded banana regression score from a fixed-size feature vector.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_predict_banana_regression_score")]
+    internal static partial int PredictBananaRegressionScore(
+        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] double[] features,
+        int featureCount,
+        out double score);
+
+    /// <summary>
+    /// Classifies banana vs non-banana for a fixed-size feature vector.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_classify_banana_binary")]
+    internal static partial int ClassifyBananaBinary(
+        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] double[] features,
+        int featureCount,
+        out BananaMlBinaryClassificationNative classification);
+
+    /// <summary>
+    /// Classifies banana vs non-banana for a flattened transformer token feature sequence.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_classify_banana_transformer")]
+    internal static partial int ClassifyBananaTransformer(
+        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] double[] tokenFeatures,
+        int tokenFeatureValueCount,
+        out BananaMlTransformerClassificationNative classification);
+
+    /// <summary>
     /// Predicts banana ripeness from supply-chain telemetry.
     /// </summary>
     [LibraryImport(LibraryName, EntryPoint = "banana_predict_banana_ripeness")]
@@ -160,4 +187,18 @@ internal static partial class NativeMethods
     /// </summary>
     [LibraryImport(LibraryName, EntryPoint = "banana_free")]
     internal static partial void Free(nint pointer);
+
+    /// <summary>
+    /// Classifies a polymorphic actor/entity/junk payload using the native banana
+    /// signal vocabulary. Tokens are passed as a flat UTF-8 byte buffer with
+    /// pointer offsets so .NET can marshal an array of strings into the
+    /// <c>const char* const*</c> contract exposed by the wrapper.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_classify_not_banana_junk")]
+    internal static partial int ClassifyNotBananaJunk(
+        nint tokens,
+        int tokenCount,
+        int actorCount,
+        int entityCount,
+        out BananaNotBananaClassificationNative classification);
 }

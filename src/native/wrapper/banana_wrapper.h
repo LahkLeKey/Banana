@@ -9,6 +9,10 @@
 #define BANANA_API __attribute__((visibility("default")))
 #endif
 
+#define CINTEROP_BANANA_ML_FEATURE_COUNT 8
+#define CINTEROP_BANANA_ML_TOKEN_FEATURE_COUNT 4
+#define CINTEROP_BANANA_ML_MAX_SEQUENCE_LENGTH 16
+
 typedef enum CInteropStatus {
     BANANA_STATUS_OK = 0,
     BANANA_STATUS_INVALID_ARGUMENT = 1,
@@ -35,6 +39,28 @@ typedef enum CInteropDistributionNodeType {
     CINTEROP_DISTRIBUTION_NODE_RIPENING_CENTER = 3
 } CInteropDistributionNodeType;
 
+typedef enum CInteropBananaMlLabel {
+    CINTEROP_BANANA_ML_LABEL_NOT_BANANA = 0,
+    CINTEROP_BANANA_ML_LABEL_BANANA = 1
+} CInteropBananaMlLabel;
+
+typedef enum CInteropBananaNotBananaLabel {
+    CINTEROP_BANANA_NOT_BANANA_LABEL_NOT_BANANA = 0,
+    CINTEROP_BANANA_NOT_BANANA_LABEL_BANANA = 1,
+    CINTEROP_BANANA_NOT_BANANA_LABEL_INDETERMINATE = 2
+} CInteropBananaNotBananaLabel;
+
+typedef struct CInteropBananaNotBananaClassification {
+    CInteropBananaNotBananaLabel predicted_label;
+    int actor_count;
+    int entity_count;
+    int signal_token_count;
+    int total_token_count;
+    double banana_probability;
+    double not_banana_probability;
+    double junk_confidence;
+} CInteropBananaNotBananaClassification;
+
 typedef struct CInteropBananaBreakdown {
     int purchases;
     int multiplier;
@@ -49,13 +75,35 @@ typedef struct CInteropBananaRipenessPrediction {
     double cold_chain_risk;
 } CInteropBananaRipenessPrediction;
 
+typedef struct CInteropBananaMlBinaryClassification {
+    CInteropBananaMlLabel predicted_label;
+    double banana_probability;
+    double not_banana_probability;
+    double decision_margin;
+    double jaccard_similarity;
+    double confusion_true_positive;
+    double confusion_false_positive;
+    double confusion_false_negative;
+    double confusion_true_negative;
+} CInteropBananaMlBinaryClassification;
+
+typedef struct CInteropBananaMlTransformerClassification {
+    CInteropBananaMlLabel predicted_label;
+    double banana_probability;
+    double not_banana_probability;
+    double attention_focus;
+} CInteropBananaMlTransformerClassification;
+
 _Static_assert(sizeof(int) == 4, "CInterop ABI requires 32-bit int.");
 _Static_assert(sizeof(CInteropStatus) == 4, "CInteropStatus ABI size must be 4 bytes.");
 _Static_assert(sizeof(CInteropBananaRipenessStage) == 4, "CInteropBananaRipenessStage ABI size must be 4 bytes.");
 _Static_assert(sizeof(CInteropDistributionNodeType) == 4, "CInteropDistributionNodeType ABI size must be 4 bytes.");
+_Static_assert(sizeof(CInteropBananaMlLabel) == 4, "CInteropBananaMlLabel ABI size must be 4 bytes.");
 _Static_assert(sizeof(CInteropBananaBreakdown) == 12, "CInteropBananaBreakdown ABI size must be 12 bytes.");
 _Static_assert(sizeof(double) == 8, "CInterop ABI requires 64-bit double.");
 _Static_assert(sizeof(CInteropBananaRipenessPrediction) == 32, "CInteropBananaRipenessPrediction ABI size must be 32 bytes.");
+_Static_assert(sizeof(CInteropBananaMlBinaryClassification) == 72, "CInteropBananaMlBinaryClassification ABI size must be 72 bytes.");
+_Static_assert(sizeof(CInteropBananaMlTransformerClassification) == 32, "CInteropBananaMlTransformerClassification ABI size must be 32 bytes.");
 _Static_assert(BANANA_STATUS_OK == 0, "CInteropStatus.Ok ordinal mismatch.");
 _Static_assert(BANANA_STATUS_INVALID_ARGUMENT == 1, "CInteropStatus.InvalidArgument ordinal mismatch.");
 _Static_assert(BANANA_STATUS_OVERFLOW == 2, "CInteropStatus.Overflow ordinal mismatch.");
@@ -73,6 +121,21 @@ _Static_assert(CINTEROP_DISTRIBUTION_NODE_PORT == 0, "CInteropDistributionNodeTy
 _Static_assert(CINTEROP_DISTRIBUTION_NODE_WAREHOUSE == 1, "CInteropDistributionNodeType.Warehouse ordinal mismatch.");
 _Static_assert(CINTEROP_DISTRIBUTION_NODE_RETAIL == 2, "CInteropDistributionNodeType.Retail ordinal mismatch.");
 _Static_assert(CINTEROP_DISTRIBUTION_NODE_RIPENING_CENTER == 3, "CInteropDistributionNodeType.RipeningCenter ordinal mismatch.");
+_Static_assert(CINTEROP_BANANA_ML_LABEL_NOT_BANANA == 0, "CInteropBananaMlLabel.NotBanana ordinal mismatch.");
+_Static_assert(CINTEROP_BANANA_ML_LABEL_BANANA == 1, "CInteropBananaMlLabel.Banana ordinal mismatch.");
+_Static_assert(CINTEROP_BANANA_NOT_BANANA_LABEL_NOT_BANANA == 0, "CInteropBananaNotBananaLabel.NotBanana ordinal mismatch.");
+_Static_assert(CINTEROP_BANANA_NOT_BANANA_LABEL_BANANA == 1, "CInteropBananaNotBananaLabel.Banana ordinal mismatch.");
+_Static_assert(CINTEROP_BANANA_NOT_BANANA_LABEL_INDETERMINATE == 2, "CInteropBananaNotBananaLabel.Indeterminate ordinal mismatch.");
+_Static_assert(sizeof(CInteropBananaNotBananaLabel) == 4, "CInteropBananaNotBananaLabel ABI size must be 4 bytes.");
+_Static_assert(sizeof(CInteropBananaNotBananaClassification) == 48, "CInteropBananaNotBananaClassification ABI size must be 48 bytes.");
+_Static_assert(offsetof(CInteropBananaNotBananaClassification, predicted_label) == 0, "CInteropBananaNotBananaClassification.predicted_label ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaNotBananaClassification, actor_count) == 4, "CInteropBananaNotBananaClassification.actor_count ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaNotBananaClassification, entity_count) == 8, "CInteropBananaNotBananaClassification.entity_count ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaNotBananaClassification, signal_token_count) == 12, "CInteropBananaNotBananaClassification.signal_token_count ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaNotBananaClassification, total_token_count) == 16, "CInteropBananaNotBananaClassification.total_token_count ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaNotBananaClassification, banana_probability) == 24, "CInteropBananaNotBananaClassification.banana_probability ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaNotBananaClassification, not_banana_probability) == 32, "CInteropBananaNotBananaClassification.not_banana_probability ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaNotBananaClassification, junk_confidence) == 40, "CInteropBananaNotBananaClassification.junk_confidence ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaBreakdown, purchases) == 0, "CInteropBananaBreakdown.purchases ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaBreakdown, multiplier) == 4, "CInteropBananaBreakdown.multiplier ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaBreakdown, banana) == 8, "CInteropBananaBreakdown.banana ABI offset mismatch.");
@@ -81,6 +144,19 @@ _Static_assert(offsetof(CInteropBananaRipenessPrediction, shelf_life_hours) == 4
 _Static_assert(offsetof(CInteropBananaRipenessPrediction, ripening_index) == 8, "CInteropBananaRipenessPrediction.ripening_index ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaRipenessPrediction, spoilage_probability) == 16, "CInteropBananaRipenessPrediction.spoilage_probability ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaRipenessPrediction, cold_chain_risk) == 24, "CInteropBananaRipenessPrediction.cold_chain_risk ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, predicted_label) == 0, "CInteropBananaMlBinaryClassification.predicted_label ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, banana_probability) == 8, "CInteropBananaMlBinaryClassification.banana_probability ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, not_banana_probability) == 16, "CInteropBananaMlBinaryClassification.not_banana_probability ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, decision_margin) == 24, "CInteropBananaMlBinaryClassification.decision_margin ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, jaccard_similarity) == 32, "CInteropBananaMlBinaryClassification.jaccard_similarity ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, confusion_true_positive) == 40, "CInteropBananaMlBinaryClassification.confusion_true_positive ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, confusion_false_positive) == 48, "CInteropBananaMlBinaryClassification.confusion_false_positive ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, confusion_false_negative) == 56, "CInteropBananaMlBinaryClassification.confusion_false_negative ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, confusion_true_negative) == 64, "CInteropBananaMlBinaryClassification.confusion_true_negative ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlTransformerClassification, predicted_label) == 0, "CInteropBananaMlTransformerClassification.predicted_label ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlTransformerClassification, banana_probability) == 8, "CInteropBananaMlTransformerClassification.banana_probability ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlTransformerClassification, not_banana_probability) == 16, "CInteropBananaMlTransformerClassification.not_banana_probability ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlTransformerClassification, attention_focus) == 24, "CInteropBananaMlTransformerClassification.attention_focus ABI offset mismatch.");
 
 /*
  * Interop decision:
@@ -115,6 +191,38 @@ BANANA_API int banana_db_query_banana_profile(
     int multiplier,
     char** out_payload,
     int* out_row_count
+);
+
+BANANA_API int banana_predict_banana_regression_score(
+    const double* features,
+    int feature_count,
+    double* out_score
+);
+
+BANANA_API int banana_classify_banana_binary(
+    const double* features,
+    int feature_count,
+    CInteropBananaMlBinaryClassification* out_classification
+);
+
+BANANA_API int banana_classify_banana_transformer(
+    const double* token_features,
+    int token_feature_value_count,
+    CInteropBananaMlTransformerClassification* out_classification
+);
+
+/*
+ * Polymorphic junk classifier. Pre-extracted ASCII tokens are scored against
+ * a banana signal vocabulary kept in sync with the TypeScript not-banana
+ * gateway slice. Caller is responsible for tokenizing arbitrary
+ * actor/entity/junk payload values before invocation.
+ */
+BANANA_API int banana_classify_not_banana_junk(
+    const char* const* tokens,
+    int token_count,
+    int actor_count,
+    int entity_count,
+    CInteropBananaNotBananaClassification* out_classification
 );
 
 BANANA_API int banana_predict_banana_ripeness(

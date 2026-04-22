@@ -15,12 +15,47 @@
 #include "domain/banana_retail.h"
 #include "domain/banana_services.h"
 #include "domain/banana_supply_chain.h"
+#include "domain/banana_ml_models.h"
+#include "domain/banana_not_banana.h"
 
 static void require_true(int condition, const char* message) {
     if (!condition) {
         fprintf(stderr, "banana_core_tests failure: %s\n", message);
         exit(1);
     }
+}
+
+static double absolute_difference(double left, double right) {
+    return left > right ? left - right : right - left;
+}
+
+static void require_binary_confusion_metrics(
+    const BananaMlBinaryClassification* classification,
+    const char* context
+) {
+    double confusion_sum = 0.0;
+    double jaccard_denominator = 0.0;
+    double expected_jaccard = 0.0;
+
+    require_true(classification->jaccard_similarity >= 0.0 && classification->jaccard_similarity <= 1.0, context);
+    require_true(classification->confusion_true_positive >= 0.0 && classification->confusion_true_positive <= 1.0, context);
+    require_true(classification->confusion_false_positive >= 0.0 && classification->confusion_false_positive <= 1.0, context);
+    require_true(classification->confusion_false_negative >= 0.0 && classification->confusion_false_negative <= 1.0, context);
+    require_true(classification->confusion_true_negative >= 0.0 && classification->confusion_true_negative <= 1.0, context);
+
+    confusion_sum = classification->confusion_true_positive +
+        classification->confusion_false_positive +
+        classification->confusion_false_negative +
+        classification->confusion_true_negative;
+    require_true(absolute_difference(confusion_sum, 1.0) < 0.000001, context);
+
+    jaccard_denominator = classification->confusion_true_positive +
+        classification->confusion_false_positive +
+        classification->confusion_false_negative;
+    expected_jaccard = jaccard_denominator > 0.0
+        ? classification->confusion_true_positive / jaccard_denominator
+        : 0.0;
+    require_true(absolute_difference(classification->jaccard_similarity, expected_jaccard) < 0.000001, context);
 }
 
 static void cap_bonus_step(BananaResult* result) {
@@ -172,6 +207,206 @@ static void test_shared_validation_rejects_invalid_rules_and_context(void) {
     context.rules = rules;
     status = banana_calculate_context(&context);
     require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when calculating invalid execution context");
+}
+
+static void test_ml_regression_predicts_deterministic_score(void) {
+    BananaMlFeatureVector features;
+    double score = 0.0;
+    BananaStatus status = BANANA_OK;
+    int index = 0;
+    const double values[BANANA_ML_FEATURE_COUNT] = {
+        0.82,
+        0.14,
+        0.76,
+        0.43,
+        0.05,
+        0.61,
+        0.72,
+        0.18
+    };
+
+    for (index = 0; index < BANANA_ML_FEATURE_COUNT; index++) {
+        features.values[index] = values[index];
+    }
+
+    status = banana_ml_predict_regression_score(&features, &score);
+    require_true(status == BANANA_OK, "expected BANANA_OK for regression inference");
+    require_true(score > 0.7905 && score < 0.7907, "expected deterministic regression score");
+}
+
+static void test_ml_regression_rejects_invalid_input(void) {
+    BananaMlFeatureVector features;
+    double score = 0.0;
+    BananaStatus status = BANANA_OK;
+    int index = 0;
+
+    for (index = 0; index < BANANA_ML_FEATURE_COUNT; index++) {
+        features.values[index] = 0.0;
+    }
+
+    status = banana_ml_predict_regression_score(0, &score);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null regression features");
+
+    status = banana_ml_predict_regression_score(&features, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null regression output pointer");
+
+    features.values[0] = 2000001.0;
+    status = banana_ml_predict_regression_score(&features, &score);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for out-of-range regression feature");
+}
+
+static void test_ml_binary_classifier_separates_banana_and_not_banana(void) {
+    BananaMlFeatureVector banana_features;
+    BananaMlFeatureVector not_banana_features;
+    BananaMlBinaryClassification classification;
+    BananaStatus status = BANANA_OK;
+    int index = 0;
+    const double banana_values[BANANA_ML_FEATURE_COUNT] = {
+        0.82,
+        0.14,
+        0.76,
+        0.43,
+        0.05,
+        0.61,
+        0.72,
+        0.18
+    };
+    const double not_banana_values[BANANA_ML_FEATURE_COUNT] = {
+        0.12,
+        0.81,
+        0.17,
+        0.09,
+        0.74,
+        0.18,
+        0.22,
+        0.66
+    };
+
+    for (index = 0; index < BANANA_ML_FEATURE_COUNT; index++) {
+        banana_features.values[index] = banana_values[index];
+        not_banana_features.values[index] = not_banana_values[index];
+    }
+
+    status = banana_ml_predict_binary_classification(&banana_features, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for banana-like binary classification sample");
+    require_true(classification.predicted_label == BANANA_ML_LABEL_BANANA, "expected banana label for banana-like sample");
+    require_true(classification.banana_probability > 0.80, "expected strong banana probability for banana-like sample");
+    require_true(absolute_difference(
+            classification.banana_probability + classification.not_banana_probability,
+            1.0) < 0.000001,
+        "expected binary probabilities to sum to one");
+    require_binary_confusion_metrics(
+        &classification,
+        "expected binary confusion metrics to be normalized for banana-like sample");
+
+    status = banana_ml_predict_binary_classification(&not_banana_features, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for not-banana binary classification sample");
+    require_true(classification.predicted_label == BANANA_ML_LABEL_NOT_BANANA, "expected not-banana label for non-banana sample");
+    require_true(classification.banana_probability < 0.20, "expected low banana probability for non-banana sample");
+    require_binary_confusion_metrics(
+        &classification,
+        "expected binary confusion metrics to be normalized for non-banana sample");
+}
+
+static void test_ml_binary_classifier_rejects_invalid_input(void) {
+    BananaMlFeatureVector features;
+    BananaMlBinaryClassification classification;
+    BananaStatus status = BANANA_OK;
+    int index = 0;
+
+    for (index = 0; index < BANANA_ML_FEATURE_COUNT; index++) {
+        features.values[index] = 0.0;
+    }
+
+    status = banana_ml_predict_binary_classification(0, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null binary features");
+
+    status = banana_ml_predict_binary_classification(&features, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null binary output");
+
+    features.values[3] = -2000001.0;
+    status = banana_ml_predict_binary_classification(&features, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for out-of-range binary feature");
+}
+
+static void test_ml_transformer_classifier_separates_sequences(void) {
+    BananaMlTransformerInput input;
+    BananaMlTransformerClassification classification;
+    BananaStatus status = BANANA_OK;
+    int token_index = 0;
+    int feature_index = 0;
+    const double banana_tokens[3][BANANA_ML_TOKEN_FEATURE_COUNT] = {
+        { 0.82, 0.15, 0.76, 0.18 },
+        { 0.79, 0.12, 0.74, 0.16 },
+        { 0.84, 0.11, 0.78, 0.14 }
+    };
+    const double not_banana_tokens[3][BANANA_ML_TOKEN_FEATURE_COUNT] = {
+        { 0.18, 0.82, 0.22, 0.79 },
+        { 0.16, 0.85, 0.20, 0.81 },
+        { 0.20, 0.78, 0.24, 0.76 }
+    };
+
+    input.token_count = 3;
+    for (token_index = 0; token_index < input.token_count; token_index++) {
+        for (feature_index = 0; feature_index < BANANA_ML_TOKEN_FEATURE_COUNT; feature_index++) {
+            input.tokens[token_index].values[feature_index] = banana_tokens[token_index][feature_index];
+        }
+    }
+
+    status = banana_ml_predict_transformer_classification(&input, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for transformer banana-like sequence");
+    require_true(classification.predicted_label == BANANA_ML_LABEL_BANANA, "expected banana label for transformer banana-like sequence");
+    require_true(classification.banana_probability > 0.95, "expected high banana probability for transformer banana-like sequence");
+    require_true(classification.attention_focus > 0.0 && classification.attention_focus <= 1.0, "expected normalized attention focus");
+
+    input.token_count = 3;
+    for (token_index = 0; token_index < input.token_count; token_index++) {
+        for (feature_index = 0; feature_index < BANANA_ML_TOKEN_FEATURE_COUNT; feature_index++) {
+            input.tokens[token_index].values[feature_index] = not_banana_tokens[token_index][feature_index];
+        }
+    }
+
+    status = banana_ml_predict_transformer_classification(&input, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for transformer non-banana sequence");
+    require_true(classification.predicted_label == BANANA_ML_LABEL_NOT_BANANA, "expected not-banana label for transformer non-banana sequence");
+    require_true(classification.banana_probability < 0.05, "expected low banana probability for transformer non-banana sequence");
+    require_true(absolute_difference(
+            classification.banana_probability + classification.not_banana_probability,
+            1.0) < 0.000001,
+        "expected transformer probabilities to sum to one");
+}
+
+static void test_ml_transformer_classifier_rejects_invalid_input(void) {
+    BananaMlTransformerInput input;
+    BananaMlTransformerClassification classification;
+    BananaStatus status = BANANA_OK;
+    int token_index = 0;
+    int feature_index = 0;
+
+    input.token_count = 0;
+    status = banana_ml_predict_transformer_classification(&input, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for zero token count");
+
+    status = banana_ml_predict_transformer_classification(0, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null transformer input");
+
+    status = banana_ml_predict_transformer_classification(&input, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null transformer output");
+
+    input.token_count = BANANA_ML_MAX_SEQUENCE_LENGTH + 1;
+    status = banana_ml_predict_transformer_classification(&input, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for out-of-range transformer sequence length");
+
+    input.token_count = 1;
+    for (token_index = 0; token_index < input.token_count; token_index++) {
+        for (feature_index = 0; feature_index < BANANA_ML_TOKEN_FEATURE_COUNT; feature_index++) {
+            input.tokens[token_index].values[feature_index] = 0.0;
+        }
+    }
+
+    input.tokens[0].values[2] = 2000001.0;
+    status = banana_ml_predict_transformer_classification(&input, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for out-of-range transformer token value");
 }
 
 static void test_domain_capacity_constants(void) {
@@ -1141,6 +1376,111 @@ static void test_pipeline_null_safety(void) {
     require_true(output.banana == 3, "null-safe pipeline must not mutate banana");
 }
 
+static void test_not_banana_classifier_flags_polymorphic_junk(void) {
+    const char* tokens[] = { "envelope", "metadata", "actor", "entity", "junk" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 5, 2, 1, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for junk-only polymorphic payload");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_NOT_BANANA,
+        "expected NOT_BANANA label for junk-only payload");
+    require_true(classification.signal_token_count == 0,
+        "expected zero banana signal tokens for junk payload");
+    require_true(classification.total_token_count == 5,
+        "expected five considered tokens for junk payload");
+    require_true(classification.actor_count == 2,
+        "expected actor count to round-trip");
+    require_true(classification.entity_count == 1,
+        "expected entity count to round-trip");
+    require_true(absolute_difference(classification.banana_probability, 0.0) < 0.000001,
+        "expected zero banana probability for junk-only payload");
+    require_true(absolute_difference(classification.not_banana_probability, 1.0) < 0.000001,
+        "expected unit not-banana probability for junk-only payload");
+    require_true(classification.junk_confidence > 0.5,
+        "expected high junk confidence for junk-only payload with actors and entities");
+}
+
+static void test_not_banana_classifier_flags_banana_signals(void) {
+    const char* tokens[] = { "Banana", "ETHYLENE", "yellow", "harvest", "envelope" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 5, 1, 0, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for banana-rich payload");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_BANANA,
+        "expected BANANA label for banana-signal-rich payload");
+    require_true(classification.signal_token_count == 4,
+        "expected four banana signal tokens (case-insensitive)");
+    require_true(classification.total_token_count == 5,
+        "expected five considered tokens for banana-rich payload");
+    require_true(classification.banana_probability >= 0.5,
+        "expected banana probability >= 0.5 for banana-rich payload");
+    require_true(absolute_difference(
+        classification.banana_probability + classification.not_banana_probability,
+        1.0) < 0.000001,
+        "expected banana/not-banana probabilities to sum to 1.0");
+}
+
+static void test_not_banana_classifier_handles_empty_payload(void) {
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(0, 0, 0, 0, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for completely empty payload");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_INDETERMINATE,
+        "expected INDETERMINATE label when no tokens, actors, or entities are supplied");
+    require_true(classification.signal_token_count == 0, "expected zero signals for empty payload");
+    require_true(classification.total_token_count == 0, "expected zero considered tokens for empty payload");
+    require_true(absolute_difference(classification.banana_probability, 0.0) < 0.000001,
+        "expected zero banana probability for empty payload");
+    require_true(absolute_difference(classification.not_banana_probability, 0.0) < 0.000001,
+        "expected zero not-banana probability for empty payload");
+    require_true(absolute_difference(classification.junk_confidence, 0.0) < 0.000001,
+        "expected zero junk confidence for empty payload");
+}
+
+static void test_not_banana_classifier_skips_empty_tokens(void) {
+    const char* tokens[] = { "", 0, "banana", "" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 4, 0, 0, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK when null/empty tokens are skipped");
+    require_true(classification.total_token_count == 1,
+        "expected only the non-empty token to be considered");
+    require_true(classification.signal_token_count == 1,
+        "expected the surviving token to be counted as a banana signal");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_BANANA,
+        "expected BANANA label when only the banana token survives");
+}
+
+static void test_not_banana_classifier_rejects_invalid_input(void) {
+    const char* tokens[] = { "banana" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 1, 0, 0, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT when out_classification is null");
+
+    status = banana_not_banana_classify(0, 1, 0, 0, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT when tokens is null but token_count > 0");
+
+    status = banana_not_banana_classify(tokens, -1, 0, 0, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT for negative token_count");
+
+    status = banana_not_banana_classify(tokens, 1, -1, 0, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT for negative actor_count");
+
+    status = banana_not_banana_classify(tokens, 1, 0, -1, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT for negative entity_count");
+}
+
 int main(void) {
     test_banana_profile_ok();
     test_banana_profile_input_validation();
@@ -1148,6 +1488,12 @@ int main(void) {
     test_banana_profile_custom_rules_and_pipeline();
     test_prepare_execution_context_and_breakdown();
     test_shared_validation_rejects_invalid_rules_and_context();
+    test_ml_regression_predicts_deterministic_score();
+    test_ml_regression_rejects_invalid_input();
+    test_ml_binary_classifier_separates_banana_and_not_banana();
+    test_ml_binary_classifier_rejects_invalid_input();
+    test_ml_transformer_classifier_separates_sequences();
+    test_ml_transformer_classifier_rejects_invalid_input();
     test_domain_capacity_constants();
     test_predict_ripeness_progresses_through_real_banana_stages();
     test_predict_ripeness_for_profile_input_returns_profile();
@@ -1172,6 +1518,12 @@ int main(void) {
     test_retail_supports_store_sections_pricing_barcodes_and_orders();
     test_inventory_receive_sell_and_discard_spoiled_bananas();
     test_pipeline_null_safety();
+
+    test_not_banana_classifier_flags_polymorphic_junk();
+    test_not_banana_classifier_flags_banana_signals();
+    test_not_banana_classifier_handles_empty_payload();
+    test_not_banana_classifier_skips_empty_tokens();
+    test_not_banana_classifier_rejects_invalid_input();
 
     puts("banana_core_tests: all tests passed");
     return 0;
