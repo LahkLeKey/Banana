@@ -187,4 +187,18 @@ internal static partial class NativeMethods
     /// </summary>
     [LibraryImport(LibraryName, EntryPoint = "banana_free")]
     internal static partial void Free(nint pointer);
+
+    /// <summary>
+    /// Classifies a polymorphic actor/entity/junk payload using the native banana
+    /// signal vocabulary. Tokens are passed as a flat UTF-8 byte buffer with
+    /// pointer offsets so .NET can marshal an array of strings into the
+    /// <c>const char* const*</c> contract exposed by the wrapper.
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_classify_not_banana_junk")]
+    internal static partial int ClassifyNotBananaJunk(
+        nint tokens,
+        int tokenCount,
+        int actorCount,
+        int entityCount,
+        out BananaNotBananaClassificationNative classification);
 }

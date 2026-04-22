@@ -694,6 +694,85 @@ static void test_free_null_is_safe(void) {
     banana_free(0);
 }
 
+static void test_classify_not_banana_junk_flags_polymorphic_junk(void) {
+    const char* tokens[] = { "envelope", "metadata", "actor", "entity", "junk" };
+    CInteropBananaNotBananaClassification classification;
+    int status;
+
+    status = banana_classify_not_banana_junk(tokens, 5, 2, 1, &classification);
+    require_true(status == BANANA_STATUS_OK, "expected status OK for junk-only polymorphic payload");
+    require_true(classification.predicted_label == CINTEROP_BANANA_NOT_BANANA_LABEL_NOT_BANANA,
+        "expected NOT_BANANA label for junk-only payload");
+    require_true(classification.signal_token_count == 0, "expected zero banana signal tokens");
+    require_true(classification.total_token_count == 5, "expected five considered tokens");
+    require_true(classification.actor_count == 2, "expected actor count to round-trip");
+    require_true(classification.entity_count == 1, "expected entity count to round-trip");
+    require_true(absolute_difference(classification.banana_probability, 0.0) < 0.000001,
+        "expected zero banana probability for junk-only payload");
+    require_true(absolute_difference(classification.not_banana_probability, 1.0) < 0.000001,
+        "expected unit not-banana probability for junk-only payload");
+    require_true(classification.junk_confidence > 0.5,
+        "expected high junk confidence for junk-only payload with actors and entities");
+}
+
+static void test_classify_not_banana_junk_flags_banana_signals(void) {
+    const char* tokens[] = { "Banana", "ETHYLENE", "yellow", "harvest", "envelope" };
+    CInteropBananaNotBananaClassification classification;
+    int status;
+
+    status = banana_classify_not_banana_junk(tokens, 5, 1, 0, &classification);
+    require_true(status == BANANA_STATUS_OK, "expected status OK for banana-rich payload");
+    require_true(classification.predicted_label == CINTEROP_BANANA_NOT_BANANA_LABEL_BANANA,
+        "expected BANANA label for banana-rich payload");
+    require_true(classification.signal_token_count == 4,
+        "expected four banana signal tokens (case-insensitive)");
+    require_true(classification.total_token_count == 5, "expected five considered tokens");
+    require_true(classification.banana_probability >= 0.5,
+        "expected banana probability >= 0.5 for banana-rich payload");
+    require_true(absolute_difference(
+        classification.banana_probability + classification.not_banana_probability,
+        1.0) < 0.000001,
+        "expected probabilities to sum to 1.0");
+}
+
+static void test_classify_not_banana_junk_handles_empty_payload(void) {
+    CInteropBananaNotBananaClassification classification;
+    int status;
+
+    status = banana_classify_not_banana_junk(0, 0, 0, 0, &classification);
+    require_true(status == BANANA_STATUS_OK, "expected status OK for empty payload");
+    require_true(classification.predicted_label == CINTEROP_BANANA_NOT_BANANA_LABEL_INDETERMINATE,
+        "expected INDETERMINATE label for empty payload");
+    require_true(classification.signal_token_count == 0, "expected zero signals for empty payload");
+    require_true(classification.total_token_count == 0, "expected zero considered tokens for empty payload");
+}
+
+static void test_classify_not_banana_junk_invalid_args(void) {
+    const char* tokens[] = { "banana" };
+    CInteropBananaNotBananaClassification classification;
+    int status;
+
+    status = banana_classify_not_banana_junk(tokens, 1, 0, 0, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT,
+        "expected invalid argument when out_classification is null");
+
+    status = banana_classify_not_banana_junk(0, 1, 0, 0, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT,
+        "expected invalid argument when tokens is null but token_count > 0");
+
+    status = banana_classify_not_banana_junk(tokens, -1, 0, 0, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT,
+        "expected invalid argument for negative token_count");
+
+    status = banana_classify_not_banana_junk(tokens, 1, -1, 0, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT,
+        "expected invalid argument for negative actor_count");
+
+    status = banana_classify_not_banana_junk(tokens, 1, 0, -1, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT,
+        "expected invalid argument for negative entity_count");
+}
+
 int main(void) {
     test_calculate_banana_ok();
     test_calculate_banana_invalid();
@@ -742,6 +821,11 @@ int main(void) {
     test_postgres_snapshot_validation_paths();
     test_postgres_snapshot_forced_results();
     test_free_null_is_safe();
+
+    test_classify_not_banana_junk_flags_polymorphic_junk();
+    test_classify_not_banana_junk_flags_banana_signals();
+    test_classify_not_banana_junk_handles_empty_payload();
+    test_classify_not_banana_junk_invalid_args();
 
     puts("native_wrapper_tests: all tests passed");
     return 0;

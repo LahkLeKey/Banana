@@ -526,6 +526,95 @@ public sealed class NativeBananaClient : INativeBananaClient
         };
     }
 
+    private static string MapNotBananaLabelName(BananaNotBananaLabel label)
+    {
+        return label switch
+        {
+            BananaNotBananaLabel.Banana => "BANANA",
+            BananaNotBananaLabel.NotBanana => "NOT_BANANA",
+            BananaNotBananaLabel.Indeterminate => "INDETERMINATE",
+            _ => throw new NativeInteropException($"Native returned unknown not-banana label: {(int)label}")
+        };
+    }
+
+    /// <inheritdoc />
+    public BananaNotBananaClassification ClassifyNotBananaJunk(
+        IReadOnlyList<string> tokens,
+        int actorCount,
+        int entityCount)
+    {
+        if (tokens is null)
+        {
+            throw new ClientInputException("tokens are required.");
+        }
+
+        if (actorCount < 0 || entityCount < 0)
+        {
+            throw new ClientInputException("actorCount and entityCount must be non-negative.");
+        }
+
+        var tokenCount = tokens.Count;
+
+        // Allocate a single contiguous unmanaged buffer of UTF-8 byte arrays and
+        // an array of pointers into it. The native contract is `const char* const*`.
+        var stringPointers = tokenCount == 0 ? Array.Empty<nint>() : new nint[tokenCount];
+        try
+        {
+            for (var index = 0; index < tokenCount; index++)
+            {
+                var token = tokens[index] ?? string.Empty;
+                stringPointers[index] = Marshal.StringToCoTaskMemUTF8(token);
+            }
+
+            nint tokensPtr = nint.Zero;
+            var pinnedHandle = default(GCHandle);
+            try
+            {
+                if (tokenCount > 0)
+                {
+                    pinnedHandle = GCHandle.Alloc(stringPointers, GCHandleType.Pinned);
+                    tokensPtr = pinnedHandle.AddrOfPinnedObject();
+                }
+
+                var status = (NativeStatusCode)NativeMethods.ClassifyNotBananaJunk(
+                    tokensPtr,
+                    tokenCount,
+                    actorCount,
+                    entityCount,
+                    out var classification);
+
+                EnsureSuccess(status);
+
+                return new BananaNotBananaClassification(
+                    MapNotBananaLabelName(classification.PredictedLabel),
+                    classification.ActorCount,
+                    classification.EntityCount,
+                    classification.SignalTokenCount,
+                    classification.TotalTokenCount,
+                    classification.BananaProbability,
+                    classification.NotBananaProbability,
+                    classification.JunkConfidence);
+            }
+            finally
+            {
+                if (pinnedHandle.IsAllocated)
+                {
+                    pinnedHandle.Free();
+                }
+            }
+        }
+        finally
+        {
+            for (var index = 0; index < stringPointers.Length; index++)
+            {
+                if (stringPointers[index] != nint.Zero)
+                {
+                    Marshal.FreeCoTaskMem(stringPointers[index]);
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Maps native status codes to managed exceptions.
     /// </summary>

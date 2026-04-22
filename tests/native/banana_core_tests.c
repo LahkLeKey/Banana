@@ -16,6 +16,7 @@
 #include "domain/banana_services.h"
 #include "domain/banana_supply_chain.h"
 #include "domain/banana_ml_models.h"
+#include "domain/banana_not_banana.h"
 
 static void require_true(int condition, const char* message) {
     if (!condition) {
@@ -1375,6 +1376,111 @@ static void test_pipeline_null_safety(void) {
     require_true(output.banana == 3, "null-safe pipeline must not mutate banana");
 }
 
+static void test_not_banana_classifier_flags_polymorphic_junk(void) {
+    const char* tokens[] = { "envelope", "metadata", "actor", "entity", "junk" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 5, 2, 1, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for junk-only polymorphic payload");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_NOT_BANANA,
+        "expected NOT_BANANA label for junk-only payload");
+    require_true(classification.signal_token_count == 0,
+        "expected zero banana signal tokens for junk payload");
+    require_true(classification.total_token_count == 5,
+        "expected five considered tokens for junk payload");
+    require_true(classification.actor_count == 2,
+        "expected actor count to round-trip");
+    require_true(classification.entity_count == 1,
+        "expected entity count to round-trip");
+    require_true(absolute_difference(classification.banana_probability, 0.0) < 0.000001,
+        "expected zero banana probability for junk-only payload");
+    require_true(absolute_difference(classification.not_banana_probability, 1.0) < 0.000001,
+        "expected unit not-banana probability for junk-only payload");
+    require_true(classification.junk_confidence > 0.5,
+        "expected high junk confidence for junk-only payload with actors and entities");
+}
+
+static void test_not_banana_classifier_flags_banana_signals(void) {
+    const char* tokens[] = { "Banana", "ETHYLENE", "yellow", "harvest", "envelope" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 5, 1, 0, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for banana-rich payload");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_BANANA,
+        "expected BANANA label for banana-signal-rich payload");
+    require_true(classification.signal_token_count == 4,
+        "expected four banana signal tokens (case-insensitive)");
+    require_true(classification.total_token_count == 5,
+        "expected five considered tokens for banana-rich payload");
+    require_true(classification.banana_probability >= 0.5,
+        "expected banana probability >= 0.5 for banana-rich payload");
+    require_true(absolute_difference(
+        classification.banana_probability + classification.not_banana_probability,
+        1.0) < 0.000001,
+        "expected banana/not-banana probabilities to sum to 1.0");
+}
+
+static void test_not_banana_classifier_handles_empty_payload(void) {
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(0, 0, 0, 0, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK for completely empty payload");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_INDETERMINATE,
+        "expected INDETERMINATE label when no tokens, actors, or entities are supplied");
+    require_true(classification.signal_token_count == 0, "expected zero signals for empty payload");
+    require_true(classification.total_token_count == 0, "expected zero considered tokens for empty payload");
+    require_true(absolute_difference(classification.banana_probability, 0.0) < 0.000001,
+        "expected zero banana probability for empty payload");
+    require_true(absolute_difference(classification.not_banana_probability, 0.0) < 0.000001,
+        "expected zero not-banana probability for empty payload");
+    require_true(absolute_difference(classification.junk_confidence, 0.0) < 0.000001,
+        "expected zero junk confidence for empty payload");
+}
+
+static void test_not_banana_classifier_skips_empty_tokens(void) {
+    const char* tokens[] = { "", 0, "banana", "" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 4, 0, 0, &classification);
+    require_true(status == BANANA_OK, "expected BANANA_OK when null/empty tokens are skipped");
+    require_true(classification.total_token_count == 1,
+        "expected only the non-empty token to be considered");
+    require_true(classification.signal_token_count == 1,
+        "expected the surviving token to be counted as a banana signal");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_BANANA,
+        "expected BANANA label when only the banana token survives");
+}
+
+static void test_not_banana_classifier_rejects_invalid_input(void) {
+    const char* tokens[] = { "banana" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 1, 0, 0, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT when out_classification is null");
+
+    status = banana_not_banana_classify(0, 1, 0, 0, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT when tokens is null but token_count > 0");
+
+    status = banana_not_banana_classify(tokens, -1, 0, 0, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT for negative token_count");
+
+    status = banana_not_banana_classify(tokens, 1, -1, 0, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT for negative actor_count");
+
+    status = banana_not_banana_classify(tokens, 1, 0, -1, &classification);
+    require_true(status == BANANA_ERROR_INVALID_INPUT,
+        "expected BANANA_ERROR_INVALID_INPUT for negative entity_count");
+}
+
 int main(void) {
     test_banana_profile_ok();
     test_banana_profile_input_validation();
@@ -1412,6 +1518,12 @@ int main(void) {
     test_retail_supports_store_sections_pricing_barcodes_and_orders();
     test_inventory_receive_sell_and_discard_spoiled_bananas();
     test_pipeline_null_safety();
+
+    test_not_banana_classifier_flags_polymorphic_junk();
+    test_not_banana_classifier_flags_banana_signals();
+    test_not_banana_classifier_handles_empty_payload();
+    test_not_banana_classifier_skips_empty_tokens();
+    test_not_banana_classifier_rejects_invalid_input();
 
     puts("banana_core_tests: all tests passed");
     return 0;

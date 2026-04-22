@@ -92,4 +92,16 @@ public interface INativeBananaClient
     /// Classifies a flattened token sequence using the native transformer-style model.
     /// </summary>
     BananaMlTransformerClassification PredictBananaTransformerClassification(IReadOnlyList<double> tokenFeatures);
+
+    /// <summary>
+    /// Scores a polymorphic actor/entity/junk payload against the native banana
+    /// signal vocabulary. The caller is expected to flatten arbitrary payload
+    /// values into ASCII tokens before invocation; see
+    /// <see cref="Banana.Api.Services.NotBananaService"/> for the canonical
+    /// tokeniser used by the HTTP surface.
+    /// </summary>
+    BananaNotBananaClassification ClassifyNotBananaJunk(
+        IReadOnlyList<string> tokens,
+        int actorCount,
+        int entityCount);
 }

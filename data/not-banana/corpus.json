@@ -1,0 +1,367 @@
+{
+    "$schema": "./README.md",
+    "description": "Labeled corpus for training the not-banana signal vocabulary. Each entry is a JSON object with a `label` (BANANA or NOT_BANANA) and a `payload` field that mirrors the polymorphic /not-banana/junk request shape.",
+    "samples": [
+        {
+            "label": "BANANA",
+            "payload": {
+                "actors": [
+                    {
+                        "actorType": "FarmHand",
+                        "actorId": "fh-1"
+                    }
+                ],
+                "entities": [
+                    {
+                        "entityType": "Banana",
+                        "entityId": "b-1"
+                    }
+                ],
+                "metadata": {
+                    "variety": "cavendish",
+                    "ripeness": "yellow",
+                    "ethyleneExposure": 0.4
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "actor": {
+                    "actorType": "Inspector"
+                },
+                "entity": {
+                    "entityType": "BananaBunch"
+                },
+                "junk": {
+                    "notes": "harvest of plantain fruit at peak ripeness"
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "entities": [
+                    {
+                        "entityType": "Batch",
+                        "entityId": "B-101",
+                        "variety": "cavendish"
+                    },
+                    {
+                        "entityType": "Banana",
+                        "entityId": "b-7",
+                        "peel": "spotted"
+                    }
+                ],
+                "metadata": {
+                    "ethylene": 0.6,
+                    "ripening": "advanced"
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "junk": {
+                    "description": "ripe yellow banana ready for shipment",
+                    "weightKg": 1.2
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "actors": [
+                    {
+                        "actorType": "Picker"
+                    }
+                ],
+                "entities": [
+                    {
+                        "entityType": "Bunch",
+                        "entityId": "bn-3"
+                    }
+                ],
+                "metadata": {
+                    "musa": "acuminata",
+                    "harvest": "day-3"
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "entities": [
+                    {
+                        "entityType": "Banana",
+                        "entityId": "b-21"
+                    }
+                ],
+                "metadata": {
+                    "variety": "plantain",
+                    "peel": "yellow",
+                    "ripening": "stage-3"
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "actor": {
+                    "actorType": "RipeningRoom"
+                },
+                "junk": {
+                    "summary": "ethylene chamber holding cavendish bunch"
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "entities": [
+                    {
+                        "entityType": "BananaBatch",
+                        "entityId": "BB-9"
+                    }
+                ],
+                "metadata": {
+                    "harvest": "complete",
+                    "ripeness": "breaking"
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "junk": {
+                    "label": "fruit shipment",
+                    "items": [
+                        "banana",
+                        "plantain"
+                    ],
+                    "ripening": true
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "actors": [
+                    {
+                        "actorType": "Grader"
+                    }
+                ],
+                "entity": {
+                    "entityType": "Bunch",
+                    "entityId": "bn-12"
+                },
+                "metadata": {
+                    "variety": "cavendish",
+                    "peel": "spotted"
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "entities": [
+                    {
+                        "entityType": "Banana"
+                    },
+                    {
+                        "entityType": "Banana"
+                    }
+                ],
+                "metadata": {
+                    "ripeness": "overripe",
+                    "ethylene": 0.9
+                }
+            }
+        },
+        {
+            "label": "BANANA",
+            "payload": {
+                "junk": {
+                    "crop": "musa",
+                    "harvest": "yes",
+                    "yellow": true,
+                    "weightKg": 2.4
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "actors": [
+                    {
+                        "actorType": "Robot",
+                        "actorId": "r-1"
+                    }
+                ],
+                "entities": [
+                    {
+                        "entityType": "Widget",
+                        "entityId": "w-9"
+                    }
+                ],
+                "metadata": {
+                    "color": "red",
+                    "weight": 12.5
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "actor": {
+                    "actorType": "User"
+                },
+                "entity": {
+                    "entityType": "Order"
+                },
+                "junk": {
+                    "sku": "ABC-123",
+                    "category": "electronics"
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "entities": [
+                    {
+                        "entityType": "Vehicle",
+                        "entityId": "v-1"
+                    }
+                ],
+                "metadata": {
+                    "fuel": "diesel",
+                    "axles": 2
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "junk": {
+                    "envelope": "mail",
+                    "address": "123 Main St"
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "actors": [
+                    {
+                        "actorType": "Sensor",
+                        "actorId": "s-1"
+                    }
+                ],
+                "metadata": {
+                    "reading": 42,
+                    "units": "celsius"
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "entities": [
+                    {
+                        "entityType": "Invoice",
+                        "entityId": "inv-77"
+                    }
+                ],
+                "metadata": {
+                    "currency": "usd",
+                    "amount": 199.99
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "actor": {
+                    "actorType": "Drone"
+                },
+                "junk": {
+                    "telemetry": {
+                        "altitude": 120,
+                        "battery": 0.7
+                    }
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "entities": [
+                    {
+                        "entityType": "Container",
+                        "entityId": "c-9"
+                    }
+                ],
+                "metadata": {
+                    "material": "steel",
+                    "volumeLitres": 200
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "junk": {
+                    "category": "stationery",
+                    "items": [
+                        "pen",
+                        "stapler",
+                        "envelope"
+                    ]
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "actors": [
+                    {
+                        "actorType": "Auditor"
+                    }
+                ],
+                "entity": {
+                    "entityType": "Ledger"
+                },
+                "metadata": {
+                    "period": "Q1",
+                    "currency": "eur"
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "entities": [
+                    {
+                        "entityType": "Server",
+                        "entityId": "srv-3"
+                    }
+                ],
+                "metadata": {
+                    "region": "us-east-1",
+                    "cpu": "x86"
+                }
+            }
+        },
+        {
+            "label": "NOT_BANANA",
+            "payload": {
+                "junk": {
+                    "title": "manual",
+                    "pages": 250,
+                    "language": "english"
+                }
+            }
+        }
+    ]
+}
