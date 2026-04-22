@@ -63,18 +63,17 @@ You own Banana ASP.NET work in [src/c-sharp/asp.net](../../src/c-sharp/asp.net) 
 
 ## Native ML Domain Contract (2026-04)
 
-- Keep public ML API declarations in `src/native/core/domain/banana_ml_models.h` and wrapper exports in `src/native/wrapper/banana_wrapper.h` stable unless a contract change is explicit.
-- Keep model internals split under `src/native/core/domain/ml/{shared,regression,binary,transformer}`.
-- Keep wrapper ML bridges split under `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
-- When ML model source files move, update `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES` in `CMakeLists.txt` in the same change.
-- Validate ML refactors with `Build Native Library` and `ctest --test-dir build/native -C Release --output-on-failure`.
+- Treat ML result contracts from `src/native/core/domain/banana_ml_models.h` and `src/native/wrapper/banana_wrapper.h` as stable API-facing boundaries.
+- Keep managed/native mapping synchronized through interop code instead of duplicating model details in pipeline or route layers.
+- Coordinate native ML file-layout or ABI-impacting changes with `native-wrapper-agent`/`native-c-agent` before adjusting managed contracts.
+- Validate API surface changes with `Build Banana API` and broaden to integration coverage when ML payloads or status mappings move.
 
 ## Not-Banana Training Contract (2026-04)
 
-- Keep `data/not-banana/corpus.json` as the canonical labeled corpus for not-banana vocabulary training.
-- Use `scripts/train-not-banana-model.py` to regenerate metrics and model artifacts.
-- Use `.github/workflows/train-not-banana-model.yml` as the CI training and drift-check path.
-- Track any vocabulary drift between training outputs and runtime classifiers explicitly, especially `src/native/core/domain/banana_not_banana.c` and `src/typescript/api/src/domains/not-banana/routes.ts`.
+- Keep `src/typescript/api/src/domains/not-banana/routes.ts` behavior aligned with training inputs in `data/not-banana/corpus.json`.
+- Regenerate training outputs via `scripts/train-not-banana-model.py` and treat `.github/workflows/train-not-banana-model.yml` as the drift gate.
+- Do not hardcode ad hoc vocabulary/threshold changes in API routes without matching training updates and documented rationale.
+- Update route-level tests when training-driven classification behavior changes.
 
 ## Shared Frontend Contract
 

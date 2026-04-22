@@ -166,18 +166,17 @@ If an existing app uses different conventions, preserve repo conventions and mig
 - App-local thin re-export stubs are not introduced.
 ## Native ML Domain Contract (2026-04)
 
-- Keep public ML API declarations in `src/native/core/domain/banana_ml_models.h` and wrapper exports in `src/native/wrapper/banana_wrapper.h` stable unless a contract change is explicit.
-- Keep model internals split under `src/native/core/domain/ml/{shared,regression,binary,transformer}`.
-- Keep wrapper ML bridges split under `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
-- When ML model source files move, update `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES` in `CMakeLists.txt` in the same change.
-- Validate ML refactors with `Build Native Library` and `ctest --test-dir build/native -C Release --output-on-failure`.
+- Frontend and Electron surfaces consume ML behavior through typed API contracts rather than direct native model internals.
+- If ML response shape changes upstream, update client typings, state handling, and UX states without introducing app-local model constants.
+- Keep reusable UI primitives in `@banana/ui` and limit ML-specific behavior to API response handling paths.
+- Validate affected surfaces with `bun run check` and `bun run build` in the owning frontend app(s).
 
 ## Not-Banana Training Contract (2026-04)
 
-- Keep `data/not-banana/corpus.json` as the canonical labeled corpus for not-banana vocabulary training.
-- Use `scripts/train-not-banana-model.py` to regenerate metrics and model artifacts.
-- Use `.github/workflows/train-not-banana-model.yml` as the CI training and drift-check path.
-- Track any vocabulary drift between training outputs and runtime classifiers explicitly, especially `src/native/core/domain/banana_not_banana.c` and `src/typescript/api/src/domains/not-banana/routes.ts`.
+- Treat backend training outputs as source of truth; avoid client-local vocabulary or threshold drift.
+- Keep not-banana UI behavior aligned with API responses from `src/typescript/api/src/domains/not-banana/routes.ts`.
+- Coordinate training-driven semantic changes with API/native owners before landing frontend copy or state changes.
+- Validate not-banana UX flows against a running API when behavior or messaging changes.
 
 ## Shared Frontend Contract
 

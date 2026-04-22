@@ -50,18 +50,17 @@ You own Banana native data access in [src/native/core/dal](../../src/native/core
 - [banana-build-and-run](../skills/banana-build-and-run/SKILL.md)
 ## Native ML Domain Contract (2026-04)
 
-- Keep public ML API declarations in `src/native/core/domain/banana_ml_models.h` and wrapper exports in `src/native/wrapper/banana_wrapper.h` stable unless a contract change is explicit.
-- Keep model internals split under `src/native/core/domain/ml/{shared,regression,binary,transformer}`.
-- Keep wrapper ML bridges split under `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
-- When ML model source files move, update `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES` in `CMakeLists.txt` in the same change.
-- Validate ML refactors with `Build Native Library` and `ctest --test-dir build/native -C Release --output-on-failure`.
+- Keep model internals in `src/native/core/domain/ml/{shared,regression,binary,transformer}` and wrapper bridges in `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
+- Preserve public contracts in `src/native/core/domain/banana_ml_models.h` and `src/native/wrapper/banana_wrapper.h` unless a coordinated breaking change is explicitly requested.
+- When ML files move, update `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES` in `CMakeLists.txt` in the same change.
+- Validate with `Build Native Library` and `ctest --test-dir build/native -C Release --output-on-failure`; coordinate with `api-interop-agent` if ABI-visible behavior changes.
 
 ## Not-Banana Training Contract (2026-04)
 
-- Keep `data/not-banana/corpus.json` as the canonical labeled corpus for not-banana vocabulary training.
-- Use `scripts/train-not-banana-model.py` to regenerate metrics and model artifacts.
-- Use `.github/workflows/train-not-banana-model.yml` as the CI training and drift-check path.
-- Track any vocabulary drift between training outputs and runtime classifiers explicitly, especially `src/native/core/domain/banana_not_banana.c` and `src/typescript/api/src/domains/not-banana/routes.ts`.
+- Keep runtime not-banana logic in `src/native/core/domain/banana_not_banana.c` aligned with training outputs from `scripts/train-not-banana-model.py`.
+- Treat `data/not-banana/corpus.json` as the canonical labeled source and regenerate artifacts instead of hand-editing derived outputs.
+- Use `.github/workflows/train-not-banana-model.yml` as the CI drift-check authority for training parity.
+- If vocabulary or scoring behavior changes, update corresponding integration expectations in API routes and tests.
 
 ## Shared Frontend Contract
 
