@@ -551,6 +551,43 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
         {
             return new BananaMlTransformerClassification("BANANA", 0.9, 0.1, 0.6);
         }
+
+        public BananaNotBananaClassification ClassifyNotBananaJunk(
+            IReadOnlyList<string> tokens,
+            int actorCount,
+            int entityCount)
+        {
+            var signalTokenCount = 0;
+
+            foreach (var token in tokens)
+            {
+                if (token.Contains("banana", StringComparison.OrdinalIgnoreCase)
+                    || token.Contains("yellow", StringComparison.OrdinalIgnoreCase)
+                    || token.Contains("ripe", StringComparison.OrdinalIgnoreCase)
+                    || token.Contains("harvest", StringComparison.OrdinalIgnoreCase))
+                {
+                    signalTokenCount++;
+                }
+            }
+
+            var totalTokenCount = tokens.Count;
+            var bananaProbability = totalTokenCount == 0
+                ? 0.0
+                : (double)signalTokenCount / totalTokenCount;
+            var notBananaProbability = 1.0 - bananaProbability;
+            var predictedLabel = signalTokenCount > 0 ? "BANANA" : "NOT_BANANA";
+            var junkConfidence = signalTokenCount == 0 ? 1.0 : 0.0;
+
+            return new BananaNotBananaClassification(
+                predictedLabel,
+                actorCount,
+                entityCount,
+                signalTokenCount,
+                totalTokenCount,
+                bananaProbability,
+                notBananaProbability,
+                junkConfidence);
+        }
     }
 
     private sealed class ThrowingDataAccessPipelineClient : IDataAccessPipelineClient
