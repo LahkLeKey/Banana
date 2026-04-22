@@ -47,10 +47,11 @@ const STATUS_MESSAGE: Record<NativeStatus, string> = {
 
 const nodeRequire = createRequire(import.meta.url);
 let nativeBridgePromise: Promise<NativeBatchBridge|null>|null = null;
+let nativeBridgePath: string|null = null;
 
 function resolveLibraryPath(nativePath?: string): string {
   const dir = nativePath || process.env.BANANA_NATIVE_PATH ||
-      path.resolve(process.cwd(), '../../build/native/bin/Release');
+      path.resolve(process.cwd(), '../../../build/native/bin/Release');
 
   if (process.platform === 'win32') {
     return path.join(dir, 'banana_native.dll');
@@ -115,10 +116,18 @@ function parseBatchPayload(payloadText: string): BananaBatchResponse {
 
 async function loadNativeBridge(nativePath?: string):
     Promise<NativeBatchBridge|null> {
-  if (nativeBridgePromise) {
-    return nativeBridgePromise;
+  const libraryPath = resolveLibraryPath(nativePath);
+
+  if (nativeBridgePromise && nativeBridgePath === libraryPath) {
+    const cachedContext = await nativeBridgePromise;
+    if (cachedContext) {
+      return cachedContext;
+    }
+
+    nativeBridgePromise = null;
   }
 
+  nativeBridgePath = libraryPath;
   nativeBridgePromise = (async () => {
     try {
       const ffi = nodeRequire('ffi-napi') as {
@@ -126,7 +135,6 @@ async function loadNativeBridge(nativePath?: string):
             unknown
       };
       const ref = nodeRequire('ref-napi') as NativeBatchBridge['ref'];
-      const libraryPath = resolveLibraryPath(nativePath);
 
       const lib = ffi.Library(libraryPath, {
         banana_create_batch:

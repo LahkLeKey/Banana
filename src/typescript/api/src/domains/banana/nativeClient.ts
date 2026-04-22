@@ -48,6 +48,7 @@ const STATUS_MESSAGE: Record<NativeStatus, string> = {
 };
 
 let nativeBridgePromise: Promise<NativeBridgeContext|null>|null = null;
+let nativeBridgePath: string|null = null;
 const nodeRequire = createRequire(import.meta.url);
 
 function assertInt32(name: string, value: number): void {
@@ -62,7 +63,7 @@ function assertInt32(name: string, value: number): void {
 
 function resolveLibraryPath(nativePath?: string): string {
   const dir = nativePath || process.env.BANANA_NATIVE_PATH ||
-      path.resolve(process.cwd(), '../../build/native/bin/Release');
+      path.resolve(process.cwd(), '../../../build/native/bin/Release');
 
   if (process.platform === 'win32') {
     return path.join(dir, 'banana_native.dll');
@@ -87,10 +88,18 @@ function toStatusError(status: number): Error {
 
 async function loadNativeBridge(nativePath?: string):
     Promise<NativeBridgeContext|null> {
-  if (nativeBridgePromise) {
-    return nativeBridgePromise;
+  const libraryPath = resolveLibraryPath(nativePath);
+
+  if (nativeBridgePromise && nativeBridgePath === libraryPath) {
+    const cachedContext = await nativeBridgePromise;
+    if (cachedContext) {
+      return cachedContext;
+    }
+
+    nativeBridgePromise = null;
   }
 
+  nativeBridgePath = libraryPath;
   nativeBridgePromise = (async () => {
     try {
       const ffi = nodeRequire('ffi-napi') as {
@@ -100,7 +109,6 @@ async function loadNativeBridge(nativePath?: string):
       const ref = nodeRequire('ref-napi') as NativeBridgeContext['ref'];
       const intType = ref.types.int;
       const intPtr = ref.refType(intType);
-      const libraryPath = resolveLibraryPath(nativePath);
 
       const lib = ffi.Library(libraryPath, {
         banana_calculate_banana_with_breakdown:
