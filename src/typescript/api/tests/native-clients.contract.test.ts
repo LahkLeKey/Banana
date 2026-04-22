@@ -13,6 +13,7 @@ const LOCAL_NATIVE_LIBRARY = process.platform === 'win32' ?
     process.platform === 'darwin' ?
     path.join(LOCAL_NATIVE_DIR, 'libbanana_native.dylib') :
     path.join(LOCAL_NATIVE_DIR, 'libbanana_native.so');
+const MISSING_NATIVE_DIR = path.join(LOCAL_NATIVE_DIR, 'missing-native-path');
 const HAS_LOCAL_NATIVE_LIBRARY = fs.existsSync(LOCAL_NATIVE_LIBRARY);
 
 function isNativeStatusError(
@@ -30,10 +31,62 @@ function isNativeStatusError(
 
 test('banana native client returns null when bridge cannot load', async () => {
   const result = await tryCalculateBananaViaNative(
-      {purchases: 3, multiplier: 2},
-      {nativePath: path.join(LOCAL_NATIVE_DIR, 'missing-native-path')});
+      {purchases: 3, multiplier: 2}, {nativePath: MISSING_NATIVE_DIR});
 
   assert.equal(result, null);
+});
+
+test(
+    'banana native client retries failed bridge load for same path',
+    async () => {
+      const first = await tryCalculateBananaViaNative(
+          {purchases: 3, multiplier: 2}, {nativePath: MISSING_NATIVE_DIR});
+      const second = await tryCalculateBananaViaNative(
+          {purchases: 3, multiplier: 2}, {nativePath: MISSING_NATIVE_DIR});
+
+      assert.equal(first, null);
+      assert.equal(second, null);
+    });
+
+test(
+    'banana native client reuses loaded bridge for repeated calls',
+    {skip: !HAS_LOCAL_NATIVE_LIBRARY}, async () => {
+      const first = await tryCalculateBananaViaNative(
+          {purchases: 5, multiplier: 2},
+          {nativePath: LOCAL_NATIVE_DIR, includeDbQuery: false});
+      const second = await tryCalculateBananaViaNative(
+          {purchases: 6, multiplier: 2},
+          {nativePath: LOCAL_NATIVE_DIR, includeDbQuery: false});
+
+      assert.notEqual(first, null);
+      assert.notEqual(second, null);
+      assert.equal(first.response.purchases, 5);
+      assert.equal(second.response.purchases, 6);
+    });
+
+test('native clients resolve darwin and linux library names', async () => {
+  const originalPlatform = process.platform;
+
+  try {
+    (process as unknown as {platform: string}).platform = 'darwin';
+    const darwinBanana = await tryCalculateBananaViaNative(
+        {purchases: 1, multiplier: 1}, {nativePath: MISSING_NATIVE_DIR});
+    assert.equal(darwinBanana, null);
+
+    (process as unknown as {platform: string}).platform = 'linux';
+    const linuxBatch = await tryCreateBatchViaNative(
+        {
+          batchId: 'platform-linux-native-client',
+          originFarm: 'farm-a',
+          storageTempC: 12,
+          ethyleneExposure: 0.2,
+          estimatedShelfLifeDays: 7,
+        },
+        {nativePath: MISSING_NATIVE_DIR});
+    assert.equal(linuxBatch, null);
+  } finally {
+    (process as unknown as {platform: string}).platform = originalPlatform;
+  }
 });
 
 test(
@@ -89,15 +142,26 @@ test('batch native client returns null when bridge cannot load', async () => {
         ethyleneExposure: 0.2,
         estimatedShelfLifeDays: 7,
       },
-      {nativePath: path.join(LOCAL_NATIVE_DIR, 'missing-native-path')});
+      {nativePath: MISSING_NATIVE_DIR});
 
   const getResult = await tryGetBatchStatusViaNative(
-      'native-client-missing-lib',
-      {nativePath: path.join(LOCAL_NATIVE_DIR, 'missing-native-path')});
+      'native-client-missing-lib', {nativePath: MISSING_NATIVE_DIR});
 
   assert.equal(createResult, null);
   assert.equal(getResult, null);
 });
+
+test(
+    'batch native client retries failed bridge load for same path',
+    async () => {
+      const first = await tryGetBatchStatusViaNative(
+          'native-client-retry-missing-lib', {nativePath: MISSING_NATIVE_DIR});
+      const second = await tryGetBatchStatusViaNative(
+          'native-client-retry-missing-lib', {nativePath: MISSING_NATIVE_DIR});
+
+      assert.equal(first, null);
+      assert.equal(second, null);
+    });
 
 test(
     'batch native client validates estimated shelf-life int32 constraints',

@@ -811,6 +811,152 @@ static void test_agriculture_registers_farms_fields_and_seedling_transplants(voi
     require_true(recommended_pick_count >= 15, "expected strong harvest recommendation for healthy soil conditions");
 }
 
+static void test_agriculture_validation_and_planning_edge_paths(void) {
+    BananaFarm farm;
+    BananaField field;
+    BananaField invalid_field;
+    BananaSoilConditions soil_conditions;
+    BananaGeoCoordinates location;
+    BananaSeedling seedling;
+    BananaPlant plant;
+    BananaDomainEvent event;
+    BananaStatus status;
+    int recommended = -1;
+    int index = 0;
+    char too_long_name[80];
+
+    memset(&farm, 0, sizeof(farm));
+    memset(&field, 0, sizeof(field));
+    memset(&invalid_field, 0, sizeof(invalid_field));
+    memset(&seedling, 0, sizeof(seedling));
+    memset(&plant, 0, sizeof(plant));
+    memset(too_long_name, 'n', sizeof(too_long_name) - 1U);
+    too_long_name[sizeof(too_long_name) - 1U] = '\0';
+
+    soil_conditions.moisture_pct = 40.0;
+    soil_conditions.ph = 6.0;
+    soil_conditions.organic_matter_pct = 4.0;
+    location.latitude = 13.0;
+    location.longitude = -89.0;
+
+    status = banana_soil_conditions_validate(0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null soil conditions");
+
+    soil_conditions.moisture_pct = 120.0;
+    status = banana_soil_conditions_validate(&soil_conditions);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for out-of-range soil moisture");
+
+    status = banana_farm_register("farm-validate-1", "", &farm);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty farm name");
+
+    status = banana_farm_register("farm-validate-1", too_long_name, &farm);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for overlong farm name");
+
+    status = banana_farm_register("", "Valid Farm", &farm);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty farm identifier");
+
+    status = banana_farm_register("farm-validate-1", "Valid Farm", 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null farm output");
+
+    status = banana_farm_register("farm-validate-1", "Valid Farm", &farm);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid farm registration");
+
+    soil_conditions.moisture_pct = 40.0;
+    soil_conditions.ph = 6.0;
+    soil_conditions.organic_matter_pct = 4.0;
+    location.latitude = 999.0;
+    location.longitude = -89.0;
+    status = banana_field_register("field-validate-1", farm.farm_id.value, location, soil_conditions, 1.0, &field);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid field coordinates");
+
+    location.latitude = 13.0;
+    soil_conditions.moisture_pct = -1.0;
+    status = banana_field_register("field-validate-1", farm.farm_id.value, location, soil_conditions, 1.0, &field);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid field soil conditions");
+
+    soil_conditions.moisture_pct = 40.0;
+    status = banana_field_register("", farm.farm_id.value, location, soil_conditions, 1.0, &field);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty field identifier");
+
+    status = banana_field_register("field-validate-1", "", location, soil_conditions, 1.0, &field);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty field farm identifier");
+
+    status = banana_field_register("field-validate-1", farm.farm_id.value, location, soil_conditions, 1.0, &field);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid field registration");
+
+    status = banana_farm_add_field(0, &field);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null farm when adding field");
+
+    status = banana_identifier_copy(&invalid_field.farm_id, "another-farm");
+    require_true(status == BANANA_OK, "expected BANANA_OK when setting mismatched farm id on invalid field");
+    status = banana_identifier_copy(&invalid_field.field_id, "field-mismatch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when setting mismatched field id");
+    status = banana_farm_add_field(&farm, &invalid_field);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for mismatched farm/field relation");
+
+    status = banana_farm_add_field(&farm, &field);
+    require_true(status == BANANA_OK, "expected BANANA_OK when adding valid field to farm");
+
+    status = banana_farm_add_field(&farm, &field);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status when adding duplicate field identifier");
+
+    memset(&invalid_field, 0, sizeof(invalid_field));
+    status = banana_identifier_copy(&invalid_field.farm_id, farm.farm_id.value);
+    require_true(status == BANANA_OK, "expected BANANA_OK when preparing invalid field farm id");
+    invalid_field.field_id.value[0] = '\0';
+    status = banana_farm_add_field(&farm, &invalid_field);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when adding field with empty identifier");
+
+    for (index = farm.field_count; index < BANANA_MAX_FIELDS_PER_FARM; index++) {
+        status = banana_identifier_copy(&farm.field_ids[index], "field-overflow-slot");
+        require_true(status == BANANA_OK, "expected BANANA_OK while preparing overflow state");
+    }
+    farm.field_count = BANANA_MAX_FIELDS_PER_FARM;
+    status = banana_farm_add_field(&farm, &field);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status when farm is at max field capacity");
+
+    status = banana_seedling_register("seedling-validate-1", BANANA_SPECIES_CAVENDISH, -1, &seedling);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for negative nursery day");
+
+    status = banana_seedling_register("", BANANA_SPECIES_CAVENDISH, 5, &seedling);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty seedling identifier");
+
+    status = banana_seedling_register("seedling-validate-1", BANANA_SPECIES_CAVENDISH, 5, &seedling);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid seedling registration");
+
+    status = banana_seedling_transplant(0, &field, "plant-from-seedling", 9, 2, &plant, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null seedling transplant");
+
+    status = banana_seedling_transplant(&seedling, &field, "plant-from-seedling", 3, 2, &plant, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for transplant before nursery day");
+
+    status = banana_seedling_transplant(&seedling, &field, "plant-from-seedling", 9, 0, &plant, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when transplant plant registration fails");
+
+    status = banana_field_plan_planting(0, &recommended);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null field planting plan");
+
+    field.soil_conditions.moisture_pct = 20.0;
+    field.soil_conditions.ph = 6.0;
+    field.soil_conditions.organic_matter_pct = 3.0;
+    field.area_hectares = 1.0;
+    status = banana_field_plan_planting(&field, &recommended);
+    require_true(status == BANANA_OK, "expected BANANA_OK for low-moisture planting plan");
+    require_true(recommended == 960, "expected moisture penalty to reduce planting recommendation");
+
+    field.area_hectares = -0.5;
+    status = banana_field_plan_planting(&field, &recommended);
+    require_true(status == BANANA_OK, "expected BANANA_OK for negative-area defensive planting plan");
+    require_true(recommended == 0, "expected planting recommendation clamp to zero for negative computed values");
+
+    status = banana_field_plan_harvest(&field, -1, &recommended);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for negative active bunch count");
+
+    status = banana_field_plan_harvest(&field, 1, &recommended);
+    require_true(status == BANANA_OK, "expected BANANA_OK for low-yield harvest plan");
+    require_true(recommended == 1, "expected minimum harvest recommendation of one when active bunches are present");
+}
+
 static void test_cultivation_registers_plants_and_harvests_bunches(void) {
     BananaPlant plant;
     BananaGeoCoordinates location;
@@ -1841,6 +1987,150 @@ static void test_application_services_validation_and_not_found_paths(void) {
     require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status when discarding unknown inventory");
 }
 
+static void test_application_services_propagate_domain_failure_paths(void) {
+    BananaGeoCoordinates location;
+    BananaPlant plant;
+    BananaHarvestCommand harvest_command;
+    BananaFruitSpec fruit_spec;
+    BananaBunchRecord bunch;
+    BananaRipenCommand ripen_command;
+    BananaRipenessPrediction prediction;
+    BananaShipCommand ship_command;
+    BananaBatch batch;
+    BananaShipment shipment;
+    BananaInventoryItem item;
+    BananaSellCommand sell_command;
+    BananaDiscardSpoiledCommand discard_command;
+    BananaDomainEvent event;
+    BananaStatus status;
+
+    memset(&harvest_command, 0, sizeof(harvest_command));
+    memset(&bunch, 0, sizeof(bunch));
+    memset(&ripen_command, 0, sizeof(ripen_command));
+    memset(&ship_command, 0, sizeof(ship_command));
+    memset(&sell_command, 0, sizeof(sell_command));
+    memset(&discard_command, 0, sizeof(discard_command));
+
+    banana_plant_repository_clear();
+    banana_bunch_repository_clear();
+    banana_shipment_repository_clear();
+    banana_inventory_repository_clear();
+
+    location.latitude = 9.5;
+    location.longitude = -61.4;
+    status = banana_plant_register("app-propagate-plant-1", BANANA_SPECIES_CAVENDISH, location, 10, 1, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for failure-path plant setup");
+    status = banana_plant_repository_save(&plant);
+    require_true(status == BANANA_OK, "expected BANANA_OK when saving failure-path plant setup");
+
+    fruit_spec.fruit_id = "app-propagate-fruit-1";
+    fruit_spec.cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_spec.ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_spec.weight_kg = 0.35;
+
+    harvest_command.bunch_id = "app-propagate-bloom-too-long-identifier-1";
+    harvest_command.bloom_day_ordinal = 20;
+    harvest_command.bunch_spec.harvest_day_ordinal = 50;
+    harvest_command.bunch_spec.weight_kg = 0.35;
+    harvest_command.bunch_spec.finger_count = 1;
+    harvest_command.bunch_spec.maturity_stage = BANANA_STAGE_GREEN;
+    harvest_command.bunch_spec.quality_score = 0.8;
+    harvest_command.cultivar = BANANA_SPECIES_CAVENDISH;
+    harvest_command.fruit_specs = &fruit_spec;
+    harvest_command.fruit_count = 1;
+
+    status = banana_application_harvest_bunch("app-propagate-plant-1", &harvest_command, &bunch, &event, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected bloom-event failure to propagate from harvest application service");
+
+    harvest_command.bunch_id = "app-propagate-bunch-1";
+    harvest_command.fruit_count = 0;
+    status = banana_application_harvest_bunch("app-propagate-plant-1", &harvest_command, &bunch, &event, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected bunch-factory failure to propagate from harvest application service");
+
+    harvest_command.fruit_count = 1;
+    status = banana_application_harvest_bunch("app-propagate-plant-1", &harvest_command, &bunch, &event, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid harvest setup in failure-propagation test");
+
+    ripen_command.bunch_id = "app-propagate-bunch-1";
+    ripen_command.input.temperature_history_c = 0;
+    ripen_command.input.temperature_history_count = 0;
+    ripen_command.input.days_since_harvest = -1;
+    ripen_command.input.ethylene_exposure = 0.0;
+    ripen_command.input.mechanical_damage = 0.0;
+    ripen_command.input.storage_temp_c = 14.0;
+    ripen_command.event_day_ordinal = 60;
+
+    status = banana_application_ripen_bunch(&ripen_command, &bunch, &prediction, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected ripening-service failure to propagate from application ripen flow");
+
+    ship_command.bunch_id = "app-propagate-bunch-1";
+    ship_command.batch_id = "app-propagate-batch-invalid";
+    ship_command.origin_farm = "app-propagate-farm";
+    ship_command.storage_temp_c = 13.0;
+    ship_command.ethylene_exposure = 1.5;
+    ship_command.estimated_shelf_life_days = -1;
+    ship_command.shipment_id = "app-propagate-shipment-invalid";
+    ship_command.origin_node_id = "app-propagate-origin";
+    ship_command.destination_node_id = "app-propagate-destination";
+    ship_command.departure_day_ordinal = 61;
+
+    status = banana_application_ship_bunch(&ship_command, &batch, &shipment, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected batch-register failure to propagate from ship application flow");
+
+    memset(&bunch, 0, sizeof(bunch));
+    status = banana_bunch_repository_save(&bunch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when seeding empty-id bunch for ship failure path");
+
+    ship_command.bunch_id = "";
+    ship_command.batch_id = "app-propagate-batch-add-fail";
+    ship_command.estimated_shelf_life_days = 5;
+    status = banana_application_ship_bunch(&ship_command, &batch, &shipment, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected batch-add-bunch failure to propagate from ship application flow");
+
+    ship_command.bunch_id = "app-propagate-bunch-1";
+    ship_command.batch_id = "app-propagate-batch-create-fail";
+    ship_command.shipment_id = "app-propagate-ship-create";
+    ship_command.origin_node_id = "app-propagate-node-1";
+    ship_command.destination_node_id = "app-propagate-node-1";
+    status = banana_application_ship_bunch(&ship_command, &batch, &shipment, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected shipment-create failure to propagate from ship application flow");
+
+    ship_command.batch_id = "app-propagate-batch-dispatch-fail";
+    ship_command.shipment_id = "app-propagate-shipment-dispatch-fail";
+    ship_command.origin_node_id = "app-propagate-origin";
+    ship_command.destination_node_id = "app-propagate-destination";
+    ship_command.departure_day_ordinal = -1;
+    status = banana_application_ship_bunch(&ship_command, &batch, &shipment, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected shipment-dispatch failure to propagate from ship application flow");
+
+    status = banana_inventory_receive(
+        "app-propagate-inventory-1",
+        "app-propagate-store-1",
+        "app-propagate-batch-1",
+        BANANA_STAGE_YELLOW,
+        10,
+        3,
+        2.0,
+        70,
+        &item,
+        0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for inventory setup in failure-propagation test");
+    status = banana_inventory_repository_save(&item);
+    require_true(status == BANANA_OK, "expected BANANA_OK when saving inventory setup for failure-propagation test");
+
+    sell_command.inventory_id = "app-propagate-inventory-1";
+    sell_command.quantity = -1;
+    sell_command.event_day_ordinal = 71;
+    status = banana_application_sell_bananas(&sell_command, &item, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected inventory-sell failure to propagate from sell application flow");
+
+    discard_command.inventory_id = "app-propagate-inventory-1";
+    discard_command.quantity = 1;
+    discard_command.event_day_ordinal = 72;
+    status = banana_application_discard_spoiled(&discard_command, &item, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected inventory-discard failure to propagate from discard application flow");
+}
+
 static void test_supply_chain_dal_validation_and_round_trip_paths(void) {
     BananaBatch batch;
     BananaShipment shipment;
@@ -2494,6 +2784,7 @@ int main(void) {
     test_batch_registry_returns_not_found();
     test_batch_registry_persists_mutations();
     test_agriculture_registers_farms_fields_and_seedling_transplants();
+    test_agriculture_validation_and_planning_edge_paths();
     test_cultivation_registers_plants_and_harvests_bunches();
     test_processing_factory_creates_individual_banana_entities();
     test_processing_supports_dimensions_crates_and_inspection();
@@ -2509,6 +2800,7 @@ int main(void) {
     test_domain_services_apply_propagates_evaluate_failure();
     test_application_services_execute_commands();
     test_application_services_validation_and_not_found_paths();
+    test_application_services_propagate_domain_failure_paths();
     test_supply_chain_dal_validation_and_round_trip_paths();
     test_cultivation_inventory_processing_dal_validation_paths();
     test_integration_adapters_translate_external_inputs();

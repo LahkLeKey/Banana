@@ -395,6 +395,36 @@ test(
       }
     });
 
+test(
+    'GET /banana falls back to proxy in auto mode when native throws',
+    {skip: !HAS_LOCAL_NATIVE_LIBRARY}, async () => {
+      const originalNativePath = process.env.BANANA_NATIVE_PATH;
+      process.env.BANANA_NATIVE_PATH = LOCAL_NATIVE_DIR;
+      const harness = await createProxyHarness({
+        configOverrides: {bananaDomainMode: 'auto'},
+      });
+
+      try {
+        const response = await harness.gateway.inject(
+            {method: 'GET', url: '/banana?purchases=-3&multiplier=2'});
+
+        assert.equal(response.statusCode, 200);
+        assert.deepEqual(response.json(), {
+          purchases: -3,
+          multiplier: 2,
+          banana: -6,
+          message: 'legacy banana response',
+        });
+      } finally {
+        await harness.close();
+        if (originalNativePath === undefined) {
+          delete process.env.BANANA_NATIVE_PATH;
+        } else {
+          process.env.BANANA_NATIVE_PATH = originalNativePath;
+        }
+      }
+    });
+
 test('POST /batches/create preserves payload contract', async () => {
   const harness = await createProxyHarness();
 
@@ -437,6 +467,25 @@ test('POST /batches/create rejects invalid payload', async () => {
       method: 'POST',
       url: '/batches/create',
       payload: {batchId: 42},
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.json(), {
+      message: 'invalid batch create payload.',
+    });
+  } finally {
+    await harness.close();
+  }
+});
+
+test('POST /batches/create rejects non-object payload', async () => {
+  const harness = await createProxyHarness();
+
+  try {
+    const response = await harness.gateway.inject({
+      method: 'POST',
+      url: '/batches/create',
+      payload: null,
     });
 
     assert.equal(response.statusCode, 400);
@@ -528,6 +577,85 @@ test(
         assert.equal(response.statusCode, 500);
         assert.deepEqual(response.json(), {
           message: 'batch native domain is unavailable.',
+        });
+      } finally {
+        await harness.close();
+        if (originalNativePath === undefined) {
+          delete process.env.BANANA_NATIVE_PATH;
+        } else {
+          process.env.BANANA_NATIVE_PATH = originalNativePath;
+        }
+      }
+    });
+
+test(
+    'POST /batches/create returns native response in native mode',
+    {skip: !HAS_LOCAL_NATIVE_LIBRARY}, async () => {
+      const originalNativePath = process.env.BANANA_NATIVE_PATH;
+      process.env.BANANA_NATIVE_PATH = LOCAL_NATIVE_DIR;
+      const harness = await createProxyHarness({
+        configOverrides: {batchDomainMode: 'native'},
+      });
+
+      try {
+        const batchId = `B-NATIVE-${Date.now()}`;
+        const response = await harness.gateway.inject({
+          method: 'POST',
+          url: '/batches/create',
+          payload: {
+            batchId,
+            originFarm: 'Native Farm',
+            storageTempC: 12,
+            ethyleneExposure: 0.2,
+            estimatedShelfLifeDays: 7,
+          },
+        });
+
+        assert.equal(response.statusCode, 200);
+        assert.equal(
+            response.headers['x-batch-domain-source'], 'native-fastify');
+        assert.equal(response.json().batchId, batchId);
+        assert.equal(response.json().originFarm, 'Native Farm');
+      } finally {
+        await harness.close();
+        if (originalNativePath === undefined) {
+          delete process.env.BANANA_NATIVE_PATH;
+        } else {
+          process.env.BANANA_NATIVE_PATH = originalNativePath;
+        }
+      }
+    });
+
+test(
+    'POST /batches/create falls back to proxy in auto mode when native throws',
+    {skip: !HAS_LOCAL_NATIVE_LIBRARY}, async () => {
+      const originalNativePath = process.env.BANANA_NATIVE_PATH;
+      process.env.BANANA_NATIVE_PATH = LOCAL_NATIVE_DIR;
+      const harness = await createProxyHarness({
+        configOverrides: {batchDomainMode: 'auto'},
+      });
+
+      try {
+        const response = await harness.gateway.inject({
+          method: 'POST',
+          url: '/batches/create',
+          payload: {
+            batchId: 'B-AUTO-FALLBACK',
+            originFarm: 'Auto Farm',
+            storageTempC: 12,
+            ethyleneExposure: 0.2,
+            estimatedShelfLifeDays: 7.5,
+          },
+        });
+
+        assert.equal(response.statusCode, 200);
+        assert.deepEqual(response.json(), {
+          batchId: 'B-AUTO-FALLBACK',
+          originFarm: 'Auto Farm',
+          exportStatus: 'Created',
+          storageTempC: 12,
+          ethyleneExposure: 0.2,
+          estimatedShelfLifeDays: 7.5,
         });
       } finally {
         await harness.close();
@@ -753,6 +881,84 @@ test(
       }
     });
 
+test(
+    'GET /batches/:id/status returns native response in native mode',
+    {skip: !HAS_LOCAL_NATIVE_LIBRARY}, async () => {
+      const originalNativePath = process.env.BANANA_NATIVE_PATH;
+      process.env.BANANA_NATIVE_PATH = LOCAL_NATIVE_DIR;
+      const harness = await createProxyHarness({
+        configOverrides: {batchDomainMode: 'native'},
+      });
+
+      try {
+        const batchId = `B-NATIVE-STATUS-${Date.now()}`;
+        const createResponse = await harness.gateway.inject({
+          method: 'POST',
+          url: '/batches/create',
+          payload: {
+            batchId,
+            originFarm: 'Native Status Farm',
+            storageTempC: 11,
+            ethyleneExposure: 0.18,
+            estimatedShelfLifeDays: 8,
+          },
+        });
+        assert.equal(createResponse.statusCode, 200);
+
+        const response = await harness.gateway.inject({
+          method: 'GET',
+          url: `/batches/${batchId}/status`,
+        });
+
+        assert.equal(response.statusCode, 200);
+        assert.equal(
+            response.headers['x-batch-domain-source'], 'native-fastify');
+        assert.equal(response.json().batchId, batchId);
+        assert.equal(response.json().originFarm, 'Native Status Farm');
+      } finally {
+        await harness.close();
+        if (originalNativePath === undefined) {
+          delete process.env.BANANA_NATIVE_PATH;
+        } else {
+          process.env.BANANA_NATIVE_PATH = originalNativePath;
+        }
+      }
+    });
+
+test(
+    'GET /batches/:id/status falls back to proxy in auto mode when native fails',
+    {skip: !HAS_LOCAL_NATIVE_LIBRARY}, async () => {
+      const originalNativePath = process.env.BANANA_NATIVE_PATH;
+      process.env.BANANA_NATIVE_PATH = LOCAL_NATIVE_DIR;
+      const harness = await createProxyHarness({
+        configOverrides: {batchDomainMode: 'auto'},
+      });
+
+      try {
+        const response = await harness.gateway.inject({
+          method: 'GET',
+          url: '/batches/AUTO-FALLBACK-STATUS/status',
+        });
+
+        assert.equal(response.statusCode, 200);
+        assert.deepEqual(response.json(), {
+          batchId: 'AUTO-FALLBACK-STATUS',
+          originFarm: 'Farm A',
+          exportStatus: 'Queued',
+          storageTempC: 12,
+          ethyleneExposure: 0.2,
+          estimatedShelfLifeDays: 7,
+        });
+      } finally {
+        await harness.close();
+        if (originalNativePath === undefined) {
+          delete process.env.BANANA_NATIVE_PATH;
+        } else {
+          process.env.BANANA_NATIVE_PATH = originalNativePath;
+        }
+      }
+    });
+
 test('POST /ripeness/predict preserves prediction contract', async () => {
   const harness = await createProxyHarness();
 
@@ -799,6 +1005,25 @@ test('POST /ripeness/predict rejects invalid payload', async () => {
         batchId: 'R-200',
         temperatureHistory: ['invalid'],
       },
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.deepEqual(response.json(), {
+      message: 'invalid ripeness prediction payload.',
+    });
+  } finally {
+    await harness.close();
+  }
+});
+
+test('POST /ripeness/predict rejects non-object payload', async () => {
+  const harness = await createProxyHarness();
+
+  try {
+    const response = await harness.gateway.inject({
+      method: 'POST',
+      url: '/ripeness/predict',
+      payload: null,
     });
 
     assert.equal(response.statusCode, 400);
@@ -1170,6 +1395,50 @@ test(
         assert.equal(typeof body.bananaProbability, 'number');
         assert.equal(body.normalizedActors[0]?.actorType, 'warehouse-worker');
         assert.equal(body.normalizedEntities[1]?.entityType, 'forklift');
+      } finally {
+        await harness.close();
+      }
+    });
+
+test(
+    'POST /not-banana/junk normalizes singular actor and entity fields',
+    async () => {
+      const harness = await createProxyHarness();
+
+      try {
+        const response = await harness.gateway.inject({
+          method: 'POST',
+          url: '/not-banana/junk',
+          payload: {
+            actor: {
+              kind: 'scanner',
+              actorKey: 'single-actor-1',
+            },
+            entity: {
+              type: 'pallet',
+              entityKey: 'single-entity-1',
+            },
+            junk: {
+              traceId: 'trace-123',
+            },
+          },
+        });
+
+        assert.equal(response.statusCode, 200);
+        const body = response.json() as {
+          actorCount: number;
+          entityCount: number;
+          normalizedActors: Array<{actorType: string; actorId: string | null}>;
+          normalizedEntities:
+              Array<{entityType: string; entityId: string | null}>;
+        };
+
+        assert.equal(body.actorCount, 1);
+        assert.equal(body.entityCount, 1);
+        assert.equal(body.normalizedActors[0]?.actorType, 'scanner');
+        assert.equal(body.normalizedActors[0]?.actorId, 'single-actor-1');
+        assert.equal(body.normalizedEntities[0]?.entityType, 'pallet');
+        assert.equal(body.normalizedEntities[0]?.entityId, 'single-entity-1');
       } finally {
         await harness.close();
       }
