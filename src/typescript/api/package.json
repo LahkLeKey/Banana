@@ -1,0 +1,36 @@
+{
+    "name": "banana-api-fastify",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "tsx watch src/apps/gateway.ts",
+        "dev:gateway": "tsx watch src/apps/gateway.ts",
+        "dev:banana": "tsx watch src/apps/banana-api.ts",
+        "dev:batch": "tsx watch src/apps/batch-api.ts",
+        "dev:ripeness": "tsx watch src/apps/ripeness-api.ts",
+        "dev:ml": "tsx watch src/apps/ml-api.ts",
+        "check": "tsc --noEmit -p tsconfig.json",
+        "test": "tsx --test tests/**/*.test.ts",
+        "build": "tsc -p tsconfig.json",
+        "start": "node dist/apps/gateway.js",
+        "start:gateway": "bun run src/apps/gateway.ts",
+        "prisma:generate": "prisma generate --schema prisma/schema.prisma",
+        "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma --name init_domain_logs"
+    },
+    "dependencies": {
+        "@prisma/client": "^7.7.0",
+        "fastify": "^5.2.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.13.1",
+        "prisma": "^7.7.0",
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.3"
+    },
+    "optionalDependencies": {
+        "ffi-napi": "^4.0.3",
+        "ref-napi": "^3.0.3"
+    },
+    "packageManager": "bun@1.1.26"
+}

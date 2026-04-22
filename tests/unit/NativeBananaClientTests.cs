@@ -212,6 +212,15 @@ public sealed class NativeBananaClientTests
     }
 
     [Fact]
+    public void PredictBananaTransformerClassification_WithTokenCountAboveAbiLimit_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+        var overLimitTokenValues = new double[4 * (16 + 1)];
+
+        Assert.Throws<ClientInputException>(() => client.PredictBananaTransformerClassification(overLimitTokenValues));
+    }
+
+    [Fact]
     public void Calculate_WithNegativeValues_ThrowsClientInputException_WhenNativeLibraryIsAvailable()
     {
         if (!EnsureNativePathConfigured())

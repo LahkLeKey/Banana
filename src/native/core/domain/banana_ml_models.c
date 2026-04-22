@@ -1,27 +1,38 @@
 #include "banana_ml_models.h"
 
+/* ============================================================
+ * WEIGHT MATRICES (MODEL PARAMETERS)
+ * ============================================================
+ * These arrays represent learned model parameters.
+ * In real ML systems, these would typically come from training.
+ * Here they are hardcoded for deterministic inference.
+ *
+ * Think of these as "frozen knowledge" the model uses.
+ * ============================================================ */
+
+/*
+ * Linear regression feature weights
+ * Used in: banana_ml_predict_regression_score
+ * Each feature contributes positively or negatively to the score.
+ */
 static const double k_regression_weights[BANANA_ML_FEATURE_COUNT] = {
-    0.23,
-    -0.19,
-    0.31,
-    0.11,
-    -0.08,
-    0.17,
-    0.21,
-    -0.14
+    0.23, -0.19, 0.31, 0.11, -0.08, 0.17, 0.21, -0.14
 };
 
+/*
+ * Binary classification weights
+ * Used in: banana vs not-banana classification
+ * Larger magnitude = stronger influence on decision boundary
+ */
 static const double k_binary_weights[BANANA_ML_FEATURE_COUNT] = {
-    1.40,
-    -1.20,
-    1.10,
-    0.90,
-    -1.30,
-    0.80,
-    1.00,
-    -1.10
+    1.40, -1.20, 1.10, 0.90, -1.30, 0.80, 1.00, -1.10
 };
 
+/*
+ * Transformer projection matrices
+ * These simulate Query/Key/Value transformations.
+ * Each token is projected into a different representation space.
+ */
 static const double k_transformer_query[BANANA_ML_TOKEN_FEATURE_COUNT][BANANA_ML_TOKEN_FEATURE_COUNT] = {
     { 0.70, 0.10, 0.05, 0.00 },
     { 0.15, 0.65, 0.05, 0.05 },
@@ -43,68 +54,81 @@ static const double k_transformer_value[BANANA_ML_TOKEN_FEATURE_COUNT][BANANA_ML
     { 0.03, 0.05, 0.04, 0.83 }
 };
 
+/*
+ * Classification heads
+ * These convert pooled transformer output into final logits.
+ */
 static const double k_transformer_banana_head[BANANA_ML_TOKEN_FEATURE_COUNT] = {
-    1.25,
-    -1.15,
-    1.10,
-    -1.05
+    1.25, -1.15, 1.10, -1.05
 };
 
 static const double k_transformer_not_banana_head[BANANA_ML_TOKEN_FEATURE_COUNT] = {
-    -1.05,
-    1.20,
-    -0.95,
-    1.15
+    -1.05, 1.20, -0.95, 1.15
 };
 
+/* ============================================================
+ * BASIC UTILITY FUNCTIONS
+ * ============================================================ */
+
+/*
+ * Validates numeric stability:
+ * - Rejects NaN
+ * - Rejects extreme values (simple safety clamp guard)
+ */
 static int banana_ml_value_is_valid(double value) {
     if (value != value) {
-        return 0;
+        return 0; // NaN check (NaN != NaN is true)
     }
 
     if (value > 1000000.0 || value < -1000000.0) {
-        return 0;
+        return 0; // prevent extreme numerical instability
     }
 
     return 1;
 }
 
+/* Absolute value helper */
 static double banana_ml_absolute(double value) {
     return value < 0.0 ? -value : value;
 }
 
+/* Clamp value into [min, max] range */
 static double banana_ml_clamp(double value, double min_value, double max_value) {
-    if (value < min_value) {
-        return min_value;
-    }
-
-    if (value > max_value) {
-        return max_value;
-    }
-
+    if (value < min_value) return min_value;
+    if (value > max_value) return max_value;
     return value;
 }
 
+/*
+ * Dot product:
+ * Core operation in ML models (linear layers, attention, etc.)
+ */
 static double banana_ml_dot(const double* left, const double* right, int count) {
     double result = 0.0;
-    int index = 0;
 
-    for (index = 0; index < count; index++) {
-        result += left[index] * right[index];
+    for (int i = 0; i < count; i++) {
+        result += left[i] * right[i];
     }
 
     return result;
 }
 
-static BananaStatus banana_ml_validate_feature_vector(const BananaMlFeatureVector* features) {
-    int index = 0;
+/* ============================================================
+ * FEATURE VALIDATION
+ * ============================================================ */
 
+/*
+ * Ensures feature vector is safe for inference:
+ * - non-null
+ * - all values valid
+ */
+static BananaStatus banana_ml_validate_feature_vector(const BananaMlFeatureVector* features) {
     if (features == 0) {
         return BANANA_ERROR_INVALID_INPUT;
     }
 
-    for (index = 0; index < BANANA_ML_FEATURE_COUNT; index++) {
-        if (!banana_ml_value_is_valid(features->values[index])) {
+    for (int i = 0; i < BANANA_ML_FEATURE_COUNT; i++) {
+        if (!banana_ml_value_is_valid(features->values[i])) {
             return BANANA_ERROR_INVALID_INPUT;
         }
     }
@@ -112,6 +136,14 @@ static BananaStatus banana_ml_validate_feature_vector(const BananaMlFeatureVecto
     return BANANA_OK;
 }
 
+/* ============================================================
+ * LINEAR MODEL CORE
+ * ============================================================ */
+
+/*
+ * Computes:
+ *   score = bias + dot(weights, features)
+ */
 static double banana_ml_linear_score(
     const double* weights,
     const BananaMlFeatureVector* features,
@@ -120,198 +152,266 @@ static double banana_ml_linear_score(
     return bias + banana_ml_dot(weights, features->values, BANANA_ML_FEATURE_COUNT);
 }
 
+/*
+ * Lightweight sigmoid approximation.
+ * Faster than exp-based sigmoid, good enough for toy ML.
+ */
 static double banana_ml_pseudo_sigmoid(double value) {
     double magnitude = banana_ml_absolute(value);
     return 0.5 + (value / (2.0 * (1.0 + magnitude)));
 }
 
+/* ============================================================
+ * TRANSFORMER UTILITY
+ * ============================================================ */
+
+/*
+ * Projects a token into a new feature space using a matrix.
+ * This simulates transformer Q/K/V linear projections.
+ */
 static void banana_ml_project_token(
     const double matrix[BANANA_ML_TOKEN_FEATURE_COUNT][BANANA_ML_TOKEN_FEATURE_COUNT],
     const BananaMlToken* token,
     double out_vector[BANANA_ML_TOKEN_FEATURE_COUNT]
 ) {
-    int row = 0;
-    int column = 0;
-
-    for (row = 0; row < BANANA_ML_TOKEN_FEATURE_COUNT; row++) {
+    for (int row = 0; row < BANANA_ML_TOKEN_FEATURE_COUNT; row++) {
         double value = 0.0;
 
-        for (column = 0; column < BANANA_ML_TOKEN_FEATURE_COUNT; column++) {
-            value += matrix[row][column] * token->values[column];
+        for (int col = 0; col < BANANA_ML_TOKEN_FEATURE_COUNT; col++) {
+            value += matrix[row][col] * token->values[col];
         }
 
         out_vector[row] = value;
     }
 }
 
+/* ============================================================
+ * REGRESSION MODEL
+ * ============================================================ */
+
+/*
+ * Predicts a bounded regression score [0, 1]
+ */
 BananaStatus banana_ml_predict_regression_score(
     const BananaMlFeatureVector* features,
     double* out_score
 ) {
-    BananaStatus status = BANANA_OK;
-    double score = 0.0;
-
     if (out_score == 0) {
         return BANANA_ERROR_INVALID_INPUT;
     }
 
-    status = banana_ml_validate_feature_vector(features);
+    BananaStatus status = banana_ml_validate_feature_vector(features);
     if (status != BANANA_OK) {
         return status;
     }
 
-    score = banana_ml_linear_score(k_regression_weights, features, 0.12);
+    double score = banana_ml_linear_score(k_regression_weights, features, 0.12);
+
+    // Ensure output stays in valid probability-like range
     *out_score = banana_ml_clamp(score, 0.0, 1.0);
+
     return BANANA_OK;
 }
 
+/* ============================================================
+ * BINARY CLASSIFICATION MODEL
+ * ============================================================ */
+
+/*
+ * Predicts:
+ * - banana probability
+ * - not-banana probability
+ * - decision margin (raw score)
+ */
 BananaStatus banana_ml_predict_binary_classification(
     const BananaMlFeatureVector* features,
     BananaMlBinaryClassification* out_classification
 ) {
-    BananaStatus status = BANANA_OK;
-    double margin = 0.0;
-    double banana_probability = 0.0;
-
     if (out_classification == 0) {
         return BANANA_ERROR_INVALID_INPUT;
     }
 
-    status = banana_ml_validate_feature_vector(features);
+    BananaStatus status = banana_ml_validate_feature_vector(features);
     if (status != BANANA_OK) {
         return status;
     }
 
-    margin = banana_ml_linear_score(k_binary_weights, features, -0.20);
-    banana_probability = banana_ml_clamp(banana_ml_pseudo_sigmoid(margin), 0.0, 1.0);
+    double margin = banana_ml_linear_score(k_binary_weights, features, -0.20);
 
-    out_classification->predicted_label = banana_probability >= 0.5
-        ? BANANA_ML_LABEL_BANANA
-        : BANANA_ML_LABEL_NOT_BANANA;
-    out_classification->banana_probability = banana_probability;
-    out_classification->not_banana_probability = 1.0 - banana_probability;
+    double probability = banana_ml_clamp(
+        banana_ml_pseudo_sigmoid(margin),
+        0.0,
+        1.0
+    );
+
+    out_classification->predicted_label =
+        probability >= 0.5 ? BANANA_ML_LABEL_BANANA : BANANA_ML_LABEL_NOT_BANANA;
+
+    out_classification->banana_probability = probability;
+    out_classification->not_banana_probability = 1.0 - probability;
     out_classification->decision_margin = margin;
+
     return BANANA_OK;
 }
+
+/* ============================================================
+ * TRANSFORMER CLASSIFICATION MODEL
+ * ============================================================
+ * This is a simplified transformer:
+ * 1. Project tokens into Q/K/V spaces
+ * 2. Compute attention between tokens
+ * 3. Build weighted context vectors
+ * 4. Pool across sequence
+ * 5. Apply classification heads
+ * ============================================================ */
 
 BananaStatus banana_ml_predict_transformer_classification(
     const BananaMlTransformerInput* input,
     BananaMlTransformerClassification* out_classification
 ) {
-    double queries[BANANA_ML_MAX_SEQUENCE_LENGTH][BANANA_ML_TOKEN_FEATURE_COUNT];
-    double keys[BANANA_ML_MAX_SEQUENCE_LENGTH][BANANA_ML_TOKEN_FEATURE_COUNT];
-    double values[BANANA_ML_MAX_SEQUENCE_LENGTH][BANANA_ML_TOKEN_FEATURE_COUNT];
-    double pooled_context[BANANA_ML_TOKEN_FEATURE_COUNT] = { 0.0, 0.0, 0.0, 0.0 };
-    double attention_focus_sum = 0.0;
-    double banana_logit = 0.0;
-    double not_banana_logit = 0.0;
-    double min_logit = 0.0;
-    double banana_shifted = 0.0;
-    double not_banana_shifted = 0.0;
-    double probability_denominator = 0.0;
-    int token_index = 0;
-    int other_index = 0;
-    int feature_index = 0;
-
     if (input == 0 || out_classification == 0) {
         return BANANA_ERROR_INVALID_INPUT;
     }
 
-    if (input->token_count <= 0 || input->token_count > BANANA_ML_MAX_SEQUENCE_LENGTH) {
+    if (input->token_count <= 0 ||
+        input->token_count > BANANA_ML_MAX_SEQUENCE_LENGTH) {
         return BANANA_ERROR_INVALID_INPUT;
     }
 
-    for (token_index = 0; token_index < input->token_count; token_index++) {
-        for (feature_index = 0; feature_index < BANANA_ML_TOKEN_FEATURE_COUNT; feature_index++) {
-            if (!banana_ml_value_is_valid(input->tokens[token_index].values[feature_index])) {
+    /* Projected representations */
+    double queries[BANANA_ML_MAX_SEQUENCE_LENGTH][BANANA_ML_TOKEN_FEATURE_COUNT];
+    double keys[BANANA_ML_MAX_SEQUENCE_LENGTH][BANANA_ML_TOKEN_FEATURE_COUNT];
+    double values[BANANA_ML_MAX_SEQUENCE_LENGTH][BANANA_ML_TOKEN_FEATURE_COUNT];
+
+    double pooled_context[BANANA_ML_TOKEN_FEATURE_COUNT] = {0};
+
+    double attention_focus_sum = 0.0;
+
+    /* ========================================================
+     * STEP 1: VALIDATE + PROJECT TOKENS
+     * ======================================================== */
+    for (int t = 0; t < input->token_count; t++) {
+
+        for (int f = 0; f < BANANA_ML_TOKEN_FEATURE_COUNT; f++) {
+            if (!banana_ml_value_is_valid(input->tokens[t].values[f])) {
                 return BANANA_ERROR_INVALID_INPUT;
             }
         }
 
-        banana_ml_project_token(k_transformer_query, &input->tokens[token_index], queries[token_index]);
-        banana_ml_project_token(k_transformer_key, &input->tokens[token_index], keys[token_index]);
-        banana_ml_project_token(k_transformer_value, &input->tokens[token_index], values[token_index]);
+        banana_ml_project_token(k_transformer_query, &input->tokens[t], queries[t]);
+        banana_ml_project_token(k_transformer_key,   &input->tokens[t], keys[t]);
+        banana_ml_project_token(k_transformer_value, &input->tokens[t], values[t]);
     }
 
-    for (token_index = 0; token_index < input->token_count; token_index++) {
+    /* ========================================================
+     * STEP 2: SELF-ATTENTION
+     * ======================================================== */
+    for (int t = 0; t < input->token_count; t++) {
+
         double row_scores[BANANA_ML_MAX_SEQUENCE_LENGTH];
         double row_min = 0.0;
         double row_sum = 0.0;
         double row_focus = 0.0;
-        double context[BANANA_ML_TOKEN_FEATURE_COUNT] = { 0.0, 0.0, 0.0, 0.0 };
+        double context[BANANA_ML_TOKEN_FEATURE_COUNT] = {0};
 
-        for (other_index = 0; other_index < input->token_count; other_index++) {
-            row_scores[other_index] = banana_ml_dot(
-                queries[token_index],
-                keys[other_index],
-                BANANA_ML_TOKEN_FEATURE_COUNT) * 0.5;
+        /* Compute similarity scores (Q · K) */
+        for (int o = 0; o < input->token_count; o++) {
+            row_scores[o] = banana_ml_dot(
+                queries[t],
+                keys[o],
+                BANANA_ML_TOKEN_FEATURE_COUNT
+            ) * 0.5;
 
-            if (other_index == 0 || row_scores[other_index] < row_min) {
-                row_min = row_scores[other_index];
+            if (o == 0 || row_scores[o] < row_min) {
+                row_min = row_scores[o];
             }
         }
 
-        for (other_index = 0; other_index < input->token_count; other_index++) {
-            row_scores[other_index] = (row_scores[other_index] - row_min) + 0.000001;
-            row_sum += row_scores[other_index];
+        /* Normalize scores (softmax-like stability trick) */
+        for (int o = 0; o < input->token_count; o++) {
+            row_scores[o] = (row_scores[o] - row_min) + 0.000001;
+            row_sum += row_scores[o];
         }
 
         if (row_sum <= 0.0) {
             return BANANA_ERROR_INVALID_INPUT;
         }
 
-        for (other_index = 0; other_index < input->token_count; other_index++) {
-            double attention_weight = row_scores[other_index] / row_sum;
+        /* Build context vector */
+        for (int o = 0; o < input->token_count; o++) {
+            double attention_weight = row_scores[o] / row_sum;
 
             if (attention_weight > row_focus) {
                 row_focus = attention_weight;
             }
 
-            for (feature_index = 0; feature_index < BANANA_ML_TOKEN_FEATURE_COUNT; feature_index++) {
-                context[feature_index] += attention_weight * values[other_index][feature_index];
+            for (int f = 0; f < BANANA_ML_TOKEN_FEATURE_COUNT; f++) {
+                context[f] += attention_weight * values[o][f];
             }
         }
 
         attention_focus_sum += row_focus;
-        for (feature_index = 0; feature_index < BANANA_ML_TOKEN_FEATURE_COUNT; feature_index++) {
-            pooled_context[feature_index] += context[feature_index];
+
+        for (int f = 0; f < BANANA_ML_TOKEN_FEATURE_COUNT; f++) {
+            pooled_context[f] += context[f];
         }
     }
 
-    for (feature_index = 0; feature_index < BANANA_ML_TOKEN_FEATURE_COUNT; feature_index++) {
-        pooled_context[feature_index] /= (double)input->token_count;
+    /* Average pooled representation */
+    for (int f = 0; f < BANANA_ML_TOKEN_FEATURE_COUNT; f++) {
+        pooled_context[f] /= (double)input->token_count;
     }
 
-    banana_logit = 0.12 + banana_ml_dot(
-        k_transformer_banana_head,
-        pooled_context,
-        BANANA_ML_TOKEN_FEATURE_COUNT);
-    not_banana_logit = 0.05 + banana_ml_dot(
-        k_transformer_not_banana_head,
-        pooled_context,
-        BANANA_ML_TOKEN_FEATURE_COUNT);
+    /* ========================================================
+     * STEP 3: CLASSIFICATION HEADS
+     * ======================================================== */
+    double banana_logit =
+        0.12 + banana_ml_dot(k_transformer_banana_head, pooled_context,
+                             BANANA_ML_TOKEN_FEATURE_COUNT);
 
-    if (!banana_ml_value_is_valid(banana_logit) || !banana_ml_value_is_valid(not_banana_logit)) {
+    double not_banana_logit =
+        0.05 + banana_ml_dot(k_transformer_not_banana_head, pooled_context,
+                             BANANA_ML_TOKEN_FEATURE_COUNT);
+
+    if (!banana_ml_value_is_valid(banana_logit) ||
+        !banana_ml_value_is_valid(not_banana_logit)) {
         return BANANA_ERROR_INVALID_INPUT;
     }
 
-    min_logit = banana_logit < not_banana_logit ? banana_logit : not_banana_logit;
-    banana_shifted = (banana_logit - min_logit) + 0.000001;
-    not_banana_shifted = (not_banana_logit - min_logit) + 0.000001;
-    probability_denominator = banana_shifted + not_banana_shifted;
+    /* ========================================================
+     * STEP 4: SOFTMAX NORMALIZATION
+     * ======================================================== */
+    double min_logit = banana_logit < not_banana_logit
+        ? banana_logit
+        : not_banana_logit;
 
-    if (probability_denominator <= 0.0) {
+    double banana_shifted = (banana_logit - min_logit) + 0.000001;
+    double not_banana_shifted = (not_banana_logit - min_logit) + 0.000001;
+
+    double denom = banana_shifted + not_banana_shifted;
+
+    if (denom <= 0.0) {
         return BANANA_ERROR_INVALID_INPUT;
     }
 
-    out_classification->banana_probability = banana_shifted / probability_denominator;
-    out_classification->not_banana_probability = not_banana_shifted / probability_denominator;
-    out_classification->predicted_label = out_classification->banana_probability >= out_classification->not_banana_probability
-        ? BANANA_ML_LABEL_BANANA
-        : BANANA_ML_LABEL_NOT_BANANA;
-    out_classification->attention_focus = banana_ml_clamp(
-        attention_focus_sum / (double)input->token_count,
-        0.0,
-        1.0);
+    /* ========================================================
+     * STEP 5: OUTPUT PROBABILITIES
+     * ======================================================== */
+    out_classification->banana_probability = banana_shifted / denom;
+    out_classification->not_banana_probability = not_banana_shifted / denom;
+
+    out_classification->predicted_label =
+        out_classification->banana_probability >=
+        out_classification->not_banana_probability
+            ? BANANA_ML_LABEL_BANANA
+            : BANANA_ML_LABEL_NOT_BANANA;
+
+    out_classification->attention_focus =
+        banana_ml_clamp(
+            attention_focus_sum / (double)input->token_count,
+            0.0,
+            1.0
+        );
+
     return BANANA_OK;
 }

@@ -210,6 +210,30 @@ public sealed class NativeInteropInternalsTests
     }
 
     [Fact]
+    public void NativeMethods_ClassifyBananaTransformer_WithSequenceAboveAbiLimit_ReturnsInvalidArgument()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var nativeMethodsType = GetNativeMethodsType();
+        var method = nativeMethodsType.GetMethod("ClassifyBananaTransformer", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var tokenFeatureValueCount = 4 * (16 + 1);
+        var args = new object?[]
+        {
+            new double[tokenFeatureValueCount],
+            tokenFeatureValueCount,
+            null
+        };
+        var status = (int)method.Invoke(null, args)!;
+
+        Assert.Equal((int)NativeStatusCode.InvalidArgument, status);
+    }
+
+    [Fact]
     public void BananaMlInteropNativeTypes_MatchExpectedAbiLayout()
     {
         Assert.Equal(0, (int)BananaMlLabel.NotBanana);

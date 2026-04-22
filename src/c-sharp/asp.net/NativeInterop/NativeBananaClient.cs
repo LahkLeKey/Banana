@@ -16,10 +16,6 @@ public sealed class NativeBananaClient : INativeBananaClient
         PropertyNameCaseInsensitive = true
     };
 
-    private const int BananaMlFeatureCount = 8;
-    private const int BananaMlTokenFeatureCount = 4;
-    private const int BananaMlMaxSequenceLength = 16;
-
     /// <inheritdoc />
     public BananaResult Calculate(int purchases, int multiplier)
     {
@@ -435,13 +431,13 @@ public sealed class NativeBananaClient : INativeBananaClient
             throw new ClientInputException("features are required.");
         }
 
-        if (features.Count != BananaMlFeatureCount)
+        if (features.Count != BananaMlInteropContract.FeatureCount)
         {
-            throw new ClientInputException($"features must contain exactly {BananaMlFeatureCount} values.");
+            throw new ClientInputException($"features must contain exactly {BananaMlInteropContract.FeatureCount} values.");
         }
 
-        var normalized = new double[BananaMlFeatureCount];
-        for (var index = 0; index < BananaMlFeatureCount; index++)
+        var normalized = new double[BananaMlInteropContract.FeatureCount];
+        for (var index = 0; index < BananaMlInteropContract.FeatureCount; index++)
         {
             if (!double.IsFinite(features[index]))
             {
@@ -466,15 +462,15 @@ public sealed class NativeBananaClient : INativeBananaClient
             throw new ClientInputException("tokenFeatures must contain at least one token.");
         }
 
-        if ((tokenFeatures.Count % BananaMlTokenFeatureCount) != 0)
+        if ((tokenFeatures.Count % BananaMlInteropContract.TokenFeatureCount) != 0)
         {
-            throw new ClientInputException($"tokenFeatures must be divisible by {BananaMlTokenFeatureCount} values per token.");
+            throw new ClientInputException($"tokenFeatures must be divisible by {BananaMlInteropContract.TokenFeatureCount} values per token.");
         }
 
-        var tokenCount = tokenFeatures.Count / BananaMlTokenFeatureCount;
-        if (tokenCount > BananaMlMaxSequenceLength)
+        var tokenCount = tokenFeatures.Count / BananaMlInteropContract.TokenFeatureCount;
+        if (tokenCount > BananaMlInteropContract.MaxSequenceLength)
         {
-            throw new ClientInputException($"tokenFeatures exceed the maximum sequence length of {BananaMlMaxSequenceLength}.");
+            throw new ClientInputException($"tokenFeatures exceed the maximum sequence length of {BananaMlInteropContract.MaxSequenceLength}.");
         }
 
         var normalized = new double[tokenFeatures.Count];
