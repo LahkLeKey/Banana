@@ -25,6 +25,11 @@ typedef struct BananaMlBinaryClassification {
     double banana_probability;
     double not_banana_probability;
     double decision_margin;
+    double jaccard_similarity;
+    double confusion_true_positive;
+    double confusion_false_positive;
+    double confusion_false_negative;
+    double confusion_true_negative;
 } BananaMlBinaryClassification;
 
 typedef struct BananaMlToken {

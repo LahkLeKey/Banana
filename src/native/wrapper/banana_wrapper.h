@@ -63,6 +63,11 @@ typedef struct CInteropBananaMlBinaryClassification {
     double banana_probability;
     double not_banana_probability;
     double decision_margin;
+    double jaccard_similarity;
+    double confusion_true_positive;
+    double confusion_false_positive;
+    double confusion_false_negative;
+    double confusion_true_negative;
 } CInteropBananaMlBinaryClassification;
 
 typedef struct CInteropBananaMlTransformerClassification {
@@ -80,7 +85,7 @@ _Static_assert(sizeof(CInteropBananaMlLabel) == 4, "CInteropBananaMlLabel ABI si
 _Static_assert(sizeof(CInteropBananaBreakdown) == 12, "CInteropBananaBreakdown ABI size must be 12 bytes.");
 _Static_assert(sizeof(double) == 8, "CInterop ABI requires 64-bit double.");
 _Static_assert(sizeof(CInteropBananaRipenessPrediction) == 32, "CInteropBananaRipenessPrediction ABI size must be 32 bytes.");
-_Static_assert(sizeof(CInteropBananaMlBinaryClassification) == 32, "CInteropBananaMlBinaryClassification ABI size must be 32 bytes.");
+_Static_assert(sizeof(CInteropBananaMlBinaryClassification) == 72, "CInteropBananaMlBinaryClassification ABI size must be 72 bytes.");
 _Static_assert(sizeof(CInteropBananaMlTransformerClassification) == 32, "CInteropBananaMlTransformerClassification ABI size must be 32 bytes.");
 _Static_assert(BANANA_STATUS_OK == 0, "CInteropStatus.Ok ordinal mismatch.");
 _Static_assert(BANANA_STATUS_INVALID_ARGUMENT == 1, "CInteropStatus.InvalidArgument ordinal mismatch.");
@@ -113,6 +118,11 @@ _Static_assert(offsetof(CInteropBananaMlBinaryClassification, predicted_label) =
 _Static_assert(offsetof(CInteropBananaMlBinaryClassification, banana_probability) == 8, "CInteropBananaMlBinaryClassification.banana_probability ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaMlBinaryClassification, not_banana_probability) == 16, "CInteropBananaMlBinaryClassification.not_banana_probability ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaMlBinaryClassification, decision_margin) == 24, "CInteropBananaMlBinaryClassification.decision_margin ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, jaccard_similarity) == 32, "CInteropBananaMlBinaryClassification.jaccard_similarity ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, confusion_true_positive) == 40, "CInteropBananaMlBinaryClassification.confusion_true_positive ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, confusion_false_positive) == 48, "CInteropBananaMlBinaryClassification.confusion_false_positive ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, confusion_false_negative) == 56, "CInteropBananaMlBinaryClassification.confusion_false_negative ABI offset mismatch.");
+_Static_assert(offsetof(CInteropBananaMlBinaryClassification, confusion_true_negative) == 64, "CInteropBananaMlBinaryClassification.confusion_true_negative ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaMlTransformerClassification, predicted_label) == 0, "CInteropBananaMlTransformerClassification.predicted_label ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaMlTransformerClassification, banana_probability) == 8, "CInteropBananaMlTransformerClassification.banana_probability ABI offset mismatch.");
 _Static_assert(offsetof(CInteropBananaMlTransformerClassification, not_banana_probability) == 16, "CInteropBananaMlTransformerClassification.not_banana_probability ABI offset mismatch.");

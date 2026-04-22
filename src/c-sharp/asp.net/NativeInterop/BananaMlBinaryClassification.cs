@@ -7,4 +7,10 @@ public sealed record BananaMlBinaryClassification(
     string PredictedLabel,
     double BananaProbability,
     double NotBananaProbability,
-    double DecisionMargin);
+    double DecisionMargin)
+{
+    public double JaccardSimilarity { get; init; }
+
+    public BananaMlBinaryConfusionMatrix ConfusionMatrix { get; init; } =
+        new(0.0, 0.0, 0.0, 0.0);
+}

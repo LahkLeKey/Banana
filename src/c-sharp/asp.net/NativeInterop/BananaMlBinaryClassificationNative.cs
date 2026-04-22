@@ -12,4 +12,9 @@ public struct BananaMlBinaryClassificationNative
     public double BananaProbability;
     public double NotBananaProbability;
     public double DecisionMargin;
+    public double JaccardSimilarity;
+    public double ConfusionTruePositive;
+    public double ConfusionFalsePositive;
+    public double ConfusionFalseNegative;
+    public double ConfusionTrueNegative;
 }

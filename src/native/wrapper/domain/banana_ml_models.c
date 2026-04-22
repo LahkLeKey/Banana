@@ -129,6 +129,11 @@ int banana_classify_banana_binary(
     out_classification->banana_probability = classification.banana_probability;
     out_classification->not_banana_probability = classification.not_banana_probability;
     out_classification->decision_margin = classification.decision_margin;
+    out_classification->jaccard_similarity = classification.jaccard_similarity;
+    out_classification->confusion_true_positive = classification.confusion_true_positive;
+    out_classification->confusion_false_positive = classification.confusion_false_positive;
+    out_classification->confusion_false_negative = classification.confusion_false_negative;
+    out_classification->confusion_true_negative = classification.confusion_true_negative;
     return BANANA_STATUS_OK;
 }
 

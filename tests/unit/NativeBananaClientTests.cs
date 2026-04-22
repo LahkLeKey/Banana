@@ -174,6 +174,14 @@ public sealed class NativeBananaClientTests
         Assert.False(string.IsNullOrWhiteSpace(result.PredictedLabel));
         Assert.InRange(result.BananaProbability, 0.0, 1.0);
         Assert.InRange(result.NotBananaProbability, 0.0, 1.0);
+        Assert.InRange(result.JaccardSimilarity, 0.0, 1.0);
+        Assert.NotNull(result.ConfusionMatrix);
+
+        var confusionTotal = result.ConfusionMatrix.TruePositive +
+            result.ConfusionMatrix.FalsePositive +
+            result.ConfusionMatrix.FalseNegative +
+            result.ConfusionMatrix.TrueNegative;
+        Assert.InRange(confusionTotal, 0.999999, 1.000001);
     }
 
     [Fact]

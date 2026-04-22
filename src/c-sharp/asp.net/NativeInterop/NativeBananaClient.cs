@@ -78,7 +78,15 @@ public sealed class NativeBananaClient : INativeBananaClient
             MapMlLabelName(classification.PredictedLabel),
             classification.BananaProbability,
             classification.NotBananaProbability,
-            classification.DecisionMargin);
+            classification.DecisionMargin)
+        {
+            JaccardSimilarity = classification.JaccardSimilarity,
+            ConfusionMatrix = new BananaMlBinaryConfusionMatrix(
+                classification.ConfusionTruePositive,
+                classification.ConfusionFalsePositive,
+                classification.ConfusionFalseNegative,
+                classification.ConfusionTrueNegative)
+        };
     }
 
     /// <inheritdoc />

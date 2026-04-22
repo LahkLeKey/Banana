@@ -161,6 +161,32 @@ static double banana_ml_pseudo_sigmoid(double value) {
     return 0.5 + (value / (2.0 * (1.0 + magnitude)));
 }
 
+static double banana_ml_jaccard_similarity(double tp, double fp, double fn) {
+    double denominator = tp + fp + fn;
+    if (denominator <= 0.0) {
+        return 0.0;
+    }
+
+    return banana_ml_clamp(tp / denominator, 0.0, 1.0);
+}
+
+static void banana_ml_fill_soft_confusion_matrix(
+    double banana_probability,
+    double not_banana_probability,
+    BananaMlBinaryClassification* out_classification
+) {
+    double tp = banana_probability * banana_probability;
+    double fp = banana_probability * not_banana_probability;
+    double fn = not_banana_probability * banana_probability;
+    double tn = not_banana_probability * not_banana_probability;
+
+    out_classification->confusion_true_positive = tp;
+    out_classification->confusion_false_positive = fp;
+    out_classification->confusion_false_negative = fn;
+    out_classification->confusion_true_negative = tn;
+    out_classification->jaccard_similarity = banana_ml_jaccard_similarity(tp, fp, fn);
+}
+
 /* ============================================================
  * TRANSFORMER UTILITY
  * ============================================================ */
@@ -250,6 +276,10 @@ BananaStatus banana_ml_predict_binary_classification(
     out_classification->banana_probability = probability;
     out_classification->not_banana_probability = 1.0 - probability;
     out_classification->decision_margin = margin;
+    banana_ml_fill_soft_confusion_matrix(
+        out_classification->banana_probability,
+        out_classification->not_banana_probability,
+        out_classification);
 
     return BANANA_OK;
 }

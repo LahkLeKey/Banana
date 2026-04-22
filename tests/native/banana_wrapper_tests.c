@@ -27,6 +27,35 @@ static double absolute_difference(double left, double right) {
     return left > right ? left - right : right - left;
 }
 
+static void require_binary_confusion_metrics(
+    const CInteropBananaMlBinaryClassification* classification,
+    const char* context
+) {
+    double confusion_sum = 0.0;
+    double jaccard_denominator = 0.0;
+    double expected_jaccard = 0.0;
+
+    require_true(classification->jaccard_similarity >= 0.0 && classification->jaccard_similarity <= 1.0, context);
+    require_true(classification->confusion_true_positive >= 0.0 && classification->confusion_true_positive <= 1.0, context);
+    require_true(classification->confusion_false_positive >= 0.0 && classification->confusion_false_positive <= 1.0, context);
+    require_true(classification->confusion_false_negative >= 0.0 && classification->confusion_false_negative <= 1.0, context);
+    require_true(classification->confusion_true_negative >= 0.0 && classification->confusion_true_negative <= 1.0, context);
+
+    confusion_sum = classification->confusion_true_positive +
+        classification->confusion_false_positive +
+        classification->confusion_false_negative +
+        classification->confusion_true_negative;
+    require_true(absolute_difference(confusion_sum, 1.0) < 0.000001, context);
+
+    jaccard_denominator = classification->confusion_true_positive +
+        classification->confusion_false_positive +
+        classification->confusion_false_negative;
+    expected_jaccard = jaccard_denominator > 0.0
+        ? classification->confusion_true_positive / jaccard_denominator
+        : 0.0;
+    require_true(absolute_difference(classification->jaccard_similarity, expected_jaccard) < 0.000001, context);
+}
+
 static void test_calculate_banana_ok(void) {
     int banana = 0;
     int status = banana_calculate_banana(10, 2, &banana);
@@ -187,6 +216,9 @@ static void test_classify_banana_binary_ok(void) {
     require_true(status == BANANA_STATUS_OK, "expected OK for banana-like binary classification sample");
     require_true(classification.predicted_label == CINTEROP_BANANA_ML_LABEL_BANANA, "expected banana label for banana-like binary sample");
     require_true(classification.banana_probability > 0.80, "expected strong banana probability for banana-like binary sample");
+    require_binary_confusion_metrics(
+        &classification,
+        "expected normalized binary confusion metrics for banana-like wrapper sample");
 
     status = banana_classify_banana_binary(
         not_banana_features,
@@ -199,6 +231,9 @@ static void test_classify_banana_binary_ok(void) {
             classification.banana_probability + classification.not_banana_probability,
             1.0) < 0.000001,
         "expected binary probabilities to sum to one");
+    require_binary_confusion_metrics(
+        &classification,
+        "expected normalized binary confusion metrics for non-banana wrapper sample");
 }
 
 static void test_classify_banana_binary_invalid_args(void) {

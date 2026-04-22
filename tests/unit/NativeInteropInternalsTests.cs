@@ -175,6 +175,13 @@ public sealed class NativeInteropInternalsTests
         Assert.True(Enum.IsDefined(typeof(BananaMlLabel), classification.PredictedLabel));
         Assert.InRange(classification.BananaProbability, 0.0, 1.0);
         Assert.InRange(classification.NotBananaProbability, 0.0, 1.0);
+        Assert.InRange(classification.JaccardSimilarity, 0.0, 1.0);
+
+        var confusionTotal = classification.ConfusionTruePositive +
+            classification.ConfusionFalsePositive +
+            classification.ConfusionFalseNegative +
+            classification.ConfusionTrueNegative;
+        Assert.InRange(confusionTotal, 0.999999, 1.000001);
     }
 
     [Fact]
@@ -240,13 +247,18 @@ public sealed class NativeInteropInternalsTests
         Assert.Equal(1, (int)BananaMlLabel.Banana);
 
         Assert.Equal(typeof(int), Enum.GetUnderlyingType(typeof(BananaMlLabel)));
-        Assert.Equal(32, Marshal.SizeOf<BananaMlBinaryClassificationNative>());
+        Assert.Equal(72, Marshal.SizeOf<BananaMlBinaryClassificationNative>());
         Assert.Equal(32, Marshal.SizeOf<BananaMlTransformerClassificationNative>());
 
         Assert.Equal(0, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.PredictedLabel)));
         Assert.Equal(8, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.BananaProbability)));
         Assert.Equal(16, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.NotBananaProbability)));
         Assert.Equal(24, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.DecisionMargin)));
+        Assert.Equal(32, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.JaccardSimilarity)));
+        Assert.Equal(40, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.ConfusionTruePositive)));
+        Assert.Equal(48, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.ConfusionFalsePositive)));
+        Assert.Equal(56, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.ConfusionFalseNegative)));
+        Assert.Equal(64, (int)Marshal.OffsetOf<BananaMlBinaryClassificationNative>(nameof(BananaMlBinaryClassificationNative.ConfusionTrueNegative)));
 
         Assert.Equal(0, (int)Marshal.OffsetOf<BananaMlTransformerClassificationNative>(nameof(BananaMlTransformerClassificationNative.PredictedLabel)));
         Assert.Equal(8, (int)Marshal.OffsetOf<BananaMlTransformerClassificationNative>(nameof(BananaMlTransformerClassificationNative.BananaProbability)));

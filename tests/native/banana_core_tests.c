@@ -28,6 +28,35 @@ static double absolute_difference(double left, double right) {
     return left > right ? left - right : right - left;
 }
 
+static void require_binary_confusion_metrics(
+    const BananaMlBinaryClassification* classification,
+    const char* context
+) {
+    double confusion_sum = 0.0;
+    double jaccard_denominator = 0.0;
+    double expected_jaccard = 0.0;
+
+    require_true(classification->jaccard_similarity >= 0.0 && classification->jaccard_similarity <= 1.0, context);
+    require_true(classification->confusion_true_positive >= 0.0 && classification->confusion_true_positive <= 1.0, context);
+    require_true(classification->confusion_false_positive >= 0.0 && classification->confusion_false_positive <= 1.0, context);
+    require_true(classification->confusion_false_negative >= 0.0 && classification->confusion_false_negative <= 1.0, context);
+    require_true(classification->confusion_true_negative >= 0.0 && classification->confusion_true_negative <= 1.0, context);
+
+    confusion_sum = classification->confusion_true_positive +
+        classification->confusion_false_positive +
+        classification->confusion_false_negative +
+        classification->confusion_true_negative;
+    require_true(absolute_difference(confusion_sum, 1.0) < 0.000001, context);
+
+    jaccard_denominator = classification->confusion_true_positive +
+        classification->confusion_false_positive +
+        classification->confusion_false_negative;
+    expected_jaccard = jaccard_denominator > 0.0
+        ? classification->confusion_true_positive / jaccard_denominator
+        : 0.0;
+    require_true(absolute_difference(classification->jaccard_similarity, expected_jaccard) < 0.000001, context);
+}
+
 static void cap_bonus_step(BananaResult* result) {
     if (result->banana > 200) {
         result->banana = 200;
@@ -265,11 +294,17 @@ static void test_ml_binary_classifier_separates_banana_and_not_banana(void) {
             classification.banana_probability + classification.not_banana_probability,
             1.0) < 0.000001,
         "expected binary probabilities to sum to one");
+    require_binary_confusion_metrics(
+        &classification,
+        "expected binary confusion metrics to be normalized for banana-like sample");
 
     status = banana_ml_predict_binary_classification(&not_banana_features, &classification);
     require_true(status == BANANA_OK, "expected BANANA_OK for not-banana binary classification sample");
     require_true(classification.predicted_label == BANANA_ML_LABEL_NOT_BANANA, "expected not-banana label for non-banana sample");
     require_true(classification.banana_probability < 0.20, "expected low banana probability for non-banana sample");
+    require_binary_confusion_metrics(
+        &classification,
+        "expected binary confusion metrics to be normalized for non-banana sample");
 }
 
 static void test_ml_binary_classifier_rejects_invalid_input(void) {
