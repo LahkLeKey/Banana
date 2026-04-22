@@ -102,6 +102,30 @@ public sealed class NativeBananaClientTests
     }
 
     [Fact]
+    public void AddBunchToHarvestBatch_ReturnsUpdatedBatch_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+        var harvestBatchId = $"h-{suffix}";
+        var bunchId = $"b-{suffix}";
+        const int harvestDayOrdinal = 1;
+
+        _ = client.CreateHarvestBatch(harvestBatchId, "f-1", harvestDayOrdinal);
+
+        var updated = client.AddBunchToHarvestBatch(harvestBatchId, bunchId, harvestDayOrdinal, 12.5);
+
+        Assert.Equal(harvestBatchId, updated.HarvestBatchId);
+        Assert.Equal(harvestDayOrdinal, updated.HarvestDayOrdinal);
+        Assert.True(updated.BunchCount >= 1);
+        Assert.True(updated.TotalWeightKg > 0.0);
+    }
+
+    [Fact]
     public void RegisterTruck_LoadRelocateUnload_AndGetTruckStatus_ReturnExpectedResult_WhenNativeLibraryIsAvailable()
     {
         if (!EnsureNativePathConfigured())
@@ -212,11 +236,91 @@ public sealed class NativeBananaClientTests
     }
 
     [Fact]
+    public void PredictBananaRegressionScore_WithNullFeatures_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() => client.PredictBananaRegressionScore(null!));
+    }
+
+    [Fact]
+    public void PredictBananaRegressionScore_WithNonFiniteFeature_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() =>
+            client.PredictBananaRegressionScore([0.72, 0.08, 0.11, 0.09, 0.84, 0.88, 0.41, double.NaN]));
+    }
+
+    [Fact]
     public void PredictBananaTransformerClassification_WithInvalidTokenFeatureStride_ThrowsClientInputException()
     {
         var client = new NativeBananaClient();
 
         Assert.Throws<ClientInputException>(() => client.PredictBananaTransformerClassification([0.1, 0.2, 0.3]));
+    }
+
+    [Fact]
+    public void PredictBananaTransformerClassification_WithNullTokenFeatures_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() => client.PredictBananaTransformerClassification(null!));
+    }
+
+    [Fact]
+    public void PredictBananaTransformerClassification_WithEmptyTokenFeatures_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() => client.PredictBananaTransformerClassification([]));
+    }
+
+    [Fact]
+    public void PredictBananaTransformerClassification_WithNonFiniteTokenFeature_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() => client.PredictBananaTransformerClassification([
+            0.70, 0.07, 0.10, 0.08,
+            0.82, 0.84, double.PositiveInfinity, 0.34
+        ]));
+    }
+
+    [Fact]
+    public void ClassifyNotBananaJunk_ReturnsClassification_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        var result = client.ClassifyNotBananaJunk(["actor", "crate", "metadata"], 1, 1);
+
+        Assert.False(string.IsNullOrWhiteSpace(result.PredictedLabel));
+        Assert.InRange(result.BananaProbability, 0.0, 1.0);
+        Assert.InRange(result.NotBananaProbability, 0.0, 1.0);
+        Assert.InRange(result.JunkConfidence, 0.0, 1.0);
+        Assert.True(result.ActorCount >= 0);
+        Assert.True(result.EntityCount >= 0);
+    }
+
+    [Fact]
+    public void ClassifyNotBananaJunk_WithNullTokens_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() => client.ClassifyNotBananaJunk(null!, 0, 0));
+    }
+
+    [Fact]
+    public void ClassifyNotBananaJunk_WithNegativeCounts_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() => client.ClassifyNotBananaJunk(["token"], -1, 0));
+        Assert.Throws<ClientInputException>(() => client.ClassifyNotBananaJunk(["token"], 0, -1));
     }
 
     [Fact]
