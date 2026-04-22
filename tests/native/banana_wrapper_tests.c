@@ -5,6 +5,7 @@
 #include "banana_wrapper.h"
 #include "banana_db.h"
 #include "internal/banana_postgres.h"
+#include "domain/banana_supply_chain.h"
 
 #if defined(_WIN32)
 #include <stdlib.h>
@@ -378,6 +379,54 @@ static void test_batch_not_found_paths(void) {
     require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing batch ripeness");
 }
 
+static void test_batch_validation_and_export_status_paths(void) {
+    BananaBatch core_batch;
+    CInteropBananaRipenessPrediction prediction;
+    char* payload = 0;
+    double history[3] = { 12.0, 12.4, 12.8 };
+    int status = banana_create_batch("batch-status-1", "farm-status-1", 13.3, 2.0, 5, &payload);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for batch-status baseline creation");
+    require_true(strstr(payload, "\"exportStatus\":\"PACKED\"") != 0, "expected PACKED status in baseline batch payload");
+    banana_free(payload);
+
+    status = banana_create_batch("batch-null-out", "farm-status-1", 13.3, 2.0, 5, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null create_batch output");
+
+    status = banana_get_batch_status("batch-status-1", 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null get_batch_status output");
+
+    status = banana_predict_batch_ripeness("batch-status-1", history, 3, 3, 0.0, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null batch ripeness output");
+
+    status = banana_predict_batch_ripeness("batch-status-1", history, 3, -1, 0.0, &prediction);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for invalid batch ripeness input");
+
+    status = banana_batch_get("batch-status-1", &core_batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for direct core batch lookup in wrapper test");
+
+    status = banana_batch_advance_export_status(&core_batch, BANANA_EXPORT_SHIPPED);
+    require_true(status == BANANA_OK, "expected BANANA_OK advancing batch to SHIPPED");
+    status = banana_get_batch_status("batch-status-1", &payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for SHIPPED batch status lookup");
+    require_true(strstr(payload, "\"exportStatus\":\"SHIPPED\"") != 0, "expected SHIPPED export status in payload");
+    banana_free(payload);
+
+    status = banana_batch_advance_export_status(&core_batch, BANANA_EXPORT_CUSTOMS);
+    require_true(status == BANANA_OK, "expected BANANA_OK advancing batch to CUSTOMS");
+    status = banana_get_batch_status("batch-status-1", &payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for CUSTOMS batch status lookup");
+    require_true(strstr(payload, "\"exportStatus\":\"CUSTOMS\"") != 0, "expected CUSTOMS export status in payload");
+    banana_free(payload);
+
+    status = banana_batch_advance_export_status(&core_batch, BANANA_EXPORT_DISTRIBUTED);
+    require_true(status == BANANA_OK, "expected BANANA_OK advancing batch to DISTRIBUTED");
+    status = banana_get_batch_status("batch-status-1", &payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for DISTRIBUTED batch status lookup");
+    require_true(strstr(payload, "\"exportStatus\":\"DISTRIBUTED\"") != 0, "expected DISTRIBUTED export status in payload");
+    banana_free(payload);
+}
+
 static void test_harvest_batch_create_add_and_status_ok(void) {
     char* payload = 0;
     char* updated_payload = 0;
@@ -474,6 +523,99 @@ static void test_truck_not_found_paths(void) {
 
     status = banana_load_truck_container("missing-truck", "container-1", 10.0, &payload);
     require_true(status == BANANA_STATUS_NOT_FOUND, "expected NOT_FOUND for missing truck load");
+}
+
+static void test_truck_validation_and_node_type_paths(void) {
+    char* payload = 0;
+    int status = banana_register_truck(
+        "truck-retail-1",
+        "retail-1",
+        CINTEROP_DISTRIBUTION_NODE_RETAIL,
+        9.25,
+        -79.10,
+        40.0,
+        &payload);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for RETAIL truck registration");
+    require_true(strstr(payload, "\"nodeType\":\"RETAIL\"") != 0, "expected RETAIL node type in truck payload");
+    banana_free(payload);
+
+    status = banana_register_truck(
+        "truck-ripening-1",
+        "ripening-1",
+        CINTEROP_DISTRIBUTION_NODE_RIPENING_CENTER,
+        9.35,
+        -79.20,
+        40.0,
+        &payload);
+    require_true(status == BANANA_STATUS_OK, "expected OK for RIPENING_CENTER truck registration");
+    require_true(strstr(payload, "\"nodeType\":\"RIPENING_CENTER\"") != 0, "expected RIPENING_CENTER node type in truck payload");
+    banana_free(payload);
+
+    status = banana_register_truck("truck-null-out", "node", CINTEROP_DISTRIBUTION_NODE_PORT, 9.0, -79.0, 30.0, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null register_truck output");
+
+    status = banana_register_truck("truck-bad-type", "node", (CInteropDistributionNodeType)99, 9.0, -79.0, 30.0, &payload);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for unknown distribution node type");
+
+    status = banana_register_truck("truck-bad-coord", "node", CINTEROP_DISTRIBUTION_NODE_PORT, 95.0, -79.0, 30.0, &payload);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for invalid truck coordinates");
+
+    status = banana_get_truck_status("truck-retail-1", 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null get_truck_status output");
+
+    status = banana_load_truck_container("truck-retail-1", "container-negative", -1.0, &payload);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for negative container weight");
+
+    status = banana_load_truck_container("truck-retail-1", 0, 1.0, &payload);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null container identifier");
+
+    status = banana_load_truck_container("truck-retail-1", "container-a", 1.0, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null load_truck_container output");
+
+    status = banana_unload_truck_container("truck-retail-1", "container-a", 1.0, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null unload_truck_container output");
+
+    status = banana_relocate_truck("truck-retail-1", "node", (CInteropDistributionNodeType)77, 9.0, -79.0, &payload);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for unknown relocate node type");
+
+    status = banana_relocate_truck("truck-retail-1", "node", CINTEROP_DISTRIBUTION_NODE_PORT, 91.0, -79.0, &payload);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for invalid relocate coordinates");
+}
+
+static void test_truck_registry_overflow_path(void) {
+    char truck_id[32];
+    char node_id[32];
+    char* payload = 0;
+    int index = 0;
+    int overflow_seen = 0;
+
+    for (index = 0; index < 128; index++) {
+        int status;
+
+        snprintf(truck_id, sizeof(truck_id), "truck-overflow-%d", index);
+        snprintf(node_id, sizeof(node_id), "node-overflow-%d", index);
+        status = banana_register_truck(
+            truck_id,
+            node_id,
+            CINTEROP_DISTRIBUTION_NODE_PORT,
+            7.20,
+            -79.80,
+            45.0,
+            &payload);
+
+        if (status == BANANA_STATUS_OK) {
+            banana_free(payload);
+            payload = 0;
+            continue;
+        }
+
+        require_true(status == BANANA_STATUS_OVERFLOW, "expected overflow once truck wrapper registry capacity is reached");
+        overflow_seen = 1;
+        break;
+    }
+
+    require_true(overflow_seen, "expected to trigger truck wrapper registry overflow path");
 }
 
 static void test_db_query_banana_invalid_args(void) {
@@ -801,10 +943,13 @@ int main(void) {
     test_batch_create_and_status_ok();
     test_predict_batch_ripeness_ok();
     test_batch_not_found_paths();
+    test_batch_validation_and_export_status_paths();
     test_harvest_batch_create_add_and_status_ok();
     test_harvest_batch_not_found_paths();
     test_truck_register_load_relocate_unload_and_status_ok();
     test_truck_not_found_paths();
+    test_truck_validation_and_node_type_paths();
+    test_truck_registry_overflow_path();
     test_db_query_banana_invalid_args();
     test_db_query_banana_invalid_input();
     test_db_query_banana_missing_connection();
