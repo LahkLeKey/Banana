@@ -119,5 +119,21 @@ public sealed class NativeCalculationStepTests
         {
             return new BananaMlTransformerClassification("BANANA", 0.9, 0.1, 0.6);
         }
+
+        public BananaNotBananaClassification ClassifyNotBananaJunk(
+            IReadOnlyList<string> tokens,
+            int actorCount,
+            int entityCount)
+        {
+            return new BananaNotBananaClassification(
+                "BANANA",
+                actorCount,
+                entityCount,
+                tokens.Count,
+                tokens.Count,
+                0.85,
+                0.15,
+                0.1);
+        }
     }
 }
