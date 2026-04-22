@@ -39,6 +39,9 @@ Gateway defaults to `http://localhost:8180`. Upstream ASP.NET proxy defaults to 
 - `BANANA_BANANA_DOMAIN_MODE=auto` (default): try native banana domain first, then fall back to legacy proxy.
 - `BANANA_BANANA_DOMAIN_MODE=native`: require native banana domain and fail request on native load/execution issues.
 - `BANANA_BANANA_DOMAIN_MODE=proxy`: force legacy ASP.NET proxy path for banana domain.
+- `BANANA_BATCH_DOMAIN_MODE=auto` (default): try native batch domain first, then fall back to legacy proxy.
+- `BANANA_BATCH_DOMAIN_MODE=native`: require native batch domain and fail request on native load/execution issues.
+- `BANANA_BATCH_DOMAIN_MODE=proxy`: force legacy ASP.NET proxy path for batch domain.
 
 When running with Docker Compose, use profile `api-fastify` to start the Fastify gateway side-by-side with the legacy API:
 
@@ -48,9 +51,9 @@ docker compose --profile api-fastify up --build api-fastify
 
 ## Migration Notes
 
-The current implementation is proxy-first with an initial native cutover in the banana domain:
+The current implementation is proxy-first with initial native cutovers in banana and batch domains:
 
 1. Fastify handles transport + route contracts.
 2. Banana domain can execute directly through native C interop (`ffi-napi`/`ref-napi`) with proxy fallback.
-3. Batch/ripeness domains continue proxying to ASP.NET for behavior parity.
+3. Ripeness domain continues proxying to ASP.NET for behavior parity.
 4. Domain logs persist through Prisma models, and banana calculations are persisted as migration-ready business records.

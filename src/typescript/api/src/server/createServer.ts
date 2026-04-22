@@ -21,7 +21,7 @@ export function createServer(
   }
 
   if (selection.batch) {
-    registerBatchRoutes(app, config.legacyApiBaseUrl);
+    registerBatchRoutes(app, config);
   }
 
   if (selection.ripeness) {

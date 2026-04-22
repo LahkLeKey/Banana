@@ -1,5 +1,9 @@
 FROM oven/bun:1.3.9
 
+RUN apt-get update \
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl \
+	&& rm -rf /var/lib/apt/lists/*
+
 WORKDIR /workspace/src/typescript/api
 
 COPY src/typescript/api/package.json ./package.json

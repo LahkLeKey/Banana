@@ -49,10 +49,17 @@ export type BananaMlBinaryRequest = {
   features: number[];
 };
 
+export type BananaMlBinaryConfusionMatrix = {
+  truePositive: number; falsePositive: number; falseNegative: number;
+  trueNegative: number;
+};
+
 export type BananaMlBinaryResponse = {
   predictedLabel: string; bananaProbability: number;
   notBananaProbability: number;
   decisionMargin: number;
+  jaccardSimilarity: number;
+  confusionMatrix: BananaMlBinaryConfusionMatrix;
 };
 
 export type BananaMlTransformerRequest = {

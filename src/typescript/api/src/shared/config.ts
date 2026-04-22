@@ -4,11 +4,11 @@ export type AppRuntimeConfig = {
   mlPort: number;
   legacyApiBaseUrl: string;
   legacyMlApiBaseUrl: string;
+  batchDomainMode: 'auto' | 'native' | 'proxy';
   bananaDomainMode: 'auto' | 'native' | 'proxy';
 };
 
-function parseBananaDomainMode(value: string|undefined): 'auto'|'native'|
-    'proxy' {
+function parseDomainMode(value: string|undefined): 'auto'|'native'|'proxy' {
   if (!value) {
     return 'auto';
   }
@@ -49,6 +49,7 @@ export function loadRuntimeConfig(env: NodeJS.ProcessEnv = process.env):
     mlPort: parsePort(env.BANANA_ML_API_PORT, 8184),
     legacyApiBaseUrl: legacy,
     legacyMlApiBaseUrl: env.BANANA_LEGACY_ML_API_BASE_URL?.trim() || legacy,
-    bananaDomainMode: parseBananaDomainMode(env.BANANA_BANANA_DOMAIN_MODE),
+    batchDomainMode: parseDomainMode(env.BANANA_BATCH_DOMAIN_MODE),
+    bananaDomainMode: parseDomainMode(env.BANANA_BANANA_DOMAIN_MODE),
   };
 }

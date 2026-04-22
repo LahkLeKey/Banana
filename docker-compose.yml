@@ -62,7 +62,8 @@ services:
     environment:
       BANANA_API_HOST: 0.0.0.0
       BANANA_API_PORT: 8180
-      BANANA_BANANA_DOMAIN_MODE: native
+      BANANA_BANANA_DOMAIN_MODE: auto
+      BANANA_BATCH_DOMAIN_MODE: auto
       BANANA_NATIVE_PATH: /native
       BANANA_LEGACY_API_BASE_URL: http://api:8080
       BANANA_LEGACY_ML_API_BASE_URL: http://api:8080

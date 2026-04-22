@@ -98,6 +98,7 @@ async function createProxyHarness(): Promise<ProxyHarness> {
         `http://127.0.0.1:${(upstreamAddress as AddressInfo).port}`,
     legacyMlApiBaseUrl:
         `http://127.0.0.1:${(upstreamAddress as AddressInfo).port}`,
+    batchDomainMode: 'proxy',
     bananaDomainMode: 'proxy',
   };
 
