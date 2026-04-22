@@ -1142,6 +1142,233 @@ static void test_processing_supports_harvest_batches(void) {
     require_true(harvest_batch.total_weight_kg > 0.69 && harvest_batch.total_weight_kg < 0.71, "expected harvest batch total weight to accumulate bunch weight");
 }
 
+static void test_processing_validation_and_failure_paths(void) {
+    BananaPlant plant;
+    BananaGeoCoordinates location;
+    BananaBunchSpec spec;
+    BananaFruitSpec fruit_specs[2];
+    BananaBunchRecord record;
+    BananaBunchRecord invalid_record;
+    BananaDimensions dimensions;
+    BananaFruit fruit;
+    BananaCrate crate;
+    BananaInspection inspection;
+    BananaHarvestBatch harvest_batch;
+    BananaDomainEvent event;
+    BananaStatus status;
+    const char* long_id = "processing-edge-identifier-that-is-longer-than-the-allowed-banana-id-capacity";
+    const char* long_field_id = "processing-edge-field-identifier-that-is-longer-than-the-allowed-banana-id-capacity";
+
+    memset(&plant, 0, sizeof(plant));
+    memset(&record, 0, sizeof(record));
+    memset(&invalid_record, 0, sizeof(invalid_record));
+    memset(&fruit, 0, sizeof(fruit));
+    memset(&crate, 0, sizeof(crate));
+    memset(&inspection, 0, sizeof(inspection));
+    memset(&harvest_batch, 0, sizeof(harvest_batch));
+
+    location.latitude = 11.4;
+    location.longitude = -76.3;
+    status = banana_plant_register("process-edge-plant", BANANA_SPECIES_CAVENDISH, location, 4, 1, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for processing edge-path plant registration");
+
+    spec.harvest_day_ordinal = 33;
+    spec.weight_kg = 0.8;
+    spec.finger_count = 2;
+    spec.maturity_stage = BANANA_STAGE_GREEN;
+    spec.quality_score = 0.93;
+    fruit_specs[0].fruit_id = "process-edge-fruit-1";
+    fruit_specs[0].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[0].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[0].weight_kg = 0.4;
+    fruit_specs[1].fruit_id = "process-edge-fruit-2";
+    fruit_specs[1].cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_specs[1].weight_kg = 0.4;
+
+    status = banana_bunch_factory_create(
+        &plant,
+        "process-edge-bunch-1",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        fruit_specs,
+        2,
+        &record,
+        &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for processing edge-path baseline bunch creation");
+
+    dimensions.length_cm = 0.0;
+    dimensions.girth_cm = 5.0;
+    status = banana_dimensions_validate(&dimensions);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for non-positive banana length dimension");
+
+    fruit.weight_kg = 0.0;
+    status = banana_fruit_estimate_dimensions(&fruit, &dimensions);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for dimension estimation with non-positive fruit weight");
+
+    status = banana_bunch_factory_create(
+        0,
+        "process-edge-bunch-null-plant",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        fruit_specs,
+        2,
+        &invalid_record,
+        &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when bunch factory receives a null plant");
+
+    fruit_specs[1].cultivar = BANANA_SPECIES_PLANTAIN;
+    status = banana_bunch_factory_create(
+        &plant,
+        "process-edge-bunch-invalid-cultivar",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        fruit_specs,
+        2,
+        &invalid_record,
+        &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch factory cultivar mismatch");
+    fruit_specs[1].cultivar = BANANA_SPECIES_CAVENDISH;
+
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_YELLOW;
+    status = banana_bunch_factory_create(
+        &plant,
+        "process-edge-bunch-invalid-ripeness",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        fruit_specs,
+        2,
+        &invalid_record,
+        &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch factory ripeness-distance validation");
+    fruit_specs[1].ripeness_stage = BANANA_STAGE_GREEN;
+
+    fruit_specs[0].fruit_id = long_id;
+    status = banana_bunch_factory_create(
+        &plant,
+        "process-edge-bunch-invalid-fruit-id",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        fruit_specs,
+        2,
+        &invalid_record,
+        &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch factory fruit-id copy failure");
+    fruit_specs[0].fruit_id = "process-edge-fruit-1";
+
+    spec.finger_count = 1;
+    status = banana_bunch_factory_create(
+        &plant,
+        "process-edge-bunch-finger-mismatch",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        fruit_specs,
+        2,
+        &invalid_record,
+        &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch factory finger-count mismatch");
+    spec.finger_count = 2;
+
+    spec.weight_kg = 1.1;
+    status = banana_bunch_factory_create(
+        &plant,
+        "process-edge-bunch-weight-mismatch",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        fruit_specs,
+        2,
+        &invalid_record,
+        &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch factory weight mismatch");
+    spec.weight_kg = 0.8;
+
+    invalid_record = record;
+    invalid_record.aggregate.bunch.finger_count = record.banana_count + 1;
+    status = banana_bunch_record_validate(&invalid_record);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch record finger-count validation");
+
+    invalid_record = record;
+    invalid_record.bananas[0].fruit_id.value[0] = '\0';
+    status = banana_bunch_record_validate(&invalid_record);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch record fruit identifier validation");
+
+    invalid_record = record;
+    invalid_record.total_weight_kg += 0.2;
+    status = banana_bunch_record_validate(&invalid_record);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch record total-weight mismatch");
+
+    invalid_record = record;
+    invalid_record.bananas[1].ripeness_stage = BANANA_STAGE_BIODEGRADATION;
+    status = banana_bunch_record_validate(&invalid_record);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for bunch record non-uniform ripeness");
+
+    status = banana_bunch_record_update_ripeness(0, BANANA_STAGE_YELLOW, 40, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null bunch record ripeness update");
+
+    record.aggregate.bunch.maturity_stage = BANANA_STAGE_YELLOW;
+    status = banana_bunch_record_update_ripeness(&record, BANANA_STAGE_BREAKING, 41, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when bunch record ripeness update regresses stage");
+
+    status = banana_crate_register("crate-edge-invalid", 0.0, &crate);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for crate registration with non-positive capacity");
+
+    status = banana_crate_register(long_id, 5.0, &crate);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for crate registration with long identifier");
+
+    status = banana_crate_register("crate-edge-1", 0.9, &crate);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid crate registration in edge-path test");
+
+    status = banana_crate_pack_bunch(0, &record);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null crate pack target");
+
+    status = banana_crate_pack_bunch(&crate, &record);
+    require_true(status == BANANA_OK, "expected BANANA_OK for first crate bunch pack");
+    status = banana_crate_pack_bunch(&crate, &record);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for duplicate crate bunch pack");
+
+    status = banana_crate_register("crate-edge-2", 5.0, &crate);
+    require_true(status == BANANA_OK, "expected BANANA_OK for second valid crate registration");
+    invalid_record = record;
+    invalid_record.aggregate.bunch.bunch_id.value[0] = '\0';
+    status = banana_crate_pack_bunch(&crate, &invalid_record);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for crate pack with empty bunch identifier");
+
+    status = banana_inspection_record("inspector-edge", &record, -0.1, 0, &inspection);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for inspection with invalid minimum quality score");
+
+    status = banana_inspection_record(long_id, &record, 0.5, 0, &inspection);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for inspection identifier copy failure");
+
+    status = banana_harvest_batch_create("harvest-edge-invalid", "field-edge", -1, &harvest_batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for harvest batch creation with negative day");
+
+    status = banana_harvest_batch_create(long_id, "field-edge", 33, &harvest_batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for harvest batch creation with long harvest-batch identifier");
+
+    status = banana_harvest_batch_create("harvest-edge-field-invalid", long_field_id, 33, &harvest_batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for harvest batch creation with long field identifier");
+
+    status = banana_harvest_batch_create("harvest-edge-1", "field-edge-1", 33, &harvest_batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid harvest batch creation in edge-path test");
+
+    invalid_record = record;
+    invalid_record.aggregate.bunch.harvest_day_ordinal = 34;
+    status = banana_harvest_batch_add_bunch(&harvest_batch, &invalid_record);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for harvest batch add with harvest-day mismatch");
+
+    status = banana_harvest_batch_add_bunch(&harvest_batch, &record);
+    require_true(status == BANANA_OK, "expected BANANA_OK for first harvest-batch add in edge-path test");
+    status = banana_harvest_batch_add_bunch(&harvest_batch, &record);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for duplicate harvest-batch add");
+
+    status = banana_harvest_batch_create("harvest-edge-2", "field-edge-2", 33, &harvest_batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for second harvest batch creation in edge-path test");
+    invalid_record = record;
+    invalid_record.aggregate.bunch.bunch_id.value[0] = '\0';
+    status = banana_harvest_batch_add_bunch(&harvest_batch, &invalid_record);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for harvest-batch add with empty bunch identifier");
+}
+
 static void test_cultivation_ripening_is_monotonic_and_spoilage_is_tracked(void) {
     BananaPlant plant;
     BananaGeoCoordinates location;
@@ -1244,6 +1471,176 @@ static void test_supply_chain_tracks_shipments_nodes_and_batch_transitions(void)
     require_true(destination.inventory_batch_count == 1, "expected destination inventory to contain the batch");
 }
 
+static void test_supply_chain_validation_and_error_paths(void) {
+    BananaBatch batch;
+    BananaBatch loaded;
+    BananaBatch second_batch;
+    BananaBatch invalid_batch;
+    DistributionNode node;
+    BananaGeoCoordinates location;
+    BananaGeoCoordinates invalid_location;
+    BananaShipment shipment;
+    BananaDomainEvent event;
+    BananaRipenessPrediction prediction;
+    BananaStatus status;
+    int db_status;
+    int index = 0;
+    int overflow_seen = 0;
+    char overflow_id[32];
+
+    memset(&batch, 0, sizeof(batch));
+    memset(&loaded, 0, sizeof(loaded));
+    memset(&second_batch, 0, sizeof(second_batch));
+    memset(&invalid_batch, 0, sizeof(invalid_batch));
+    memset(&node, 0, sizeof(node));
+    memset(&shipment, 0, sizeof(shipment));
+    memset(&event, 0, sizeof(event));
+    memset(&prediction, 0, sizeof(prediction));
+
+    location.latitude = 18.2;
+    location.longitude = -63.1;
+    invalid_location.latitude = 120.0;
+    invalid_location.longitude = -63.1;
+
+    status = banana_batch_get("missing-batch-edge", 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null batch-get output");
+
+    status = banana_batch_get("", &loaded);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status for empty batch identifier lookup");
+
+    status = banana_batch_predict_ripeness("missing-batch-edge", 0, 0, 1, 0.0, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripeness prediction output");
+
+    status = banana_batch_register("", "supply-farm-edge", 13.0, 2.0, 5, &batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty batch identifier registration");
+
+    status = banana_batch_register("batch-edge-origin-invalid", "", 13.0, 2.0, 5, &batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty origin farm registration");
+
+    status = banana_batch_register("batch-edge-cache-1", "supply-farm-edge", 13.0, 2.0, 5, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid batch registration in supply-chain edge test");
+
+    db_status = banana_db_clear_batches();
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected known DB status when clearing batches for cache fallback test");
+
+    status = banana_batch_get("batch-edge-cache-1", &loaded);
+    require_true(status == BANANA_OK, "expected BANANA_OK for cached batch lookup after DB clear");
+
+    batch.export_status = BANANA_EXPORT_SHIPPED;
+    status = banana_batch_add_bunch(&batch, "edge-bunch-invalid-status");
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when adding bunch outside PACKED export state");
+
+    batch.export_status = BANANA_EXPORT_PACKED;
+    status = banana_batch_add_bunch(&batch, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null bunch identifier");
+
+    status = banana_batch_add_bunch(&batch, "edge-bunch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid bunch add in edge-path test");
+    status = banana_batch_add_bunch(&batch, "edge-bunch-1");
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for duplicate bunch add");
+
+    memset(&invalid_batch, 0, sizeof(invalid_batch));
+    invalid_batch.export_status = BANANA_EXPORT_PACKED;
+    status = banana_batch_add_bunch(&invalid_batch, "edge-bunch-empty-batch-id");
+    require_true(status == BANANA_OK, "expected BANANA_OK for bunch add when batch id is empty");
+    require_true(invalid_batch.bunch_count == 1, "expected bunch count increment even when batch id is empty");
+
+    status = banana_batch_advance_export_status(&batch, BANANA_EXPORT_DISTRIBUTED);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for unsupported export transition");
+
+    status = banana_distribution_node_register("node-edge-invalid", BANANA_NODE_PORT, invalid_location, 100.0, &node);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid distribution node coordinates");
+
+    status = banana_distribution_node_register("", BANANA_NODE_PORT, location, 100.0, &node);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty distribution node identifier");
+
+    status = banana_distribution_node_register("node-edge-1", BANANA_NODE_PORT, location, 100.0, &node);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid distribution node registration");
+
+    status = banana_distribution_node_receive_batch(0, "node-edge-batch-1");
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null distribution node receive target");
+
+    status = banana_distribution_node_receive_batch(&node, "");
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty received batch identifier");
+
+    status = banana_distribution_node_receive_batch(&node, "node-edge-batch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid distribution node receive");
+    status = banana_distribution_node_receive_batch(&node, "node-edge-batch-1");
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for duplicate distribution node receive");
+    status = banana_distribution_node_receive_batch(&node, "node-edge-batch-2");
+    require_true(status == BANANA_OK, "expected BANANA_OK for second distribution node receive");
+
+    status = banana_distribution_node_dispatch_batch(0, "node-edge-batch-1");
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null distribution node dispatch target");
+
+    status = banana_distribution_node_dispatch_batch(&node, "missing-node-batch");
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status for missing distribution node batch dispatch");
+
+    status = banana_distribution_node_dispatch_batch(&node, "node-edge-batch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK for dispatching first batch from multi-batch node inventory");
+    require_true(node.inventory_batch_count == 1, "expected distribution node inventory count to decrement after dispatch");
+
+    status = banana_shipment_create("", "origin-edge", "destination-edge", &shipment);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty shipment identifier");
+
+    status = banana_shipment_create("shipment-edge-origin-invalid", "", "destination-edge", &shipment);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty shipment origin identifier");
+
+    status = banana_shipment_create("shipment-edge-destination-invalid", "origin-edge", "", &shipment);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty shipment destination identifier");
+
+    status = banana_shipment_create("shipment-edge-1", "origin-edge", "destination-edge", &shipment);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid shipment creation");
+
+    status = banana_shipment_add_batch(0, &batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null shipment add target");
+
+    status = banana_shipment_add_batch(&shipment, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid shipment batch add");
+    status = banana_shipment_add_batch(&shipment, &batch);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for duplicate shipment batch add");
+
+    status = banana_shipment_add_batch(&shipment, &invalid_batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for shipment add with empty batch identifier");
+
+    status = banana_shipment_create("shipment-edge-dispatch", "origin-edge", "destination-edge", &shipment);
+    require_true(status == BANANA_OK, "expected BANANA_OK for dispatch failure shipment setup");
+    status = banana_shipment_add_batch(&shipment, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when adding batch to dispatch-failure shipment setup");
+    batch.export_status = BANANA_EXPORT_CUSTOMS;
+    status = banana_shipment_dispatch(&shipment, &batch, 120, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status from shipment dispatch when export transition is invalid");
+
+    status = banana_shipment_arrive(&shipment, &batch, 121, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when shipment arrival preconditions are not met");
+
+    status = banana_shipment_create("shipment-edge-arrive", "origin-edge", "destination-edge", &shipment);
+    require_true(status == BANANA_OK, "expected BANANA_OK for arrival failure shipment setup");
+    status = banana_shipment_add_batch(&shipment, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when adding batch to arrival-failure shipment setup");
+    shipment.status = BANANA_SHIPMENT_IN_TRANSIT;
+    shipment.departure_day_ordinal = 120;
+    batch.export_status = BANANA_EXPORT_PACKED;
+    status = banana_shipment_arrive(&shipment, &batch, 121, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when shipment arrival export transition is invalid");
+
+    for (index = 0; index < BANANA_MAX_BATCH_REGISTRY + 32; index++) {
+        snprintf(overflow_id, sizeof(overflow_id), "batch-overflow-%d", index);
+        status = banana_batch_register(overflow_id, "overflow-farm", 12.0, 1.0, 3, &second_batch);
+        if (status == BANANA_ERROR_OVERFLOW) {
+            overflow_seen = 1;
+            break;
+        }
+
+        require_true(status == BANANA_OK, "expected BANANA_OK while filling batch registry to overflow point");
+    }
+
+    require_true(overflow_seen, "expected to hit overflow status while filling batch registry");
+}
+
+
 static void test_logistics_supports_containers_and_ripening_rooms(void) {
     BananaBatch batch;
     BananaCurrentLocation location;
@@ -1332,6 +1729,191 @@ static void test_logistics_supports_trucks(void) {
     status = banana_truck_unload_container(&truck, container.container_id.value, container.current_weight_kg);
     require_true(status == BANANA_OK, "expected BANANA_OK when unloading container from truck");
     require_true(truck.container_count == 0, "expected no containers on truck after unload");
+}
+
+static void test_logistics_validation_overflow_and_edge_paths(void) {
+    BananaGeoCoordinates coordinates;
+    BananaGeoCoordinates invalid_coordinates;
+    BananaCurrentLocation location;
+    BananaTemperatureSetting temperature;
+    BananaTemperatureSetting invalid_temperature;
+    BananaContainer container;
+    BananaContainer invalid_container;
+    BananaBatch batch;
+    BananaBatch second_batch;
+    BananaBatch invalid_batch;
+    BananaRipeningRoom room;
+    BananaRipenessPrediction prediction;
+    BananaDomainEvent event;
+    BananaTruck truck;
+    BananaStatus status;
+    double history[1] = { 16.0 };
+
+    memset(&location, 0, sizeof(location));
+    memset(&container, 0, sizeof(container));
+    memset(&invalid_container, 0, sizeof(invalid_container));
+    memset(&batch, 0, sizeof(batch));
+    memset(&second_batch, 0, sizeof(second_batch));
+    memset(&invalid_batch, 0, sizeof(invalid_batch));
+    memset(&room, 0, sizeof(room));
+    memset(&prediction, 0, sizeof(prediction));
+    memset(&event, 0, sizeof(event));
+    memset(&truck, 0, sizeof(truck));
+
+    coordinates.latitude = 14.0;
+    coordinates.longitude = -60.0;
+    invalid_coordinates.latitude = 999.0;
+    invalid_coordinates.longitude = -60.0;
+
+    temperature.set_point_c = 13.0;
+    temperature.tolerance_c = 1.0;
+    invalid_temperature.set_point_c = 80.0;
+    invalid_temperature.tolerance_c = 1.0;
+
+    status = banana_temperature_setting_validate(0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null temperature setting");
+    status = banana_temperature_setting_validate(&invalid_temperature);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for out-of-range temperature setting");
+
+    status = banana_current_location_set("location-invalid", invalid_coordinates, BANANA_NODE_PORT, &location);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid location coordinates");
+    status = banana_current_location_set("", coordinates, BANANA_NODE_PORT, &location);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty location identifier");
+    status = banana_current_location_set("location-valid", coordinates, BANANA_NODE_PORT, &location);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid current location");
+
+    status = banana_container_register("container-invalid-capacity", location, temperature, 0.0, &container);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for non-positive container capacity");
+    status = banana_container_register("container-invalid-temp", location, invalid_temperature, 40.0, &container);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid container temperature");
+    status = banana_container_register("", location, temperature, 40.0, &container);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty container identifier");
+    status = banana_container_register("container-valid", location, temperature, 40.0, &container);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid container registration");
+
+    status = banana_batch_register("log-edge-batch-1", "log-edge-farm", 13.0, 2.0, 5, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for primary logistics edge batch");
+    status = banana_batch_register("log-edge-batch-2", "log-edge-farm", 13.0, 2.0, 5, &second_batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for secondary logistics edge batch");
+
+    status = banana_container_load_batch(0, &batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null container load target");
+
+    status = banana_container_load_batch(&container, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for first container batch load");
+    status = banana_container_load_batch(&container, &batch);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for duplicate container batch load");
+
+    container.batch_count = 0;
+    container.current_weight_kg = 30.0;
+    container.capacity_kg = 40.0;
+    status = banana_container_load_batch(&container, &second_batch);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for container weight-capacity limit");
+
+    container.current_weight_kg = 0.0;
+    invalid_batch.bunch_count = 1;
+    status = banana_container_load_batch(&container, &invalid_batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for batch with empty identifier");
+
+    status = banana_container_unload_batch(0, "missing-batch");
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null container unload target");
+    status = banana_container_unload_batch(&container, 0);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status for null batch id unload lookup");
+
+    status = banana_identifier_copy(&container.batch_ids[0], "container-batch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when preparing container unload fixture first batch");
+    status = banana_identifier_copy(&container.batch_ids[1], "container-batch-2");
+    require_true(status == BANANA_OK, "expected BANANA_OK when preparing container unload fixture second batch");
+    container.batch_count = 2;
+    container.current_weight_kg = 10.0;
+    status = banana_container_unload_batch(&container, "container-batch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when unloading first batch from multi-batch container");
+    require_true(container.batch_count == 1, "expected container batch count decrement after unload");
+    require_true(container.current_weight_kg == 0.0, "expected container weight floor clamp on unload");
+
+    status = banana_ripening_room_register("room-invalid", location, -1.0, 1.0, BANANA_STAGE_YELLOW, &room);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid ripening room temperature");
+    status = banana_ripening_room_register("", location, 16.0, 1.0, BANANA_STAGE_YELLOW, &room);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty ripening room identifier");
+    status = banana_ripening_room_register("room-valid", location, 16.0, 1.0, BANANA_STAGE_YELLOW, &room);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid ripening room registration");
+
+    status = banana_ripening_room_admit_batch(0, &batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripening-room admit target");
+    status = banana_ripening_room_admit_batch(&room, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ripening room batch admission");
+    status = banana_ripening_room_admit_batch(&room, &batch);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for duplicate ripening-room batch admission");
+    status = banana_ripening_room_admit_batch(&room, &invalid_batch);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for ripening-room batch with empty identifier");
+
+    status = banana_ripening_room_release_batch(0, "missing-batch");
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripening-room release target");
+    status = banana_ripening_room_release_batch(&room, "missing-batch");
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status for unknown ripening-room batch");
+
+    status = banana_identifier_copy(&room.batch_ids[0], "room-batch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when preparing room release fixture first batch");
+    status = banana_identifier_copy(&room.batch_ids[1], "room-batch-2");
+    require_true(status == BANANA_OK, "expected BANANA_OK when preparing room release fixture second batch");
+    room.batch_count = 2;
+    status = banana_ripening_room_release_batch(&room, "room-batch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when releasing first batch from multi-batch room");
+    require_true(room.batch_count == 1, "expected ripening room batch count decrement after release");
+
+    room.batch_count = 0;
+    status = banana_ripening_room_apply(&room, &batch, history, 1, 3, &prediction, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for applying room to non-admitted batch");
+
+    status = banana_ripening_room_admit_batch(&room, &batch);
+    require_true(status == BANANA_OK, "expected BANANA_OK when re-admitting batch for ripening apply failure path");
+    status = banana_ripening_room_apply(&room, &batch, history, 1, -1, &prediction, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when ripeness prediction input is invalid");
+
+    status = banana_truck_register("truck-invalid", location, 0.0, &truck);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for non-positive truck capacity");
+    status = banana_truck_register("", location, 60.0, &truck);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for empty truck identifier");
+    status = banana_truck_register("truck-valid", location, 60.0, &truck);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid truck registration");
+
+    status = banana_truck_load_container(0, &container);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null truck load target");
+
+    status = banana_identifier_copy(&container.container_id, "truck-container-valid");
+    require_true(status == BANANA_OK, "expected BANANA_OK when preparing valid truck container id");
+    container.current_weight_kg = 20.0;
+    status = banana_truck_load_container(&truck, &container);
+    require_true(status == BANANA_OK, "expected BANANA_OK when loading valid container onto truck");
+    status = banana_truck_load_container(&truck, &container);
+    require_true(status == BANANA_ERROR_OVERFLOW, "expected overflow status for duplicate container on truck");
+
+    truck.container_count = 0;
+    truck.current_load_kg = 0.0;
+    invalid_container.current_weight_kg = 5.0;
+    status = banana_truck_load_container(&truck, &invalid_container);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when truck container id is empty");
+
+    status = banana_truck_unload_container(0, "missing-container", 1.0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null truck unload target");
+    status = banana_truck_unload_container(&truck, "missing-container", -1.0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for negative unload weight");
+    status = banana_truck_unload_container(&truck, "missing-container", 1.0);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status for unknown container unload");
+
+    status = banana_identifier_copy(&truck.container_ids[0], "truck-container-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when preparing truck unload fixture first container");
+    status = banana_identifier_copy(&truck.container_ids[1], "truck-container-2");
+    require_true(status == BANANA_OK, "expected BANANA_OK when preparing truck unload fixture second container");
+    truck.container_count = 2;
+    truck.current_load_kg = 5.0;
+    status = banana_truck_unload_container(&truck, "truck-container-1", 10.0);
+    require_true(status == BANANA_OK, "expected BANANA_OK when unloading first container from multi-container truck");
+    require_true(truck.container_count == 1, "expected truck container count decrement after unload");
+    require_true(truck.current_load_kg == 0.0, "expected truck load floor clamp after overweight unload");
+
+    status = banana_truck_relocate(0, location);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null truck relocate target");
 }
 
 static void test_repositories_persist_aggregates(void) {
@@ -2228,6 +2810,11 @@ static void test_integration_adapters_translate_external_inputs(void) {
     require_true(telemetry_context.input.storage_temp_c > 13.9 && telemetry_context.input.storage_temp_c < 14.1, "expected Fahrenheit to Celsius conversion for storage temperature");
     require_true(telemetry_context.input.ethylene_exposure == 4.0, "expected ppm normalization for ethylene exposure");
 
+    telemetry.transit_days = -1;
+    status = banana_sensor_adapter_normalize(&telemetry, &telemetry_context);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for negative transit days");
+    telemetry.transit_days = 5;
+
     external_inventory.product_code = "banana-cav-retail";
     external_inventory.batch_id = "ext-batch-1";
     external_inventory.store_code = "store-ext-1";
@@ -2240,6 +2827,30 @@ static void test_integration_adapters_translate_external_inputs(void) {
     require_true(item.ripeness_stage == BANANA_STAGE_YELLOW, "expected translated ripeness stage from external inventory level");
     require_true(item.total_weight_kg > 2.7 && item.total_weight_kg < 2.73, "expected pound-to-kilogram conversion for inventory weight");
     require_true(event.type == BANANA_EVENT_INVENTORY_RECEIVED, "expected inventory-received event from ACL translation");
+
+    external_inventory.ripeness_level = 2;
+    status = banana_inventory_acl_translate(&external_inventory, "ext-inventory-2", 3, 91, &item, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for green-stage inventory translation");
+    require_true(item.ripeness_stage == BANANA_STAGE_GREEN, "expected GREEN stage from ripeness level <= 2");
+
+    external_inventory.ripeness_level = 3;
+    status = banana_inventory_acl_translate(&external_inventory, "ext-inventory-3", 3, 92, &item, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for breaking-stage inventory translation");
+    require_true(item.ripeness_stage == BANANA_STAGE_BREAKING, "expected BREAKING stage from ripeness level 3");
+
+    external_inventory.ripeness_level = 6;
+    status = banana_inventory_acl_translate(&external_inventory, "ext-inventory-4", 3, 93, &item, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for spotted-stage inventory translation");
+    require_true(item.ripeness_stage == BANANA_STAGE_SPOTTED, "expected SPOTTED stage from ripeness level 6");
+
+    external_inventory.ripeness_level = 7;
+    status = banana_inventory_acl_translate(&external_inventory, "ext-inventory-5", 3, 94, &item, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for overripe-stage inventory translation");
+    require_true(item.ripeness_stage == BANANA_STAGE_OVERRIPE, "expected OVERRIPE stage from ripeness level > 6");
+
+    external_inventory.units_available = 0;
+    status = banana_inventory_acl_translate(&external_inventory, "ext-inventory-invalid", 3, 95, &item, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for non-positive external inventory units");
 }
 
 static void test_weather_acl_translates_growing_conditions(void) {
@@ -2260,6 +2871,18 @@ static void test_weather_acl_translates_growing_conditions(void) {
     require_true(advice.should_irrigate, "expected irrigation advice for dry soil and low rainfall");
     require_true(advice.should_harvest_early, "expected early-harvest advice for hot humid conditions");
     require_true(advice.projected_health == BANANA_HEALTH_STRESSED, "expected stressed projected health for harsh conditions");
+
+    status = banana_weather_acl_translate(0, &soil_conditions, &advice);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null weather observation");
+
+    weather.rainfall_mm = 5.0;
+    weather.humidity_pct = 50.0;
+    weather.average_temp_c = 30.0;
+    soil_conditions.moisture_pct = -1.0;
+    soil_conditions.ph = 6.0;
+    soil_conditions.organic_matter_pct = 4.2;
+    status = banana_weather_acl_translate(&weather, &soil_conditions, &advice);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid translated soil conditions");
 }
 
 static void test_read_models_project_stock_and_stats(void) {
@@ -2789,10 +3412,12 @@ int main(void) {
     test_processing_factory_creates_individual_banana_entities();
     test_processing_supports_dimensions_crates_and_inspection();
     test_processing_supports_harvest_batches();
+    test_processing_validation_and_failure_paths();
     test_cultivation_ripening_is_monotonic_and_spoilage_is_tracked();
     test_supply_chain_tracks_shipments_nodes_and_batch_transitions();
     test_logistics_supports_containers_and_ripening_rooms();
     test_logistics_supports_trucks();
+    test_logistics_validation_overflow_and_edge_paths();
     test_repositories_persist_aggregates();
     test_repositories_validation_update_and_overflow_paths();
     test_domain_services_apply_ripening_and_quality_control();
@@ -2811,6 +3436,7 @@ int main(void) {
     test_retail_validation_and_order_state_paths();
     test_inventory_receive_sell_and_discard_spoiled_bananas();
     test_pipeline_null_safety();
+    test_supply_chain_validation_and_error_paths();
 
     test_not_banana_classifier_flags_polymorphic_junk();
     test_not_banana_classifier_flags_banana_signals();
