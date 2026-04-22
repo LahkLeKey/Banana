@@ -64,6 +64,20 @@ You own Banana native C changes in [src/native](../../src/native), [tests/native
 - Build skill: [banana-build-and-run](../skills/banana-build-and-run/SKILL.md)
 - Coverage skill: [banana-test-and-coverage](../skills/banana-test-and-coverage/SKILL.md)
 
+## Native ML Domain Contract (2026-04)
+
+- Keep model internals in `src/native/core/domain/ml/{shared,regression,binary,transformer}` and wrapper bridges in `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
+- Preserve public contracts in `src/native/core/domain/banana_ml_models.h` and `src/native/wrapper/banana_wrapper.h` unless a coordinated breaking change is explicitly requested.
+- When ML files move, update `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES` in `CMakeLists.txt` in the same change.
+- Validate with `Build Native Library` and `ctest --test-dir build/native -C Release --output-on-failure`; coordinate with `api-interop-agent` if ABI-visible behavior changes.
+
+## Not-Banana Training Contract (2026-04)
+
+- Keep runtime not-banana logic in `src/native/core/domain/banana_not_banana.c` aligned with training outputs from `scripts/train-not-banana-model.py`.
+- Treat `data/not-banana/corpus.json` as the canonical labeled source and regenerate artifacts instead of hand-editing derived outputs.
+- Use `.github/workflows/train-not-banana-model.yml` as the CI drift-check authority for training parity.
+- If vocabulary or scoring behavior changes, update corresponding integration expectations in API routes and tests.
+
 ## Shared Frontend Contract
 
 - If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.

@@ -35,7 +35,10 @@ set(BANANA_CORE_SOURCES
     src/native/core/domain/banana_inventory.c
     src/native/core/domain/banana_lifecycle.c
     src/native/core/domain/banana_logistics.c
-    src/native/core/domain/banana_ml_models.c
+    src/native/core/domain/ml/shared/banana_ml_shared.c
+    src/native/core/domain/ml/regression/banana_ml_regression.c
+    src/native/core/domain/ml/binary/banana_ml_binary.c
+    src/native/core/domain/ml/transformer/banana_ml_transformer.c
     src/native/core/domain/banana_not_banana.c
     src/native/core/domain/banana_profile.c
     src/native/core/domain/banana_processing.c
@@ -61,7 +64,10 @@ set(BANANA_WRAPPER_SOURCES
     src/native/wrapper/banana_wrapper.c
     src/native/wrapper/dal/banana_db.c
     src/native/wrapper/domain/banana_logistics.c
-    src/native/wrapper/domain/banana_ml_models.c
+    src/native/wrapper/domain/ml/shared/banana_ml_wrapper_shared.c
+    src/native/wrapper/domain/ml/regression/banana_ml_regression.c
+    src/native/wrapper/domain/ml/binary/banana_ml_binary.c
+    src/native/wrapper/domain/ml/transformer/banana_ml_transformer.c
     src/native/wrapper/domain/banana_not_banana.c
     src/native/wrapper/domain/banana_processing.c
     src/native/wrapper/domain/banana_profile.c

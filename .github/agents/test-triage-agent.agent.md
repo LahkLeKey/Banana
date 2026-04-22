@@ -54,6 +54,20 @@ You separate Banana validation failures into product defects, harness defects, a
 - [testing.instructions.md](../instructions/testing.instructions.md)
 - [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - [banana-ci-debugging](../skills/banana-ci-debugging/SKILL.md)
+## Native ML Domain Contract (2026-04)
+
+- During planning, review, and triage, ensure ML changes stay inside `src/native/core/domain/ml/{shared,regression,binary,transformer}` and `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
+- Require explicit confirmation that public contracts in `src/native/core/domain/banana_ml_models.h` and `src/native/wrapper/banana_wrapper.h` remain stable unless a breaking change is approved.
+- When ML files move, require coordinated `CMakeLists.txt` updates for `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES`.
+- Route implementation to native helpers (`native-core-agent`, `native-wrapper-agent`, `native-c-agent`) and require native build plus `ctest` evidence.
+
+## Not-Banana Training Contract (2026-04)
+
+- Treat `data/not-banana/corpus.json`, `scripts/train-not-banana-model.py`, and `.github/workflows/train-not-banana-model.yml` as one coordinated contract.
+- Require drift checks whenever vocabulary or classifier logic changes across native and API layers.
+- Ensure downstream behavior stays aligned in `src/native/core/domain/banana_not_banana.c` and `src/typescript/api/src/domains/not-banana/routes.ts`.
+- Flag missing training validation, stale artifacts, or undocumented threshold shifts as release risk.
+
 ## Shared Frontend Contract
 
 - If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.

@@ -48,6 +48,20 @@ You own GitHub Actions and CI automation in [.github/workflows](../workflows), i
 - [infra.instructions.md](../instructions/infra.instructions.md)
 - [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - [banana-ci-debugging](../skills/banana-ci-debugging/SKILL.md)
+## Native ML Domain Contract (2026-04)
+
+- Runtime and CI surfaces should preserve native ML build/test orchestration without owning model internals.
+- Ensure existing tasks, scripts, and workflows still compile and exercise sources under `src/native/core/domain/ml/*` and `src/native/wrapper/domain/ml/*`.
+- Keep native library loading and path assumptions explicit in runtime environments.
+- Escalate model-logic changes to native helpers; keep runtime scope focused on orchestration, diagnostics, and delivery parity.
+
+## Not-Banana Training Contract (2026-04)
+
+- Keep training data, script, and workflow wiring coherent across `data/not-banana/corpus.json`, `scripts/train-not-banana-model.py`, and `.github/workflows/train-not-banana-model.yml`.
+- Preserve CI/container prerequisites needed to execute training and drift checks reliably.
+- Treat training drift failures as actionable model/data contract signals, not infrastructure noise.
+- Document any runtime or automation changes that affect training invocation, artifacts, or reproducibility.
+
 ## Shared Frontend Contract
 
 - If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.

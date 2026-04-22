@@ -164,6 +164,20 @@ If an existing app uses different conventions, preserve repo conventions and mig
 - Summary includes files changed, validation run, and follow-up options.
 - Shared UI changes remain centralized in `@banana/ui` with direct consuming-app imports.
 - App-local thin re-export stubs are not introduced.
+## Native ML Domain Contract (2026-04)
+
+- Frontend and Electron surfaces consume ML behavior through typed API contracts rather than direct native model internals.
+- If ML response shape changes upstream, update client typings, state handling, and UX states without introducing app-local model constants.
+- Keep reusable UI primitives in `@banana/ui` and limit ML-specific behavior to API response handling paths.
+- Validate affected surfaces with `bun run check` and `bun run build` in the owning frontend app(s).
+
+## Not-Banana Training Contract (2026-04)
+
+- Treat backend training outputs as source of truth; avoid client-local vocabulary or threshold drift.
+- Keep not-banana UI behavior aligned with API responses from `src/typescript/api/src/domains/not-banana/routes.ts`.
+- Coordinate training-driven semantic changes with API/native owners before landing frontend copy or state changes.
+- Validate not-banana UX flows against a running API when behavior or messaging changes.
+
 ## Shared Frontend Contract
 
 - If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.

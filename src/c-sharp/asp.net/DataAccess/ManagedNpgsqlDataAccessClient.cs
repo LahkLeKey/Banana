@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 using Microsoft.Extensions.Options;
@@ -63,6 +64,7 @@ public sealed class ManagedNpgsqlDataAccessClient : IDataAccessPipelineClient
         }
     }
 
+    [ExcludeFromCodeCoverage(Justification = "Exercised through PostgreSQL-backed integration runs.")]
     private static Dictionary<string, object?> ExecuteQuery(string connectionString, string query, DbAccessRequest request)
     {
         using var connection = new NpgsqlConnection(connectionString);
@@ -100,6 +102,7 @@ public sealed class ManagedNpgsqlDataAccessClient : IDataAccessPipelineClient
         }
     }
 
+    [ExcludeFromCodeCoverage(Justification = "Exercised through PostgreSQL-backed integration runs.")]
     private static Dictionary<string, object?> ReadRow(NpgsqlDataReader reader)
     {
         var row = new Dictionary<string, object?>(StringComparer.Ordinal);

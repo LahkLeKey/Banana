@@ -241,6 +241,107 @@ public sealed class NativeInteropInternalsTests
     }
 
     [Fact]
+    public void NativeMethods_ClassifyNotBananaJunk_ReturnsOk()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var nativeMethodsType = GetNativeMethodsType();
+        var method = nativeMethodsType.GetMethod("ClassifyNotBananaJunk", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        var tokens = new[]
+        {
+            Marshal.StringToCoTaskMemUTF8("actor"),
+            Marshal.StringToCoTaskMemUTF8("entity"),
+            Marshal.StringToCoTaskMemUTF8("junk")
+        };
+
+        var handle = GCHandle.Alloc(tokens, GCHandleType.Pinned);
+        try
+        {
+            var args = new object?[]
+            {
+                handle.AddrOfPinnedObject(),
+                tokens.Length,
+                1,
+                1,
+                null
+            };
+
+            var status = (int)method.Invoke(null, args)!;
+            var classification = Assert.IsType<BananaNotBananaClassificationNative>(args[4]);
+
+            Assert.Equal((int)NativeStatusCode.Ok, status);
+            Assert.True(Enum.IsDefined(typeof(BananaNotBananaLabel), classification.PredictedLabel));
+            Assert.InRange(classification.BananaProbability, 0.0, 1.0);
+            Assert.InRange(classification.NotBananaProbability, 0.0, 1.0);
+            Assert.InRange(classification.JunkConfidence, 0.0, 1.0);
+        }
+        finally
+        {
+            if (handle.IsAllocated)
+            {
+                handle.Free();
+            }
+
+            foreach (var tokenPtr in tokens)
+            {
+                if (tokenPtr != nint.Zero)
+                {
+                    Marshal.FreeCoTaskMem(tokenPtr);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void NativeBananaClient_PrivateMapStageName_MapsKnownStages_AndRejectsUnknown()
+    {
+        var method = typeof(NativeBananaClient).GetMethod("MapStageName", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        Assert.Equal("GREEN", method.Invoke(null, [BananaRipenessStage.Green]));
+        Assert.Equal("BREAKING", method.Invoke(null, [BananaRipenessStage.Breaking]));
+        Assert.Equal("YELLOW", method.Invoke(null, [BananaRipenessStage.Yellow]));
+        Assert.Equal("SPOTTED", method.Invoke(null, [BananaRipenessStage.Spotted]));
+        Assert.Equal("OVERRIPE", method.Invoke(null, [BananaRipenessStage.Overripe]));
+        Assert.Equal("BIODEGRADATION", method.Invoke(null, [BananaRipenessStage.Biodegradation]));
+
+        var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, [(BananaRipenessStage)999]));
+        Assert.IsType<NativeInteropException>(ex.InnerException);
+    }
+
+    [Fact]
+    public void NativeBananaClient_PrivateMapMlLabelName_MapsKnownLabels_AndRejectsUnknown()
+    {
+        var method = typeof(NativeBananaClient).GetMethod("MapMlLabelName", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        Assert.Equal("BANANA", method.Invoke(null, [BananaMlLabel.Banana]));
+        Assert.Equal("NOT_BANANA", method.Invoke(null, [BananaMlLabel.NotBanana]));
+
+        var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, [(BananaMlLabel)999]));
+        Assert.IsType<NativeInteropException>(ex.InnerException);
+    }
+
+    [Fact]
+    public void NativeBananaClient_PrivateMapNotBananaLabelName_MapsKnownLabels_AndRejectsUnknown()
+    {
+        var method = typeof(NativeBananaClient).GetMethod("MapNotBananaLabelName", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+
+        Assert.Equal("BANANA", method.Invoke(null, [BananaNotBananaLabel.Banana]));
+        Assert.Equal("NOT_BANANA", method.Invoke(null, [BananaNotBananaLabel.NotBanana]));
+        Assert.Equal("INDETERMINATE", method.Invoke(null, [BananaNotBananaLabel.Indeterminate]));
+
+        var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(null, [(BananaNotBananaLabel)999]));
+        Assert.IsType<NativeInteropException>(ex.InnerException);
+    }
+
+    [Fact]
     public void BananaMlInteropNativeTypes_MatchExpectedAbiLayout()
     {
         Assert.Equal(0, (int)BananaMlLabel.NotBanana);

@@ -7,7 +7,7 @@ Use this playbook when coordinating Banana work across agents so specialists ope
 - Native domain: `native-core-agent`, `native-dal-agent`, `native-wrapper-agent`, coordinated by `native-c-agent`
 - ASP.NET domain: `api-pipeline-agent`, `api-interop-agent`, coordinated by `csharp-api-agent`
 - Frontend domain: `react-ui-agent`, `electron-agent`, coordinated by `react-agent`
-- Runtime and CI domain: `compose-runtime-agent`, `workflow-agent`, coordinated by `infrastructure-agent`
+- Runtime and CI domain: `compose-runtime-agent`, `mobile-runtime-agent`, `workflow-agent`, coordinated by `infrastructure-agent`
 - Cross-domain quality and orchestration: `integration-agent`, `test-triage-agent`, `banana-reviewer`, `banana-planner`, `banana-sdlc`
 
 ## Team-First Operating Model
@@ -47,6 +47,20 @@ Before coding on a received handoff:
 - Escalate to `banana-sdlc` when more than two domains must move together.
 - Escalate to `integration-agent` when validation spans multiple domains.
 - Escalate to `banana-reviewer` when residual risk remains after implementation.
+
+## Native ML Domain Contract (2026-04)
+
+- During planning, review, and triage, ensure ML changes stay inside `src/native/core/domain/ml/{shared,regression,binary,transformer}` and `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
+- Require explicit confirmation that public contracts in `src/native/core/domain/banana_ml_models.h` and `src/native/wrapper/banana_wrapper.h` remain stable unless a breaking change is approved.
+- When ML files move, require coordinated `CMakeLists.txt` updates for `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES`.
+- Route implementation to native helpers (`native-core-agent`, `native-wrapper-agent`, `native-c-agent`) and require native build plus `ctest` evidence.
+
+## Not-Banana Training Contract (2026-04)
+
+- Treat `data/not-banana/corpus.json`, `scripts/train-not-banana-model.py`, and `.github/workflows/train-not-banana-model.yml` as one coordinated contract.
+- Require drift checks whenever vocabulary or classifier logic changes across native and API layers.
+- Ensure downstream behavior stays aligned in `src/native/core/domain/banana_not_banana.c` and `src/typescript/api/src/domains/not-banana/routes.ts`.
+- Flag missing training validation, stale artifacts, or undocumented threshold shifts as release risk.
 
 ## Ubuntu WSL2 Reproducible Contract (2026-04)
 

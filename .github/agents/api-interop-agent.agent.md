@@ -48,6 +48,20 @@ You own the managed side of Banana's native contract in [src/c-sharp/asp.net/Nat
 - [api.instructions.md](../instructions/api.instructions.md)
 - [banana-agent-decomposition](../skills/banana-agent-decomposition/SKILL.md)
 - [banana-build-and-run](../skills/banana-build-and-run/SKILL.md)
+## Native ML Domain Contract (2026-04)
+
+- Treat ML result contracts from `src/native/core/domain/banana_ml_models.h` and `src/native/wrapper/banana_wrapper.h` as stable API-facing boundaries.
+- Keep managed/native mapping synchronized through interop code instead of duplicating model details in pipeline or route layers.
+- Coordinate native ML file-layout or ABI-impacting changes with `native-wrapper-agent`/`native-c-agent` before adjusting managed contracts.
+- Validate API surface changes with `Build Banana API` and broaden to integration coverage when ML payloads or status mappings move.
+
+## Not-Banana Training Contract (2026-04)
+
+- Keep `src/typescript/api/src/domains/not-banana/routes.ts` behavior aligned with training inputs in `data/not-banana/corpus.json`.
+- Regenerate training outputs via `scripts/train-not-banana-model.py` and treat `.github/workflows/train-not-banana-model.yml` as the drift gate.
+- Do not hardcode ad hoc vocabulary/threshold changes in API routes without matching training updates and documented rationale.
+- Update route-level tests when training-driven classification behavior changes.
+
 ## Shared Frontend Contract
 
 - If a task touches src/typescript/react, src/typescript/electron, or src/typescript/shared/ui, keep shared primitives in @banana/ui instead of app-local thin re-export stubs.

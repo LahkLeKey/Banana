@@ -53,3 +53,4 @@ Thumbs.db
 /artifacts
 /.wiki
 bash.exe.stackdump
+/tests/unit/TestResults
