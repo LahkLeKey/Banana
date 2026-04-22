@@ -35,6 +35,7 @@ set(BANANA_CORE_SOURCES
     src/native/core/domain/banana_inventory.c
     src/native/core/domain/banana_lifecycle.c
     src/native/core/domain/banana_logistics.c
+    src/native/core/domain/banana_ml_models.c
     src/native/core/domain/banana_profile.c
     src/native/core/domain/banana_processing.c
     src/native/core/domain/banana_read_models.c
