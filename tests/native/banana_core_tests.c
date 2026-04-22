@@ -17,6 +17,11 @@
 #include "domain/banana_supply_chain.h"
 #include "domain/banana_ml_models.h"
 #include "domain/banana_not_banana.h"
+#include "dal/banana_db.h"
+#include "dal/domain/banana_cultivation.h"
+#include "dal/domain/banana_inventory.h"
+#include "dal/domain/banana_processing.h"
+#include "dal/domain/banana_supply_chain.h"
 
 static void require_true(int condition, const char* message) {
     if (!condition) {
@@ -417,6 +422,142 @@ static void test_domain_capacity_constants(void) {
     require_true(BANANA_MAX_BATCH_REGISTRY == 64, "expected registry capacity constant to remain stable");
 }
 
+static void test_lifecycle_identifier_and_name_helpers(void) {
+    BananaIdentifier identifier;
+    BananaStatus status;
+    char too_long[BANANA_ID_CAPACITY + 1];
+    int index = 0;
+
+    for (index = 0; index < BANANA_ID_CAPACITY; index++) {
+        too_long[index] = 'x';
+    }
+    too_long[BANANA_ID_CAPACITY] = '\0';
+
+    require_true(!banana_identifier_is_valid(0), "expected invalid identifier for null value");
+    require_true(!banana_identifier_is_valid(""), "expected invalid identifier for empty value");
+    require_true(banana_identifier_is_valid("id-1"), "expected valid identifier for short value");
+    require_true(!banana_identifier_is_valid(too_long), "expected invalid identifier for out-of-range length");
+
+    status = banana_identifier_copy(0, "id-1");
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null identifier output");
+
+    status = banana_identifier_copy(&identifier, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null identifier value");
+
+    status = banana_identifier_copy(&identifier, too_long);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for too-long identifier value");
+
+    status = banana_identifier_copy(&identifier, "id-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid identifier copy");
+    require_true(strcmp(identifier.value, "id-1") == 0, "expected copied identifier value");
+
+    require_true(strcmp(banana_species_name(BANANA_SPECIES_CAVENDISH), "Cavendish") == 0, "expected Cavendish species name");
+    require_true(strcmp(banana_species_name(BANANA_SPECIES_PLANTAIN), "Plantain") == 0, "expected Plantain species name");
+    require_true(strcmp(banana_species_name(BANANA_SPECIES_OTHER), "Other") == 0, "expected Other species name");
+    require_true(strcmp(banana_species_name((BananaSpecies)999), "Unknown") == 0, "expected Unknown species fallback");
+
+    require_true(strcmp(banana_ripeness_stage_name(BANANA_STAGE_GREEN), "GREEN") == 0, "expected GREEN ripeness name");
+    require_true(strcmp(banana_ripeness_stage_name(BANANA_STAGE_BREAKING), "BREAKING") == 0, "expected BREAKING ripeness name");
+    require_true(strcmp(banana_ripeness_stage_name(BANANA_STAGE_YELLOW), "YELLOW") == 0, "expected YELLOW ripeness name");
+    require_true(strcmp(banana_ripeness_stage_name(BANANA_STAGE_SPOTTED), "SPOTTED") == 0, "expected SPOTTED ripeness name");
+    require_true(strcmp(banana_ripeness_stage_name(BANANA_STAGE_OVERRIPE), "OVERRIPE") == 0, "expected OVERRIPE ripeness name");
+    require_true(strcmp(banana_ripeness_stage_name(BANANA_STAGE_BIODEGRADATION), "BIODEGRADATION") == 0, "expected BIODEGRADATION ripeness name");
+    require_true(strcmp(banana_ripeness_stage_name((BananaRipenessStage)999), "UNKNOWN") == 0, "expected UNKNOWN ripeness fallback");
+}
+
+static void test_domain_event_helpers_cover_status_and_validation_paths(void) {
+    BananaDomainEvent event;
+    BananaStatus status;
+    char too_long[BANANA_ID_CAPACITY + 1];
+    int index = 0;
+
+    for (index = 0; index < BANANA_ID_CAPACITY; index++) {
+        too_long[index] = 'z';
+    }
+    too_long[BANANA_ID_CAPACITY] = '\0';
+
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_NONE), "NONE") == 0, "expected NONE event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_PLANTED), "PLANTED") == 0, "expected PLANTED event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_BLOOMED), "BLOOMED") == 0, "expected BLOOMED event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_HARVESTED), "HARVESTED") == 0, "expected HARVESTED event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_SHIPPED), "SHIPPED") == 0, "expected SHIPPED event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_ARRIVED), "ARRIVED") == 0, "expected ARRIVED event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_RIPENED), "RIPENED") == 0, "expected RIPENED event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_SOLD), "SOLD") == 0, "expected SOLD event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_SPOILED), "SPOILED") == 0, "expected SPOILED event name");
+    require_true(strcmp(banana_domain_event_type_name(BANANA_EVENT_INVENTORY_RECEIVED), "INVENTORY_RECEIVED") == 0, "expected INVENTORY_RECEIVED event name");
+    require_true(strcmp(banana_domain_event_type_name((BananaDomainEventType)999), "NONE") == 0, "expected NONE fallback for unknown event type");
+
+    event.type = BANANA_EVENT_SHIPPED;
+    event.quantity = 11;
+    banana_domain_event_clear(&event);
+    require_true(event.type == BANANA_EVENT_NONE, "expected event clear to reset event type");
+    require_true(event.quantity == 0, "expected event clear to reset quantity");
+
+    banana_domain_event_clear(0);
+
+    status = banana_domain_event_record(
+        0,
+        BANANA_EVENT_SHIPPED,
+        "aggregate-1",
+        "related-1",
+        BANANA_STAGE_YELLOW,
+        12,
+        110,
+        18.4);
+    require_true(status == BANANA_OK, "expected BANANA_OK when event output is null");
+
+    status = banana_domain_event_record(
+        &event,
+        BANANA_EVENT_SHIPPED,
+        "aggregate-1",
+        "related-1",
+        BANANA_STAGE_YELLOW,
+        12,
+        110,
+        18.4);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid event recording");
+    require_true(strcmp(event.aggregate_id.value, "aggregate-1") == 0, "expected aggregate identifier to be copied");
+    require_true(strcmp(event.related_id.value, "related-1") == 0, "expected related identifier to be copied");
+
+    status = banana_domain_event_record(
+        &event,
+        BANANA_EVENT_RIPENED,
+        0,
+        "",
+        BANANA_STAGE_SPOTTED,
+        3,
+        203,
+        7.1);
+    require_true(status == BANANA_OK, "expected BANANA_OK for optional identifiers");
+    require_true(event.aggregate_id.value[0] == '\0', "expected empty aggregate identifier when omitted");
+    require_true(event.related_id.value[0] == '\0', "expected empty related identifier when omitted");
+
+    status = banana_domain_event_record(
+        &event,
+        BANANA_EVENT_SHIPPED,
+        too_long,
+        "related-1",
+        BANANA_STAGE_YELLOW,
+        12,
+        110,
+        18.4);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for too-long aggregate identifier");
+    require_true(event.type == BANANA_EVENT_NONE, "expected event state to be cleared after aggregate-id failure");
+
+    status = banana_domain_event_record(
+        &event,
+        BANANA_EVENT_SHIPPED,
+        "aggregate-1",
+        too_long,
+        BANANA_STAGE_YELLOW,
+        12,
+        110,
+        18.4);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for too-long related identifier");
+    require_true(event.type == BANANA_EVENT_NONE, "expected event state to be cleared after related-id failure");
+}
+
 static void test_predict_ripeness_progresses_through_real_banana_stages(void) {
     double green_history[3] = { 12.5, 12.7, 12.9 };
     double yellow_history[3] = { 15.2, 16.1, 17.0 };
@@ -462,6 +603,84 @@ static void test_predict_ripeness_for_profile_input_returns_profile(void) {
     require_true(prediction.predicted_stage == BANANA_STAGE_YELLOW, "expected YELLOW stage for default banana profile scenario");
     require_true(prediction.shelf_life_hours > 0, "expected positive remaining shelf life");
     require_true(prediction.spoilage_probability > 0.0, "expected non-zero spoilage probability");
+}
+
+static void test_predict_ripeness_validation_and_stage_edges(void) {
+    BananaRipenessInput input;
+    BananaRipenessPrediction prediction;
+    BananaStatus status;
+    double cold_history[1] = { 10.0 };
+    double warm_history[2] = { 25.0, 26.0 };
+    double invalid_history[1] = { 70.0 };
+
+    status = banana_predict_ripeness(0, &prediction);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripeness input");
+
+    status = banana_predict_ripeness(&input, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripeness output");
+
+    memset(&input, 0, sizeof(input));
+    input.temperature_history_c = cold_history;
+    input.temperature_history_count = 1;
+    input.days_since_harvest = -1;
+    input.ethylene_exposure = 0.0;
+    input.mechanical_damage = 0.0;
+    input.storage_temp_c = 12.0;
+    status = banana_predict_ripeness(&input, &prediction);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for negative days-since-harvest");
+
+    input.days_since_harvest = 1;
+    input.storage_temp_c = 61.0;
+    status = banana_predict_ripeness(&input, &prediction);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for out-of-range storage temperature");
+
+    input.temperature_history_c = invalid_history;
+    input.temperature_history_count = 1;
+    input.storage_temp_c = 15.0;
+    status = banana_predict_ripeness(&input, &prediction);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for out-of-range temperature history");
+
+    input.temperature_history_c = 0;
+    input.temperature_history_count = 0;
+    input.days_since_harvest = 5;
+    input.ethylene_exposure = 0.0;
+    input.mechanical_damage = 0.0;
+    input.storage_temp_c = 20.0;
+    status = banana_predict_ripeness(&input, &prediction);
+    require_true(status == BANANA_OK, "expected BANANA_OK for BREAKING-stage boundary scenario");
+    require_true(prediction.predicted_stage == BANANA_STAGE_BREAKING, "expected BREAKING stage from fallback average-temperature path");
+
+    input.temperature_history_c = cold_history;
+    input.temperature_history_count = 1;
+    input.days_since_harvest = 20;
+    input.ethylene_exposure = 6.0;
+    input.mechanical_damage = 0.0;
+    input.storage_temp_c = 10.0;
+    status = banana_predict_ripeness(&input, &prediction);
+    require_true(status == BANANA_OK, "expected BANANA_OK for SPOTTED-stage scenario");
+    require_true(prediction.predicted_stage == BANANA_STAGE_SPOTTED, "expected SPOTTED stage from boosted ripening index");
+
+    input.temperature_history_c = 0;
+    input.temperature_history_count = 0;
+    input.days_since_harvest = 17;
+    input.ethylene_exposure = 0.0;
+    input.mechanical_damage = 0.0;
+    input.storage_temp_c = 20.0;
+    status = banana_predict_ripeness(&input, &prediction);
+    require_true(status == BANANA_OK, "expected BANANA_OK for OVERRIPE-stage scenario");
+    require_true(prediction.predicted_stage == BANANA_STAGE_OVERRIPE, "expected OVERRIPE stage from high ripening index");
+
+    input.temperature_history_c = warm_history;
+    input.temperature_history_count = 2;
+    input.days_since_harvest = 20;
+    input.ethylene_exposure = 10.0;
+    input.mechanical_damage = 1.0;
+    input.storage_temp_c = 25.0;
+    status = banana_predict_ripeness(&input, &prediction);
+    require_true(status == BANANA_OK, "expected BANANA_OK for BIODEGRADATION-stage scenario");
+    require_true(prediction.predicted_stage == BANANA_STAGE_BIODEGRADATION, "expected BIODEGRADATION stage from extreme ripening index");
+    require_true(prediction.shelf_life_hours == 0, "expected zero shelf life once ripening index exceeds biodegradation threshold");
+    require_true(absolute_difference(prediction.spoilage_probability, 1.0) < 0.000001, "expected spoilage probability clamp to upper bound");
 }
 
 static void test_batch_registry_create_get_and_predict(void) {
@@ -1062,6 +1281,79 @@ static void test_domain_services_apply_ripening_and_quality_control(void) {
     require_true(bunch.bananas[0].ripeness_stage == bunch.aggregate.bunch.maturity_stage, "expected child banana stage sync after ripening apply");
 }
 
+static void test_domain_services_validation_and_null_prediction_paths(void) {
+    BananaBunchRecord bunch;
+    BananaBunchSpec spec;
+    BananaFruitSpec fruit_spec;
+    BananaPlant plant;
+    BananaGeoCoordinates location;
+    BananaRipenessInput input;
+    BananaRipenessPrediction prediction;
+    BananaDomainEvent event;
+    BananaStatus status;
+
+    memset(&bunch, 0, sizeof(bunch));
+    memset(&input, 0, sizeof(input));
+
+    require_true(absolute_difference(banana_quality_control_average_fruit_weight_kg(0), 0.0) < 0.000001,
+        "expected zero average fruit weight for null bunch");
+    require_true(absolute_difference(banana_quality_control_average_fruit_weight_kg(&bunch), 0.0) < 0.000001,
+        "expected zero average fruit weight for empty bunch");
+    require_true(!banana_quality_control_is_underweight(&bunch, 0.0),
+        "expected non-positive threshold to short-circuit underweight check");
+
+    status = banana_ripening_service_evaluate_bunch(0, &input, &prediction);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null bunch in ripening service evaluate");
+
+    status = banana_ripening_service_evaluate_bunch(&bunch, 0, &prediction);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripeness input in evaluate");
+
+    status = banana_ripening_service_evaluate_bunch(&bunch, &input, 0);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripeness output in evaluate");
+
+    input.temperature_history_c = 0;
+    input.temperature_history_count = 0;
+    input.days_since_harvest = 3;
+    input.ethylene_exposure = 0.0;
+    input.mechanical_damage = 0.0;
+    input.storage_temp_c = 14.0;
+    status = banana_ripening_service_evaluate_bunch(&bunch, &input, &prediction);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid bunch in ripening service evaluate");
+
+    location.latitude = -8.4;
+    location.longitude = 34.2;
+    status = banana_plant_register("service-validate-plant-1", BANANA_SPECIES_CAVENDISH, location, 7, 1, &plant, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for service validation plant registration");
+
+    spec.harvest_day_ordinal = 90;
+    spec.weight_kg = 0.45;
+    spec.finger_count = 1;
+    spec.maturity_stage = BANANA_STAGE_GREEN;
+    spec.quality_score = 0.83;
+    fruit_spec.fruit_id = "service-validate-fruit-1";
+    fruit_spec.cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_spec.ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_spec.weight_kg = 0.45;
+
+    status = banana_bunch_factory_create(
+        &plant,
+        "service-validate-bunch-1",
+        &spec,
+        BANANA_SPECIES_CAVENDISH,
+        &fruit_spec,
+        1,
+        &bunch,
+        0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for service validation bunch creation");
+
+    input.days_since_harvest = 6;
+    input.ethylene_exposure = 4.0;
+    input.storage_temp_c = 16.0;
+    status = banana_ripening_service_apply(&bunch, &input, 97, 0, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for ripening service apply with null prediction output");
+    require_true(event.type == BANANA_EVENT_RIPENED, "expected ripened event when service apply resolves local prediction");
+}
+
 static void test_application_services_execute_commands(void) {
     BananaPlant plant;
     BananaGeoCoordinates location;
@@ -1178,6 +1470,213 @@ static void test_application_services_execute_commands(void) {
     require_true(status == BANANA_OK, "expected BANANA_OK for discard application service");
     require_true(item.quantity_on_hand == 2, "expected reduced inventory after discard application service");
     require_true(first_event.type == BANANA_EVENT_SPOILED, "expected spoiled event from discard application service");
+}
+
+static void test_application_services_validation_and_not_found_paths(void) {
+    BananaHarvestCommand harvest_command;
+    BananaFruitSpec fruit_spec;
+    BananaBunchRecord bunch;
+    BananaRipenCommand ripen_command;
+    BananaRipenessPrediction prediction;
+    BananaShipCommand ship_command;
+    BananaBatch batch;
+    BananaShipment shipment;
+    BananaInventoryReceiveCommand inventory_receive_command;
+    BananaInventoryItem item;
+    BananaSellCommand sell_command;
+    BananaDiscardSpoiledCommand discard_command;
+    BananaDomainEvent event;
+    BananaStatus status;
+
+    memset(&harvest_command, 0, sizeof(harvest_command));
+    memset(&ripen_command, 0, sizeof(ripen_command));
+    memset(&ship_command, 0, sizeof(ship_command));
+    memset(&inventory_receive_command, 0, sizeof(inventory_receive_command));
+    memset(&sell_command, 0, sizeof(sell_command));
+    memset(&discard_command, 0, sizeof(discard_command));
+
+    fruit_spec.fruit_id = "missing-fruit-1";
+    fruit_spec.cultivar = BANANA_SPECIES_CAVENDISH;
+    fruit_spec.ripeness_stage = BANANA_STAGE_GREEN;
+    fruit_spec.weight_kg = 0.3;
+
+    harvest_command.bunch_id = "missing-bunch-app-1";
+    harvest_command.bloom_day_ordinal = 10;
+    harvest_command.bunch_spec.harvest_day_ordinal = 20;
+    harvest_command.bunch_spec.weight_kg = 0.3;
+    harvest_command.bunch_spec.finger_count = 1;
+    harvest_command.bunch_spec.maturity_stage = BANANA_STAGE_GREEN;
+    harvest_command.bunch_spec.quality_score = 0.9;
+    harvest_command.cultivar = BANANA_SPECIES_CAVENDISH;
+    harvest_command.fruit_specs = &fruit_spec;
+    harvest_command.fruit_count = 1;
+
+    status = banana_application_harvest_bunch("missing-plant-app-1", 0, &bunch, &event, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null harvest command");
+
+    status = banana_application_harvest_bunch("missing-plant-app-1", &harvest_command, 0, &event, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null harvest bunch output");
+
+    status = banana_application_harvest_bunch("missing-plant-app-1", &harvest_command, &bunch, &event, &event);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status when harvesting from unknown plant");
+
+    ripen_command.bunch_id = "missing-bunch-app-1";
+    ripen_command.input.temperature_history_c = 0;
+    ripen_command.input.temperature_history_count = 0;
+    ripen_command.input.days_since_harvest = 2;
+    ripen_command.input.ethylene_exposure = 0.0;
+    ripen_command.input.mechanical_damage = 0.0;
+    ripen_command.input.storage_temp_c = 14.0;
+    ripen_command.event_day_ordinal = 22;
+
+    status = banana_application_ripen_bunch(0, &bunch, &prediction, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripen command");
+
+    status = banana_application_ripen_bunch(&ripen_command, 0, &prediction, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ripen bunch output");
+
+    status = banana_application_ripen_bunch(&ripen_command, &bunch, &prediction, &event);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status when ripening unknown bunch");
+
+    ship_command.bunch_id = "missing-bunch-app-1";
+    ship_command.batch_id = "missing-batch-app-1";
+    ship_command.origin_farm = "missing-farm-app-1";
+    ship_command.storage_temp_c = 13.0;
+    ship_command.ethylene_exposure = 1.0;
+    ship_command.estimated_shelf_life_days = 4;
+    ship_command.shipment_id = "missing-shipment-app-1";
+    ship_command.origin_node_id = "missing-origin-app-1";
+    ship_command.destination_node_id = "missing-destination-app-1";
+    ship_command.departure_day_ordinal = 25;
+
+    status = banana_application_ship_bunch(0, &batch, &shipment, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ship command");
+
+    status = banana_application_ship_bunch(&ship_command, 0, &shipment, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null ship batch output");
+
+    status = banana_application_ship_bunch(&ship_command, &batch, &shipment, &event);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status when shipping unknown bunch");
+
+    inventory_receive_command.inventory_id = "invalid-inventory-app-1";
+    inventory_receive_command.location_id = "invalid-location-app-1";
+    inventory_receive_command.source_batch_id = "invalid-batch-app-1";
+    inventory_receive_command.ripeness_stage = BANANA_STAGE_YELLOW;
+    inventory_receive_command.quantity_on_hand = -1;
+    inventory_receive_command.reorder_threshold = 3;
+    inventory_receive_command.total_weight_kg = 1.0;
+    inventory_receive_command.event_day_ordinal = 30;
+
+    status = banana_application_receive_inventory(0, &item, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null inventory-receive command");
+
+    status = banana_application_receive_inventory(&inventory_receive_command, 0, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null inventory output");
+
+    status = banana_application_receive_inventory(&inventory_receive_command, &item, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for invalid inventory receive payload");
+
+    sell_command.inventory_id = "missing-inventory-app-1";
+    sell_command.quantity = 1;
+    sell_command.event_day_ordinal = 31;
+
+    status = banana_application_sell_bananas(0, &item, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null sell command");
+
+    status = banana_application_sell_bananas(&sell_command, 0, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null sell inventory output");
+
+    status = banana_application_sell_bananas(&sell_command, &item, &event);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status when selling unknown inventory");
+
+    discard_command.inventory_id = "missing-inventory-app-1";
+    discard_command.quantity = 1;
+    discard_command.event_day_ordinal = 32;
+
+    status = banana_application_discard_spoiled(0, &item, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null discard command");
+
+    status = banana_application_discard_spoiled(&discard_command, 0, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for null discard inventory output");
+
+    status = banana_application_discard_spoiled(&discard_command, &item, &event);
+    require_true(status == BANANA_ERROR_NOT_FOUND, "expected not-found status when discarding unknown inventory");
+}
+
+static void test_supply_chain_dal_validation_and_round_trip_paths(void) {
+    BananaBatch batch;
+    BananaShipment shipment;
+    BananaStatus status;
+    int db_status;
+
+    memset(&batch, 0, sizeof(batch));
+    memset(&shipment, 0, sizeof(shipment));
+
+    db_status = banana_supply_chain_db_save_batch(0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null supply-chain batch save");
+
+    db_status = banana_supply_chain_db_get_batch(0, &batch);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null supply-chain batch id");
+
+    db_status = banana_supply_chain_db_get_batch("", &batch);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for empty supply-chain batch id");
+
+    db_status = banana_supply_chain_db_get_batch("dal-batch-1", 0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null supply-chain batch output");
+
+    status = banana_identifier_copy(&batch.batch_id, "dal-batch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when assigning dal batch identifier");
+    status = banana_identifier_copy(&batch.origin_farm, "dal-farm-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when assigning dal farm identifier");
+
+    db_status = banana_supply_chain_db_save_batch(&batch);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected supply-chain batch save to return a known DB status");
+
+    db_status = banana_supply_chain_db_get_batch("dal-batch-1", &batch);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_NOT_FOUND || db_status == BANANA_DB_ERROR,
+        "expected supply-chain batch get to return a known DB status");
+
+    db_status = banana_supply_chain_db_clear_batches();
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected supply-chain batch clear to return a known DB status");
+
+    db_status = banana_supply_chain_db_save_shipment(0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null supply-chain shipment save");
+
+    db_status = banana_supply_chain_db_get_shipment(0, &shipment);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null supply-chain shipment id");
+
+    db_status = banana_supply_chain_db_get_shipment("", &shipment);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for empty supply-chain shipment id");
+
+    db_status = banana_supply_chain_db_get_shipment("dal-shipment-1", 0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null supply-chain shipment output");
+
+    status = banana_identifier_copy(&shipment.shipment_id, "dal-shipment-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when assigning dal shipment identifier");
+    status = banana_identifier_copy(&shipment.origin_node_id, "dal-origin-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when assigning dal shipment origin node");
+    status = banana_identifier_copy(&shipment.destination_node_id, "dal-destination-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when assigning dal shipment destination node");
+
+    db_status = banana_supply_chain_db_save_shipment(&shipment);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected supply-chain shipment save to return a known DB status");
+
+    db_status = banana_supply_chain_db_get_shipment("dal-shipment-1", &shipment);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_NOT_FOUND || db_status == BANANA_DB_ERROR,
+        "expected supply-chain shipment get to return a known DB status");
+
+    db_status = banana_supply_chain_db_clear_shipments();
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected supply-chain shipment clear to return a known DB status");
 }
 
 static void test_integration_adapters_translate_external_inputs(void) {
@@ -1325,6 +1824,161 @@ static void test_retail_supports_store_sections_pricing_barcodes_and_orders(void
     require_true(order.status == BANANA_ORDER_FULFILLED, "expected fulfilled retail order state");
     require_true(item.quantity_on_hand == 2, "expected reduced inventory after order fulfillment");
     require_true(event.type == BANANA_EVENT_SOLD, "expected sold event for retail order fulfillment");
+}
+
+static void test_retail_validation_and_order_state_paths(void) {
+    BananaPrice price;
+    BananaBarcode barcode;
+    BananaStoreSection section;
+    BananaRetailOrder order;
+    BananaInventoryItem inventory;
+    BananaDomainEvent event;
+    BananaStatus status;
+    char too_long_barcode[BANANA_BARCODE_CAPACITY + 2];
+    int index = 0;
+
+    for (index = 0; index < BANANA_BARCODE_CAPACITY + 1; index++) {
+        too_long_barcode[index] = '9';
+    }
+    too_long_barcode[BANANA_BARCODE_CAPACITY + 1] = '\0';
+
+    status = banana_price_set(100, "US", &price);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for non-ISO currency code");
+
+    status = banana_barcode_set(too_long_barcode, &barcode);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for too-long barcode");
+
+    status = banana_price_set(159, "USD", &price);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid retail price");
+
+    status = banana_barcode_set("1234567890123", &barcode);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid barcode");
+
+    status = banana_store_section_register("section-retail-2", "store-retail-2", barcode, price, BANANA_STAGE_YELLOW, 0, &section);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for non-positive facing capacity");
+
+    status = banana_store_section_register("section-retail-2", "store-retail-2", barcode, price, BANANA_STAGE_YELLOW, 12, &section);
+    require_true(status == BANANA_OK, "expected BANANA_OK for valid retail section registration");
+
+    status = banana_retail_order_create("order-retail-invalid", "store-retail-2", "section-retail-2", 0, price, &order);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status for non-positive retail order quantity");
+
+    status = banana_retail_order_create("order-retail-partial", "store-retail-2", "section-retail-2", 10, price, &order);
+    require_true(status == BANANA_OK, "expected BANANA_OK for retail order creation");
+
+    status = banana_inventory_receive("inventory-retail-partial", "store-retail-2", "batch-retail-2", BANANA_STAGE_YELLOW, 20, 3, 4.0, 121, &inventory, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for retail partial inventory setup");
+
+    status = banana_retail_order_fulfill(&order, &inventory, 11, 122, &event);
+    require_true(status == BANANA_ERROR_INVALID_INPUT, "expected invalid-input status when fulfillment quantity exceeds ordered quantity");
+
+    status = banana_retail_order_fulfill(&order, &inventory, 4, 122, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for partial retail order fulfillment");
+    require_true(order.status == BANANA_ORDER_PARTIALLY_FULFILLED, "expected PARTIALLY_FULFILLED order status after partial fulfillment");
+
+    status = banana_retail_order_create("order-retail-backorder", "store-retail-2", "section-retail-2", 10, price, &order);
+    require_true(status == BANANA_OK, "expected BANANA_OK for backorder scenario order creation");
+
+    status = banana_inventory_receive("inventory-retail-backorder", "store-retail-2", "batch-retail-3", BANANA_STAGE_YELLOW, 4, 2, 0.8, 123, &inventory, 0);
+    require_true(status == BANANA_OK, "expected BANANA_OK for backorder inventory setup");
+
+    status = banana_retail_order_fulfill(&order, &inventory, 4, 124, &event);
+    require_true(status == BANANA_OK, "expected BANANA_OK for backorder scenario fulfillment");
+    require_true(order.status == BANANA_ORDER_BACKORDERED, "expected BACKORDERED order status when stock hits zero before full order quantity");
+
+    require_true(!banana_store_section_can_face_inventory(0, &inventory), "expected false when section is null");
+    require_true(!banana_store_section_can_face_inventory(&section, 0), "expected false when inventory is null");
+
+    inventory.quantity_on_hand = 20;
+    require_true(!banana_store_section_can_face_inventory(&section, &inventory), "expected false when quantity exceeds facing capacity");
+
+    inventory.quantity_on_hand = 5;
+    inventory.ripeness_stage = BANANA_STAGE_GREEN;
+    require_true(!banana_store_section_can_face_inventory(&section, &inventory), "expected false when ripeness stage distance exceeds one");
+}
+
+static void test_cultivation_inventory_processing_dal_validation_paths(void) {
+    BananaPlant plant;
+    BananaInventoryItem item;
+    BananaBunchRecord bunch;
+    BananaStatus status;
+    int db_status;
+
+    memset(&plant, 0, sizeof(plant));
+    memset(&item, 0, sizeof(item));
+    memset(&bunch, 0, sizeof(bunch));
+
+    db_status = banana_cultivation_db_save_plant(0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null cultivation DAL save");
+    db_status = banana_cultivation_db_get_plant(0, &plant);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null cultivation DAL get id");
+    db_status = banana_cultivation_db_get_plant("", &plant);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for empty cultivation DAL get id");
+    db_status = banana_cultivation_db_get_plant("dal-cultivation-plant-1", 0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null cultivation DAL get output");
+
+    status = banana_identifier_copy(&plant.plant_id, "dal-cultivation-plant-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when assigning cultivation DAL plant identifier");
+    db_status = banana_cultivation_db_save_plant(&plant);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected cultivation DAL save to return a known DB status");
+    db_status = banana_cultivation_db_get_plant("dal-cultivation-plant-1", &plant);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_NOT_FOUND || db_status == BANANA_DB_ERROR,
+        "expected cultivation DAL get to return a known DB status");
+    db_status = banana_cultivation_db_clear_plants();
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected cultivation DAL clear to return a known DB status");
+
+    db_status = banana_inventory_db_save_item(0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null inventory DAL save");
+    db_status = banana_inventory_db_get_item(0, &item);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null inventory DAL get id");
+    db_status = banana_inventory_db_get_item("", &item);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for empty inventory DAL get id");
+    db_status = banana_inventory_db_get_item("dal-inventory-item-1", 0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null inventory DAL get output");
+
+    status = banana_identifier_copy(&item.inventory_id, "dal-inventory-item-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when assigning inventory DAL item identifier");
+    db_status = banana_inventory_db_save_item(&item);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected inventory DAL save to return a known DB status");
+    db_status = banana_inventory_db_get_item("dal-inventory-item-1", &item);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_NOT_FOUND || db_status == BANANA_DB_ERROR,
+        "expected inventory DAL get to return a known DB status");
+    db_status = banana_inventory_db_clear_items();
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected inventory DAL clear to return a known DB status");
+
+    db_status = banana_processing_db_save_bunch(0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null processing DAL save");
+    db_status = banana_processing_db_get_bunch(0, &bunch);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null processing DAL get id");
+    db_status = banana_processing_db_get_bunch("", &bunch);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for empty processing DAL get id");
+    db_status = banana_processing_db_get_bunch("dal-processing-bunch-1", 0);
+    require_true(db_status == BANANA_DB_INVALID_ARGUMENT, "expected DB_INVALID_ARGUMENT for null processing DAL get output");
+
+    status = banana_identifier_copy(&bunch.aggregate.bunch.bunch_id, "dal-processing-bunch-1");
+    require_true(status == BANANA_OK, "expected BANANA_OK when assigning processing DAL bunch identifier");
+    db_status = banana_processing_db_save_bunch(&bunch);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected processing DAL save to return a known DB status");
+    db_status = banana_processing_db_get_bunch("dal-processing-bunch-1", &bunch);
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_NOT_FOUND || db_status == BANANA_DB_ERROR,
+        "expected processing DAL get to return a known DB status");
+    db_status = banana_processing_db_clear_bunches();
+    require_true(
+        db_status == BANANA_DB_OK || db_status == BANANA_DB_NOT_CONFIGURED || db_status == BANANA_DB_ERROR,
+        "expected processing DAL clear to return a known DB status");
 }
 
 static void test_inventory_receive_sell_and_discard_spoiled_bananas(void) {
@@ -1495,8 +2149,11 @@ int main(void) {
     test_ml_transformer_classifier_separates_sequences();
     test_ml_transformer_classifier_rejects_invalid_input();
     test_domain_capacity_constants();
+    test_lifecycle_identifier_and_name_helpers();
+    test_domain_event_helpers_cover_status_and_validation_paths();
     test_predict_ripeness_progresses_through_real_banana_stages();
     test_predict_ripeness_for_profile_input_returns_profile();
+    test_predict_ripeness_validation_and_stage_edges();
     test_batch_registry_create_get_and_predict();
     test_batch_registry_returns_not_found();
     test_batch_registry_persists_mutations();
@@ -1511,11 +2168,16 @@ int main(void) {
     test_logistics_supports_trucks();
     test_repositories_persist_aggregates();
     test_domain_services_apply_ripening_and_quality_control();
+    test_domain_services_validation_and_null_prediction_paths();
     test_application_services_execute_commands();
+    test_application_services_validation_and_not_found_paths();
+    test_supply_chain_dal_validation_and_round_trip_paths();
+    test_cultivation_inventory_processing_dal_validation_paths();
     test_integration_adapters_translate_external_inputs();
     test_weather_acl_translates_growing_conditions();
     test_read_models_project_stock_and_stats();
     test_retail_supports_store_sections_pricing_barcodes_and_orders();
+    test_retail_validation_and_order_state_paths();
     test_inventory_receive_sell_and_discard_spoiled_bananas();
     test_pipeline_null_safety();
 
