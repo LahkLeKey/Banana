@@ -16,6 +16,10 @@ public sealed class NativeBananaClient : INativeBananaClient
         PropertyNameCaseInsensitive = true
     };
 
+    private const int BananaMlFeatureCount = 8;
+    private const int BananaMlTokenFeatureCount = 4;
+    private const int BananaMlMaxSequenceLength = 16;
+
     /// <inheritdoc />
     public BananaResult Calculate(int purchases, int multiplier)
     {
@@ -48,6 +52,55 @@ public sealed class NativeBananaClient : INativeBananaClient
         {
             NativeMethods.Free(messagePtr);
         }
+    }
+
+    /// <inheritdoc />
+    public double PredictBananaRegressionScore(IReadOnlyList<double> features)
+    {
+        var normalized = NormalizeFeatureVector(features);
+        var status = (NativeStatusCode)NativeMethods.PredictBananaRegressionScore(
+            normalized,
+            normalized.Length,
+            out var score);
+
+        EnsureSuccess(status);
+        return score;
+    }
+
+    /// <inheritdoc />
+    public BananaMlBinaryClassification PredictBananaBinaryClassification(IReadOnlyList<double> features)
+    {
+        var normalized = NormalizeFeatureVector(features);
+        var status = (NativeStatusCode)NativeMethods.ClassifyBananaBinary(
+            normalized,
+            normalized.Length,
+            out var classification);
+
+        EnsureSuccess(status);
+
+        return new BananaMlBinaryClassification(
+            MapMlLabelName(classification.PredictedLabel),
+            classification.BananaProbability,
+            classification.NotBananaProbability,
+            classification.DecisionMargin);
+    }
+
+    /// <inheritdoc />
+    public BananaMlTransformerClassification PredictBananaTransformerClassification(IReadOnlyList<double> tokenFeatures)
+    {
+        var normalized = NormalizeTransformerTokenValues(tokenFeatures);
+        var status = (NativeStatusCode)NativeMethods.ClassifyBananaTransformer(
+            normalized,
+            normalized.Length,
+            out var classification);
+
+        EnsureSuccess(status);
+
+        return new BananaMlTransformerClassification(
+            MapMlLabelName(classification.PredictedLabel),
+            classification.BananaProbability,
+            classification.NotBananaProbability,
+            classification.AttentionFocus);
     }
 
     /// <inheritdoc />
@@ -375,6 +428,69 @@ public sealed class NativeBananaClient : INativeBananaClient
         return bytes.ToArray();
     }
 
+    private static double[] NormalizeFeatureVector(IReadOnlyList<double> features)
+    {
+        if (features is null)
+        {
+            throw new ClientInputException("features are required.");
+        }
+
+        if (features.Count != BananaMlFeatureCount)
+        {
+            throw new ClientInputException($"features must contain exactly {BananaMlFeatureCount} values.");
+        }
+
+        var normalized = new double[BananaMlFeatureCount];
+        for (var index = 0; index < BananaMlFeatureCount; index++)
+        {
+            if (!double.IsFinite(features[index]))
+            {
+                throw new ClientInputException("features must contain finite numeric values.");
+            }
+
+            normalized[index] = features[index];
+        }
+
+        return normalized;
+    }
+
+    private static double[] NormalizeTransformerTokenValues(IReadOnlyList<double> tokenFeatures)
+    {
+        if (tokenFeatures is null)
+        {
+            throw new ClientInputException("tokenFeatures are required.");
+        }
+
+        if (tokenFeatures.Count == 0)
+        {
+            throw new ClientInputException("tokenFeatures must contain at least one token.");
+        }
+
+        if ((tokenFeatures.Count % BananaMlTokenFeatureCount) != 0)
+        {
+            throw new ClientInputException($"tokenFeatures must be divisible by {BananaMlTokenFeatureCount} values per token.");
+        }
+
+        var tokenCount = tokenFeatures.Count / BananaMlTokenFeatureCount;
+        if (tokenCount > BananaMlMaxSequenceLength)
+        {
+            throw new ClientInputException($"tokenFeatures exceed the maximum sequence length of {BananaMlMaxSequenceLength}.");
+        }
+
+        var normalized = new double[tokenFeatures.Count];
+        for (var index = 0; index < tokenFeatures.Count; index++)
+        {
+            if (!double.IsFinite(tokenFeatures[index]))
+            {
+                throw new ClientInputException("tokenFeatures must contain finite numeric values.");
+            }
+
+            normalized[index] = tokenFeatures[index];
+        }
+
+        return normalized;
+    }
+
     private static TRecord DeserializeRecord<TRecord>(nint payloadPtr, string invalidPayloadMessage)
     {
         var json = Encoding.UTF8.GetString(ReadNullTerminatedUtf8(payloadPtr));
@@ -393,6 +509,16 @@ public sealed class NativeBananaClient : INativeBananaClient
             BananaRipenessStage.Overripe => "OVERRIPE",
             BananaRipenessStage.Biodegradation => "BIODEGRADATION",
             _ => throw new NativeInteropException($"Native returned unknown ripeness stage: {(int)stage}")
+        };
+    }
+
+    private static string MapMlLabelName(BananaMlLabel label)
+    {
+        return label switch
+        {
+            BananaMlLabel.Banana => "BANANA",
+            BananaMlLabel.NotBanana => "NOT_BANANA",
+            _ => throw new NativeInteropException($"Native returned unknown banana model label: {(int)label}")
         };
     }
 

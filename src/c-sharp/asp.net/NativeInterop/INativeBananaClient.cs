@@ -77,4 +77,19 @@ public interface INativeBananaClient
         IReadOnlyList<double> temperatureHistoryC,
         int daysSinceHarvest,
         double mechanicalDamage);
+
+    /// <summary>
+    /// Predicts banana-likeness as a bounded regression score in the range [0, 1].
+    /// </summary>
+    double PredictBananaRegressionScore(IReadOnlyList<double> features);
+
+    /// <summary>
+    /// Classifies whether features represent a banana using a binary classifier.
+    /// </summary>
+    BananaMlBinaryClassification PredictBananaBinaryClassification(IReadOnlyList<double> features);
+
+    /// <summary>
+    /// Classifies a flattened token sequence using the native transformer-style model.
+    /// </summary>
+    BananaMlTransformerClassification PredictBananaTransformerClassification(IReadOnlyList<double> tokenFeatures);
 }

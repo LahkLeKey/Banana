@@ -23,6 +23,10 @@ static void require_true(int condition, const char* message) {
     }
 }
 
+static double absolute_difference(double left, double right) {
+    return left > right ? left - right : right - left;
+}
+
 static void test_calculate_banana_ok(void) {
     int banana = 0;
     int status = banana_calculate_banana(10, 2, &banana);
@@ -117,6 +121,154 @@ static void test_breakdown_internal_error(void) {
 static void test_breakdown_null_pointer(void) {
     int status = banana_calculate_banana_with_breakdown(10, 2, 0);
     require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null breakdown");
+}
+
+static void test_predict_banana_regression_score_ok(void) {
+    double features[CINTEROP_BANANA_ML_FEATURE_COUNT] = {
+        0.82,
+        0.14,
+        0.76,
+        0.43,
+        0.05,
+        0.61,
+        0.72,
+        0.18
+    };
+    double score = 0.0;
+    int status = banana_predict_banana_regression_score(
+        features,
+        CINTEROP_BANANA_ML_FEATURE_COUNT,
+        &score);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for regression score prediction");
+    require_true(score > 0.7905 && score < 0.7907, "expected deterministic regression score");
+}
+
+static void test_predict_banana_regression_score_invalid_args(void) {
+    double features[CINTEROP_BANANA_ML_FEATURE_COUNT] = { 0.0 };
+    double score = 0.0;
+    int status = banana_predict_banana_regression_score(0, CINTEROP_BANANA_ML_FEATURE_COUNT, &score);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null regression features");
+
+    status = banana_predict_banana_regression_score(features, CINTEROP_BANANA_ML_FEATURE_COUNT - 1, &score);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for wrong regression feature count");
+
+    status = banana_predict_banana_regression_score(features, CINTEROP_BANANA_ML_FEATURE_COUNT, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null regression score output");
+}
+
+static void test_classify_banana_binary_ok(void) {
+    double banana_features[CINTEROP_BANANA_ML_FEATURE_COUNT] = {
+        0.82,
+        0.14,
+        0.76,
+        0.43,
+        0.05,
+        0.61,
+        0.72,
+        0.18
+    };
+    double not_banana_features[CINTEROP_BANANA_ML_FEATURE_COUNT] = {
+        0.12,
+        0.81,
+        0.17,
+        0.09,
+        0.74,
+        0.18,
+        0.22,
+        0.66
+    };
+    CInteropBananaMlBinaryClassification classification;
+    int status = banana_classify_banana_binary(
+        banana_features,
+        CINTEROP_BANANA_ML_FEATURE_COUNT,
+        &classification);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for banana-like binary classification sample");
+    require_true(classification.predicted_label == CINTEROP_BANANA_ML_LABEL_BANANA, "expected banana label for banana-like binary sample");
+    require_true(classification.banana_probability > 0.80, "expected strong banana probability for banana-like binary sample");
+
+    status = banana_classify_banana_binary(
+        not_banana_features,
+        CINTEROP_BANANA_ML_FEATURE_COUNT,
+        &classification);
+    require_true(status == BANANA_STATUS_OK, "expected OK for non-banana binary classification sample");
+    require_true(classification.predicted_label == CINTEROP_BANANA_ML_LABEL_NOT_BANANA, "expected not-banana label for non-banana binary sample");
+    require_true(classification.banana_probability < 0.20, "expected low banana probability for non-banana binary sample");
+    require_true(absolute_difference(
+            classification.banana_probability + classification.not_banana_probability,
+            1.0) < 0.000001,
+        "expected binary probabilities to sum to one");
+}
+
+static void test_classify_banana_binary_invalid_args(void) {
+    double features[CINTEROP_BANANA_ML_FEATURE_COUNT] = { 0.0 };
+    CInteropBananaMlBinaryClassification classification;
+    int status = banana_classify_banana_binary(0, CINTEROP_BANANA_ML_FEATURE_COUNT, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null binary features");
+
+    status = banana_classify_banana_binary(features, CINTEROP_BANANA_ML_FEATURE_COUNT - 1, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for wrong binary feature count");
+
+    status = banana_classify_banana_binary(features, CINTEROP_BANANA_ML_FEATURE_COUNT, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null binary classification output");
+}
+
+static void test_classify_banana_transformer_ok(void) {
+    double banana_tokens[] = {
+        0.82, 0.15, 0.76, 0.18,
+        0.79, 0.12, 0.74, 0.16,
+        0.84, 0.11, 0.78, 0.14
+    };
+    double not_banana_tokens[] = {
+        0.18, 0.82, 0.22, 0.79,
+        0.16, 0.85, 0.20, 0.81,
+        0.20, 0.78, 0.24, 0.76
+    };
+    CInteropBananaMlTransformerClassification classification;
+    int status = banana_classify_banana_transformer(
+        banana_tokens,
+        (int)(sizeof(banana_tokens) / sizeof(double)),
+        &classification);
+
+    require_true(status == BANANA_STATUS_OK, "expected OK for transformer banana-like sequence");
+    require_true(classification.predicted_label == CINTEROP_BANANA_ML_LABEL_BANANA, "expected banana label for transformer banana-like sequence");
+    require_true(classification.banana_probability > 0.95, "expected high banana probability for transformer banana-like sequence");
+    require_true(classification.attention_focus > 0.0 && classification.attention_focus <= 1.0, "expected normalized attention focus for transformer sequence");
+
+    status = banana_classify_banana_transformer(
+        not_banana_tokens,
+        (int)(sizeof(not_banana_tokens) / sizeof(double)),
+        &classification);
+    require_true(status == BANANA_STATUS_OK, "expected OK for transformer non-banana sequence");
+    require_true(classification.predicted_label == CINTEROP_BANANA_ML_LABEL_NOT_BANANA, "expected not-banana label for transformer non-banana sequence");
+    require_true(classification.banana_probability < 0.05, "expected low banana probability for transformer non-banana sequence");
+}
+
+static void test_classify_banana_transformer_invalid_args(void) {
+    double token_values[CINTEROP_BANANA_ML_TOKEN_FEATURE_COUNT * 2] = {
+        0.2, 0.1, 0.3, 0.4,
+        0.4, 0.3, 0.2, 0.1
+    };
+    double over_limit_values[CINTEROP_BANANA_ML_TOKEN_FEATURE_COUNT * (CINTEROP_BANANA_ML_MAX_SEQUENCE_LENGTH + 1)] = { 0.0 };
+    CInteropBananaMlTransformerClassification classification;
+    int status = banana_classify_banana_transformer(0, 8, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null transformer token values");
+
+    status = banana_classify_banana_transformer(token_values, 0, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for empty transformer token sequence");
+
+    status = banana_classify_banana_transformer(token_values, 7, &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for non-aligned transformer token value count");
+
+    status = banana_classify_banana_transformer(
+        over_limit_values,
+        (int)(sizeof(over_limit_values) / sizeof(double)),
+        &classification);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for transformer sequence exceeding max length");
+
+    status = banana_classify_banana_transformer(token_values, 8, 0);
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null transformer output");
 }
 
 static void test_db_query_banana_ok(void) {
@@ -523,6 +675,12 @@ int main(void) {
     test_breakdown_invalid_input();
     test_breakdown_null_pointer();
     test_breakdown_internal_error();
+    test_predict_banana_regression_score_ok();
+    test_predict_banana_regression_score_invalid_args();
+    test_classify_banana_binary_ok();
+    test_classify_banana_binary_invalid_args();
+    test_classify_banana_transformer_ok();
+    test_classify_banana_transformer_invalid_args();
     test_db_query_banana_ok();
     test_predict_banana_ripeness_ok();
     test_predict_banana_ripeness_invalid_args();

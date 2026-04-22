@@ -147,6 +147,71 @@ public sealed class NativeBananaClientTests
     }
 
     [Fact]
+    public void PredictBananaRegressionScore_ReturnsBoundedScore_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        var result = client.PredictBananaRegressionScore([0.72, 0.08, 0.11, 0.09, 0.84, 0.88, 0.41, 0.37]);
+
+        Assert.InRange(result, 0.0, 1.0);
+    }
+
+    [Fact]
+    public void PredictBananaBinaryClassification_ReturnsProbabilities_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        var result = client.PredictBananaBinaryClassification([0.72, 0.08, 0.11, 0.09, 0.84, 0.88, 0.41, 0.37]);
+
+        Assert.False(string.IsNullOrWhiteSpace(result.PredictedLabel));
+        Assert.InRange(result.BananaProbability, 0.0, 1.0);
+        Assert.InRange(result.NotBananaProbability, 0.0, 1.0);
+    }
+
+    [Fact]
+    public void PredictBananaTransformerClassification_ReturnsProbabilities_WhenNativeLibraryIsAvailable()
+    {
+        if (!EnsureNativePathConfigured())
+        {
+            return;
+        }
+
+        var client = new NativeBananaClient();
+        var result = client.PredictBananaTransformerClassification([
+            0.70, 0.07, 0.10, 0.08,
+            0.82, 0.84, 0.36, 0.34
+        ]);
+
+        Assert.False(string.IsNullOrWhiteSpace(result.PredictedLabel));
+        Assert.InRange(result.BananaProbability, 0.0, 1.0);
+        Assert.InRange(result.NotBananaProbability, 0.0, 1.0);
+    }
+
+    [Fact]
+    public void PredictBananaRegressionScore_WithInvalidFeatureCount_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() => client.PredictBananaRegressionScore([0.25, 0.5]));
+    }
+
+    [Fact]
+    public void PredictBananaTransformerClassification_WithInvalidTokenFeatureStride_ThrowsClientInputException()
+    {
+        var client = new NativeBananaClient();
+
+        Assert.Throws<ClientInputException>(() => client.PredictBananaTransformerClassification([0.1, 0.2, 0.3]));
+    }
+
+    [Fact]
     public void Calculate_WithNegativeValues_ThrowsClientInputException_WhenNativeLibraryIsAvailable()
     {
         if (!EnsureNativePathConfigured())

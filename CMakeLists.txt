@@ -60,6 +60,7 @@ set(BANANA_WRAPPER_SOURCES
     src/native/wrapper/banana_wrapper.c
     src/native/wrapper/dal/banana_db.c
     src/native/wrapper/domain/banana_logistics.c
+    src/native/wrapper/domain/banana_ml_models.c
     src/native/wrapper/domain/banana_processing.c
     src/native/wrapper/domain/banana_profile.c
     src/native/wrapper/domain/banana_ripeness.c
