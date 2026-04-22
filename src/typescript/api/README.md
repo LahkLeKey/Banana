@@ -10,6 +10,7 @@ This workspace is the migration target for replacing the ASP.NET API with a Type
   - `POST /batches/create`
   - `GET /batches/:id/status`
   - `POST /ripeness/predict`
+  - `POST /not-banana/junk`
 - Introduce domain-oriented route modules and standalone domain API entrypoints.
 - Use Prisma as the default persistence mechanism for API/domain request logs.
 - Proxy to the existing ASP.NET API during transition to reduce blast radius.
@@ -56,4 +57,5 @@ The current implementation is proxy-first with initial native cutovers in banana
 1. Fastify handles transport + route contracts.
 2. Banana domain can execute directly through native C interop (`ffi-napi`/`ref-napi`) with proxy fallback.
 3. Ripeness domain continues proxying to ASP.NET for behavior parity.
-4. Domain logs persist through Prisma models, and banana calculations are persisted as migration-ready business records.
+4. Not-banana domain classifies arbitrary junk payloads using polymorphic actor/entity normalization.
+5. Domain logs persist through Prisma models, and banana calculations are persisted as migration-ready business records.

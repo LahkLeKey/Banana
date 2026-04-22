@@ -71,3 +71,33 @@ export type BananaMlTransformerResponse = {
   notBananaProbability: number;
   attentionFocus: number;
 };
+
+export type NotBananaPolymorphicActor = {
+  actorType: string; actorId: string | null;
+};
+
+export type NotBananaPolymorphicEntity = {
+  entityType: string; entityId: string | null;
+};
+
+export type NotBananaJunkRequest = {
+  actors?: unknown[];
+  entities?: unknown[];
+  actor?: unknown;
+  entity?: unknown;
+  junk?: unknown;
+  metadata?: Record<string, unknown>;
+};
+
+export type NotBananaJunkClassification = 'NOT_BANANA'|'MAYBE_BANANA';
+
+export type NotBananaJunkResponse = {
+  classification: NotBananaJunkClassification; bananaProbability: number;
+  notBananaProbability: number;
+  junkConfidence: number;
+  actorCount: number;
+  entityCount: number;
+  normalizedActors: NotBananaPolymorphicActor[];
+  normalizedEntities: NotBananaPolymorphicEntity[];
+  message: string;
+};

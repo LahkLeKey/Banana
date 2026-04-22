@@ -4,6 +4,8 @@ type PrismaClientLike = {
   batchApiCall?: {create(args: unknown): Promise<unknown>};
   ripenessApiCall?: {create(args: unknown): Promise<unknown>};
   mlApiCall?: {create(args: unknown): Promise<unknown>};
+  notBananaApiCall?: {create(args: unknown): Promise<unknown>};
+  notBananaClassification?: {create(args: unknown): Promise<unknown>};
 };
 
 let clientPromise: Promise<PrismaClientLike|null>|null = null;
@@ -30,11 +32,22 @@ export async function getPrismaClient(): Promise<PrismaClientLike|null> {
   return clientPromise;
 }
 
-export type DomainName = 'banana'|'batch'|'ripeness'|'ml';
+export type DomainName = 'banana'|'batch'|'ripeness'|'ml'|'not-banana';
 
 export type BananaCalculationRecord = {
   purchases: number; multiplier: number; banana: number; message: string;
   source: 'native-c' | 'proxy';
+};
+
+export type NotBananaClassificationRecord = {
+  classification: 'NOT_BANANA'|'MAYBE_BANANA'; bananaProbability: number;
+  notBananaProbability: number;
+  junkConfidence: number;
+  actorCount: number;
+  entityCount: number;
+  requestBody: unknown;
+  responseBody: unknown;
+  source: string;
 };
 
 export async function saveBananaCalculation(record: BananaCalculationRecord):
@@ -51,6 +64,32 @@ export async function saveBananaCalculation(record: BananaCalculationRecord):
         multiplier: record.multiplier,
         banana: record.banana,
         message: record.message,
+        source: record.source,
+      }
+    });
+  } catch {
+    // Keep HTTP flow resilient when schema rollout lags runtime deployment.
+  }
+}
+
+export async function saveNotBananaClassification(
+    record: NotBananaClassificationRecord): Promise<void> {
+  const prisma = await getPrismaClient();
+  if (!prisma?.notBananaClassification?.create) {
+    return;
+  }
+
+  try {
+    await prisma.notBananaClassification.create({
+      data: {
+        classification: record.classification,
+        bananaProbability: record.bananaProbability,
+        notBananaProbability: record.notBananaProbability,
+        junkConfidence: record.junkConfidence,
+        actorCount: record.actorCount,
+        entityCount: record.entityCount,
+        requestJson: JSON.stringify(record.requestBody ?? null),
+        responseJson: JSON.stringify(record.responseBody ?? null),
         source: record.source,
       }
     });
@@ -91,6 +130,9 @@ export async function logDomainCall(
         break;
       case 'ml':
         await prisma.mlApiCall?.create({data});
+        break;
+      case 'not-banana':
+        await prisma.notBananaApiCall?.create({data});
         break;
       default:
         break;

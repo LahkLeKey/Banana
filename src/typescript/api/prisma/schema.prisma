@@ -51,3 +51,26 @@ model MlApiCall {
     responseJson String
     createdAt    DateTime @default(now())
 }
+
+model NotBananaApiCall {
+    id           BigInt   @id @default(autoincrement())
+    route        String
+    statusCode   Int
+    requestJson  String
+    responseJson String
+    createdAt    DateTime @default(now())
+}
+
+model NotBananaClassification {
+    id                   BigInt   @id @default(autoincrement())
+    classification       String
+    bananaProbability    Float
+    notBananaProbability Float
+    junkConfidence       Float
+    actorCount           Int
+    entityCount          Int
+    requestJson          String
+    responseJson         String
+    source               String
+    createdAt            DateTime @default(now())
+}

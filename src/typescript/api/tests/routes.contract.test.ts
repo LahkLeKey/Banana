@@ -107,6 +107,7 @@ async function createProxyHarness(): Promise<ProxyHarness> {
     batch: true,
     ripeness: true,
     ml: false,
+    notBanana: true,
   });
 
   await gateway.ready();
@@ -255,3 +256,69 @@ test('POST /ripeness/predict preserves prediction contract', async () => {
     await harness.close();
   }
 });
+
+test(
+    'POST /not-banana/junk handles polymorphic actor and entity payloads',
+    async () => {
+      const harness = await createProxyHarness();
+
+      const requestBody = {
+        actors: [
+          {
+            actorType: 'warehouse-worker',
+            actorId: 'A-1',
+            payload: {shift: 'night', role: 'picker'},
+          },
+          {
+            type: 'camera',
+            id: 'A-2',
+            payload: {lensState: 'dusty'},
+          },
+        ],
+        entities: [
+          {
+            entityType: 'crate',
+            entityId: 'E-1',
+            payload: {weightKg: 8.2},
+          },
+          {
+            kind: 'forklift',
+            id: 'E-2',
+            payload: {batteryPercent: 63},
+          },
+        ],
+        junk: {
+          arbitrary:
+              {region: 'dock-west', discardedParts: ['bolt', 'scrap-metal']}
+        },
+      };
+
+      try {
+        const response = await harness.gateway.inject({
+          method: 'POST',
+          url: '/not-banana/junk',
+          payload: requestBody,
+        });
+
+        assert.equal(response.statusCode, 200);
+        const body = response.json() as {
+          classification: string;
+          actorCount: number;
+          entityCount: number;
+          notBananaProbability: number;
+          bananaProbability: number;
+          normalizedActors: Array<{actorType: string}>;
+          normalizedEntities: Array<{entityType: string}>;
+        };
+
+        assert.equal(body.classification, 'NOT_BANANA');
+        assert.equal(body.actorCount, 2);
+        assert.equal(body.entityCount, 2);
+        assert.equal(typeof body.notBananaProbability, 'number');
+        assert.equal(typeof body.bananaProbability, 'number');
+        assert.equal(body.normalizedActors[0]?.actorType, 'warehouse-worker');
+        assert.equal(body.normalizedEntities[1]?.entityType, 'forklift');
+      } finally {
+        await harness.close();
+      }
+    });

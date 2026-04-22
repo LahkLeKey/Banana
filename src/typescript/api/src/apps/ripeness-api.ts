@@ -7,6 +7,7 @@ const app = createServer(config, {
   batch: false,
   ripeness: true,
   ml: false,
+  notBanana: false,
 });
 
 try {
