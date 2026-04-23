@@ -228,6 +228,10 @@ def main() -> int:
             "backlog_issue_labels": "WORKFLOW missing backlog issue-label cleanup contract",
             "backlog_pr_labels": "WORKFLOW missing backlog PR-label cleanup contract",
             "backlog_pr_branch_prefixes": "WORKFLOW missing backlog PR-branch cleanup contract",
+            "epic_decomposition": "WORKFLOW missing epic decomposition toggle",
+            "epic_auto_dispatch_first_task": "WORKFLOW missing epic first-task auto-dispatch toggle",
+            "BANANA_TRIAGE_ENABLE_EPIC_DECOMPOSITION": "WORKFLOW missing epic decomposition env wiring",
+            "BANANA_TRIAGE_EPIC_AUTO_DISPATCH_FIRST_TASK": "WORKFLOW missing epic first-task dispatch env wiring",
             "workflow-triage-idea-cloud.sh": "WORKFLOW missing triage idea orchestration script execution",
             "workflow-sync-wiki.sh": "WORKFLOW missing wiki sync step",
             "BANANA_WIKI_REMOTE_URL": "WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring",
@@ -355,6 +359,13 @@ def main() -> int:
             "BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS": "SCRIPT missing required-check dispatch toggle",
             "BANANA_TRIAGE_CHECK_WORKFLOWS": "SCRIPT missing required-check workflow list contract",
             "actions/workflows/${workflow_file}/dispatches": "SCRIPT missing required-check workflow dispatch path",
+            "BANANA_TRIAGE_ENABLE_EPIC_DECOMPOSITION": "SCRIPT missing epic decomposition toggle",
+            "BANANA_TRIAGE_EPIC_AUTO_DISPATCH_FIRST_TASK": "SCRIPT missing epic first-task auto-dispatch toggle",
+            "scaffold_epic_breakdown_if_requested": "SCRIPT missing epic decomposition execution path",
+            "dispatch_triage_issue_workflow": "SCRIPT missing first-task workflow dispatch helper",
+            "epic-decomposed": "SCRIPT missing epic decomposition label contract",
+            "user-story": "SCRIPT missing user-story label contract",
+            "task": "SCRIPT missing task label contract",
         }
 
         for fragment, message in triage_idea_script_required_fragments.items():

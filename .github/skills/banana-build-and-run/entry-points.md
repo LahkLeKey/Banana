@@ -81,6 +81,7 @@
 - Cloud triage idea orchestration script: `bash scripts/workflow-triage-idea-cloud.sh`.
 - Cloud triage backlog cleanup defaults: `BANANA_TRIAGE_CLEAR_BACKLOG=true`, `BANANA_TRIAGE_BACKLOG_ISSUE_LABELS=copilot-suggestion,ai-generated`, `BANANA_TRIAGE_BACKLOG_PR_LABELS=automation,triaged-item`, and `BANANA_TRIAGE_BACKLOG_PR_BRANCH_PREFIXES=triage/,triage-copilot/,triage-feedback/`.
 - Cloud triage check-dispatch defaults: `BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS=true` and `BANANA_TRIAGE_CHECK_WORKFLOWS=copilot-review-triage.yml,require-human-approval.yml`.
+- Cloud triage epic-decomposition defaults: `BANANA_TRIAGE_ENABLE_EPIC_DECOMPOSITION=true` and `BANANA_TRIAGE_EPIC_AUTO_DISPATCH_FIRST_TASK=true` to split epic ideas into story/task issues and bootstrap the first task CI run.
 - Custom triage prompt: `.github/prompts/triage.prompt.md` (use `/triage "idea"` to intake and orchestrate).
 - Backlog iteration prompt: `.github/prompts/iterate-the-backlog.prompt.md` (use `/iterate-the-backlog "scope"` to cycle existing backlog items through incremental orchestration and required-check gating).
 - Human-approval gate workflow: `.github/workflows/require-human-approval.yml` (mark check required in branch protection/rulesets).

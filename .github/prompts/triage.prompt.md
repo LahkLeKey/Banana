@@ -18,6 +18,9 @@ Requirements:
 - Support any static helper agent defined in `.github/agents/*.agent.md` when `banana-target-agent` is provided by a human template.
 - Keep propagated `agent:*` labels on both triage issues and generated PRs for deterministic helper routing.
 - Clear backlog triage issues and triage automation PRs before creating new ones unless backlog cleanup is explicitly disabled.
+- When the idea is epic-like, decompose it into linked `epic`, `user-story`, and `task` issues instead of keeping a 1:1 issue-to-PR shape.
+- Start CI from the first generated task by dispatching triage orchestration for that task with backlog cleanup disabled.
+- Preserve epic/story/task labels on generated PRs so backlog iteration can progress task-by-task until epic completion.
 - Trigger cloud orchestration through workflow `.github/workflows/orchestrate-triage-idea-cloud.yml`.
 - Preserve provenance labels on generated pull requests (`copilot-auto-approve` and `copilot-bypass-vibe-coded` unless overridden).
 - Return concrete outputs: issue URL, workflow run URL, generated PR URL (if created), and any skipped-no-change reason.
