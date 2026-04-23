@@ -42,6 +42,7 @@ jobs:
 
             const labels = (pr.labels || []).map((label) => label.name);
             const headBranch = pr.head?.ref || "";
+            const soloBypassLabel = "solo-maintainer-bypass";
             const requiresHumanApproval =
               labels.includes("requires-human-approval") ||
               headBranch.startsWith("triage/") ||
@@ -49,6 +50,22 @@ jobs:
 
             if (!requiresHumanApproval) {
               core.notice("Pull request is not marked as automation-managed. Skipping gate.");
+              return;
+            }
+
+            if (labels.includes(soloBypassLabel)) {
+              const prAuthor = (pr.user?.login || "").toLowerCase();
+              const repoOwner = (context.repo.owner || "").toLowerCase();
+              if (prAuthor !== repoOwner) {
+                core.setFailed(
+                  `Label '${soloBypassLabel}' may only be used when the repository owner is the pull request author.`
+                );
+                return;
+              }
+
+              core.notice(
+                `Bypassing human approval gate because '${soloBypassLabel}' is set on an owner-authored PR.`
+              );
               return;
             }
 
