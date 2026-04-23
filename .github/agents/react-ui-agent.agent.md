@@ -75,6 +75,7 @@ You own React UI work in [src/typescript/react/src](../../src/typescript/react/s
 ## Cross-Domain Teaming Protocol
 
 - Follow [domain-teaming-playbook.md](./domain-teaming-playbook.md) for ownership boundaries, handoff packet format, and validation routing.
+- Apply the [Feedback Loop And Incremental Branch Contract](./domain-teaming-playbook.md#feedback-loop-and-incremental-branch-contract-all-agents) for automation-driven changes: use incremental feature branches, GH CLI PR orchestration, and wiki sync updates in the same SDLC flow.
 - Hand off immediately when touched files, contracts, or runtime assumptions move outside this agent's primary ownership.
 - Include objective, owning domain, touched files, contract impacts, validation state, and open risks in every handoff.
 - Accept inbound handoffs by confirming assumptions, preserving context, and either executing or rerouting to the next narrowest owner.

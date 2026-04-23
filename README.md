@@ -305,6 +305,7 @@ Automated SDLC orchestration (incremental PR slices + wiki sync):
 - Run workflow `Orchestrate Banana SDLC` to execute multiple incremental automation slices in one run.
 - Each increment uses the same GH CLI PR engine as `Orchestrate Triaged Item Pull Request`, but with per-slice commands, commit messages, and PR metadata.
 - Inputs support inline `incremental_plan_json` plus global defaults for base branch, labels, reviewers, draft mode, and no-op behavior.
+- AI contract preflight validation runs by default (`validate_ai_contracts=true`) and fails fast if `.github` prompt/agent/instruction/skill or wiki-sync contracts drift.
 - Wiki layer runs after PR orchestration via `scripts/workflow-sync-wiki.sh` and can push commits to the GitHub wiki repo (or run dry-run for validation).
 - Workflow runs on `workflow_dispatch` and on a weekday schedule for unattended incremental automation.
 - Default plan includes:

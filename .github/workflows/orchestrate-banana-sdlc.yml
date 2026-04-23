@@ -63,6 +63,14 @@ on:
         options:
           - "true"
           - "false"
+      validate_ai_contracts:
+        description: Validate .github AI customization and wiki-sync contracts before running increments
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
       wiki_dry_run:
         description: Run wiki synchronization in dry-run mode
         required: false
@@ -114,6 +122,7 @@ jobs:
       BANANA_SDLC_SKIP_NO_CHANGES: ${{ github.event.inputs.skip_no_changes || 'true' }}
       BANANA_SDLC_CONTINUE_ON_ERROR: ${{ github.event.inputs.continue_on_error || 'false' }}
       BANANA_SDLC_ENABLE_WIKI_SYNC: ${{ github.event.inputs.sync_wiki || 'true' }}
+      BANANA_SDLC_VALIDATE_AI_CONTRACTS: ${{ github.event.inputs.validate_ai_contracts || 'true' }}
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
       BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}
       BANANA_WIKI_STRICT: ${{ github.event.inputs.wiki_strict || 'false' }}
