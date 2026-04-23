@@ -244,8 +244,9 @@ Repository-backed long-term history:
   - `registry_history_pr_base_branch` (default: `main`)
   - `registry_history_open_draft_pr` (default: `true`)
   - `registry_history_pr_labels` (default includes `requires-human-approval`)
-  - `registry_history_pr_reviewers` (optional comma-separated usernames)
+  - `registry_history_pr_reviewers` (optional comma-separated usernames or `["user1","user2"]` array syntax)
 - CI writes timestamped snapshot bundles, updates `latest.json`, then opens a PR for human review.
+- Reviewer requests are applied one username at a time; invalid or unavailable usernames are skipped with workflow warnings.
 
 Restore persisted history after a fresh clone:
 
@@ -299,7 +300,7 @@ cp .env.example .env
 - Set at minimum in `.env`:
   - `GH_TOKEN`
   - `BANANA_LOCAL_DRY_RUN=false`
-  - `BANANA_REGISTRY_PR_REVIEWERS` and `BANANA_PR_REVIEWERS` (GitHub usernames)
+  - `BANANA_REGISTRY_PR_REVIEWERS` and `BANANA_PR_REVIEWERS` (GitHub usernames, comma-separated or `["user1","user2"]`)
 - Train + persistence PR path (dry-run orchestration by default):
 
 ```bash
