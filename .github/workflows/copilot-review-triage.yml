@@ -599,25 +599,40 @@ jobs:
 
               if (enforceCopilotReview) {
                 const reviewRequest = await requestCopilotReview();
-                const requestSummary = reviewRequest.requested
-                  ? "Requested Copilot review and waiting for findings."
-                  : `Copilot review request could not be submitted automatically (${reviewRequest.reason || "manual request required"}).`;
+                if (!reviewRequest.requested && hasCopilotBypassLabel) {
+                  await addLabel(readyLabel);
+                  await removeLabel(pendingLabel);
 
-                await upsertSummaryComment(
-                  `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n\n${requestSummary}\n`
-                );
+                  await upsertSummaryComment(
+                    `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n\nCopilot reviewer assignment is currently unavailable (${reviewRequest.reason || "manual request required"}). Continuing autonomous bypass triage and recording readiness for gated approval checks.\n`
+                  );
 
-                core.setFailed(
-                  "Awaiting Copilot review activity before triage can continue."
-                );
-                return;
+                  core.notice(
+                    "Proceeding without direct Copilot review activity because bypass labels are present and reviewer assignment is unavailable."
+                  );
+                } else {
+                  const requestSummary = reviewRequest.requested
+                    ? "Requested Copilot review and waiting for findings."
+                    : `Copilot review request could not be submitted automatically (${reviewRequest.reason || "manual request required"}).`;
+
+                  await upsertSummaryComment(
+                    `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n\n${requestSummary}\n`
+                  );
+
+                  core.setFailed(
+                    "Awaiting Copilot review activity before triage can continue."
+                  );
+                  return;
+                }
               }
 
-              await upsertSummaryComment(
-                `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n`
-              );
-              core.notice("No Copilot review findings detected yet.");
-              return;
+              if (!enforceCopilotReview) {
+                await upsertSummaryComment(
+                  `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n`
+                );
+                core.notice("No Copilot review findings detected yet.");
+                return;
+              }
             }
 
             const suggestionIssueSync = await syncSuggestionIssues(unresolved);
