@@ -260,6 +260,8 @@ Human-approval merge gate:
 - Workflow `Require Human Approval (Automation PRs)` blocks automation PRs until at least one non-bot approval is present.
 - Add this check as required in your protected-branch ruleset so merge remains blocked until a human review approves.
 - Keep branch settings aligned with `Require a pull request before merging` and reviewer requirements.
+- Solo maintainer option: add label `solo-maintainer-bypass` to an owner-authored automation PR to bypass the gate when no second human reviewer exists.
+- Safety rule: `solo-maintainer-bypass` fails the check if applied to a PR not opened by the repository owner.
 
 Local workflow containers (Docker Compose):
 
