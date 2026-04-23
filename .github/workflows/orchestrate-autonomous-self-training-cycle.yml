@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       incremental_plan_json:
-        description: Optional JSON array (or {"increments": [...]}) describing autonomous incremental slices
+        description: 'Optional JSON array (or {"increments": [...]}) describing autonomous incremental slices'
         required: false
         default: ""
       wiki_dry_run:

@@ -12,7 +12,7 @@ on:
         required: false
         default: "banana-sdlc"
       incremental_plan_json:
-        description: Optional JSON array (or {"increments": [...]}) describing incremental PR slices
+        description: 'Optional JSON array (or {"increments": [...]}) describing incremental PR slices'
         required: false
         default: ""
       base_branch:
@@ -138,8 +138,8 @@ jobs:
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
       BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}
       BANANA_WIKI_STRICT: ${{ github.event_name == 'schedule' && 'true' || github.event.inputs.wiki_strict || 'false' }}
-      BANANA_WIKI_COMMIT_MESSAGE: ${{ github.event.inputs.wiki_commit_message || 'docs(wiki): sync automated SDLC documentation snapshots' }}
-      BANANA_WIKI_REMOTE_URL: ${{ github.event.inputs.wiki_remote_url || 'https://github.com/LahkLeKey/Banana.wiki.git' }}
+      BANANA_WIKI_COMMIT_MESSAGE: "${{ github.event.inputs.wiki_commit_message || 'docs(wiki): sync automated SDLC documentation snapshots' }}"
+      BANANA_WIKI_REMOTE_URL: "${{ github.event.inputs.wiki_remote_url || 'https://github.com/LahkLeKey/Banana.wiki.git' }}"
       BANANA_ENFORCE_CANONICAL_WIKI_REMOTE: 'true'
       BANANA_WIKI_SYNC_MAPPING: ${{ github.event.inputs.wiki_sync_mapping || '' }}
     steps:

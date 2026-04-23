@@ -155,7 +155,7 @@ jobs:
       BANANA_FEEDBACK_TRIAGE_ID: not-banana-feedback
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage-feedback' }}
-      BANANA_COMMIT_MESSAGE: ${{ github.event.inputs.commit_message || 'chore(feedback): apply not-banana feedback into corpus' }}
+      BANANA_COMMIT_MESSAGE: "${{ github.event.inputs.commit_message || 'chore(feedback): apply not-banana feedback into corpus' }}"
       BANANA_PR_TITLE: ${{ github.event.inputs.pr_title || '' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
       BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded,feedback-loop' }}
@@ -163,8 +163,8 @@ jobs:
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
       BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}
       BANANA_WIKI_STRICT: ${{ github.event_name == 'schedule' && 'true' || github.event.inputs.wiki_strict || 'false' }}
-      BANANA_WIKI_COMMIT_MESSAGE: ${{ github.event.inputs.wiki_commit_message || 'docs(wiki): sync automated SDLC documentation snapshots' }}
-      BANANA_WIKI_REMOTE_URL: ${{ github.event.inputs.wiki_remote_url || 'https://github.com/LahkLeKey/Banana.wiki.git' }}
+      BANANA_WIKI_COMMIT_MESSAGE: "${{ github.event.inputs.wiki_commit_message || 'docs(wiki): sync automated SDLC documentation snapshots' }}"
+      BANANA_WIKI_REMOTE_URL: "${{ github.event.inputs.wiki_remote_url || 'https://github.com/LahkLeKey/Banana.wiki.git' }}"
       BANANA_ENFORCE_CANONICAL_WIKI_REMOTE: 'true'
       BANANA_WIKI_SYNC_MAPPING: ${{ github.event.inputs.wiki_sync_mapping || '' }}
     steps:

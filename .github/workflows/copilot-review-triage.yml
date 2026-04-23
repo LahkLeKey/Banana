@@ -20,10 +20,6 @@ on:
       - submitted
       - edited
       - dismissed
-  pull_request_review_thread:
-    types:
-      - resolved
-      - unresolved
 
 jobs:
   copilot-review-triage:
@@ -229,7 +225,7 @@ jobs:
                     branch_prefix: "triage-copilot",
                     draft_pr: "true",
                     skip_if_no_changes: "true",
-                    sync_wiki: "false",
+                    sync_wiki: "true",
                   },
                 });
 

@@ -251,7 +251,7 @@ def main() -> int:
     else:
         copilot_triage_text = WORKFLOW_COPILOT_REVIEW_TRIAGE.read_text(encoding="utf-8")
         copilot_required_fragments = {
-            "pull_request_review_thread": "WORKFLOW missing pull_request_review_thread trigger",
+            "pull_request_review": "WORKFLOW missing pull_request_review trigger",
             "copilot-pull-request-reviewer": "WORKFLOW missing Copilot reviewer login detection",
             "copilot-triage-pending": "WORKFLOW missing copilot-triage-pending label contract",
             "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready label contract",
