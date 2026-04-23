@@ -17,6 +17,48 @@ DRAFT_PR="${BANANA_DRAFT_PR:-true}"
 PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval}"
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
+SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-false}"
+PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-}"
+
+write_pr_output() {
+  local status="$1"
+  local pr_url="$2"
+  local pr_number="$3"
+  local reason="$4"
+
+  if [[ -z "$PR_OUTPUT_PATH" ]]; then
+    return 0
+  fi
+
+  PR_OUTPUT_STATUS="$status" \
+  PR_OUTPUT_URL="$pr_url" \
+  PR_OUTPUT_NUMBER="$pr_number" \
+  PR_OUTPUT_REASON="$reason" \
+  PR_OUTPUT_BRANCH="$WORK_BRANCH" \
+  PR_OUTPUT_TRIAGE_ID="$TRIAGE_ID" \
+  PR_OUTPUT_BASE_BRANCH="$BASE_BRANCH" \
+  python - "$PR_OUTPUT_PATH" <<'PY'
+import json
+import os
+import pathlib
+import sys
+
+output_path = pathlib.Path(sys.argv[1])
+output_path.parent.mkdir(parents=True, exist_ok=True)
+
+payload = {
+    "status": os.environ.get("PR_OUTPUT_STATUS", ""),
+    "triage_id": os.environ.get("PR_OUTPUT_TRIAGE_ID", ""),
+    "base_branch": os.environ.get("PR_OUTPUT_BASE_BRANCH", ""),
+    "branch": os.environ.get("PR_OUTPUT_BRANCH", ""),
+    "pr_url": os.environ.get("PR_OUTPUT_URL", ""),
+    "pr_number": os.environ.get("PR_OUTPUT_NUMBER", ""),
+    "reason": os.environ.get("PR_OUTPUT_REASON", ""),
+}
+
+output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+PY
+}
 
 parse_list_input() {
   local raw="${1:-}"
@@ -97,6 +139,7 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
 }
 EOF
 
+  write_pr_output "dry-run" "https://example.invalid/${WORK_BRANCH}" "" "dry-run"
   echo "Dry-run triaged PR plan generated: $PLAN_FILE"
   exit 0
 fi
@@ -111,6 +154,12 @@ git checkout -B "$WORK_BRANCH" "origin/$BASE_BRANCH"
 
 git add -A
 if git diff --cached --quiet; then
+  if [[ "$SKIP_IF_NO_CHANGES" == "true" ]]; then
+    echo "No file changes were produced by change_command. Skipping PR creation by policy."
+    write_pr_output "skipped" "" "" "no file changes"
+    exit 0
+  fi
+
   echo "::error::No file changes were produced by change_command."
   exit 1
 fi
@@ -186,3 +235,4 @@ if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
 fi
 
 echo "Triaged PR ready for review: $pr_url"
+write_pr_output "created" "$pr_url" "$pr_number" ""

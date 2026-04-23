@@ -93,6 +93,8 @@ Session controls:
 - `--session-mode incremental`: run multiple deterministic sessions and keep the best hold-out F1 result.
 - `--session-mode single`: run one baseline session (fastest, deterministic).
 - `--max-sessions <n>`: cap the number of evaluated sessions (`0` uses profile defaults).
+- `--min-token-length <n>`: reject short low-information tokens from the learned vocabulary (default `3`).
+- `--allow-numeric-tokens`: include numeric-only tokens in the learned vocabulary (disabled by default).
 
 Examples:
 
@@ -109,7 +111,9 @@ Artifacts are written to `artifacts/not-banana-model`:
 - `vocabulary.json`: selected vocabulary + metrics + session history.
 - `metrics.json`: selected hold-out metrics and per-session summary.
 - `sessions.json`: detailed per-session hyperparameters and scores.
-- `banana_signal_tokens.h`: generated native header.
+- `banana_signal_tokens.h`: generated native header. Copy to
+  `src/native/core/domain/generated/banana_signal_tokens.h` to make native
+  not-banana inference consume the trained vocabulary.
 
 ### Model Image Registry (Safe Iteration + Rollback)
 
@@ -291,6 +295,30 @@ Feedback-loop orchestration for classifier improvement:
   - open an automation PR labeled `feedback-loop`
 - After feedback PR merge, `Train Not-Banana Model` push run automatically persists registry history when `data/not-banana/corpus.json` changes.
 - Loop summary: approved feedback -> corpus PR -> human merge -> train + persisted registry-history PR.
+
+Automated SDLC orchestration (incremental PR slices + wiki sync):
+
+- Run workflow `Orchestrate Banana SDLC` to execute multiple incremental automation slices in one run.
+- Each increment uses the same GH CLI PR engine as `Orchestrate Triaged Item Pull Request`, but with per-slice commands, commit messages, and PR metadata.
+- Inputs support inline `incremental_plan_json` plus global defaults for base branch, labels, reviewers, draft mode, and no-op behavior.
+- Wiki layer runs after PR orchestration via `scripts/workflow-sync-wiki.sh` and can push commits to the GitHub wiki repo (or run dry-run for validation).
+- Default plan includes:
+  - feedback ingestion into `data/not-banana/corpus.json`
+  - retraining + generated header refresh in `src/native/core/domain/generated/banana_signal_tokens.h`
+- Machine-readable summary artifacts are written under `artifacts/sdlc-orchestration/`.
+
+Local SDLC dry-run:
+
+```bash
+bash scripts/workflow-local-orchestrate-sdlc.sh
+```
+
+Direct local SDLC execution with custom plan JSON:
+
+```bash
+BANANA_SDLC_INCREMENT_PLAN_JSON='[{"id":"docs","change_command":"python -m py_compile scripts/train-not-banana-model.py","commit_message":"chore(sdlc): validate trainer"}]' \
+bash scripts/workflow-orchestrate-sdlc.sh
+```
 
 Human-approval merge gate:
 

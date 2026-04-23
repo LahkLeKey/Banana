@@ -38,6 +38,8 @@ DEFAULT_HOLDOUT_FRACTION = 0.3
 DEFAULT_VOCAB_SIZE = 24
 DEFAULT_MIN_BANANA_OCCURRENCES = 1
 DEFAULT_MIN_SIGNAL_SCORE = 0.7
+DEFAULT_MIN_TOKEN_LENGTH = 3
+DEFAULT_ALLOW_NUMERIC_TOKENS = False
 DEFAULT_TRAINING_PROFILE = "auto"
 DEFAULT_SESSION_MODE = "incremental"
 
@@ -404,6 +406,27 @@ def tokenise_string(value: str) -> Iterable[str]:
     return TOKEN_REGEX.findall(value.lower())
 
 
+def token_has_ascii_alpha(token: str) -> bool:
+    for char in token:
+        if "a" <= char <= "z":
+            return True
+    return False
+
+
+def token_passes_quality_filters(
+    token: str,
+    min_token_length: int,
+    allow_numeric_tokens: bool,
+) -> bool:
+    if len(token) < min_token_length:
+        return False
+
+    if not allow_numeric_tokens and not token_has_ascii_alpha(token):
+        return False
+
+    return True
+
+
 def _add_token(token: str, tokens: set[str]) -> None:
     if token and token not in STRUCTURAL_STOP_WORDS:
         tokens.add(token)
@@ -487,6 +510,8 @@ def learn_vocabulary(
     vocab_size: int,
     min_banana_occurrences: int,
     min_signal_score: float,
+    min_token_length: int,
+    allow_numeric_tokens: bool,
 ) -> list[dict[str, Any]]:
     banana_counts: Counter[str] = Counter()
     not_banana_counts: Counter[str] = Counter()
@@ -501,6 +526,9 @@ def learn_vocabulary(
 
     candidates: list[dict[str, Any]] = []
     for token, banana_count in banana_counts.items():
+        if not token_passes_quality_filters(token, min_token_length, allow_numeric_tokens):
+            continue
+
         if banana_count < min_banana_occurrences:
             continue
 
@@ -654,6 +682,8 @@ def write_outputs(
                 "min_banana_occurrences"
             ],
             "min_signal_score": selected_hyperparameters["min_signal_score"],
+            "min_token_length": selected_hyperparameters["min_token_length"],
+            "allow_numeric_tokens": selected_hyperparameters["allow_numeric_tokens"],
             "holdout_fraction": selected_hyperparameters["holdout_fraction"],
             "decision_threshold": selected_hyperparameters["decision_threshold"],
             "split_seed": SPLIT_SEED,
@@ -662,6 +692,8 @@ def write_outputs(
             "vocab_size": args.vocab_size,
             "min_banana_occurrences": args.min_banana_occurrences,
             "min_signal_score": args.min_signal_score,
+            "min_token_length": args.min_token_length,
+            "allow_numeric_tokens": args.allow_numeric_tokens,
             "holdout_fraction": args.holdout_fraction,
             "decision_threshold": args.decision_threshold,
             "training_profile": args.training_profile,
@@ -752,6 +784,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Minimum BANANA-vs-NOT_BANANA signal score required to keep a token.",
     )
     parser.add_argument(
+        "--min-token-length",
+        type=int,
+        default=DEFAULT_MIN_TOKEN_LENGTH,
+        help="Minimum token length required before a token is eligible for the vocabulary.",
+    )
+    parser.add_argument(
+        "--allow-numeric-tokens",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_ALLOW_NUMERIC_TOKENS,
+        help="Allow tokens that contain no alphabetic characters (for example pure numbers).",
+    )
+    parser.add_argument(
         "--holdout-fraction",
         type=float,
         default=DEFAULT_HOLDOUT_FRACTION,
@@ -797,6 +841,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.max_sessions < 0:
         raise ValueError("max-sessions must be zero or greater.")
+    if args.min_token_length < 1:
+        raise ValueError("min-token-length must be at least 1.")
 
     samples = load_corpus(args.corpus)
     training_profile = resolve_training_profile(args.training_profile)
@@ -824,6 +870,8 @@ def main(argv: list[str] | None = None) -> int:
             vocab_size=session.vocab_size,
             min_banana_occurrences=session.min_banana_occurrences,
             min_signal_score=session.min_signal_score,
+            min_token_length=args.min_token_length,
+            allow_numeric_tokens=args.allow_numeric_tokens,
         )
         vocabulary_scores = {
             entry["token"]: entry["signal_score"] for entry in vocabulary
@@ -839,6 +887,8 @@ def main(argv: list[str] | None = None) -> int:
                 "vocab_size": session.vocab_size,
                 "min_banana_occurrences": session.min_banana_occurrences,
                 "min_signal_score": session.min_signal_score,
+                "min_token_length": args.min_token_length,
+                "allow_numeric_tokens": args.allow_numeric_tokens,
                 "holdout_fraction": session.holdout_fraction,
                 "decision_threshold": session.decision_threshold,
                 "split_seed": SPLIT_SEED,

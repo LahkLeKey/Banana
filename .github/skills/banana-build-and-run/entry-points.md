@@ -63,6 +63,10 @@
 - Feedback apply command: `python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved`
 - Feedback PR orchestration script: `bash scripts/orchestrate-not-banana-feedback-loop.sh`
 - Feedback PR orchestration workflow: `.github/workflows/orchestrate-not-banana-feedback-loop.yml`
+- Wiki sync script: `bash scripts/workflow-sync-wiki.sh` (supports `BANANA_WIKI_*` env vars)
+- Incremental SDLC orchestration script: `bash scripts/workflow-orchestrate-sdlc.sh`
+- Local SDLC dry-run script: `bash scripts/workflow-local-orchestrate-sdlc.sh`
+- Full SDLC orchestration workflow: `.github/workflows/orchestrate-banana-sdlc.yml`
 - CI multi-release build input: `release_matrix_json` (workflow dispatch) to build multiple model releases in one run.
 - CI repository persistence input: `persist_registry_history=true` to create a registry-history pull request containing snapshot bundles at `registry_history_path`.
 - CI repository persistence PR controls: `registry_history_pr_base_branch`, `registry_history_open_draft_pr`, `registry_history_pr_labels`, and `registry_history_pr_reviewers`.

@@ -48,10 +48,15 @@ Outputs:
 - `artifacts/not-banana-model/vocabulary.json` — learned signal tokens, scores,
   and evaluation metrics.
 - `artifacts/not-banana-model/banana_signal_tokens.h` — generated C header that
-  can replace the inline vocabulary in
-  `src/native/core/domain/banana_not_banana.c`.
+  can be staged to
+  `src/native/core/domain/generated/banana_signal_tokens.h` for native
+  inference consumption.
 - `artifacts/not-banana-model/metrics.json` — precision, recall, F1 on a
   hold-out split.
 
 The trainer is deterministic (fixed split seed) so CI runs produce stable
 artifacts unless the corpus or hyperparameters change.
+
+Token quality defaults improve generalization by excluding short and
+numeric-only tokens. Override with `--min-token-length` and
+`--allow-numeric-tokens` when needed.

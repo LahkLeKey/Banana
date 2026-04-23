@@ -2,12 +2,20 @@
 
 #include <stddef.h>
 
+#if defined(__has_include)
+#if __has_include("generated/banana_signal_tokens.h")
+#include "generated/banana_signal_tokens.h"
+#define BANANA_NOT_BANANA_HAS_GENERATED_VOCABULARY 1
+#endif
+#endif
+
 /*
  * Banana signal vocabulary used by the polymorphic junk classifier.
- * Kept in sync with the TypeScript gateway slice in
- * src/typescript/api/src/domains/not-banana/routes.ts so both runtimes
- * agree on which tokens push a payload toward the BANANA label.
+ * Prefer generated vocabulary from scripts/train-not-banana-model.py when
+ * available. Fallback list below preserves deterministic behavior when the
+ * generated header is not staged into src/native/core/domain/generated.
  */
+#ifndef BANANA_NOT_BANANA_HAS_GENERATED_VOCABULARY
 static const char* const k_banana_signal_tokens[] = {
     "banana",
     "bananas",
@@ -30,6 +38,43 @@ static const char* const k_banana_signal_tokens[] = {
 
 static const int k_banana_signal_token_count =
     (int)(sizeof(k_banana_signal_tokens) / sizeof(k_banana_signal_tokens[0]));
+#endif
+
+#ifdef BANANA_NOT_BANANA_HAS_GENERATED_VOCABULARY
+#define BANANA_SIGNAL_TOKENS k_banana_signal_tokens_generated
+#define BANANA_SIGNAL_TOKEN_COUNT k_banana_signal_token_count_generated
+#else
+#define BANANA_SIGNAL_TOKENS k_banana_signal_tokens
+#define BANANA_SIGNAL_TOKEN_COUNT k_banana_signal_token_count
+#endif
+
+/*
+ * Structural polymorphic envelope tokens are intentionally ignored during
+ * scoring so that payload scaffolding does not dilute true banana evidence.
+ * Keep this list in sync with STRUCTURAL_STOP_WORDS in
+ * scripts/train-not-banana-model.py.
+ */
+static const char* const k_structural_stop_tokens[] = {
+    "actor",
+    "actorid",
+    "actorkey",
+    "actors",
+    "actortype",
+    "entity",
+    "entityid",
+    "entitykey",
+    "entities",
+    "entitytype",
+    "junk",
+    "kind",
+    "metadata",
+    "type",
+    "id",
+    "key"
+};
+
+static const int k_structural_stop_token_count =
+    (int)(sizeof(k_structural_stop_tokens) / sizeof(k_structural_stop_tokens[0]));
 
 static int banana_not_banana_to_lower_ascii(int byte_value) {
     if (byte_value >= 'A' && byte_value <= 'Z') {
@@ -84,8 +129,24 @@ static int banana_not_banana_token_is_signal(const char* token) {
         return 0;
     }
 
-    for (signal_index = 0; signal_index < k_banana_signal_token_count; signal_index++) {
-        if (banana_not_banana_tokens_equal_ci(token, k_banana_signal_tokens[signal_index])) {
+    for (signal_index = 0; signal_index < BANANA_SIGNAL_TOKEN_COUNT; signal_index++) {
+        if (banana_not_banana_tokens_equal_ci(token, BANANA_SIGNAL_TOKENS[signal_index])) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int banana_not_banana_token_is_structural_stop_word(const char* token) {
+    int token_index = 0;
+
+    if (banana_not_banana_token_is_empty(token)) {
+        return 0;
+    }
+
+    for (token_index = 0; token_index < k_structural_stop_token_count; token_index++) {
+        if (banana_not_banana_tokens_equal_ci(token, k_structural_stop_tokens[token_index])) {
             return 1;
         }
     }
@@ -135,6 +196,10 @@ BananaStatus banana_not_banana_classify(
         const char* token = tokens[token_index];
 
         if (banana_not_banana_token_is_empty(token)) {
+            continue;
+        }
+
+        if (banana_not_banana_token_is_structural_stop_word(token)) {
             continue;
         }
 

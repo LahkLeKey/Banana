@@ -32,15 +32,17 @@ typedef struct BananaNotBananaClassification {
  *    actor/entity/junk payload fields. May be null when token_count == 0.
  *    Individual entries may be null or empty and will be ignored. Comparison
  *    is case-insensitive over the ASCII range; non-ASCII bytes pass through
- *    unchanged.
+ *    unchanged. Structural envelope terms (actor/entity/junk/id/type/etc.)
+ *    are ignored so they do not dilute banana signal scoring.
  *  - token_count: number of entries in tokens. Must be >= 0.
  *  - actor_count: number of polymorphic actors present in the request.
  *  - entity_count: number of polymorphic entities present in the request.
  *
  * Output:
  *  - out_classification: populated label, banana/not-banana probabilities,
- *    junk confidence, and counts. predicted_label is INDETERMINATE only when
- *    no tokens, no actors, and no entities are supplied.
+ *    junk confidence, and counts. total_token_count reflects only non-empty,
+ *    non-structural tokens that were scored. predicted_label is INDETERMINATE
+ *    only when no tokens, no actors, and no entities are supplied.
  */
 BananaStatus banana_not_banana_classify(
     const char* const* tokens,

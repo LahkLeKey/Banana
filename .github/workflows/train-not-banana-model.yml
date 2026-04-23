@@ -309,25 +309,43 @@ jobs:
           release_id = os.environ["BANANA_RELEASE_ID"]
           generated = Path(f"artifacts/not-banana-model/{release_id}/vocabulary.json")
           native = Path("src/native/core/domain/banana_not_banana.c")
+          staged_header = Path("src/native/core/domain/generated/banana_signal_tokens.h")
 
           model = json.loads(generated.read_text(encoding="utf-8"))
           learned = {entry["token"] for entry in model["vocabulary"]}
 
-          source = native.read_text(encoding="utf-8")
-          match = re.search(
-              r"k_banana_signal_tokens\[\]\s*=\s*\{(.*?)\};", source, re.DOTALL
-          )
-          if not match:
-              raise SystemExit("Failed to locate k_banana_signal_tokens in native source.")
+          if staged_header.exists():
+              source = staged_header.read_text(encoding="utf-8")
+              match = re.search(
+                  r"k_banana_signal_tokens_generated\[\]\s*=\s*\{(.*?)\};",
+                  source,
+                  re.DOTALL,
+              )
+              if not match:
+                  raise SystemExit(
+                      "Failed to locate k_banana_signal_tokens_generated in staged header."
+                  )
+              reference_tokens = set(re.findall(r"\"([^\"]+)\"", match.group(1)))
+              reference_source = str(staged_header)
+          else:
+              source = native.read_text(encoding="utf-8")
+              match = re.search(
+                  r"k_banana_signal_tokens\[\]\s*=\s*\{(.*?)\};",
+                  source,
+                  re.DOTALL,
+              )
+              if not match:
+                  raise SystemExit("Failed to locate k_banana_signal_tokens in native source.")
+              reference_tokens = set(re.findall(r"\"([^\"]+)\"", match.group(1)))
+              reference_source = str(native)
 
-          inline = set(re.findall(r"\"([^\"]+)\"", match.group(1)))
-
-          added = sorted(learned - inline)
-          removed = sorted(inline - learned)
+          added = sorted(learned - reference_tokens)
+          removed = sorted(reference_tokens - learned)
 
           drift = {
               "learned_tokens": sorted(learned),
-              "inline_tokens": sorted(inline),
+              "reference_tokens": sorted(reference_tokens),
+              "reference_source": reference_source,
               "added": added,
               "removed": removed,
               "metrics": model["metrics"],

@@ -3289,8 +3289,8 @@ static void test_not_banana_classifier_flags_polymorphic_junk(void) {
         "expected NOT_BANANA label for junk-only payload");
     require_true(classification.signal_token_count == 0,
         "expected zero banana signal tokens for junk payload");
-    require_true(classification.total_token_count == 5,
-        "expected five considered tokens for junk payload");
+    require_true(classification.total_token_count == 1,
+        "expected structural envelope tokens to be ignored during scoring");
     require_true(classification.actor_count == 2,
         "expected actor count to round-trip");
     require_true(classification.entity_count == 1,
@@ -3355,6 +3355,24 @@ static void test_not_banana_classifier_skips_empty_tokens(void) {
         "expected the surviving token to be counted as a banana signal");
     require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_BANANA,
         "expected BANANA label when only the banana token survives");
+}
+
+static void test_not_banana_classifier_ignores_structural_token_dilution(void) {
+    const char* tokens[] = { "banana", "actor", "entity", "metadata", "junk", "id", "type", "key" };
+    BananaNotBananaClassification classification;
+    BananaStatus status;
+
+    status = banana_not_banana_classify(tokens, 8, 1, 1, &classification);
+    require_true(status == BANANA_OK,
+        "expected BANANA_OK when structural envelope tokens are present");
+    require_true(classification.total_token_count == 1,
+        "expected only non-structural evidence tokens to be considered");
+    require_true(classification.signal_token_count == 1,
+        "expected banana signal token to remain after structural filtering");
+    require_true(classification.predicted_label == BANANA_NOT_BANANA_LABEL_BANANA,
+        "expected BANANA label when the only scored token is banana");
+    require_true(absolute_difference(classification.banana_probability, 1.0) < 0.000001,
+        "expected full banana probability when all scored tokens are banana signals");
 }
 
 static void test_not_banana_classifier_rejects_invalid_input(void) {
@@ -3442,6 +3460,7 @@ int main(void) {
     test_not_banana_classifier_flags_banana_signals();
     test_not_banana_classifier_handles_empty_payload();
     test_not_banana_classifier_skips_empty_tokens();
+    test_not_banana_classifier_ignores_structural_token_dilution();
     test_not_banana_classifier_rejects_invalid_input();
 
     puts("banana_core_tests: all tests passed");

@@ -858,7 +858,8 @@ static void test_classify_not_banana_junk_flags_polymorphic_junk(void) {
     require_true(classification.predicted_label == CINTEROP_BANANA_NOT_BANANA_LABEL_NOT_BANANA,
         "expected NOT_BANANA label for junk-only payload");
     require_true(classification.signal_token_count == 0, "expected zero banana signal tokens");
-    require_true(classification.total_token_count == 5, "expected five considered tokens");
+    require_true(classification.total_token_count == 1,
+        "expected structural envelope tokens to be ignored during scoring");
     require_true(classification.actor_count == 2, "expected actor count to round-trip");
     require_true(classification.entity_count == 1, "expected entity count to round-trip");
     require_true(absolute_difference(classification.banana_probability, 0.0) < 0.000001,
@@ -899,6 +900,22 @@ static void test_classify_not_banana_junk_handles_empty_payload(void) {
         "expected INDETERMINATE label for empty payload");
     require_true(classification.signal_token_count == 0, "expected zero signals for empty payload");
     require_true(classification.total_token_count == 0, "expected zero considered tokens for empty payload");
+}
+
+static void test_classify_not_banana_junk_ignores_structural_token_dilution(void) {
+    const char* tokens[] = { "banana", "actor", "entity", "metadata", "junk", "id", "type", "key" };
+    CInteropBananaNotBananaClassification classification;
+    int status;
+
+    status = banana_classify_not_banana_junk(tokens, 8, 1, 1, &classification);
+    require_true(status == BANANA_STATUS_OK,
+        "expected status OK when structural envelope tokens are present");
+    require_true(classification.total_token_count == 1,
+        "expected only non-structural evidence tokens to be considered");
+    require_true(classification.signal_token_count == 1,
+        "expected banana signal token to remain after structural filtering");
+    require_true(classification.predicted_label == CINTEROP_BANANA_NOT_BANANA_LABEL_BANANA,
+        "expected BANANA label when the only scored token is banana");
 }
 
 static void test_classify_not_banana_junk_invalid_args(void) {
@@ -983,6 +1000,7 @@ int main(void) {
     test_classify_not_banana_junk_flags_polymorphic_junk();
     test_classify_not_banana_junk_flags_banana_signals();
     test_classify_not_banana_junk_handles_empty_payload();
+    test_classify_not_banana_junk_ignores_structural_token_dilution();
     test_classify_not_banana_junk_invalid_args();
 
     puts("native_wrapper_tests: all tests passed");
