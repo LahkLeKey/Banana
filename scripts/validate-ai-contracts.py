@@ -162,7 +162,6 @@ def main() -> int:
 
     if "BANANA_ENFORCE_CANONICAL_WIKI_REMOTE" not in workflow_sync_text:
         issues.append("WIKI_SYNC missing canonical wiki remote enforcement toggle")
-
     workflow_contract_targets = [
         WORKFLOW_ORCHESTRATE_TRIAGED,
         WORKFLOW_ORCHESTRATE_FEEDBACK,
@@ -182,7 +181,6 @@ def main() -> int:
 
         if "copilot-bypass-vibe-coded" not in workflow_text:
             issues.append(f"WORKFLOW missing copilot bypass provenance label default: {workflow_rel}")
-
         if workflow_path == WORKFLOW_ORCHESTRATE_FEEDBACK:
             if "github.event_name == 'schedule' && 'true'" not in workflow_text:
                 issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {workflow_rel}")
@@ -261,7 +259,6 @@ def main() -> int:
     for fragment, message in require_human_required_fragments.items():
         if fragment not in require_human_text:
             issues.append(f"{message}: {require_human_rel}")
-
     sdlc_script_text = SCRIPT_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
     if "WIKI_REMOTE_URL=" not in sdlc_script_text:
         issues.append("SDLC script missing WIKI_REMOTE_URL input wiring")
@@ -271,7 +268,6 @@ def main() -> int:
 
     if "copilot-bypass-vibe-coded" not in sdlc_script_text:
         issues.append("SDLC script missing copilot bypass provenance label defaults")
-
     payload: dict[str, Any] = {
         "issues": issues,
         "prompt_missing_wiki_contract": prompt_missing_wiki_contract,
