@@ -1,0 +1,41 @@
+name: Human Intake - Integration Agent
+description: Route cross-layer validation and test-surface issues to integration-agent triage automation.
+title: "[integration-agent] "
+labels:
+  - triage-idea
+  - automation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- banana-intake-source: human -->
+        <!-- banana-target-agent: integration-agent -->
+        Human-authored issue intake for integration-agent.
+  - type: textarea
+    id: changed_surface
+    attributes:
+      label: Changed surface
+      description: Describe what changed across domains and why integrated validation is needed.
+    validations:
+      required: true
+  - type: textarea
+    id: failure_mode
+    attributes:
+      label: Failure mode
+      description: Describe test/runtime failures or integration gaps.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include failing checks, logs, and environment assumptions.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List concrete validation outcomes needed.
+    validations:
+      required: true

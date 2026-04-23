@@ -77,7 +77,7 @@
 - Push-based corpus persistence: when `data/not-banana/corpus.json` changes, `Train Not-Banana Model` now persists registry history automatically in the same run.
 - Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
 - Cloud triage idea orchestration workflow: `.github/workflows/orchestrate-triage-idea-cloud.yml` via issue labels `triage-idea`/`copilot-suggestion`/`human-triage` or workflow dispatch with `idea`/`issue_number`.
-- Human agent-target issue templates: `.github/ISSUE_TEMPLATE/human-*.yml` (each template embeds routing markers for source and target helper agent).
+- Human agent-target issue templates: `.github/ISSUE_TEMPLATE/human-*.yml` (one template per static helper in `.github/agents/*.agent.md`, each embedding routing markers for source and target agent).
 - Cloud triage idea orchestration script: `bash scripts/workflow-triage-idea-cloud.sh`.
 - Cloud triage backlog cleanup defaults: `BANANA_TRIAGE_CLEAR_BACKLOG=true`, `BANANA_TRIAGE_BACKLOG_ISSUE_LABELS=copilot-suggestion,ai-generated`, `BANANA_TRIAGE_BACKLOG_PR_LABELS=automation,triaged-item`, and `BANANA_TRIAGE_BACKLOG_PR_BRANCH_PREFIXES=triage/,triage-copilot/,triage-feedback/`.
 - Cloud triage check-dispatch defaults: `BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS=true` and `BANANA_TRIAGE_CHECK_WORKFLOWS=copilot-review-triage.yml,require-human-approval.yml`.

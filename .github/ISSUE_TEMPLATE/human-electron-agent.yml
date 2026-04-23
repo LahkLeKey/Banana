@@ -1,0 +1,41 @@
+name: Human Intake - Electron Agent
+description: Route Electron runtime, preload, bridge, and desktop packaging issues to electron-agent triage automation.
+title: "[electron-agent] "
+labels:
+  - triage-idea
+  - automation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- banana-intake-source: human -->
+        <!-- banana-target-agent: electron-agent -->
+        Human-authored issue intake for electron-agent.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: Describe desktop runtime behavior that is broken.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe expected Electron behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or reproduction
+      description: Include platform details, logs, crash output, and reproduction steps.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List concrete checks that define done.
+    validations:
+      required: true

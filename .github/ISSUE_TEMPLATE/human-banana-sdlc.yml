@@ -1,0 +1,41 @@
+name: Human Intake - Banana SDLC
+description: Route multi-phase, multi-domain orchestration requests to banana-sdlc triage automation.
+title: "[banana-sdlc] "
+labels:
+  - triage-idea
+  - automation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- banana-intake-source: human -->
+        <!-- banana-target-agent: banana-sdlc -->
+        Human-authored issue intake for banana-sdlc.
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: Describe the end-to-end outcome you want.
+    validations:
+      required: true
+  - type: textarea
+    id: touched_domains
+    attributes:
+      label: Touched domains
+      description: List native, API, frontend, infra, workflow, or docs surfaces involved.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Include deadlines, environment limits, and risk controls.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List concrete outcomes for discovery, implementation, validation, and review.
+    validations:
+      required: true
