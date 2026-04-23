@@ -124,12 +124,11 @@ on:
   push:
     paths:
       - data/not-banana/**
+      - '!data/not-banana/model-release-history/**'
       - scripts/train-not-banana-model.py
       - scripts/manage-not-banana-model-image.py
       - scripts/workflow-persist-registry-history-pr.sh
       - .github/workflows/train-not-banana-model.yml
-    paths-ignore:
-      - data/not-banana/model-release-history/**
   schedule:
     - cron: "0 6 * * 1"
 
