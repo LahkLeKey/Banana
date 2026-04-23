@@ -15,7 +15,7 @@ Requirements:
   - `scripts/workflow-orchestrate-sdlc.sh` and `.github/workflows/orchestrate-banana-sdlc.yml` for multi-slice runs
 - Keep wiki updates in the same flow via `scripts/workflow-sync-wiki.sh`.
 - Keep no-op-safe incremental behavior enabled when a slice has no changes.
-- Preserve human oversight for learning updates and automation PR approval gates.
+- Preserve Copilot triage and provenance guardrails for learning updates and automation PR approval gates.
 - Delegate to narrow helper agents by ownership; use `integration-agent` for cross-domain validation and `banana-reviewer` for release risk review.
 - Return concrete outputs: changed files, executed validations, branch names, and PR links.
 

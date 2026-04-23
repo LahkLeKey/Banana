@@ -180,6 +180,9 @@ def main() -> int:
         if CANONICAL_WIKI_REMOTE_URL not in workflow_text:
             issues.append(f"WORKFLOW missing canonical wiki remote default: {workflow_rel}")
 
+        if "copilot-bypass-vibe-coded" not in workflow_text:
+            issues.append(f"WORKFLOW missing copilot bypass provenance label default: {workflow_rel}")
+
         if workflow_path == WORKFLOW_ORCHESTRATE_FEEDBACK:
             if "github.event_name == 'schedule' && 'true'" not in workflow_text:
                 issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {workflow_rel}")
@@ -195,6 +198,9 @@ def main() -> int:
     if CANONICAL_WIKI_REMOTE_URL not in sdlc_workflow_text:
         issues.append(f"WORKFLOW missing canonical wiki remote default: {sdlc_workflow_rel}")
 
+    if "copilot-bypass-vibe-coded" not in sdlc_workflow_text:
+        issues.append(f"WORKFLOW missing copilot bypass provenance label default: {sdlc_workflow_rel}")
+
     if "github.event_name == 'schedule' && 'true'" not in sdlc_workflow_text:
         issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {sdlc_workflow_rel}")
 
@@ -209,6 +215,7 @@ def main() -> int:
         autonomous_required_fragments = {
             "pull_request_target": "WORKFLOW missing autonomous continuation trigger",
             "copilot-autonomous-cycle": "WORKFLOW missing copilot-autonomous-cycle label contract",
+            "copilot-bypass-vibe-coded": "WORKFLOW missing copilot bypass provenance label contract",
             "workflow-orchestrate-sdlc.sh": "WORKFLOW missing SDLC orchestrator execution",
             "training-profile ci --session-mode single --max-sessions 1": "WORKFLOW missing bounded minimal-resource training command",
             CANONICAL_WIKI_REMOTE_URL: "WORKFLOW missing canonical wiki remote default",
@@ -230,6 +237,7 @@ def main() -> int:
             "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready label contract",
             "copilot-auto-approve": "WORKFLOW missing copilot-auto-approve opt-in contract",
             "copilot-autonomous-cycle": "WORKFLOW missing autonomous cycle label contract",
+            "copilot-bypass-vibe-coded": "WORKFLOW missing copilot bypass provenance label contract",
             "requestReviewers": "WORKFLOW missing Copilot reviewer request path",
             'event: "APPROVE"': "WORKFLOW missing automated approval event",
             "core.setFailed": "WORKFLOW missing unresolved-triage failure path",
@@ -245,6 +253,7 @@ def main() -> int:
     require_human_text = WORKFLOW_REQUIRE_HUMAN_APPROVAL.read_text(encoding="utf-8")
     require_human_required_fragments = {
         "copilot-autonomous-cycle": "WORKFLOW missing autonomous-cycle bypass label support",
+        "copilot-bypass-vibe-coded": "WORKFLOW missing copilot bypass provenance label support",
         "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready bypass guard",
         "github-actions[bot]": "WORKFLOW missing bot-approval continuity guard",
     }
@@ -259,6 +268,9 @@ def main() -> int:
 
     if 'export BANANA_WIKI_REMOTE_URL="$WIKI_REMOTE_URL"' not in sdlc_script_text:
         issues.append("SDLC script missing BANANA_WIKI_REMOTE_URL export")
+
+    if "copilot-bypass-vibe-coded" not in sdlc_script_text:
+        issues.append("SDLC script missing copilot bypass provenance label defaults")
 
     payload: dict[str, Any] = {
         "issues": issues,

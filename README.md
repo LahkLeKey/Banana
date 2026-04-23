@@ -284,7 +284,7 @@ Automation pull request orchestration for triaged code changes:
   - `triage_id`
   - `change_command`
   - optional branch/label/reviewer overrides
-- The workflow creates a branch, commits generated changes, opens a PR, and labels it with `requires-human-approval` by default.
+- The workflow creates a branch, commits generated changes, opens a PR, and labels it with `requires-human-approval`, `copilot-auto-approve`, and `copilot-bypass-vibe-coded` by default.
 - The workflow now runs `scripts/workflow-sync-wiki.sh` in the same run by default (`sync_wiki=true`).
 - Wiki remote defaults to `https://github.com/LahkLeKey/Banana.wiki.git` and enforces this canonical target by default (`BANANA_ENFORCE_CANONICAL_WIKI_REMOTE=true`).
 
@@ -324,7 +324,7 @@ Autonomous cloud self-training cycle (bounded incremental proof of concept):
 
 - Workflow `Orchestrate Autonomous Self-Training Cycle` runs small incremental SDLC slices on weekday schedules and after merge of prior autonomous-cycle PRs.
 - The workflow uses bounded resource defaults (`training-profile ci`, `session-mode single`, `max-sessions 1`, and capped feedback ingestion) to keep cloud resource usage minimal.
-- Generated PRs use labels `copilot-auto-approve` and `copilot-autonomous-cycle` so Copilot triage can approve and continue the cycle automatically.
+- Generated PRs use labels `copilot-auto-approve`, `copilot-autonomous-cycle`, and `copilot-bypass-vibe-coded` so Copilot triage can approve and continue the cycle automatically while preserving provenance for vibe-coded integrations.
 - Wiki sync is strict and pinned to `https://github.com/LahkLeKey/Banana.wiki.git` for every autonomous run.
 
 Local SDLC dry-run:
@@ -349,7 +349,7 @@ Human-approval merge gate:
 - For automation-managed PRs with no Copilot activity yet, `Copilot Review Triage` requests Copilot review and fails in a waiting state until review activity exists.
 - When all Copilot findings are triaged, `Copilot Review Triage` applies label `copilot-triage-ready` and submits an approval review from `github-actions[bot]` for automation PRs (or for non-automation PRs labeled `copilot-auto-approve`).
 - If unresolved Copilot findings remain, `Copilot Review Triage` applies `copilot-triage-pending` and blocks readiness until triage is complete.
-- Label `copilot-autonomous-cycle` enables autonomous continuation: after Copilot triage is ready and bot approval is current, the human-approval check allows bypass and Copilot triage attempts to enable auto-merge.
+- Labels `copilot-autonomous-cycle` and `copilot-bypass-vibe-coded` enable autonomous continuation: after Copilot triage is ready and bot approval is current, the human-approval check allows bypass and Copilot triage attempts to enable auto-merge.
 - Mark `Require Human Approval (Automation PRs)` as required in your protected-branch ruleset so automation merges stay blocked until a human review approves.
 - Mark `Copilot Review Triage` as required if you want unresolved Copilot findings to block merge readiness.
 - Keep branch settings aligned with `Require a pull request before merging` and reviewer requirements.

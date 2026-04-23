@@ -45,6 +45,7 @@ jobs:
             const readyLabel = "copilot-triage-ready";
             const autoApproveOptInLabel = "copilot-auto-approve";
             const autonomousCycleLabel = "copilot-autonomous-cycle";
+            const vibeBypassLabel = "copilot-bypass-vibe-coded";
             const summaryMarker = "<!-- banana-copilot-triage-summary -->";
 
             const { data: pr } = await github.rest.pulls.get({
@@ -63,9 +64,11 @@ jobs:
               labels.includes("automation") ||
               automationAuthor;
             const isAutonomousCycle = labels.includes(autonomousCycleLabel);
+            const isVibeBypass = labels.includes(vibeBypassLabel);
+            const hasCopilotBypassLabel = isAutonomousCycle || isVibeBypass;
             const canAutoApprove = isAutomationPr || labels.includes(autoApproveOptInLabel);
             const enforceCopilotReview =
-              isAutomationPr || labels.includes(autoApproveOptInLabel) || isAutonomousCycle;
+              isAutomationPr || labels.includes(autoApproveOptInLabel) || hasCopilotBypassLabel;
 
             async function ensureLabel(name, color, description) {
               try {
@@ -176,7 +179,7 @@ jobs:
             }
 
             async function enableAutoMergeIfEligible() {
-              if (!isAutonomousCycle) {
+              if (!hasCopilotBypassLabel) {
                 return;
               }
 
@@ -206,10 +209,10 @@ jobs:
                   }
                 );
 
-                core.notice("Enabled auto-merge for copilot-autonomous-cycle pull request.");
+                core.notice("Enabled auto-merge for Copilot bypass-labeled pull request.");
               } catch (error) {
                 core.warning(
-                  `Unable to enable auto-merge for copilot-autonomous-cycle pull request: ${error.message}`
+                  `Unable to enable auto-merge for Copilot bypass-labeled pull request: ${error.message}`
                 );
               }
             }
@@ -233,6 +236,11 @@ jobs:
               autonomousCycleLabel,
               "0366D6",
               "Allow autonomous Copilot-reviewed automation cycle including auto-merge"
+            );
+            await ensureLabel(
+              vibeBypassLabel,
+              "0B63A5",
+              "Bypass human gate after Copilot triage while marking vibe-coded integration provenance"
             );
 
             const reviewThreads = [];
@@ -388,7 +396,7 @@ jobs:
               ? "All Copilot review threads are triaged for the current revision. This pull request is ready for approval."
               : "All Copilot review threads are triaged for the current revision. This pull request is ready for human approval. Add label `copilot-auto-approve` to permit automated approval on non-automation pull requests.";
 
-            if (isAutonomousCycle) {
+            if (hasCopilotBypassLabel) {
               readySummary = `${readySummary} Auto-merge will be enabled for this autonomous cycle once automated approval is up to date.`;
             }
 

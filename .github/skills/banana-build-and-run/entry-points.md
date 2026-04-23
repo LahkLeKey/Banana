@@ -78,7 +78,7 @@
 - Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
 - Human-approval gate workflow: `.github/workflows/require-human-approval.yml` (mark check required in branch protection/rulesets).
 - Copilot triage-and-approval workflow: `.github/workflows/copilot-review-triage.yml` (tracks unresolved Copilot findings and auto-approves automation PRs, or non-automation PRs with `copilot-auto-approve`).
-- Autonomous continuation label: `copilot-autonomous-cycle` (paired with `copilot-triage-ready` for bot-driven continuation).
+- Autonomous continuation labels: `copilot-autonomous-cycle` and `copilot-bypass-vibe-coded` (paired with `copilot-triage-ready` for bot-driven continuation and provenance tagging of vibe-coded integrations).
 - Preserve CI/container prerequisites needed to execute training and drift checks reliably.
 - Treat training drift failures as actionable model/data contract signals, not infrastructure noise.
 - Document any runtime or automation changes that affect training invocation, artifacts, or reproducibility.
