@@ -302,6 +302,7 @@ Automated SDLC orchestration (incremental PR slices + wiki sync):
 - Each increment uses the same GH CLI PR engine as `Orchestrate Triaged Item Pull Request`, but with per-slice commands, commit messages, and PR metadata.
 - Inputs support inline `incremental_plan_json` plus global defaults for base branch, labels, reviewers, draft mode, and no-op behavior.
 - Wiki layer runs after PR orchestration via `scripts/workflow-sync-wiki.sh` and can push commits to the GitHub wiki repo (or run dry-run for validation).
+- Workflow runs on `workflow_dispatch` and on a weekday schedule for unattended incremental automation.
 - Default plan includes:
   - feedback ingestion into `data/not-banana/corpus.json`
   - retraining + generated header refresh in `src/native/core/domain/generated/banana_signal_tokens.h`
@@ -344,14 +345,20 @@ cp .env.example .env
 - Train + persistence PR path (dry-run orchestration by default):
 
 ```bash
-bash scripts/compose-local-workflows.sh workflow-train-not-banana-local
+bash scripts/compose-local-workflows.sh train
 ```
 
 - Triaged item PR path with safe no-op change command:
 
 ```bash
 BANANA_TRIAGE_CHANGE_COMMAND=':' \
-bash scripts/compose-local-workflows.sh workflow-orchestrate-triaged-local
+bash scripts/compose-local-workflows.sh triaged
+```
+
+- Full SDLC incremental PR + wiki sync local path:
+
+```bash
+bash scripts/compose-local-workflows.sh sdlc
 ```
 
 - To run against GitHub for real PR creation, provide `GH_TOKEN` and set `BANANA_LOCAL_DRY_RUN=false`.

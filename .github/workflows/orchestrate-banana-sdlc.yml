@@ -95,10 +95,12 @@ on:
         description: Optional newline-delimited source|target mapping for wiki sync
         required: false
         default: ""
+  schedule:
+    - cron: "0 4 * * 1-5"
 
 jobs:
   orchestrate-sdlc:
-    if: ${{ github.actor != 'github-actions[bot]' }}
+    if: ${{ github.event_name == 'schedule' || github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

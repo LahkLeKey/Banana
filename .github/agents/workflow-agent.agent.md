@@ -36,7 +36,9 @@ You own GitHub Actions and CI automation in [.github/workflows](../workflows), i
 1. Mirror existing local scripts and runtime expectations instead of inventing workflow-only behavior.
 2. Keep artifact names and coverage output paths stable unless the change is explicit.
 3. Make required env vars and secrets assumptions clear in the workflow diff or nearest docs.
-4. If local compose or runtime scripts also need updates, coordinate with [compose-runtime-agent](./compose-runtime-agent.agent.md).
+4. Preserve and evolve GH CLI orchestration paths for incremental PR automation (`workflow-orchestrate-triaged-item-pr.sh`, `workflow-orchestrate-sdlc.sh`).
+5. Keep wiki synchronization (`workflow-sync-wiki.sh`) aligned with workflow automation when delivery runbooks or contracts change.
+6. If local compose or runtime scripts also need updates, coordinate with [compose-runtime-agent](./compose-runtime-agent.agent.md).
 
 # Validation
 

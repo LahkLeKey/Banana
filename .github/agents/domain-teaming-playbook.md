@@ -19,6 +19,21 @@ Use this playbook when coordinating Banana work across agents so specialists ope
 4. Keep context moving with each handoff instead of restarting discovery.
 5. Validate on the narrowest surface first, then expand only when contracts cross domains.
 
+## Feedback Loop And Incremental Branch Contract (All Agents)
+
+1. Treat feedback-loop automation as a first-class SDLC input, not a side path: approved feedback must flow through corpus updates, training refresh, and human-reviewed pull requests.
+2. For automation-generated code or data changes, prefer incremental feature branches over monolithic updates.
+3. Open incremental pull requests through GH CLI orchestration paths:
+   - `scripts/workflow-orchestrate-triaged-item-pr.sh` for one slice
+   - `scripts/workflow-orchestrate-sdlc.sh` / `.github/workflows/orchestrate-banana-sdlc.yml` for multi-slice SDLC runs
+4. Use no-op-safe behavior for incremental slices that produce no changes (`BANANA_SKIP_IF_NO_CHANGES=true`) so orchestration continues without failing the full run.
+5. Keep wiki updates inside the same SDLC flow using `scripts/workflow-sync-wiki.sh`; documentation drift is treated as delivery risk.
+6. When planning or implementing across helpers, include explicit branch and PR metadata per increment:
+   - `triage_id` or SDLC increment id
+   - commit message
+   - labels/reviewers
+   - expected changed files and validation surface
+
 ## Required Handoff Packet
 
 Every handoff should include:

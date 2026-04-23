@@ -260,5 +260,34 @@ services:
     command: ["bash", "-lc", "bash scripts/workflow-local-orchestrate-triaged-item-pr.sh"]
     profiles: ["workflow-local"]
 
+  workflow-orchestrate-sdlc-local:
+    build:
+      context: .
+      dockerfile: docker/workflow-local.Dockerfile
+    working_dir: /workspace
+    environment:
+      BANANA_SDLC_ID: "${BANANA_SDLC_ID:-banana-sdlc}"
+      BANANA_SDLC_INCREMENT_PLAN_JSON: "${BANANA_SDLC_INCREMENT_PLAN_JSON:-}"
+      BANANA_BASE_BRANCH: "${BANANA_BASE_BRANCH:-main}"
+      BANANA_BRANCH_PREFIX: "${BANANA_BRANCH_PREFIX:-sdlc}"
+      BANANA_DRAFT_PR: "${BANANA_DRAFT_PR:-true}"
+      BANANA_PR_LABELS: "${BANANA_PR_LABELS:-automation,sdlc,triaged-item,requires-human-approval}"
+      BANANA_PR_REVIEWERS: "${BANANA_PR_REVIEWERS:-}"
+      BANANA_SDLC_SKIP_NO_CHANGES: "${BANANA_SDLC_SKIP_NO_CHANGES:-true}"
+      BANANA_SDLC_CONTINUE_ON_ERROR: "${BANANA_SDLC_CONTINUE_ON_ERROR:-false}"
+      BANANA_SDLC_ENABLE_WIKI_SYNC: "${BANANA_SDLC_ENABLE_WIKI_SYNC:-true}"
+      BANANA_WIKI_DRY_RUN: "${BANANA_WIKI_DRY_RUN:-true}"
+      BANANA_WIKI_PUSH: "${BANANA_WIKI_PUSH:-false}"
+      BANANA_WIKI_STRICT: "${BANANA_WIKI_STRICT:-false}"
+      BANANA_WIKI_DIR: "${BANANA_WIKI_DIR:-artifacts/wiki-sync/local-wiki-dry-run}"
+      BANANA_WIKI_SYNC_MAPPING: "${BANANA_WIKI_SYNC_MAPPING:-}"
+      BANANA_WIKI_COMMIT_MESSAGE: "${BANANA_WIKI_COMMIT_MESSAGE:-docs(wiki): sync automated SDLC documentation snapshots}"
+      BANANA_LOCAL_DRY_RUN: "${BANANA_LOCAL_DRY_RUN:-true}"
+      GH_TOKEN: "${GH_TOKEN:-}"
+    volumes:
+      - .:/workspace
+    command: ["bash", "-lc", "bash scripts/workflow-local-orchestrate-sdlc.sh"]
+    profiles: ["workflow-local"]
+
 volumes:
   native-artifacts:

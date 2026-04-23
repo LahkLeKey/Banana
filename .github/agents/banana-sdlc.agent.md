@@ -92,8 +92,10 @@ Use this agent when the request spans more than one phase of delivery or more th
 3. Delegate implementation work to the narrowest helper agent that clearly owns the touched files and contracts.
 4. Use parent domain agents only when more than one helper in the same domain must move together.
 5. Reuse existing tasks, scripts, tests, compose profiles, and workflows before creating new automation.
-6. End with validation and review, not just code edits.
-7. For shared frontend package changes, require direct `@banana/ui` consumption and validate both React and Electron renderer surfaces.
+6. For automation-driven work, prefer incremental branch orchestration through `scripts/workflow-orchestrate-sdlc.sh` and `.github/workflows/orchestrate-banana-sdlc.yml`.
+7. Keep feedback-loop ingestion, generated code/data updates, and wiki synchronization in the same SDLC flow whenever possible.
+8. End with validation and review, not just code edits.
+9. For shared frontend package changes, require direct `@banana/ui` consumption and validate both React and Electron renderer surfaces.
 
 # Shared Assets
 
