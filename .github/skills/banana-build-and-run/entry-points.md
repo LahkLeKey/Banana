@@ -64,6 +64,7 @@
 - Feedback PR orchestration script: `bash scripts/orchestrate-not-banana-feedback-loop.sh`
 - Feedback PR orchestration workflow: `.github/workflows/orchestrate-not-banana-feedback-loop.yml`
 - Wiki sync script: `bash scripts/workflow-sync-wiki.sh` (supports `BANANA_WIKI_*` env vars)
+- AI contract validation script: `python scripts/validate-ai-contracts.py` (verifies prompt/agent/instruction/skill frontmatter and wiki-sync coverage)
 - Incremental SDLC orchestration script: `bash scripts/workflow-orchestrate-sdlc.sh`
 - Local SDLC dry-run script: `bash scripts/workflow-local-orchestrate-sdlc.sh`
 - Full SDLC orchestration workflow: `.github/workflows/orchestrate-banana-sdlc.yml`

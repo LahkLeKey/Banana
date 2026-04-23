@@ -26,6 +26,11 @@ SUMMARY_PATH="${BANANA_SDLC_SUMMARY_PATH:-${OUTPUT_DIR}/summary-${RUN_ID}-attemp
 
 mkdir -p "$OUTPUT_DIR"
 
+if [[ "${BANANA_SDLC_VALIDATE_AI_CONTRACTS:-true}" == "true" ]]; then
+  echo "Validating AI customization and wiki-sync contracts..."
+  python scripts/validate-ai-contracts.py > "${OUTPUT_DIR}/ai-contract-report-${RUN_ID}-attempt-${RUN_ATTEMPT}.json"
+fi
+
 PLAN_INPUT_PATH="${OUTPUT_DIR}/plan-${RUN_ID}-attempt-${RUN_ATTEMPT}.json"
 PLAN_ROWS_PATH="${OUTPUT_DIR}/plan-rows-${RUN_ID}-attempt-${RUN_ATTEMPT}.tsv"
 WIKI_REPORT_PATH="${OUTPUT_DIR}/wiki-sync-${RUN_ID}-attempt-${RUN_ATTEMPT}.json"
