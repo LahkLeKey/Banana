@@ -289,10 +289,14 @@ Automation pull request orchestration for triaged code changes:
 Feedback-loop orchestration for classifier improvement:
 
 - Queue reviewed classifier observations in `data/not-banana/feedback/inbox.json` with `status=approved`.
+- Human oversight is enforced at ingestion time: approved entries must include
+  `reviewed_by` and `reviewed_at_utc` metadata, or automation rejects them.
 - Run workflow `Orchestrate Not-Banana Feedback Loop` to:
   - ingest approved feedback into `data/not-banana/corpus.json`
   - mark processed feedback entries as `applied` (configurable)
   - open an automation PR labeled `feedback-loop`
+- Workflow inputs `require_human_review` (default `true`) and
+  `min_human_reviewers` (default `1`) control this gate.
 - After feedback PR merge, `Train Not-Banana Model` push run automatically persists registry history when `data/not-banana/corpus.json` changes.
 - Loop summary: approved feedback -> corpus PR -> human merge -> train + persisted registry-history PR.
 
@@ -324,6 +328,7 @@ bash scripts/workflow-orchestrate-sdlc.sh
 Human-approval merge gate:
 
 - Workflow `Require Human Approval (Automation PRs)` blocks automation PRs until at least one non-bot approval is present.
+- Automation PR detection now includes automation labels, known automation branch prefixes, and bot-authored PRs.
 - Add this check as required in your protected-branch ruleset so merge remains blocked until a human review approves.
 - Keep branch settings aligned with `Require a pull request before merging` and reviewer requirements.
 - Solo maintainer option: add label `solo-maintainer-bypass` to an owner-authored automation PR to bypass the gate when no second human reviewer exists.

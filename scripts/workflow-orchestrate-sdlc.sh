@@ -39,7 +39,7 @@ else
 [
   {
     "id": "feedback-corpus",
-    "change_command": "python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved --consume --report artifacts/not-banana-feedback/sdlc-apply-report.json",
+    "change_command": "python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved --consume --require-human-review --minimum-human-reviewers 1 --report artifacts/not-banana-feedback/sdlc-apply-report.json",
     "commit_message": "chore(feedback): apply approved feedback into corpus",
     "pr_title": "triage(feedback): apply approved inbox updates",
     "pr_body": "Automated SDLC increment: apply approved not-banana feedback into corpus.",
