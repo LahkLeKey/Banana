@@ -73,6 +73,22 @@ on:
         description: Comma-separated workflow files to dispatch for PR gate checks
         required: false
         default: "copilot-review-triage.yml,require-human-approval.yml"
+      epic_decomposition:
+        description: Decompose epic-like triage ideas into linked user stories and tasks
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      epic_auto_dispatch_first_task:
+        description: Dispatch triage automation for the first generated epic task
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
       reviewers:
         description: Optional reviewer usernames as comma-separated values or [array] syntax
         required: false
@@ -149,6 +165,8 @@ jobs:
       BANANA_TRIAGE_BACKLOG_PR_BRANCH_PREFIXES: ${{ github.event.inputs.backlog_pr_branch_prefixes || 'triage/,triage-copilot/,triage-feedback/' }}
       BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS: ${{ github.event.inputs.dispatch_required_checks || 'true' }}
       BANANA_TRIAGE_CHECK_WORKFLOWS: ${{ github.event.inputs.check_workflows || 'copilot-review-triage.yml,require-human-approval.yml' }}
+      BANANA_TRIAGE_ENABLE_EPIC_DECOMPOSITION: ${{ github.event.inputs.epic_decomposition || 'true' }}
+      BANANA_TRIAGE_EPIC_AUTO_DISPATCH_FIRST_TASK: ${{ github.event.inputs.epic_auto_dispatch_first_task || 'true' }}
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_SKIP_IF_NO_CHANGES: ${{ github.event.inputs.skip_if_no_changes || 'true' }}
       BANANA_SYNC_WIKI: ${{ github.event.inputs.sync_wiki || 'true' }}
