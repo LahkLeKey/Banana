@@ -30,6 +30,18 @@ CANONICAL_WIKI_REMOTE_URL = "https://github.com/LahkLeKey/Banana.wiki.git"
 AGENT_CONTRACT_FRAGMENT = "Feedback Loop And Incremental Branch Contract"
 PROMPT_WIKI_CONTRACT_HEADER = "## Wiki Updater Contract"
 SKILL_NAME_RE = re.compile(r"^[a-z0-9-]{1,64}$")
+ITERATE_BACKLOG_PROMPT = PROMPTS_DIR / "iterate-the-backlog.prompt.md"
+ITERATE_BACKLOG_PROMPT_REQUIRED_FRAGMENTS = {
+    "orchestrate-triage-idea-cloud.yml": "PROMPT missing cloud triage workflow contract",
+    "workflow-triage-idea-cloud.sh": "PROMPT missing cloud triage orchestration script contract",
+    "orchestrate-banana-sdlc.yml": "PROMPT missing SDLC workflow contract",
+    "workflow-orchestrate-sdlc.sh": "PROMPT missing SDLC orchestration script contract",
+    "orchestrate-not-banana-feedback-loop.yml": "PROMPT missing feedback-loop workflow contract",
+    "copilot-review-triage.yml": "PROMPT missing copilot triage required-check contract",
+    "require-human-approval.yml": "PROMPT missing human-approval required-check contract",
+    "Stop when no eligible backlog items remain.": "PROMPT missing deterministic no-work stop condition",
+    "Return concrete outputs for each iteration": "PROMPT missing iteration output contract",
+}
 
 
 def parse_frontmatter(path: Path) -> tuple[dict[str, str] | None, str]:
@@ -87,6 +99,18 @@ def main() -> int:
 
         if PROMPT_WIKI_CONTRACT_HEADER not in body:
             prompt_missing_wiki_contract.append(rel)
+
+    iterate_backlog_rel = ITERATE_BACKLOG_PROMPT.relative_to(ROOT).as_posix()
+    if not ITERATE_BACKLOG_PROMPT.exists():
+        issues.append(f"PROMPT missing backlog-iteration command contract: {iterate_backlog_rel}")
+    else:
+        iterate_frontmatter, iterate_body = parse_frontmatter(ITERATE_BACKLOG_PROMPT)
+        if iterate_frontmatter is None:
+            issues.append(f"PROMPT missing/invalid frontmatter: {iterate_backlog_rel}")
+        else:
+            for fragment, message in ITERATE_BACKLOG_PROMPT_REQUIRED_FRAGMENTS.items():
+                if fragment not in iterate_body:
+                    issues.append(f"{message}: {iterate_backlog_rel}")
 
     # Agents
     for agent_path in sorted(AGENTS_DIR.glob("*.agent.md")):
