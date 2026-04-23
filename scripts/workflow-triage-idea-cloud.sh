@@ -102,37 +102,63 @@ dispatch_gate_workflow() {
 }
 
 close_backlog_pull_requests() {
+  declare -A seen_pr_numbers=()
+  local -a parsed_pr_labels=()
+  local -a parsed_pr_prefixes=()
   local -a backlog_pr_numbers=()
+  local -a label_filtered_numbers=()
+  local -a prefix_filtered_rows=()
+
+  parse_list_input "$TRIAGE_BACKLOG_PR_LABELS" parsed_pr_labels
+  parse_list_input "$TRIAGE_BACKLOG_PR_BRANCH_PREFIXES" parsed_pr_prefixes
+
+  if [[ ${#parsed_pr_labels[@]} -gt 0 ]]; then
+    local -a pr_label_query=(gh pr list --state open --limit 200 --json number)
+    for label in "${parsed_pr_labels[@]}"; do
+      pr_label_query+=(--label "$label")
+    done
+
+    while IFS= read -r pr_number; do
+      if [[ -n "$pr_number" ]]; then
+        label_filtered_numbers+=("$pr_number")
+      fi
+    done < <("${pr_label_query[@]}" --jq '.[].number')
+  fi
 
   while IFS= read -r pr_number; do
     if [[ -n "$pr_number" ]]; then
-      backlog_pr_numbers+=("$pr_number")
+      seen_pr_numbers["$pr_number"]=1
     fi
-  done < <(
-    gh pr list --state open --limit 200 --json number,labels,headRefName | python - "$TRIAGE_BACKLOG_PR_LABELS" "$TRIAGE_BACKLOG_PR_BRANCH_PREFIXES" <<'PY'
-import json
-import sys
+  done < <(printf '%s\n' "${label_filtered_numbers[@]:-}")
 
-required_labels = [item.strip().lower() for item in sys.argv[1].split(",") if item.strip()]
-branch_prefixes = [item.strip() for item in sys.argv[2].split(",") if item.strip()]
+  if [[ ${#parsed_pr_prefixes[@]} -gt 0 ]]; then
+    while IFS= read -r row; do
+      if [[ -n "$row" ]]; then
+        prefix_filtered_rows+=("$row")
+      fi
+    done < <(gh pr list --state open --limit 200 --json number,headRefName --jq '.[] | "\(.number)\t\(.headRefName)"')
 
-payload = json.load(sys.stdin)
-for pr in payload:
-    labels = {
-        ((label.get("name") if isinstance(label, dict) else label) or "").strip().lower()
-        for label in (pr.get("labels") or [])
-    }
-    head_ref = (pr.get("headRefName") or "").strip()
+    for row in "${prefix_filtered_rows[@]}"; do
+      pr_number="${row%%$'\t'*}"
+      head_ref="${row#*$'\t'}"
 
-    has_required_labels = all(label in labels for label in required_labels) if required_labels else False
-    has_backlog_prefix = any(head_ref.startswith(prefix) for prefix in branch_prefixes)
+      for prefix in "${parsed_pr_prefixes[@]}"; do
+        if [[ "$head_ref" == "$prefix"* ]]; then
+          seen_pr_numbers["$pr_number"]=1
+          break
+        fi
+      done
+    done
+  fi
 
-    if has_required_labels or has_backlog_prefix:
-        number = pr.get("number")
-        if number is not None:
-            print(number)
-PY
-  )
+  for pr_number in "${!seen_pr_numbers[@]}"; do
+    backlog_pr_numbers+=("$pr_number")
+  done
+
+  if [[ ${#backlog_pr_numbers[@]} -gt 1 ]]; then
+    IFS=$'\n' backlog_pr_numbers=($(printf '%s\n' "${backlog_pr_numbers[@]}" | sort -n))
+    unset IFS
+  fi
 
   if [[ ${#backlog_pr_numbers[@]} -eq 0 ]]; then
     echo "No backlog triage pull requests found for cleanup."
@@ -151,38 +177,38 @@ PY
 
 close_backlog_issues() {
   local keep_issue_number="${1:-}"
+  declare -A seen_issue_numbers=()
+  local -a parsed_issue_backlog_labels=()
   local -a backlog_issue_numbers=()
+  local -a label_issue_numbers=()
 
-  while IFS= read -r issue_number; do
+  parse_list_input "$TRIAGE_BACKLOG_ISSUE_LABELS" parsed_issue_backlog_labels
+
+  for label in "${parsed_issue_backlog_labels[@]}"; do
+    while IFS= read -r issue_number; do
+      if [[ -n "$issue_number" ]]; then
+        label_issue_numbers+=("$issue_number")
+      fi
+    done < <(gh issue list --state open --limit 200 --label "$label" --json number --jq '.[].number')
+  done
+
+  for issue_number in "${label_issue_numbers[@]}"; do
     if [[ -n "$issue_number" ]]; then
-      backlog_issue_numbers+=("$issue_number")
+      seen_issue_numbers["$issue_number"]=1
     fi
-  done < <(
-    gh issue list --state open --limit 200 --json number,labels | python - "$TRIAGE_BACKLOG_ISSUE_LABELS" "$keep_issue_number" <<'PY'
-import json
-import sys
+  done
 
-backlog_labels = {item.strip().lower() for item in sys.argv[1].split(",") if item.strip()}
-keep_issue_raw = sys.argv[2].strip()
-keep_issue = int(keep_issue_raw) if keep_issue_raw.isdigit() else None
+  for issue_number in "${!seen_issue_numbers[@]}"; do
+    if [[ -n "$keep_issue_number" && "$issue_number" == "$keep_issue_number" ]]; then
+      continue
+    fi
+    backlog_issue_numbers+=("$issue_number")
+  done
 
-payload = json.load(sys.stdin)
-for issue in payload:
-    number = issue.get("number")
-    if number is None:
-        continue
-    if keep_issue is not None and number == keep_issue:
-        continue
-
-    labels = {
-        ((label.get("name") if isinstance(label, dict) else label) or "").strip().lower()
-        for label in (issue.get("labels") or [])
-    }
-
-    if labels & backlog_labels:
-        print(number)
-PY
-  )
+  if [[ ${#backlog_issue_numbers[@]} -gt 1 ]]; then
+    IFS=$'\n' backlog_issue_numbers=($(printf '%s\n' "${backlog_issue_numbers[@]}" | sort -n))
+    unset IFS
+  fi
 
   if [[ ${#backlog_issue_numbers[@]} -eq 0 ]]; then
     echo "No backlog triage issues found for cleanup."
