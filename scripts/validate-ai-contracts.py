@@ -19,10 +19,12 @@ WORKFLOW_SYNC_WIKI = ROOT / "scripts" / "workflow-sync-wiki.sh"
 WORKFLOW_ORCHESTRATE_SDLC = ROOT / ".github" / "workflows" / "orchestrate-banana-sdlc.yml"
 WORKFLOW_ORCHESTRATE_TRIAGED = ROOT / ".github" / "workflows" / "orchestrate-triaged-item-pr.yml"
 WORKFLOW_ORCHESTRATE_FEEDBACK = ROOT / ".github" / "workflows" / "orchestrate-not-banana-feedback-loop.yml"
+WORKFLOW_ORCHESTRATE_TRIAGE_IDEA = ROOT / ".github" / "workflows" / "orchestrate-triage-idea-cloud.yml"
 WORKFLOW_ORCHESTRATE_AUTONOMOUS = ROOT / ".github" / "workflows" / "orchestrate-autonomous-self-training-cycle.yml"
 WORKFLOW_COPILOT_REVIEW_TRIAGE = ROOT / ".github" / "workflows" / "copilot-review-triage.yml"
 WORKFLOW_REQUIRE_HUMAN_APPROVAL = ROOT / ".github" / "workflows" / "require-human-approval.yml"
 SCRIPT_ORCHESTRATE_SDLC = ROOT / "scripts" / "workflow-orchestrate-sdlc.sh"
+SCRIPT_ORCHESTRATE_TRIAGE_IDEA = ROOT / "scripts" / "workflow-triage-idea-cloud.sh"
 CANONICAL_WIKI_REMOTE_URL = "https://github.com/LahkLeKey/Banana.wiki.git"
 
 AGENT_CONTRACT_FRAGMENT = "Feedback Loop And Incremental Branch Contract"
@@ -185,6 +187,26 @@ def main() -> int:
             if "github.event_name == 'schedule' && 'true'" not in workflow_text:
                 issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {workflow_rel}")
 
+    triage_idea_rel = WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
+    if not WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.exists():
+        issues.append(f"WORKFLOW missing cloud triage idea orchestration workflow: {triage_idea_rel}")
+    else:
+        triage_idea_text = WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.read_text(encoding="utf-8")
+        triage_idea_required_fragments = {
+            "workflow_dispatch": "WORKFLOW missing workflow_dispatch trigger for cloud triage idea orchestration",
+            "issues": "WORKFLOW missing issue-event trigger for cloud triage idea orchestration",
+            "triage-idea": "WORKFLOW missing triage-idea issue label contract",
+            "copilot-suggestion": "WORKFLOW missing copilot-suggestion issue label contract",
+            "workflow-triage-idea-cloud.sh": "WORKFLOW missing triage idea orchestration script execution",
+            "workflow-sync-wiki.sh": "WORKFLOW missing wiki sync step",
+            "BANANA_WIKI_REMOTE_URL": "WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring",
+            CANONICAL_WIKI_REMOTE_URL: "WORKFLOW missing canonical wiki remote default",
+        }
+
+        for fragment, message in triage_idea_required_fragments.items():
+            if fragment not in triage_idea_text:
+                issues.append(f"{message}: {triage_idea_rel}")
+
     sdlc_workflow_text = WORKFLOW_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
     sdlc_workflow_rel = WORKFLOW_ORCHESTRATE_SDLC.relative_to(ROOT).as_posix()
     if "workflow-orchestrate-sdlc.sh" not in sdlc_workflow_text:
@@ -236,6 +258,9 @@ def main() -> int:
             "copilot-auto-approve": "WORKFLOW missing copilot-auto-approve opt-in contract",
             "copilot-autonomous-cycle": "WORKFLOW missing autonomous cycle label contract",
             "copilot-bypass-vibe-coded": "WORKFLOW missing copilot bypass provenance label contract",
+            "copilot-suggestion": "WORKFLOW missing copilot suggestion issue label contract",
+            "syncSuggestionIssues": "WORKFLOW missing per-suggestion issue triage path",
+            "createWorkflowDispatch": "WORKFLOW missing per-suggestion orchestration dispatch path",
             "requestReviewers": "WORKFLOW missing Copilot reviewer request path",
             'event: "APPROVE"': "WORKFLOW missing automated approval event",
             "core.setFailed": "WORKFLOW missing unresolved-triage failure path",
@@ -268,6 +293,23 @@ def main() -> int:
 
     if "copilot-bypass-vibe-coded" not in sdlc_script_text:
         issues.append("SDLC script missing copilot bypass provenance label defaults")
+
+    triage_idea_script_rel = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
+    if not SCRIPT_ORCHESTRATE_TRIAGE_IDEA.exists():
+        issues.append(f"SCRIPT missing cloud triage idea orchestration script: {triage_idea_script_rel}")
+    else:
+        triage_idea_script_text = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.read_text(encoding="utf-8")
+        triage_idea_script_required_fragments = {
+            "triage-idea": "SCRIPT missing triage-idea label contract",
+            "copilot-suggestion": "SCRIPT missing copilot-suggestion label contract",
+            "copilot-bypass-vibe-coded": "SCRIPT missing copilot bypass provenance label contract",
+            "workflow-orchestrate-triaged-item-pr.sh": "SCRIPT missing triaged PR orchestration handoff",
+            "docs/triage/intake": "SCRIPT missing triage intake artifact contract",
+        }
+
+        for fragment, message in triage_idea_script_required_fragments.items():
+            if fragment not in triage_idea_script_text:
+                issues.append(f"{message}: {triage_idea_script_rel}")
     payload: dict[str, Any] = {
         "issues": issues,
         "prompt_missing_wiki_contract": prompt_missing_wiki_contract,

@@ -288,6 +288,17 @@ Automation pull request orchestration for triaged code changes:
 - The workflow now runs `scripts/workflow-sync-wiki.sh` in the same run by default (`sync_wiki=true`).
 - Wiki remote defaults to `https://github.com/LahkLeKey/Banana.wiki.git` and enforces this canonical target by default (`BANANA_ENFORCE_CANONICAL_WIKI_REMOTE=true`).
 
+Cloud idea triage from prompt or issue labels:
+
+- Use prompt `/triage "<idea>"` to create a triage issue and kick off cloud orchestration.
+- Workflow `Orchestrate Triage Idea Cloud` can also run via `workflow_dispatch` when you provide either `idea` or `issue_number`.
+- Applying label `triage-idea` or `copilot-suggestion` to an issue triggers the same cloud workflow path.
+- The workflow records intake artifacts under `docs/triage/intake/issue-<number>.md` and opens a triaged automation PR through the existing triaged-item PR engine.
+- Default issue labels: `triage-idea`, `copilot-suggestion`, `automation`, `copilot-bypass-vibe-coded`.
+- Default generated PR labels: `automation`, `triaged-item`, `requires-human-approval`, `copilot-auto-approve`, `copilot-bypass-vibe-coded`.
+- The workflow supports custom issue labels and PR labels through workflow inputs.
+- Wiki sync is enabled by default in the cloud triage workflow and uses canonical wiki remote enforcement.
+
 Feedback-loop orchestration for classifier improvement:
 
 - Queue reviewed classifier observations in `data/not-banana/feedback/inbox.json` with `status=approved`.
@@ -346,6 +357,7 @@ Human-approval merge gate:
 - Automation PR detection now includes automation labels, known automation branch prefixes, and bot-authored PRs.
 - Draft-aware enforcement: draft automation PRs are allowed to stage changes, and the gate is enforced when the PR becomes ready for review.
 - Workflow `Copilot Review Triage` tracks review threads from `copilot-pull-request-reviewer`, fails while unresolved findings remain, and posts an up-to-date triage summary on the PR.
+- For unresolved Copilot findings, `Copilot Review Triage` now synchronizes one issue per suggestion (label `copilot-suggestion`) so cloud triage orchestration can process remediation incrementally.
 - For automation-managed PRs with no Copilot activity yet, `Copilot Review Triage` requests Copilot review and fails in a waiting state until review activity exists.
 - When all Copilot findings are triaged, `Copilot Review Triage` applies label `copilot-triage-ready` and submits an approval review from `github-actions[bot]` for automation PRs (or for non-automation PRs labeled `copilot-auto-approve`).
 - If unresolved Copilot findings remain, `Copilot Review Triage` applies `copilot-triage-pending` and blocks readiness until triage is complete.
