@@ -19,6 +19,7 @@ WORKFLOW_SYNC_WIKI = ROOT / "scripts" / "workflow-sync-wiki.sh"
 WORKFLOW_ORCHESTRATE_SDLC = ROOT / ".github" / "workflows" / "orchestrate-banana-sdlc.yml"
 WORKFLOW_ORCHESTRATE_TRIAGED = ROOT / ".github" / "workflows" / "orchestrate-triaged-item-pr.yml"
 WORKFLOW_ORCHESTRATE_FEEDBACK = ROOT / ".github" / "workflows" / "orchestrate-not-banana-feedback-loop.yml"
+WORKFLOW_COPILOT_REVIEW_TRIAGE = ROOT / ".github" / "workflows" / "copilot-review-triage.yml"
 SCRIPT_ORCHESTRATE_SDLC = ROOT / "scripts" / "workflow-orchestrate-sdlc.sh"
 
 AGENT_CONTRACT_FRAGMENT = "Feedback Loop And Incremental Branch Contract"
@@ -169,6 +170,25 @@ def main() -> int:
 
     if "github.event_name == 'schedule' && 'true'" not in sdlc_workflow_text:
         issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {sdlc_workflow_rel}")
+
+    copilot_triage_rel = WORKFLOW_COPILOT_REVIEW_TRIAGE.relative_to(ROOT).as_posix()
+    if not WORKFLOW_COPILOT_REVIEW_TRIAGE.exists():
+        issues.append(f"WORKFLOW missing Copilot review triage workflow: {copilot_triage_rel}")
+    else:
+        copilot_triage_text = WORKFLOW_COPILOT_REVIEW_TRIAGE.read_text(encoding="utf-8")
+        copilot_required_fragments = {
+            "pull_request_review_thread": "WORKFLOW missing pull_request_review_thread trigger",
+            "copilot-pull-request-reviewer": "WORKFLOW missing Copilot reviewer login detection",
+            "copilot-triage-pending": "WORKFLOW missing copilot-triage-pending label contract",
+            "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready label contract",
+            "copilot-auto-approve": "WORKFLOW missing copilot-auto-approve opt-in contract",
+            'event: "APPROVE"': "WORKFLOW missing automated approval event",
+            "core.setFailed": "WORKFLOW missing unresolved-triage failure path",
+        }
+
+        for fragment, message in copilot_required_fragments.items():
+            if fragment not in copilot_triage_text:
+                issues.append(f"{message}: {copilot_triage_rel}")
 
     sdlc_script_text = SCRIPT_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
     if "WIKI_REMOTE_URL=" not in sdlc_script_text:

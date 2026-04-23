@@ -1,0 +1,339 @@
+name: Copilot Review Triage
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - converted_to_draft
+      - edited
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+  pull_request_review_thread:
+    types:
+      - resolved
+      - unresolved
+
+jobs:
+  copilot-review-triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Triage Copilot review threads and approve when ready
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pullNumber = context.payload.pull_request?.number;
+            if (!pullNumber) {
+              core.notice("No pull request context found for this event.");
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const copilotLogin = "copilot-pull-request-reviewer";
+            const pendingLabel = "copilot-triage-pending";
+            const readyLabel = "copilot-triage-ready";
+            const autoApproveOptInLabel = "copilot-auto-approve";
+            const summaryMarker = "<!-- banana-copilot-triage-summary -->";
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullNumber,
+            });
+
+            const labels = (pr.labels || []).map((label) => label.name);
+            const prAuthorType = pr.user?.type || "";
+            const automationAuthor =
+              prAuthorType === "Bot" ||
+              (pr.user?.login || "").toLowerCase().endsWith("[bot]");
+            const isAutomationPr =
+              labels.includes("requires-human-approval") ||
+              labels.includes("automation") ||
+              automationAuthor;
+            const canAutoApprove = isAutomationPr || labels.includes(autoApproveOptInLabel);
+
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name,
+                  color,
+                  description,
+                });
+              } catch (createError) {
+                if (createError.status !== 422) {
+                  throw createError;
+                }
+              }
+            }
+
+            async function addLabel(name) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pullNumber,
+                labels: [name],
+              });
+            }
+
+            async function removeLabel(name) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number: pullNumber,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+              }
+            }
+
+            async function upsertSummaryComment(body) {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: pullNumber,
+                per_page: 100,
+              });
+
+              const existing = comments.find(
+                (comment) =>
+                  comment.user?.login === "github-actions[bot]" &&
+                  comment.body?.includes(summaryMarker)
+              );
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existing.id,
+                  body,
+                });
+                return;
+              }
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullNumber,
+                body,
+              });
+            }
+
+            await ensureLabel(
+              pendingLabel,
+              "D73A4A",
+              "Copilot review has unresolved findings requiring triage"
+            );
+            await ensureLabel(
+              readyLabel,
+              "0E8A16",
+              "Copilot review findings are triaged and ready for approval"
+            );
+            await ensureLabel(
+              autoApproveOptInLabel,
+              "1D76DB",
+              "Allow automated approval for non-automation PRs after Copilot triage completes"
+            );
+
+            const reviewThreads = [];
+            let cursor = null;
+            for (;;) {
+              const result = await github.graphql(
+                `
+                query ($owner: String!, $repo: String!, $number: Int!, $cursor: String) {
+                  repository(owner: $owner, name: $repo) {
+                    pullRequest(number: $number) {
+                      reviewThreads(first: 100, after: $cursor) {
+                        pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                        nodes {
+                          isResolved
+                          isOutdated
+                          path
+                          line
+                          startLine
+                          comments(first: 100) {
+                            nodes {
+                              body
+                              url
+                              author {
+                                login
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                `,
+                {
+                  owner,
+                  repo,
+                  number: pullNumber,
+                  cursor,
+                }
+              );
+
+              const connection = result.repository?.pullRequest?.reviewThreads;
+              if (!connection) {
+                break;
+              }
+
+              for (const node of connection.nodes || []) {
+                reviewThreads.push(node);
+              }
+
+              if (!connection.pageInfo?.hasNextPage) {
+                break;
+              }
+
+              cursor = connection.pageInfo.endCursor;
+            }
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number: pullNumber,
+              per_page: 100,
+            });
+
+            let copilotThreadCount = 0;
+            const unresolved = [];
+            for (const thread of reviewThreads) {
+              const comments = thread.comments?.nodes || [];
+              const copilotComments = comments.filter(
+                (comment) => comment.author?.login === copilotLogin
+              );
+
+              if (!copilotComments.length) {
+                continue;
+              }
+
+              copilotThreadCount += 1;
+              const latest = copilotComments[copilotComments.length - 1];
+
+              if (!thread.isResolved && !thread.isOutdated) {
+                const normalizedBody = (latest.body || "")
+                  .replace(/\s+/g, " ")
+                  .trim()
+                  .slice(0, 220);
+
+                unresolved.push({
+                  path: thread.path || "(unknown file)",
+                  line: thread.line || thread.startLine || 0,
+                  url: latest.url || pr.html_url,
+                  summary: normalizedBody || "No details provided by Copilot.",
+                });
+              }
+            }
+
+            const hasCopilotReview = reviews.some(
+              (review) => review.user?.login === copilotLogin
+            );
+            const hasCopilotActivity = copilotThreadCount > 0 || hasCopilotReview;
+
+            if (!hasCopilotActivity) {
+              await removeLabel(pendingLabel);
+              await removeLabel(readyLabel);
+              await upsertSummaryComment(
+                `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n`
+              );
+              core.notice("No Copilot review findings detected yet.");
+              return;
+            }
+
+            if (unresolved.length > 0) {
+              await addLabel(pendingLabel);
+              await removeLabel(readyLabel);
+
+              const lines = unresolved.map((item) => {
+                const location = item.line > 0 ? `${item.path}:${item.line}` : item.path;
+                return `- [${location}](${item.url}) - ${item.summary}`;
+              });
+
+              await upsertSummaryComment(
+                `${summaryMarker}\n## Copilot Review Triage\n\n${unresolved.length} unresolved Copilot review thread(s) still need triage before automated approval.\n\n${lines.join("\n")}\n`
+              );
+
+              core.setFailed(
+                `Copilot review triage has ${unresolved.length} unresolved finding(s). Resolve or mark the Copilot threads as resolved.`
+              );
+              return;
+            }
+
+            await addLabel(readyLabel);
+            await removeLabel(pendingLabel);
+
+            const readySummary = canAutoApprove
+              ? "All Copilot review threads are triaged for the current revision. This pull request is ready for approval."
+              : "All Copilot review threads are triaged for the current revision. This pull request is ready for human approval. Add label `copilot-auto-approve` to permit automated approval on non-automation pull requests.";
+
+            await upsertSummaryComment(
+              `${summaryMarker}\n## Copilot Review Triage\n\n${readySummary}\n`
+            );
+
+            if (pr.draft) {
+              core.notice("Pull request is still draft; skipping automated approval.");
+              return;
+            }
+
+            if (!canAutoApprove) {
+              core.notice(
+                "Skipping automated approval because this pull request is not automation-managed and does not include the copilot-auto-approve label."
+              );
+              return;
+            }
+
+            const latestReviewByUser = new Map();
+            for (const review of reviews) {
+              if (!review.user?.login) {
+                continue;
+              }
+              latestReviewByUser.set(review.user.login, review);
+            }
+
+            const botLogin = "github-actions[bot]";
+            const latestBotReview = latestReviewByUser.get(botLogin);
+            if (
+              latestBotReview &&
+              latestBotReview.state === "APPROVED" &&
+              latestBotReview.commit_id === pr.head.sha
+            ) {
+              core.notice("Automated approval already exists for the current head commit.");
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number: pullNumber,
+              event: "APPROVE",
+              body: "Copilot triage complete: no unresolved Copilot findings remain on this revision.",
+            });
+
+            core.notice("Submitted automated approval after Copilot triage completion.");

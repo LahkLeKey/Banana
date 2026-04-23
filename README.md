@@ -337,7 +337,11 @@ Human-approval merge gate:
 - Workflow `Require Human Approval (Automation PRs)` blocks automation PRs until at least one non-bot approval is present.
 - Automation PR detection now includes automation labels, known automation branch prefixes, and bot-authored PRs.
 - Draft-aware enforcement: draft automation PRs are allowed to stage changes, and the gate is enforced when the PR becomes ready for review.
-- Add this check as required in your protected-branch ruleset so merge remains blocked until a human review approves.
+- Workflow `Copilot Review Triage` tracks review threads from `copilot-pull-request-reviewer`, fails while unresolved findings remain, and posts an up-to-date triage summary on the PR.
+- When all Copilot findings are triaged, `Copilot Review Triage` applies label `copilot-triage-ready` and submits an approval review from `github-actions[bot]` for automation PRs (or for non-automation PRs labeled `copilot-auto-approve`).
+- If unresolved Copilot findings remain, `Copilot Review Triage` applies `copilot-triage-pending` and blocks readiness until triage is complete.
+- Mark `Require Human Approval (Automation PRs)` as required in your protected-branch ruleset so automation merges stay blocked until a human review approves.
+- Mark `Copilot Review Triage` as required if you want unresolved Copilot findings to block merge readiness.
 - Keep branch settings aligned with `Require a pull request before merging` and reviewer requirements.
 - Solo maintainer option: add label `solo-maintainer-bypass` to an owner-authored automation PR to bypass the gate when no second human reviewer exists.
 - Safety rule: `solo-maintainer-bypass` fails the check if applied to a PR not opened by the repository owner.
