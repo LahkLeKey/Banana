@@ -237,11 +237,47 @@ Example matrix payload:
 
 Repository-backed long-term history:
 
-- Set workflow input `persist_registry_history=true` to commit release snapshots into the repo.
+- Set workflow input `persist_registry_history=true` to stage release snapshots into an automated pull request.
 - Configure:
-  - `registry_history_branch` (default: `model-release-history`)
+  - `registry_history_branch` (default: `model-release-history`, used as branch prefix)
   - `registry_history_path` (default: `data/not-banana/model-release-history`)
-- CI writes timestamped snapshot bundles and updates `latest.json` for quick lookup.
+  - `registry_history_pr_base_branch` (default: `main`)
+  - `registry_history_open_draft_pr` (default: `true`)
+  - `registry_history_pr_labels` (default includes `requires-human-approval`)
+  - `registry_history_pr_reviewers` (optional comma-separated usernames)
+- CI writes timestamped snapshot bundles, updates `latest.json`, then opens a PR for human review.
+
+Automation pull request orchestration for triaged code changes:
+
+- Run workflow `Orchestrate Triaged Item Pull Request` with:
+  - `triage_id`
+  - `change_command`
+  - optional branch/label/reviewer overrides
+- The workflow creates a branch, commits generated changes, opens a PR, and labels it with `requires-human-approval` by default.
+
+Human-approval merge gate:
+
+- Workflow `Require Human Approval (Automation PRs)` blocks automation PRs until at least one non-bot approval is present.
+- Add this check as required in your protected-branch ruleset so merge remains blocked until a human review approves.
+- Keep branch settings aligned with `Require a pull request before merging` and reviewer requirements.
+
+Local workflow containers (Docker Compose):
+
+- Use profile `workflow-local` to run one workflow validation path per container.
+- Train + persistence PR path (dry-run orchestration by default):
+
+```bash
+bash scripts/compose-local-workflows.sh workflow-train-not-banana-local
+```
+
+- Triaged item PR path with safe no-op change command:
+
+```bash
+BANANA_TRIAGE_CHANGE_COMMAND=':' \
+bash scripts/compose-local-workflows.sh workflow-orchestrate-triaged-local
+```
+
+- To run against GitHub for real PR creation, provide `GH_TOKEN` and set `BANANA_LOCAL_DRY_RUN=false`.
 
 ## Learn More
 

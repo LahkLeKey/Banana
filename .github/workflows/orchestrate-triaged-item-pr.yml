@@ -1,0 +1,76 @@
+name: Orchestrate Triaged Item Pull Request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      triage_id:
+        description: Triage identifier (ticket ID, incident ID, or backlog key)
+        required: true
+      change_command:
+        description: Shell command that applies the triaged code changes before commit
+        required: true
+      base_branch:
+        description: Base branch that receives the pull request
+        required: false
+        default: "main"
+      branch_prefix:
+        description: Prefix for generated automation branches
+        required: false
+        default: "triage"
+      commit_message:
+        description: Commit message for generated triage changes
+        required: false
+        default: "chore(triage): automated triaged change"
+      pr_title:
+        description: Optional pull request title override
+        required: false
+        default: ""
+      pr_body:
+        description: Optional pull request body override
+        required: false
+        default: ""
+      draft_pr:
+        description: Open pull request as draft
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      labels:
+        description: Comma-separated labels for generated pull requests
+        required: false
+        default: "automation,triaged-item,requires-human-approval"
+      reviewers:
+        description: Optional comma-separated reviewer usernames
+        required: false
+        default: ""
+
+jobs:
+  orchestrate-triaged-pr:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BANANA_TRIAGE_ID: ${{ github.event.inputs.triage_id }}
+      BANANA_TRIAGE_CHANGE_COMMAND: ${{ github.event.inputs.change_command }}
+      BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
+      BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage' }}
+      BANANA_COMMIT_MESSAGE: ${{ github.event.inputs.commit_message || 'chore(triage): automated triaged change' }}
+      BANANA_PR_TITLE: ${{ github.event.inputs.pr_title || '' }}
+      BANANA_PR_BODY: ${{ github.event.inputs.pr_body || '' }}
+      BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
+      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval' }}
+      BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate triaged branch, commit changes, and open PR
+        run: bash scripts/workflow-orchestrate-triaged-item-pr.sh

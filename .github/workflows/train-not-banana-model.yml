@@ -2,6 +2,7 @@ name: Train Not-Banana Model
 
 permissions:
   contents: write
+  pull-requests: write
 
 on:
   workflow_dispatch:
@@ -77,7 +78,7 @@ on:
         required: false
         default: ""
       persist_registry_history:
-        description: Persist release snapshots inside the repository on a branch
+        description: Persist release snapshots inside the repository through an automated pull request
         required: false
         default: "false"
         type: choice
@@ -85,13 +86,33 @@ on:
           - "false"
           - "true"
       registry_history_branch:
-        description: Branch that stores persistent registry history commits
+        description: Branch prefix used for generated registry history PR branches
         required: false
         default: "model-release-history"
       registry_history_path:
         description: Repository path for persistent registry snapshots
         required: false
         default: "data/not-banana/model-release-history"
+      registry_history_pr_base_branch:
+        description: Base branch for registry-history pull requests
+        required: false
+        default: "main"
+      registry_history_open_draft_pr:
+        description: Open registry-history pull requests as draft
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      registry_history_pr_labels:
+        description: Comma-separated labels for registry-history pull requests
+        required: false
+        default: "automation,model-training,requires-human-approval"
+      registry_history_pr_reviewers:
+        description: Optional comma-separated reviewer usernames for registry-history pull requests
+        required: false
+        default: ""
       min_signal_score:
         description: Minimum BANANA-vs-NOT_BANANA signal score
         required: false
@@ -105,6 +126,7 @@ on:
       - data/not-banana/**
       - scripts/train-not-banana-model.py
       - scripts/manage-not-banana-model-image.py
+      - scripts/workflow-persist-registry-history-pr.sh
       - .github/workflows/train-not-banana-model.yml
     paths-ignore:
       - data/not-banana/model-release-history/**
@@ -548,59 +570,15 @@ jobs:
           path: artifacts/not-banana-release-artifacts
           merge-multiple: false
 
-      - name: Commit registry history to repository branch
+      - name: Commit registry history and open pull request
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BANANA_REGISTRY_HISTORY_BRANCH: ${{ github.event.inputs.registry_history_branch || 'model-release-history' }}
           BANANA_REGISTRY_HISTORY_PATH: ${{ github.event.inputs.registry_history_path || 'data/not-banana/model-release-history' }}
+          BANANA_REGISTRY_PR_BASE_BRANCH: ${{ github.event.inputs.registry_history_pr_base_branch || 'main' }}
+          BANANA_REGISTRY_OPEN_DRAFT_PR: ${{ github.event.inputs.registry_history_open_draft_pr || 'true' }}
+          BANANA_REGISTRY_PR_LABELS: ${{ github.event.inputs.registry_history_pr_labels || 'automation,model-training,requires-human-approval' }}
+          BANANA_REGISTRY_PR_REVIEWERS: ${{ github.event.inputs.registry_history_pr_reviewers || '' }}
+          BANANA_RELEASE_ARTIFACTS_SOURCE: artifacts/not-banana-release-artifacts
         run: |
-          set -euo pipefail
-
-          BRANCH="${BANANA_REGISTRY_HISTORY_BRANCH}"
-          HISTORY_PATH="${BANANA_REGISTRY_HISTORY_PATH%/}"
-
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            git fetch origin "$BRANCH"
-            git checkout -B "$BRANCH" "origin/$BRANCH"
-          else
-            git checkout -B "$BRANCH"
-          fi
-
-          STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-          TARGET_DIR="$HISTORY_PATH/$STAMP"
-          mkdir -p "$TARGET_DIR"
-          cp -R artifacts/not-banana-release-artifacts/* "$TARGET_DIR/"
-
-          python - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          history_path = Path(os.environ["BANANA_REGISTRY_HISTORY_PATH"]).resolve()
-          entries = [
-              path.name
-              for path in history_path.iterdir()
-              if path.is_dir() and not path.name.startswith(".")
-          ]
-          entries.sort(reverse=True)
-
-          latest = {
-              "schema_version": 1,
-              "updated_at_utc": entries[0] if entries else "",
-              "snapshots": entries[:50],
-          }
-          latest_path = history_path / "latest.json"
-          latest_path.parent.mkdir(parents=True, exist_ok=True)
-          latest_path.write_text(json.dumps(latest, indent=2) + "\n", encoding="utf-8")
-          PY
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$HISTORY_PATH"
-
-          if git diff --cached --quiet; then
-            echo "No registry history changes to commit."
-            exit 0
-          fi
-
-          git commit -m "chore(model): persist release snapshots run ${GITHUB_RUN_ID} [skip ci]"
-          git push origin "$BRANCH"
+          bash scripts/workflow-persist-registry-history-pr.sh

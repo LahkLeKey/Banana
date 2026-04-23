@@ -28,6 +28,9 @@
 - Stop apps stack: `bash scripts/compose-apps-down.sh`
 - Test profile: `bash scripts/compose-tests.sh`
 - Runtime profile: `bash scripts/compose-runtime.sh`
+- Local workflow containers: `bash scripts/compose-local-workflows.sh <service>`
+- Local training PR-path service: `workflow-train-not-banana-local`
+- Local triaged PR-path service: `workflow-orchestrate-triaged-local`
 - Electron desktop channel: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-electron.sh'`
 - Mobile emulator channel: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-mobile.sh'`
 - Primary helpers: `compose-runtime-agent`, `mobile-runtime-agent`, `workflow-agent`
@@ -55,7 +58,10 @@
 - Snapshot command: `python scripts/manage-not-banana-model-image.py snapshot --registry-dir artifacts/not-banana-model-registry --snapshot-dir artifacts/not-banana-model-registry-snapshots`
 - Snapshot upload command: `python scripts/manage-not-banana-model-image.py snapshot --registry-dir artifacts/not-banana-model-registry --snapshot-dir artifacts/not-banana-model-registry-snapshots --upload-url <archive-put-url> --upload-sha-url <sha-put-url>`
 - CI multi-release build input: `release_matrix_json` (workflow dispatch) to build multiple model releases in one run.
-- CI repository persistence input: `persist_registry_history=true` to commit snapshot bundles to `registry_history_branch` and `registry_history_path`.
+- CI repository persistence input: `persist_registry_history=true` to create a registry-history pull request containing snapshot bundles at `registry_history_path`.
+- CI repository persistence PR controls: `registry_history_pr_base_branch`, `registry_history_open_draft_pr`, `registry_history_pr_labels`, and `registry_history_pr_reviewers`.
+- Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
+- Human-approval gate workflow: `.github/workflows/require-human-approval.yml` (mark check required in branch protection/rulesets).
 - Preserve CI/container prerequisites needed to execute training and drift checks reliably.
 - Treat training drift failures as actionable model/data contract signals, not infrastructure noise.
 - Document any runtime or automation changes that affect training invocation, artifacts, or reproducibility.
