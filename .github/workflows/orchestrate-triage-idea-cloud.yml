@@ -1,6 +1,7 @@
 name: Orchestrate Triage Idea Cloud
 
 permissions:
+  actions: write
   contents: write
   issues: write
   pull-requests: write
@@ -23,7 +24,7 @@ on:
       pr_labels:
         description: Comma-separated labels for generated pull request
         required: false
-        default: "automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded"
+        default: "automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded"
       base_branch:
         description: Base branch that receives generated pull request
         required: false
@@ -35,11 +36,23 @@ on:
       draft_pr:
         description: Open generated pull request as draft
         required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      dispatch_required_checks:
+        description: Dispatch required PR gate workflows for bot-authored triage PRs
+        required: false
         default: "true"
         type: choice
         options:
           - "true"
           - "false"
+      check_workflows:
+        description: Comma-separated workflow files to dispatch for PR gate checks
+        required: false
+        default: "copilot-review-triage.yml,require-human-approval.yml"
       reviewers:
         description: Optional reviewer usernames as comma-separated values or [array] syntax
         required: false
@@ -106,10 +119,12 @@ jobs:
       BANANA_TRIAGE_IDEA: ${{ github.event.inputs.idea || '' }}
       BANANA_TRIAGE_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || github.event.inputs.issue_number || '' }}
       BANANA_TRIAGE_ISSUE_LABELS: ${{ github.event.inputs.issue_labels || 'triage-idea,copilot-suggestion,automation,copilot-bypass-vibe-coded' }}
-      BANANA_TRIAGE_PR_LABELS: ${{ github.event.inputs.pr_labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded' }}
+      BANANA_TRIAGE_PR_LABELS: ${{ github.event.inputs.pr_labels || 'automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage' }}
-      BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
+      BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'false' }}
+      BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS: ${{ github.event.inputs.dispatch_required_checks || 'true' }}
+      BANANA_TRIAGE_CHECK_WORKFLOWS: ${{ github.event.inputs.check_workflows || 'copilot-review-triage.yml,require-human-approval.yml' }}
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_SKIP_IF_NO_CHANGES: ${{ github.event.inputs.skip_if_no_changes || 'true' }}
       BANANA_SYNC_WIKI: ${{ github.event.inputs.sync_wiki || 'true' }}

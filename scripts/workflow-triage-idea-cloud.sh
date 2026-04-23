@@ -10,11 +10,13 @@ RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-1}"
 TRIAGE_IDEA="${BANANA_TRIAGE_IDEA:-}"
 TRIAGE_ISSUE_NUMBER="${BANANA_TRIAGE_ISSUE_NUMBER:-}"
 TRIAGE_ISSUE_LABELS="${BANANA_TRIAGE_ISSUE_LABELS:-triage-idea,copilot-suggestion,automation,copilot-bypass-vibe-coded}"
-TRIAGE_PR_LABELS="${BANANA_TRIAGE_PR_LABELS:-automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded}"
+TRIAGE_PR_LABELS="${BANANA_TRIAGE_PR_LABELS:-automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded}"
 TRIAGE_INTAKE_DIR="${BANANA_TRIAGE_INTAKE_DIR:-docs/triage/intake}"
 BASE_BRANCH="${BANANA_BASE_BRANCH:-main}"
 BRANCH_PREFIX="${BANANA_BRANCH_PREFIX:-triage}"
-DRAFT_PR="${BANANA_DRAFT_PR:-true}"
+DRAFT_PR="${BANANA_DRAFT_PR:-false}"
+TRIAGE_DISPATCH_REQUIRED_CHECKS="${BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS:-true}"
+TRIAGE_CHECK_WORKFLOWS="${BANANA_TRIAGE_CHECK_WORKFLOWS:-copilot-review-triage.yml,require-human-approval.yml}"
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-true}"
 PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-artifacts/triage-idea/triage-pr-output-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
@@ -63,6 +65,36 @@ parse_list_input() {
 normalize_whitespace() {
   local raw="${1:-}"
   printf '%s' "$raw" | tr '\r\n' '  ' | sed -E 's/[[:space:]]+/ /g' | xargs
+}
+
+get_repo_slug() {
+  if [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
+    printf '%s' "$GITHUB_REPOSITORY"
+    return 0
+  fi
+
+  gh repo view --json nameWithOwner -q .nameWithOwner
+}
+
+dispatch_gate_workflow() {
+  local repo_slug="$1"
+  local workflow_file="$2"
+  local pr_number="$3"
+  local pr_branch="$4"
+
+  if [[ -z "$workflow_file" ]]; then
+    return 0
+  fi
+
+  if gh api -X POST "repos/${repo_slug}/actions/workflows/${workflow_file}/dispatches" \
+    -f ref="$pr_branch" \
+    -f inputs[pull_number]="$pr_number" >/dev/null 2>&1; then
+    echo "Dispatched gate workflow '${workflow_file}' for PR #${pr_number} (${pr_branch})."
+    return 0
+  fi
+
+  echo "::warning::Unable to dispatch gate workflow '${workflow_file}' for PR #${pr_number}."
+  return 1
 }
 
 ensure_label() {
@@ -242,6 +274,46 @@ payload = json.loads(path.read_text(encoding="utf-8"))
 print(payload.get("pr_url", ""))
 PY
 )"
+
+pr_number="$(python - "$PR_OUTPUT_PATH" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+if not path.exists():
+    print("")
+    raise SystemExit(0)
+
+payload = json.loads(path.read_text(encoding="utf-8"))
+print(payload.get("pr_number", ""))
+PY
+)"
+
+pr_branch="$(python - "$PR_OUTPUT_PATH" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+if not path.exists():
+    print("")
+    raise SystemExit(0)
+
+payload = json.loads(path.read_text(encoding="utf-8"))
+print(payload.get("branch", ""))
+PY
+)"
+
+if [[ "$TRIAGE_DISPATCH_REQUIRED_CHECKS" == "true" && "$pr_status" == "created" && -n "$pr_number" && -n "$pr_branch" ]]; then
+  repo_slug="$(get_repo_slug)"
+
+  declare -a parsed_check_workflows=()
+  parse_list_input "$TRIAGE_CHECK_WORKFLOWS" parsed_check_workflows
+  for workflow_file in "${parsed_check_workflows[@]}"; do
+    dispatch_gate_workflow "$repo_slug" "$workflow_file" "$pr_number" "$pr_branch" || true
+  done
+fi
 
 if [[ -n "$pr_url" ]]; then
   gh issue comment "$TRIAGE_ISSUE_NUMBER" --body "Automation PR opened for this triage idea: ${pr_url}" >/dev/null 2>&1 || true
