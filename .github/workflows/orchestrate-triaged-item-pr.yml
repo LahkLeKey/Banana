@@ -60,7 +60,7 @@ jobs:
       BANANA_TRIAGE_CHANGE_COMMAND: ${{ github.event.inputs.change_command }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage' }}
-      BANANA_COMMIT_MESSAGE: ${{ github.event.inputs.commit_message || 'chore(triage): automated triaged change' }}
+      BANANA_COMMIT_MESSAGE: "${{ github.event.inputs.commit_message || 'chore(triage): automated triaged change' }}"
       BANANA_PR_TITLE: ${{ github.event.inputs.pr_title || '' }}
       BANANA_PR_BODY: ${{ github.event.inputs.pr_body || '' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
