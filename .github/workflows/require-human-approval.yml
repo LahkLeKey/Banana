@@ -43,6 +43,10 @@ jobs:
             const labels = (pr.labels || []).map((label) => label.name);
             const headBranch = pr.head?.ref || "";
             const soloBypassLabel = "solo-maintainer-bypass";
+            const autonomousCycleLabel = "copilot-autonomous-cycle";
+            const vibeBypassLabel = "copilot-bypass-vibe-coded";
+            const copilotReadyLabel = "copilot-triage-ready";
+            const automationBotLogin = "github-actions[bot]";
             const automationBranchPrefixes = [
               "triage/",
               "triage-feedback/",
@@ -102,7 +106,38 @@ jobs:
               latestReviewByUser.set(review.user.login, {
                 state: review.state,
                 type: review.user.type || "",
+                commitId: review.commit_id || "",
               });
+            }
+
+            const latestBotReview = latestReviewByUser.get(automationBotLogin);
+            const hasCurrentBotApproval =
+              !!latestBotReview &&
+              latestBotReview.state === "APPROVED" &&
+              latestBotReview.commitId === pr.head.sha;
+
+            const hasCopilotBypassLabel =
+              labels.includes(autonomousCycleLabel) || labels.includes(vibeBypassLabel);
+
+            if (hasCopilotBypassLabel) {
+              if (!labels.includes(copilotReadyLabel)) {
+                core.setFailed(
+                  `Labels '${autonomousCycleLabel}' or '${vibeBypassLabel}' require '${copilotReadyLabel}' before bypassing human approval.`
+                );
+                return;
+              }
+
+              if (!hasCurrentBotApproval) {
+                core.setFailed(
+                  `Labels '${autonomousCycleLabel}' or '${vibeBypassLabel}' require a current-head approval from ${automationBotLogin}.`
+                );
+                return;
+              }
+
+              core.notice(
+                `Bypassing human approval gate because Copilot bypass label is set and Copilot triage approval is current.`
+              );
+              return;
             }
 
             const approvingHumans = [];

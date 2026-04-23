@@ -9,6 +9,8 @@ RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-1}"
 WIKI_DIR="${BANANA_WIKI_DIR:-.wiki}"
 WIKI_REPOSITORY="${BANANA_WIKI_REPOSITORY:-${GITHUB_REPOSITORY:-}}"
 WIKI_REMOTE_URL="${BANANA_WIKI_REMOTE_URL:-}"
+CANONICAL_WIKI_REMOTE_URL="${BANANA_WIKI_CANONICAL_REMOTE_URL:-https://github.com/LahkLeKey/Banana.wiki.git}"
+ENFORCE_CANONICAL_WIKI_REMOTE="${BANANA_ENFORCE_CANONICAL_WIKI_REMOTE:-true}"
 WIKI_COMMIT_MESSAGE="${BANANA_WIKI_COMMIT_MESSAGE:-docs(wiki): sync automated SDLC documentation snapshots}"
 WIKI_PUSH="${BANANA_WIKI_PUSH:-true}"
 WIKI_DRY_RUN="${BANANA_WIKI_DRY_RUN:-false}"
@@ -47,6 +49,38 @@ else
       mapping_entries+=("${prompt_path}|Auto-Prompts/${prompt_name}.md")
     done < <(find .github/prompts -maxdepth 1 -type f -name "*.prompt.md" | sort)
   fi
+
+  if [[ -f ".github/copilot-instructions.md" ]]; then
+    mapping_entries+=(".github/copilot-instructions.md|Auto-GitHub/copilot-instructions.md")
+  fi
+
+  if [[ -d ".github/workflows" ]]; then
+    while IFS= read -r workflow_path; do
+      workflow_file="$(basename "$workflow_path")"
+      mapping_entries+=("${workflow_path}|Auto-GitHub-Workflows/${workflow_file}.md")
+    done < <(find .github/workflows -maxdepth 1 -type f -name "*.yml" | sort)
+  fi
+
+  if [[ -d ".github/instructions" ]]; then
+    while IFS= read -r instruction_path; do
+      instruction_file="$(basename "$instruction_path")"
+      mapping_entries+=("${instruction_path}|Auto-GitHub-Instructions/${instruction_file}")
+    done < <(find .github/instructions -maxdepth 1 -type f -name "*.md" | sort)
+  fi
+fi
+
+if [[ -z "$WIKI_REMOTE_URL" ]]; then
+  WIKI_REMOTE_URL="$CANONICAL_WIKI_REMOTE_URL"
+fi
+
+if [[ "$ENFORCE_CANONICAL_WIKI_REMOTE" == "true" && "$WIKI_REMOTE_URL" != "$CANONICAL_WIKI_REMOTE_URL" ]]; then
+  if [[ "$WIKI_STRICT" == "true" ]]; then
+    echo "::error::Configured wiki remote '$WIKI_REMOTE_URL' does not match canonical remote '$CANONICAL_WIKI_REMOTE_URL'."
+    exit 1
+  fi
+
+  echo "::warning::Configured wiki remote '$WIKI_REMOTE_URL' does not match canonical remote '$CANONICAL_WIKI_REMOTE_URL'. Using canonical remote."
+  WIKI_REMOTE_URL="$CANONICAL_WIKI_REMOTE_URL"
 fi
 
 if [[ ${#mapping_entries[@]} -eq 0 ]]; then
@@ -104,7 +138,7 @@ if [[ ! -d "$WIKI_DIR/.git" ]]; then
   if [[ -z "$WIKI_REMOTE_URL" ]]; then
     if [[ -z "$WIKI_REPOSITORY" ]]; then
       if [[ "$WIKI_STRICT" == "true" ]]; then
-        echo "::error::Cannot determine wiki repository slug. Set BANANA_WIKI_REPOSITORY or BANANA_WIKI_REMOTE_URL (for example https://github.com/LahkLeKey/Banana.wiki.git)."
+        echo "::error::Cannot determine wiki repository slug. Set BANANA_WIKI_REPOSITORY or BANANA_WIKI_REMOTE_URL (canonical: $CANONICAL_WIKI_REMOTE_URL)."
         exit 1
       fi
 

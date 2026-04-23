@@ -65,16 +65,23 @@
 - Feedback PR orchestration workflow: `.github/workflows/orchestrate-not-banana-feedback-loop.yml`
 - Wiki sync script: `bash scripts/workflow-sync-wiki.sh` (supports `BANANA_WIKI_*` env vars)
 - Example explicit Banana wiki remote (override for forks): `BANANA_WIKI_REMOTE_URL=https://github.com/LahkLeKey/Banana.wiki.git`
+- Canonical wiki enforcement toggle: `BANANA_ENFORCE_CANONICAL_WIKI_REMOTE=true`
 - AI contract validation script: `python scripts/validate-ai-contracts.py` (verifies prompt/agent/instruction/skill frontmatter and wiki-sync coverage)
 - Incremental SDLC orchestration script: `bash scripts/workflow-orchestrate-sdlc.sh`
 - Local SDLC dry-run script: `bash scripts/workflow-local-orchestrate-sdlc.sh`
 - Full SDLC orchestration workflow: `.github/workflows/orchestrate-banana-sdlc.yml`
+- Autonomous bounded self-training workflow: `.github/workflows/orchestrate-autonomous-self-training-cycle.yml`
 - CI multi-release build input: `release_matrix_json` (workflow dispatch) to build multiple model releases in one run.
 - CI repository persistence input: `persist_registry_history=true` to create a registry-history pull request containing snapshot bundles at `registry_history_path`.
 - CI repository persistence PR controls: `registry_history_pr_base_branch`, `registry_history_open_draft_pr`, `registry_history_pr_labels`, and `registry_history_pr_reviewers`.
 - Push-based corpus persistence: when `data/not-banana/corpus.json` changes, `Train Not-Banana Model` now persists registry history automatically in the same run.
 - Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
+- Cloud triage idea orchestration workflow: `.github/workflows/orchestrate-triage-idea-cloud.yml` via issue labels `triage-idea`/`copilot-suggestion` or workflow dispatch with `idea`/`issue_number`.
+- Cloud triage idea orchestration script: `bash scripts/workflow-triage-idea-cloud.sh`.
+- Custom triage prompt: `.github/prompts/triage.prompt.md` (use `/triage "idea"` to intake and orchestrate).
 - Human-approval gate workflow: `.github/workflows/require-human-approval.yml` (mark check required in branch protection/rulesets).
+- Copilot triage-and-approval workflow: `.github/workflows/copilot-review-triage.yml` (tracks unresolved Copilot findings and auto-approves automation PRs, or non-automation PRs with `copilot-auto-approve`).
+- Autonomous continuation labels: `copilot-autonomous-cycle` and `copilot-bypass-vibe-coded` (paired with `copilot-triage-ready` for bot-driven continuation and provenance tagging of vibe-coded integrations).
 - Preserve CI/container prerequisites needed to execute training and drift checks reliably.
 - Treat training drift failures as actionable model/data contract signals, not infrastructure noise.
 - Document any runtime or automation changes that affect training invocation, artifacts, or reproducibility.

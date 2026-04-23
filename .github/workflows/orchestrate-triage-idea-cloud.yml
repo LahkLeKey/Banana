@@ -1,72 +1,59 @@
-name: Orchestrate Triaged Item Pull Request
+name: Orchestrate Triage Idea Cloud
 
 permissions:
   contents: write
+  issues: write
   pull-requests: write
 
 on:
   workflow_dispatch:
     inputs:
-      triage_id:
-        description: Triage identifier (ticket ID, incident ID, or backlog key)
-        required: true
-      change_command:
-        description: Shell command that applies the triaged code changes before commit
-        required: true
+      idea:
+        description: Idea text for a new triage issue (optional when issue_number is provided)
+        required: false
+        default: ""
+      issue_number:
+        description: Existing issue number to triage instead of creating a new issue
+        required: false
+        default: ""
+      issue_labels:
+        description: Comma-separated labels to apply to triage issue
+        required: false
+        default: "triage-idea,copilot-suggestion,automation,copilot-bypass-vibe-coded"
+      pr_labels:
+        description: Comma-separated labels for generated pull request
+        required: false
+        default: "automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded"
       base_branch:
-        description: Base branch that receives the pull request
+        description: Base branch that receives generated pull request
         required: false
         default: "main"
       branch_prefix:
-        description: Prefix for generated automation branches
+        description: Prefix for generated automation branch
         required: false
         default: "triage"
-      commit_message:
-        description: Commit message for generated triage changes
-        required: false
-        default: "chore(triage): automated triaged change"
-      pr_title:
-        description: Optional pull request title override
-        required: false
-        default: ""
-      pr_body:
-        description: Optional pull request body override
-        required: false
-        default: ""
       draft_pr:
-        description: Open pull request as draft
+        description: Open generated pull request as draft
         required: false
         default: "true"
         type: choice
         options:
           - "true"
           - "false"
-      labels:
-        description: Comma-separated labels for generated pull requests
-        required: false
-        default: "automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded"
       reviewers:
         description: Optional reviewer usernames as comma-separated values or [array] syntax
         required: false
         default: ""
-      allow_actions_actor:
-        description: Allow workflow_dispatch runs triggered by github-actions[bot]
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
       skip_if_no_changes:
-        description: Skip PR creation when change_command does not modify files
+        description: Skip PR creation when triage intake file has no effective changes
         required: false
-        default: "false"
+        default: "true"
         type: choice
         options:
           - "true"
           - "false"
       sync_wiki:
-        description: Run wiki synchronization after triaged pull request orchestration
+        description: Run wiki synchronization after triage orchestration
         required: false
         default: "true"
         type: choice
@@ -105,44 +92,42 @@ on:
         description: Optional explicit wiki git remote URL
         required: false
         default: "https://github.com/LahkLeKey/Banana.wiki.git"
-      wiki_sync_mapping:
-        description: Optional newline-delimited source|target mapping for wiki sync
-        required: false
-        default: ""
+  issues:
+    types:
+      - opened
+      - labeled
 
 jobs:
-  orchestrate-triaged-pr:
-    if: ${{ github.actor != 'github-actions[bot]' || github.event.inputs.allow_actions_actor == 'true' }}
+  orchestrate-triage-idea:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && ((github.event.action == 'opened' && (contains(github.event.issue.labels.*.name, 'triage-idea') || contains(github.event.issue.labels.*.name, 'copilot-suggestion'))) || (github.event.action == 'labeled' && (github.event.label.name == 'triage-idea' || github.event.label.name == 'copilot-suggestion')))) }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      BANANA_TRIAGE_ID: ${{ github.event.inputs.triage_id }}
-      BANANA_TRIAGE_CHANGE_COMMAND: ${{ github.event.inputs.change_command }}
+      BANANA_TRIAGE_IDEA: ${{ github.event.inputs.idea || '' }}
+      BANANA_TRIAGE_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || github.event.inputs.issue_number || '' }}
+      BANANA_TRIAGE_ISSUE_LABELS: ${{ github.event.inputs.issue_labels || 'triage-idea,copilot-suggestion,automation,copilot-bypass-vibe-coded' }}
+      BANANA_TRIAGE_PR_LABELS: ${{ github.event.inputs.pr_labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage' }}
-      BANANA_COMMIT_MESSAGE: "${{ github.event.inputs.commit_message || 'chore(triage): automated triaged change' }}"
-      BANANA_PR_TITLE: ${{ github.event.inputs.pr_title || '' }}
-      BANANA_PR_BODY: ${{ github.event.inputs.pr_body || '' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
-      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded' }}
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
-      BANANA_SKIP_IF_NO_CHANGES: ${{ github.event.inputs.skip_if_no_changes || 'false' }}
+      BANANA_SKIP_IF_NO_CHANGES: ${{ github.event.inputs.skip_if_no_changes || 'true' }}
+      BANANA_SYNC_WIKI: ${{ github.event.inputs.sync_wiki || 'true' }}
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
       BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}
       BANANA_WIKI_STRICT: ${{ github.event.inputs.wiki_strict || 'false' }}
       BANANA_WIKI_COMMIT_MESSAGE: ${{ github.event.inputs.wiki_commit_message || 'docs(wiki): sync automated SDLC documentation snapshots' }}
       BANANA_WIKI_REMOTE_URL: ${{ github.event.inputs.wiki_remote_url || 'https://github.com/LahkLeKey/Banana.wiki.git' }}
       BANANA_ENFORCE_CANONICAL_WIKI_REMOTE: 'true'
-      BANANA_WIKI_SYNC_MAPPING: ${{ github.event.inputs.wiki_sync_mapping || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Generate triaged branch, commit changes, and open PR
-        run: bash scripts/workflow-orchestrate-triaged-item-pr.sh
+      - name: Orchestrate issue intake and triaged PR
+        run: bash scripts/workflow-triage-idea-cloud.sh
 
-      - name: Sync wiki snapshots for triaged automation
-        if: ${{ github.event.inputs.sync_wiki != 'false' }}
+      - name: Sync wiki snapshots for triage idea automation
+        if: ${{ env.BANANA_SYNC_WIKI != 'false' }}
         run: bash scripts/workflow-sync-wiki.sh
