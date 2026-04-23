@@ -297,6 +297,9 @@ Cloud idea triage from prompt or issue labels:
 - Default issue labels: `triage-idea`, `copilot-suggestion`, `automation`, `copilot-bypass-vibe-coded`.
 - Default generated PR labels: `automation`, `triaged-item`, `copilot-auto-approve`, `copilot-autonomous-cycle`, `copilot-bypass-vibe-coded`.
 - Default generated PR mode is ready-for-review (`draft_pr=false`) for autonomous continuation.
+- Cloud triage now clears backlog by default before creating new artifacts (`clear_backlog=true`).
+- Backlog cleanup targets open issues with labels `triage-idea` or `copilot-suggestion`, and open PRs with labels `automation` + `triaged-item` (or triage branch prefixes).
+- Backlog cleanup scope can be tuned with workflow inputs `backlog_issue_labels`, `backlog_pr_labels`, and `backlog_pr_branch_prefixes`.
 - Cloud triage now dispatches `copilot-review-triage.yml` and `require-human-approval.yml` via `workflow_dispatch` on generated PR heads so required checks report for bot-authored PRs.
 - Required-check dispatch can be tuned with `dispatch_required_checks` and `check_workflows` workflow inputs (or `BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS` / `BANANA_TRIAGE_CHECK_WORKFLOWS`).
 - The workflow supports custom issue labels and PR labels through workflow inputs.

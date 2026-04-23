@@ -15,6 +15,10 @@ TRIAGE_INTAKE_DIR="${BANANA_TRIAGE_INTAKE_DIR:-docs/triage/intake}"
 BASE_BRANCH="${BANANA_BASE_BRANCH:-main}"
 BRANCH_PREFIX="${BANANA_BRANCH_PREFIX:-triage}"
 DRAFT_PR="${BANANA_DRAFT_PR:-false}"
+TRIAGE_CLEAR_BACKLOG="${BANANA_TRIAGE_CLEAR_BACKLOG:-true}"
+TRIAGE_BACKLOG_ISSUE_LABELS="${BANANA_TRIAGE_BACKLOG_ISSUE_LABELS:-triage-idea,copilot-suggestion}"
+TRIAGE_BACKLOG_PR_LABELS="${BANANA_TRIAGE_BACKLOG_PR_LABELS:-automation,triaged-item}"
+TRIAGE_BACKLOG_PR_BRANCH_PREFIXES="${BANANA_TRIAGE_BACKLOG_PR_BRANCH_PREFIXES:-triage/,triage-copilot/,triage-feedback/}"
 TRIAGE_DISPATCH_REQUIRED_CHECKS="${BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS:-true}"
 TRIAGE_CHECK_WORKFLOWS="${BANANA_TRIAGE_CHECK_WORKFLOWS:-copilot-review-triage.yml,require-human-approval.yml}"
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
@@ -97,6 +101,117 @@ dispatch_gate_workflow() {
   return 1
 }
 
+close_backlog_pull_requests() {
+  local -a backlog_pr_numbers=()
+
+  while IFS= read -r pr_number; do
+    if [[ -n "$pr_number" ]]; then
+      backlog_pr_numbers+=("$pr_number")
+    fi
+  done < <(
+    gh pr list --state open --limit 200 --json number,labels,headRefName | python - "$TRIAGE_BACKLOG_PR_LABELS" "$TRIAGE_BACKLOG_PR_BRANCH_PREFIXES" <<'PY'
+import json
+import sys
+
+required_labels = [item.strip().lower() for item in sys.argv[1].split(",") if item.strip()]
+branch_prefixes = [item.strip() for item in sys.argv[2].split(",") if item.strip()]
+
+payload = json.load(sys.stdin)
+for pr in payload:
+    labels = {
+        ((label.get("name") if isinstance(label, dict) else label) or "").strip().lower()
+        for label in (pr.get("labels") or [])
+    }
+    head_ref = (pr.get("headRefName") or "").strip()
+
+    has_required_labels = all(label in labels for label in required_labels) if required_labels else False
+    has_backlog_prefix = any(head_ref.startswith(prefix) for prefix in branch_prefixes)
+
+    if has_required_labels or has_backlog_prefix:
+        number = pr.get("number")
+        if number is not None:
+            print(number)
+PY
+  )
+
+  if [[ ${#backlog_pr_numbers[@]} -eq 0 ]]; then
+    echo "No backlog triage pull requests found for cleanup."
+    return 0
+  fi
+
+  echo "Closing ${#backlog_pr_numbers[@]} backlog triage pull request(s)..."
+  for pr_number in "${backlog_pr_numbers[@]}"; do
+    if gh pr close "$pr_number" --comment "Closed automatically by triage backlog cleanup before run ${RUN_ID} attempt ${RUN_ATTEMPT}." >/dev/null 2>&1; then
+      echo "Closed backlog PR #${pr_number}."
+    else
+      echo "::warning::Unable to close backlog PR #${pr_number}."
+    fi
+  done
+}
+
+close_backlog_issues() {
+  local keep_issue_number="${1:-}"
+  local -a backlog_issue_numbers=()
+
+  while IFS= read -r issue_number; do
+    if [[ -n "$issue_number" ]]; then
+      backlog_issue_numbers+=("$issue_number")
+    fi
+  done < <(
+    gh issue list --state open --limit 200 --json number,labels | python - "$TRIAGE_BACKLOG_ISSUE_LABELS" "$keep_issue_number" <<'PY'
+import json
+import sys
+
+backlog_labels = {item.strip().lower() for item in sys.argv[1].split(",") if item.strip()}
+keep_issue_raw = sys.argv[2].strip()
+keep_issue = int(keep_issue_raw) if keep_issue_raw.isdigit() else None
+
+payload = json.load(sys.stdin)
+for issue in payload:
+    number = issue.get("number")
+    if number is None:
+        continue
+    if keep_issue is not None and number == keep_issue:
+        continue
+
+    labels = {
+        ((label.get("name") if isinstance(label, dict) else label) or "").strip().lower()
+        for label in (issue.get("labels") or [])
+    }
+
+    if labels & backlog_labels:
+        print(number)
+PY
+  )
+
+  if [[ ${#backlog_issue_numbers[@]} -eq 0 ]]; then
+    echo "No backlog triage issues found for cleanup."
+    return 0
+  fi
+
+  echo "Closing ${#backlog_issue_numbers[@]} backlog triage issue(s)..."
+  for issue_number in "${backlog_issue_numbers[@]}"; do
+    if gh issue close "$issue_number" --comment "Closed automatically by triage backlog cleanup before run ${RUN_ID} attempt ${RUN_ATTEMPT}." >/dev/null 2>&1; then
+      echo "Closed backlog issue #${issue_number}."
+    else
+      echo "::warning::Unable to close backlog issue #${issue_number}."
+    fi
+  done
+}
+
+clear_triage_backlog_if_enabled() {
+  local keep_issue_number="${1:-}"
+
+  if [[ "$TRIAGE_CLEAR_BACKLOG" != "true" ]]; then
+    echo "Backlog cleanup disabled for this run."
+    return 0
+  fi
+
+  echo "Clearing triage backlog before creating new issue/PR artifacts..."
+  close_backlog_pull_requests
+  close_backlog_issues "$keep_issue_number"
+}
+
 ensure_label() {
   local label_name="$1"
   local color="$2"
@@ -136,6 +251,8 @@ ensure_issue_label_contract
 
 declare -a parsed_issue_labels=()
 parse_list_input "$TRIAGE_ISSUE_LABELS" parsed_issue_labels
+
+clear_triage_backlog_if_enabled "$TRIAGE_ISSUE_NUMBER"
 
 if [[ -z "$TRIAGE_ISSUE_NUMBER" ]]; then
   normalized_idea="$(normalize_whitespace "$TRIAGE_IDEA")"
