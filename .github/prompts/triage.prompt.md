@@ -15,6 +15,8 @@ Requirements:
 - Include label `copilot-suggestion` when the idea originates from Copilot review findings.
 - Mark AI-originated triage issues with `ai-generated` and avoid applying `source-human-issue`.
 - Preserve human-template routing markers (`banana-intake-source` and `banana-target-agent`) when orchestrating from existing human-created issues.
+- Support any static helper agent defined in `.github/agents/*.agent.md` when `banana-target-agent` is provided by a human template.
+- Keep propagated `agent:*` labels on both triage issues and generated PRs for deterministic helper routing.
 - Clear backlog triage issues and triage automation PRs before creating new ones unless backlog cleanup is explicitly disabled.
 - Trigger cloud orchestration through workflow `.github/workflows/orchestrate-triage-idea-cloud.yml`.
 - Preserve provenance labels on generated pull requests (`copilot-auto-approve` and `copilot-bypass-vibe-coded` unless overridden).
