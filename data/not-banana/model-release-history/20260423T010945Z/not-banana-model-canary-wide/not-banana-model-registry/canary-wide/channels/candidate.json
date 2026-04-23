@@ -1,0 +1,12 @@
+{
+  "channel": "candidate",
+  "image_id": "nbm-20260423T010933Z-445179a6a01c",
+  "model_digest": "445179a6a01cef808ebc6021f30c24c0146079679ee47ff5bf72eccc5a21ab5e",
+  "updated_at_utc": "2026-04-23T01:09:33Z",
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "accuracy": 1.0
+  }
+}

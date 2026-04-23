@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "model_family": "not-banana-vocabulary-v1",
+  "created_at_utc": "2026-04-23T01:09:33Z",
+  "updated_at_utc": "2026-04-23T01:09:33Z",
+  "images": [
+    {
+      "image_id": "nbm-20260423T010933Z-84ff0c8a6ff7",
+      "created_at_utc": "2026-04-23T01:09:33Z",
+      "model_digest": "84ff0c8a6ff7cf6a50a9f08d7928adfb34b3647d8e5b3ea15badb22ef36e6615",
+      "parent_image_id": null,
+      "channels": [
+        "candidate"
+      ],
+      "training_profile": "ci",
+      "session_mode": "incremental",
+      "session_count": 4,
+      "signature": {
+        "algorithm": "hmac-sha256",
+        "key_id": "junior-unknown-unit-signing-key-id"
+      },
+      "metrics": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0
+      }
+    }
+  ]
+}
