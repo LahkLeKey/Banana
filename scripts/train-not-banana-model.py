@@ -2,15 +2,16 @@
 """Train the polymorphic not-banana signal vocabulary from a labeled corpus.
 
 The trainer learns which lowercase ASCII tokens most reliably indicate that a
-polymorphic /not-banana/junk payload is actually a BANANA. It emits:
+polymorphic /not-banana/junk payload is actually a BANANA. It can run either a
+single baseline session or an incremental resource-aware sweep (CI/local/
+overnight profiles), and emits:
 
-  - vocabulary.json  : learned tokens with per-token signal scores and overall
-                       evaluation metrics
-  - banana_signal_tokens.h : generated C header that can replace the inline
-                             vocabulary in
-                             src/native/core/domain/banana_not_banana.c
-  - metrics.json     : precision/recall/F1/accuracy on a deterministic hold-out
-                       split
+    - vocabulary.json: learned tokens with per-token signal scores and evaluation
+        metrics for the selected session.
+    - banana_signal_tokens.h: generated C header that can replace the inline
+        vocabulary in src/native/core/domain/banana_not_banana.c.
+    - metrics.json: precision/recall/F1/accuracy for the selected hold-out run.
+    - sessions.json: per-session hyperparameters and hold-out metrics.
 
 The implementation is intentionally dependency-free (Python standard library
 only) so it runs identically in local and CI environments.
@@ -37,6 +38,8 @@ DEFAULT_HOLDOUT_FRACTION = 0.3
 DEFAULT_VOCAB_SIZE = 24
 DEFAULT_MIN_BANANA_OCCURRENCES = 1
 DEFAULT_MIN_SIGNAL_SCORE = 0.7
+DEFAULT_TRAINING_PROFILE = "auto"
+DEFAULT_SESSION_MODE = "incremental"
 
 # Structural / polymorphic-schema keys and ids that appear in both classes
 # and therefore carry no class signal. They are excluded so the learned
@@ -68,6 +71,333 @@ class Sample:
     label: str
     payload: dict[str, Any]
     tokens: set[str] = field(default_factory=set)
+
+
+@dataclass(frozen=True)
+class SessionConfig:
+    vocab_size: int
+    min_banana_occurrences: int
+    min_signal_score: float
+    holdout_fraction: float
+    decision_threshold: float
+
+
+def detect_cpu_count() -> int:
+    return max(1, os.cpu_count() or 1)
+
+
+def clamp_int(value: int, min_value: int, max_value: int) -> int:
+    return max(min_value, min(max_value, value))
+
+
+def unique_ints(values: Iterable[int], min_value: int, max_value: int) -> list[int]:
+    seen: set[int] = set()
+    output: list[int] = []
+
+    for value in values:
+        clamped = clamp_int(int(value), min_value, max_value)
+        if clamped not in seen:
+            seen.add(clamped)
+            output.append(clamped)
+
+    return output
+
+
+def unique_floats(values: Iterable[float], min_value: float, max_value: float) -> list[float]:
+    seen: set[float] = set()
+    output: list[float] = []
+
+    for value in values:
+        clamped = round(max(min_value, min(max_value, float(value))), 4)
+        if clamped not in seen:
+            seen.add(clamped)
+            output.append(clamped)
+
+    return output
+
+
+def resolve_training_profile(profile: str) -> str:
+    if profile != "auto":
+        return profile
+
+    env_profile = os.environ.get("BANANA_TRAIN_PROFILE", "").strip().lower()
+    if env_profile in {"ci", "local", "overnight"}:
+        return env_profile
+
+    if os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true":
+        return "ci"
+
+    cpu_count = detect_cpu_count()
+    if cpu_count >= 12:
+        return "overnight"
+
+    return "local"
+
+
+def resolve_max_sessions(profile: str, requested_max_sessions: int) -> int:
+    if requested_max_sessions > 0:
+        return requested_max_sessions
+
+    cpu_count = detect_cpu_count()
+    if profile == "ci":
+        return min(8, max(3, cpu_count + 1))
+    if profile == "overnight":
+        return min(72, max(16, cpu_count * 6))
+
+    return min(24, max(6, cpu_count * 3))
+
+
+def build_session_plan(
+    args: argparse.Namespace,
+    training_profile: str,
+    max_sessions: int,
+    session_mode: str,
+) -> list[SessionConfig]:
+    baseline = SessionConfig(
+        vocab_size=args.vocab_size,
+        min_banana_occurrences=args.min_banana_occurrences,
+        min_signal_score=args.min_signal_score,
+        holdout_fraction=args.holdout_fraction,
+        decision_threshold=args.decision_threshold,
+    )
+
+    if session_mode == "single":
+        return [baseline]
+
+    if training_profile == "ci":
+        vocab_values = unique_ints(
+            [baseline.vocab_size, baseline.vocab_size + 4, baseline.vocab_size + 8],
+            min_value=4,
+            max_value=256,
+        )
+        signal_values = unique_floats(
+            [
+                baseline.min_signal_score,
+                baseline.min_signal_score - 0.05,
+                baseline.min_signal_score + 0.05,
+            ],
+            min_value=0.0,
+            max_value=1.0,
+        )
+        occurrence_values = unique_ints(
+            [baseline.min_banana_occurrences, baseline.min_banana_occurrences + 1],
+            min_value=1,
+            max_value=32,
+        )
+        decision_values = unique_floats(
+            [
+                baseline.decision_threshold,
+                baseline.decision_threshold - 0.05,
+                baseline.decision_threshold + 0.05,
+            ],
+            min_value=0.01,
+            max_value=0.99,
+        )
+        holdout_values = unique_floats([baseline.holdout_fraction], 0.05, 0.95)
+    elif training_profile == "overnight":
+        vocab_values = unique_ints(
+            [
+                baseline.vocab_size,
+                baseline.vocab_size + 4,
+                baseline.vocab_size + 8,
+                baseline.vocab_size + 12,
+                baseline.vocab_size + 16,
+                baseline.vocab_size + 24,
+            ],
+            min_value=4,
+            max_value=512,
+        )
+        signal_values = unique_floats(
+            [
+                baseline.min_signal_score,
+                baseline.min_signal_score - 0.1,
+                baseline.min_signal_score - 0.05,
+                baseline.min_signal_score + 0.05,
+                baseline.min_signal_score + 0.1,
+            ],
+            min_value=0.0,
+            max_value=1.0,
+        )
+        occurrence_values = unique_ints(
+            [
+                baseline.min_banana_occurrences,
+                baseline.min_banana_occurrences + 1,
+                baseline.min_banana_occurrences + 2,
+            ],
+            min_value=1,
+            max_value=32,
+        )
+        decision_values = unique_floats(
+            [
+                baseline.decision_threshold,
+                baseline.decision_threshold - 0.1,
+                baseline.decision_threshold - 0.05,
+                baseline.decision_threshold + 0.05,
+                baseline.decision_threshold + 0.1,
+            ],
+            min_value=0.01,
+            max_value=0.99,
+        )
+        holdout_values = unique_floats(
+            [baseline.holdout_fraction, 0.25, 0.3, 0.35],
+            min_value=0.05,
+            max_value=0.95,
+        )
+    else:
+        vocab_values = unique_ints(
+            [baseline.vocab_size, baseline.vocab_size + 4, baseline.vocab_size + 8, baseline.vocab_size + 12],
+            min_value=4,
+            max_value=512,
+        )
+        signal_values = unique_floats(
+            [
+                baseline.min_signal_score,
+                baseline.min_signal_score - 0.05,
+                baseline.min_signal_score + 0.05,
+            ],
+            min_value=0.0,
+            max_value=1.0,
+        )
+        occurrence_values = unique_ints(
+            [baseline.min_banana_occurrences, baseline.min_banana_occurrences + 1, baseline.min_banana_occurrences + 2],
+            min_value=1,
+            max_value=32,
+        )
+        decision_values = unique_floats(
+            [
+                baseline.decision_threshold,
+                baseline.decision_threshold - 0.05,
+                baseline.decision_threshold + 0.05,
+            ],
+            min_value=0.01,
+            max_value=0.99,
+        )
+        holdout_values = unique_floats(
+            [baseline.holdout_fraction, 0.25, 0.3],
+            min_value=0.05,
+            max_value=0.95,
+        )
+
+    sessions: list[SessionConfig] = []
+    seen: set[tuple[int, int, float, float, float]] = set()
+
+    def add_session(candidate: SessionConfig) -> None:
+        if len(sessions) >= max_sessions:
+            return
+
+        key = (
+            candidate.vocab_size,
+            candidate.min_banana_occurrences,
+            candidate.min_signal_score,
+            candidate.holdout_fraction,
+            candidate.decision_threshold,
+        )
+        if key in seen:
+            return
+
+        seen.add(key)
+        sessions.append(candidate)
+
+    add_session(baseline)
+
+    for value in vocab_values:
+        add_session(
+            SessionConfig(
+                vocab_size=value,
+                min_banana_occurrences=baseline.min_banana_occurrences,
+                min_signal_score=baseline.min_signal_score,
+                holdout_fraction=baseline.holdout_fraction,
+                decision_threshold=baseline.decision_threshold,
+            )
+        )
+    for value in signal_values:
+        add_session(
+            SessionConfig(
+                vocab_size=baseline.vocab_size,
+                min_banana_occurrences=baseline.min_banana_occurrences,
+                min_signal_score=value,
+                holdout_fraction=baseline.holdout_fraction,
+                decision_threshold=baseline.decision_threshold,
+            )
+        )
+    for value in occurrence_values:
+        add_session(
+            SessionConfig(
+                vocab_size=baseline.vocab_size,
+                min_banana_occurrences=value,
+                min_signal_score=baseline.min_signal_score,
+                holdout_fraction=baseline.holdout_fraction,
+                decision_threshold=baseline.decision_threshold,
+            )
+        )
+    for value in decision_values:
+        add_session(
+            SessionConfig(
+                vocab_size=baseline.vocab_size,
+                min_banana_occurrences=baseline.min_banana_occurrences,
+                min_signal_score=baseline.min_signal_score,
+                holdout_fraction=baseline.holdout_fraction,
+                decision_threshold=value,
+            )
+        )
+    for value in holdout_values:
+        add_session(
+            SessionConfig(
+                vocab_size=baseline.vocab_size,
+                min_banana_occurrences=baseline.min_banana_occurrences,
+                min_signal_score=baseline.min_signal_score,
+                holdout_fraction=value,
+                decision_threshold=baseline.decision_threshold,
+            )
+        )
+
+    for vocab_size in vocab_values:
+        for min_signal_score in signal_values:
+            add_session(
+                SessionConfig(
+                    vocab_size=vocab_size,
+                    min_banana_occurrences=baseline.min_banana_occurrences,
+                    min_signal_score=min_signal_score,
+                    holdout_fraction=baseline.holdout_fraction,
+                    decision_threshold=baseline.decision_threshold,
+                )
+            )
+    for decision_threshold in decision_values:
+        for min_signal_score in signal_values:
+            add_session(
+                SessionConfig(
+                    vocab_size=baseline.vocab_size,
+                    min_banana_occurrences=baseline.min_banana_occurrences,
+                    min_signal_score=min_signal_score,
+                    holdout_fraction=baseline.holdout_fraction,
+                    decision_threshold=decision_threshold,
+                )
+            )
+    for holdout_fraction in holdout_values:
+        for vocab_size in vocab_values:
+            add_session(
+                SessionConfig(
+                    vocab_size=vocab_size,
+                    min_banana_occurrences=baseline.min_banana_occurrences,
+                    min_signal_score=baseline.min_signal_score,
+                    holdout_fraction=holdout_fraction,
+                    decision_threshold=baseline.decision_threshold,
+                )
+            )
+
+    return sessions[:max_sessions]
+
+
+def session_score_key(session_result: dict[str, Any]) -> tuple[float, float, float, float, int]:
+    metrics = session_result["metrics"]
+    params = session_result["hyperparameters"]
+    return (
+        float(metrics["f1"]),
+        float(metrics["accuracy"]),
+        float(metrics["precision"]),
+        float(metrics["recall"]),
+        -int(params["vocab_size"]),
+    )
 
 
 def tokenise_string(value: str) -> Iterable[str]:
@@ -297,25 +627,51 @@ def write_outputs(
     train_size: int,
     holdout_size: int,
     args: argparse.Namespace,
+    training_profile: str,
+    session_mode: str,
+    session_results: list[dict[str, Any]],
+    selected_session: dict[str, Any],
+    resource_context: dict[str, Any],
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    selected_hyperparameters = selected_session["hyperparameters"]
 
     vocabulary_payload = {
         "schema_version": 1,
         "model_id": "not-banana-vocabulary-v1",
         "trained_from": str(args.corpus),
+        "training_profile": training_profile,
+        "session_mode": session_mode,
+        "resource_context": resource_context,
+        "session_count": len(session_results),
+        "selected_session_index": selected_session["session_index"],
         "train_size": train_size,
         "holdout_size": holdout_size,
         "hyperparameters": {
+            "vocab_size": selected_hyperparameters["vocab_size"],
+            "min_banana_occurrences": selected_hyperparameters[
+                "min_banana_occurrences"
+            ],
+            "min_signal_score": selected_hyperparameters["min_signal_score"],
+            "holdout_fraction": selected_hyperparameters["holdout_fraction"],
+            "decision_threshold": selected_hyperparameters["decision_threshold"],
+            "split_seed": SPLIT_SEED,
+        },
+        "requested_hyperparameters": {
             "vocab_size": args.vocab_size,
             "min_banana_occurrences": args.min_banana_occurrences,
             "min_signal_score": args.min_signal_score,
             "holdout_fraction": args.holdout_fraction,
             "decision_threshold": args.decision_threshold,
+            "training_profile": args.training_profile,
+            "session_mode": args.session_mode,
+            "max_sessions": args.max_sessions,
             "split_seed": SPLIT_SEED,
         },
         "vocabulary": vocabulary,
         "metrics": metrics,
+        "sessions": session_results,
     }
 
     (output_dir / "vocabulary.json").write_text(
@@ -324,7 +680,37 @@ def write_outputs(
     )
 
     (output_dir / "metrics.json").write_text(
-        json.dumps({"holdout": metrics}, indent=2, sort_keys=False) + "\n",
+        json.dumps(
+            {
+                "training_profile": training_profile,
+                "session_mode": session_mode,
+                "resource_context": resource_context,
+                "session_count": len(session_results),
+                "selected_session_index": selected_session["session_index"],
+                "holdout": metrics,
+                "sessions": session_results,
+            },
+            indent=2,
+            sort_keys=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    (output_dir / "sessions.json").write_text(
+        json.dumps(
+            {
+                "training_profile": training_profile,
+                "session_mode": session_mode,
+                "resource_context": resource_context,
+                "session_count": len(session_results),
+                "selected_session_index": selected_session["session_index"],
+                "sessions": session_results,
+            },
+            indent=2,
+            sort_keys=False,
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -385,30 +771,117 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Optional minimum F1 score on the hold-out split. Non-zero "
              "values cause the trainer to exit non-zero when the gate fails.",
     )
+    parser.add_argument(
+        "--training-profile",
+        choices=["auto", "ci", "local", "overnight"],
+        default=DEFAULT_TRAINING_PROFILE,
+        help="Resource profile used to size the incremental training sweep.",
+    )
+    parser.add_argument(
+        "--session-mode",
+        choices=["single", "incremental"],
+        default=DEFAULT_SESSION_MODE,
+        help="Run a single baseline session or an incremental parameter sweep.",
+    )
+    parser.add_argument(
+        "--max-sessions",
+        type=int,
+        default=0,
+        help="Upper bound on sessions to evaluate. 0 selects a profile-based default.",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
 
+    if args.max_sessions < 0:
+        raise ValueError("max-sessions must be zero or greater.")
+
     samples = load_corpus(args.corpus)
-    train, holdout = deterministic_split(samples, args.holdout_fraction)
-
-    vocabulary = learn_vocabulary(
-        train,
-        vocab_size=args.vocab_size,
-        min_banana_occurrences=args.min_banana_occurrences,
-        min_signal_score=args.min_signal_score,
+    training_profile = resolve_training_profile(args.training_profile)
+    max_sessions = resolve_max_sessions(training_profile, args.max_sessions)
+    resource_context = {
+        "cpu_count": detect_cpu_count(),
+        "github_actions": os.environ.get("GITHUB_ACTIONS", "").strip().lower()
+        == "true",
+    }
+    session_plan = build_session_plan(
+        args=args,
+        training_profile=training_profile,
+        max_sessions=max_sessions,
+        session_mode=args.session_mode,
     )
-    vocabulary_scores = {entry["token"]: entry["signal_score"] for entry in vocabulary}
 
-    metrics = evaluate(holdout, vocabulary_scores, args.decision_threshold)
+    selected_session_result: dict[str, Any] | None = None
+    selected_vocabulary: list[dict[str, Any]] = []
+    session_results: list[dict[str, Any]] = []
 
-    write_outputs(args.output, vocabulary, metrics, len(train), len(holdout), args)
+    for session_index, session in enumerate(session_plan, start=1):
+        train, holdout = deterministic_split(samples, session.holdout_fraction)
+        vocabulary = learn_vocabulary(
+            train,
+            vocab_size=session.vocab_size,
+            min_banana_occurrences=session.min_banana_occurrences,
+            min_signal_score=session.min_signal_score,
+        )
+        vocabulary_scores = {
+            entry["token"]: entry["signal_score"] for entry in vocabulary
+        }
+        metrics = evaluate(holdout, vocabulary_scores, session.decision_threshold)
+
+        session_result = {
+            "session_index": session_index,
+            "train_size": len(train),
+            "holdout_size": len(holdout),
+            "token_count": len(vocabulary),
+            "hyperparameters": {
+                "vocab_size": session.vocab_size,
+                "min_banana_occurrences": session.min_banana_occurrences,
+                "min_signal_score": session.min_signal_score,
+                "holdout_fraction": session.holdout_fraction,
+                "decision_threshold": session.decision_threshold,
+                "split_seed": SPLIT_SEED,
+            },
+            "metrics": metrics,
+        }
+        session_results.append(session_result)
+
+        if selected_session_result is None:
+            selected_session_result = session_result
+            selected_vocabulary = vocabulary
+            continue
+
+        if session_score_key(session_result) > session_score_key(selected_session_result):
+            selected_session_result = session_result
+            selected_vocabulary = vocabulary
+
+    if selected_session_result is None:
+        raise RuntimeError("Trainer did not produce any training sessions.")
+
+    metrics = selected_session_result["metrics"]
+    train_size = int(selected_session_result["train_size"])
+    holdout_size = int(selected_session_result["holdout_size"])
+
+    write_outputs(
+        output_dir=args.output,
+        vocabulary=selected_vocabulary,
+        metrics=metrics,
+        train_size=train_size,
+        holdout_size=holdout_size,
+        args=args,
+        training_profile=training_profile,
+        session_mode=args.session_mode,
+        session_results=session_results,
+        selected_session=selected_session_result,
+        resource_context=resource_context,
+    )
 
     print(
         "trained vocabulary tokens="
-        f"{len(vocabulary)} train={len(train)} holdout={len(holdout)} "
+        f"{len(selected_vocabulary)} train={train_size} holdout={holdout_size} "
+        f"profile={training_profile} sessions={len(session_results)} "
+        f"selected_session={selected_session_result['session_index']} "
         f"f1={metrics['f1']} precision={metrics['precision']} "
         f"recall={metrics['recall']} accuracy={metrics['accuracy']}"
     )
@@ -417,9 +890,15 @@ def main(argv: list[str] | None = None) -> int:
     if summary_path:
         with open(summary_path, "a", encoding="utf-8") as handle:
             handle.write("## Not-Banana Trainer\n\n")
-            handle.write(f"- vocabulary size: {len(vocabulary)}\n")
-            handle.write(f"- train samples: {len(train)}\n")
-            handle.write(f"- holdout samples: {len(holdout)}\n")
+            handle.write(f"- profile: {training_profile}\n")
+            handle.write(f"- session mode: {args.session_mode}\n")
+            handle.write(f"- sessions evaluated: {len(session_results)}\n")
+            handle.write(
+                f"- selected session: {selected_session_result['session_index']}\n"
+            )
+            handle.write(f"- vocabulary size: {len(selected_vocabulary)}\n")
+            handle.write(f"- train samples: {train_size}\n")
+            handle.write(f"- holdout samples: {holdout_size}\n")
             handle.write(f"- precision: {metrics['precision']}\n")
             handle.write(f"- recall: {metrics['recall']}\n")
             handle.write(f"- f1: {metrics['f1']}\n")

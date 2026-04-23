@@ -1,0 +1,91 @@
+name: Require Human Approval (Automation PRs)
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+      - unlabeled
+      - ready_for_review
+      - edited
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+
+jobs:
+  require-human-approval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify at least one human approval for automation PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pullNumber = context.payload.pull_request?.number;
+            if (!pullNumber) {
+              core.notice("No pull request context found for this event.");
+              return;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+            });
+
+            const labels = (pr.labels || []).map((label) => label.name);
+            const headBranch = pr.head?.ref || "";
+            const requiresHumanApproval =
+              labels.includes("requires-human-approval") ||
+              headBranch.startsWith("triage/") ||
+              headBranch.startsWith("model-release-history/");
+
+            if (!requiresHumanApproval) {
+              core.notice("Pull request is not marked as automation-managed. Skipping gate.");
+              return;
+            }
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+              per_page: 100,
+            });
+
+            const latestReviewByUser = new Map();
+            for (const review of reviews) {
+              if (!review.user?.login) {
+                continue;
+              }
+              latestReviewByUser.set(review.user.login, {
+                state: review.state,
+                type: review.user.type || "",
+              });
+            }
+
+            const approvingHumans = [];
+            for (const [login, info] of latestReviewByUser.entries()) {
+              const isBot = info.type === "Bot" || login.endsWith("[bot]");
+              if (isBot || login === pr.user?.login) {
+                continue;
+              }
+              if (info.state === "APPROVED") {
+                approvingHumans.push(login);
+              }
+            }
+
+            if (approvingHumans.length < 1) {
+              core.setFailed(
+                "Automation pull requests require at least one human approval before merge."
+              );
+              return;
+            }
+
+            core.notice(`Human approvals: ${approvingHumans.join(", ")}`);

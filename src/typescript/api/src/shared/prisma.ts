@@ -10,6 +10,14 @@ type PrismaClientLike = {
 
 let clientPromise: Promise<PrismaClientLike|null>|null = null;
 
+export function __setPrismaClientForTests(client: PrismaClientLike|null): void {
+  clientPromise = Promise.resolve(client);
+}
+
+export function __resetPrismaClientForTests(): void {
+  clientPromise = null;
+}
+
 export async function getPrismaClient(): Promise<PrismaClientLike|null> {
   if (clientPromise) {
     return clientPromise;

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "banana_wrapper.h"
 #include "banana_db.h"
@@ -305,6 +306,17 @@ static void test_classify_banana_transformer_invalid_args(void) {
 
     status = banana_classify_banana_transformer(token_values, 8, 0);
     require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument for null transformer output");
+}
+
+static void test_classify_banana_transformer_maps_core_invalid_status(void) {
+    double token_values[CINTEROP_BANANA_ML_TOKEN_FEATURE_COUNT] = { NAN, 0.1, 0.2, 0.3 };
+    CInteropBananaMlTransformerClassification classification;
+    int status = banana_classify_banana_transformer(
+        token_values,
+        CINTEROP_BANANA_ML_TOKEN_FEATURE_COUNT,
+        &classification);
+
+    require_true(status == BANANA_STATUS_INVALID_ARGUMENT, "expected invalid argument when transformer token features include NaN");
 }
 
 static void test_db_query_banana_ok(void) {
@@ -937,6 +949,7 @@ int main(void) {
     test_classify_banana_binary_invalid_args();
     test_classify_banana_transformer_ok();
     test_classify_banana_transformer_invalid_args();
+    test_classify_banana_transformer_maps_core_invalid_status();
     test_db_query_banana_ok();
     test_predict_banana_ripeness_ok();
     test_predict_banana_ripeness_invalid_args();

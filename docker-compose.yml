@@ -210,5 +210,55 @@ services:
       - "5555:5555"
     profiles: ["android-emulator"]
 
+  workflow-train-not-banana-local:
+    build:
+      context: .
+      dockerfile: docker/workflow-local.Dockerfile
+    working_dir: /workspace
+    environment:
+      BANANA_RELEASE_ID: "${BANANA_RELEASE_ID:-local-validation}"
+      BANANA_TRAIN_VOCAB_SIZE: "${BANANA_TRAIN_VOCAB_SIZE:-24}"
+      BANANA_TRAIN_PROFILE: "${BANANA_TRAIN_PROFILE:-ci}"
+      BANANA_TRAIN_SESSION_MODE: "${BANANA_TRAIN_SESSION_MODE:-single}"
+      BANANA_TRAIN_MAX_SESSIONS: "${BANANA_TRAIN_MAX_SESSIONS:-1}"
+      BANANA_TRAIN_MIN_SIGNAL: "${BANANA_TRAIN_MIN_SIGNAL:-0.7}"
+      BANANA_TRAIN_MIN_F1: "${BANANA_TRAIN_MIN_F1:-0.7}"
+      BANANA_PERSIST_REGISTRY_HISTORY: "${BANANA_PERSIST_REGISTRY_HISTORY:-true}"
+      BANANA_REGISTRY_HISTORY_BRANCH: "${BANANA_REGISTRY_HISTORY_BRANCH:-model-release-history}"
+      BANANA_REGISTRY_HISTORY_PATH: "${BANANA_REGISTRY_HISTORY_PATH:-data/not-banana/model-release-history}"
+      BANANA_REGISTRY_PR_BASE_BRANCH: "${BANANA_REGISTRY_PR_BASE_BRANCH:-main}"
+      BANANA_REGISTRY_OPEN_DRAFT_PR: "${BANANA_REGISTRY_OPEN_DRAFT_PR:-true}"
+      BANANA_REGISTRY_PR_LABELS: "${BANANA_REGISTRY_PR_LABELS:-automation,model-training,requires-human-approval}"
+      BANANA_REGISTRY_PR_REVIEWERS: "${BANANA_REGISTRY_PR_REVIEWERS:-}"
+      BANANA_LOCAL_DRY_RUN: "${BANANA_LOCAL_DRY_RUN:-true}"
+      GH_TOKEN: "${GH_TOKEN:-}"
+    volumes:
+      - .:/workspace
+    command: ["bash", "-lc", "bash scripts/workflow-local-train-not-banana.sh"]
+    profiles: ["workflow-local"]
+
+  workflow-orchestrate-triaged-local:
+    build:
+      context: .
+      dockerfile: docker/workflow-local.Dockerfile
+    working_dir: /workspace
+    environment:
+      BANANA_TRIAGE_ID: "${BANANA_TRIAGE_ID:-local-safe-noop}"
+      BANANA_TRIAGE_CHANGE_COMMAND: "${BANANA_TRIAGE_CHANGE_COMMAND:-:}"
+      BANANA_BASE_BRANCH: "${BANANA_BASE_BRANCH:-main}"
+      BANANA_BRANCH_PREFIX: "${BANANA_BRANCH_PREFIX:-triage}"
+      BANANA_COMMIT_MESSAGE: "${BANANA_COMMIT_MESSAGE:-chore(triage): automated triaged change}"
+      BANANA_PR_TITLE: "${BANANA_PR_TITLE:-}"
+      BANANA_PR_BODY: "${BANANA_PR_BODY:-}"
+      BANANA_DRAFT_PR: "${BANANA_DRAFT_PR:-true}"
+      BANANA_PR_LABELS: "${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval}"
+      BANANA_PR_REVIEWERS: "${BANANA_PR_REVIEWERS:-}"
+      BANANA_LOCAL_DRY_RUN: "${BANANA_LOCAL_DRY_RUN:-true}"
+      GH_TOKEN: "${GH_TOKEN:-}"
+    volumes:
+      - .:/workspace
+    command: ["bash", "-lc", "bash scripts/workflow-local-orchestrate-triaged-item-pr.sh"]
+    profiles: ["workflow-local"]
+
 volumes:
   native-artifacts:
