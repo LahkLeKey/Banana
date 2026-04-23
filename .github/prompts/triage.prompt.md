@@ -13,6 +13,8 @@ Requirements:
 - Create or update a GitHub issue for the idea with custom labels when provided.
 - Ensure label `triage-idea` is applied so cloud orchestration can trigger from issue events.
 - Include label `copilot-suggestion` when the idea originates from Copilot review findings.
+- Mark AI-originated triage issues with `ai-generated` and avoid applying `source-human-issue`.
+- Preserve human-template routing markers (`banana-intake-source` and `banana-target-agent`) when orchestrating from existing human-created issues.
 - Clear backlog triage issues and triage automation PRs before creating new ones unless backlog cleanup is explicitly disabled.
 - Trigger cloud orchestration through workflow `.github/workflows/orchestrate-triage-idea-cloud.yml`.
 - Preserve provenance labels on generated pull requests (`copilot-auto-approve` and `copilot-bypass-vibe-coded` unless overridden).

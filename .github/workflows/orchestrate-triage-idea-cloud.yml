@@ -18,9 +18,9 @@ on:
         required: false
         default: ""
       issue_labels:
-        description: Comma-separated labels to apply to triage issue
+        description: Comma-separated labels to apply when creating a triage issue via workflow_dispatch
         required: false
-        default: "triage-idea,copilot-suggestion,automation,copilot-bypass-vibe-coded"
+        default: "triage-idea,copilot-suggestion,ai-generated,automation,copilot-bypass-vibe-coded"
       pr_labels:
         description: Comma-separated labels for generated pull request
         required: false
@@ -52,7 +52,7 @@ on:
       backlog_issue_labels:
         description: Comma-separated issue labels used to select backlog issues for cleanup
         required: false
-        default: "triage-idea,copilot-suggestion"
+        default: "copilot-suggestion,ai-generated"
       backlog_pr_labels:
         description: Comma-separated PR labels used to select backlog pull requests for cleanup
         required: false
@@ -132,19 +132,19 @@ on:
 
 jobs:
   orchestrate-triage-idea:
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && ((github.event.action == 'opened' && (contains(github.event.issue.labels.*.name, 'triage-idea') || contains(github.event.issue.labels.*.name, 'copilot-suggestion'))) || (github.event.action == 'labeled' && (github.event.label.name == 'triage-idea' || github.event.label.name == 'copilot-suggestion')))) }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && ((github.event.action == 'opened' && (contains(github.event.issue.labels.*.name, 'triage-idea') || contains(github.event.issue.labels.*.name, 'copilot-suggestion') || contains(github.event.issue.labels.*.name, 'human-triage'))) || (github.event.action == 'labeled' && (github.event.label.name == 'triage-idea' || github.event.label.name == 'copilot-suggestion' || github.event.label.name == 'human-triage')))) }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BANANA_TRIAGE_IDEA: ${{ github.event.inputs.idea || '' }}
       BANANA_TRIAGE_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || github.event.inputs.issue_number || '' }}
-      BANANA_TRIAGE_ISSUE_LABELS: ${{ github.event.inputs.issue_labels || 'triage-idea,copilot-suggestion,automation,copilot-bypass-vibe-coded' }}
+      BANANA_TRIAGE_ISSUE_LABELS: ${{ github.event_name == 'issues' && join(github.event.issue.labels.*.name, ',') || github.event.inputs.issue_labels || 'triage-idea,copilot-suggestion,ai-generated,automation,copilot-bypass-vibe-coded' }}
       BANANA_TRIAGE_PR_LABELS: ${{ github.event.inputs.pr_labels || 'automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'false' }}
       BANANA_TRIAGE_CLEAR_BACKLOG: ${{ github.event.inputs.clear_backlog || 'true' }}
-      BANANA_TRIAGE_BACKLOG_ISSUE_LABELS: ${{ github.event.inputs.backlog_issue_labels || 'triage-idea,copilot-suggestion' }}
+      BANANA_TRIAGE_BACKLOG_ISSUE_LABELS: ${{ github.event.inputs.backlog_issue_labels || 'copilot-suggestion,ai-generated' }}
       BANANA_TRIAGE_BACKLOG_PR_LABELS: ${{ github.event.inputs.backlog_pr_labels || 'automation,triaged-item' }}
       BANANA_TRIAGE_BACKLOG_PR_BRANCH_PREFIXES: ${{ github.event.inputs.backlog_pr_branch_prefixes || 'triage/,triage-copilot/,triage-feedback/' }}
       BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS: ${{ github.event.inputs.dispatch_required_checks || 'true' }}
