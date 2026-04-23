@@ -1,0 +1,41 @@
+name: Human Intake - Compose Runtime Agent
+description: Route compose runtime/service bring-up issues to compose-runtime-agent triage automation.
+title: "[compose-runtime-agent] "
+labels:
+  - triage-idea
+  - automation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- banana-intake-source: human -->
+        <!-- banana-target-agent: compose-runtime-agent -->
+        Human-authored issue intake for compose-runtime-agent.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: Describe service startup/runtime failure.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe expected compose/runtime behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or reproduction
+      description: Include compose logs, service names, and environment details.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List concrete checks that define done.
+    validations:
+      required: true

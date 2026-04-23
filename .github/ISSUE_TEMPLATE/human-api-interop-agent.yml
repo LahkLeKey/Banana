@@ -1,0 +1,42 @@
+name: Human Intake - API Interop Agent
+description: Route interop/status-mapping/data-access contract issues to api-interop-agent triage automation.
+title: "[api-interop-agent] "
+labels:
+  - triage-idea
+  - automation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- banana-intake-source: human -->
+        <!-- banana-target-agent: api-interop-agent -->
+        Human-authored issue intake for api-interop-agent.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: Describe the interop or data-access behavior that is broken.
+      placeholder: Native status mapping fails when...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe the expected interop behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or reproduction
+      description: Include stack traces, status codes, and reproduction steps.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List concrete checks that define done.
+    validations:
+      required: true

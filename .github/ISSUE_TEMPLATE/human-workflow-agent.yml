@@ -1,0 +1,42 @@
+name: Human Intake - Workflow Agent
+description: Route GitHub Actions or CI workflow issues to workflow-agent triage automation.
+title: "[workflow-agent] "
+labels:
+  - triage-idea
+  - automation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- banana-intake-source: human -->
+        <!-- banana-target-agent: workflow-agent -->
+        Human-authored issue intake for workflow-agent.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: Describe the failing workflow behavior.
+      placeholder: Workflow X fails in step Y with...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe expected workflow behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or reproduction
+      description: Include run URL, failing job, and key log excerpts.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List concrete checks that define done.
+    validations:
+      required: true
