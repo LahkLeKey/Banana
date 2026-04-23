@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "model_family": "not-banana-vocabulary-v1",
+  "image_id": "nbm-20260423T011649Z-da05622d6c66",
+  "created_at_utc": "2026-04-23T01:16:49Z",
+  "model_digest": "da05622d6c6694f16847709092df884f7037d733fb1f63c97aececdb4280d94a",
+  "parent_image_id": null,
+  "channels": [
+    "candidate"
+  ],
+  "source": {
+    "host": "FourtySixty",
+    "cwd": "C:\\bn20260423011645\\r",
+    "git_sha": "",
+    "github_run_id": "",
+    "github_run_attempt": "",
+    "github_workflow": ""
+  },
+  "training": {
+    "training_profile": "ci",
+    "session_mode": "single",
+    "session_count": 1,
+    "selected_session_index": 1,
+    "hyperparameters": {
+      "vocab_size": 24,
+      "min_banana_occurrences": 1,
+      "min_signal_score": 0.7,
+      "holdout_fraction": 0.3,
+      "decision_threshold": 0.5,
+      "split_seed": 1729
+    },
+    "requested_hyperparameters": {
+      "vocab_size": 24,
+      "min_banana_occurrences": 1,
+      "min_signal_score": 0.7,
+      "holdout_fraction": 0.3,
+      "decision_threshold": 0.5,
+      "training_profile": "ci",
+      "session_mode": "single",
+      "max_sessions": 1,
+      "split_seed": 1729
+    },
+    "resource_context": {
+      "cpu_count": 12,
+      "github_actions": false
+    }
+  },
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "accuracy": 1.0
+  },
+  "drift_summary": {
+    "added_count": 0,
+    "removed_count": 0
+  },
+  "files": [
+    {
+      "path": "vocabulary.json",
+      "size_bytes": 6238,
+      "sha256": "055a3411b5c777b3bd092f210a0934b5fbc3a4c5e2e6737131a5fbfbcdd1d191"
+    },
+    {
+      "path": "metrics.json",
+      "size_bytes": 1065,
+      "sha256": "8d1975100f67f0a6de4db80675c24b94f0448443fa0141b917e93f43f3e9f77d"
+    },
+    {
+      "path": "sessions.json",
+      "size_bytes": 842,
+      "sha256": "c88aa126509496bd9ec55e87dfc3e2845a8acfdeeb5bd3ad636b14af071ad3b1"
+    },
+    {
+      "path": "banana_signal_tokens.h",
+      "size_bytes": 858,
+      "sha256": "23bb21c933df10a0f0e1544f52c938851903b68cfeef242678eb15c22b83e089"
+    }
+  ],
+  "safety": {
+    "lifecycle_state": "candidate",
+    "notes": "Promote to stable only after validation and policy checks."
+  },
+  "signature": {
+    "algorithm": "none",
+    "key_id": "",
+    "signed_at_utc": "2026-04-23T01:16:49Z",
+    "value": ""
+  }
+}
