@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "model_family": "not-banana-vocabulary-v1",
+  "image_id": "nbm-20260423T010933Z-8ae6d3f7e72b",
+  "created_at_utc": "2026-04-23T01:09:33Z",
+  "model_digest": "8ae6d3f7e72b7d0e1efb4def812c12bcd1976c344e0e0aac36b05bea3dc81134",
+  "parent_image_id": null,
+  "channels": [
+    "candidate"
+  ],
+  "source": {
+    "host": "runnervmeorf1",
+    "cwd": "/home/runner/work/Banana/Banana",
+    "git_sha": "cf314a0a825fa95859645ddcc0bd2edbbb2fb8ed",
+    "github_run_id": "24811084213",
+    "github_run_attempt": "1",
+    "github_workflow": "Train Not-Banana Model"
+  },
+  "training": {
+    "training_profile": "ci",
+    "session_mode": "incremental",
+    "session_count": 4,
+    "selected_session_index": 1,
+    "hyperparameters": {
+      "vocab_size": 24,
+      "min_banana_occurrences": 1,
+      "min_signal_score": 0.7,
+      "holdout_fraction": 0.3,
+      "decision_threshold": 0.5,
+      "split_seed": 1729
+    },
+    "requested_hyperparameters": {
+      "vocab_size": 24,
+      "min_banana_occurrences": 1,
+      "min_signal_score": 0.7,
+      "holdout_fraction": 0.3,
+      "decision_threshold": 0.5,
+      "training_profile": "ci",
+      "session_mode": "incremental",
+      "max_sessions": 4,
+      "split_seed": 1729
+    },
+    "resource_context": {
+      "cpu_count": 4,
+      "github_actions": true
+    }
+  },
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "accuracy": 1.0
+  },
+  "drift_summary": {
+    "added_count": 14,
+    "removed_count": 7
+  },
+  "files": [
+    {
+      "path": "vocabulary.json",
+      "size_bytes": 7764,
+      "sha256": "8d0439bf30ab69b9cb536f28a53b277ba3043fb2c254d07898b6d50ceab11cdd"
+    },
+    {
+      "path": "metrics.json",
+      "size_bytes": 2806,
+      "sha256": "8e889d8c972046f6cc4c91236236aa28919f964a8dbf2830e4b897bec6f1543f"
+    },
+    {
+      "path": "sessions.json",
+      "size_bytes": 2594,
+      "sha256": "7f9fee4deaca123f72fe0d4aa2dd1ef03e2d8a17d8233f4261904139a37218af"
+    },
+    {
+      "path": "banana_signal_tokens.h",
+      "size_bytes": 820,
+      "sha256": "40d52f7e4743954c4a8dfb83ea9fdf348f8a0b7ef9f2b34a8fd8c1016d624269"
+    },
+    {
+      "path": "drift.json",
+      "size_bytes": 1168,
+      "sha256": "9d0c7bd31bc27355bc37bef08c4f42bde7c0c4461ad332711c95804ce7687b41"
+    }
+  ],
+  "safety": {
+    "lifecycle_state": "candidate",
+    "notes": "Promote to stable only after validation and policy checks."
+  },
+  "signature": {
+    "algorithm": "hmac-sha256",
+    "key_id": "junior-unknown-unit-signing-key-id",
+    "signed_at_utc": "2026-04-23T01:09:33Z",
+    "value": "c1df1905bd0528e7a0565993682747f67a95995264fae74c6e932bd65b069e03"
+  }
+}

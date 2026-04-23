@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "snapshot_label": "stable-candidate-run-24811084213-attempt-1",
+  "created_at_utc": "2026-04-23T01:09:34Z",
+  "registry_dir": "artifacts/not-banana-model-registry/stable-candidate",
+  "archive": {
+    "path": "artifacts/not-banana-model-registry-snapshots/stable-candidate/not-banana-model-registry-stable-candidate-run-24811084213-attempt-1.tar.gz",
+    "file_name": "not-banana-model-registry-stable-candidate-run-24811084213-attempt-1.tar.gz",
+    "size_bytes": 3145,
+    "sha256": "9478b1e0c1c830413c94d1c651fa91f0167415bfef716b3bfd1b82825dc0735d"
+  },
+  "sha_file": {
+    "path": "artifacts/not-banana-model-registry-snapshots/stable-candidate/not-banana-model-registry-stable-candidate-run-24811084213-attempt-1.tar.gz.sha256",
+    "file_name": "not-banana-model-registry-stable-candidate-run-24811084213-attempt-1.tar.gz.sha256"
+  }
+}
