@@ -63,17 +63,62 @@ PY
   exit 0
 fi
 
+extract_repo_slug_from_url() {
+  local remote_url="$1"
+  local normalized="${remote_url%.git}"
+
+  if [[ "$normalized" =~ ^https://github\.com/([^/]+/[^/]+)$ ]]; then
+    printf '%s' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+
+  if [[ "$normalized" =~ ^git@github\.com:([^/]+/[^/]+)$ ]]; then
+    printf '%s' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+
+  if [[ "$normalized" =~ ^ssh://git@github\.com/([^/]+/[^/]+)$ ]]; then
+    printf '%s' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+
+  return 1
+}
+
 if [[ -z "$WIKI_REPOSITORY" ]] && command -v gh >/dev/null 2>&1; then
   if repo_name="$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null)"; then
     WIKI_REPOSITORY="$repo_name"
   fi
 fi
 
+if [[ -z "$WIKI_REPOSITORY" ]]; then
+  origin_url="$(git config --get remote.origin.url 2>/dev/null || true)"
+  if [[ -n "$origin_url" ]]; then
+    if repo_name="$(extract_repo_slug_from_url "$origin_url")"; then
+      WIKI_REPOSITORY="$repo_name"
+    fi
+  fi
+fi
+
 if [[ ! -d "$WIKI_DIR/.git" ]]; then
   if [[ -z "$WIKI_REMOTE_URL" ]]; then
     if [[ -z "$WIKI_REPOSITORY" ]]; then
-      echo "::error::Cannot determine wiki repository slug. Set BANANA_WIKI_REPOSITORY or BANANA_WIKI_REMOTE_URL."
-      exit 1
+      if [[ "$WIKI_STRICT" == "true" ]]; then
+        echo "::error::Cannot determine wiki repository slug. Set BANANA_WIKI_REPOSITORY or BANANA_WIKI_REMOTE_URL (for example https://github.com/LahkLeKey/Banana.wiki.git)."
+        exit 1
+      fi
+
+      echo "::warning::Cannot determine wiki repository slug. Skipping wiki sync because strict mode is disabled."
+      python - "$WIKI_OUTPUT_PATH" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(json.dumps({"status": "skipped", "reason": "wiki repository unresolved"}, indent=2) + "\n", encoding="utf-8")
+PY
+      exit 0
     fi
     WIKI_REMOTE_URL="https://github.com/${WIKI_REPOSITORY}.wiki.git"
   fi
@@ -201,11 +246,14 @@ if [[ "$WIKI_DRY_RUN" == "true" ]]; then
   echo "Wiki sync dry-run changes: ${changed_pages[*]}"
   status="dry-run"
   commit_sha=""
+  push_status="dry-run"
 else
   git -C "$WIKI_DIR" config user.name "github-actions[bot]"
   git -C "$WIKI_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
   git -C "$WIKI_DIR" commit -m "$WIKI_COMMIT_MESSAGE" >/dev/null
   commit_sha="$(git -C "$WIKI_DIR" rev-parse HEAD)"
+
+  push_status="not-requested"
 
   if [[ "$WIKI_PUSH" == "true" ]]; then
     if [[ -n "${GH_TOKEN:-}" ]]; then
@@ -215,10 +263,25 @@ else
       fi
     fi
 
-    git -C "$WIKI_DIR" push origin HEAD >/dev/null
+    if git -C "$WIKI_DIR" push origin HEAD >/dev/null 2>&1; then
+      push_status="pushed"
+    else
+      push_status="push-failed"
+      if [[ "$WIKI_STRICT" == "true" ]]; then
+        echo "::error::Failed to push wiki updates."
+        exit 1
+      fi
+
+      echo "::warning::Failed to push wiki updates. Keeping local wiki commit only."
+    fi
   fi
 
-  status="updated"
+  if [[ "$push_status" == "push-failed" ]]; then
+    status="updated-no-push"
+  else
+    status="updated"
+  fi
+
   echo "Wiki sync committed: ${commit_sha}"
 fi
 
@@ -227,6 +290,7 @@ CHANGED_PAGES_CSV="$(IFS=','; echo "${changed_pages[*]}")"
 WIKI_STATUS="$status" \
 WIKI_COMMIT_SHA="$commit_sha" \
 WIKI_CHANGED_PAGES="$CHANGED_PAGES_CSV" \
+WIKI_PUSH_STATUS="$push_status" \
 WIKI_REPORT_DIR="$WIKI_DIR" \
 WIKI_REPORT_RUN_ID="$RUN_ID" \
 WIKI_REPORT_RUN_ATTEMPT="$RUN_ATTEMPT" \
@@ -242,6 +306,7 @@ changed_csv = os.environ.get("WIKI_CHANGED_PAGES", "")
 payload = {
     "status": os.environ.get("WIKI_STATUS", "unknown"),
     "commit_sha": os.environ.get("WIKI_COMMIT_SHA", ""),
+  "push_status": os.environ.get("WIKI_PUSH_STATUS", ""),
     "changed_pages": [item for item in changed_csv.split(",") if item],
   "wiki_dir": os.environ.get("WIKI_REPORT_DIR", ""),
   "run_id": os.environ.get("WIKI_REPORT_RUN_ID", ""),

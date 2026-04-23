@@ -15,5 +15,13 @@ export BANANA_DRAFT_PR="${BANANA_DRAFT_PR:-true}"
 export BANANA_PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval}"
 export BANANA_PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 export BANANA_LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-true}"
+export BANANA_ENABLE_WIKI_SYNC="${BANANA_ENABLE_WIKI_SYNC:-true}"
+export BANANA_WIKI_DRY_RUN="${BANANA_WIKI_DRY_RUN:-true}"
+export BANANA_WIKI_PUSH="${BANANA_WIKI_PUSH:-false}"
+export BANANA_WIKI_DIR="${BANANA_WIKI_DIR:-artifacts/wiki-sync/local-wiki-dry-run}"
 
 bash scripts/workflow-orchestrate-triaged-item-pr.sh
+
+if [[ "$BANANA_ENABLE_WIKI_SYNC" == "true" ]]; then
+	bash scripts/workflow-sync-wiki.sh
+fi

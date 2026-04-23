@@ -64,6 +64,13 @@ jobs:
               return;
             }
 
+            if (pr.draft) {
+              core.notice(
+                "Automation pull request is in draft state. Human-approval enforcement starts when it is ready for review."
+              );
+              return;
+            }
+
             if (labels.includes(soloBypassLabel)) {
               const prAuthor = (pr.user?.login || "").toLowerCase();
               const repoOwner = (context.repo.owner || "").toLowerCase();

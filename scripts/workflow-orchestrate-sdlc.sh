@@ -21,6 +21,7 @@ WIKI_DRY_RUN="${BANANA_WIKI_DRY_RUN:-false}"
 WIKI_PUSH="${BANANA_WIKI_PUSH:-true}"
 WIKI_STRICT="${BANANA_WIKI_STRICT:-false}"
 WIKI_COMMIT_MESSAGE="${BANANA_WIKI_COMMIT_MESSAGE:-docs(wiki): sync automated SDLC documentation snapshots}"
+WIKI_REMOTE_URL="${BANANA_WIKI_REMOTE_URL:-}"
 OUTPUT_DIR="${BANANA_SDLC_OUTPUT_DIR:-artifacts/sdlc-orchestration}"
 SUMMARY_PATH="${BANANA_SDLC_SUMMARY_PATH:-${OUTPUT_DIR}/summary-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
 
@@ -235,6 +236,7 @@ if [[ "$ENABLE_WIKI_SYNC" == "true" ]]; then
   export BANANA_WIKI_PUSH="$WIKI_PUSH"
   export BANANA_WIKI_STRICT="$WIKI_STRICT"
   export BANANA_WIKI_COMMIT_MESSAGE="$WIKI_COMMIT_MESSAGE"
+  export BANANA_WIKI_REMOTE_URL="$WIKI_REMOTE_URL"
   export BANANA_WIKI_OUTPUT_PATH="$WIKI_REPORT_PATH"
   bash scripts/workflow-sync-wiki.sh
 fi

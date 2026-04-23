@@ -16,6 +16,10 @@ AGENTS_DIR = GITHUB_DIR / "agents"
 INSTRUCTIONS_DIR = GITHUB_DIR / "instructions"
 SKILLS_DIR = GITHUB_DIR / "skills"
 WORKFLOW_SYNC_WIKI = ROOT / "scripts" / "workflow-sync-wiki.sh"
+WORKFLOW_ORCHESTRATE_SDLC = ROOT / ".github" / "workflows" / "orchestrate-banana-sdlc.yml"
+WORKFLOW_ORCHESTRATE_TRIAGED = ROOT / ".github" / "workflows" / "orchestrate-triaged-item-pr.yml"
+WORKFLOW_ORCHESTRATE_FEEDBACK = ROOT / ".github" / "workflows" / "orchestrate-not-banana-feedback-loop.yml"
+SCRIPT_ORCHESTRATE_SDLC = ROOT / "scripts" / "workflow-orchestrate-sdlc.sh"
 
 AGENT_CONTRACT_FRAGMENT = "Feedback Loop And Incremental Branch Contract"
 PROMPT_WIKI_CONTRACT_HEADER = "## Wiki Updater Contract"
@@ -136,6 +140,42 @@ def main() -> int:
 
     if "Auto-Prompts/${prompt_name}.md" not in workflow_sync_text:
         issues.append("WIKI_SYNC missing Auto-Prompts target mapping")
+
+    workflow_contract_targets = [
+        WORKFLOW_ORCHESTRATE_TRIAGED,
+        WORKFLOW_ORCHESTRATE_FEEDBACK,
+    ]
+    for workflow_path in workflow_contract_targets:
+        workflow_text = workflow_path.read_text(encoding="utf-8")
+        workflow_rel = workflow_path.relative_to(ROOT).as_posix()
+
+        if "workflow-sync-wiki.sh" not in workflow_text:
+            issues.append(f"WORKFLOW missing wiki sync step: {workflow_rel}")
+
+        if "BANANA_WIKI_REMOTE_URL" not in workflow_text:
+            issues.append(f"WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring: {workflow_rel}")
+
+        if workflow_path == WORKFLOW_ORCHESTRATE_FEEDBACK:
+            if "github.event_name == 'schedule' && 'true'" not in workflow_text:
+                issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {workflow_rel}")
+
+    sdlc_workflow_text = WORKFLOW_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
+    sdlc_workflow_rel = WORKFLOW_ORCHESTRATE_SDLC.relative_to(ROOT).as_posix()
+    if "workflow-orchestrate-sdlc.sh" not in sdlc_workflow_text:
+        issues.append(f"WORKFLOW missing SDLC orchestration step: {sdlc_workflow_rel}")
+
+    if "BANANA_WIKI_REMOTE_URL" not in sdlc_workflow_text:
+        issues.append(f"WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring: {sdlc_workflow_rel}")
+
+    if "github.event_name == 'schedule' && 'true'" not in sdlc_workflow_text:
+        issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {sdlc_workflow_rel}")
+
+    sdlc_script_text = SCRIPT_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
+    if "WIKI_REMOTE_URL=" not in sdlc_script_text:
+        issues.append("SDLC script missing WIKI_REMOTE_URL input wiring")
+
+    if 'export BANANA_WIKI_REMOTE_URL="$WIKI_REMOTE_URL"' not in sdlc_script_text:
+        issues.append("SDLC script missing BANANA_WIKI_REMOTE_URL export")
 
     payload: dict[str, Any] = {
         "issues": issues,
