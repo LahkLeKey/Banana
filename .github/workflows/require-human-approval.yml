@@ -43,6 +43,9 @@ jobs:
             const labels = (pr.labels || []).map((label) => label.name);
             const headBranch = pr.head?.ref || "";
             const soloBypassLabel = "solo-maintainer-bypass";
+            const autonomousCycleLabel = "copilot-autonomous-cycle";
+            const copilotReadyLabel = "copilot-triage-ready";
+            const automationBotLogin = "github-actions[bot]";
             const automationBranchPrefixes = [
               "triage/",
               "triage-feedback/",
@@ -102,7 +105,35 @@ jobs:
               latestReviewByUser.set(review.user.login, {
                 state: review.state,
                 type: review.user.type || "",
+                commitId: review.commit_id || "",
               });
+            }
+
+            const latestBotReview = latestReviewByUser.get(automationBotLogin);
+            const hasCurrentBotApproval =
+              !!latestBotReview &&
+              latestBotReview.state === "APPROVED" &&
+              latestBotReview.commitId === pr.head.sha;
+
+            if (labels.includes(autonomousCycleLabel)) {
+              if (!labels.includes(copilotReadyLabel)) {
+                core.setFailed(
+                  `Label '${autonomousCycleLabel}' requires '${copilotReadyLabel}' before bypassing human approval.`
+                );
+                return;
+              }
+
+              if (!hasCurrentBotApproval) {
+                core.setFailed(
+                  `Label '${autonomousCycleLabel}' requires a current-head approval from ${automationBotLogin}.`
+                );
+                return;
+              }
+
+              core.notice(
+                `Bypassing human approval gate because '${autonomousCycleLabel}' is set and Copilot triage approval is current.`
+              );
+              return;
             }
 
             const approvingHumans = [];

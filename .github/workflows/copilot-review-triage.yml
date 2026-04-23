@@ -1,7 +1,7 @@
 name: Copilot Review Triage
 
 permissions:
-  contents: read
+  contents: write
   issues: write
   pull-requests: write
 
@@ -44,6 +44,7 @@ jobs:
             const pendingLabel = "copilot-triage-pending";
             const readyLabel = "copilot-triage-ready";
             const autoApproveOptInLabel = "copilot-auto-approve";
+            const autonomousCycleLabel = "copilot-autonomous-cycle";
             const summaryMarker = "<!-- banana-copilot-triage-summary -->";
 
             const { data: pr } = await github.rest.pulls.get({
@@ -61,16 +62,22 @@ jobs:
               labels.includes("requires-human-approval") ||
               labels.includes("automation") ||
               automationAuthor;
+            const isAutonomousCycle = labels.includes(autonomousCycleLabel);
             const canAutoApprove = isAutomationPr || labels.includes(autoApproveOptInLabel);
+            const enforceCopilotReview =
+              isAutomationPr || labels.includes(autoApproveOptInLabel) || isAutonomousCycle;
 
             async function ensureLabel(name, color, description) {
               try {
                 await github.rest.issues.getLabel({ owner, repo, name });
+                return;
               } catch (error) {
                 if (error.status !== 404) {
                   throw error;
                 }
+              }
 
+              try {
                 await github.rest.issues.createLabel({
                   owner,
                   repo,
@@ -141,6 +148,72 @@ jobs:
               });
             }
 
+            async function requestCopilotReview() {
+              try {
+                await github.rest.pulls.requestReviewers({
+                  owner,
+                  repo,
+                  pull_number: pullNumber,
+                  reviewers: [copilotLogin],
+                });
+
+                return {
+                  requested: true,
+                  reason: "",
+                };
+              } catch (error) {
+                if (error.status === 422 || error.status === 403) {
+                  const reason = error.message || "unable to request Copilot reviewer";
+                  core.warning(`Could not request Copilot review automatically: ${reason}`);
+                  return {
+                    requested: false,
+                    reason,
+                  };
+                }
+
+                throw error;
+              }
+            }
+
+            async function enableAutoMergeIfEligible() {
+              if (!isAutonomousCycle) {
+                return;
+              }
+
+              if (pr.auto_merge) {
+                core.notice("Auto-merge already enabled for this pull request.");
+                return;
+              }
+
+              try {
+                await github.graphql(
+                  `
+                  mutation($pullRequestId: ID!) {
+                    enablePullRequestAutoMerge(
+                      input: {
+                        pullRequestId: $pullRequestId
+                        mergeMethod: SQUASH
+                      }
+                    ) {
+                      pullRequest {
+                        id
+                      }
+                    }
+                  }
+                  `,
+                  {
+                    pullRequestId: pr.node_id,
+                  }
+                );
+
+                core.notice("Enabled auto-merge for copilot-autonomous-cycle pull request.");
+              } catch (error) {
+                core.warning(
+                  `Unable to enable auto-merge for copilot-autonomous-cycle pull request: ${error.message}`
+                );
+              }
+            }
+
             await ensureLabel(
               pendingLabel,
               "D73A4A",
@@ -155,6 +228,11 @@ jobs:
               autoApproveOptInLabel,
               "1D76DB",
               "Allow automated approval for non-automation PRs after Copilot triage completes"
+            );
+            await ensureLabel(
+              autonomousCycleLabel,
+              "0366D6",
+              "Allow autonomous Copilot-reviewed automation cycle including auto-merge"
             );
 
             const reviewThreads = [];
@@ -258,8 +336,25 @@ jobs:
             const hasCopilotActivity = copilotThreadCount > 0 || hasCopilotReview;
 
             if (!hasCopilotActivity) {
-              await removeLabel(pendingLabel);
+              await addLabel(pendingLabel);
               await removeLabel(readyLabel);
+
+              if (enforceCopilotReview) {
+                const reviewRequest = await requestCopilotReview();
+                const requestSummary = reviewRequest.requested
+                  ? "Requested Copilot review and waiting for findings."
+                  : `Copilot review request could not be submitted automatically (${reviewRequest.reason || "manual request required"}).`;
+
+                await upsertSummaryComment(
+                  `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n\n${requestSummary}\n`
+                );
+
+                core.setFailed(
+                  "Awaiting Copilot review activity before triage can continue."
+                );
+                return;
+              }
+
               await upsertSummaryComment(
                 `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n`
               );
@@ -289,9 +384,13 @@ jobs:
             await addLabel(readyLabel);
             await removeLabel(pendingLabel);
 
-            const readySummary = canAutoApprove
+            let readySummary = canAutoApprove
               ? "All Copilot review threads are triaged for the current revision. This pull request is ready for approval."
               : "All Copilot review threads are triaged for the current revision. This pull request is ready for human approval. Add label `copilot-auto-approve` to permit automated approval on non-automation pull requests.";
+
+            if (isAutonomousCycle) {
+              readySummary = `${readySummary} Auto-merge will be enabled for this autonomous cycle once automated approval is up to date.`;
+            }
 
             await upsertSummaryComment(
               `${summaryMarker}\n## Copilot Review Triage\n\n${readySummary}\n`
@@ -325,15 +424,16 @@ jobs:
               latestBotReview.commit_id === pr.head.sha
             ) {
               core.notice("Automated approval already exists for the current head commit.");
-              return;
+            } else {
+              await github.rest.pulls.createReview({
+                owner,
+                repo,
+                pull_number: pullNumber,
+                event: "APPROVE",
+                body: "Copilot triage complete: no unresolved Copilot findings remain on this revision.",
+              });
+
+              core.notice("Submitted automated approval after Copilot triage completion.");
             }
 
-            await github.rest.pulls.createReview({
-              owner,
-              repo,
-              pull_number: pullNumber,
-              event: "APPROVE",
-              body: "Copilot triage complete: no unresolved Copilot findings remain on this revision.",
-            });
-
-            core.notice("Submitted automated approval after Copilot triage completion.");
+            await enableAutoMergeIfEligible();

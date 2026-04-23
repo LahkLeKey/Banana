@@ -39,6 +39,14 @@ on:
         description: Optional reviewer usernames as comma-separated values or [array] syntax
         required: false
         default: ""
+      allow_actions_actor:
+        description: Allow workflow_dispatch runs triggered by github-actions[bot]
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
       skip_no_changes:
         description: Skip PR creation for increments that produce no file changes
         required: false
@@ -102,7 +110,7 @@ on:
       wiki_remote_url:
         description: Optional explicit wiki git remote URL
         required: false
-        default: ""
+        default: "https://github.com/LahkLeKey/Banana.wiki.git"
       wiki_sync_mapping:
         description: Optional newline-delimited source|target mapping for wiki sync
         required: false
@@ -112,7 +120,7 @@ on:
 
 jobs:
   orchestrate-sdlc:
-    if: ${{ github.event_name == 'schedule' || github.actor != 'github-actions[bot]' }}
+    if: ${{ github.event_name == 'schedule' || github.actor != 'github-actions[bot]' || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_actions_actor == 'true') }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -131,7 +139,8 @@ jobs:
       BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}
       BANANA_WIKI_STRICT: ${{ github.event_name == 'schedule' && 'true' || github.event.inputs.wiki_strict || 'false' }}
       BANANA_WIKI_COMMIT_MESSAGE: ${{ github.event.inputs.wiki_commit_message || 'docs(wiki): sync automated SDLC documentation snapshots' }}
-      BANANA_WIKI_REMOTE_URL: ${{ github.event.inputs.wiki_remote_url || format('https://github.com/{0}.wiki.git', github.repository) }}
+      BANANA_WIKI_REMOTE_URL: ${{ github.event.inputs.wiki_remote_url || 'https://github.com/LahkLeKey/Banana.wiki.git' }}
+      BANANA_ENFORCE_CANONICAL_WIKI_REMOTE: 'true'
       BANANA_WIKI_SYNC_MAPPING: ${{ github.event.inputs.wiki_sync_mapping || '' }}
     steps:
       - name: Checkout
