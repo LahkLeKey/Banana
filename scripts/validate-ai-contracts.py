@@ -197,6 +197,10 @@ def main() -> int:
             "issues": "WORKFLOW missing issue-event trigger for cloud triage idea orchestration",
             "triage-idea": "WORKFLOW missing triage-idea issue label contract",
             "copilot-suggestion": "WORKFLOW missing copilot-suggestion issue label contract",
+            "clear_backlog": "WORKFLOW missing backlog cleanup toggle",
+            "backlog_issue_labels": "WORKFLOW missing backlog issue-label cleanup contract",
+            "backlog_pr_labels": "WORKFLOW missing backlog PR-label cleanup contract",
+            "backlog_pr_branch_prefixes": "WORKFLOW missing backlog PR-branch cleanup contract",
             "workflow-triage-idea-cloud.sh": "WORKFLOW missing triage idea orchestration script execution",
             "workflow-sync-wiki.sh": "WORKFLOW missing wiki sync step",
             "BANANA_WIKI_REMOTE_URL": "WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring",
@@ -251,7 +255,9 @@ def main() -> int:
     else:
         copilot_triage_text = WORKFLOW_COPILOT_REVIEW_TRIAGE.read_text(encoding="utf-8")
         copilot_required_fragments = {
-            "pull_request_review_thread": "WORKFLOW missing pull_request_review_thread trigger",
+            "workflow_dispatch": "WORKFLOW missing workflow_dispatch trigger",
+            "pull_number": "WORKFLOW missing workflow_dispatch pull_number input",
+            "pull_request_review": "WORKFLOW missing pull_request_review trigger",
             "copilot-pull-request-reviewer": "WORKFLOW missing Copilot reviewer login detection",
             "copilot-triage-pending": "WORKFLOW missing copilot-triage-pending label contract",
             "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready label contract",
@@ -275,6 +281,8 @@ def main() -> int:
     require_human_rel = WORKFLOW_REQUIRE_HUMAN_APPROVAL.relative_to(ROOT).as_posix()
     require_human_text = WORKFLOW_REQUIRE_HUMAN_APPROVAL.read_text(encoding="utf-8")
     require_human_required_fragments = {
+        "workflow_dispatch": "WORKFLOW missing workflow_dispatch trigger",
+        "pull_number": "WORKFLOW missing workflow_dispatch pull_number input",
         "copilot-autonomous-cycle": "WORKFLOW missing autonomous-cycle bypass label support",
         "copilot-bypass-vibe-coded": "WORKFLOW missing copilot bypass provenance label support",
         "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready bypass guard",
@@ -305,6 +313,14 @@ def main() -> int:
             "copilot-bypass-vibe-coded": "SCRIPT missing copilot bypass provenance label contract",
             "workflow-orchestrate-triaged-item-pr.sh": "SCRIPT missing triaged PR orchestration handoff",
             "docs/triage/intake": "SCRIPT missing triage intake artifact contract",
+            "BANANA_TRIAGE_CLEAR_BACKLOG": "SCRIPT missing backlog cleanup toggle",
+            "BANANA_TRIAGE_BACKLOG_ISSUE_LABELS": "SCRIPT missing backlog issue-label cleanup inputs",
+            "BANANA_TRIAGE_BACKLOG_PR_LABELS": "SCRIPT missing backlog PR-label cleanup inputs",
+            "BANANA_TRIAGE_BACKLOG_PR_BRANCH_PREFIXES": "SCRIPT missing backlog PR-branch cleanup inputs",
+            "clear_triage_backlog_if_enabled": "SCRIPT missing backlog cleanup execution path",
+            "BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS": "SCRIPT missing required-check dispatch toggle",
+            "BANANA_TRIAGE_CHECK_WORKFLOWS": "SCRIPT missing required-check workflow list contract",
+            "actions/workflows/${workflow_file}/dispatches": "SCRIPT missing required-check workflow dispatch path",
         }
 
         for fragment, message in triage_idea_script_required_fragments.items():

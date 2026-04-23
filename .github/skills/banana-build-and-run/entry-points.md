@@ -78,6 +78,8 @@
 - Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
 - Cloud triage idea orchestration workflow: `.github/workflows/orchestrate-triage-idea-cloud.yml` via issue labels `triage-idea`/`copilot-suggestion` or workflow dispatch with `idea`/`issue_number`.
 - Cloud triage idea orchestration script: `bash scripts/workflow-triage-idea-cloud.sh`.
+- Cloud triage backlog cleanup defaults: `BANANA_TRIAGE_CLEAR_BACKLOG=true`, `BANANA_TRIAGE_BACKLOG_ISSUE_LABELS=triage-idea,copilot-suggestion`, `BANANA_TRIAGE_BACKLOG_PR_LABELS=automation,triaged-item`, and `BANANA_TRIAGE_BACKLOG_PR_BRANCH_PREFIXES=triage/,triage-copilot/,triage-feedback/`.
+- Cloud triage check-dispatch defaults: `BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS=true` and `BANANA_TRIAGE_CHECK_WORKFLOWS=copilot-review-triage.yml,require-human-approval.yml`.
 - Custom triage prompt: `.github/prompts/triage.prompt.md` (use `/triage "idea"` to intake and orchestrate).
 - Human-approval gate workflow: `.github/workflows/require-human-approval.yml` (mark check required in branch protection/rulesets).
 - Copilot triage-and-approval workflow: `.github/workflows/copilot-review-triage.yml` (tracks unresolved Copilot findings and auto-approves automation PRs, or non-automation PRs with `copilot-auto-approve`).
