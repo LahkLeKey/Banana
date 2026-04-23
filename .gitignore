@@ -54,3 +54,4 @@ Thumbs.db
 /.wiki
 bash.exe.stackdump
 /tests/unit/TestResults
+/scripts/__pycache__

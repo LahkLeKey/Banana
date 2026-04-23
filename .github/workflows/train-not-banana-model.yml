@@ -1,5 +1,8 @@
 name: Train Not-Banana Model
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -7,6 +10,88 @@ on:
         description: Maximum learned vocabulary size
         required: false
         default: "24"
+      training_profile:
+        description: Resource profile (ci/local/overnight/auto)
+        required: false
+        default: "ci"
+        type: choice
+        options:
+          - ci
+          - local
+          - overnight
+          - auto
+      session_mode:
+        description: Session strategy (single or incremental)
+        required: false
+        default: "incremental"
+        type: choice
+        options:
+          - incremental
+          - single
+      max_sessions:
+        description: Maximum sessions (0 uses profile defaults)
+        required: false
+        default: "0"
+      release_matrix_json:
+        description: Optional JSON array of release profiles to build in CI
+        required: false
+        default: ""
+      require_signed_images:
+        description: Require signed model image manifests
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      promote_to_stable:
+        description: Promote candidate image to stable in this run
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      stable_min_f1:
+        description: Minimum hold-out F1 required for stable promotion
+        required: false
+        default: "0.8"
+      max_removed_tokens:
+        description: Maximum allowed removed tokens when promoting stable
+        required: false
+        default: "4"
+      publish_registry_release_asset:
+        description: Publish snapshot archive as GitHub release asset
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      registry_release_tag:
+        description: Release tag used for persistent registry snapshot assets
+        required: false
+        default: "not-banana-model-registry"
+      registry_snapshot_label:
+        description: Optional snapshot label override
+        required: false
+        default: ""
+      persist_registry_history:
+        description: Persist release snapshots inside the repository on a branch
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      registry_history_branch:
+        description: Branch that stores persistent registry history commits
+        required: false
+        default: "model-release-history"
+      registry_history_path:
+        description: Repository path for persistent registry snapshots
+        required: false
+        default: "data/not-banana/model-release-history"
       min_signal_score:
         description: Minimum BANANA-vs-NOT_BANANA signal score
         required: false
@@ -19,13 +104,133 @@ on:
     paths:
       - data/not-banana/**
       - scripts/train-not-banana-model.py
+      - scripts/manage-not-banana-model-image.py
       - .github/workflows/train-not-banana-model.yml
+    paths-ignore:
+      - data/not-banana/model-release-history/**
   schedule:
     - cron: "0 6 * * 1"
 
 jobs:
-  train:
+  prepare-release-matrix:
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
+    outputs:
+      release_matrix: ${{ steps.build.outputs.release_matrix }}
+    steps:
+      - name: Build release matrix
+        id: build
+        env:
+          BANANA_RELEASE_MATRIX_JSON: ${{ github.event.inputs.release_matrix_json || '' }}
+          BANANA_TRAIN_VOCAB_SIZE: ${{ github.event.inputs.vocab_size || '24' }}
+          BANANA_TRAIN_PROFILE: ${{ github.event.inputs.training_profile || 'ci' }}
+          BANANA_TRAIN_SESSION_MODE: ${{ github.event.inputs.session_mode || 'incremental' }}
+          BANANA_TRAIN_MAX_SESSIONS: ${{ github.event.inputs.max_sessions || '0' }}
+          BANANA_TRAIN_MIN_SIGNAL: ${{ github.event.inputs.min_signal_score || '0.7' }}
+          BANANA_TRAIN_MIN_F1: ${{ github.event.inputs.min_f1 || '0.7' }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+
+          raw = (os.environ.get("BANANA_RELEASE_MATRIX_JSON") or "").strip()
+          vocab_size = int(float(os.environ.get("BANANA_TRAIN_VOCAB_SIZE", "24")))
+          train_profile = (os.environ.get("BANANA_TRAIN_PROFILE") or "ci").strip() or "ci"
+          session_mode = (os.environ.get("BANANA_TRAIN_SESSION_MODE") or "incremental").strip() or "incremental"
+          max_sessions = int(float(os.environ.get("BANANA_TRAIN_MAX_SESSIONS", "0")))
+          min_signal = float(os.environ.get("BANANA_TRAIN_MIN_SIGNAL", "0.7"))
+          min_f1 = float(os.environ.get("BANANA_TRAIN_MIN_F1", "0.7"))
+
+          default_max_sessions = max(4, max_sessions) if max_sessions > 0 else 4
+
+          default_profiles = [
+              {
+                  "release_id": "stable-candidate",
+                  "training_profile": train_profile,
+                  "session_mode": session_mode,
+                  "max_sessions": str(default_max_sessions),
+                  "vocab_size": str(vocab_size),
+                  "min_signal_score": f"{min_signal:.4f}",
+                  "min_f1": f"{min_f1:.4f}",
+                  "allow_stable_promotion": "true",
+              },
+              {
+                  "release_id": "canary-wide",
+                  "training_profile": "ci",
+                  "session_mode": "incremental",
+                  "max_sessions": str(max(default_max_sessions, 6)),
+                  "vocab_size": str(vocab_size + 8),
+                  "min_signal_score": f"{max(0.0, min_signal - 0.05):.4f}",
+                  "min_f1": f"{min_f1:.4f}",
+                  "allow_stable_promotion": "false",
+              },
+              {
+                  "release_id": "strict-safety",
+                  "training_profile": "ci",
+                  "session_mode": "incremental",
+                  "max_sessions": str(max(default_max_sessions, 4)),
+                  "vocab_size": str(vocab_size),
+                  "min_signal_score": f"{min(1.0, min_signal + 0.05):.4f}",
+                  "min_f1": f"{max(min_f1, 0.75):.4f}",
+                  "allow_stable_promotion": "false",
+              },
+          ]
+
+          if raw:
+              parsed = json.loads(raw)
+              if isinstance(parsed, dict) and "include" in parsed:
+                  profiles = parsed["include"]
+              else:
+                  profiles = parsed
+              if not isinstance(profiles, list) or not profiles:
+                  raise ValueError("release_matrix_json must decode to a non-empty array.")
+          else:
+              profiles = default_profiles
+
+          def clean_release_id(value: str, index: int) -> str:
+              cleaned = re.sub(r"[^a-z0-9._-]+", "-", value.lower()).strip("-._")
+              return cleaned or f"release-{index + 1}"
+
+          prepared = []
+          for idx, profile in enumerate(profiles):
+              if not isinstance(profile, dict):
+                  raise ValueError(f"Release profile #{idx + 1} must be an object.")
+
+              release_id = clean_release_id(str(profile.get("release_id", f"release-{idx + 1}")), idx)
+              prepared.append(
+                  {
+                      "release_id": release_id,
+                      "training_profile": str(profile.get("training_profile", train_profile)),
+                      "session_mode": str(profile.get("session_mode", session_mode)),
+                      "max_sessions": str(profile.get("max_sessions", default_max_sessions)),
+                      "vocab_size": str(profile.get("vocab_size", vocab_size)),
+                      "min_signal_score": str(profile.get("min_signal_score", f"{min_signal:.4f}")),
+                      "min_f1": str(profile.get("min_f1", f"{min_f1:.4f}")),
+                      "allow_stable_promotion": str(profile.get("allow_stable_promotion", "false")).lower(),
+                  }
+              )
+
+          matrix_payload = {"include": prepared}
+          matrix_json = json.dumps(matrix_payload, separators=(",", ":"))
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
+              handle.write(f"release_matrix={matrix_json}\n")
+
+          print(f"release profiles={len(prepared)}")
+          for item in prepared:
+              print(
+                  f"- {item['release_id']}: profile={item['training_profile']} "
+                  f"session_mode={item['session_mode']} vocab={item['vocab_size']}"
+              )
+          PY
+
+  train:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    needs: prepare-release-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare-release-matrix.outputs.release_matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,34 +240,53 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Train not-banana vocabulary
+      - name: Train not-banana vocabulary (${{ matrix.release_id }})
         env:
-          BANANA_TRAIN_VOCAB_SIZE: ${{ github.event.inputs.vocab_size || '24' }}
-          BANANA_TRAIN_MIN_SIGNAL: ${{ github.event.inputs.min_signal_score || '0.7' }}
-          BANANA_TRAIN_MIN_F1: ${{ github.event.inputs.min_f1 || '0.7' }}
+          BANANA_RELEASE_ID: ${{ matrix.release_id }}
+          BANANA_TRAIN_VOCAB_SIZE: ${{ matrix.vocab_size }}
+          BANANA_TRAIN_PROFILE: ${{ matrix.training_profile }}
+          BANANA_TRAIN_SESSION_MODE: ${{ matrix.session_mode }}
+          BANANA_TRAIN_MAX_SESSIONS: ${{ matrix.max_sessions }}
+          BANANA_TRAIN_MIN_SIGNAL: ${{ matrix.min_signal_score }}
+          BANANA_TRAIN_MIN_F1: ${{ matrix.min_f1 }}
         run: |
+          MODEL_OUTPUT_DIR="artifacts/not-banana-model/${BANANA_RELEASE_ID}"
+
           python scripts/train-not-banana-model.py \
             --corpus data/not-banana/corpus.json \
-            --output artifacts/not-banana-model \
+            --output "$MODEL_OUTPUT_DIR" \
             --vocab-size "$BANANA_TRAIN_VOCAB_SIZE" \
+            --training-profile "$BANANA_TRAIN_PROFILE" \
+            --session-mode "$BANANA_TRAIN_SESSION_MODE" \
+            --max-sessions "$BANANA_TRAIN_MAX_SESSIONS" \
             --min-signal-score "$BANANA_TRAIN_MIN_SIGNAL" \
             --min-f1 "$BANANA_TRAIN_MIN_F1"
 
-      - name: Print metrics
+      - name: Print metrics (${{ matrix.release_id }})
+        env:
+          BANANA_RELEASE_ID: ${{ matrix.release_id }}
         run: |
-          echo "===== Trained Vocabulary Metrics ====="
-          cat artifacts/not-banana-model/metrics.json
+          MODEL_OUTPUT_DIR="artifacts/not-banana-model/${BANANA_RELEASE_ID}"
 
-      - name: Detect drift vs current native vocabulary
+          echo "===== Trained Vocabulary Metrics ====="
+          cat "$MODEL_OUTPUT_DIR/metrics.json"
+          echo "===== Session Plan ====="
+          cat "$MODEL_OUTPUT_DIR/sessions.json"
+
+      - name: Detect drift vs current native vocabulary (${{ matrix.release_id }})
         id: drift
         continue-on-error: true
+        env:
+          BANANA_RELEASE_ID: ${{ matrix.release_id }}
         run: |
           python - <<'PY'
           import json
           import re
+          import os
           from pathlib import Path
 
-          generated = Path("artifacts/not-banana-model/vocabulary.json")
+          release_id = os.environ["BANANA_RELEASE_ID"]
+          generated = Path(f"artifacts/not-banana-model/{release_id}/vocabulary.json")
           native = Path("src/native/core/domain/banana_not_banana.c")
 
           model = json.loads(generated.read_text(encoding="utf-8"))
@@ -86,9 +310,10 @@ jobs:
               "added": added,
               "removed": removed,
               "metrics": model["metrics"],
+              "release_id": release_id,
           }
 
-          Path("artifacts/not-banana-model/drift.json").write_text(
+          Path(f"artifacts/not-banana-model/{release_id}/drift.json").write_text(
               json.dumps(drift, indent=2) + "\n", encoding="utf-8"
           )
 
@@ -98,31 +323,170 @@ jobs:
               print("No vocabulary drift detected.")
           PY
 
+      - name: Create and verify immutable model image (${{ matrix.release_id }})
+        env:
+          BANANA_RELEASE_ID: ${{ matrix.release_id }}
+          BANANA_ALLOW_STABLE_PROMOTION: ${{ matrix.allow_stable_promotion }}
+          BANANA_REQUIRE_SIGNED_IMAGES: ${{ github.event.inputs.require_signed_images || 'true' }}
+          BANANA_PROMOTE_TO_STABLE: ${{ github.event.inputs.promote_to_stable || 'false' }}
+          BANANA_STABLE_MIN_F1: ${{ github.event.inputs.stable_min_f1 || '0.8' }}
+          BANANA_MAX_REMOVED_TOKENS: ${{ github.event.inputs.max_removed_tokens || '4' }}
+          BANANA_MODEL_SIGNING_KEY: ${{ secrets.BANANA_MODEL_SIGNING_KEY }}
+          BANANA_MODEL_SIGNING_KEY_ID: ${{ secrets.BANANA_MODEL_SIGNING_KEY_ID }}
+        run: |
+          MODEL_OUTPUT_DIR="artifacts/not-banana-model/${BANANA_RELEASE_ID}"
+          REGISTRY_DIR="artifacts/not-banana-model-registry/${BANANA_RELEASE_ID}"
+
+          CREATE_ARGS=(
+            --model-dir "$MODEL_OUTPUT_DIR"
+            --registry-dir "$REGISTRY_DIR"
+            --channel candidate
+            --parent-from-channel stable
+            --signing-key-env BANANA_MODEL_SIGNING_KEY
+            --key-id-env BANANA_MODEL_SIGNING_KEY_ID
+          )
+
+          VERIFY_ARGS=(
+            --registry-dir "$REGISTRY_DIR"
+            --channel candidate
+            --signing-key-env BANANA_MODEL_SIGNING_KEY
+          )
+
+          PROMOTE_ARGS=(
+            --registry-dir "$REGISTRY_DIR"
+            --from-channel candidate
+            --to-channel stable
+            --min-f1 "$BANANA_STABLE_MIN_F1"
+            --max-removed-tokens "$BANANA_MAX_REMOVED_TOKENS"
+            --signing-key-env BANANA_MODEL_SIGNING_KEY
+          )
+
+          if [ "$BANANA_REQUIRE_SIGNED_IMAGES" = "true" ]; then
+            CREATE_ARGS+=(--require-signing-key)
+            VERIFY_ARGS+=(--require-signature)
+          else
+            PROMOTE_ARGS+=(--allow-unsigned)
+          fi
+
+          python scripts/manage-not-banana-model-image.py create "${CREATE_ARGS[@]}"
+          python scripts/manage-not-banana-model-image.py verify "${VERIFY_ARGS[@]}"
+
+          if [ "$BANANA_PROMOTE_TO_STABLE" = "true" ] && [ "$BANANA_ALLOW_STABLE_PROMOTION" = "true" ]; then
+            python scripts/manage-not-banana-model-image.py promote "${PROMOTE_ARGS[@]}"
+          fi
+
+          python scripts/manage-not-banana-model-image.py status \
+            --registry-dir "$REGISTRY_DIR" \
+            --json > "$REGISTRY_DIR/status.json"
+
+      - name: Snapshot registry and optionally upload to object store (${{ matrix.release_id }})
+        env:
+          BANANA_RELEASE_ID: ${{ matrix.release_id }}
+          BANANA_REGISTRY_SNAPSHOT_LABEL: ${{ github.event.inputs.registry_snapshot_label || '' }}
+          BANANA_MODEL_REGISTRY_UPLOAD_URL: ${{ secrets.BANANA_MODEL_REGISTRY_UPLOAD_URL }}
+          BANANA_MODEL_REGISTRY_UPLOAD_SHA_URL: ${{ secrets.BANANA_MODEL_REGISTRY_UPLOAD_SHA_URL }}
+          BANANA_MODEL_REGISTRY_UPLOAD_AUTH_HEADER: ${{ secrets.BANANA_MODEL_REGISTRY_UPLOAD_AUTH_HEADER }}
+        run: |
+          REGISTRY_DIR="artifacts/not-banana-model-registry/${BANANA_RELEASE_ID}"
+          SNAPSHOT_DIR="artifacts/not-banana-model-registry-snapshots/${BANANA_RELEASE_ID}"
+          SNAPSHOT_LABEL="${BANANA_REGISTRY_SNAPSHOT_LABEL:-${BANANA_RELEASE_ID}-run-${GITHUB_RUN_ID}-attempt-${GITHUB_RUN_ATTEMPT}}"
+
+          SNAPSHOT_ARGS=(
+            --registry-dir "$REGISTRY_DIR"
+            --snapshot-dir "$SNAPSHOT_DIR"
+            --label "$SNAPSHOT_LABEL"
+          )
+
+          if [ -n "${BANANA_MODEL_REGISTRY_UPLOAD_URL:-}" ]; then
+            SNAPSHOT_ARGS+=(--upload-url "$BANANA_MODEL_REGISTRY_UPLOAD_URL")
+          fi
+          if [ -n "${BANANA_MODEL_REGISTRY_UPLOAD_SHA_URL:-}" ]; then
+            SNAPSHOT_ARGS+=(--upload-sha-url "$BANANA_MODEL_REGISTRY_UPLOAD_SHA_URL")
+          fi
+          if [ -n "${BANANA_MODEL_REGISTRY_UPLOAD_AUTH_HEADER:-}" ]; then
+            SNAPSHOT_ARGS+=(--upload-header "$BANANA_MODEL_REGISTRY_UPLOAD_AUTH_HEADER")
+          fi
+
+          python scripts/manage-not-banana-model-image.py snapshot "${SNAPSHOT_ARGS[@]}"
+
+      - name: Publish snapshot as release asset (${{ matrix.release_id }})
+        if: ${{ github.event.inputs.publish_registry_release_asset == 'true' }}
+        env:
+          BANANA_RELEASE_ID: ${{ matrix.release_id }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BANANA_REGISTRY_RELEASE_TAG: ${{ github.event.inputs.registry_release_tag || 'not-banana-model-registry' }}
+        run: |
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "::error::GitHub CLI is required to publish release assets."
+            exit 1
+          fi
+
+          TAG="${BANANA_REGISTRY_RELEASE_TAG:-not-banana-model-registry}-${BANANA_RELEASE_ID}"
+          SNAPSHOT_ARCHIVE="$(ls -1t artifacts/not-banana-model-registry-snapshots/${BANANA_RELEASE_ID}/*.tar.gz | head -n 1)"
+          SNAPSHOT_SHA="${SNAPSHOT_ARCHIVE}.sha256"
+
+          if [ ! -f "$SNAPSHOT_ARCHIVE" ]; then
+            echo "::error::No registry snapshot archive found for release publication."
+            exit 1
+          fi
+
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --title "Not-Banana Model Registry" \
+              --notes "Persistent not-banana model registry snapshots for rollback-safe iteration."
+          fi
+
+          gh release upload "$TAG" "$SNAPSHOT_ARCHIVE" "$SNAPSHOT_SHA" --clobber
+
       - name: Upload trained model artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: not-banana-model
-          path: artifacts/not-banana-model
+          name: not-banana-model-${{ matrix.release_id }}
+          path: |
+            artifacts/not-banana-model/${{ matrix.release_id }}
+            artifacts/not-banana-model-registry/${{ matrix.release_id }}
+            artifacts/not-banana-model-registry-snapshots/${{ matrix.release_id }}
 
-      - name: Add summary
+      - name: Add summary (${{ matrix.release_id }})
         if: always()
+        env:
+          BANANA_RELEASE_ID: ${{ matrix.release_id }}
         run: |
+          MODEL_OUTPUT_DIR="artifacts/not-banana-model/${BANANA_RELEASE_ID}"
+          REGISTRY_DIR="artifacts/not-banana-model-registry/${BANANA_RELEASE_ID}"
+          SNAPSHOT_DIR="artifacts/not-banana-model-registry-snapshots/${BANANA_RELEASE_ID}"
+
           {
-            echo "## Not-Banana Trainer Run"
+            echo "## Not-Banana Trainer Run (${BANANA_RELEASE_ID})"
             echo
             echo '```json'
-            cat artifacts/not-banana-model/metrics.json
+            cat "$MODEL_OUTPUT_DIR/metrics.json"
             echo '```'
-            if [ -f artifacts/not-banana-model/drift.json ]; then
+            if [ -f "$MODEL_OUTPUT_DIR/drift.json" ]; then
               echo
               echo "### Vocabulary Drift"
               echo '```json'
-              cat artifacts/not-banana-model/drift.json
+              cat "$MODEL_OUTPUT_DIR/drift.json"
+              echo '```'
+            fi
+            if [ -f "$REGISTRY_DIR/status.json" ]; then
+              echo
+              echo "### Model Image Registry"
+              echo '```json'
+              cat "$REGISTRY_DIR/status.json"
+              echo '```'
+            fi
+            if ls "$SNAPSHOT_DIR"/*.json >/dev/null 2>&1; then
+              echo
+              echo "### Registry Snapshot"
+              echo '```json'
+              cat "$(ls -1t "$SNAPSHOT_DIR"/*.json | head -n 1)"
               echo '```'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
   verify-native-rebuild:
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     needs: train
     steps:
@@ -143,7 +507,10 @@ jobs:
         run: |
           python scripts/train-not-banana-model.py \
             --corpus data/not-banana/corpus.json \
-            --output artifacts/not-banana-model
+            --output artifacts/not-banana-model \
+            --training-profile ci \
+            --session-mode single \
+            --max-sessions 1
 
       - name: Stage generated header next to native source
         run: |
@@ -163,3 +530,77 @@ jobs:
       - name: Run native tests
         run: |
           ctest --test-dir build/native -C Release --output-on-failure
+
+  persist-registry-history:
+    if: ${{ github.actor != 'github-actions[bot]' && github.event_name == 'workflow_dispatch' && github.event.inputs.persist_registry_history == 'true' }}
+    runs-on: ubuntu-latest
+    needs: train
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: not-banana-model-*
+          path: artifacts/not-banana-release-artifacts
+          merge-multiple: false
+
+      - name: Commit registry history to repository branch
+        env:
+          BANANA_REGISTRY_HISTORY_BRANCH: ${{ github.event.inputs.registry_history_branch || 'model-release-history' }}
+          BANANA_REGISTRY_HISTORY_PATH: ${{ github.event.inputs.registry_history_path || 'data/not-banana/model-release-history' }}
+        run: |
+          set -euo pipefail
+
+          BRANCH="${BANANA_REGISTRY_HISTORY_BRANCH}"
+          HISTORY_PATH="${BANANA_REGISTRY_HISTORY_PATH%/}"
+
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH"
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -B "$BRANCH"
+          fi
+
+          STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+          TARGET_DIR="$HISTORY_PATH/$STAMP"
+          mkdir -p "$TARGET_DIR"
+          cp -R artifacts/not-banana-release-artifacts/* "$TARGET_DIR/"
+
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          history_path = Path(os.environ["BANANA_REGISTRY_HISTORY_PATH"]).resolve()
+          entries = [
+              path.name
+              for path in history_path.iterdir()
+              if path.is_dir() and not path.name.startswith(".")
+          ]
+          entries.sort(reverse=True)
+
+          latest = {
+              "schema_version": 1,
+              "updated_at_utc": entries[0] if entries else "",
+              "snapshots": entries[:50],
+          }
+          latest_path = history_path / "latest.json"
+          latest_path.parent.mkdir(parents=True, exist_ok=True)
+          latest_path.write_text(json.dumps(latest, indent=2) + "\n", encoding="utf-8")
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$HISTORY_PATH"
+
+          if git diff --cached --quiet; then
+            echo "No registry history changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(model): persist release snapshots run ${GITHUB_RUN_ID} [skip ci]"
+          git push origin "$BRANCH"

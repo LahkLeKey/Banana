@@ -71,6 +71,178 @@ Keep these contracts steady while you iterate quickly:
    - API build: `Build Banana API` task
 3. Run narrow tests first, then widen only when contract edges move.
 
+## Incremental Not-Banana Training
+
+Use one trainer for both local and CI sessions:
+
+```bash
+python scripts/train-not-banana-model.py \
+  --corpus data/not-banana/corpus.json \
+  --output artifacts/not-banana-model
+```
+
+Resource-aware session profiles:
+
+- `--training-profile ci`: bounded sweep for constrained containers.
+- `--training-profile local`: wider sweep for workstation runs.
+- `--training-profile overnight`: broader sweep for long on-prem runs.
+- `--training-profile auto`: chooses `ci` on GitHub Actions, otherwise scales by CPU count.
+
+Session controls:
+
+- `--session-mode incremental`: run multiple deterministic sessions and keep the best hold-out F1 result.
+- `--session-mode single`: run one baseline session (fastest, deterministic).
+- `--max-sessions <n>`: cap the number of evaluated sessions (`0` uses profile defaults).
+
+Examples:
+
+```bash
+# Fast CI-like run
+python scripts/train-not-banana-model.py --training-profile ci --session-mode incremental --max-sessions 4
+
+# Longer overnight run
+python scripts/train-not-banana-model.py --training-profile overnight --session-mode incremental --max-sessions 48
+```
+
+Artifacts are written to `artifacts/not-banana-model`:
+
+- `vocabulary.json`: selected vocabulary + metrics + session history.
+- `metrics.json`: selected hold-out metrics and per-session summary.
+- `sessions.json`: detailed per-session hyperparameters and scores.
+- `banana_signal_tokens.h`: generated native header.
+
+### Model Image Registry (Safe Iteration + Rollback)
+
+Package trainer outputs into immutable model images before promotion:
+
+```bash
+python scripts/manage-not-banana-model-image.py create \
+  --model-dir artifacts/not-banana-model \
+  --registry-dir artifacts/not-banana-model-registry \
+  --channel candidate
+```
+
+Verify checksum integrity before promotion:
+
+```bash
+python scripts/manage-not-banana-model-image.py verify \
+  --registry-dir artifacts/not-banana-model-registry \
+  --channel candidate
+```
+
+Promote only after quality/safety checks:
+
+```bash
+python scripts/manage-not-banana-model-image.py promote \
+  --registry-dir artifacts/not-banana-model-registry \
+  --from-channel candidate \
+  --to-channel stable \
+  --min-f1 0.8 \
+  --max-removed-tokens 4
+```
+
+Rollback is channel-pointer based and does not require retraining:
+
+```bash
+python scripts/manage-not-banana-model-image.py promote \
+  --registry-dir artifacts/not-banana-model-registry \
+  --image-id <previous-image-id> \
+  --to-channel stable
+```
+
+Registry outputs are kept in `artifacts/not-banana-model-registry`:
+
+- `images/<image-id>/`: immutable per-version files + `manifest.json`.
+- `channels/candidate.json` and `channels/stable.json`: active pointers.
+- `index.json`: lineage, metrics summary, and channel membership.
+
+Manifest signing hardening:
+
+- Set `BANANA_MODEL_SIGNING_KEY` (and optional `BANANA_MODEL_SIGNING_KEY_ID`) in CI secrets.
+- Enforce signing at image creation:
+
+```bash
+python scripts/manage-not-banana-model-image.py create \
+  --model-dir artifacts/not-banana-model \
+  --registry-dir artifacts/not-banana-model-registry \
+  --channel candidate \
+  --require-signing-key \
+  --signing-key-env BANANA_MODEL_SIGNING_KEY \
+  --key-id-env BANANA_MODEL_SIGNING_KEY_ID
+```
+
+- Enforce signature verification before promotion:
+
+```bash
+python scripts/manage-not-banana-model-image.py verify \
+  --registry-dir artifacts/not-banana-model-registry \
+  --channel candidate \
+  --require-signature \
+  --signing-key-env BANANA_MODEL_SIGNING_KEY
+```
+
+Long-term snapshot persistence:
+
+- Create snapshot archive + sha manifest:
+
+```bash
+python scripts/manage-not-banana-model-image.py snapshot \
+  --registry-dir artifacts/not-banana-model-registry \
+  --snapshot-dir artifacts/not-banana-model-registry-snapshots
+```
+
+- Optional object-store upload using pre-signed URLs:
+
+```bash
+python scripts/manage-not-banana-model-image.py snapshot \
+  --registry-dir artifacts/not-banana-model-registry \
+  --snapshot-dir artifacts/not-banana-model-registry-snapshots \
+  --upload-url "<presigned archive PUT url>" \
+  --upload-sha-url "<presigned sha PUT url>"
+```
+
+- In CI, snapshots can also be published as GitHub release assets via `publish_registry_release_asset=true`.
+
+Multi-release CI builds:
+
+- The training workflow now builds multiple release profiles in one run (stable candidate, canary wide, strict safety) by default.
+- Override profiles using `release_matrix_json` (workflow dispatch input).
+
+Example matrix payload:
+
+```json
+[
+  {
+    "release_id": "stable-candidate",
+    "training_profile": "ci",
+    "session_mode": "incremental",
+    "max_sessions": "6",
+    "vocab_size": "24",
+    "min_signal_score": "0.70",
+    "min_f1": "0.75",
+    "allow_stable_promotion": "true"
+  },
+  {
+    "release_id": "canary-wide",
+    "training_profile": "ci",
+    "session_mode": "incremental",
+    "max_sessions": "10",
+    "vocab_size": "40",
+    "min_signal_score": "0.62",
+    "min_f1": "0.70",
+    "allow_stable_promotion": "false"
+  }
+]
+```
+
+Repository-backed long-term history:
+
+- Set workflow input `persist_registry_history=true` to commit release snapshots into the repo.
+- Configure:
+  - `registry_history_branch` (default: `model-release-history`)
+  - `registry_history_path` (default: `data/not-banana/model-release-history`)
+- CI writes timestamped snapshot bundles and updates `latest.json` for quick lookup.
+
 ## Learn More
 
 - Wiki hub: [Banana Wiki](https://github.com/LahkLeKey/Banana/wiki)

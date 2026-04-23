@@ -42,6 +42,20 @@
 ## Not-Banana Training Contract (2026-04)
 
 - Keep training data, script, and workflow wiring coherent across `data/not-banana/corpus.json`, `scripts/train-not-banana-model.py`, and `.github/workflows/train-not-banana-model.yml`.
+- Local and CI should use the same trainer entry point with explicit profile/session flags.
+- CI-like incremental command: `python scripts/train-not-banana-model.py --training-profile ci --session-mode incremental --max-sessions 4`
+- Overnight incremental command: `python scripts/train-not-banana-model.py --training-profile overnight --session-mode incremental --max-sessions 48`
+- Single-session deterministic command: `python scripts/train-not-banana-model.py --session-mode single --max-sessions 1`
+- Package immutable image command: `python scripts/manage-not-banana-model-image.py create --model-dir artifacts/not-banana-model --registry-dir artifacts/not-banana-model-registry --channel candidate`
+- Verify image command: `python scripts/manage-not-banana-model-image.py verify --registry-dir artifacts/not-banana-model-registry --channel candidate`
+- Signed create command: `python scripts/manage-not-banana-model-image.py create --model-dir artifacts/not-banana-model --registry-dir artifacts/not-banana-model-registry --channel candidate --require-signing-key --signing-key-env BANANA_MODEL_SIGNING_KEY --key-id-env BANANA_MODEL_SIGNING_KEY_ID`
+- Signed verify command: `python scripts/manage-not-banana-model-image.py verify --registry-dir artifacts/not-banana-model-registry --channel candidate --require-signature --signing-key-env BANANA_MODEL_SIGNING_KEY`
+- Promote to stable command: `python scripts/manage-not-banana-model-image.py promote --registry-dir artifacts/not-banana-model-registry --from-channel candidate --to-channel stable --min-f1 0.8 --max-removed-tokens 4`
+- Rollback command: `python scripts/manage-not-banana-model-image.py promote --registry-dir artifacts/not-banana-model-registry --image-id <previous-image-id> --to-channel stable`
+- Snapshot command: `python scripts/manage-not-banana-model-image.py snapshot --registry-dir artifacts/not-banana-model-registry --snapshot-dir artifacts/not-banana-model-registry-snapshots`
+- Snapshot upload command: `python scripts/manage-not-banana-model-image.py snapshot --registry-dir artifacts/not-banana-model-registry --snapshot-dir artifacts/not-banana-model-registry-snapshots --upload-url <archive-put-url> --upload-sha-url <sha-put-url>`
+- CI multi-release build input: `release_matrix_json` (workflow dispatch) to build multiple model releases in one run.
+- CI repository persistence input: `persist_registry_history=true` to commit snapshot bundles to `registry_history_branch` and `registry_history_path`.
 - Preserve CI/container prerequisites needed to execute training and drift checks reliably.
 - Treat training drift failures as actionable model/data contract signals, not infrastructure noise.
 - Document any runtime or automation changes that affect training invocation, artifacts, or reproducibility.
