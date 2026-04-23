@@ -26,6 +26,8 @@ from typing import Any
 MODEL_FAMILY = "not-banana-vocabulary-v1"
 DEFAULT_MODEL_DIR = Path("artifacts/not-banana-model")
 DEFAULT_REGISTRY_DIR = Path("artifacts/not-banana-model-registry")
+DEFAULT_REGISTRY_HISTORY_DIR = Path("data/not-banana/model-release-history")
+DEFAULT_RESTORE_OUTPUT_ROOT = Path("artifacts")
 REQUIRED_FILES = (
     "vocabulary.json",
     "metrics.json",
@@ -185,6 +187,13 @@ def append_github_output(values: dict[str, str]) -> None:
     with open(output_path, "a", encoding="utf-8") as handle:
         for key, value in values.items():
             handle.write(f"{key}={value}\n")
+
+
+def remove_path(path: Path) -> None:
+    if path.is_dir():
+        shutil.rmtree(path)
+    elif path.exists():
+        path.unlink()
 
 
 def load_or_create_index(registry_dir: Path) -> dict[str, Any]:
@@ -797,6 +806,197 @@ def snapshot_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def resolve_history_snapshot_id(history_dir: Path, requested_snapshot: str | None) -> str:
+    snapshot = str(requested_snapshot or "").strip()
+    if snapshot and snapshot.lower() != "latest":
+        return snapshot
+
+    latest_path = history_dir / "latest.json"
+    if not latest_path.exists():
+        raise ValueError(
+            f"History metadata not found at '{latest_path}'. "
+            "Use --snapshot with a timestamp folder name."
+        )
+
+    latest_payload = load_json(latest_path)
+    snapshots = latest_payload.get("snapshots") or []
+    if isinstance(snapshots, list):
+        for item in snapshots:
+            snapshot_id = str(item).strip()
+            if snapshot_id:
+                return snapshot_id
+
+    updated_at_utc = str(latest_payload.get("updated_at_utc", "")).strip()
+    if updated_at_utc:
+        return updated_at_utc
+
+    raise ValueError(
+        f"History metadata '{latest_path}' does not contain a usable snapshot id."
+    )
+
+
+def restore_history_command(args: argparse.Namespace) -> int:
+    history_dir = args.history_path
+    if not history_dir.exists() or not history_dir.is_dir():
+        print(
+            f"::error::History directory '{history_dir}' does not exist.",
+            file=sys.stderr,
+        )
+        return 1
+
+    try:
+        snapshot_id = resolve_history_snapshot_id(history_dir, args.snapshot)
+    except ValueError as exc:
+        print(f"::error::{exc}", file=sys.stderr)
+        return 1
+
+    snapshot_dir = history_dir / snapshot_id
+    if not snapshot_dir.exists() or not snapshot_dir.is_dir():
+        print(
+            f"::error::Snapshot '{snapshot_id}' does not exist under '{history_dir}'.",
+            file=sys.stderr,
+        )
+        return 1
+
+    release_bundles: dict[str, Path] = {}
+    for entry in sorted(snapshot_dir.iterdir()):
+        if not entry.is_dir():
+            continue
+        if not entry.name.startswith("not-banana-model-"):
+            continue
+        release_id = entry.name[len("not-banana-model-") :]
+        if release_id:
+            release_bundles[release_id] = entry
+
+    if not release_bundles:
+        print(
+            f"::error::No not-banana model release bundles were found in '{snapshot_dir}'.",
+            file=sys.stderr,
+        )
+        return 1
+
+    requested_release_ids = list(args.release_id or [])
+    selected_releases: dict[str, Path]
+    if requested_release_ids:
+        selected_releases = {}
+        missing_release_ids: list[str] = []
+        for release_id in requested_release_ids:
+            bundle_dir = release_bundles.get(release_id)
+            if not bundle_dir:
+                missing_release_ids.append(release_id)
+                continue
+            selected_releases[release_id] = bundle_dir
+
+        if missing_release_ids:
+            available = ", ".join(sorted(release_bundles.keys()))
+            missing = ", ".join(sorted(set(missing_release_ids)))
+            print(
+                "::error::Requested release ids were not found in snapshot "
+                f"'{snapshot_id}': {missing}. Available: {available}",
+                file=sys.stderr,
+            )
+            return 1
+    else:
+        selected_releases = dict(sorted(release_bundles.items()))
+
+    output_root = args.output_root
+    output_root.mkdir(parents=True, exist_ok=True)
+
+    restored_releases: list[dict[str, Any]] = []
+    for release_id, bundle_dir in selected_releases.items():
+        release_record: dict[str, Any] = {
+            "release_id": release_id,
+            "bundle_dir": str(bundle_dir),
+            "restored": {},
+        }
+
+        source_target_pairs = (
+            (
+                bundle_dir / "not-banana-model" / release_id,
+                output_root / "not-banana-model" / release_id,
+                "not-banana-model",
+            ),
+            (
+                bundle_dir / "not-banana-model-registry" / release_id,
+                output_root / "not-banana-model-registry" / release_id,
+                "not-banana-model-registry",
+            ),
+            (
+                bundle_dir / "not-banana-model-registry-snapshots" / release_id,
+                output_root / "not-banana-model-registry-snapshots" / release_id,
+                "not-banana-model-registry-snapshots",
+            ),
+        )
+
+        restored_any = False
+        for source_dir, target_dir, category in source_target_pairs:
+            if not source_dir.exists() or not source_dir.is_dir():
+                continue
+
+            if target_dir.exists():
+                if not args.overwrite:
+                    print(
+                        "::error::Target path already exists and overwrite is disabled: "
+                        f"'{target_dir}'",
+                        file=sys.stderr,
+                    )
+                    return 1
+                remove_path(target_dir)
+
+            target_dir.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(source_dir, target_dir)
+            release_record["restored"][category] = str(target_dir)
+            restored_any = True
+
+        if not restored_any:
+            print(
+                "::warning::Release bundle has no recognized restore directories: "
+                f"{bundle_dir}",
+                file=sys.stderr,
+            )
+            continue
+
+        restored_releases.append(release_record)
+
+    if not restored_releases:
+        print(
+            "::error::No release artifacts were restored from the selected snapshot.",
+            file=sys.stderr,
+        )
+        return 1
+
+    restore_report = {
+        "schema_version": 1,
+        "history_dir": str(history_dir),
+        "snapshot_id": snapshot_id,
+        "restored_at_utc": utc_now(),
+        "output_root": str(output_root),
+        "release_count": len(restored_releases),
+        "releases": restored_releases,
+    }
+
+    report_path = output_root / "not-banana-model-restore-report.json"
+    write_json(report_path, restore_report)
+
+    append_github_output(
+        {
+            "registry_history_snapshot": snapshot_id,
+            "registry_restore_output_root": str(output_root),
+            "registry_restore_release_ids": ",".join(
+                [item["release_id"] for item in restored_releases]
+            ),
+            "registry_restore_report": str(report_path),
+        }
+    )
+
+    release_ids = ",".join([item["release_id"] for item in restored_releases])
+    print(
+        "history restored "
+        f"snapshot={snapshot_id} releases={release_ids} report={report_path}"
+    )
+    return 0
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -905,6 +1105,45 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     snapshot_parser.set_defaults(handler=snapshot_command)
 
+    restore_parser = subparsers.add_parser(
+        "restore-history",
+        help="Restore source-controlled registry-history bundles into local artifacts.",
+    )
+    restore_parser.add_argument(
+        "--history-path",
+        type=Path,
+        default=DEFAULT_REGISTRY_HISTORY_DIR,
+    )
+    restore_parser.add_argument(
+        "--snapshot",
+        default="latest",
+        help="Snapshot folder id to restore, or 'latest' to resolve via latest.json.",
+    )
+    restore_parser.add_argument(
+        "--output-root",
+        type=Path,
+        default=DEFAULT_RESTORE_OUTPUT_ROOT,
+    )
+    restore_parser.add_argument(
+        "--release-id",
+        action="append",
+        default=[],
+        help="Release id to restore. Repeat to restore multiple. Defaults to all releases in snapshot.",
+    )
+    restore_parser.add_argument(
+        "--overwrite",
+        dest="overwrite",
+        action="store_true",
+        help="Overwrite existing target directories (default).",
+    )
+    restore_parser.add_argument(
+        "--no-overwrite",
+        dest="overwrite",
+        action="store_false",
+        help="Fail if any target directory already exists.",
+    )
+    restore_parser.set_defaults(handler=restore_history_command, overwrite=True)
+
     return parser.parse_args(argv)
 
 
@@ -940,6 +1179,14 @@ def main(argv: list[str] | None = None) -> int:
         args.upload_url = args.upload_url.strip() or None
     if hasattr(args, "upload_sha_url") and isinstance(args.upload_sha_url, str):
         args.upload_sha_url = args.upload_sha_url.strip() or None
+    if hasattr(args, "snapshot") and isinstance(args.snapshot, str):
+        args.snapshot = args.snapshot.strip() or None
+    if hasattr(args, "release_id") and isinstance(args.release_id, list):
+        args.release_id = [
+            item.strip()
+            for item in args.release_id
+            if isinstance(item, str) and item.strip()
+        ]
 
     return int(args.handler(args))
 

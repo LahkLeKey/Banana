@@ -247,6 +247,32 @@ Repository-backed long-term history:
   - `registry_history_pr_reviewers` (optional comma-separated usernames)
 - CI writes timestamped snapshot bundles, updates `latest.json`, then opens a PR for human review.
 
+Restore persisted history after a fresh clone:
+
+- Restore the latest snapshot listed in `data/not-banana/model-release-history/latest.json`:
+
+```bash
+bash scripts/restore-not-banana-model-history.sh
+```
+
+- Restore a specific timestamped snapshot:
+
+```bash
+BANANA_REGISTRY_RESTORE_SNAPSHOT=20260423T010945Z \
+bash scripts/restore-not-banana-model-history.sh
+```
+
+- Restore only selected release ids from that snapshot:
+
+```bash
+BANANA_REGISTRY_RESTORE_RELEASE_IDS=stable-candidate,canary-wide \
+bash scripts/restore-not-banana-model-history.sh
+```
+
+- Restored artifacts are written under `artifacts/not-banana-model`, `artifacts/not-banana-model-registry`, and `artifacts/not-banana-model-registry-snapshots`.
+- By default, restore overwrites existing target release directories. Set `BANANA_REGISTRY_RESTORE_OVERWRITE=false` to fail instead.
+- Restore writes a machine-readable report at `artifacts/not-banana-model-restore-report.json`.
+
 Automation pull request orchestration for triaged code changes:
 
 - Run workflow `Orchestrate Triaged Item Pull Request` with:
@@ -264,6 +290,16 @@ Human-approval merge gate:
 Local workflow containers (Docker Compose):
 
 - Use profile `workflow-local` to run one workflow validation path per container.
+- Configure local secrets/defaults once via root `.env`:
+
+```bash
+cp .env.example .env
+```
+
+- Set at minimum in `.env`:
+  - `GH_TOKEN`
+  - `BANANA_LOCAL_DRY_RUN=false`
+  - `BANANA_REGISTRY_PR_REVIEWERS` and `BANANA_PR_REVIEWERS` (GitHub usernames)
 - Train + persistence PR path (dry-run orchestration by default):
 
 ```bash

@@ -57,6 +57,9 @@
 - Rollback command: `python scripts/manage-not-banana-model-image.py promote --registry-dir artifacts/not-banana-model-registry --image-id <previous-image-id> --to-channel stable`
 - Snapshot command: `python scripts/manage-not-banana-model-image.py snapshot --registry-dir artifacts/not-banana-model-registry --snapshot-dir artifacts/not-banana-model-registry-snapshots`
 - Snapshot upload command: `python scripts/manage-not-banana-model-image.py snapshot --registry-dir artifacts/not-banana-model-registry --snapshot-dir artifacts/not-banana-model-registry-snapshots --upload-url <archive-put-url> --upload-sha-url <sha-put-url>`
+- Restore latest source-controlled snapshot command: `python scripts/manage-not-banana-model-image.py restore-history --history-path data/not-banana/model-release-history --snapshot latest --output-root artifacts`
+- Restore selected releases command: `python scripts/manage-not-banana-model-image.py restore-history --history-path data/not-banana/model-release-history --snapshot <timestamp> --release-id stable-candidate --release-id canary-wide --output-root artifacts`
+- Restore wrapper script: `bash scripts/restore-not-banana-model-history.sh` (supports `BANANA_REGISTRY_RESTORE_*` env vars)
 - CI multi-release build input: `release_matrix_json` (workflow dispatch) to build multiple model releases in one run.
 - CI repository persistence input: `persist_registry_history=true` to create a registry-history pull request containing snapshot bundles at `registry_history_path`.
 - CI repository persistence PR controls: `registry_history_pr_base_branch`, `registry_history_open_draft_pr`, `registry_history_pr_labels`, and `registry_history_pr_reviewers`.
