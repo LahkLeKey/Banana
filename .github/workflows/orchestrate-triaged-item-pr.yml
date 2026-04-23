@@ -46,7 +46,7 @@ on:
         required: false
         default: "automation,triaged-item,requires-human-approval"
       reviewers:
-        description: Optional comma-separated reviewer usernames
+        description: Optional reviewer usernames as comma-separated values or [array] syntax
         required: false
         default: ""
 

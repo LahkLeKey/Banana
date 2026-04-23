@@ -18,6 +18,44 @@ PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval}"
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
 
+parse_list_input() {
+  local raw="${1:-}"
+  local -n out_items="$2"
+  local normalized
+  local item
+  local -a raw_items=()
+
+  normalized="${raw//$'\r'/}"
+  normalized="${normalized//$'\n'/,}"
+  normalized="$(echo "$normalized" | xargs)"
+
+  if [[ -z "$normalized" ]]; then
+    return 0
+  fi
+
+  if [[ "$normalized" == \[*\] ]]; then
+    normalized="${normalized#[}"
+    normalized="${normalized%]}"
+  fi
+
+  IFS=',' read -r -a raw_items <<< "$normalized"
+  for raw_item in "${raw_items[@]}"; do
+    item="$(echo "$raw_item" | xargs)"
+    item="${item#\"}"
+    item="${item%\"}"
+    item="${item#\'}"
+    item="${item%\'}"
+    item="$(echo "$item" | xargs)"
+    if [[ -n "$item" ]]; then
+      out_items+=("$item")
+    fi
+  done
+}
+
+declare -a parsed_reviewers=()
+parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
+PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
+
 TRIAGE_ID_SLUG="$(echo "$TRIAGE_ID" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
 if [[ -z "$TRIAGE_ID_SLUG" ]]; then
   echo "::error::triage_id does not produce a valid branch slug."
@@ -52,7 +90,7 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "base_branch": "${BASE_BRANCH}",
   "commit_message": "${COMMIT_MESSAGE}",
   "labels": "${PR_LABELS}",
-  "reviewers": "${PR_REVIEWERS}",
+  "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${DRAFT_PR}",
   "changed_files_csv": "${CHANGED_FILES}",
   "simulated_pr_url": "https://example.invalid/${WORK_BRANCH}"
@@ -132,10 +170,19 @@ for raw_label in "${label_items[@]}"; do
   fi
 done
 
-if [[ -n "${PR_REVIEWERS:-}" ]]; then
-  if ! gh pr edit "$pr_number" --add-reviewer "$PR_REVIEWERS" >/dev/null 2>&1; then
-    echo "::warning::Failed to request reviewers '$PR_REVIEWERS' for PR #$pr_number."
-  fi
+if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
+  declare -A seen_reviewers=()
+  for reviewer in "${parsed_reviewers[@]}"; do
+    reviewer_key="$(echo "$reviewer" | tr '[:upper:]' '[:lower:]')"
+    if [[ -n "${seen_reviewers[$reviewer_key]:-}" ]]; then
+      continue
+    fi
+    seen_reviewers[$reviewer_key]=1
+
+    if ! gh pr edit "$pr_number" --add-reviewer "$reviewer" >/dev/null 2>&1; then
+      echo "::warning::Failed to request reviewer '$reviewer' for PR #$pr_number."
+    fi
+  done
 fi
 
 echo "Triaged PR ready for review: $pr_url"

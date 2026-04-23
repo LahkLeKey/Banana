@@ -110,7 +110,7 @@ on:
         required: false
         default: "automation,model-training,requires-human-approval"
       registry_history_pr_reviewers:
-        description: Optional comma-separated reviewer usernames for registry-history pull requests
+        description: Optional reviewer usernames as comma-separated values or [array] syntax for registry-history pull requests
         required: false
         default: ""
       min_signal_score:

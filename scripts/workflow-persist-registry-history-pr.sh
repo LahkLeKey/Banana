@@ -15,6 +15,44 @@ PR_LABELS="${BANANA_REGISTRY_PR_LABELS:-automation,model-training,requires-human
 PR_REVIEWERS="${BANANA_REGISTRY_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
 
+parse_list_input() {
+  local raw="${1:-}"
+  local -n out_items="$2"
+  local normalized
+  local item
+  local -a raw_items=()
+
+  normalized="${raw//$'\r'/}"
+  normalized="${normalized//$'\n'/,}"
+  normalized="$(echo "$normalized" | xargs)"
+
+  if [[ -z "$normalized" ]]; then
+    return 0
+  fi
+
+  if [[ "$normalized" == \[*\] ]]; then
+    normalized="${normalized#[}"
+    normalized="${normalized%]}"
+  fi
+
+  IFS=',' read -r -a raw_items <<< "$normalized"
+  for raw_item in "${raw_items[@]}"; do
+    item="$(echo "$raw_item" | xargs)"
+    item="${item#\"}"
+    item="${item%\"}"
+    item="${item#\'}"
+    item="${item%\'}"
+    item="$(echo "$item" | xargs)"
+    if [[ -n "$item" ]]; then
+      out_items+=("$item")
+    fi
+  done
+}
+
+declare -a parsed_reviewers=()
+parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
+PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
+
 if [[ ! -d "$RELEASE_ARTIFACTS_SOURCE" ]]; then
   echo "::error::Release artifacts source does not exist: $RELEASE_ARTIFACTS_SOURCE"
   exit 1
@@ -48,7 +86,7 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "base_branch": "${BASE_BRANCH}",
   "history_path": "${HISTORY_PATH}",
   "labels": "${PR_LABELS}",
-  "reviewers": "${PR_REVIEWERS}",
+  "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${OPEN_DRAFT_PR}",
   "simulated_pr_url": "https://example.invalid/${WORK_BRANCH}"
 }
@@ -147,10 +185,19 @@ for raw_label in "${label_items[@]}"; do
   fi
 done
 
-if [[ -n "${PR_REVIEWERS:-}" ]]; then
-  if ! gh pr edit "$pr_number" --add-reviewer "$PR_REVIEWERS" >/dev/null 2>&1; then
-    echo "::warning::Failed to request reviewers '$PR_REVIEWERS' for PR #$pr_number."
-  fi
+if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
+  declare -A seen_reviewers=()
+  for reviewer in "${parsed_reviewers[@]}"; do
+    reviewer_key="$(echo "$reviewer" | tr '[:upper:]' '[:lower:]')"
+    if [[ -n "${seen_reviewers[$reviewer_key]:-}" ]]; then
+      continue
+    fi
+    seen_reviewers[$reviewer_key]=1
+
+    if ! gh pr edit "$pr_number" --add-reviewer "$reviewer" >/dev/null 2>&1; then
+      echo "::warning::Failed to request reviewer '$reviewer' for PR #$pr_number."
+    fi
+  done
 fi
 
 pr_url="$(gh pr view "$pr_number" --json url --jq '.url')"
