@@ -8,6 +8,7 @@ tools:
   - web
   - todo
 agents:
+  - banana-classifier-agent
   - native-core-agent
   - native-dal-agent
   - native-wrapper-agent
@@ -19,6 +20,9 @@ agents:
   - workflow-agent
   - test-triage-agent
 handoffs:
+  - label: Implement Banana Classifier Work
+    agent: banana-classifier-agent
+    prompt: Implement the planned banana-vs-not-banana classifier milestones across training, API contract, and simple frontend behavior.
   - label: Implement Native Core Work
     agent: native-core-agent
     prompt: Implement the planned native core changes and validate them with the appropriate native build and test flow.

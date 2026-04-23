@@ -8,6 +8,7 @@ Use this playbook when coordinating Banana work across agents so specialists ope
 - ASP.NET domain: `api-pipeline-agent`, `api-interop-agent`, coordinated by `csharp-api-agent`
 - Frontend domain: `react-ui-agent`, `electron-agent`, coordinated by `react-agent`
 - Runtime and CI domain: `compose-runtime-agent`, `mobile-runtime-agent`, `workflow-agent`, coordinated by `infrastructure-agent`
+- Product-specialized classifier domain: `banana-classifier-agent` coordinating banana-vs-not-banana behavior across training, API, and simple frontend slices
 - Cross-domain quality and orchestration: `integration-agent`, `test-triage-agent`, `banana-reviewer`, `banana-planner`, `banana-sdlc`
 
 ## Team-First Operating Model

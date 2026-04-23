@@ -553,7 +553,20 @@ jobs:
           ctest --test-dir build/native -C Release --output-on-failure
 
   persist-registry-history:
-    if: ${{ github.actor != 'github-actions[bot]' && github.event_name == 'workflow_dispatch' && github.event.inputs.persist_registry_history == 'true' }}
+    if: ${{
+      github.actor != 'github-actions[bot]' &&
+      (
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.persist_registry_history == 'true') ||
+        (
+          github.event_name == 'push' &&
+          (
+            contains(join(github.event.commits.*.added, ' '), 'data/not-banana/corpus.json') ||
+            contains(join(github.event.commits.*.modified, ' '), 'data/not-banana/corpus.json') ||
+            contains(join(github.event.commits.*.removed, ' '), 'data/not-banana/corpus.json')
+          )
+        )
+      )
+    }}
     runs-on: ubuntu-latest
     needs: train
     steps:

@@ -12,6 +12,7 @@ tools:
   - agent/runSubagent
 agents:
   - banana-planner
+  - banana-classifier-agent
   - native-c-agent
   - native-core-agent
   - native-dal-agent
@@ -33,6 +34,9 @@ handoffs:
   - label: Plan The Change
     agent: banana-planner
     prompt: Analyze the request, identify impacted domains, list risks, and produce an implementation and validation plan.
+  - label: Implement Banana Classifier Slice
+    agent: banana-classifier-agent
+    prompt: Implement the scoped banana-vs-not-banana classifier slice across training, API contract, and simple frontend behavior as needed.
   - label: Implement Native Core Slice
     agent: native-core-agent
     prompt: Implement the scoped native core changes, keep the work focused, and validate the matching native behavior.

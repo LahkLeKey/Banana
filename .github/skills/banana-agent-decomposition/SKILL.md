@@ -12,9 +12,10 @@ Use this skill when a Banana request is broad, crosses subdomains, or would be s
 
 1. Start from the touched paths, contracts, and phase of work: plan, implement, validate, review, or debug.
 2. Prefer the narrowest helper agent that clearly owns the files and risks.
-3. Use a parent domain agent only when two or more helpers in the same domain must move together.
-4. Use `banana-sdlc` only for multi-phase or multi-domain orchestration.
-5. Make handoffs explicit: helper name, owned files, acceptance criteria, and validation surface.
+3. Route banana-vs-not-banana product work (training + inference contract + simple frontend flow) to `banana-classifier-agent` before broad orchestration.
+4. Use a parent domain agent only when two or more helpers in the same domain must move together.
+5. Use `banana-sdlc` only for multi-phase or multi-domain orchestration.
+6. Make handoffs explicit: helper name, owned files, acceptance criteria, and validation surface.
 
 ## Output
 

@@ -14,6 +14,25 @@ has:
 - `label`: `BANANA` or `NOT_BANANA`
 - `payload`: a polymorphic `/not-banana/junk` request body
 
+## Feedback Inbox
+
+Use `feedback/inbox.json` to queue classifier observations for ingestion into
+`corpus.json`.
+
+- Keep entries in `pending` until reviewed.
+- Mark reviewed entries as `approved` (or `rejected`) before orchestration.
+- Run apply command directly when needed:
+
+```bash
+python3 scripts/apply-not-banana-feedback.py \
+  --feedback data/not-banana/feedback/inbox.json \
+  --corpus data/not-banana/corpus.json \
+  --status-filter approved
+```
+
+Automation workflow `Orchestrate Not-Banana Feedback Loop` uses the same
+script and opens a triaged PR for human approval.
+
 ## Training
 
 Run the trainer from the repository root:

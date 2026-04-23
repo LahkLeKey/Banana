@@ -28,6 +28,7 @@
 - `native-c-agent`: coordinate when core, DAL, and wrapper all move together
 - `csharp-api-agent`: coordinate when pipeline and interop or data access move together
 - `react-agent`: coordinate React plus Electron or broader frontend work
+- `banana-classifier-agent`: coordinate banana-vs-not-banana product slices across training, native inference, API contract, and simple frontend UX
 - `infrastructure-agent`: coordinate compose/runtime and workflow changes together
 - `integration-agent`: validate across helpers and separate environment failures from product defects
 - `banana-sdlc`: orchestrate multi-domain, multi-phase work

@@ -282,6 +282,16 @@ Automation pull request orchestration for triaged code changes:
   - optional branch/label/reviewer overrides
 - The workflow creates a branch, commits generated changes, opens a PR, and labels it with `requires-human-approval` by default.
 
+Feedback-loop orchestration for classifier improvement:
+
+- Queue reviewed classifier observations in `data/not-banana/feedback/inbox.json` with `status=approved`.
+- Run workflow `Orchestrate Not-Banana Feedback Loop` to:
+  - ingest approved feedback into `data/not-banana/corpus.json`
+  - mark processed feedback entries as `applied` (configurable)
+  - open an automation PR labeled `feedback-loop`
+- After feedback PR merge, `Train Not-Banana Model` push run automatically persists registry history when `data/not-banana/corpus.json` changes.
+- Loop summary: approved feedback -> corpus PR -> human merge -> train + persisted registry-history PR.
+
 Human-approval merge gate:
 
 - Workflow `Require Human Approval (Automation PRs)` blocks automation PRs until at least one non-bot approval is present.

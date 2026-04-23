@@ -1,0 +1,105 @@
+name: Orchestrate Not-Banana Feedback Loop
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      feedback_path:
+        description: Path to feedback inbox JSON
+        required: false
+        default: "data/not-banana/feedback/inbox.json"
+      corpus_path:
+        description: Path to corpus JSON
+        required: false
+        default: "data/not-banana/corpus.json"
+      status_filter:
+        description: Comma-separated feedback statuses to ingest
+        required: false
+        default: "approved"
+      max_entries:
+        description: Maximum eligible feedback entries to process (0 means no limit)
+        required: false
+        default: "0"
+      consume_approved:
+        description: Mark processed feedback entries as applied/error
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      strict_validation:
+        description: Fail when eligible feedback entries are invalid
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      base_branch:
+        description: Base branch for generated pull request
+        required: false
+        default: "main"
+      branch_prefix:
+        description: Branch prefix for generated pull request
+        required: false
+        default: "triage-feedback"
+      commit_message:
+        description: Commit message for feedback-driven changes
+        required: false
+        default: "chore(feedback): apply not-banana feedback into corpus"
+      pr_title:
+        description: Optional pull request title override
+        required: false
+        default: ""
+      draft_pr:
+        description: Open feedback pull request as draft
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      labels:
+        description: Labels for generated feedback pull request
+        required: false
+        default: "automation,triaged-item,requires-human-approval,feedback-loop"
+      reviewers:
+        description: Optional reviewer usernames as comma-separated values or [array] syntax
+        required: false
+        default: ""
+  schedule:
+    - cron: "0 8 * * 1-5"
+
+jobs:
+  orchestrate-feedback-loop:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BANANA_FEEDBACK_PATH: ${{ github.event.inputs.feedback_path || 'data/not-banana/feedback/inbox.json' }}
+      BANANA_CORPUS_PATH: ${{ github.event.inputs.corpus_path || 'data/not-banana/corpus.json' }}
+      BANANA_FEEDBACK_STATUS_FILTER: ${{ github.event.inputs.status_filter || 'approved' }}
+      BANANA_FEEDBACK_MAX_ENTRIES: ${{ github.event.inputs.max_entries || '0' }}
+      BANANA_FEEDBACK_CONSUME_APPROVED: ${{ github.event.inputs.consume_approved || 'true' }}
+      BANANA_FEEDBACK_STRICT_VALIDATION: ${{ github.event.inputs.strict_validation || 'false' }}
+      BANANA_FEEDBACK_TRIAGE_ID: not-banana-feedback
+      BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
+      BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage-feedback' }}
+      BANANA_COMMIT_MESSAGE: ${{ github.event.inputs.commit_message || 'chore(feedback): apply not-banana feedback into corpus' }}
+      BANANA_PR_TITLE: ${{ github.event.inputs.pr_title || '' }}
+      BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
+      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,feedback-loop' }}
+      BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply approved feedback and open pull request
+        run: |
+          bash scripts/orchestrate-not-banana-feedback-loop.sh
