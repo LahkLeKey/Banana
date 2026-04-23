@@ -7,6 +7,11 @@ permissions:
   pull-requests: write
 
 on:
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: Pull request number to triage when dispatched manually
+        required: true
   pull_request_target:
     types:
       - opened
@@ -20,10 +25,6 @@ on:
       - submitted
       - edited
       - dismissed
-  pull_request_review_thread:
-    types:
-      - resolved
-      - unresolved
 
 jobs:
   copilot-review-triage:
@@ -33,8 +34,9 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const pullNumber = context.payload.pull_request?.number;
-            if (!pullNumber) {
+            const dispatchPullNumber = Number(context.payload.inputs?.pull_number || 0);
+            const pullNumber = context.payload.pull_request?.number || dispatchPullNumber;
+            if (!pullNumber || Number.isNaN(pullNumber)) {
               core.notice("No pull request context found for this event.");
               return;
             }
@@ -224,12 +226,12 @@ jobs:
                   inputs: {
                     issue_number: String(issueNumber),
                     issue_labels: `${triageIdeaLabel},${copilotSuggestionLabel},automation,${vibeBypassLabel}`,
-                    pr_labels: `automation,triaged-item,requires-human-approval,${autoApproveOptInLabel},${vibeBypassLabel}`,
+                    pr_labels: `automation,triaged-item,${autoApproveOptInLabel},${autonomousCycleLabel},${vibeBypassLabel}`,
                     base_branch: pr.base.ref,
                     branch_prefix: "triage-copilot",
-                    draft_pr: "true",
+                    draft_pr: "false",
                     skip_if_no_changes: "true",
-                    sync_wiki: "false",
+                    sync_wiki: "true",
                   },
                 });
 

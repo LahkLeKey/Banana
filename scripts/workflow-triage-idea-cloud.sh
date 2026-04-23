@@ -10,11 +10,17 @@ RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-1}"
 TRIAGE_IDEA="${BANANA_TRIAGE_IDEA:-}"
 TRIAGE_ISSUE_NUMBER="${BANANA_TRIAGE_ISSUE_NUMBER:-}"
 TRIAGE_ISSUE_LABELS="${BANANA_TRIAGE_ISSUE_LABELS:-triage-idea,copilot-suggestion,automation,copilot-bypass-vibe-coded}"
-TRIAGE_PR_LABELS="${BANANA_TRIAGE_PR_LABELS:-automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded}"
+TRIAGE_PR_LABELS="${BANANA_TRIAGE_PR_LABELS:-automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded}"
 TRIAGE_INTAKE_DIR="${BANANA_TRIAGE_INTAKE_DIR:-docs/triage/intake}"
 BASE_BRANCH="${BANANA_BASE_BRANCH:-main}"
 BRANCH_PREFIX="${BANANA_BRANCH_PREFIX:-triage}"
-DRAFT_PR="${BANANA_DRAFT_PR:-true}"
+DRAFT_PR="${BANANA_DRAFT_PR:-false}"
+TRIAGE_CLEAR_BACKLOG="${BANANA_TRIAGE_CLEAR_BACKLOG:-true}"
+TRIAGE_BACKLOG_ISSUE_LABELS="${BANANA_TRIAGE_BACKLOG_ISSUE_LABELS:-triage-idea,copilot-suggestion}"
+TRIAGE_BACKLOG_PR_LABELS="${BANANA_TRIAGE_BACKLOG_PR_LABELS:-automation,triaged-item}"
+TRIAGE_BACKLOG_PR_BRANCH_PREFIXES="${BANANA_TRIAGE_BACKLOG_PR_BRANCH_PREFIXES:-triage/,triage-copilot/,triage-feedback/}"
+TRIAGE_DISPATCH_REQUIRED_CHECKS="${BANANA_TRIAGE_DISPATCH_REQUIRED_CHECKS:-true}"
+TRIAGE_CHECK_WORKFLOWS="${BANANA_TRIAGE_CHECK_WORKFLOWS:-copilot-review-triage.yml,require-human-approval.yml}"
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-true}"
 PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-artifacts/triage-idea/triage-pr-output-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
@@ -65,6 +71,173 @@ normalize_whitespace() {
   printf '%s' "$raw" | tr '\r\n' '  ' | sed -E 's/[[:space:]]+/ /g' | xargs
 }
 
+get_repo_slug() {
+  if [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
+    printf '%s' "$GITHUB_REPOSITORY"
+    return 0
+  fi
+
+  gh repo view --json nameWithOwner -q .nameWithOwner
+}
+
+dispatch_gate_workflow() {
+  local repo_slug="$1"
+  local workflow_file="$2"
+  local pr_number="$3"
+  local pr_branch="$4"
+
+  if [[ -z "$workflow_file" ]]; then
+    return 0
+  fi
+
+  if gh api -X POST "repos/${repo_slug}/actions/workflows/${workflow_file}/dispatches" \
+    -f ref="$pr_branch" \
+    -f inputs[pull_number]="$pr_number" >/dev/null 2>&1; then
+    echo "Dispatched gate workflow '${workflow_file}' for PR #${pr_number} (${pr_branch})."
+    return 0
+  fi
+
+  echo "::warning::Unable to dispatch gate workflow '${workflow_file}' for PR #${pr_number}."
+  return 1
+}
+
+close_backlog_pull_requests() {
+  declare -A seen_pr_numbers=()
+  local -a parsed_pr_labels=()
+  local -a parsed_pr_prefixes=()
+  local -a backlog_pr_numbers=()
+  local -a label_filtered_numbers=()
+  local -a prefix_filtered_rows=()
+
+  parse_list_input "$TRIAGE_BACKLOG_PR_LABELS" parsed_pr_labels
+  parse_list_input "$TRIAGE_BACKLOG_PR_BRANCH_PREFIXES" parsed_pr_prefixes
+
+  if [[ ${#parsed_pr_labels[@]} -gt 0 ]]; then
+    local -a pr_label_query=(gh pr list --state open --limit 200 --json number)
+    for label in "${parsed_pr_labels[@]}"; do
+      pr_label_query+=(--label "$label")
+    done
+
+    while IFS= read -r pr_number; do
+      if [[ -n "$pr_number" ]]; then
+        label_filtered_numbers+=("$pr_number")
+      fi
+    done < <("${pr_label_query[@]}" --jq '.[].number')
+  fi
+
+  while IFS= read -r pr_number; do
+    if [[ -n "$pr_number" ]]; then
+      seen_pr_numbers["$pr_number"]=1
+    fi
+  done < <(printf '%s\n' "${label_filtered_numbers[@]:-}")
+
+  if [[ ${#parsed_pr_prefixes[@]} -gt 0 ]]; then
+    while IFS= read -r row; do
+      if [[ -n "$row" ]]; then
+        prefix_filtered_rows+=("$row")
+      fi
+    done < <(gh pr list --state open --limit 200 --json number,headRefName --jq '.[] | "\(.number)\t\(.headRefName)"')
+
+    for row in "${prefix_filtered_rows[@]}"; do
+      pr_number="${row%%$'\t'*}"
+      head_ref="${row#*$'\t'}"
+
+      for prefix in "${parsed_pr_prefixes[@]}"; do
+        if [[ "$head_ref" == "$prefix"* ]]; then
+          seen_pr_numbers["$pr_number"]=1
+          break
+        fi
+      done
+    done
+  fi
+
+  for pr_number in "${!seen_pr_numbers[@]}"; do
+    backlog_pr_numbers+=("$pr_number")
+  done
+
+  if [[ ${#backlog_pr_numbers[@]} -gt 1 ]]; then
+    IFS=$'\n' backlog_pr_numbers=($(printf '%s\n' "${backlog_pr_numbers[@]}" | sort -n))
+    unset IFS
+  fi
+
+  if [[ ${#backlog_pr_numbers[@]} -eq 0 ]]; then
+    echo "No backlog triage pull requests found for cleanup."
+    return 0
+  fi
+
+  echo "Closing ${#backlog_pr_numbers[@]} backlog triage pull request(s)..."
+  for pr_number in "${backlog_pr_numbers[@]}"; do
+    if gh pr close "$pr_number" --comment "Closed automatically by triage backlog cleanup before run ${RUN_ID} attempt ${RUN_ATTEMPT}." >/dev/null 2>&1; then
+      echo "Closed backlog PR #${pr_number}."
+    else
+      echo "::warning::Unable to close backlog PR #${pr_number}."
+    fi
+  done
+}
+
+close_backlog_issues() {
+  local keep_issue_number="${1:-}"
+  declare -A seen_issue_numbers=()
+  local -a parsed_issue_backlog_labels=()
+  local -a backlog_issue_numbers=()
+  local -a label_issue_numbers=()
+
+  parse_list_input "$TRIAGE_BACKLOG_ISSUE_LABELS" parsed_issue_backlog_labels
+
+  for label in "${parsed_issue_backlog_labels[@]}"; do
+    while IFS= read -r issue_number; do
+      if [[ -n "$issue_number" ]]; then
+        label_issue_numbers+=("$issue_number")
+      fi
+    done < <(gh issue list --state open --limit 200 --label "$label" --json number --jq '.[].number')
+  done
+
+  for issue_number in "${label_issue_numbers[@]}"; do
+    if [[ -n "$issue_number" ]]; then
+      seen_issue_numbers["$issue_number"]=1
+    fi
+  done
+
+  for issue_number in "${!seen_issue_numbers[@]}"; do
+    if [[ -n "$keep_issue_number" && "$issue_number" == "$keep_issue_number" ]]; then
+      continue
+    fi
+    backlog_issue_numbers+=("$issue_number")
+  done
+
+  if [[ ${#backlog_issue_numbers[@]} -gt 1 ]]; then
+    IFS=$'\n' backlog_issue_numbers=($(printf '%s\n' "${backlog_issue_numbers[@]}" | sort -n))
+    unset IFS
+  fi
+
+  if [[ ${#backlog_issue_numbers[@]} -eq 0 ]]; then
+    echo "No backlog triage issues found for cleanup."
+    return 0
+  fi
+
+  echo "Closing ${#backlog_issue_numbers[@]} backlog triage issue(s)..."
+  for issue_number in "${backlog_issue_numbers[@]}"; do
+    if gh issue close "$issue_number" --comment "Closed automatically by triage backlog cleanup before run ${RUN_ID} attempt ${RUN_ATTEMPT}." >/dev/null 2>&1; then
+      echo "Closed backlog issue #${issue_number}."
+    else
+      echo "::warning::Unable to close backlog issue #${issue_number}."
+    fi
+  done
+}
+
+clear_triage_backlog_if_enabled() {
+  local keep_issue_number="${1:-}"
+
+  if [[ "$TRIAGE_CLEAR_BACKLOG" != "true" ]]; then
+    echo "Backlog cleanup disabled for this run."
+    return 0
+  fi
+
+  echo "Clearing triage backlog before creating new issue/PR artifacts..."
+  close_backlog_pull_requests
+  close_backlog_issues "$keep_issue_number"
+}
+
 ensure_label() {
   local label_name="$1"
   local color="$2"
@@ -104,6 +277,8 @@ ensure_issue_label_contract
 
 declare -a parsed_issue_labels=()
 parse_list_input "$TRIAGE_ISSUE_LABELS" parsed_issue_labels
+
+clear_triage_backlog_if_enabled "$TRIAGE_ISSUE_NUMBER"
 
 if [[ -z "$TRIAGE_ISSUE_NUMBER" ]]; then
   normalized_idea="$(normalize_whitespace "$TRIAGE_IDEA")"
@@ -242,6 +417,46 @@ payload = json.loads(path.read_text(encoding="utf-8"))
 print(payload.get("pr_url", ""))
 PY
 )"
+
+pr_number="$(python - "$PR_OUTPUT_PATH" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+if not path.exists():
+    print("")
+    raise SystemExit(0)
+
+payload = json.loads(path.read_text(encoding="utf-8"))
+print(payload.get("pr_number", ""))
+PY
+)"
+
+pr_branch="$(python - "$PR_OUTPUT_PATH" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+if not path.exists():
+    print("")
+    raise SystemExit(0)
+
+payload = json.loads(path.read_text(encoding="utf-8"))
+print(payload.get("branch", ""))
+PY
+)"
+
+if [[ "$TRIAGE_DISPATCH_REQUIRED_CHECKS" == "true" && "$pr_status" == "created" && -n "$pr_number" && -n "$pr_branch" ]]; then
+  repo_slug="$(get_repo_slug)"
+
+  declare -a parsed_check_workflows=()
+  parse_list_input "$TRIAGE_CHECK_WORKFLOWS" parsed_check_workflows
+  for workflow_file in "${parsed_check_workflows[@]}"; do
+    dispatch_gate_workflow "$repo_slug" "$workflow_file" "$pr_number" "$pr_branch" || true
+  done
+fi
 
 if [[ -n "$pr_url" ]]; then
   gh issue comment "$TRIAGE_ISSUE_NUMBER" --body "Automation PR opened for this triage idea: ${pr_url}" >/dev/null 2>&1 || true
