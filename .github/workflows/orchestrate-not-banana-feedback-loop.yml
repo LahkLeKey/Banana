@@ -39,6 +39,18 @@ on:
         options:
           - "true"
           - "false"
+      require_human_review:
+        description: Require approved feedback entries to include reviewed_by and reviewed_at_utc metadata
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      min_human_reviewers:
+        description: Minimum non-bot reviewers required for approved feedback entries
+        required: false
+        default: "1"
       base_branch:
         description: Base branch for generated pull request
         required: false
@@ -76,7 +88,7 @@ on:
 
 jobs:
   orchestrate-feedback-loop:
-    if: ${{ github.actor != 'github-actions[bot]' }}
+    if: ${{ github.event_name == 'schedule' || github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,6 +98,8 @@ jobs:
       BANANA_FEEDBACK_MAX_ENTRIES: ${{ github.event.inputs.max_entries || '0' }}
       BANANA_FEEDBACK_CONSUME_APPROVED: ${{ github.event.inputs.consume_approved || 'true' }}
       BANANA_FEEDBACK_STRICT_VALIDATION: ${{ github.event.inputs.strict_validation || 'false' }}
+      BANANA_FEEDBACK_REQUIRE_HUMAN_REVIEW: ${{ github.event.inputs.require_human_review || 'true' }}
+      BANANA_FEEDBACK_MIN_HUMAN_REVIEWERS: ${{ github.event.inputs.min_human_reviewers || '1' }}
       BANANA_FEEDBACK_TRIAGE_ID: not-banana-feedback
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage-feedback' }}

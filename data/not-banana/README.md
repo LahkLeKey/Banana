@@ -21,13 +21,18 @@ Use `feedback/inbox.json` to queue classifier observations for ingestion into
 
 - Keep entries in `pending` until reviewed.
 - Mark reviewed entries as `approved` (or `rejected`) before orchestration.
+- Approved entries must include human oversight metadata:
+  - `reviewed_by` (string or array of GitHub usernames)
+  - `reviewed_at_utc` (RFC3339 timestamp)
 - Run apply command directly when needed:
 
 ```bash
 python3 scripts/apply-not-banana-feedback.py \
   --feedback data/not-banana/feedback/inbox.json \
   --corpus data/not-banana/corpus.json \
-  --status-filter approved
+  --status-filter approved \
+  --require-human-review \
+  --minimum-human-reviewers 1
 ```
 
 Automation workflow `Orchestrate Not-Banana Feedback Loop` uses the same

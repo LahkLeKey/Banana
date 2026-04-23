@@ -13,6 +13,8 @@ STATUS_FILTER="${BANANA_FEEDBACK_STATUS_FILTER:-approved}"
 MAX_ENTRIES="${BANANA_FEEDBACK_MAX_ENTRIES:-0}"
 CONSUME_APPROVED="${BANANA_FEEDBACK_CONSUME_APPROVED:-true}"
 STRICT_VALIDATION="${BANANA_FEEDBACK_STRICT_VALIDATION:-false}"
+REQUIRE_HUMAN_REVIEW="${BANANA_FEEDBACK_REQUIRE_HUMAN_REVIEW:-true}"
+MIN_HUMAN_REVIEWERS="${BANANA_FEEDBACK_MIN_HUMAN_REVIEWERS:-1}"
 
 TRIAGE_ID="${BANANA_FEEDBACK_TRIAGE_ID:-not-banana-feedback}"
 BASE_BRANCH="${BANANA_BASE_BRANCH:-main}"
@@ -50,9 +52,17 @@ if [[ "$STRICT_VALIDATION" == "true" ]]; then
   preview_args+=(--strict)
 fi
 
+if [[ "$REQUIRE_HUMAN_REVIEW" == "true" ]]; then
+  preview_args+=(--require-human-review)
+else
+  preview_args+=(--no-require-human-review)
+fi
+
+preview_args+=(--minimum-human-reviewers "$MIN_HUMAN_REVIEWERS")
+
 "${preview_args[@]}"
 
-read -r eligible processed added duplicate invalid < <(
+read -r eligible processed added duplicate invalid oversight_invalid < <(
   python - "$PREVIEW_REPORT" <<'PY'
 import json
 import sys
@@ -65,6 +75,7 @@ print(
     report.get("added_count", 0),
     report.get("duplicate_count", 0),
     report.get("invalid_count", 0),
+    report.get("oversight_invalid_count", 0),
 )
 PY
 )
@@ -91,6 +102,9 @@ This pull request was orchestrated from the not-banana feedback inbox.
 - Added samples: ${added}
 - Duplicate samples: ${duplicate}
 - Invalid entries: ${invalid}
+- Oversight-invalid entries: ${oversight_invalid}
+- Human review required: ${REQUIRE_HUMAN_REVIEW}
+- Minimum human reviewers: ${MIN_HUMAN_REVIEWERS}
 - Apply report path: ${APPLY_REPORT}
 EOF
 )
@@ -114,6 +128,14 @@ fi
 if [[ "$STRICT_VALIDATION" == "true" ]]; then
   apply_args+=(--strict)
 fi
+
+if [[ "$REQUIRE_HUMAN_REVIEW" == "true" ]]; then
+  apply_args+=(--require-human-review)
+else
+  apply_args+=(--no-require-human-review)
+fi
+
+apply_args+=(--minimum-human-reviewers "$MIN_HUMAN_REVIEWERS")
 
 printf -v APPLY_COMMAND '%q ' "${apply_args[@]}"
 APPLY_COMMAND="${APPLY_COMMAND% }"

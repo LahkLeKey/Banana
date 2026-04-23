@@ -43,10 +43,21 @@ jobs:
             const labels = (pr.labels || []).map((label) => label.name);
             const headBranch = pr.head?.ref || "";
             const soloBypassLabel = "solo-maintainer-bypass";
+            const automationBranchPrefixes = [
+              "triage/",
+              "triage-feedback/",
+              "model-release-history/",
+              "sdlc/",
+            ];
+            const prAuthorType = pr.user?.type || "";
+            const automationAuthor =
+              prAuthorType === "Bot" ||
+              (pr.user?.login || "").toLowerCase().endsWith("[bot]");
             const requiresHumanApproval =
               labels.includes("requires-human-approval") ||
-              headBranch.startsWith("triage/") ||
-              headBranch.startsWith("model-release-history/");
+              labels.includes("automation") ||
+              automationBranchPrefixes.some((prefix) => headBranch.startsWith(prefix)) ||
+              automationAuthor;
 
             if (!requiresHumanApproval) {
               core.notice("Pull request is not marked as automation-managed. Skipping gate.");

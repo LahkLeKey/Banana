@@ -60,7 +60,7 @@
 - Restore latest source-controlled snapshot command: `python scripts/manage-not-banana-model-image.py restore-history --history-path data/not-banana/model-release-history --snapshot latest --output-root artifacts`
 - Restore selected releases command: `python scripts/manage-not-banana-model-image.py restore-history --history-path data/not-banana/model-release-history --snapshot <timestamp> --release-id stable-candidate --release-id canary-wide --output-root artifacts`
 - Restore wrapper script: `bash scripts/restore-not-banana-model-history.sh` (supports `BANANA_REGISTRY_RESTORE_*` env vars)
-- Feedback apply command: `python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved`
+- Feedback apply command: `python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved --require-human-review --minimum-human-reviewers 1`
 - Feedback PR orchestration script: `bash scripts/orchestrate-not-banana-feedback-loop.sh`
 - Feedback PR orchestration workflow: `.github/workflows/orchestrate-not-banana-feedback-loop.yml`
 - Wiki sync script: `bash scripts/workflow-sync-wiki.sh` (supports `BANANA_WIKI_*` env vars)

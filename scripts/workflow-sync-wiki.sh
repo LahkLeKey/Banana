@@ -39,6 +39,14 @@ else
     "data/not-banana/README.md|Auto-Not-Banana-Data.md"
     "data/not-banana/feedback/README.md|Auto-Not-Banana-Feedback-Inbox.md"
   )
+
+  if [[ -d ".github/prompts" ]]; then
+    while IFS= read -r prompt_path; do
+      prompt_file="$(basename "$prompt_path")"
+      prompt_name="${prompt_file%.prompt.md}"
+      mapping_entries+=("${prompt_path}|Auto-Prompts/${prompt_name}.md")
+    done < <(find .github/prompts -maxdepth 1 -type f -name "*.prompt.md" | sort)
+  fi
 fi
 
 if [[ ${#mapping_entries[@]} -eq 0 ]]; then
