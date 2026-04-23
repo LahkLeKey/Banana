@@ -11,6 +11,9 @@
 - For React work, preserve Bun as the package manager and `VITE_BANANA_API_BASE_URL` as the API base URL contract.
 - When behavior changes, update the nearest docs or prompt/skill references rather than scattering duplicate guidance.
 - Do not rewrite or reformat unrelated code when adding agent customizations.
+- Treat feedback-loop updates as SDLC inputs that should flow through incremental feature branches and automated pull requests.
+- For automation-driven changes, prefer GH CLI orchestration entry points (`scripts/workflow-orchestrate-triaged-item-pr.sh` and `scripts/workflow-orchestrate-sdlc.sh`) over one-off branch/PR commands.
+- Keep wiki updates in the same orchestration path (via `scripts/workflow-sync-wiki.sh`) when delivery behavior, workflows, or runbooks change.
 
 ## Runtime Contract Lessons (2026-04)
 
