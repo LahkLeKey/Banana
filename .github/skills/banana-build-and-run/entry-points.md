@@ -66,7 +66,7 @@
 - Wiki sync script: `bash scripts/workflow-sync-wiki.sh` (supports `BANANA_WIKI_*` env vars)
 - Example explicit Banana wiki remote (override for forks): `BANANA_WIKI_REMOTE_URL=https://github.com/LahkLeKey/Banana.wiki.git`
 - Canonical wiki enforcement toggle: `BANANA_ENFORCE_CANONICAL_WIKI_REMOTE=true`
-- AI contract validation script: `python scripts/validate-ai-contracts.py` (verifies prompt/agent/instruction/skill frontmatter and wiki-sync coverage)
+- AI contract validation script: `python scripts/validate-ai-contracts.py` (verifies prompt/agent/instruction/skill frontmatter, wiki-sync coverage, and blocks legacy terminology regressions)
 - Incremental SDLC orchestration script: `bash scripts/workflow-orchestrate-sdlc.sh`
 - Local SDLC dry-run script: `bash scripts/workflow-local-orchestrate-sdlc.sh`
 - Full SDLC orchestration workflow: `.github/workflows/orchestrate-banana-sdlc.yml`
@@ -76,6 +76,12 @@
 - CI repository persistence PR controls: `registry_history_pr_base_branch`, `registry_history_open_draft_pr`, `registry_history_pr_labels`, and `registry_history_pr_reviewers`.
 - Push-based corpus persistence: when `data/not-banana/corpus.json` changes, `Train Not-Banana Model` now persists registry history automatically in the same run.
 - Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
+- Automation contributor attribution for triaged and registry-history PR scripts:
+	- Contributor identity: `BANANA_AGENT_CONTRIBUTOR`, `BANANA_AGENT_CONTRIBUTOR_LOGIN`, `BANANA_AGENT_CONTRIBUTOR_NAME`, `BANANA_AGENT_CONTRIBUTOR_EMAIL`
+	- Auth path: workflow `GH_TOKEN` only (no manual PAT map/override secrets in orchestration scripts)
+	- Required reviewer default: `BANANA_REQUIRED_HUMAN_REVIEWER=LahkLeKey` on automation workflows
+	- If contributor identity is unset, triaged orchestration derives it from the first `agent:*` PR label and otherwise falls back to `workflow-agent`; contributor assignment is applied via `gh pr edit --add-assignee`
+- Multi-agent smoke test command: `bash scripts/smoke-test-spec-driven-agents.sh` (exercises spec-driven attribution across a representative agent set in dry-run mode).
 - Cloud triage idea orchestration workflow: `.github/workflows/orchestrate-triage-idea-cloud.yml` via issue labels `triage-idea`/`copilot-suggestion`/`human-triage` or workflow dispatch with `idea`/`issue_number`.
 - Human agent-target issue templates: `.github/ISSUE_TEMPLATE/human-*.yml` (one template per static helper in `.github/agents/*.agent.md`, each embedding routing markers for source and target agent).
 - Cloud triage idea orchestration script: `bash scripts/workflow-triage-idea-cloud.sh`.
@@ -84,9 +90,11 @@
 - Cloud triage epic-decomposition defaults: `BANANA_TRIAGE_ENABLE_EPIC_DECOMPOSITION=true` and `BANANA_TRIAGE_EPIC_AUTO_DISPATCH_FIRST_TASK=true` to split epic ideas into story/task issues and bootstrap the first task CI run.
 - Custom triage prompt: `.github/prompts/triage.prompt.md` (use `/triage "idea"` to intake and orchestrate).
 - Backlog iteration prompt: `.github/prompts/iterate-the-backlog.prompt.md` (use `/iterate-the-backlog "scope"` to cycle existing backlog items through incremental orchestration and required-check gating).
+- Open PR focus prompt: `.github/prompts/focus-on-open-pull-requests.prompt.md` (use `/focus-on-open-pull-requests "scope"` to prioritize open PR merge readiness and dispatch required checks).
 - Human-approval gate workflow: `.github/workflows/require-human-approval.yml` (mark check required in branch protection/rulesets).
 - Copilot triage-and-approval workflow: `.github/workflows/copilot-review-triage.yml` (tracks unresolved Copilot findings and auto-approves automation PRs, or non-automation PRs with `copilot-auto-approve`).
-- Autonomous continuation labels: `copilot-autonomous-cycle` and `copilot-bypass-vibe-coded` (paired with `copilot-triage-ready` for bot-driven continuation and provenance tagging of vibe-coded integrations).
+- AI contract guard workflow: `.github/workflows/ai-contract-guard.yml` (runs `scripts/validate-ai-contracts.py` on pull requests, pushes, and manual dispatch).
+- Autonomous continuation labels: `copilot-autonomous-cycle` and `speckit-driven` (paired with `copilot-triage-ready` for bot-driven continuation and provenance tagging of spec-kit-driven integrations).
 - Preserve CI/container prerequisites needed to execute training and drift checks reliably.
 - Treat training drift failures as actionable model/data contract signals, not infrastructure noise.
 - Document any runtime or automation changes that affect training invocation, artifacts, or reproducibility.

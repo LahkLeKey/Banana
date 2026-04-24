@@ -22,7 +22,7 @@ Requirements:
 - Start CI from the first generated task by dispatching triage orchestration for that task with backlog cleanup disabled.
 - Preserve epic/story/task labels on generated PRs so backlog iteration can progress task-by-task until epic completion.
 - Trigger cloud orchestration through workflow `.github/workflows/orchestrate-triage-idea-cloud.yml`.
-- Preserve provenance labels on generated pull requests (`copilot-auto-approve` and `copilot-bypass-vibe-coded` unless overridden).
+- Preserve provenance labels on generated pull requests (`copilot-auto-approve` and `speckit-driven` unless overridden).
 - Return concrete outputs: issue URL, workflow run URL, generated PR URL (if created), and any skipped-no-change reason.
 
 Relevant assets:
