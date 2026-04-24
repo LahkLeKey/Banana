@@ -116,8 +116,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      BANANA_AUTOMATION_PAT: ${{ secrets.BANANA_AUTOMATION_PAT }}
-      BANANA_AGENT_PAT_MAP_JSON: ${{ secrets.BANANA_AGENT_PAT_MAP_JSON }}
       BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
       BANANA_TRIAGE_ID: ${{ github.event.inputs.triage_id }}
       BANANA_TRIAGE_CHANGE_COMMAND: ${{ github.event.inputs.change_command }}

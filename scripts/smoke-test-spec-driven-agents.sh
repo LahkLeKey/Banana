@@ -18,20 +18,6 @@ AGENTS=(
 OUTPUT_DIR="artifacts/agent-smoke"
 mkdir -p "$OUTPUT_DIR"
 
-AGENT_PAT_MAP_JSON="$({
-  printf '{'
-  first="true"
-  for agent in "${AGENTS[@]}"; do
-    if [[ "$first" == "true" ]]; then
-      first="false"
-    else
-      printf ','
-    fi
-    printf '"%s":"token-%s"' "$agent" "$agent"
-  done
-  printf '}'
-})"
-
 for agent in "${AGENTS[@]}"; do
   report_path="${OUTPUT_DIR}/${agent}.json"
 
@@ -46,7 +32,6 @@ for agent in "${AGENTS[@]}"; do
   BANANA_LOCAL_DRY_RUN="true" \
   BANANA_PR_OUTPUT_PATH="$report_path" \
   BANANA_AGENT_CONTRIBUTOR="$agent" \
-  BANANA_AGENT_PAT_MAP_JSON="$AGENT_PAT_MAP_JSON" \
   BANANA_REQUIRED_HUMAN_REVIEWER="LahkLeKey" \
   bash scripts/workflow-orchestrate-triaged-item-pr.sh
 
@@ -80,7 +65,7 @@ for report in reports:
     if contributor_label != f"contributor:{contributor_slug}":
         raise SystemExit(f"Unexpected contributor label in {report.name}: {contributor_label}")
 
-    if token_source not in {"agent-pat", "dry-run-no-agent-token"}:
+    if token_source != "github-token":
         raise SystemExit(f"Unexpected token source in {report.name}: {token_source}")
 
     if reviewer != required_reviewer:

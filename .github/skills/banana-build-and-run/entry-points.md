@@ -76,10 +76,9 @@
 - CI repository persistence PR controls: `registry_history_pr_base_branch`, `registry_history_open_draft_pr`, `registry_history_pr_labels`, and `registry_history_pr_reviewers`.
 - Push-based corpus persistence: when `data/not-banana/corpus.json` changes, `Train Not-Banana Model` now persists registry history automatically in the same run.
 - Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
-- Automation contributor attribution + authorship overrides for triaged and registry-history PR scripts:
+- Automation contributor attribution for triaged and registry-history PR scripts:
 	- Contributor identity: `BANANA_AGENT_CONTRIBUTOR`, `BANANA_AGENT_CONTRIBUTOR_LOGIN`, `BANANA_AGENT_CONTRIBUTOR_NAME`, `BANANA_AGENT_CONTRIBUTOR_EMAIL`
-	- PR author token precedence: `BANANA_PR_AUTHOR_PAT`, then `BANANA_AGENT_AUTHOR_PAT`, then `BANANA_AGENT_PAT_<AGENT_SLUG_UPPER>`, then `BANANA_AGENT_PAT_MAP_JSON[<agent-slug>]`; author token is required for non-dry-run automation
-	- Human review token: `BANANA_AUTOMATION_PAT` (used for contributor assignment and reviewer requests)
+	- Auth path: workflow `GH_TOKEN` only (no manual PAT map/override secrets in orchestration scripts)
 	- Required reviewer default: `BANANA_REQUIRED_HUMAN_REVIEWER=LahkLeKey` on automation workflows
 	- If contributor identity is unset, triaged orchestration derives it from the first `agent:*` PR label and otherwise falls back to `workflow-agent`; contributor assignment is applied via `gh pr edit --add-assignee`
 - Multi-agent smoke test command: `bash scripts/smoke-test-spec-driven-agents.sh` (exercises spec-driven attribution across a representative agent set in dry-run mode).
