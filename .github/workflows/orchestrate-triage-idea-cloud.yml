@@ -152,6 +152,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BANANA_AUTOMATION_PAT: ${{ secrets.BANANA_AUTOMATION_PAT }}
       BANANA_TRIAGE_IDEA: ${{ github.event.inputs.idea || '' }}
       BANANA_TRIAGE_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || github.event.inputs.issue_number || '' }}
       BANANA_TRIAGE_ISSUE_LABELS: ${{ github.event_name == 'issues' && join(github.event.issue.labels.*.name, ',') || github.event.inputs.issue_labels || 'triage-idea,copilot-suggestion,ai-generated,automation,speckit-driven' }}

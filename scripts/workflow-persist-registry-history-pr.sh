@@ -14,13 +14,20 @@ OPEN_DRAFT_PR="${BANANA_REGISTRY_OPEN_DRAFT_PR:-true}"
 PR_LABELS="${BANANA_REGISTRY_PR_LABELS:-automation,model-training,requires-human-approval}"
 PR_REVIEWERS="${BANANA_REGISTRY_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
+AUTOMATION_PAT="${BANANA_AUTOMATION_PAT:-}"
+AGENT_AUTHOR_PAT_OVERRIDE="${BANANA_AGENT_AUTHOR_PAT:-}"
+PR_AUTHOR_PAT_OVERRIDE="${BANANA_PR_AUTHOR_PAT:-}"
 AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-banana-classifier-agent}"
+AGENT_AUTHOR_LOGIN_OVERRIDE="${BANANA_AGENT_AUTHOR_LOGIN:-}"
+AGENT_CONTRIBUTOR_LOGIN_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_LOGIN:-}"
 AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
 AGENT_CONTRIBUTOR_EMAIL_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_EMAIL:-}"
 AGENT_CONTRIBUTOR_SLUG=""
+AGENT_CONTRIBUTOR_LOGIN=""
 AGENT_CONTRIBUTOR_NAME=""
 AGENT_CONTRIBUTOR_EMAIL=""
 AGENT_CONTRIBUTOR_LABEL=""
+PR_AUTHOR_TOKEN_SOURCE="default-gh-token"
 
 parse_list_input() {
   local raw="${1:-}"
@@ -69,6 +76,18 @@ slugify_agent_contributor() {
   printf '%s' "$slug"
 }
 
+to_env_var_suffix() {
+  local raw="${1:-}"
+  local suffix
+
+  suffix="$(printf '%s' "$raw" | tr '[:lower:]' '[:upper:]' | sed -E 's/[^A-Z0-9]+/_/g; s/^_+//; s/_+$//')"
+  if [[ -z "$suffix" ]]; then
+    suffix="WORKFLOW_AGENT"
+  fi
+
+  printf '%s' "$suffix"
+}
+
 append_csv_item_if_missing() {
   local csv="${1:-}"
   local item="${2:-}"
@@ -99,12 +118,33 @@ append_csv_item_if_missing() {
 
 resolve_agent_contributor() {
   AGENT_CONTRIBUTOR_SLUG="$(slugify_agent_contributor "$AGENT_CONTRIBUTOR_OVERRIDE")"
+  AGENT_CONTRIBUTOR_LOGIN="${AGENT_CONTRIBUTOR_LOGIN_OVERRIDE:-${AGENT_AUTHOR_LOGIN_OVERRIDE:-$AGENT_CONTRIBUTOR_SLUG}}"
   AGENT_CONTRIBUTOR_LABEL="contributor:${AGENT_CONTRIBUTOR_SLUG}"
 
-  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-banana-${AGENT_CONTRIBUTOR_SLUG}[bot]}"
-  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-banana+${AGENT_CONTRIBUTOR_SLUG}@users.noreply.github.com}"
+  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-$AGENT_CONTRIBUTOR_LOGIN}"
+  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com}"
 
   PR_LABELS="$(append_csv_item_if_missing "$PR_LABELS" "$AGENT_CONTRIBUTOR_LABEL")"
+}
+
+resolve_pr_author_token() {
+  local suffix
+  local agent_pat_env
+  local agent_pat_value
+  local resolved_token
+
+  suffix="$(to_env_var_suffix "$AGENT_CONTRIBUTOR_SLUG")"
+  agent_pat_env="BANANA_AGENT_PAT_${suffix}"
+  agent_pat_value="${!agent_pat_env:-}"
+
+  resolved_token="${PR_AUTHOR_PAT_OVERRIDE:-${AGENT_AUTHOR_PAT_OVERRIDE:-${agent_pat_value:-${AUTOMATION_PAT:-}}}}"
+
+  if [[ -n "$resolved_token" ]]; then
+    export GH_TOKEN="$resolved_token"
+    PR_AUTHOR_TOKEN_SOURCE="pat"
+  else
+    PR_AUTHOR_TOKEN_SOURCE="default-gh-token"
+  fi
 }
 
 declare -a parsed_reviewers=()
@@ -112,6 +152,7 @@ parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
 PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
 
 resolve_agent_contributor
+resolve_pr_author_token
 echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
 
 if [[ ! -d "$RELEASE_ARTIFACTS_SOURCE" ]]; then
@@ -147,8 +188,10 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "base_branch": "${BASE_BRANCH}",
   "history_path": "${HISTORY_PATH}",
   "labels": "${PR_LABELS}",
+  "author_token_source": "${PR_AUTHOR_TOKEN_SOURCE}",
   "automation_contributor_name": "${AGENT_CONTRIBUTOR_NAME}",
   "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
+  "automation_contributor_login": "${AGENT_CONTRIBUTOR_LOGIN}",
   "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${OPEN_DRAFT_PR}",
@@ -216,6 +259,7 @@ This pull request was orchestrated by the not-banana training workflow and requi
 - Snapshot path: ${HISTORY_PATH}/${STAMP}
 - Source branch: ${WORK_BRANCH}
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
+- Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}
 EOF
 )
 
@@ -249,6 +293,12 @@ for raw_label in "${label_items[@]}"; do
     echo "::warning::Failed to apply label '$label' to PR #$pr_number."
   fi
 done
+
+if [[ -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
+  if ! gh pr edit "$pr_number" --add-assignee "$AGENT_CONTRIBUTOR_LOGIN" >/dev/null 2>&1; then
+    echo "::warning::Failed to assign contributor '$AGENT_CONTRIBUTOR_LOGIN' to PR #$pr_number."
+  fi
+fi
 
 if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
   declare -A seen_reviewers=()
