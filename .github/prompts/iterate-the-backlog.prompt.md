@@ -18,7 +18,7 @@ Requirements:
 - Keep test gating enabled for every generated or updated pull request by dispatching required checks:
   - `.github/workflows/copilot-review-triage.yml`
   - `.github/workflows/require-human-approval.yml`
-- Preserve provenance and routing labels across the cycle (`automation`, `triaged-item`, `copilot-auto-approve`, `copilot-bypass-vibe-coded`, plus source and `agent:*` labels when present).
+- Preserve provenance and routing labels across the cycle (`automation`, `triaged-item`, `copilot-auto-approve`, `speckit-driven`, plus source and `agent:*` labels when present).
 - Apply smart iteration stop conditions:
   - Stop when no eligible backlog items remain.
   - Stop when iteration cap is reached.

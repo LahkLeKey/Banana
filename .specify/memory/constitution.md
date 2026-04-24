@@ -1,0 +1,42 @@
+# Banana Spec Kit Constitution
+
+## Core Principles
+
+### I. Domain Core First
+All business behavior begins in native C under `src/native`; upper layers orchestrate, validate, and present results, but do not duplicate core domain rules.
+
+### II. Layered Interop Contract
+Managed flows must preserve the `controller -> service -> pipeline -> native interop` architecture. Cross-layer behavior changes require explicit contract updates in the touched layers.
+
+### III. Spec First Delivery
+AI-assisted work follows Spec Kit stages before implementation: `/speckit.specify`, `/speckit.plan`, and `/speckit.tasks`. Emergency fixes may bypass this only with explicit human approval and a follow-up spec update.
+
+### IV. Verifiable Quality Gates
+Every change must run domain-appropriate validation before merge, including workflow-required checks for automation pull requests.
+
+### V. Documentation and Wiki Parity
+When workflow behavior, automation contracts, prompts, skills, or runbooks change, repository docs and wiki snapshots must be updated in the same SDLC slice.
+
+## Platform Constraints
+
+- Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
+- Keep `BANANA_NATIVE_PATH` explicit for ASP.NET runtime wiring.
+- Preserve `VITE_BANANA_API_BASE_URL` as the frontend API base URL contract.
+- Preserve Bun as package manager for TypeScript React/Electron/mobile domains.
+- Keep runtime-channel behavior aligned with the Windows + Docker Desktop + Ubuntu WSL2 contract.
+
+## Workflow and Review
+
+- Scope changes to the owning domain unless a cross-layer contract actually changes.
+- Prefer existing entry points in `scripts/`, workspace tasks, CMake targets, dotnet projects, Bun scripts, and compose profiles.
+- Keep automation pull requests on provenance labels including `speckit-driven` and required-check workflows.
+- Run `scripts/validate-ai-contracts.py` whenever AI workflow contracts (prompts, agents, skills, instructions, workflows, wiki mapping) are touched.
+- Run `scripts/workflow-sync-wiki.sh` in the same change when contract surfaces move.
+
+## Governance
+
+This constitution governs Spec Kit driven development and automation workflows in Banana.
+Amendments require a pull request that documents rationale, migration impact, and validation updates.
+Reviewers should block merges that violate these principles.
+
+**Version**: 1.0.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-24

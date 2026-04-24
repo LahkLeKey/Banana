@@ -48,7 +48,7 @@ jobs:
             const readyLabel = "copilot-triage-ready";
             const autoApproveOptInLabel = "copilot-auto-approve";
             const autonomousCycleLabel = "copilot-autonomous-cycle";
-            const vibeBypassLabel = "copilot-bypass-vibe-coded";
+            const speckitDrivenLabel = "speckit-driven";
             const triageIdeaLabel = "triage-idea";
             const copilotSuggestionLabel = "copilot-suggestion";
             const triageIdeaWorkflowId = "orchestrate-triage-idea-cloud.yml";
@@ -71,8 +71,8 @@ jobs:
               labels.includes("automation") ||
               automationAuthor;
             const isAutonomousCycle = labels.includes(autonomousCycleLabel);
-            const isVibeBypass = labels.includes(vibeBypassLabel);
-            const hasCopilotBypassLabel = isAutonomousCycle || isVibeBypass;
+            const isSpeckitDriven = labels.includes(speckitDrivenLabel);
+            const hasCopilotBypassLabel = isAutonomousCycle || isSpeckitDriven;
             const canAutoApprove = isAutomationPr || labels.includes(autoApproveOptInLabel);
             const enforceCopilotReview =
               isAutomationPr || labels.includes(autoApproveOptInLabel) || hasCopilotBypassLabel;
@@ -225,8 +225,8 @@ jobs:
                   ref: pr.head.ref,
                   inputs: {
                     issue_number: String(issueNumber),
-                    issue_labels: `${triageIdeaLabel},${copilotSuggestionLabel},automation,${vibeBypassLabel}`,
-                    pr_labels: `automation,triaged-item,${autoApproveOptInLabel},${autonomousCycleLabel},${vibeBypassLabel}`,
+                    issue_labels: `${triageIdeaLabel},${copilotSuggestionLabel},automation,${speckitDrivenLabel}`,
+                    pr_labels: `automation,triaged-item,${autoApproveOptInLabel},${autonomousCycleLabel},${speckitDrivenLabel}`,
                     base_branch: pr.base.ref,
                     branch_prefix: "triage-copilot",
                     draft_pr: "false",
@@ -295,7 +295,7 @@ jobs:
                   copilotSuggestionLabel,
                   triageIdeaLabel,
                   "automation",
-                  vibeBypassLabel,
+                  speckitDrivenLabel,
                 ];
 
                 const existingIssue = issuesByKey.get(key);
@@ -478,9 +478,9 @@ jobs:
               "Allow autonomous Copilot-reviewed automation cycle including auto-merge"
             );
             await ensureLabel(
-              vibeBypassLabel,
+              speckitDrivenLabel,
               "0B63A5",
-              "Bypass human gate after Copilot triage while marking vibe-coded integration provenance"
+              "Bypass human gate after Copilot triage while marking spec-kit-driven integration provenance"
             );
             await ensureLabel(
               triageIdeaLabel,

@@ -4,7 +4,7 @@ Pass the Banana from native C into API, desktop, web, and mobile channels.
 
 This repo is a practical playground for one core idea: keep domain behavior in native C, then project it cleanly into multiple runtimes without rewriting business logic per app.
 
-## Vibe Code Quickstart (5 Minutes)
+## Spec Kit Driven Quickstart (5 Minutes)
 
 1. Open this workspace in VS Code on Windows with Docker Desktop + WSL2 enabled.
 2. In Run and Debug, pick `Demo Channel` from `.vscode/launch.json`.
@@ -54,7 +54,7 @@ Useful environment overrides:
 - `BANANA_IOS_PREVIEW_ENGINE=webkit`
 - `BANANA_COMPOSE_APPS_SERVICES="api react-app"`
 
-## Vibe Coding Guardrails
+## Spec Kit Driven Guardrails
 
 Keep these contracts steady while you iterate quickly:
 
@@ -62,6 +62,16 @@ Keep these contracts steady while you iterate quickly:
 - Native runtime path for managed integration: `BANANA_NATIVE_PATH`.
 - PostgreSQL-backed native flows: `BANANA_PG_CONNECTION`.
 - Frontend API base URL contract: `VITE_BANANA_API_BASE_URL`.
+- AI orchestration entry points enforce Spec Kit preflight via `scripts/workflow-ensure-speckit.sh`.
+
+## Spec Kit Workflow
+
+For AI-driven feature work, run the Spec Kit flow before implementation:
+
+1. `/speckit.specify "<feature description>"`
+2. `/speckit.plan`
+3. `/speckit.tasks`
+4. Implement and validate through existing Banana workflow entry points.
 
 ## Fast Developer Loop
 
@@ -284,7 +294,7 @@ Automation pull request orchestration for triaged code changes:
   - `triage_id`
   - `change_command`
   - optional branch/label/reviewer overrides
-- The workflow creates a branch, commits generated changes, opens a PR, and labels it with `requires-human-approval`, `copilot-auto-approve`, and `copilot-bypass-vibe-coded` by default.
+- The workflow creates a branch, commits generated changes, opens a PR, and labels it with `requires-human-approval`, `copilot-auto-approve`, and `speckit-driven` by default.
 - The workflow now runs `scripts/workflow-sync-wiki.sh` in the same run by default (`sync_wiki=true`).
 - Wiki remote defaults to `https://github.com/LahkLeKey/Banana.wiki.git` and enforces this canonical target by default (`BANANA_ENFORCE_CANONICAL_WIKI_REMOTE=true`).
 
@@ -294,9 +304,9 @@ Cloud idea triage from prompt or issue labels:
 - Workflow `Orchestrate Triage Idea Cloud` can also run via `workflow_dispatch` when you provide either `idea` or `issue_number`.
 - Applying label `triage-idea`, `copilot-suggestion`, or `human-triage` to an issue triggers the same cloud workflow path.
 - The workflow records intake artifacts under `docs/triage/intake/issue-<number>.md` and opens a triaged automation PR through the existing triaged-item PR engine.
-- Default AI issue labels (workflow-created): `triage-idea`, `copilot-suggestion`, `ai-generated`, `automation`, `copilot-bypass-vibe-coded`.
+- Default AI issue labels (workflow-created): `triage-idea`, `copilot-suggestion`, `ai-generated`, `automation`, `speckit-driven`.
 - Human issue templates under `.github/ISSUE_TEMPLATE/human-*.yml` embed hidden source/agent routing markers so CI can classify `source-human-issue` and propagate `agent:*` labels to generated PRs.
-- Default generated PR labels: `automation`, `triaged-item`, `copilot-auto-approve`, `copilot-autonomous-cycle`, `copilot-bypass-vibe-coded`.
+- Default generated PR labels: `automation`, `triaged-item`, `copilot-auto-approve`, `copilot-autonomous-cycle`, `speckit-driven`.
 - Default generated PR mode is ready-for-review (`draft_pr=false`) for autonomous continuation.
 - Cloud triage now clears backlog by default before creating new artifacts (`clear_backlog=true`).
 - Backlog cleanup targets open AI issues with labels `copilot-suggestion` or `ai-generated`, and open PRs with labels `automation` + `triaged-item` (or triage branch prefixes).
@@ -342,7 +352,7 @@ Autonomous cloud self-training cycle (bounded incremental proof of concept):
 
 - Workflow `Orchestrate Autonomous Self-Training Cycle` runs small incremental SDLC slices on weekday schedules and after merge of prior autonomous-cycle PRs.
 - The workflow uses bounded resource defaults (`training-profile ci`, `session-mode single`, `max-sessions 1`, and capped feedback ingestion) to keep cloud resource usage minimal.
-- Generated PRs use labels `copilot-auto-approve`, `copilot-autonomous-cycle`, and `copilot-bypass-vibe-coded` so Copilot triage can approve and continue the cycle automatically while preserving provenance for vibe-coded integrations.
+- Generated PRs use labels `copilot-auto-approve`, `copilot-autonomous-cycle`, and `speckit-driven` so Copilot triage can approve and continue the cycle automatically while preserving provenance for spec-kit-driven integrations.
 - Wiki sync is strict and pinned to `https://github.com/LahkLeKey/Banana.wiki.git` for every autonomous run.
 
 Local SDLC dry-run:
@@ -368,7 +378,7 @@ Human-approval merge gate:
 - For automation-managed PRs with no Copilot activity yet, `Copilot Review Triage` requests Copilot review and fails in a waiting state until review activity exists.
 - When all Copilot findings are triaged, `Copilot Review Triage` applies label `copilot-triage-ready` and submits an approval review from `github-actions[bot]` for automation PRs (or for non-automation PRs labeled `copilot-auto-approve`).
 - If unresolved Copilot findings remain, `Copilot Review Triage` applies `copilot-triage-pending` and blocks readiness until triage is complete.
-- Labels `copilot-autonomous-cycle` and `copilot-bypass-vibe-coded` enable autonomous continuation: after Copilot triage is ready and bot approval is current, the human-approval check allows bypass and Copilot triage attempts to enable auto-merge.
+- Labels `copilot-autonomous-cycle` and `speckit-driven` enable autonomous continuation: after Copilot triage is ready and bot approval is current, the human-approval check allows bypass and Copilot triage attempts to enable auto-merge.
 - Mark `Require Human Approval (Automation PRs)` as required in your protected-branch ruleset so automation merges stay blocked until a human review approves.
 - Mark `Copilot Review Triage` as required if you want unresolved Copilot findings to block merge readiness.
 - Keep branch settings aligned with `Require a pull request before merging` and reviewer requirements.

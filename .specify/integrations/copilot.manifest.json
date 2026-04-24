@@ -1,0 +1,16 @@
+{
+  "integration": "copilot",
+  "version": "0.8.0",
+  "installed_at": "2026-04-24T02:59:56.214808+00:00",
+  "files": {
+    ".github/skills/speckit-analyze/SKILL.md": "02577732ab03f59b5eeaff6f723686f9487b5cab9cfc5ace7c856bcd820645ce",
+    ".github/skills/speckit-checklist/SKILL.md": "946d9ca2899446fd923c3c9c5d0f78b56505f5f47c0d271867a89f3ede02bac1",
+    ".github/skills/speckit-clarify/SKILL.md": "ffb54829c595f96781cea29c40d34dc398cd3fd7913fc9dfb2797f8c4068ffa6",
+    ".github/skills/speckit-constitution/SKILL.md": "24da670731f2dcabd64f9829b76a6c913dfdc10673de57e223deba55548805ec",
+    ".github/skills/speckit-implement/SKILL.md": "9828306a6164b4c78e8bbe1f7e1ba9d0e82f9e30d2fb9d3ce698a592953a992f",
+    ".github/skills/speckit-plan/SKILL.md": "45b8ce0c25828a9b6f47a222227d4df3e82a9335ae313a10c8d528412bd02b8c",
+    ".github/skills/speckit-specify/SKILL.md": "4f6dae01da6661e37c2dc4039478187cc3c0c0c138a07d705ac82801bb6845f7",
+    ".github/skills/speckit-tasks/SKILL.md": "9fa19d0a772be6f4e5dc53b5267a6e87bef8dcdf683a7ea609f307f4b9ec5e35",
+    ".github/skills/speckit-taskstoissues/SKILL.md": "1bc639daab59a6c0934c99f3ada8e1360d238696af168a35382d35f95bc15e33"
+  }
+}

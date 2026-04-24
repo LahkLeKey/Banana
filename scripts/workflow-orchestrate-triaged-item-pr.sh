@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+bash scripts/workflow-ensure-speckit.sh
+
 RUN_ID="${GITHUB_RUN_ID:-local-run}"
 RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-1}"
 TRIAGE_ID="${BANANA_TRIAGE_ID:-local-triage}"
@@ -14,7 +16,7 @@ COMMIT_MESSAGE="${BANANA_COMMIT_MESSAGE:-chore(triage): automated triaged change
 PR_TITLE_OVERRIDE="${BANANA_PR_TITLE:-}"
 PR_BODY_OVERRIDE="${BANANA_PR_BODY:-}"
 DRAFT_PR="${BANANA_DRAFT_PR:-true}"
-PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded}"
+PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven}"
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
 SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-false}"

@@ -78,7 +78,7 @@ on:
       labels:
         description: Labels for generated feedback pull request
         required: false
-        default: "automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded,feedback-loop"
+        default: "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,feedback-loop"
       reviewers:
         description: Optional reviewer usernames as comma-separated values or [array] syntax
         required: false
@@ -158,7 +158,7 @@ jobs:
       BANANA_COMMIT_MESSAGE: "${{ github.event.inputs.commit_message || 'chore(feedback): apply not-banana feedback into corpus' }}"
       BANANA_PR_TITLE: ${{ github.event.inputs.pr_title || '' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
-      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded,feedback-loop' }}
+      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,feedback-loop' }}
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
       BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}

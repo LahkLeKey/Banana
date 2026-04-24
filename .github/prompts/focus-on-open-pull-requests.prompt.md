@@ -15,7 +15,7 @@ Requirements:
   - `.github/workflows/copilot-review-triage.yml`
   - `.github/workflows/require-human-approval.yml`
 - For automation PRs, ensure required checks are dispatched and report resulting workflow run URLs.
-- Preserve provenance and routing labels (`automation`, `triaged-item`, `copilot-auto-approve`, `copilot-bypass-vibe-coded`, plus source and `agent:*` labels when present).
+- Preserve provenance and routing labels (`automation`, `triaged-item`, `copilot-auto-approve`, `speckit-driven`, plus source and `agent:*` labels when present).
 - Do not force-merge or bypass branch protections unless explicitly requested by a human.
 - Do not open duplicate replacement PRs when an equivalent branch and scope are already active.
 - Return concrete outputs for each PR handled: PR URL, current check state, chosen action, run URLs if dispatched, and blocker reason.

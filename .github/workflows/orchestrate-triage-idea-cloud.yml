@@ -20,11 +20,11 @@ on:
       issue_labels:
         description: Comma-separated labels to apply when creating a triage issue via workflow_dispatch
         required: false
-        default: "triage-idea,copilot-suggestion,ai-generated,automation,copilot-bypass-vibe-coded"
+        default: "triage-idea,copilot-suggestion,ai-generated,automation,speckit-driven"
       pr_labels:
         description: Comma-separated labels for generated pull request
         required: false
-        default: "automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded"
+        default: "automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven"
       base_branch:
         description: Base branch that receives generated pull request
         required: false
@@ -154,8 +154,8 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BANANA_TRIAGE_IDEA: ${{ github.event.inputs.idea || '' }}
       BANANA_TRIAGE_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || github.event.inputs.issue_number || '' }}
-      BANANA_TRIAGE_ISSUE_LABELS: ${{ github.event_name == 'issues' && join(github.event.issue.labels.*.name, ',') || github.event.inputs.issue_labels || 'triage-idea,copilot-suggestion,ai-generated,automation,copilot-bypass-vibe-coded' }}
-      BANANA_TRIAGE_PR_LABELS: ${{ github.event.inputs.pr_labels || 'automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded' }}
+      BANANA_TRIAGE_ISSUE_LABELS: ${{ github.event_name == 'issues' && join(github.event.issue.labels.*.name, ',') || github.event.inputs.issue_labels || 'triage-idea,copilot-suggestion,ai-generated,automation,speckit-driven' }}
+      BANANA_TRIAGE_PR_LABELS: ${{ github.event.inputs.pr_labels || 'automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'false' }}

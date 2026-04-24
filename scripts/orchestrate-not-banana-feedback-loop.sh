@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+bash scripts/workflow-ensure-speckit.sh
+
 RUN_ID="${GITHUB_RUN_ID:-local-run}"
 RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-1}"
 
@@ -24,7 +26,7 @@ PR_TITLE_DEFAULT="triage(not-banana-feedback): apply approved feedback to corpus
 PR_TITLE="${BANANA_PR_TITLE:-$PR_TITLE_DEFAULT}"
 PR_BODY="${BANANA_PR_BODY:-}"
 DRAFT_PR="${BANANA_DRAFT_PR:-true}"
-PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval,copilot-auto-approve,copilot-bypass-vibe-coded,feedback-loop}"
+PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,feedback-loop}"
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 
 REPORT_ROOT="artifacts/not-banana-feedback"

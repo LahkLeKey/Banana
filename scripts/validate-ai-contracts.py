@@ -23,12 +23,17 @@ WORKFLOW_ORCHESTRATE_TRIAGE_IDEA = ROOT / ".github" / "workflows" / "orchestrate
 WORKFLOW_ORCHESTRATE_AUTONOMOUS = ROOT / ".github" / "workflows" / "orchestrate-autonomous-self-training-cycle.yml"
 WORKFLOW_COPILOT_REVIEW_TRIAGE = ROOT / ".github" / "workflows" / "copilot-review-triage.yml"
 WORKFLOW_REQUIRE_HUMAN_APPROVAL = ROOT / ".github" / "workflows" / "require-human-approval.yml"
+SCRIPT_ORCHESTRATE_TRIAGED = ROOT / "scripts" / "workflow-orchestrate-triaged-item-pr.sh"
 SCRIPT_ORCHESTRATE_SDLC = ROOT / "scripts" / "workflow-orchestrate-sdlc.sh"
+SCRIPT_ORCHESTRATE_FEEDBACK = ROOT / "scripts" / "orchestrate-not-banana-feedback-loop.sh"
 SCRIPT_ORCHESTRATE_TRIAGE_IDEA = ROOT / "scripts" / "workflow-triage-idea-cloud.sh"
+SCRIPT_ENSURE_SPECKIT = ROOT / "scripts" / "workflow-ensure-speckit.sh"
 CANONICAL_WIKI_REMOTE_URL = "https://github.com/LahkLeKey/Banana.wiki.git"
 
 AGENT_CONTRACT_FRAGMENT = "Feedback Loop And Incremental Branch Contract"
 PROMPT_WIKI_CONTRACT_HEADER = "## Wiki Updater Contract"
+SPECKIT_EXTENSION_PROMPT_PREFIX = "speckit.git."
+SPECKIT_EXTENSION_AGENT_PREFIX = "speckit.git."
 SKILL_NAME_RE = re.compile(r"^[a-z0-9-]{1,64}$")
 ITERATE_BACKLOG_PROMPT = PROMPTS_DIR / "iterate-the-backlog.prompt.md"
 ITERATE_BACKLOG_PROMPT_REQUIRED_FRAGMENTS = {
@@ -97,16 +102,24 @@ def main() -> int:
     for prompt_path in sorted(PROMPTS_DIR.glob("*.prompt.md")):
         frontmatter, body = parse_frontmatter(prompt_path)
         rel = prompt_path.relative_to(ROOT).as_posix()
+        prompt_name = prompt_path.name.removesuffix(".prompt.md")
+        is_speckit_extension_prompt = prompt_name.startswith(SPECKIT_EXTENSION_PROMPT_PREFIX)
 
         if frontmatter is None:
             issues.append(f"PROMPT missing/invalid frontmatter: {rel}")
             continue
 
-        for required in ("name", "description", "argument-hint", "agent"):
+        required_frontmatter = (
+            ("agent",)
+            if is_speckit_extension_prompt
+            else ("name", "description", "argument-hint", "agent")
+        )
+
+        for required in required_frontmatter:
             if not frontmatter.get(required):
                 issues.append(f"PROMPT missing {required}: {rel}")
 
-        if PROMPT_WIKI_CONTRACT_HEADER not in body:
+        if not is_speckit_extension_prompt and PROMPT_WIKI_CONTRACT_HEADER not in body:
             prompt_missing_wiki_contract.append(rel)
 
     iterate_backlog_rel = ITERATE_BACKLOG_PROMPT.relative_to(ROOT).as_posix()
@@ -137,6 +150,7 @@ def main() -> int:
     for agent_path in sorted(AGENTS_DIR.glob("*.agent.md")):
         frontmatter, body = parse_frontmatter(agent_path)
         rel = agent_path.relative_to(ROOT).as_posix()
+        is_speckit_extension_agent = agent_path.name.startswith(SPECKIT_EXTENSION_AGENT_PREFIX)
 
         if frontmatter is None:
             issues.append(f"AGENT missing/invalid frontmatter: {rel}")
@@ -145,7 +159,7 @@ def main() -> int:
         if not frontmatter.get("description"):
             issues.append(f"AGENT missing description: {rel}")
 
-        if AGENT_CONTRACT_FRAGMENT not in body:
+        if not is_speckit_extension_agent and AGENT_CONTRACT_FRAGMENT not in body:
             issues.append(f"AGENT missing feedback-loop contract link: {rel}")
 
     # Instructions
@@ -209,6 +223,9 @@ def main() -> int:
 
     if "BANANA_ENFORCE_CANONICAL_WIKI_REMOTE" not in workflow_sync_text:
         issues.append("WIKI_SYNC missing canonical wiki remote enforcement toggle")
+
+    if not SCRIPT_ENSURE_SPECKIT.exists():
+        issues.append("SCRIPT missing Spec Kit preflight helper: scripts/workflow-ensure-speckit.sh")
     workflow_contract_targets = [
         WORKFLOW_ORCHESTRATE_TRIAGED,
         WORKFLOW_ORCHESTRATE_FEEDBACK,
@@ -226,8 +243,8 @@ def main() -> int:
         if CANONICAL_WIKI_REMOTE_URL not in workflow_text:
             issues.append(f"WORKFLOW missing canonical wiki remote default: {workflow_rel}")
 
-        if "copilot-bypass-vibe-coded" not in workflow_text:
-            issues.append(f"WORKFLOW missing copilot bypass provenance label default: {workflow_rel}")
+        if "speckit-driven" not in workflow_text:
+            issues.append(f"WORKFLOW missing spec-kit provenance label default: {workflow_rel}")
         if workflow_path == WORKFLOW_ORCHESTRATE_FEEDBACK:
             if "github.event_name == 'schedule' && 'true'" not in workflow_text:
                 issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {workflow_rel}")
@@ -274,8 +291,8 @@ def main() -> int:
     if CANONICAL_WIKI_REMOTE_URL not in sdlc_workflow_text:
         issues.append(f"WORKFLOW missing canonical wiki remote default: {sdlc_workflow_rel}")
 
-    if "copilot-bypass-vibe-coded" not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing copilot bypass provenance label default: {sdlc_workflow_rel}")
+    if "speckit-driven" not in sdlc_workflow_text:
+        issues.append(f"WORKFLOW missing spec-kit provenance label default: {sdlc_workflow_rel}")
 
     if "github.event_name == 'schedule' && 'true'" not in sdlc_workflow_text:
         issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {sdlc_workflow_rel}")
@@ -291,7 +308,7 @@ def main() -> int:
         autonomous_required_fragments = {
             "pull_request_target": "WORKFLOW missing autonomous continuation trigger",
             "copilot-autonomous-cycle": "WORKFLOW missing copilot-autonomous-cycle label contract",
-            "copilot-bypass-vibe-coded": "WORKFLOW missing copilot bypass provenance label contract",
+            "speckit-driven": "WORKFLOW missing spec-kit provenance label contract",
             "workflow-orchestrate-sdlc.sh": "WORKFLOW missing SDLC orchestrator execution",
             "training-profile ci --session-mode single --max-sessions 1": "WORKFLOW missing bounded minimal-resource training command",
             CANONICAL_WIKI_REMOTE_URL: "WORKFLOW missing canonical wiki remote default",
@@ -315,7 +332,7 @@ def main() -> int:
             "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready label contract",
             "copilot-auto-approve": "WORKFLOW missing copilot-auto-approve opt-in contract",
             "copilot-autonomous-cycle": "WORKFLOW missing autonomous cycle label contract",
-            "copilot-bypass-vibe-coded": "WORKFLOW missing copilot bypass provenance label contract",
+            "speckit-driven": "WORKFLOW missing copilot bypass provenance label contract",
             "copilot-suggestion": "WORKFLOW missing copilot suggestion issue label contract",
             "syncSuggestionIssues": "WORKFLOW missing per-suggestion issue triage path",
             "createWorkflowDispatch": "WORKFLOW missing per-suggestion orchestration dispatch path",
@@ -336,7 +353,7 @@ def main() -> int:
         "workflow_dispatch": "WORKFLOW missing workflow_dispatch trigger",
         "pull_number": "WORKFLOW missing workflow_dispatch pull_number input",
         "copilot-autonomous-cycle": "WORKFLOW missing autonomous-cycle bypass label support",
-        "copilot-bypass-vibe-coded": "WORKFLOW missing copilot bypass provenance label support",
+        "speckit-driven": "WORKFLOW missing spec-kit provenance label support",
         "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready bypass guard",
         "github-actions[bot]": "WORKFLOW missing bot-approval continuity guard",
     }
@@ -344,6 +361,14 @@ def main() -> int:
     for fragment, message in require_human_required_fragments.items():
         if fragment not in require_human_text:
             issues.append(f"{message}: {require_human_rel}")
+    triaged_script_text = SCRIPT_ORCHESTRATE_TRIAGED.read_text(encoding="utf-8")
+    if "workflow-ensure-speckit.sh" not in triaged_script_text:
+        issues.append("Triaged PR script missing Spec Kit preflight invocation")
+
+    feedback_script_text = SCRIPT_ORCHESTRATE_FEEDBACK.read_text(encoding="utf-8")
+    if "workflow-ensure-speckit.sh" not in feedback_script_text:
+        issues.append("Feedback-loop script missing Spec Kit preflight invocation")
+
     sdlc_script_text = SCRIPT_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
     if "WIKI_REMOTE_URL=" not in sdlc_script_text:
         issues.append("SDLC script missing WIKI_REMOTE_URL input wiring")
@@ -351,8 +376,11 @@ def main() -> int:
     if 'export BANANA_WIKI_REMOTE_URL="$WIKI_REMOTE_URL"' not in sdlc_script_text:
         issues.append("SDLC script missing BANANA_WIKI_REMOTE_URL export")
 
-    if "copilot-bypass-vibe-coded" not in sdlc_script_text:
-        issues.append("SDLC script missing copilot bypass provenance label defaults")
+    if "speckit-driven" not in sdlc_script_text:
+        issues.append("SDLC script missing spec-kit provenance label defaults")
+
+    if "workflow-ensure-speckit.sh" not in sdlc_script_text:
+        issues.append("SDLC script missing Spec Kit preflight invocation")
 
     triage_idea_script_rel = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
     if not SCRIPT_ORCHESTRATE_TRIAGE_IDEA.exists():
@@ -362,7 +390,7 @@ def main() -> int:
         triage_idea_script_required_fragments = {
             "triage-idea": "SCRIPT missing triage-idea label contract",
             "copilot-suggestion": "SCRIPT missing copilot-suggestion label contract",
-            "copilot-bypass-vibe-coded": "SCRIPT missing copilot bypass provenance label contract",
+            "speckit-driven": "SCRIPT missing spec-kit provenance label contract",
             "human-triage": "SCRIPT missing human triage label contract",
             "source-human-issue": "SCRIPT missing human-source issue label contract",
             "ai-generated": "SCRIPT missing AI-generated issue label contract",
@@ -370,6 +398,7 @@ def main() -> int:
             "banana-intake-source": "SCRIPT missing issue-source marker parsing contract",
             "banana-target-agent": "SCRIPT missing agent-target marker parsing contract",
             "agent:": "SCRIPT missing agent label propagation contract",
+            "workflow-ensure-speckit.sh": "SCRIPT missing Spec Kit preflight invocation",
             "workflow-orchestrate-triaged-item-pr.sh": "SCRIPT missing triaged PR orchestration handoff",
             "docs/triage/intake": "SCRIPT missing triage intake artifact contract",
             "BANANA_TRIAGE_CLEAR_BACKLOG": "SCRIPT missing backlog cleanup toggle",

@@ -50,7 +50,7 @@ jobs:
             const headBranch = pr.head?.ref || "";
             const soloBypassLabel = "solo-maintainer-bypass";
             const autonomousCycleLabel = "copilot-autonomous-cycle";
-            const vibeBypassLabel = "copilot-bypass-vibe-coded";
+            const speckitDrivenLabel = "speckit-driven";
             const copilotReadyLabel = "copilot-triage-ready";
             const automationBotLogin = "github-actions[bot]";
             const automationBranchPrefixes = [
@@ -123,19 +123,19 @@ jobs:
               latestBotReview.commitId === pr.head.sha;
 
             const hasCopilotBypassLabel =
-              labels.includes(autonomousCycleLabel) || labels.includes(vibeBypassLabel);
+              labels.includes(autonomousCycleLabel) || labels.includes(speckitDrivenLabel);
 
             if (hasCopilotBypassLabel) {
               if (!labels.includes(copilotReadyLabel)) {
                 core.setFailed(
-                  `Labels '${autonomousCycleLabel}' or '${vibeBypassLabel}' require '${copilotReadyLabel}' before bypassing human approval.`
+                  `Labels '${autonomousCycleLabel}' or '${speckitDrivenLabel}' require '${copilotReadyLabel}' before bypassing human approval.`
                 );
                 return;
               }
 
               if (!hasCurrentBotApproval) {
                 core.setFailed(
-                  `Labels '${autonomousCycleLabel}' or '${vibeBypassLabel}' require a current-head approval from ${automationBotLogin}.`
+                  `Labels '${autonomousCycleLabel}' or '${speckitDrivenLabel}' require a current-head approval from ${automationBotLogin}.`
                 );
                 return;
               }
