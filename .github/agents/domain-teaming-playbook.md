@@ -34,6 +34,22 @@ Use this playbook when coordinating Banana work across agents so specialists ope
    - labels/reviewers
    - expected changed files and validation surface
 
+## Open Pull Request Focus Contract (All Agents)
+
+1. When open pull requests become the priority, run a focused PR cycle before starting new feature slices.
+2. Enumerate open PRs first and classify each as one of:
+   - merge-ready
+   - waiting-checks
+   - waiting-human-review
+   - blocked-conflict-or-rebase
+   - superseded-or-close-candidate
+3. For automation PRs, keep required checks explicit and current by dispatching:
+   - `.github/workflows/copilot-review-triage.yml`
+   - `.github/workflows/require-human-approval.yml`
+4. Do not bypass branch protections or force-merge without explicit human instruction.
+5. Return concrete per-PR actions and blockers with URLs so triage loops can continue incrementally.
+6. Apply duplicate-work safeguards: avoid opening replacement PRs when an equivalent branch and scope are already active.
+
 ## Required Handoff Packet
 
 Every handoff should include:

@@ -42,6 +42,15 @@ ITERATE_BACKLOG_PROMPT_REQUIRED_FRAGMENTS = {
     "Stop when no eligible backlog items remain.": "PROMPT missing deterministic no-work stop condition",
     "Return concrete outputs for each iteration": "PROMPT missing iteration output contract",
 }
+FOCUS_OPEN_PRS_PROMPT = PROMPTS_DIR / "focus-on-open-pull-requests.prompt.md"
+FOCUS_OPEN_PRS_PROMPT_REQUIRED_FRAGMENTS = {
+    "open pull requests": "PROMPT missing open pull request focus scope",
+    "copilot-review-triage.yml": "PROMPT missing copilot review triage workflow contract",
+    "require-human-approval.yml": "PROMPT missing human approval workflow contract",
+    "Do not force-merge or bypass branch protections unless explicitly requested by a human.": "PROMPT missing branch-protection safety contract",
+    "Do not open duplicate replacement PRs": "PROMPT missing duplicate PR safeguard contract",
+    "Return concrete outputs for each PR handled": "PROMPT missing per-PR output contract",
+}
 
 
 def parse_frontmatter(path: Path) -> tuple[dict[str, str] | None, str]:
@@ -111,6 +120,18 @@ def main() -> int:
             for fragment, message in ITERATE_BACKLOG_PROMPT_REQUIRED_FRAGMENTS.items():
                 if fragment not in iterate_body:
                     issues.append(f"{message}: {iterate_backlog_rel}")
+
+    focus_open_prs_rel = FOCUS_OPEN_PRS_PROMPT.relative_to(ROOT).as_posix()
+    if not FOCUS_OPEN_PRS_PROMPT.exists():
+        issues.append(f"PROMPT missing open-pr-focus command contract: {focus_open_prs_rel}")
+    else:
+        focus_frontmatter, focus_body = parse_frontmatter(FOCUS_OPEN_PRS_PROMPT)
+        if focus_frontmatter is None:
+            issues.append(f"PROMPT missing/invalid frontmatter: {focus_open_prs_rel}")
+        else:
+            for fragment, message in FOCUS_OPEN_PRS_PROMPT_REQUIRED_FRAGMENTS.items():
+                if fragment not in focus_body:
+                    issues.append(f"{message}: {focus_open_prs_rel}")
 
     # Agents
     for agent_path in sorted(AGENTS_DIR.glob("*.agent.md")):
