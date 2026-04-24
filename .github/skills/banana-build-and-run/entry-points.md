@@ -66,7 +66,7 @@
 - Wiki sync script: `bash scripts/workflow-sync-wiki.sh` (supports `BANANA_WIKI_*` env vars)
 - Example explicit Banana wiki remote (override for forks): `BANANA_WIKI_REMOTE_URL=https://github.com/LahkLeKey/Banana.wiki.git`
 - Canonical wiki enforcement toggle: `BANANA_ENFORCE_CANONICAL_WIKI_REMOTE=true`
-- AI contract validation script: `python scripts/validate-ai-contracts.py` (verifies prompt/agent/instruction/skill frontmatter and wiki-sync coverage)
+- AI contract validation script: `python scripts/validate-ai-contracts.py` (verifies prompt/agent/instruction/skill frontmatter, wiki-sync coverage, and blocks legacy terminology regressions)
 - Incremental SDLC orchestration script: `bash scripts/workflow-orchestrate-sdlc.sh`
 - Local SDLC dry-run script: `bash scripts/workflow-local-orchestrate-sdlc.sh`
 - Full SDLC orchestration workflow: `.github/workflows/orchestrate-banana-sdlc.yml`
@@ -87,6 +87,7 @@
 - Open PR focus prompt: `.github/prompts/focus-on-open-pull-requests.prompt.md` (use `/focus-on-open-pull-requests "scope"` to prioritize open PR merge readiness and dispatch required checks).
 - Human-approval gate workflow: `.github/workflows/require-human-approval.yml` (mark check required in branch protection/rulesets).
 - Copilot triage-and-approval workflow: `.github/workflows/copilot-review-triage.yml` (tracks unresolved Copilot findings and auto-approves automation PRs, or non-automation PRs with `copilot-auto-approve`).
+- AI contract guard workflow: `.github/workflows/ai-contract-guard.yml` (runs `scripts/validate-ai-contracts.py` on pull requests, pushes, and manual dispatch).
 - Autonomous continuation labels: `copilot-autonomous-cycle` and `speckit-driven` (paired with `copilot-triage-ready` for bot-driven continuation and provenance tagging of spec-kit-driven integrations).
 - Preserve CI/container prerequisites needed to execute training and drift checks reliably.
 - Treat training drift failures as actionable model/data contract signals, not infrastructure noise.

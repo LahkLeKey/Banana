@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -56,6 +57,64 @@ FOCUS_OPEN_PRS_PROMPT_REQUIRED_FRAGMENTS = {
     "Do not open duplicate replacement PRs": "PROMPT missing duplicate PR safeguard contract",
     "Return concrete outputs for each PR handled": "PROMPT missing per-PR output contract",
 }
+TERM_GUARD_TOKEN = "vi" + "be"
+TERM_GUARD_TITLE_TOKEN = TERM_GUARD_TOKEN.capitalize()
+TERM_GUARD_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (
+        re.compile(rf"\bcopilot-bypass-{TERM_GUARD_TOKEN}-coded\b", re.IGNORECASE),
+        "legacy-label-token",
+    ),
+    (re.compile(rf"\b{TERM_GUARD_TOKEN}[- ]coding\b", re.IGNORECASE), "legacy-coding-phrase"),
+    (re.compile(rf"\b{TERM_GUARD_TOKEN}[- ]coded\b", re.IGNORECASE), "legacy-coded-phrase"),
+    (re.compile(rf"\b{TERM_GUARD_TOKEN}bypass\b", re.IGNORECASE), "legacy-bypass-token"),
+    (
+        re.compile(rf"##\s+{TERM_GUARD_TITLE_TOKEN}\s+Code\s+Quickstart", re.IGNORECASE),
+        "legacy-quickstart-heading",
+    ),
+    (
+        re.compile(rf"##\s+{TERM_GUARD_TITLE_TOKEN}\s+Coding\s+Guardrails", re.IGNORECASE),
+        "legacy-guardrails-heading",
+    ),
+)
+TERM_GUARD_EXCLUDED_DIRECTORIES = {
+    ".git",
+    ".idea",
+    ".venv",
+    ".vs",
+    "build",
+    "node_modules",
+    "__pycache__",
+}
+TERM_GUARD_EXCLUDED_SUFFIXES = {
+    ".7z",
+    ".a",
+    ".bin",
+    ".bmp",
+    ".class",
+    ".dll",
+    ".dylib",
+    ".eot",
+    ".exe",
+    ".gif",
+    ".gz",
+    ".ico",
+    ".jar",
+    ".jpeg",
+    ".jpg",
+    ".lib",
+    ".o",
+    ".obj",
+    ".pdf",
+    ".png",
+    ".so",
+    ".tar",
+    ".tgz",
+    ".ttf",
+    ".webp",
+    ".woff",
+    ".woff2",
+    ".zip",
+}
 
 
 def parse_frontmatter(path: Path) -> tuple[dict[str, str] | None, str]:
@@ -92,6 +151,79 @@ def gather_contract_mappings() -> set[str]:
         prompt_targets.add(f"Auto-Prompts/{prompt_name}.md")
 
     return prompt_targets
+
+
+def iter_fallback_guard_files() -> list[Path]:
+    candidates: list[Path] = []
+    for path in ROOT.rglob("*"):
+        if not path.is_file():
+            continue
+
+        rel_path = path.relative_to(ROOT)
+        if any(part in TERM_GUARD_EXCLUDED_DIRECTORIES for part in rel_path.parts):
+            continue
+
+        if path.suffix.lower() in TERM_GUARD_EXCLUDED_SUFFIXES:
+            continue
+
+        candidates.append(path)
+
+    return sorted(candidates)
+
+
+def iter_guard_target_files() -> list[Path]:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(ROOT), "ls-files", "-z"],
+            check=True,
+            capture_output=True,
+            text=False,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return iter_fallback_guard_files()
+
+    candidates: list[Path] = []
+    for raw_rel in result.stdout.split(b"\x00"):
+        if not raw_rel:
+            continue
+
+        rel = raw_rel.decode("utf-8", errors="ignore")
+        rel_path = Path(rel)
+
+        if any(part in TERM_GUARD_EXCLUDED_DIRECTORIES for part in rel_path.parts):
+            continue
+
+        abs_path = ROOT / rel_path
+        if not abs_path.is_file():
+            continue
+
+        if abs_path.suffix.lower() in TERM_GUARD_EXCLUDED_SUFFIXES:
+            continue
+
+        candidates.append(abs_path)
+
+    return sorted(candidates)
+
+
+def validate_no_legacy_terms(issues: list[str]) -> None:
+    for file_path in iter_guard_target_files():
+        rel = file_path.relative_to(ROOT).as_posix()
+
+        try:
+            text = file_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            for pattern, label in TERM_GUARD_PATTERNS:
+                if pattern.search(line):
+                    snippet = line.strip()
+                    if len(snippet) > 140:
+                        snippet = snippet[:137] + "..."
+                    issues.append(
+                        f"TERM_GUARD prohibited phrase '{label}' found: {rel}:{line_number} ({snippet})"
+                    )
+                    break
 
 
 def main() -> int:
@@ -421,6 +553,9 @@ def main() -> int:
         for fragment, message in triage_idea_script_required_fragments.items():
             if fragment not in triage_idea_script_text:
                 issues.append(f"{message}: {triage_idea_script_rel}")
+
+    validate_no_legacy_terms(issues)
+
     payload: dict[str, Any] = {
         "issues": issues,
         "prompt_missing_wiki_contract": prompt_missing_wiki_contract,
