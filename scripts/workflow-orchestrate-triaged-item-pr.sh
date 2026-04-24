@@ -21,13 +21,20 @@ PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
 SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-false}"
 PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-}"
+AUTOMATION_PAT="${BANANA_AUTOMATION_PAT:-}"
+AGENT_AUTHOR_PAT_OVERRIDE="${BANANA_AGENT_AUTHOR_PAT:-}"
+PR_AUTHOR_PAT_OVERRIDE="${BANANA_PR_AUTHOR_PAT:-}"
 AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-}"
+AGENT_AUTHOR_LOGIN_OVERRIDE="${BANANA_AGENT_AUTHOR_LOGIN:-}"
+AGENT_CONTRIBUTOR_LOGIN_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_LOGIN:-}"
 AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
 AGENT_CONTRIBUTOR_EMAIL_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_EMAIL:-}"
 AGENT_CONTRIBUTOR_SLUG=""
+AGENT_CONTRIBUTOR_LOGIN=""
 AGENT_CONTRIBUTOR_NAME=""
 AGENT_CONTRIBUTOR_EMAIL=""
 AGENT_CONTRIBUTOR_LABEL=""
+PR_AUTHOR_TOKEN_SOURCE="default-gh-token"
 
 write_pr_output() {
   local status="$1"
@@ -49,7 +56,9 @@ write_pr_output() {
   PR_OUTPUT_AGENT_CONTRIBUTOR_NAME="$AGENT_CONTRIBUTOR_NAME" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_EMAIL="$AGENT_CONTRIBUTOR_EMAIL" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG="$AGENT_CONTRIBUTOR_SLUG" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_LOGIN="$AGENT_CONTRIBUTOR_LOGIN" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL="$AGENT_CONTRIBUTOR_LABEL" \
+  PR_OUTPUT_AUTHOR_TOKEN_SOURCE="$PR_AUTHOR_TOKEN_SOURCE" \
   python - "$PR_OUTPUT_PATH" <<'PY'
 import json
 import os
@@ -70,7 +79,9 @@ payload = {
     "automation_contributor_name": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_NAME", ""),
     "automation_contributor_email": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_EMAIL", ""),
     "automation_contributor_slug": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG", ""),
+    "automation_contributor_login": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LOGIN", ""),
     "automation_contributor_label": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL", ""),
+    "author_token_source": os.environ.get("PR_OUTPUT_AUTHOR_TOKEN_SOURCE", ""),
 }
 
 output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -124,6 +135,18 @@ slugify_agent_contributor() {
   printf '%s' "$slug"
 }
 
+to_env_var_suffix() {
+  local raw="${1:-}"
+  local suffix
+
+  suffix="$(printf '%s' "$raw" | tr '[:lower:]' '[:upper:]' | sed -E 's/[^A-Z0-9]+/_/g; s/^_+//; s/_+$//')"
+  if [[ -z "$suffix" ]]; then
+    suffix="WORKFLOW_AGENT"
+  fi
+
+  printf '%s' "$suffix"
+}
+
 append_csv_item_if_missing() {
   local csv="${1:-}"
   local item="${2:-}"
@@ -172,12 +195,33 @@ resolve_agent_contributor() {
   fi
 
   AGENT_CONTRIBUTOR_SLUG="$(slugify_agent_contributor "$candidate")"
+  AGENT_CONTRIBUTOR_LOGIN="${AGENT_CONTRIBUTOR_LOGIN_OVERRIDE:-${AGENT_AUTHOR_LOGIN_OVERRIDE:-$AGENT_CONTRIBUTOR_SLUG}}"
   AGENT_CONTRIBUTOR_LABEL="contributor:${AGENT_CONTRIBUTOR_SLUG}"
 
-  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-banana-${AGENT_CONTRIBUTOR_SLUG}[bot]}"
-  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-banana+${AGENT_CONTRIBUTOR_SLUG}@users.noreply.github.com}"
+  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-$AGENT_CONTRIBUTOR_LOGIN}"
+  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com}"
 
   PR_LABELS="$(append_csv_item_if_missing "$PR_LABELS" "$AGENT_CONTRIBUTOR_LABEL")"
+}
+
+resolve_pr_author_token() {
+  local suffix
+  local agent_pat_env
+  local agent_pat_value
+  local resolved_token
+
+  suffix="$(to_env_var_suffix "$AGENT_CONTRIBUTOR_SLUG")"
+  agent_pat_env="BANANA_AGENT_PAT_${suffix}"
+  agent_pat_value="${!agent_pat_env:-}"
+
+  resolved_token="${PR_AUTHOR_PAT_OVERRIDE:-${AGENT_AUTHOR_PAT_OVERRIDE:-${agent_pat_value:-${AUTOMATION_PAT:-}}}}"
+
+  if [[ -n "$resolved_token" ]]; then
+    export GH_TOKEN="$resolved_token"
+    PR_AUTHOR_TOKEN_SOURCE="pat"
+  else
+    PR_AUTHOR_TOKEN_SOURCE="default-gh-token"
+  fi
 }
 
 declare -a parsed_reviewers=()
@@ -185,6 +229,7 @@ parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
 PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
 
 resolve_agent_contributor
+resolve_pr_author_token
 echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
 
 TRIAGE_ID_SLUG="$(echo "$TRIAGE_ID" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
@@ -221,8 +266,10 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "base_branch": "${BASE_BRANCH}",
   "commit_message": "${COMMIT_MESSAGE}",
   "labels": "${PR_LABELS}",
+  "author_token_source": "${PR_AUTHOR_TOKEN_SOURCE}",
   "automation_contributor_name": "${AGENT_CONTRIBUTOR_NAME}",
   "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
+  "automation_contributor_login": "${AGENT_CONTRIBUTOR_LOGIN}",
   "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${DRAFT_PR}",
@@ -276,6 +323,7 @@ This pull request was orchestrated for a triaged item and requires human approva
 - Attempt: ${RUN_ATTEMPT}
 - Source branch: ${WORK_BRANCH}
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
+- Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}
 
 Command executed:
 ${CHANGE_COMMAND}
@@ -288,6 +336,11 @@ if [[ -n "$PR_BODY_OVERRIDE" ]]; then
     PR_BODY="${PR_BODY}
 
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
+  fi
+  if [[ "$PR_BODY" != *"Automation contributor login:"* ]]; then
+    PR_BODY="${PR_BODY}
+
+- Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}"
   fi
 else
   PR_BODY="$DEFAULT_PR_BODY"
@@ -316,6 +369,12 @@ for raw_label in "${label_items[@]}"; do
     echo "::warning::Failed to apply label '$label' to PR #$pr_number."
   fi
 done
+
+if [[ -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
+  if ! gh pr edit "$pr_number" --add-assignee "$AGENT_CONTRIBUTOR_LOGIN" >/dev/null 2>&1; then
+    echo "::warning::Failed to assign contributor '$AGENT_CONTRIBUTOR_LOGIN' to PR #$pr_number."
+  fi
+fi
 
 if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
   declare -A seen_reviewers=()

@@ -124,6 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BANANA_AUTOMATION_PAT: ${{ secrets.BANANA_AUTOMATION_PAT }}
       BANANA_SDLC_ID: ${{ github.event.inputs.sdlc_id || 'banana-sdlc' }}
       BANANA_SDLC_INCREMENT_PLAN_JSON: ${{ github.event.inputs.incremental_plan_json || '' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
