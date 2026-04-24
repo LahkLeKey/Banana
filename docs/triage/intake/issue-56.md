@@ -26,6 +26,6 @@ Wire classification pipeline endpoint so chatbot questions resolve through contr
 ## Cloud Orchestration Contract
 
 - Entry workflow: Orchestrate Triage Idea Cloud
-- Pull request labels: automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded,source-ai-issue,task,agent:csharp-api-agent
+- Pull request labels: automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,source-ai-issue,task,agent:csharp-api-agent
 - Base branch: main
 - Branch prefix: triage

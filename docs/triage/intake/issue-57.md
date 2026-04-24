@@ -26,6 +26,6 @@ Implement React chatbot UI and state flow using shared UI contracts.
 ## Cloud Orchestration Contract
 
 - Entry workflow: Orchestrate Triage Idea Cloud
-- Pull request labels: automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded,source-ai-issue,task,agent:react-ui-agent
+- Pull request labels: automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,source-ai-issue,task,agent:react-ui-agent
 - Base branch: main
 - Branch prefix: triage

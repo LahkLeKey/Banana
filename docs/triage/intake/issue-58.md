@@ -26,6 +26,6 @@ Implement Electron chatbot client wiring with classification API contract parity
 ## Cloud Orchestration Contract
 
 - Entry workflow: Orchestrate Triage Idea Cloud
-- Pull request labels: automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded,source-ai-issue,task,agent:electron-agent
+- Pull request labels: automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,source-ai-issue,task,agent:electron-agent
 - Base branch: main
 - Branch prefix: triage

@@ -2,7 +2,7 @@
 
 - Source issue: https://github.com/LahkLeKey/Banana/issues/55
 - Source title: task(epic-51): define chatbot request-response contract
-- Source labels: automation,copilot-bypass-vibe-coded,triage-idea,ai-generated,source-ai-issue,task,agent:api-pipeline-agent
+- Source labels: automation,speckit-driven,triage-idea,ai-generated,source-ai-issue,task,agent:api-pipeline-agent
 - Intake source: ai
 - Target agent: not-specified
 
@@ -26,6 +26,6 @@ Define chatbot request and response DTO contracts for arbitrary banana/not-banan
 ## Cloud Orchestration Contract
 
 - Entry workflow: Orchestrate Triage Idea Cloud
-- Pull request labels: automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,copilot-bypass-vibe-coded,source-ai-issue,task,agent:api-pipeline-agent
+- Pull request labels: automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,source-ai-issue,task,agent:api-pipeline-agent
 - Base branch: main
 - Branch prefix: triage

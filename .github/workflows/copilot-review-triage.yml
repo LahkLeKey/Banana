@@ -704,6 +704,15 @@ jobs:
             }
 
             const botLogin = "github-actions[bot]";
+            const prAuthorLogin = (pr.user?.login || "").toLowerCase();
+            if (prAuthorLogin === botLogin.toLowerCase()) {
+              core.notice(
+                "Skipping automated approval because github-actions[bot] cannot approve its own pull request."
+              );
+              await enableAutoMergeIfEligible();
+              return;
+            }
+
             const latestBotReview = latestReviewByUser.get(botLogin);
             if (
               latestBotReview &&
