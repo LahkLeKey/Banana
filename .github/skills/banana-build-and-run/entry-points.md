@@ -84,6 +84,7 @@
 - Cloud triage epic-decomposition defaults: `BANANA_TRIAGE_ENABLE_EPIC_DECOMPOSITION=true` and `BANANA_TRIAGE_EPIC_AUTO_DISPATCH_FIRST_TASK=true` to split epic ideas into story/task issues and bootstrap the first task CI run.
 - Custom triage prompt: `.github/prompts/triage.prompt.md` (use `/triage "idea"` to intake and orchestrate).
 - Backlog iteration prompt: `.github/prompts/iterate-the-backlog.prompt.md` (use `/iterate-the-backlog "scope"` to cycle existing backlog items through incremental orchestration and required-check gating).
+- Open PR focus prompt: `.github/prompts/focus-on-open-pull-requests.prompt.md` (use `/focus-on-open-pull-requests "scope"` to prioritize open PR merge readiness and dispatch required checks).
 - Human-approval gate workflow: `.github/workflows/require-human-approval.yml` (mark check required in branch protection/rulesets).
 - Copilot triage-and-approval workflow: `.github/workflows/copilot-review-triage.yml` (tracks unresolved Copilot findings and auto-approves automation PRs, or non-automation PRs with `copilot-auto-approve`).
 - Autonomous continuation labels: `copilot-autonomous-cycle` and `copilot-bypass-vibe-coded` (paired with `copilot-triage-ready` for bot-driven continuation and provenance tagging of vibe-coded integrations).
