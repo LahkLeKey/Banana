@@ -48,11 +48,7 @@ jobs:
 
             const labels = (pr.labels || []).map((label) => label.name);
             const headBranch = pr.head?.ref || "";
-            const soloBypassLabel = "solo-maintainer-bypass";
-            const autonomousCycleLabel = "copilot-autonomous-cycle";
-            const speckitDrivenLabel = "speckit-driven";
-            const copilotReadyLabel = "copilot-triage-ready";
-            const automationBotLogin = "github-actions[bot]";
+            const requiredApproverLogin = "LahkLeKey";
             const automationBranchPrefixes = [
               "triage/",
               "triage-feedback/",
@@ -81,22 +77,6 @@ jobs:
               return;
             }
 
-            if (labels.includes(soloBypassLabel)) {
-              const prAuthor = (pr.user?.login || "").toLowerCase();
-              const repoOwner = (context.repo.owner || "").toLowerCase();
-              if (prAuthor !== repoOwner) {
-                core.setFailed(
-                  `Label '${soloBypassLabel}' may only be used when the repository owner is the pull request author.`
-                );
-                return;
-              }
-
-              core.notice(
-                `Bypassing human approval gate because '${soloBypassLabel}' is set on an owner-authored PR.`
-              );
-              return;
-            }
-
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -116,32 +96,15 @@ jobs:
               });
             }
 
-            const latestBotReview = latestReviewByUser.get(automationBotLogin);
-            const hasCurrentBotApproval =
-              !!latestBotReview &&
-              latestBotReview.state === "APPROVED" &&
-              latestBotReview.commitId === pr.head.sha;
+            const requiredApproverReview = latestReviewByUser.get(requiredApproverLogin);
+            const hasRequiredApproverApproval =
+              !!requiredApproverReview &&
+              requiredApproverReview.state === "APPROVED" &&
+              requiredApproverReview.commitId === pr.head.sha;
 
-            const hasCopilotBypassLabel =
-              labels.includes(autonomousCycleLabel) || labels.includes(speckitDrivenLabel);
-
-            if (hasCopilotBypassLabel) {
-              if (!labels.includes(copilotReadyLabel)) {
-                core.setFailed(
-                  `Labels '${autonomousCycleLabel}' or '${speckitDrivenLabel}' require '${copilotReadyLabel}' before bypassing human approval.`
-                );
-                return;
-              }
-
-              if (!hasCurrentBotApproval) {
-                core.setFailed(
-                  `Labels '${autonomousCycleLabel}' or '${speckitDrivenLabel}' require a current-head approval from ${automationBotLogin}.`
-                );
-                return;
-              }
-
-              core.notice(
-                `Bypassing human approval gate because Copilot bypass label is set and Copilot triage approval is current.`
+            if (!hasRequiredApproverApproval) {
+              core.setFailed(
+                `Automation pull requests require a current-head approval from ${requiredApproverLogin} before merge.`
               );
               return;
             }
@@ -165,3 +128,4 @@ jobs:
             }
 
             core.notice(`Human approvals: ${approvingHumans.join(", ")}`);
+            core.notice(`Required approver '${requiredApproverLogin}' is current on head ${pr.head.sha}.`);

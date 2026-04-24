@@ -21,7 +21,9 @@ PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
 SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-false}"
 PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-}"
-AUTOMATION_PAT="${BANANA_AUTOMATION_PAT:-}"
+HUMAN_REVIEW_PAT="${BANANA_AUTOMATION_PAT:-}"
+REQUIRED_HUMAN_REVIEWER="${BANANA_REQUIRED_HUMAN_REVIEWER:-LahkLeKey}"
+AGENT_PAT_MAP_JSON="${BANANA_AGENT_PAT_MAP_JSON:-}"
 AGENT_AUTHOR_PAT_OVERRIDE="${BANANA_AGENT_AUTHOR_PAT:-}"
 PR_AUTHOR_PAT_OVERRIDE="${BANANA_PR_AUTHOR_PAT:-}"
 AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-}"
@@ -35,6 +37,7 @@ AGENT_CONTRIBUTOR_NAME=""
 AGENT_CONTRIBUTOR_EMAIL=""
 AGENT_CONTRIBUTOR_LABEL=""
 PR_AUTHOR_TOKEN_SOURCE="default-gh-token"
+AGENT_AUTHOR_LOGIN_RESOLVED=""
 
 write_pr_output() {
   local status="$1"
@@ -58,6 +61,8 @@ write_pr_output() {
   PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG="$AGENT_CONTRIBUTOR_SLUG" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_LOGIN="$AGENT_CONTRIBUTOR_LOGIN" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL="$AGENT_CONTRIBUTOR_LABEL" \
+  PR_OUTPUT_AGENT_AUTHOR_LOGIN="$AGENT_AUTHOR_LOGIN_RESOLVED" \
+  PR_OUTPUT_REQUIRED_HUMAN_REVIEWER="$REQUIRED_HUMAN_REVIEWER" \
   PR_OUTPUT_AUTHOR_TOKEN_SOURCE="$PR_AUTHOR_TOKEN_SOURCE" \
   python - "$PR_OUTPUT_PATH" <<'PY'
 import json
@@ -81,6 +86,8 @@ payload = {
     "automation_contributor_slug": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG", ""),
     "automation_contributor_login": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LOGIN", ""),
     "automation_contributor_label": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL", ""),
+    "agent_author_login": os.environ.get("PR_OUTPUT_AGENT_AUTHOR_LOGIN", ""),
+    "required_human_reviewer": os.environ.get("PR_OUTPUT_REQUIRED_HUMAN_REVIEWER", ""),
     "author_token_source": os.environ.get("PR_OUTPUT_AUTHOR_TOKEN_SOURCE", ""),
 }
 
@@ -208,28 +215,108 @@ resolve_pr_author_token() {
   local suffix
   local agent_pat_env
   local agent_pat_value
+  local agent_pat_map_value
   local resolved_token
 
   suffix="$(to_env_var_suffix "$AGENT_CONTRIBUTOR_SLUG")"
   agent_pat_env="BANANA_AGENT_PAT_${suffix}"
   agent_pat_value="${!agent_pat_env:-}"
+  agent_pat_map_value="$(resolve_agent_pat_from_map "$AGENT_CONTRIBUTOR_SLUG")"
 
-  resolved_token="${PR_AUTHOR_PAT_OVERRIDE:-${AGENT_AUTHOR_PAT_OVERRIDE:-${agent_pat_value:-${AUTOMATION_PAT:-}}}}"
+  resolved_token="${PR_AUTHOR_PAT_OVERRIDE:-${AGENT_AUTHOR_PAT_OVERRIDE:-${agent_pat_value:-${agent_pat_map_value:-}}}}"
 
   if [[ -n "$resolved_token" ]]; then
     export GH_TOKEN="$resolved_token"
-    PR_AUTHOR_TOKEN_SOURCE="pat"
+    PR_AUTHOR_TOKEN_SOURCE="agent-pat"
+
+    if [[ "$LOCAL_DRY_RUN" != "true" ]]; then
+      if ! AGENT_AUTHOR_LOGIN_RESOLVED="$(gh api user --jq '.login' 2>/dev/null)"; then
+        echo "::error::Unable to resolve agent author identity from configured PAT token."
+        exit 1
+      fi
+
+      if [[ -n "$AGENT_AUTHOR_LOGIN_OVERRIDE" && "${AGENT_AUTHOR_LOGIN_RESOLVED,,}" != "${AGENT_AUTHOR_LOGIN_OVERRIDE,,}" ]]; then
+        echo "::error::Configured agent PAT resolves to '$AGENT_AUTHOR_LOGIN_RESOLVED' but BANANA_AGENT_AUTHOR_LOGIN expects '$AGENT_AUTHOR_LOGIN_OVERRIDE'."
+        exit 1
+      fi
+
+      if [[ -z "$AGENT_CONTRIBUTOR_LOGIN_OVERRIDE" ]]; then
+        AGENT_CONTRIBUTOR_LOGIN="$AGENT_AUTHOR_LOGIN_RESOLVED"
+      fi
+
+      if [[ -z "$AGENT_CONTRIBUTOR_NAME_OVERRIDE" ]]; then
+        AGENT_CONTRIBUTOR_NAME="$AGENT_CONTRIBUTOR_LOGIN"
+      fi
+
+      if [[ -z "$AGENT_CONTRIBUTOR_EMAIL_OVERRIDE" ]]; then
+        AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com"
+      fi
+    fi
+  elif [[ "$LOCAL_DRY_RUN" == "true" ]]; then
+    PR_AUTHOR_TOKEN_SOURCE="dry-run-no-agent-token"
   else
-    PR_AUTHOR_TOKEN_SOURCE="default-gh-token"
+    echo "::error::Missing agent author PAT for ${AGENT_CONTRIBUTOR_SLUG}. Configure BANANA_PR_AUTHOR_PAT, BANANA_AGENT_AUTHOR_PAT, or BANANA_AGENT_PAT_${suffix}."
+    exit 1
+  fi
+}
+
+resolve_agent_pat_from_map() {
+  local slug="${1:-}"
+
+  if [[ -z "$AGENT_PAT_MAP_JSON" || -z "$slug" ]]; then
+  printf ''
+  return 0
+  fi
+
+  BANANA_AGENT_PAT_MAP_JSON="$AGENT_PAT_MAP_JSON" BANANA_AGENT_PAT_MAP_SLUG="$slug" python - <<'PY'
+import json
+import os
+
+raw = os.environ.get("BANANA_AGENT_PAT_MAP_JSON", "")
+slug = os.environ.get("BANANA_AGENT_PAT_MAP_SLUG", "")
+
+if not raw or not slug:
+  raise SystemExit(0)
+
+try:
+  payload = json.loads(raw)
+except Exception:
+  raise SystemExit(0)
+
+if not isinstance(payload, dict):
+  raise SystemExit(0)
+
+for key in (slug, f"agent:{slug}"):
+  value = payload.get(key)
+  if isinstance(value, str) and value:
+    print(value, end="")
+    break
+PY
+}
+
+run_pr_edit_with_review_token() {
+  local pr_number="$1"
+  shift
+
+  if [[ -n "$HUMAN_REVIEW_PAT" ]]; then
+    GH_TOKEN="$HUMAN_REVIEW_PAT" gh pr edit "$pr_number" "$@"
+  else
+    gh pr edit "$pr_number" "$@"
   fi
 }
 
 declare -a parsed_reviewers=()
 parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
-PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
 
 resolve_agent_contributor
 resolve_pr_author_token
+
+if [[ -n "$REQUIRED_HUMAN_REVIEWER" ]]; then
+  parsed_reviewers+=("$REQUIRED_HUMAN_REVIEWER")
+fi
+
+PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
+
 echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
 
 TRIAGE_ID_SLUG="$(echo "$TRIAGE_ID" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
@@ -267,10 +354,12 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "commit_message": "${COMMIT_MESSAGE}",
   "labels": "${PR_LABELS}",
   "author_token_source": "${PR_AUTHOR_TOKEN_SOURCE}",
+  "agent_author_login": "${AGENT_AUTHOR_LOGIN_RESOLVED}",
   "automation_contributor_name": "${AGENT_CONTRIBUTOR_NAME}",
   "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
   "automation_contributor_login": "${AGENT_CONTRIBUTOR_LOGIN}",
   "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
+  "required_human_reviewer": "${REQUIRED_HUMAN_REVIEWER}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${DRAFT_PR}",
   "changed_files_csv": "${CHANGED_FILES}",
@@ -322,8 +411,10 @@ This pull request was orchestrated for a triaged item and requires human approva
 - Run ID: ${RUN_ID}
 - Attempt: ${RUN_ATTEMPT}
 - Source branch: ${WORK_BRANCH}
+- Agent author login: ${AGENT_AUTHOR_LOGIN_RESOLVED}
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
 - Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}
+- Required human reviewer: ${REQUIRED_HUMAN_REVIEWER}
 
 Command executed:
 ${CHANGE_COMMAND}
@@ -341,6 +432,11 @@ if [[ -n "$PR_BODY_OVERRIDE" ]]; then
     PR_BODY="${PR_BODY}
 
 - Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}"
+  fi
+  if [[ "$PR_BODY" != *"Required human reviewer:"* ]]; then
+    PR_BODY="${PR_BODY}
+
+- Required human reviewer: ${REQUIRED_HUMAN_REVIEWER}"
   fi
 else
   PR_BODY="$DEFAULT_PR_BODY"
@@ -371,7 +467,7 @@ for raw_label in "${label_items[@]}"; do
 done
 
 if [[ -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
-  if ! gh pr edit "$pr_number" --add-assignee "$AGENT_CONTRIBUTOR_LOGIN" >/dev/null 2>&1; then
+  if ! run_pr_edit_with_review_token "$pr_number" --add-assignee "$AGENT_CONTRIBUTOR_LOGIN" >/dev/null 2>&1; then
     echo "::warning::Failed to assign contributor '$AGENT_CONTRIBUTOR_LOGIN' to PR #$pr_number."
   fi
 fi
@@ -385,7 +481,7 @@ if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
     fi
     seen_reviewers[$reviewer_key]=1
 
-    if ! gh pr edit "$pr_number" --add-reviewer "$reviewer" >/dev/null 2>&1; then
+    if ! run_pr_edit_with_review_token "$pr_number" --add-reviewer "$reviewer" >/dev/null 2>&1; then
       echo "::warning::Failed to request reviewer '$reviewer' for PR #$pr_number."
     fi
   done

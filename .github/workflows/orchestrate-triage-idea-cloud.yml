@@ -24,7 +24,7 @@ on:
       pr_labels:
         description: Comma-separated labels for generated pull request
         required: false
-        default: "automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven"
+        default: "automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:workflow-agent"
       base_branch:
         description: Base branch that receives generated pull request
         required: false
@@ -153,10 +153,12 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BANANA_AUTOMATION_PAT: ${{ secrets.BANANA_AUTOMATION_PAT }}
+      BANANA_AGENT_PAT_MAP_JSON: ${{ secrets.BANANA_AGENT_PAT_MAP_JSON }}
+      BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
       BANANA_TRIAGE_IDEA: ${{ github.event.inputs.idea || '' }}
       BANANA_TRIAGE_ISSUE_NUMBER: ${{ github.event_name == 'issues' && github.event.issue.number || github.event.inputs.issue_number || '' }}
       BANANA_TRIAGE_ISSUE_LABELS: ${{ github.event_name == 'issues' && join(github.event.issue.labels.*.name, ',') || github.event.inputs.issue_labels || 'triage-idea,copilot-suggestion,ai-generated,automation,speckit-driven' }}
-      BANANA_TRIAGE_PR_LABELS: ${{ github.event.inputs.pr_labels || 'automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven' }}
+      BANANA_TRIAGE_PR_LABELS: ${{ github.event.inputs.pr_labels || 'automation,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:workflow-agent' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'triage' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'false' }}

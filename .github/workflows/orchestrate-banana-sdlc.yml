@@ -34,7 +34,7 @@ on:
       labels:
         description: Labels applied to generated incremental pull requests
         required: false
-        default: "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven"
+        default: "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent"
       reviewers:
         description: Optional reviewer usernames as comma-separated values or [array] syntax
         required: false
@@ -125,12 +125,14 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BANANA_AUTOMATION_PAT: ${{ secrets.BANANA_AUTOMATION_PAT }}
+      BANANA_AGENT_PAT_MAP_JSON: ${{ secrets.BANANA_AGENT_PAT_MAP_JSON }}
+      BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
       BANANA_SDLC_ID: ${{ github.event.inputs.sdlc_id || 'banana-sdlc' }}
       BANANA_SDLC_INCREMENT_PLAN_JSON: ${{ github.event.inputs.incremental_plan_json || '' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'sdlc' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
-      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven' }}
+      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent' }}
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_SDLC_SKIP_NO_CHANGES: ${{ github.event.inputs.skip_no_changes || 'true' }}
       BANANA_SDLC_CONTINUE_ON_ERROR: ${{ github.event.inputs.continue_on_error || 'false' }}

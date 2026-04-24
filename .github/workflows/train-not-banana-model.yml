@@ -108,7 +108,7 @@ on:
       registry_history_pr_labels:
         description: Comma-separated labels for registry-history pull requests
         required: false
-        default: "automation,model-training,requires-human-approval"
+        default: "automation,model-training,requires-human-approval,agent:banana-classifier-agent"
       registry_history_pr_reviewers:
         description: Optional reviewer usernames as comma-separated values or [array] syntax for registry-history pull requests
         required: false
@@ -605,12 +605,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BANANA_AUTOMATION_PAT: ${{ secrets.BANANA_AUTOMATION_PAT }}
+          BANANA_AGENT_PAT_MAP_JSON: ${{ secrets.BANANA_AGENT_PAT_MAP_JSON }}
           BANANA_AGENT_PAT_BANANA_CLASSIFIER_AGENT: ${{ secrets.BANANA_AGENT_PAT_BANANA_CLASSIFIER_AGENT }}
+          BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
           BANANA_REGISTRY_HISTORY_BRANCH: ${{ github.event.inputs.registry_history_branch || 'model-release-history' }}
           BANANA_REGISTRY_HISTORY_PATH: ${{ github.event.inputs.registry_history_path || 'data/not-banana/model-release-history' }}
           BANANA_REGISTRY_PR_BASE_BRANCH: ${{ github.event.inputs.registry_history_pr_base_branch || 'main' }}
           BANANA_REGISTRY_OPEN_DRAFT_PR: ${{ github.event.inputs.registry_history_open_draft_pr || 'true' }}
-          BANANA_REGISTRY_PR_LABELS: ${{ github.event.inputs.registry_history_pr_labels || 'automation,model-training,requires-human-approval' }}
+          BANANA_REGISTRY_PR_LABELS: ${{ github.event.inputs.registry_history_pr_labels || 'automation,model-training,requires-human-approval,agent:banana-classifier-agent' }}
           BANANA_REGISTRY_PR_REVIEWERS: ${{ github.event.inputs.registry_history_pr_reviewers || '' }}
           BANANA_RELEASE_ARTIFACTS_SOURCE: artifacts/not-banana-release-artifacts
         run: |

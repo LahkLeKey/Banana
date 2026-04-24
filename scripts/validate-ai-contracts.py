@@ -24,12 +24,14 @@ WORKFLOW_ORCHESTRATE_TRIAGE_IDEA = ROOT / ".github" / "workflows" / "orchestrate
 WORKFLOW_ORCHESTRATE_AUTONOMOUS = ROOT / ".github" / "workflows" / "orchestrate-autonomous-self-training-cycle.yml"
 WORKFLOW_COPILOT_REVIEW_TRIAGE = ROOT / ".github" / "workflows" / "copilot-review-triage.yml"
 WORKFLOW_REQUIRE_HUMAN_APPROVAL = ROOT / ".github" / "workflows" / "require-human-approval.yml"
+WORKFLOW_AI_CONTRACT_GUARD = ROOT / ".github" / "workflows" / "ai-contract-guard.yml"
 WORKFLOW_TRAIN_NOT_BANANA = ROOT / ".github" / "workflows" / "train-not-banana-model.yml"
 SCRIPT_ORCHESTRATE_TRIAGED = ROOT / "scripts" / "workflow-orchestrate-triaged-item-pr.sh"
 SCRIPT_ORCHESTRATE_SDLC = ROOT / "scripts" / "workflow-orchestrate-sdlc.sh"
 SCRIPT_ORCHESTRATE_FEEDBACK = ROOT / "scripts" / "orchestrate-not-banana-feedback-loop.sh"
 SCRIPT_ORCHESTRATE_TRIAGE_IDEA = ROOT / "scripts" / "workflow-triage-idea-cloud.sh"
 SCRIPT_PERSIST_REGISTRY_HISTORY = ROOT / "scripts" / "workflow-persist-registry-history-pr.sh"
+SCRIPT_SPEC_AGENT_SMOKE = ROOT / "scripts" / "smoke-test-spec-driven-agents.sh"
 SCRIPT_ENSURE_SPECKIT = ROOT / "scripts" / "workflow-ensure-speckit.sh"
 CANONICAL_WIKI_REMOTE_URL = "https://github.com/LahkLeKey/Banana.wiki.git"
 
@@ -360,6 +362,19 @@ def main() -> int:
 
     if not SCRIPT_ENSURE_SPECKIT.exists():
         issues.append("SCRIPT missing Spec Kit preflight helper: scripts/workflow-ensure-speckit.sh")
+    if not SCRIPT_SPEC_AGENT_SMOKE.exists():
+        issues.append("SCRIPT missing spec-driven agent smoke test: scripts/smoke-test-spec-driven-agents.sh")
+    else:
+        smoke_text = SCRIPT_SPEC_AGENT_SMOKE.read_text(encoding="utf-8")
+        smoke_required_fragments = {
+            "workflow-orchestrate-triaged-item-pr.sh": "Smoke-test script missing triaged PR orchestration invocation",
+            "BANANA_LOCAL_DRY_RUN": "Smoke-test script missing dry-run safety guard",
+            "LahkLeKey": "Smoke-test script missing LahkLeKey review requirement assertion",
+        }
+
+        for fragment, message in smoke_required_fragments.items():
+            if fragment not in smoke_text:
+                issues.append(message)
     workflow_contract_targets = [
         WORKFLOW_ORCHESTRATE_TRIAGED,
         WORKFLOW_ORCHESTRATE_FEEDBACK,
@@ -382,7 +397,18 @@ def main() -> int:
 
         if "BANANA_AUTOMATION_PAT" not in workflow_text:
             issues.append(f"WORKFLOW missing automation PAT wiring: {workflow_rel}")
+
+        if "BANANA_AGENT_PAT_MAP_JSON" not in workflow_text:
+            issues.append(f"WORKFLOW missing agent PAT map wiring: {workflow_rel}")
+
+        if "BANANA_REQUIRED_HUMAN_REVIEWER" not in workflow_text:
+            issues.append(f"WORKFLOW missing required human reviewer wiring: {workflow_rel}")
+        if workflow_path == WORKFLOW_ORCHESTRATE_TRIAGED:
+            if "agent:workflow-agent" not in workflow_text:
+                issues.append(f"WORKFLOW missing workflow-agent label default: {workflow_rel}")
         if workflow_path == WORKFLOW_ORCHESTRATE_FEEDBACK:
+            if "agent:banana-classifier-agent" not in workflow_text:
+                issues.append(f"WORKFLOW missing classifier agent label default: {workflow_rel}")
             if "github.event_name == 'schedule' && 'true'" not in workflow_text:
                 issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {workflow_rel}")
 
@@ -411,6 +437,9 @@ def main() -> int:
             "workflow-sync-wiki.sh": "WORKFLOW missing wiki sync step",
             "BANANA_WIKI_REMOTE_URL": "WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring",
             "BANANA_AUTOMATION_PAT": "WORKFLOW missing automation PAT wiring",
+            "BANANA_AGENT_PAT_MAP_JSON": "WORKFLOW missing agent PAT map wiring",
+            "BANANA_REQUIRED_HUMAN_REVIEWER": "WORKFLOW missing required human reviewer wiring",
+            "agent:workflow-agent": "WORKFLOW missing workflow-agent PR label default",
             CANONICAL_WIKI_REMOTE_URL: "WORKFLOW missing canonical wiki remote default",
         }
 
@@ -441,6 +470,15 @@ def main() -> int:
     if "BANANA_AUTOMATION_PAT" not in sdlc_workflow_text:
         issues.append(f"WORKFLOW missing automation PAT wiring: {sdlc_workflow_rel}")
 
+    if "BANANA_AGENT_PAT_MAP_JSON" not in sdlc_workflow_text:
+        issues.append(f"WORKFLOW missing agent PAT map wiring: {sdlc_workflow_rel}")
+
+    if "BANANA_REQUIRED_HUMAN_REVIEWER" not in sdlc_workflow_text:
+        issues.append(f"WORKFLOW missing required human reviewer wiring: {sdlc_workflow_rel}")
+
+    if "agent:workflow-agent" not in sdlc_workflow_text:
+        issues.append(f"WORKFLOW missing workflow-agent PR label default: {sdlc_workflow_rel}")
+
     autonomous_rel = WORKFLOW_ORCHESTRATE_AUTONOMOUS.relative_to(ROOT).as_posix()
     if not WORKFLOW_ORCHESTRATE_AUTONOMOUS.exists():
         issues.append(f"WORKFLOW missing autonomous self-training cycle workflow: {autonomous_rel}")
@@ -453,6 +491,10 @@ def main() -> int:
             "workflow-orchestrate-sdlc.sh": "WORKFLOW missing SDLC orchestrator execution",
             "training-profile ci --session-mode single --max-sessions 1": "WORKFLOW missing bounded minimal-resource training command",
             "BANANA_AUTOMATION_PAT": "WORKFLOW missing automation PAT wiring",
+            "BANANA_AGENT_PAT_MAP_JSON": "WORKFLOW missing agent PAT map wiring",
+            "BANANA_REQUIRED_HUMAN_REVIEWER": "WORKFLOW missing required human reviewer wiring",
+            "agent:workflow-agent": "WORKFLOW missing workflow-agent PR label default",
+            "agent:banana-classifier-agent": "WORKFLOW missing classifier agent increment labels",
             CANONICAL_WIKI_REMOTE_URL: "WORKFLOW missing canonical wiki remote default",
         }
 
@@ -494,10 +536,9 @@ def main() -> int:
     require_human_required_fragments = {
         "workflow_dispatch": "WORKFLOW missing workflow_dispatch trigger",
         "pull_number": "WORKFLOW missing workflow_dispatch pull_number input",
-        "copilot-autonomous-cycle": "WORKFLOW missing autonomous-cycle bypass label support",
-        "speckit-driven": "WORKFLOW missing spec-kit provenance label support",
-        "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready bypass guard",
-        "github-actions[bot]": "WORKFLOW missing bot-approval continuity guard",
+        "requiredApproverLogin = \"LahkLeKey\"": "WORKFLOW missing required LahkLeKey approver contract",
+        "current-head approval from ${requiredApproverLogin}": "WORKFLOW missing required-approver failure contract",
+        "endsWith(\"[bot]\")": "WORKFLOW missing bot-authorship detection contract",
     }
 
     for fragment, message in require_human_required_fragments.items():
@@ -510,15 +551,20 @@ def main() -> int:
     triaged_required_fragments = {
         "BANANA_AGENT_CONTRIBUTOR": "Triaged PR script missing automation contributor override input",
         "BANANA_AUTOMATION_PAT": "Triaged PR script missing automation PAT input",
+        "BANANA_REQUIRED_HUMAN_REVIEWER": "Triaged PR script missing required human reviewer input",
+        "BANANA_AGENT_PAT_MAP_JSON": "Triaged PR script missing agent PAT map input",
         "BANANA_AGENT_CONTRIBUTOR_LOGIN": "Triaged PR script missing contributor login override input",
         "resolve_agent_contributor": "Triaged PR script missing automation contributor resolution",
+        "resolve_agent_pat_from_map": "Triaged PR script missing agent PAT map resolution",
         "resolve_pr_author_token": "Triaged PR script missing PAT author token resolution",
+        "run_pr_edit_with_review_token": "Triaged PR script missing human PAT assignment path",
         "contributor:${AGENT_CONTRIBUTOR_SLUG}": "Triaged PR script missing contributor label propagation",
         "git config user.name \"$AGENT_CONTRIBUTOR_NAME\"": "Triaged PR script missing contributor git author name wiring",
         "git config user.email \"$AGENT_CONTRIBUTOR_EMAIL\"": "Triaged PR script missing contributor git author email wiring",
         "--add-assignee": "Triaged PR script missing contributor assignee wiring",
         "Automation contributor:": "Triaged PR script missing contributor metadata in PR body",
         "Automation contributor login:": "Triaged PR script missing contributor login metadata in PR body",
+        "Required human reviewer:": "Triaged PR script missing required reviewer metadata in PR body",
         "author_token_source": "Triaged PR script missing author token source reporting",
     }
 
@@ -549,6 +595,12 @@ def main() -> int:
     if "speckit-driven" not in sdlc_script_text:
         issues.append("SDLC script missing spec-kit provenance label defaults")
 
+    if "agent:workflow-agent" not in sdlc_script_text:
+        issues.append("SDLC script missing workflow-agent default label")
+
+    if "agent:banana-classifier-agent" not in sdlc_script_text:
+        issues.append("SDLC script missing classifier-agent increment labels")
+
     if "workflow-ensure-speckit.sh" not in sdlc_script_text:
         issues.append("SDLC script missing Spec Kit preflight invocation")
 
@@ -562,14 +614,20 @@ def main() -> int:
         persist_required_fragments = {
             "BANANA_AGENT_CONTRIBUTOR": "Registry-history PR script missing automation contributor override input",
             "BANANA_AUTOMATION_PAT": "Registry-history PR script missing automation PAT input",
+            "BANANA_REQUIRED_HUMAN_REVIEWER": "Registry-history PR script missing required human reviewer input",
+            "BANANA_AGENT_PAT_MAP_JSON": "Registry-history PR script missing agent PAT map input",
             "BANANA_AGENT_CONTRIBUTOR_LOGIN": "Registry-history PR script missing contributor login override input",
+            "agent:banana-classifier-agent": "Registry-history PR script missing classifier agent label default",
+            "resolve_agent_pat_from_map": "Registry-history PR script missing agent PAT map resolution",
             "resolve_pr_author_token": "Registry-history PR script missing PAT author token resolution",
+            "run_pr_edit_with_review_token": "Registry-history PR script missing human PAT assignment path",
             "contributor:${AGENT_CONTRIBUTOR_SLUG}": "Registry-history PR script missing contributor label propagation",
             "git config user.name \"$AGENT_CONTRIBUTOR_NAME\"": "Registry-history PR script missing contributor git author name wiring",
             "git config user.email \"$AGENT_CONTRIBUTOR_EMAIL\"": "Registry-history PR script missing contributor git author email wiring",
             "--add-assignee": "Registry-history PR script missing contributor assignee wiring",
             "Automation contributor:": "Registry-history PR script missing contributor metadata in PR body",
             "Automation contributor login:": "Registry-history PR script missing contributor login metadata in PR body",
+            "Required human reviewer:": "Registry-history PR script missing required reviewer metadata in PR body",
             "author_token_source": "Registry-history PR script missing author token source reporting",
         }
 
@@ -585,12 +643,29 @@ def main() -> int:
         train_workflow_required_fragments = {
             "workflow-persist-registry-history-pr.sh": "WORKFLOW missing registry-history script execution",
             "BANANA_AUTOMATION_PAT": "WORKFLOW missing automation PAT wiring",
+            "BANANA_AGENT_PAT_MAP_JSON": "WORKFLOW missing agent PAT map wiring",
             "BANANA_AGENT_PAT_BANANA_CLASSIFIER_AGENT": "WORKFLOW missing classifier agent PAT wiring",
+            "BANANA_REQUIRED_HUMAN_REVIEWER": "WORKFLOW missing required human reviewer wiring",
+            "agent:banana-classifier-agent": "WORKFLOW missing classifier agent PR label default",
         }
 
         for fragment, message in train_workflow_required_fragments.items():
             if fragment not in train_workflow_text:
                 issues.append(f"{message}: {train_workflow_rel}")
+
+    ai_contract_guard_rel = WORKFLOW_AI_CONTRACT_GUARD.relative_to(ROOT).as_posix()
+    if not WORKFLOW_AI_CONTRACT_GUARD.exists():
+        issues.append(f"WORKFLOW missing AI contract guard workflow: {ai_contract_guard_rel}")
+    else:
+        ai_contract_guard_text = WORKFLOW_AI_CONTRACT_GUARD.read_text(encoding="utf-8")
+        ai_contract_guard_required_fragments = {
+            "validate-ai-contracts.py": "WORKFLOW missing AI contract validation step",
+            "smoke-test-spec-driven-agents.sh": "WORKFLOW missing spec-driven agent smoke-test step",
+        }
+
+        for fragment, message in ai_contract_guard_required_fragments.items():
+            if fragment not in ai_contract_guard_text:
+                issues.append(f"{message}: {ai_contract_guard_rel}")
 
     triage_idea_script_rel = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
     if not SCRIPT_ORCHESTRATE_TRIAGE_IDEA.exists():

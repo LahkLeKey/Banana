@@ -78,8 +78,11 @@
 - Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
 - Automation contributor attribution + authorship overrides for triaged and registry-history PR scripts:
 	- Contributor identity: `BANANA_AGENT_CONTRIBUTOR`, `BANANA_AGENT_CONTRIBUTOR_LOGIN`, `BANANA_AGENT_CONTRIBUTOR_NAME`, `BANANA_AGENT_CONTRIBUTOR_EMAIL`
-	- PR author token precedence: `BANANA_PR_AUTHOR_PAT`, then `BANANA_AGENT_AUTHOR_PAT`, then `BANANA_AGENT_PAT_<AGENT_SLUG_UPPER>`, then `BANANA_AUTOMATION_PAT`, then default `GH_TOKEN`
+	- PR author token precedence: `BANANA_PR_AUTHOR_PAT`, then `BANANA_AGENT_AUTHOR_PAT`, then `BANANA_AGENT_PAT_<AGENT_SLUG_UPPER>`, then `BANANA_AGENT_PAT_MAP_JSON[<agent-slug>]`; author token is required for non-dry-run automation
+	- Human review token: `BANANA_AUTOMATION_PAT` (used for contributor assignment and reviewer requests)
+	- Required reviewer default: `BANANA_REQUIRED_HUMAN_REVIEWER=LahkLeKey` on automation workflows
 	- If contributor identity is unset, triaged orchestration derives it from the first `agent:*` PR label and otherwise falls back to `workflow-agent`; contributor assignment is applied via `gh pr edit --add-assignee`
+- Multi-agent smoke test command: `bash scripts/smoke-test-spec-driven-agents.sh` (exercises spec-driven attribution across a representative agent set in dry-run mode).
 - Cloud triage idea orchestration workflow: `.github/workflows/orchestrate-triage-idea-cloud.yml` via issue labels `triage-idea`/`copilot-suggestion`/`human-triage` or workflow dispatch with `idea`/`issue_number`.
 - Human agent-target issue templates: `.github/ISSUE_TEMPLATE/human-*.yml` (one template per static helper in `.github/agents/*.agent.md`, each embedding routing markers for source and target agent).
 - Cloud triage idea orchestration script: `bash scripts/workflow-triage-idea-cloud.sh`.

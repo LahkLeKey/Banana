@@ -20,3 +20,7 @@ jobs:
       - name: Validate AI contracts and terminology guard
         run: |
           python scripts/validate-ai-contracts.py
+
+      - name: Smoke test spec-driven agent attribution
+        run: |
+          bash scripts/smoke-test-spec-driven-agents.sh

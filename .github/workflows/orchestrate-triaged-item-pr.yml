@@ -44,7 +44,7 @@ on:
       labels:
         description: Comma-separated labels for generated pull requests
         required: false
-        default: "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven"
+        default: "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent"
       reviewers:
         description: Optional reviewer usernames as comma-separated values or [array] syntax
         required: false
@@ -117,6 +117,8 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BANANA_AUTOMATION_PAT: ${{ secrets.BANANA_AUTOMATION_PAT }}
+      BANANA_AGENT_PAT_MAP_JSON: ${{ secrets.BANANA_AGENT_PAT_MAP_JSON }}
+      BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
       BANANA_TRIAGE_ID: ${{ github.event.inputs.triage_id }}
       BANANA_TRIAGE_CHANGE_COMMAND: ${{ github.event.inputs.change_command }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
@@ -125,7 +127,7 @@ jobs:
       BANANA_PR_TITLE: ${{ github.event.inputs.pr_title || '' }}
       BANANA_PR_BODY: ${{ github.event.inputs.pr_body || '' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
-      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven' }}
+      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent' }}
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_SKIP_IF_NO_CHANGES: ${{ github.event.inputs.skip_if_no_changes || 'false' }}
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
