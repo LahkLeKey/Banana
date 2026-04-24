@@ -1,0 +1,61 @@
+name: Human Intake - MCP Epic Orchestration
+description: Route human-authored MCP epic requests to banana-sdlc with story and task scaffolding context.
+title: "[mcp-epic] "
+labels:
+  - triage-idea
+  - automation
+  - epic
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- banana-intake-source: human -->
+        <!-- banana-target-agent: banana-sdlc -->
+        Human-authored epic intake for MCP server orchestration in Banana.
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: Describe the business outcome and why MCP orchestration is needed.
+    validations:
+      required: true
+  - type: textarea
+    id: architecture_scope
+    attributes:
+      label: Architecture Scope
+      description: List impacted domains (native, API, frontend clients, workflows, runtime).
+    validations:
+      required: true
+  - type: textarea
+    id: story_slices
+    attributes:
+      label: User Story Slices
+      description: List the user stories you expect this epic to be decomposed into.
+      placeholder: |
+        - Contract and capability discovery
+        - Runtime orchestration and failover
+        - API and frontend integration parity
+        - Validation and release readiness
+    validations:
+      required: true
+  - type: textarea
+    id: bootstrap_tasks
+    attributes:
+      label: Bootstrap Tasks
+      description: List initial tasks suitable for first-iteration CI execution.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints and Risks
+      description: Include deadlines, rollout concerns, and explicit non-goals.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Define how epic completion will be measured.
+    validations:
+      required: true
