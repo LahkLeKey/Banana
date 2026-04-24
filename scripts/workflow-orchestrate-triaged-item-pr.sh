@@ -21,13 +21,17 @@ PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
 SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-false}"
 PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-}"
+REQUIRED_HUMAN_REVIEWER="${BANANA_REQUIRED_HUMAN_REVIEWER:-LahkLeKey}"
 AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-}"
+AGENT_CONTRIBUTOR_LOGIN_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_LOGIN:-}"
 AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
 AGENT_CONTRIBUTOR_EMAIL_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_EMAIL:-}"
 AGENT_CONTRIBUTOR_SLUG=""
+AGENT_CONTRIBUTOR_LOGIN=""
 AGENT_CONTRIBUTOR_NAME=""
 AGENT_CONTRIBUTOR_EMAIL=""
 AGENT_CONTRIBUTOR_LABEL=""
+PR_AUTHOR_TOKEN_SOURCE="github-token"
 
 write_pr_output() {
   local status="$1"
@@ -49,7 +53,10 @@ write_pr_output() {
   PR_OUTPUT_AGENT_CONTRIBUTOR_NAME="$AGENT_CONTRIBUTOR_NAME" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_EMAIL="$AGENT_CONTRIBUTOR_EMAIL" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG="$AGENT_CONTRIBUTOR_SLUG" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_LOGIN="$AGENT_CONTRIBUTOR_LOGIN" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL="$AGENT_CONTRIBUTOR_LABEL" \
+  PR_OUTPUT_REQUIRED_HUMAN_REVIEWER="$REQUIRED_HUMAN_REVIEWER" \
+  PR_OUTPUT_AUTHOR_TOKEN_SOURCE="$PR_AUTHOR_TOKEN_SOURCE" \
   python - "$PR_OUTPUT_PATH" <<'PY'
 import json
 import os
@@ -70,7 +77,10 @@ payload = {
     "automation_contributor_name": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_NAME", ""),
     "automation_contributor_email": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_EMAIL", ""),
     "automation_contributor_slug": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG", ""),
+    "automation_contributor_login": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LOGIN", ""),
     "automation_contributor_label": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL", ""),
+    "required_human_reviewer": os.environ.get("PR_OUTPUT_REQUIRED_HUMAN_REVIEWER", ""),
+    "author_token_source": os.environ.get("PR_OUTPUT_AUTHOR_TOKEN_SOURCE", ""),
 }
 
 output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -172,19 +182,26 @@ resolve_agent_contributor() {
   fi
 
   AGENT_CONTRIBUTOR_SLUG="$(slugify_agent_contributor "$candidate")"
+  AGENT_CONTRIBUTOR_LOGIN="${AGENT_CONTRIBUTOR_LOGIN_OVERRIDE:-$AGENT_CONTRIBUTOR_SLUG}"
   AGENT_CONTRIBUTOR_LABEL="contributor:${AGENT_CONTRIBUTOR_SLUG}"
 
-  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-banana-${AGENT_CONTRIBUTOR_SLUG}[bot]}"
-  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-banana+${AGENT_CONTRIBUTOR_SLUG}@users.noreply.github.com}"
+  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-$AGENT_CONTRIBUTOR_LOGIN}"
+  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com}"
 
   PR_LABELS="$(append_csv_item_if_missing "$PR_LABELS" "$AGENT_CONTRIBUTOR_LABEL")"
 }
 
 declare -a parsed_reviewers=()
 parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
-PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
 
 resolve_agent_contributor
+
+if [[ -n "$REQUIRED_HUMAN_REVIEWER" ]]; then
+  parsed_reviewers+=("$REQUIRED_HUMAN_REVIEWER")
+fi
+
+PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
+
 echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
 
 TRIAGE_ID_SLUG="$(echo "$TRIAGE_ID" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
@@ -221,9 +238,12 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "base_branch": "${BASE_BRANCH}",
   "commit_message": "${COMMIT_MESSAGE}",
   "labels": "${PR_LABELS}",
+  "author_token_source": "${PR_AUTHOR_TOKEN_SOURCE}",
   "automation_contributor_name": "${AGENT_CONTRIBUTOR_NAME}",
   "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
+  "automation_contributor_login": "${AGENT_CONTRIBUTOR_LOGIN}",
   "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
+  "required_human_reviewer": "${REQUIRED_HUMAN_REVIEWER}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${DRAFT_PR}",
   "changed_files_csv": "${CHANGED_FILES}",
@@ -276,6 +296,8 @@ This pull request was orchestrated for a triaged item and requires human approva
 - Attempt: ${RUN_ATTEMPT}
 - Source branch: ${WORK_BRANCH}
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
+- Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}
+- Required human reviewer: ${REQUIRED_HUMAN_REVIEWER}
 
 Command executed:
 ${CHANGE_COMMAND}
@@ -288,6 +310,16 @@ if [[ -n "$PR_BODY_OVERRIDE" ]]; then
     PR_BODY="${PR_BODY}
 
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
+  fi
+  if [[ "$PR_BODY" != *"Automation contributor login:"* ]]; then
+    PR_BODY="${PR_BODY}
+
+- Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}"
+  fi
+  if [[ "$PR_BODY" != *"Required human reviewer:"* ]]; then
+    PR_BODY="${PR_BODY}
+
+- Required human reviewer: ${REQUIRED_HUMAN_REVIEWER}"
   fi
 else
   PR_BODY="$DEFAULT_PR_BODY"
@@ -316,6 +348,12 @@ for raw_label in "${label_items[@]}"; do
     echo "::warning::Failed to apply label '$label' to PR #$pr_number."
   fi
 done
+
+if [[ -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
+  if ! gh pr edit "$pr_number" --add-assignee "$AGENT_CONTRIBUTOR_LOGIN" >/dev/null 2>&1; then
+    echo "::warning::Failed to assign contributor '$AGENT_CONTRIBUTOR_LOGIN' to PR #$pr_number."
+  fi
+fi
 
 if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
   declare -A seen_reviewers=()

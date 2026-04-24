@@ -11,16 +11,20 @@ BRANCH_PREFIX="${BANANA_REGISTRY_HISTORY_BRANCH:-model-release-history}"
 BASE_BRANCH="${BANANA_REGISTRY_PR_BASE_BRANCH:-main}"
 HISTORY_PATH="${BANANA_REGISTRY_HISTORY_PATH:-data/not-banana/model-release-history}"
 OPEN_DRAFT_PR="${BANANA_REGISTRY_OPEN_DRAFT_PR:-true}"
-PR_LABELS="${BANANA_REGISTRY_PR_LABELS:-automation,model-training,requires-human-approval}"
+PR_LABELS="${BANANA_REGISTRY_PR_LABELS:-automation,model-training,requires-human-approval,agent:banana-classifier-agent}"
 PR_REVIEWERS="${BANANA_REGISTRY_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
+REQUIRED_HUMAN_REVIEWER="${BANANA_REQUIRED_HUMAN_REVIEWER:-LahkLeKey}"
 AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-banana-classifier-agent}"
+AGENT_CONTRIBUTOR_LOGIN_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_LOGIN:-}"
 AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
 AGENT_CONTRIBUTOR_EMAIL_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_EMAIL:-}"
 AGENT_CONTRIBUTOR_SLUG=""
+AGENT_CONTRIBUTOR_LOGIN=""
 AGENT_CONTRIBUTOR_NAME=""
 AGENT_CONTRIBUTOR_EMAIL=""
 AGENT_CONTRIBUTOR_LABEL=""
+PR_AUTHOR_TOKEN_SOURCE="github-token"
 
 parse_list_input() {
   local raw="${1:-}"
@@ -99,19 +103,26 @@ append_csv_item_if_missing() {
 
 resolve_agent_contributor() {
   AGENT_CONTRIBUTOR_SLUG="$(slugify_agent_contributor "$AGENT_CONTRIBUTOR_OVERRIDE")"
+  AGENT_CONTRIBUTOR_LOGIN="${AGENT_CONTRIBUTOR_LOGIN_OVERRIDE:-$AGENT_CONTRIBUTOR_SLUG}"
   AGENT_CONTRIBUTOR_LABEL="contributor:${AGENT_CONTRIBUTOR_SLUG}"
 
-  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-banana-${AGENT_CONTRIBUTOR_SLUG}[bot]}"
-  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-banana+${AGENT_CONTRIBUTOR_SLUG}@users.noreply.github.com}"
+  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-$AGENT_CONTRIBUTOR_LOGIN}"
+  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com}"
 
   PR_LABELS="$(append_csv_item_if_missing "$PR_LABELS" "$AGENT_CONTRIBUTOR_LABEL")"
 }
 
 declare -a parsed_reviewers=()
 parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
-PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
 
 resolve_agent_contributor
+
+if [[ -n "$REQUIRED_HUMAN_REVIEWER" ]]; then
+  parsed_reviewers+=("$REQUIRED_HUMAN_REVIEWER")
+fi
+
+PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
+
 echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
 
 if [[ ! -d "$RELEASE_ARTIFACTS_SOURCE" ]]; then
@@ -147,9 +158,12 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "base_branch": "${BASE_BRANCH}",
   "history_path": "${HISTORY_PATH}",
   "labels": "${PR_LABELS}",
+  "author_token_source": "${PR_AUTHOR_TOKEN_SOURCE}",
   "automation_contributor_name": "${AGENT_CONTRIBUTOR_NAME}",
   "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
+  "automation_contributor_login": "${AGENT_CONTRIBUTOR_LOGIN}",
   "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
+  "required_human_reviewer": "${REQUIRED_HUMAN_REVIEWER}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${OPEN_DRAFT_PR}",
   "simulated_pr_url": "https://example.invalid/${WORK_BRANCH}"
@@ -216,6 +230,8 @@ This pull request was orchestrated by the not-banana training workflow and requi
 - Snapshot path: ${HISTORY_PATH}/${STAMP}
 - Source branch: ${WORK_BRANCH}
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
+- Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}
+- Required human reviewer: ${REQUIRED_HUMAN_REVIEWER}
 EOF
 )
 
@@ -249,6 +265,12 @@ for raw_label in "${label_items[@]}"; do
     echo "::warning::Failed to apply label '$label' to PR #$pr_number."
   fi
 done
+
+if [[ -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
+  if ! gh pr edit "$pr_number" --add-assignee "$AGENT_CONTRIBUTOR_LOGIN" >/dev/null 2>&1; then
+    echo "::warning::Failed to assign contributor '$AGENT_CONTRIBUTOR_LOGIN' to PR #$pr_number."
+  fi
+fi
 
 if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
   declare -A seen_reviewers=()
