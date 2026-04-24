@@ -28,6 +28,7 @@ SCRIPT_ORCHESTRATE_TRIAGED = ROOT / "scripts" / "workflow-orchestrate-triaged-it
 SCRIPT_ORCHESTRATE_SDLC = ROOT / "scripts" / "workflow-orchestrate-sdlc.sh"
 SCRIPT_ORCHESTRATE_FEEDBACK = ROOT / "scripts" / "orchestrate-not-banana-feedback-loop.sh"
 SCRIPT_ORCHESTRATE_TRIAGE_IDEA = ROOT / "scripts" / "workflow-triage-idea-cloud.sh"
+SCRIPT_PERSIST_REGISTRY_HISTORY = ROOT / "scripts" / "workflow-persist-registry-history-pr.sh"
 SCRIPT_ENSURE_SPECKIT = ROOT / "scripts" / "workflow-ensure-speckit.sh"
 CANONICAL_WIKI_REMOTE_URL = "https://github.com/LahkLeKey/Banana.wiki.git"
 
@@ -497,9 +498,31 @@ def main() -> int:
     if "workflow-ensure-speckit.sh" not in triaged_script_text:
         issues.append("Triaged PR script missing Spec Kit preflight invocation")
 
+    triaged_required_fragments = {
+        "BANANA_AGENT_CONTRIBUTOR": "Triaged PR script missing automation contributor override input",
+        "resolve_agent_contributor": "Triaged PR script missing automation contributor resolution",
+        "contributor:${AGENT_CONTRIBUTOR_SLUG}": "Triaged PR script missing contributor label propagation",
+        "git config user.name \"$AGENT_CONTRIBUTOR_NAME\"": "Triaged PR script missing contributor git author name wiring",
+        "git config user.email \"$AGENT_CONTRIBUTOR_EMAIL\"": "Triaged PR script missing contributor git author email wiring",
+        "Automation contributor:": "Triaged PR script missing contributor metadata in PR body",
+    }
+
+    for fragment, message in triaged_required_fragments.items():
+        if fragment not in triaged_script_text:
+            issues.append(message)
+
     feedback_script_text = SCRIPT_ORCHESTRATE_FEEDBACK.read_text(encoding="utf-8")
     if "workflow-ensure-speckit.sh" not in feedback_script_text:
         issues.append("Feedback-loop script missing Spec Kit preflight invocation")
+
+    feedback_required_fragments = {
+        "BANANA_AGENT_CONTRIBUTOR": "Feedback-loop script missing automation contributor override",
+        "agent:banana-classifier-agent": "Feedback-loop script missing classifier agent label default",
+    }
+
+    for fragment, message in feedback_required_fragments.items():
+        if fragment not in feedback_script_text:
+            issues.append(message)
 
     sdlc_script_text = SCRIPT_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
     if "WIKI_REMOTE_URL=" not in sdlc_script_text:
@@ -513,6 +536,25 @@ def main() -> int:
 
     if "workflow-ensure-speckit.sh" not in sdlc_script_text:
         issues.append("SDLC script missing Spec Kit preflight invocation")
+
+    persist_script_rel = SCRIPT_PERSIST_REGISTRY_HISTORY.relative_to(ROOT).as_posix()
+    if not SCRIPT_PERSIST_REGISTRY_HISTORY.exists():
+        issues.append(
+            f"SCRIPT missing registry-history PR orchestration script: {persist_script_rel}"
+        )
+    else:
+        persist_script_text = SCRIPT_PERSIST_REGISTRY_HISTORY.read_text(encoding="utf-8")
+        persist_required_fragments = {
+            "BANANA_AGENT_CONTRIBUTOR": "Registry-history PR script missing automation contributor override input",
+            "contributor:${AGENT_CONTRIBUTOR_SLUG}": "Registry-history PR script missing contributor label propagation",
+            "git config user.name \"$AGENT_CONTRIBUTOR_NAME\"": "Registry-history PR script missing contributor git author name wiring",
+            "git config user.email \"$AGENT_CONTRIBUTOR_EMAIL\"": "Registry-history PR script missing contributor git author email wiring",
+            "Automation contributor:": "Registry-history PR script missing contributor metadata in PR body",
+        }
+
+        for fragment, message in persist_required_fragments.items():
+            if fragment not in persist_script_text:
+                issues.append(f"{message}: {persist_script_rel}")
 
     triage_idea_script_rel = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
     if not SCRIPT_ORCHESTRATE_TRIAGE_IDEA.exists():

@@ -21,6 +21,13 @@ PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
 SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-false}"
 PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-}"
+AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-}"
+AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
+AGENT_CONTRIBUTOR_EMAIL_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_EMAIL:-}"
+AGENT_CONTRIBUTOR_SLUG=""
+AGENT_CONTRIBUTOR_NAME=""
+AGENT_CONTRIBUTOR_EMAIL=""
+AGENT_CONTRIBUTOR_LABEL=""
 
 write_pr_output() {
   local status="$1"
@@ -39,6 +46,10 @@ write_pr_output() {
   PR_OUTPUT_BRANCH="$WORK_BRANCH" \
   PR_OUTPUT_TRIAGE_ID="$TRIAGE_ID" \
   PR_OUTPUT_BASE_BRANCH="$BASE_BRANCH" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_NAME="$AGENT_CONTRIBUTOR_NAME" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_EMAIL="$AGENT_CONTRIBUTOR_EMAIL" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG="$AGENT_CONTRIBUTOR_SLUG" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL="$AGENT_CONTRIBUTOR_LABEL" \
   python - "$PR_OUTPUT_PATH" <<'PY'
 import json
 import os
@@ -56,6 +67,10 @@ payload = {
     "pr_url": os.environ.get("PR_OUTPUT_URL", ""),
     "pr_number": os.environ.get("PR_OUTPUT_NUMBER", ""),
     "reason": os.environ.get("PR_OUTPUT_REASON", ""),
+    "automation_contributor_name": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_NAME", ""),
+    "automation_contributor_email": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_EMAIL", ""),
+    "automation_contributor_slug": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG", ""),
+    "automation_contributor_label": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL", ""),
 }
 
 output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -96,9 +111,81 @@ parse_list_input() {
   done
 }
 
+slugify_agent_contributor() {
+  local raw="${1:-}"
+  local slug
+
+  slug="$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/^agent://; s/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
+
+  if [[ -z "$slug" ]]; then
+    slug="workflow-agent"
+  fi
+
+  printf '%s' "$slug"
+}
+
+append_csv_item_if_missing() {
+  local csv="${1:-}"
+  local item="${2:-}"
+  local -a parsed_items=()
+  local normalized_item
+  local existing
+
+  normalized_item="$(echo "$item" | xargs)"
+  if [[ -z "$normalized_item" ]]; then
+    printf '%s' "$csv"
+    return 0
+  fi
+
+  parse_list_input "$csv" parsed_items
+  for existing in "${parsed_items[@]}"; do
+    if [[ "${existing,,}" == "${normalized_item,,}" ]]; then
+      printf '%s' "$csv"
+      return 0
+    fi
+  done
+
+  if [[ -z "$csv" ]]; then
+    printf '%s' "$normalized_item"
+  else
+    printf '%s,%s' "$csv" "$normalized_item"
+  fi
+}
+
+resolve_agent_contributor() {
+  local candidate="${AGENT_CONTRIBUTOR_OVERRIDE:-}"
+  local label
+  local -a parsed_labels=()
+
+  if [[ -z "$candidate" ]]; then
+    parse_list_input "${PR_LABELS:-}" parsed_labels
+    for label in "${parsed_labels[@]}"; do
+      if [[ "$label" == agent:* ]]; then
+        candidate="${label#agent:}"
+        break
+      fi
+    done
+  fi
+
+  if [[ -z "$candidate" ]]; then
+    candidate="workflow-agent"
+  fi
+
+  AGENT_CONTRIBUTOR_SLUG="$(slugify_agent_contributor "$candidate")"
+  AGENT_CONTRIBUTOR_LABEL="contributor:${AGENT_CONTRIBUTOR_SLUG}"
+
+  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-banana-${AGENT_CONTRIBUTOR_SLUG}[bot]}"
+  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-banana+${AGENT_CONTRIBUTOR_SLUG}@users.noreply.github.com}"
+
+  PR_LABELS="$(append_csv_item_if_missing "$PR_LABELS" "$AGENT_CONTRIBUTOR_LABEL")"
+}
+
 declare -a parsed_reviewers=()
 parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
 PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
+
+resolve_agent_contributor
+echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
 
 TRIAGE_ID_SLUG="$(echo "$TRIAGE_ID" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
 if [[ -z "$TRIAGE_ID_SLUG" ]]; then
@@ -134,6 +221,9 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "base_branch": "${BASE_BRANCH}",
   "commit_message": "${COMMIT_MESSAGE}",
   "labels": "${PR_LABELS}",
+  "automation_contributor_name": "${AGENT_CONTRIBUTOR_NAME}",
+  "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
+  "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${DRAFT_PR}",
   "changed_files_csv": "${CHANGED_FILES}",
@@ -166,8 +256,8 @@ if git diff --cached --quiet; then
   exit 1
 fi
 
-git config user.name "github-actions[bot]"
-git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+git config user.name "$AGENT_CONTRIBUTOR_NAME"
+git config user.email "$AGENT_CONTRIBUTOR_EMAIL"
 git commit -m "$COMMIT_MESSAGE"
 git push -u origin "$WORK_BRANCH"
 
@@ -185,6 +275,7 @@ This pull request was orchestrated for a triaged item and requires human approva
 - Run ID: ${RUN_ID}
 - Attempt: ${RUN_ATTEMPT}
 - Source branch: ${WORK_BRANCH}
+- Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
 
 Command executed:
 ${CHANGE_COMMAND}
@@ -193,6 +284,11 @@ EOF
 
 if [[ -n "$PR_BODY_OVERRIDE" ]]; then
   PR_BODY="$PR_BODY_OVERRIDE"
+  if [[ "$PR_BODY" != *"Automation contributor:"* ]]; then
+    PR_BODY="${PR_BODY}
+
+- Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
+  fi
 else
   PR_BODY="$DEFAULT_PR_BODY"
 fi

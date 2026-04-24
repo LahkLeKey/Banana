@@ -76,6 +76,7 @@
 - CI repository persistence PR controls: `registry_history_pr_base_branch`, `registry_history_open_draft_pr`, `registry_history_pr_labels`, and `registry_history_pr_reviewers`.
 - Push-based corpus persistence: when `data/not-banana/corpus.json` changes, `Train Not-Banana Model` now persists registry history automatically in the same run.
 - Triaged-code PR orchestration workflow: `.github/workflows/orchestrate-triaged-item-pr.yml` via workflow dispatch with `triage_id` + `change_command`.
+- Automation contributor attribution overrides: `BANANA_AGENT_CONTRIBUTOR`, `BANANA_AGENT_CONTRIBUTOR_NAME`, and `BANANA_AGENT_CONTRIBUTOR_EMAIL` (triaged + registry-history PR scripts). If unset, triaged orchestration derives contributor identity from the first `agent:*` PR label and otherwise falls back to `workflow-agent`.
 - Cloud triage idea orchestration workflow: `.github/workflows/orchestrate-triage-idea-cloud.yml` via issue labels `triage-idea`/`copilot-suggestion`/`human-triage` or workflow dispatch with `idea`/`issue_number`.
 - Human agent-target issue templates: `.github/ISSUE_TEMPLATE/human-*.yml` (one template per static helper in `.github/agents/*.agent.md`, each embedding routing markers for source and target agent).
 - Cloud triage idea orchestration script: `bash scripts/workflow-triage-idea-cloud.sh`.

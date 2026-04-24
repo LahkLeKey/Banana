@@ -14,6 +14,13 @@ OPEN_DRAFT_PR="${BANANA_REGISTRY_OPEN_DRAFT_PR:-true}"
 PR_LABELS="${BANANA_REGISTRY_PR_LABELS:-automation,model-training,requires-human-approval}"
 PR_REVIEWERS="${BANANA_REGISTRY_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
+AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-banana-classifier-agent}"
+AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
+AGENT_CONTRIBUTOR_EMAIL_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_EMAIL:-}"
+AGENT_CONTRIBUTOR_SLUG=""
+AGENT_CONTRIBUTOR_NAME=""
+AGENT_CONTRIBUTOR_EMAIL=""
+AGENT_CONTRIBUTOR_LABEL=""
 
 parse_list_input() {
   local raw="${1:-}"
@@ -49,9 +56,63 @@ parse_list_input() {
   done
 }
 
+slugify_agent_contributor() {
+  local raw="${1:-}"
+  local slug
+
+  slug="$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]' | sed -E 's/^agent://; s/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
+
+  if [[ -z "$slug" ]]; then
+    slug="workflow-agent"
+  fi
+
+  printf '%s' "$slug"
+}
+
+append_csv_item_if_missing() {
+  local csv="${1:-}"
+  local item="${2:-}"
+  local -a parsed_items=()
+  local normalized_item
+  local existing
+
+  normalized_item="$(echo "$item" | xargs)"
+  if [[ -z "$normalized_item" ]]; then
+    printf '%s' "$csv"
+    return 0
+  fi
+
+  parse_list_input "$csv" parsed_items
+  for existing in "${parsed_items[@]}"; do
+    if [[ "${existing,,}" == "${normalized_item,,}" ]]; then
+      printf '%s' "$csv"
+      return 0
+    fi
+  done
+
+  if [[ -z "$csv" ]]; then
+    printf '%s' "$normalized_item"
+  else
+    printf '%s,%s' "$csv" "$normalized_item"
+  fi
+}
+
+resolve_agent_contributor() {
+  AGENT_CONTRIBUTOR_SLUG="$(slugify_agent_contributor "$AGENT_CONTRIBUTOR_OVERRIDE")"
+  AGENT_CONTRIBUTOR_LABEL="contributor:${AGENT_CONTRIBUTOR_SLUG}"
+
+  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-banana-${AGENT_CONTRIBUTOR_SLUG}[bot]}"
+  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-banana+${AGENT_CONTRIBUTOR_SLUG}@users.noreply.github.com}"
+
+  PR_LABELS="$(append_csv_item_if_missing "$PR_LABELS" "$AGENT_CONTRIBUTOR_LABEL")"
+}
+
 declare -a parsed_reviewers=()
 parse_list_input "${PR_REVIEWERS:-}" parsed_reviewers
 PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
+
+resolve_agent_contributor
+echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
 
 if [[ ! -d "$RELEASE_ARTIFACTS_SOURCE" ]]; then
   echo "::error::Release artifacts source does not exist: $RELEASE_ARTIFACTS_SOURCE"
@@ -86,6 +147,9 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "base_branch": "${BASE_BRANCH}",
   "history_path": "${HISTORY_PATH}",
   "labels": "${PR_LABELS}",
+  "automation_contributor_name": "${AGENT_CONTRIBUTOR_NAME}",
+  "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
+  "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${OPEN_DRAFT_PR}",
   "simulated_pr_url": "https://example.invalid/${WORK_BRANCH}"
@@ -131,8 +195,8 @@ latest_path.parent.mkdir(parents=True, exist_ok=True)
 latest_path.write_text(json.dumps(latest, indent=2) + "\n", encoding="utf-8")
 PY
 
-git config user.name "github-actions[bot]"
-git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+git config user.name "$AGENT_CONTRIBUTOR_NAME"
+git config user.email "$AGENT_CONTRIBUTOR_EMAIL"
 git add "$HISTORY_PATH"
 
 if git diff --cached --quiet; then
@@ -151,6 +215,7 @@ This pull request was orchestrated by the not-banana training workflow and requi
 - Attempt: ${RUN_ATTEMPT}
 - Snapshot path: ${HISTORY_PATH}/${STAMP}
 - Source branch: ${WORK_BRANCH}
+- Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
 EOF
 )
 
