@@ -19,11 +19,20 @@ AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-banana-classifier-agent}
 AGENT_CONTRIBUTOR_LOGIN_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_LOGIN:-}"
 AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
 AGENT_CONTRIBUTOR_EMAIL_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_EMAIL:-}"
+AGENT_IDENTITY_REGISTRY_PATH="${BANANA_AGENT_IDENTITY_REGISTRY_PATH:-docs/automation/agent-pulse/agent-identities.json}"
 AGENT_CONTRIBUTOR_SLUG=""
 AGENT_CONTRIBUTOR_LOGIN=""
 AGENT_CONTRIBUTOR_NAME=""
 AGENT_CONTRIBUTOR_EMAIL=""
 AGENT_CONTRIBUTOR_LABEL=""
+AGENT_CONTRIBUTOR_ICON=""
+AGENT_CONTRIBUTOR_PROFILE_URL=""
+AGENT_CONTRIBUTOR_FOLLOWABLE="false"
+AGENT_CONTRIBUTOR_CAN_ASSIGN="false"
+AGENT_IDENTITY_DISPLAY_NAME=""
+AGENT_IDENTITY_GITHUB_LOGIN=""
+AGENT_IDENTITY_CONTRIBUTOR_NAME=""
+AGENT_IDENTITY_CONTRIBUTOR_EMAIL=""
 PR_AUTHOR_TOKEN_SOURCE="github-token"
 
 parse_list_input() {
@@ -101,13 +110,120 @@ append_csv_item_if_missing() {
   fi
 }
 
+load_agent_identity_profile() {
+  local slug="$1"
+  local serialized
+
+  AGENT_IDENTITY_DISPLAY_NAME=""
+  AGENT_IDENTITY_GITHUB_LOGIN=""
+  AGENT_IDENTITY_CONTRIBUTOR_NAME=""
+  AGENT_IDENTITY_CONTRIBUTOR_EMAIL=""
+  AGENT_CONTRIBUTOR_ICON=""
+  AGENT_CONTRIBUTOR_PROFILE_URL=""
+  AGENT_CONTRIBUTOR_FOLLOWABLE="false"
+
+  if [[ ! -f "$AGENT_IDENTITY_REGISTRY_PATH" ]]; then
+    return 0
+  fi
+
+  serialized="$(python - "$AGENT_IDENTITY_REGISTRY_PATH" "$slug" <<'PY'
+import json
+import pathlib
+import shlex
+import sys
+
+registry_path = pathlib.Path(sys.argv[1])
+agent_slug = sys.argv[2]
+entry = {}
+
+try:
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+except Exception:
+    payload = {}
+
+if not isinstance(payload, dict):
+  payload = {}
+
+agents = payload.get("agents", [])
+if not isinstance(agents, list):
+  agents = []
+
+for candidate in agents:
+    if not isinstance(candidate, dict):
+        continue
+    if str(candidate.get("slug", "")).strip() == agent_slug:
+        entry = candidate
+        break
+
+def clean(value: object) -> str:
+  return str(value or "").replace("\n", " ").strip()
+
+values = {
+  "AGENT_IDENTITY_DISPLAY_NAME": clean(entry.get("display_name", "")),
+  "AGENT_CONTRIBUTOR_ICON": clean(entry.get("icon", "")),
+  "AGENT_IDENTITY_GITHUB_LOGIN": clean(entry.get("github_login", "")),
+  "AGENT_CONTRIBUTOR_PROFILE_URL": clean(entry.get("follow_url", "")),
+  "AGENT_CONTRIBUTOR_FOLLOWABLE": clean(entry.get("followable", "false")).lower(),
+  "AGENT_IDENTITY_CONTRIBUTOR_NAME": clean(entry.get("contributor_name", "")),
+  "AGENT_IDENTITY_CONTRIBUTOR_EMAIL": clean(entry.get("contributor_email", "")),
+}
+
+if values["AGENT_CONTRIBUTOR_FOLLOWABLE"] not in {"true", "false"}:
+  values["AGENT_CONTRIBUTOR_FOLLOWABLE"] = "false"
+
+for key, value in values.items():
+  print(f"{key}={shlex.quote(value)}")
+PY
+)"
+
+  eval "$serialized"
+}
+
 resolve_agent_contributor() {
   AGENT_CONTRIBUTOR_SLUG="$(slugify_agent_contributor "$AGENT_CONTRIBUTOR_OVERRIDE")"
-  AGENT_CONTRIBUTOR_LOGIN="${AGENT_CONTRIBUTOR_LOGIN_OVERRIDE:-$AGENT_CONTRIBUTOR_SLUG}"
+  load_agent_identity_profile "$AGENT_CONTRIBUTOR_SLUG"
+
+  if [[ -n "$AGENT_CONTRIBUTOR_LOGIN_OVERRIDE" ]]; then
+    AGENT_CONTRIBUTOR_LOGIN="$AGENT_CONTRIBUTOR_LOGIN_OVERRIDE"
+  elif [[ -n "$AGENT_IDENTITY_GITHUB_LOGIN" ]]; then
+    AGENT_CONTRIBUTOR_LOGIN="$AGENT_IDENTITY_GITHUB_LOGIN"
+  else
+    AGENT_CONTRIBUTOR_LOGIN="$AGENT_CONTRIBUTOR_SLUG"
+  fi
+
   AGENT_CONTRIBUTOR_LABEL="contributor:${AGENT_CONTRIBUTOR_SLUG}"
 
-  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-$AGENT_CONTRIBUTOR_LOGIN}"
-  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com}"
+  if [[ -n "$AGENT_CONTRIBUTOR_NAME_OVERRIDE" ]]; then
+    AGENT_CONTRIBUTOR_NAME="$AGENT_CONTRIBUTOR_NAME_OVERRIDE"
+  elif [[ -n "$AGENT_IDENTITY_CONTRIBUTOR_NAME" ]]; then
+    AGENT_CONTRIBUTOR_NAME="$AGENT_IDENTITY_CONTRIBUTOR_NAME"
+  elif [[ -n "$AGENT_IDENTITY_DISPLAY_NAME" && -n "$AGENT_CONTRIBUTOR_ICON" ]]; then
+    AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_ICON} ${AGENT_IDENTITY_DISPLAY_NAME}"
+  elif [[ -n "$AGENT_IDENTITY_DISPLAY_NAME" ]]; then
+    AGENT_CONTRIBUTOR_NAME="$AGENT_IDENTITY_DISPLAY_NAME"
+  else
+    AGENT_CONTRIBUTOR_NAME="$AGENT_CONTRIBUTOR_LOGIN"
+  fi
+
+  if [[ -n "$AGENT_CONTRIBUTOR_EMAIL_OVERRIDE" ]]; then
+    AGENT_CONTRIBUTOR_EMAIL="$AGENT_CONTRIBUTOR_EMAIL_OVERRIDE"
+  elif [[ -n "$AGENT_IDENTITY_CONTRIBUTOR_EMAIL" ]]; then
+    AGENT_CONTRIBUTOR_EMAIL="$AGENT_IDENTITY_CONTRIBUTOR_EMAIL"
+  else
+    AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com"
+  fi
+
+  if [[ -z "$AGENT_CONTRIBUTOR_PROFILE_URL" ]]; then
+    AGENT_CONTRIBUTOR_PROFILE_URL="docs/automation/agent-pulse/agents/${AGENT_CONTRIBUTOR_SLUG}/"
+  fi
+
+  if [[ -n "$AGENT_CONTRIBUTOR_LOGIN_OVERRIDE" ]]; then
+    AGENT_CONTRIBUTOR_CAN_ASSIGN="true"
+  elif [[ "$AGENT_CONTRIBUTOR_FOLLOWABLE" == "true" && -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
+    AGENT_CONTRIBUTOR_CAN_ASSIGN="true"
+  else
+    AGENT_CONTRIBUTOR_CAN_ASSIGN="false"
+  fi
 
   PR_LABELS="$(append_csv_item_if_missing "$PR_LABELS" "$AGENT_CONTRIBUTOR_LABEL")"
 }
@@ -123,7 +239,10 @@ fi
 
 PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
 
-echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
+echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}> (icon=${AGENT_CONTRIBUTOR_ICON:-n/a}, follow=${AGENT_CONTRIBUTOR_PROFILE_URL})"
+if [[ "$AGENT_CONTRIBUTOR_FOLLOWABLE" != "true" ]]; then
+  echo "::notice::Pulse will show a default avatar for '${AGENT_CONTRIBUTOR_SLUG}' until a real GitHub login/avatar is mapped in docs/automation/agent-pulse/agent-identities.json."
+fi
 
 if [[ ! -d "$RELEASE_ARTIFACTS_SOURCE" ]]; then
   echo "::error::Release artifacts source does not exist: $RELEASE_ARTIFACTS_SOURCE"
@@ -163,6 +282,9 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
   "automation_contributor_login": "${AGENT_CONTRIBUTOR_LOGIN}",
   "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
+  "automation_contributor_icon": "${AGENT_CONTRIBUTOR_ICON}",
+  "automation_contributor_profile_url": "${AGENT_CONTRIBUTOR_PROFILE_URL}",
+  "automation_contributor_followable": "${AGENT_CONTRIBUTOR_FOLLOWABLE}",
   "required_human_reviewer": "${REQUIRED_HUMAN_REVIEWER}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${OPEN_DRAFT_PR}",
@@ -231,6 +353,9 @@ This pull request was orchestrated by the not-banana training workflow and requi
 - Source branch: ${WORK_BRANCH}
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
 - Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}
+- Automation contributor icon: ${AGENT_CONTRIBUTOR_ICON}
+- Automation contributor profile: ${AGENT_CONTRIBUTOR_PROFILE_URL}
+- Automation contributor followable: ${AGENT_CONTRIBUTOR_FOLLOWABLE}
 - Required human reviewer: ${REQUIRED_HUMAN_REVIEWER}
 EOF
 )
@@ -266,7 +391,7 @@ for raw_label in "${label_items[@]}"; do
   fi
 done
 
-if [[ -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
+if [[ "$AGENT_CONTRIBUTOR_CAN_ASSIGN" == "true" && -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
   if ! gh pr edit "$pr_number" --add-assignee "$AGENT_CONTRIBUTOR_LOGIN" >/dev/null 2>&1; then
     echo "::warning::Failed to assign contributor '$AGENT_CONTRIBUTOR_LOGIN' to PR #$pr_number."
   fi

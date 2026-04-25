@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import os
 import pathlib
 import re
@@ -22,6 +23,10 @@ def utc_now_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def to_display_name(agent_slug: str) -> str:
+    return " ".join(part.capitalize() for part in agent_slug.split("-"))
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Create an agent pulse snapshot markdown file for one SDLC increment."
@@ -35,6 +40,11 @@ def parse_args() -> argparse.Namespace:
         default="docs/automation/agent-pulse",
         help="Root folder for management pulse documentation",
     )
+    parser.add_argument(
+        "--identity-registry",
+        default="docs/automation/agent-pulse/agent-identities.json",
+        help="Identity registry JSON file used to resolve icon/name/follow metadata",
+    )
     return parser.parse_args()
 
 
@@ -47,7 +57,49 @@ def build_run_url() -> str:
     return "local-run"
 
 
-def ensure_agent_readme(path: pathlib.Path, agent_slug: str) -> None:
+def load_agent_identity(registry_path: pathlib.Path, agent_slug: str) -> dict[str, str]:
+    fallback = {
+        "display_name": to_display_name(agent_slug),
+        "icon": "",
+        "follow_url": f"docs/automation/agent-pulse/agents/{agent_slug}/",
+        "followable": "false",
+    }
+
+    if not registry_path.exists():
+        return fallback
+
+    try:
+        payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return fallback
+
+    if not isinstance(payload, dict):
+        return fallback
+
+    agents = payload.get("agents", [])
+    if not isinstance(agents, list):
+        return fallback
+
+    for entry in agents:
+        if not isinstance(entry, dict):
+            continue
+        if slugify(str(entry.get("slug", ""))) != agent_slug:
+            continue
+
+        resolved = {
+            "display_name": str(entry.get("display_name", "")).strip() or fallback["display_name"],
+            "icon": str(entry.get("icon", "")).strip(),
+            "follow_url": str(entry.get("follow_url", "")).strip() or fallback["follow_url"],
+            "followable": str(entry.get("followable", "false")).strip().lower(),
+        }
+        if resolved["followable"] not in {"true", "false"}:
+            resolved["followable"] = "false"
+        return resolved
+
+    return fallback
+
+
+def ensure_agent_readme(path: pathlib.Path, agent_slug: str, identity: dict[str, str]) -> None:
     if path.exists():
         return
 
@@ -57,6 +109,13 @@ def ensure_agent_readme(path: pathlib.Path, agent_slug: str) -> None:
                 f"# Agent Pulse: {agent_slug}",
                 "",
                 "This folder stores autonomous run snapshots for this agent.",
+                "",
+                "## Identity",
+                "",
+                f"- Display Name: {identity.get('display_name', to_display_name(agent_slug))}",
+                f"- Icon: {identity.get('icon', '') or 'n/a'}",
+                f"- Follow URL: {identity.get('follow_url', f'docs/automation/agent-pulse/agents/{agent_slug}/')}",
+                f"- Followable on GitHub: {identity.get('followable', 'false')}",
                 "",
                 "## Snapshot Convention",
                 "",
@@ -86,11 +145,13 @@ def main() -> int:
     recorded_at = utc_now_iso()
 
     output_root = pathlib.Path(args.output_root)
+    identity_registry_path = pathlib.Path(args.identity_registry)
     agent_root = output_root / "agents" / agent_slug
     run_dir = agent_root / "runs"
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    ensure_agent_readme(agent_root / "README.md", agent_slug)
+    identity = load_agent_identity(identity_registry_path, agent_slug)
+    ensure_agent_readme(agent_root / "README.md", agent_slug, identity)
 
     snapshot_path = run_dir / f"run-{run_id}-attempt-{run_attempt}-{increment_slug}.md"
     snapshot_path.write_text(
@@ -99,6 +160,10 @@ def main() -> int:
                 "# Agent Run Snapshot",
                 "",
                 f"- Agent: {agent_slug}",
+                f"- Agent Display Name: {identity.get('display_name', to_display_name(agent_slug))}",
+                f"- Agent Icon: {identity.get('icon', '') or 'n/a'}",
+                f"- Agent Follow URL: {identity.get('follow_url', f'docs/automation/agent-pulse/agents/{agent_slug}/')}",
+                f"- Agent Followable on GitHub: {identity.get('followable', 'false')}",
                 f"- Increment: {args.increment_id}",
                 f"- Intent: {args.intent}",
                 f"- Scope: {args.scope}",

@@ -204,6 +204,30 @@ public sealed class NativeLibraryResolverTests
         NativeLibraryResolver.EnsureConfigured(configuration, logger);
     }
 
+    [Fact]
+    public void EnsureConfigured_WhenResolverAlreadySet_HandlesInvalidOperation()
+    {
+        var configuration = new ConfigurationBuilder().Build();
+        var logger = CreateLogger();
+        var isConfiguredField = typeof(NativeLibraryResolver).GetField("_isConfigured", BindingFlags.NonPublic | BindingFlags.Static);
+
+        Assert.NotNull(isConfiguredField);
+
+        NativeLibraryResolver.EnsureConfigured(configuration, logger);
+        isConfiguredField!.SetValue(null, false);
+
+        try
+        {
+            NativeLibraryResolver.EnsureConfigured(configuration, logger);
+        }
+        finally
+        {
+            isConfiguredField.SetValue(null, true);
+        }
+
+        Assert.True((bool)isConfiguredField.GetValue(null)!);
+    }
+
     private static ILogger CreateLogger()
     {
         return LoggerFactory.CreateLogger("NativeLibraryResolverTests");

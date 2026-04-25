@@ -91,7 +91,19 @@ jobs:
           name: native-c-coverage
           path: .artifacts/native-c
 
+  dotnet-api-coverage-denominator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Banana.Api denominator manifest
+        run: |
+          bash scripts/check-banana-api-coverage-denominator.sh
+
   dotnet-unit-tests-coverage:
+    needs:
+      - dotnet-api-coverage-denominator
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -159,11 +171,23 @@ jobs:
             -reporttypes:"Cobertura;HtmlInline;TextSummary" \
             -assemblyfilters:"+Banana.Api;-*Tests"
 
+      - name: Enforce .NET unit line-rate gate (100%)
+        run: |
+          bash scripts/check-dotnet-coverage-threshold.sh \
+            .artifacts/coverage/unit-report/Summary.txt \
+            100 \
+            .artifacts/coverage/unit-report/unit-line-rate-gate.json \
+            unit-line-rate
+
       - name: Print .NET unit coverage summary in job output
         if: always()
         run: |
           echo "===== .NET Unit Coverage Summary ====="
           cat .artifacts/coverage/unit-report/Summary.txt
+          if [[ -f .artifacts/coverage/unit-report/unit-line-rate-gate.json ]]; then
+            echo "===== .NET Unit Coverage Gate ====="
+            cat .artifacts/coverage/unit-report/unit-line-rate-gate.json
+          fi
 
       - name: Add .NET unit coverage summary to GitHub Actions summary
         if: always()
@@ -174,6 +198,14 @@ jobs:
             echo '```text'
             cat .artifacts/coverage/unit-report/Summary.txt
             echo '```'
+            if [[ -f .artifacts/coverage/unit-report/unit-line-rate-gate.json ]]; then
+              echo
+              echo "## .NET Unit Coverage Gate"
+              echo
+              echo '```json'
+              cat .artifacts/coverage/unit-report/unit-line-rate-gate.json
+              echo '```'
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload unit test results
@@ -191,6 +223,8 @@ jobs:
           path: .artifacts/coverage/unit-report
 
   dotnet-integration-tests-coverage:
+    needs:
+      - dotnet-api-coverage-denominator
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -258,11 +292,40 @@ jobs:
             -reporttypes:"Cobertura;HtmlInline;TextSummary" \
             -assemblyfilters:"+Banana.Api;-*Tests"
 
+      - name: Generate integration uncovered-lines artifact
+        run: |
+          report_file="$(find .artifacts/coverage/integration-report -maxdepth 1 -type f -name '*.xml' | head -n 1)"
+          if [[ -z "$report_file" ]]; then
+            echo "No integration Cobertura XML report found in .artifacts/coverage/integration-report"
+            exit 1
+          fi
+
+          python scripts/export-cobertura-uncovered-lines.py \
+            --report "$report_file" \
+            --output-json .artifacts/coverage/integration-report/uncovered-lines.json \
+            --output-text .artifacts/coverage/integration-report/uncovered-lines.txt
+
+      - name: Generate .NET integration line-rate gate diagnostics (100%)
+        run: |
+          bash scripts/check-dotnet-coverage-threshold.sh \
+            .artifacts/coverage/integration-report/Summary.txt \
+            100 \
+            .artifacts/coverage/integration-report/integration-line-rate-gate.json \
+            integration-line-rate || true
+
       - name: Print .NET integration coverage summary in job output
         if: always()
         run: |
           echo "===== .NET Integration Coverage Summary ====="
           cat .artifacts/coverage/integration-report/Summary.txt
+          if [[ -f .artifacts/coverage/integration-report/integration-line-rate-gate.json ]]; then
+            echo "===== .NET Integration Coverage Gate ====="
+            cat .artifacts/coverage/integration-report/integration-line-rate-gate.json
+          fi
+          if [[ -f .artifacts/coverage/integration-report/uncovered-lines.txt ]]; then
+            echo "===== .NET Integration Uncovered Lines (first 200 lines) ====="
+            head -n 200 .artifacts/coverage/integration-report/uncovered-lines.txt
+          fi
 
       - name: Add .NET integration coverage summary to GitHub Actions summary
         if: always()
@@ -273,6 +336,22 @@ jobs:
             echo '```text'
             cat .artifacts/coverage/integration-report/Summary.txt
             echo '```'
+            if [[ -f .artifacts/coverage/integration-report/integration-line-rate-gate.json ]]; then
+              echo
+              echo "## .NET Integration Coverage Gate"
+              echo
+              echo '```json'
+              cat .artifacts/coverage/integration-report/integration-line-rate-gate.json
+              echo '```'
+            fi
+            if [[ -f .artifacts/coverage/integration-report/uncovered-lines.txt ]]; then
+              echo
+              echo "## .NET Integration Uncovered Lines"
+              echo
+              echo '```text'
+              head -n 200 .artifacts/coverage/integration-report/uncovered-lines.txt
+              echo '```'
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload integration test results

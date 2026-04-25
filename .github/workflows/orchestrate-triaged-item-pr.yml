@@ -65,6 +65,26 @@ on:
         options:
           - "true"
           - "false"
+      require_real_updates:
+        description: Require at least one source/workflow impact file before creating a PR
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      skip_non_real_updates:
+        description: Skip PR creation when changed files are docs/non-impact only
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      real_update_path_patterns:
+        description: Comma-separated glob patterns treated as source/workflow impact paths
+        required: false
+        default: "src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props"
       sync_wiki:
         description: Run wiki synchronization after triaged pull request orchestration
         required: false
@@ -128,6 +148,9 @@ jobs:
       BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent' }}
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_SKIP_IF_NO_CHANGES: ${{ github.event.inputs.skip_if_no_changes || 'false' }}
+      BANANA_REQUIRE_REAL_UPDATES: ${{ github.event.inputs.require_real_updates || 'true' }}
+      BANANA_SKIP_DOCS_ONLY_CHANGES: ${{ github.event.inputs.skip_non_real_updates || 'true' }}
+      BANANA_REAL_UPDATE_PATH_PATTERNS: ${{ github.event.inputs.real_update_path_patterns || 'src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props' }}
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
       BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}
       BANANA_WIKI_STRICT: ${{ github.event.inputs.wiki_strict || 'false' }}

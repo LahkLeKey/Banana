@@ -51,8 +51,13 @@ required_reviewer = "LahkLeKey"
 for report in reports:
     payload = json.loads(report.read_text(encoding="utf-8"))
     status = payload.get("status")
-    if status != "dry-run":
+    if status not in {"dry-run", "skipped"}:
         raise SystemExit(f"Unexpected status in {report.name}: {status}")
+
+    if status == "skipped":
+        reason = payload.get("reason", "")
+        if reason != "non-impact/doc-only changes":
+            raise SystemExit(f"Unexpected skipped reason in {report.name}: {reason}")
 
     contributor_slug = payload.get("automation_contributor_slug", "")
     contributor_label = payload.get("automation_contributor_label", "")
