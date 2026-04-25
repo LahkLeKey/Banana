@@ -20,6 +20,7 @@ DEFAULT_LABELS="${BANANA_PR_LABELS:-automation,sdlc,triaged-item,requires-human-
 DEFAULT_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 SKIP_NO_CHANGES="${BANANA_SDLC_SKIP_NO_CHANGES:-true}"
 CONTINUE_ON_ERROR="${BANANA_SDLC_CONTINUE_ON_ERROR:-false}"
+INCREMENT_TIMEOUT_SECONDS="${BANANA_SDLC_INCREMENT_TIMEOUT_SECONDS:-900}"
 ENABLE_WIKI_SYNC="${BANANA_SDLC_ENABLE_WIKI_SYNC:-true}"
 WIKI_DRY_RUN="${BANANA_WIKI_DRY_RUN:-false}"
 WIKI_PUSH="${BANANA_WIKI_PUSH:-true}"
@@ -210,21 +211,31 @@ while IFS=$'\t' read -r increment_id change_b64 commit_b64 title_b64 body_b64 la
 
   echo "Running SDLC increment '${increment_id}'..."
 
-  if ! (
-    export BANANA_TRIAGE_ID="${SDLC_ID}-${increment_id}"
-    export BANANA_TRIAGE_CHANGE_COMMAND="$change_command"
-    export BANANA_BASE_BRANCH="$base_branch"
-    export BANANA_BRANCH_PREFIX="$branch_prefix"
-    export BANANA_COMMIT_MESSAGE="$commit_message"
-    export BANANA_PR_TITLE="$pr_title"
-    export BANANA_PR_BODY="$pr_body"
-    export BANANA_DRAFT_PR="$draft_pr"
-    export BANANA_PR_LABELS="$labels"
-    export BANANA_PR_REVIEWERS="$reviewers"
-    export BANANA_SKIP_IF_NO_CHANGES="$SKIP_NO_CHANGES"
-    export BANANA_PR_OUTPUT_PATH="$increment_report_path"
-    bash scripts/workflow-orchestrate-triaged-item-pr.sh
-  ); then
+  export BANANA_TRIAGE_ID="${SDLC_ID}-${increment_id}"
+  export BANANA_TRIAGE_CHANGE_COMMAND="$change_command"
+  export BANANA_BASE_BRANCH="$base_branch"
+  export BANANA_BRANCH_PREFIX="$branch_prefix"
+  export BANANA_COMMIT_MESSAGE="$commit_message"
+  export BANANA_PR_TITLE="$pr_title"
+  export BANANA_PR_BODY="$pr_body"
+  export BANANA_DRAFT_PR="$draft_pr"
+  export BANANA_PR_LABELS="$labels"
+  export BANANA_PR_REVIEWERS="$reviewers"
+  export BANANA_SKIP_IF_NO_CHANGES="$SKIP_NO_CHANGES"
+  export BANANA_PR_OUTPUT_PATH="$increment_report_path"
+
+  increment_exit_code=0
+  if command -v timeout >/dev/null 2>&1 && [[ "$INCREMENT_TIMEOUT_SECONDS" =~ ^[0-9]+$ ]] && [[ "$INCREMENT_TIMEOUT_SECONDS" -gt 0 ]]; then
+    timeout --preserve-status "${INCREMENT_TIMEOUT_SECONDS}s" bash scripts/workflow-orchestrate-triaged-item-pr.sh || increment_exit_code=$?
+  else
+    bash scripts/workflow-orchestrate-triaged-item-pr.sh || increment_exit_code=$?
+  fi
+
+  if [[ "$increment_exit_code" -ne 0 ]]; then
+    if [[ "$increment_exit_code" -eq 124 ]]; then
+      echo "::warning::SDLC increment '${increment_id}' timed out after ${INCREMENT_TIMEOUT_SECONDS}s."
+    fi
+
     python - "$increment_report_path" <<'PY'
 import json
 import pathlib
