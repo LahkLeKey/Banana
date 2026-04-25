@@ -1,6 +1,6 @@
 # Banana Legacy Baseline
 
-Snapshots of the current ("v1", AI-vibe-coded) Banana implementation captured per
+Snapshots of the current ("v1") Banana implementation captured per
 domain so the v2 regeneration effort (`.specify/specs/005-v2-regeneration/`) has
 a stable factual record of:
 

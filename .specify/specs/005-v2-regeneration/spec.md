@@ -3,7 +3,7 @@
 **Feature Branch**: `005-v2-regeneration`  
 **Created**: 2026-04-25  
 **Status**: Draft  
-**Input**: User description: "scaffold the entire repo into specify so we can build a new clean v2 from what we learned and our mistakes. the banana 'works' but its ai vibe coded slop that could be cleaner and more optimized when we break down everything into .specify"
+**Input**: User description: scaffold the entire repo into Spec Kit so a clean v2 can be built from lessons learned and prior mistakes. v1 works end-to-end but accumulated AI-generated drift; decomposing everything into `.specify/` lets v2 be cleaner and more optimized.
 
 ## Context
 
