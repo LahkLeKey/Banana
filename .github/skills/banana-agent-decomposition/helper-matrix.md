@@ -21,6 +21,7 @@
 - `compose-runtime-agent`: `docker-compose.yml`, `docker`, runtime scripts, local stack bring-up, and health-check behavior
 - `mobile-runtime-agent`: mobile emulator launch scripts, Ubuntu WSL2/WSLg preflight, Android AVD startup, and iOS-preview fallback behavior
 - `workflow-agent`: `.github/workflows`, coverage automation, CI artifact handling, and job structure
+- `technical-writer-agent`: wiki/doc structure and voice split, including `scripts/workflow-sync-wiki.sh`, `README.md`, and audience-specific navigation pages
 - `test-triage-agent`: test failure isolation, harness fixes, validation expansion, and fix-owner routing
 
 ## Parent Agents

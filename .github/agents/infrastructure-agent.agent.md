@@ -13,6 +13,7 @@ agents:
   - compose-runtime-agent
   - mobile-runtime-agent
   - workflow-agent
+  - technical-writer-agent
   - integration-agent
   - banana-reviewer
 handoffs:
@@ -25,6 +26,9 @@ handoffs:
   - label: Implement Workflow Or Coverage Work
     agent: workflow-agent
     prompt: Implement the scoped GitHub Actions or coverage automation change and validate the nearest local mirror path.
+  - label: Implement Documentation Or Wiki Work
+    agent: technical-writer-agent
+    prompt: Implement wiki or docs organization updates, keep the human-vs-AI audience split clear, and preserve sync automation contracts.
   - label: Run Validation
     agent: integration-agent
     prompt: Validate the updated infrastructure path against the relevant tests, compose profiles, or runtime checks.

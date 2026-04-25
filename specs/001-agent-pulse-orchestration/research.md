@@ -45,3 +45,11 @@
 - Alternatives considered:
   - Keep deterministic logic only in Python. Rejected because the request explicitly requires a custom C native implementation.
   - Move full JSON parsing/rewriting into C. Rejected because this increases native complexity with low value versus a C model + Python renderer split.
+
+## Decision 7: Preserve dual-track documentation outputs for human and AI audiences
+
+- Decision: Keep management-facing outputs split into a concise human-readable guide lane and a verbose AI-audit lane, both linked from a shared navigation entry.
+- Rationale: Managers need empathetic, quick-read summaries while operators and automation need detailed technical traces with deterministic structure.
+- Alternatives considered:
+  - Single mixed-tone documentation lane. Rejected because it compromises readability for humans and completeness for machine/audit consumers.
+  - Human-only summaries with no detailed traces. Rejected because it weakens operational triage and compliance evidence.

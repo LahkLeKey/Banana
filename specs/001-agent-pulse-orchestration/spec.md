@@ -19,6 +19,7 @@ A delivery manager can quickly see meaningful agent-attributed autonomous activi
 
 1. **Given** a default autonomous cycle run completes, **When** a manager inspects repository activity and the management summary, **Then** they can identify contributions from multiple distinct agents.
 2. **Given** a manager sees agent-attributed commits, **When** they open the related trace artifact, **Then** they can understand each agent's purpose and affected scope without reading raw workflow internals.
+3. **Given** documentation is published for a run, **When** a manager opens the human reading entry point, **Then** they see concise, empathetic summaries while detailed machine-audit traces remain in AI-focused pages.
 
 ---
 
@@ -72,6 +73,7 @@ An engineer can update the autonomous increment catalog in one management-friend
 - **FR-008**: Existing not-banana feedback and training automation increments MUST remain represented in the default catalog.
 - **FR-009**: The management visibility mechanism MUST avoid requiring direct workflow YAML inspection to answer "which agents did what".
 - **FR-010**: The default autonomous plan rendering path MUST be guided by a custom native C deterministic model when no manual increment override JSON is supplied.
+- **FR-011**: Management documentation outputs MUST preserve an explicit audience split where human-facing pages are concise and empathetic while AI-facing pages retain verbose technical trace detail.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -88,6 +90,7 @@ An engineer can update the autonomous increment catalog in one management-friend
 - **SC-003**: Management can identify the latest activity for any participating agent in under 2 minutes using repository documentation plus run artifacts.
 - **SC-004**: Updating increment orchestration defaults requires editing one catalog file instead of editing a large inline JSON literal in workflow YAML.
 - **SC-005**: The native deterministic model renders at least 15 autonomous increments per default cycle while preserving explicit agent ownership labels for each increment.
+- **SC-006**: For each autonomous cycle, documentation publishing produces both a human-readable summary path and an AI-audit path discoverable from one shared navigation entry in under 2 minutes.
 
 ## Assumptions
 
@@ -95,3 +98,4 @@ An engineer can update the autonomous increment catalog in one management-friend
 - Maintaining existing feedback/training increments is mandatory while extending visibility to additional agents.
 - Activity records stored in repository documentation are acceptable for management auditability.
 - Manual dispatch users may still provide custom increment plans for experiments, but default scheduled runs should rely on the repository-managed catalog.
+- A dedicated documentation ownership lane (`technical-writer-agent`) can participate in autonomous increments when audience-split wiki/index updates are required.
