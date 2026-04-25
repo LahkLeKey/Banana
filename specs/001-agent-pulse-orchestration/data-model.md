@@ -40,6 +40,8 @@
   - `run_attempt`: Workflow run attempt number.
   - `recorded_at_utc`: UTC timestamp.
   - `intent_summary`: Human-readable summary of work intent.
+  - `audience_lane`: Output audience lane (`human-readable` or `ai-audit`).
+  - `detail_level`: Expected verbosity (`concise-empathic` or `technical-verbose`).
   - `source_workflow`: Workflow name or file.
 - Relationships:
   - Many activity records can belong to one agent.
@@ -53,6 +55,7 @@
   - `primary_focus`
   - `snapshot_root_path`
   - `snapshot_filename_pattern`
+  - `audience_lane`
 - Relationships:
   - One map references many per-agent snapshot folders.
 
@@ -62,5 +65,5 @@
 2. Native deterministic model rendered -> `AgentDeterministicLane` rows parsed from C CLI JSON.
 3. Deterministic renderer emits final `AgentIncrementDefinition` plan in lane order.
 4. Increment executed -> PR output status determined (`created`, `skipped`, `failed`, or `dry-run`).
-5. Activity recorder runs -> immutable `AgentActivityRecord` snapshot file written under the agent `runs/` folder.
-6. Management deep-dive map in docs links managers to each agent snapshot root.
+5. Activity recorder runs -> immutable `AgentActivityRecord` snapshot files written under audience-specific roots.
+6. Management deep-dive map in docs links managers to human-readable summaries and AI-audit roots for each agent.

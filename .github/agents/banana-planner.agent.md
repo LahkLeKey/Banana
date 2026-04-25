@@ -18,6 +18,7 @@ agents:
   - electron-agent
   - compose-runtime-agent
   - workflow-agent
+  - technical-writer-agent
   - test-triage-agent
 handoffs:
   - label: Implement Banana Classifier Work
@@ -50,6 +51,9 @@ handoffs:
   - label: Implement Workflow Work
     agent: workflow-agent
     prompt: Implement the planned GitHub Actions or coverage automation changes and validate the nearest local mirror path.
+  - label: Implement Documentation Work
+    agent: technical-writer-agent
+    prompt: Implement the planned wiki or docs structure and tone updates while preserving the human-vs-AI audience split.
   - label: Triage Validation Failure
     agent: test-triage-agent
     prompt: Isolate the failing validation stage, confirm the real owner, and return the narrowest safe fix path.
@@ -72,6 +76,7 @@ You produce implementation plans for Banana without editing code.
 
 - Follow the controller -> service -> pipeline -> native interop flow from [docs/developer-onboarding.md](../../docs/developer-onboarding.md) when backend behavior changes.
 - Treat [docker-compose.yml](../../docker-compose.yml), [scripts](../../scripts), and [.github/workflows/compose-ci.yml](../workflows/compose-ci.yml) as the delivery surface for runtime and CI work.
+- For wiki or docs refactors, preserve explicit human-readable and AI-audit tracks and keep `scripts/workflow-sync-wiki.sh` navigation markers stable.
 - If the task crosses layers, explicitly call out shared contracts such as `BANANA_PG_CONNECTION`, `BANANA_NATIVE_PATH`, and `VITE_BANANA_API_BASE_URL`.
 - If the task touches reusable frontend primitives, plan updates in `src/typescript/shared/ui` and direct consuming-app imports from `@banana/ui` instead of local re-export stubs.
 - If `src/typescript/shared/ui` changes, include validation for both `src/typescript/react` and `src/typescript/electron/renderer`.

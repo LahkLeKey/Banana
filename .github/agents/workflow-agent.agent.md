@@ -13,6 +13,9 @@ handoffs:
   - label: Coordinate Local Runtime Mirror
     agent: compose-runtime-agent
     prompt: Update the matching local script or compose runtime path for the workflow change and re-run the relevant validation.
+  - label: Coordinate Wiki Or Docs Update
+    agent: technical-writer-agent
+    prompt: Update wiki and docs structure for the workflow change while preserving human-readable and AI-audit lanes.
   - label: Validate Workflow Change
     agent: integration-agent
     prompt: Validate the workflow change against the nearest local mirror scripts, coverage flow, and runtime assumptions.

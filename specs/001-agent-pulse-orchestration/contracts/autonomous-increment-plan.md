@@ -54,3 +54,5 @@ Native deterministic rendering can guide default plan generation when:
 - Each default increment should contain exactly one `agent:*` ownership marker.
 - Default catalog should include multiple agent lanes, not only one agent.
 - Each increment should carry a clear intent summary in `pr_body` for management readability.
+- Default catalog should include a documentation ownership lane (`agent:technical-writer-agent`) when wiki/index audience split updates are required.
+- Management-visible outputs should keep separate human-readable and AI-audit entry points linked from one shared navigation section.
