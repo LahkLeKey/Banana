@@ -212,20 +212,20 @@ public sealed class NativeLibraryResolverTests
         var isConfiguredField = typeof(NativeLibraryResolver).GetField("_isConfigured", BindingFlags.NonPublic | BindingFlags.Static);
 
         Assert.NotNull(isConfiguredField);
-
-        NativeLibraryResolver.EnsureConfigured(configuration, logger);
-        isConfiguredField!.SetValue(null, false);
+        var originalIsConfigured = (bool)isConfiguredField!.GetValue(null)!;
 
         try
         {
             NativeLibraryResolver.EnsureConfigured(configuration, logger);
+            isConfiguredField.SetValue(null, false);
+
+            NativeLibraryResolver.EnsureConfigured(configuration, logger);
+            Assert.True((bool)isConfiguredField.GetValue(null)!);
         }
         finally
         {
-            isConfiguredField.SetValue(null, true);
+            isConfiguredField.SetValue(null, originalIsConfigured);
         }
-
-        Assert.True((bool)isConfiguredField.GetValue(null)!);
     }
 
     private static ILogger CreateLogger()
