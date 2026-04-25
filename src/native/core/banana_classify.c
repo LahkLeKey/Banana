@@ -1,6 +1,6 @@
-/* Stubs for classify/ripeness/batch/truck domains. v2 spec keeps the surface
- * intact (consumed by ASP.NET 007 + Fastify 008). Real implementations land
- * in subsequent feature slices. */
+/* Classifier surface is implemented by dedicated domain modules under
+ * core/domain/ml and wrapper/domain/ml. This translation unit remains the
+ * compatibility anchor for historical includes. */
 #include "banana_wrapper.h"
 
-/* No internal API needed yet; wrapper.c implements stub passthroughs directly. */
+/* No additional internal API required in this file. */

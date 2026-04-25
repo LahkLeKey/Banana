@@ -68,40 +68,58 @@ int banana_classify_not_banana_junk(const char* input_json, char** out_json) {
 }
 
 int banana_predict_banana_ripeness(const char* input_json, char** out_json) {
-    (void)input_json;
-    if (!out_json) return BANANA_INVALID_ARGUMENT;
-    const char* payload = "{\"label\":\"ripe\",\"confidence\":0.750000}";
-    size_t n = strlen(payload) + 1;
-    char* buf = (char*)malloc(n);
-    if (!buf) return BANANA_INTERNAL_ERROR;
-    memcpy(buf, payload, n);
-    *out_json = buf;
-    return BANANA_OK;
+    return banana_core_predict_ripeness(input_json, out_json);
 }
 
-/* === Batch / harvest / truck (stub passthroughs; spec 006 keeps surface). === */
+/* === Batch / harvest / truck. === */
 
-static int json_passthrough(const char* label, char** out_json) {
-    if (!out_json) return BANANA_INVALID_ARGUMENT;
-    size_t n = strlen(label) + 32;
-    char* buf = (char*)malloc(n);
-    if (!buf) return BANANA_INTERNAL_ERROR;
-    snprintf(buf, n, "{\"status\":\"%s\"}", label);
-    *out_json = buf;
-    return BANANA_OK;
+int banana_create_batch(const char* input_json, char** out_json) {
+    return banana_core_create_batch(input_json, out_json);
 }
 
-int banana_create_batch(const char* input_json, char** out_json) { (void)input_json; return json_passthrough("created", out_json); }
-int banana_get_batch_status(const char* batch_id, char** out_json) { (void)batch_id; return json_passthrough("ok", out_json); }
-int banana_predict_batch_ripeness(const char* batch_id, char** out_json) { (void)batch_id; return json_passthrough("ripe", out_json); }
-int banana_create_harvest_batch(const char* input_json, char** out_json) { (void)input_json; return json_passthrough("created", out_json); }
-int banana_add_bunch_to_harvest_batch(const char* batch_id, const char* input_json, char** out_json) { (void)batch_id; (void)input_json; return json_passthrough("added", out_json); }
-int banana_get_harvest_batch_status(const char* batch_id, char** out_json) { (void)batch_id; return json_passthrough("ok", out_json); }
-int banana_register_truck(const char* input_json, char** out_json) { (void)input_json; return json_passthrough("registered", out_json); }
-int banana_load_truck_container(const char* truck_id, const char* input_json, char** out_json) { (void)truck_id; (void)input_json; return json_passthrough("loaded", out_json); }
-int banana_unload_truck_container(const char* truck_id, const char* container_id, char** out_json) { (void)truck_id; (void)container_id; return json_passthrough("unloaded", out_json); }
-int banana_relocate_truck(const char* truck_id, const char* input_json, char** out_json) { (void)truck_id; (void)input_json; return json_passthrough("relocated", out_json); }
-int banana_get_truck_status(const char* truck_id, char** out_json) { (void)truck_id; return json_passthrough("ok", out_json); }
+int banana_get_batch_status(const char* batch_id, char** out_json) {
+    return banana_core_get_batch_status(batch_id, out_json);
+}
+
+int banana_predict_batch_ripeness(const char* batch_id, char** out_json) {
+    return banana_core_predict_batch_ripeness(batch_id, out_json);
+}
+
+int banana_create_harvest_batch(const char* input_json, char** out_json) {
+    return banana_core_create_harvest_batch(input_json, out_json);
+}
+
+int banana_add_bunch_to_harvest_batch(
+    const char* batch_id, const char* input_json, char** out_json) {
+    return banana_core_add_bunch_to_harvest_batch(batch_id, input_json, out_json);
+}
+
+int banana_get_harvest_batch_status(const char* batch_id, char** out_json) {
+    return banana_core_get_harvest_batch_status(batch_id, out_json);
+}
+
+int banana_register_truck(const char* input_json, char** out_json) {
+    return banana_core_register_truck(input_json, out_json);
+}
+
+int banana_load_truck_container(
+    const char* truck_id, const char* input_json, char** out_json) {
+    return banana_core_load_truck_container(truck_id, input_json, out_json);
+}
+
+int banana_unload_truck_container(
+    const char* truck_id, const char* container_id, char** out_json) {
+    return banana_core_unload_truck_container(truck_id, container_id, out_json);
+}
+
+int banana_relocate_truck(
+    const char* truck_id, const char* input_json, char** out_json) {
+    return banana_core_relocate_truck(truck_id, input_json, out_json);
+}
+
+int banana_get_truck_status(const char* truck_id, char** out_json) {
+    return banana_core_get_truck_status(truck_id, out_json);
+}
 
 /* === Memory === */
 void banana_free(void* pointer) {
