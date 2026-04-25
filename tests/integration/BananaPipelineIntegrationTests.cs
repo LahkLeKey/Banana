@@ -4,6 +4,8 @@ using System.Text.Json;
 
 using Banana.Api.DataAccess;
 using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline;
+using Banana.Api.Pipeline.Steps;
 using Banana.Api.Services;
 
 using Microsoft.AspNetCore.Hosting;
@@ -58,6 +60,83 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
 
         var body = await response.Content.ReadAsStringAsync();
         Assert.Contains("purchases and multiplier must be non-negative.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetBanana_WhenMultiplierIsNegative_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.GetAsync("/banana?purchases=1&multiplier=-1");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("purchases and multiplier must be non-negative.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetBanana_UsesPipelineAndReturnsExpectedBody_WhenBonusBranchIsNotApplied()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.GetAsync("/banana?purchases=9&multiplier=3");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+
+        Assert.Equal("BananaProfileProjection", response.Headers.GetValues("X-Banana-Db-Contract").Single());
+        Assert.Equal("integration-fake", response.Headers.GetValues("X-Banana-Db-Source").Single());
+        Assert.Equal("1", response.Headers.GetValues("X-Banana-Db-RowCount").Single());
+        Assert.Equal(9, root.GetProperty("purchases").GetInt32());
+        Assert.Equal(3, root.GetProperty("multiplier").GetInt32());
+        Assert.Equal(27, root.GetProperty("banana").GetInt32());
+        Assert.Equal("purchases=9 multiplier=3 banana=27", root.GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task GetBanana_UsesPipelineAndReturnsExpectedBody_WhenPostProcessingStepIsRemoved()
+    {
+        using var client = CreateFactoryWithFakeNativeWithoutPostProcessing().CreateClient();
+
+        var response = await client.GetAsync("/banana?purchases=10&multiplier=2");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+
+        Assert.Equal("BananaProfileProjection", response.Headers.GetValues("X-Banana-Db-Contract").Single());
+        Assert.Equal("integration-fake", response.Headers.GetValues("X-Banana-Db-Source").Single());
+        Assert.Equal("1", response.Headers.GetValues("X-Banana-Db-RowCount").Single());
+        Assert.Equal(10, root.GetProperty("purchases").GetInt32());
+        Assert.Equal(2, root.GetProperty("multiplier").GetInt32());
+        Assert.Equal(20, root.GetProperty("banana").GetInt32());
+        Assert.Equal("purchases=10 multiplier=2 banana=20", root.GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task GetBanana_Tranche1FixtureReset_ResetsStateAcrossFreshHosts()
+    {
+        using var firstHostClient = CreateFactoryWithCountingDataAccessAndFakeNative().CreateClient();
+
+        var firstResponse = await firstHostClient.GetAsync("/banana?purchases=4&multiplier=3");
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        Assert.Equal("integration-count-1", firstResponse.Headers.GetValues("X-Banana-Db-Source").Single());
+
+        var secondResponseSameHost = await firstHostClient.GetAsync("/banana?purchases=5&multiplier=3");
+        Assert.Equal(HttpStatusCode.OK, secondResponseSameHost.StatusCode);
+        Assert.Equal("integration-count-2", secondResponseSameHost.Headers.GetValues("X-Banana-Db-Source").Single());
+
+        using var secondHostClient = CreateFactoryWithCountingDataAccessAndFakeNative().CreateClient();
+
+        var firstResponseSecondHost = await secondHostClient.GetAsync("/banana?purchases=6&multiplier=3");
+        Assert.Equal(HttpStatusCode.OK, firstResponseSecondHost.StatusCode);
+        Assert.Equal("integration-count-1", firstResponseSecondHost.Headers.GetValues("X-Banana-Db-Source").Single());
     }
 
     [Fact]
@@ -230,6 +309,425 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
     }
 
     [Fact]
+    public async Task CreateBatch_WhenBatchIdIsWhitespace_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/batches/create", new
+        {
+            batchId = "   ",
+            originFarm = "farm-1",
+            storageTempC = 13.2,
+            ethyleneExposure = 2.5,
+            estimatedShelfLifeDays = 3
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("batchId and originFarm are required.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task CreateBatch_WhenOriginFarmIsWhitespace_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/batches/create", new
+        {
+            batchId = "batch-origin-missing",
+            originFarm = " ",
+            storageTempC = 13.2,
+            ethyleneExposure = 2.5,
+            estimatedShelfLifeDays = 3
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("batchId and originFarm are required.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task CreateBatch_WhenTelemetryIsNegative_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/batches/create", new
+        {
+            batchId = "batch-negative-telemetry",
+            originFarm = "farm-1",
+            storageTempC = -0.1,
+            ethyleneExposure = 2.5,
+            estimatedShelfLifeDays = 3
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Batch telemetry values must be non-negative.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PredictRipeness_WhenBatchIdIsWhitespace_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/ripeness/predict", new
+        {
+            batchId = " ",
+            temperatureHistory = new[] { 12.5, 13.0, 14.2 },
+            daysSinceHarvest = 5,
+            ethyleneExposure = 2.5,
+            mechanicalDamage = 0.1,
+            storageTempC = 13.2
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("batchId is required.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PredictRipeness_WhenTemperatureHistoryIsEmpty_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/ripeness/predict", new
+        {
+            batchId = "batch-1",
+            temperatureHistory = Array.Empty<double>(),
+            daysSinceHarvest = 5,
+            ethyleneExposure = 2.5,
+            mechanicalDamage = 0.1,
+            storageTempC = 13.2
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("temperatureHistory must contain at least one reading.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PredictRipeness_WhenDaysSinceHarvestIsNegative_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/ripeness/predict", new
+        {
+            batchId = "batch-1",
+            temperatureHistory = new[] { 12.5, 13.0, 14.2 },
+            daysSinceHarvest = -1,
+            ethyleneExposure = 2.5,
+            mechanicalDamage = 0.1,
+            storageTempC = 13.2
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("daysSinceHarvest must be non-negative.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PredictRipeness_WhenEthyleneExposureIsNegative_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/ripeness/predict", new
+        {
+            batchId = "batch-1",
+            temperatureHistory = new[] { 12.5, 13.0, 14.2 },
+            daysSinceHarvest = 5,
+            ethyleneExposure = -0.1,
+            mechanicalDamage = 0.1,
+            storageTempC = 13.2
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("ethyleneExposure and mechanicalDamage must be non-negative.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PredictRipeness_WhenMechanicalDamageIsNegative_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/ripeness/predict", new
+        {
+            batchId = "batch-1",
+            temperatureHistory = new[] { 12.5, 13.0, 14.2 },
+            daysSinceHarvest = 5,
+            ethyleneExposure = 2.5,
+            mechanicalDamage = -0.1,
+            storageTempC = 13.2
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("ethyleneExposure and mechanicalDamage must be non-negative.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PredictRipeness_WhenBatchDoesNotExist_ReturnsNotFound()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/ripeness/predict", new
+        {
+            batchId = "missing-batch",
+            temperatureHistory = new[] { 12.5, 13.0, 14.2 },
+            daysSinceHarvest = 5,
+            ethyleneExposure = 2.5,
+            mechanicalDamage = 0.1,
+            storageTempC = 13.2
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Batch was not found.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ClassifyNotBanana_WhenPayloadIsEmpty_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/not-banana/junk", new { });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("payload must include actors, entities, junk, or metadata content.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ClassifyNotBanana_WhenActorTypeIsMissing_ReturnsBadRequest()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/not-banana/junk", new
+        {
+            actors = new[]
+            {
+                new
+                {
+                    actorId = "actor-missing-type"
+                }
+            }
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("actor entries must include actorType/type/kind discriminator.", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ClassifyNotBanana_WhenNoBananaSignalsExist_ReturnsNotBananaClassification()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/not-banana/junk", new
+        {
+            actors = new[]
+            {
+                new
+                {
+                    actorType = "Loader",
+                    actorId = "worker-9"
+                }
+            },
+            entities = new[]
+            {
+                new
+                {
+                    entityType = "Container",
+                    entityId = "crate-2"
+                }
+            },
+            junk = new
+            {
+                note = "metal shelf inventory",
+                tags = new[] { "steel", "bolt", "screw" }
+            }
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+
+        Assert.Equal("NOT_BANANA", root.GetProperty("classification").GetString());
+        Assert.Equal(0.0, root.GetProperty("bananaProbability").GetDouble());
+        Assert.Equal(1.0, root.GetProperty("notBananaProbability").GetDouble());
+    }
+
+    [Fact]
+    public async Task CoreSuccessE2E_CJ001_BananaConsoleJourney_ReturnsExpectedPayloads()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var healthResponse = await client.GetAsync("/health");
+        Assert.Equal(HttpStatusCode.OK, healthResponse.StatusCode);
+
+        var bananaResponse = await client.GetAsync("/banana?purchases=8&multiplier=4");
+        Assert.Equal(HttpStatusCode.OK, bananaResponse.StatusCode);
+
+        var bananaBody = await bananaResponse.Content.ReadAsStringAsync();
+        using (var bananaDocument = JsonDocument.Parse(bananaBody))
+        {
+            var bananaRoot = bananaDocument.RootElement;
+            Assert.Equal(8, bananaRoot.GetProperty("purchases").GetInt32());
+            Assert.Equal(4, bananaRoot.GetProperty("multiplier").GetInt32());
+            Assert.Equal(32, bananaRoot.GetProperty("banana").GetInt32());
+        }
+
+        var createBatchResponse = await client.PostAsJsonAsync("/batches/create", new
+        {
+            batchId = "journey-batch",
+            originFarm = "journey-farm",
+            storageTempC = 12.8,
+            ethyleneExposure = 1.6,
+            estimatedShelfLifeDays = 4
+        });
+        Assert.Equal(HttpStatusCode.OK, createBatchResponse.StatusCode);
+
+        var batchStatusResponse = await client.GetAsync("/batches/journey-batch/status");
+        Assert.Equal(HttpStatusCode.OK, batchStatusResponse.StatusCode);
+
+        var batchStatusBody = await batchStatusResponse.Content.ReadAsStringAsync();
+        using (var statusDocument = JsonDocument.Parse(batchStatusBody))
+        {
+            var statusRoot = statusDocument.RootElement;
+            Assert.Equal("journey-batch", statusRoot.GetProperty("batchId").GetString());
+            Assert.Equal("journey-farm", statusRoot.GetProperty("originFarm").GetString());
+            Assert.Equal("PACKED", statusRoot.GetProperty("exportStatus").GetString());
+        }
+
+        var ripenessResponse = await client.PostAsJsonAsync("/ripeness/predict", new
+        {
+            batchId = "journey-batch",
+            temperatureHistory = new[] { 12.1, 12.4, 13.0 },
+            daysSinceHarvest = 3,
+            ethyleneExposure = 1.6,
+            mechanicalDamage = 0.05,
+            storageTempC = 12.8
+        });
+        Assert.Equal(HttpStatusCode.OK, ripenessResponse.StatusCode);
+
+        var ripenessBody = await ripenessResponse.Content.ReadAsStringAsync();
+        using var ripenessDocument = JsonDocument.Parse(ripenessBody);
+        var ripenessRoot = ripenessDocument.RootElement;
+        Assert.Equal("journey-batch", ripenessRoot.GetProperty("batchId").GetString());
+        Assert.Equal("YELLOW", ripenessRoot.GetProperty("predictedStage").GetString());
+        Assert.Equal(48, ripenessRoot.GetProperty("shelfLifeHours").GetInt32());
+    }
+
+    [Fact]
+    public async Task CoreSuccessE2E_CJ002_NotBananaJourney_ReturnsPolymorphicClassification()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var response = await client.PostAsJsonAsync("/not-banana/junk", new
+        {
+            actors = new[]
+            {
+                new
+                {
+                    actorType = "ShipmentWorker",
+                    actorId = "actor-1",
+                    note = "banana loading bay"
+                }
+            },
+            entities = new[]
+            {
+                new
+                {
+                    entityType = "Container",
+                    entityId = "entity-1",
+                    label = "ripe yellow"
+                }
+            },
+            junk = new
+            {
+                message = "banana telemetry sample",
+                tags = new[] { "harvest", "yellow", "ripe" }
+            }
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+
+        Assert.Equal("MAYBE_BANANA", root.GetProperty("classification").GetString());
+        Assert.Equal(1, root.GetProperty("actorCount").GetInt32());
+        Assert.Equal(1, root.GetProperty("entityCount").GetInt32());
+        Assert.Equal("actor-1", root.GetProperty("normalizedActors")[0].GetProperty("actorId").GetString());
+        Assert.Equal("entity-1", root.GetProperty("normalizedEntities")[0].GetProperty("entityId").GetString());
+    }
+
+    [Fact]
+    public async Task FailureRecoveryE2E_CJ006_BananaPipeline_RecoversAfterNativeFailureInSameSession()
+    {
+        using var client = CreateFactoryWithFakeNative().CreateClient();
+
+        var failedResponse = await client.GetAsync("/banana?purchases=2&multiplier=777");
+        Assert.Equal(HttpStatusCode.InternalServerError, failedResponse.StatusCode);
+
+        var failedBody = await failedResponse.Content.ReadAsStringAsync();
+        Assert.Contains("Native interop failure.", failedBody, StringComparison.Ordinal);
+
+        var recoveredResponse = await client.GetAsync("/banana?purchases=2&multiplier=6");
+        Assert.Equal(HttpStatusCode.OK, recoveredResponse.StatusCode);
+
+        var recoveredBody = await recoveredResponse.Content.ReadAsStringAsync();
+        using var recoveredDocument = JsonDocument.Parse(recoveredBody);
+        var recoveredRoot = recoveredDocument.RootElement;
+        Assert.Equal(2, recoveredRoot.GetProperty("purchases").GetInt32());
+        Assert.Equal(6, recoveredRoot.GetProperty("multiplier").GetInt32());
+        Assert.Equal(12, recoveredRoot.GetProperty("banana").GetInt32());
+    }
+
+    [Fact]
+    public async Task DataResetE2E_CJ007_BatchState_DoesNotLeakAcrossScenarioHosts()
+    {
+        const string scenarioBatchId = "reset-scenario-batch";
+
+        using var scenarioOneClient = CreateFactoryWithFakeNative().CreateClient();
+
+        var createResponse = await scenarioOneClient.PostAsJsonAsync("/batches/create", new
+        {
+            batchId = scenarioBatchId,
+            originFarm = "reset-farm",
+            storageTempC = 11.4,
+            ethyleneExposure = 0.9,
+            estimatedShelfLifeDays = 6
+        });
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+
+        var firstScenarioStatusResponse = await scenarioOneClient.GetAsync($"/batches/{scenarioBatchId}/status");
+        Assert.Equal(HttpStatusCode.OK, firstScenarioStatusResponse.StatusCode);
+
+        using var scenarioTwoClient = CreateFactoryWithFakeNative().CreateClient();
+
+        var secondScenarioStatusResponse = await scenarioTwoClient.GetAsync($"/batches/{scenarioBatchId}/status");
+        Assert.Equal(HttpStatusCode.NotFound, secondScenarioStatusResponse.StatusCode);
+
+        var secondScenarioBody = await secondScenarioStatusResponse.Content.ReadAsStringAsync();
+        Assert.Contains("Batch was not found.", secondScenarioBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void DataAccessClientResolution_UsesManagedClient_WhenConfigured()
     {
         using var factory = _factory.WithWebHostBuilder(builder =>
@@ -297,6 +795,43 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
                 services.RemoveAll<INativeBananaClient>();
                 services.AddScoped<IDataAccessPipelineClient, ThrowingDataAccessPipelineClient>();
                 services.AddScoped<INativeBananaClient, FakeNativeBananaClient>();
+            });
+        });
+    }
+
+    private WebApplicationFactory<Program> CreateFactoryWithCountingDataAccessAndFakeNative()
+    {
+        return _factory.WithWebHostBuilder(static builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(static services =>
+            {
+                services.RemoveAll<IDataAccessPipelineClient>();
+                services.RemoveAll<INativeBananaClient>();
+                services.AddSingleton<IDataAccessPipelineClient, CountingDataAccessPipelineClient>();
+                services.AddSingleton<INativeBananaClient, FakeNativeBananaClient>();
+            });
+        });
+    }
+
+    private WebApplicationFactory<Program> CreateFactoryWithFakeNativeWithoutPostProcessing()
+    {
+        return _factory.WithWebHostBuilder(static builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(static services =>
+            {
+                services.RemoveAll<IDataAccessPipelineClient>();
+                services.RemoveAll<INativeBananaClient>();
+                services.RemoveAll<IPipelineStep<PipelineContext>>();
+
+                services.AddSingleton<IDataAccessPipelineClient, SuccessfulDataAccessPipelineClient>();
+                services.AddSingleton<INativeBananaClient, FakeNativeBananaClient>();
+
+                services.AddScoped<IPipelineStep<PipelineContext>, ValidationStep>();
+                services.AddScoped<IPipelineStep<PipelineContext>, DatabaseAccessStep>();
+                services.AddScoped<IPipelineStep<PipelineContext>, NativeCalculationStep>();
+                services.AddScoped<IPipelineStep<PipelineContext>, AuditStep>();
             });
         });
     }
@@ -604,6 +1139,19 @@ public sealed class BananaPipelineIntegrationTests : IClassFixture<WebApplicatio
         {
             var payload = $"{{\"purchases\":{request.Purchases},\"multiplier\":{request.Multiplier}}}";
             return new RawDbAccessResult("integration-fake", payload, 1);
+        }
+    }
+
+    private sealed class CountingDataAccessPipelineClient : IDataAccessPipelineClient
+    {
+        private int _executionCount;
+
+        public RawDbAccessResult Execute(DbAccessRequest request)
+        {
+            _executionCount++;
+
+            var payload = $"{{\"purchases\":{request.Purchases},\"multiplier\":{request.Multiplier}}}";
+            return new RawDbAccessResult($"integration-count-{_executionCount}", payload, 1);
         }
     }
 }

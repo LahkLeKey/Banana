@@ -1,0 +1,145 @@
+name: Require Human Approval (Automation PRs)
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: Pull request number to evaluate when dispatched manually
+        required: true
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+      - unlabeled
+      - ready_for_review
+      - edited
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+
+jobs:
+  require-human-approval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify at least one human approval for automation PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const dispatchPullNumber = Number(context.payload.inputs?.pull_number || 0);
+            const pullNumber = context.payload.pull_request?.number || dispatchPullNumber;
+            if (!pullNumber || Number.isNaN(pullNumber)) {
+              core.notice("No pull request context found for this event.");
+              return;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+            });
+
+            const labels = (pr.labels || []).map((label) => label.name);
+            const headBranch = pr.head?.ref || "";
+            const requiredApproverLogin = "LahkLeKey";
+            const automationBranchPrefixes = [
+              "triage/",
+              "triage-feedback/",
+              "model-release-history/",
+              "sdlc/",
+            ];
+            const prAuthorType = pr.user?.type || "";
+            const automationAuthor =
+              prAuthorType === "Bot" ||
+              (pr.user?.login || "").toLowerCase().endsWith("[bot]");
+            const requiresHumanApproval =
+              labels.includes("requires-human-approval") ||
+              labels.includes("automation") ||
+              automationBranchPrefixes.some((prefix) => headBranch.startsWith(prefix)) ||
+              automationAuthor;
+
+            if (!requiresHumanApproval) {
+              core.notice("Pull request is not marked as automation-managed. Skipping gate.");
+              return;
+            }
+
+            if (pr.draft) {
+              core.notice(
+                "Automation pull request is in draft state. Human-approval enforcement starts when it is ready for review."
+              );
+              return;
+            }
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+              per_page: 100,
+            });
+
+            const latestReviewByUser = new Map();
+            for (const review of reviews) {
+              if (!review.user?.login) {
+                continue;
+              }
+              latestReviewByUser.set(review.user.login, {
+                state: review.state,
+                type: review.user.type || "",
+                commitId: review.commit_id || "",
+              });
+            }
+
+            const requiredApproverReview = latestReviewByUser.get(requiredApproverLogin);
+            const hasRequiredApproverApproval =
+              !!requiredApproverReview &&
+              requiredApproverReview.state === "APPROVED" &&
+              requiredApproverReview.commitId === pr.head.sha;
+            const requiredApproverIsAuthor =
+              requiredApproverLogin.toLowerCase() === (pr.user?.login || "").toLowerCase();
+
+            if (!hasRequiredApproverApproval) {
+              if (!requiredApproverIsAuthor) {
+                core.setFailed(
+                  `Automation pull requests require a current-head approval from ${requiredApproverLogin} before merge.`
+                );
+                return;
+              }
+
+              core.notice(
+                `Required approver '${requiredApproverLogin}' is also the pull request author; skipping self-approval requirement for head ${pr.head.sha}.`
+              );
+            }
+
+            const approvingHumans = [];
+            for (const [login, info] of latestReviewByUser.entries()) {
+              const isBot = info.type === "Bot" || login.endsWith("[bot]");
+              if (isBot || login === pr.user?.login) {
+                continue;
+              }
+              if (info.state === "APPROVED") {
+                approvingHumans.push(login);
+              }
+            }
+
+            if (approvingHumans.length < 1) {
+              if (!requiredApproverIsAuthor) {
+                core.setFailed(
+                  "Automation pull requests require at least one human approval before merge."
+                );
+                return;
+              }
+
+              core.notice(
+                "Required approver matches pull request author; allowing this automation PR without an additional human approval."
+              );
+            }
+
+            core.notice(`Human approvals: ${approvingHumans.join(", ")}`);
+            core.notice(`Required approver '${requiredApproverLogin}' is current on head ${pr.head.sha}.`);

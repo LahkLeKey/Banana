@@ -34,6 +34,9 @@ SCRIPT_PERSIST_REGISTRY_HISTORY = ROOT / "scripts" / "workflow-persist-registry-
 SCRIPT_SPEC_AGENT_SMOKE = ROOT / "scripts" / "smoke-test-spec-driven-agents.sh"
 SCRIPT_ENSURE_SPECKIT = ROOT / "scripts" / "workflow-ensure-speckit.sh"
 CANONICAL_WIKI_REMOTE_URL = "https://github.com/LahkLeKey/Banana.wiki.git"
+WIKI_SOURCE_DIR = ROOT / ".wiki"
+SPECIFY_WIKI_HUMAN_REFERENCE_DIR = ROOT / ".specify" / "wiki" / "human-reference"
+WIKI_ALLOWLIST_FILE = ROOT / ".specify" / "wiki" / "human-reference-allowlist.txt"
 
 AGENT_CONTRACT_FRAGMENT = "Feedback Loop And Incremental Branch Contract"
 PROMPT_WIKI_CONTRACT_HEADER = "## Wiki Updater Contract"
@@ -209,6 +212,78 @@ def iter_guard_target_files() -> list[Path]:
     return sorted(candidates)
 
 
+def parse_wiki_allowlist(path: Path, issues: list[str]) -> set[str]:
+    if not path.exists():
+        issues.append(
+            "WIKI_ALLOWLIST missing allowlist file: .specify/wiki/human-reference-allowlist.txt"
+        )
+        return set()
+
+    entries: set[str] = set()
+    duplicate_entries: list[str] = []
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        normalized = line.replace("\\", "/")
+        if normalized.startswith(".wiki/"):
+            normalized = normalized[len(".wiki/") :]
+
+        if not normalized.endswith(".md"):
+            issues.append(
+                "WIKI_ALLOWLIST non-markdown entry found: "
+                f".specify/wiki/human-reference-allowlist.txt ({normalized})"
+            )
+            continue
+
+        if normalized in entries:
+            duplicate_entries.append(normalized)
+            continue
+
+        entries.add(normalized)
+
+    if not entries:
+        issues.append(
+            "WIKI_ALLOWLIST empty allowlist: .specify/wiki/human-reference-allowlist.txt"
+        )
+
+    if duplicate_entries:
+        unique_duplicates = sorted(set(duplicate_entries))
+        issues.append(
+            "WIKI_ALLOWLIST duplicate entries: "
+            + ", ".join(unique_duplicates)
+        )
+
+    return entries
+
+
+def list_markdown_paths(root: Path) -> set[str]:
+    if not root.exists() or not root.is_dir():
+        return set()
+
+    paths: set[str] = set()
+    for path in root.rglob("*.md"):
+        rel = path.relative_to(root).as_posix()
+        if rel.startswith(".git/"):
+            continue
+        paths.add(rel)
+
+    return paths
+
+
+def summarize_path_set(paths: list[str], limit: int = 10) -> str:
+    if not paths:
+        return ""
+
+    if len(paths) <= limit:
+        return ", ".join(paths)
+
+    head = ", ".join(paths[:limit])
+    return f"{head}, ... (+{len(paths) - limit} more)"
+
+
 def validate_no_legacy_terms(issues: list[str]) -> None:
     for file_path in iter_guard_target_files():
         rel = file_path.relative_to(ROOT).as_posix()
@@ -360,6 +435,56 @@ def main() -> int:
 
     if "BANANA_ENFORCE_CANONICAL_WIKI_REMOTE" not in workflow_sync_text:
         issues.append("WIKI_SYNC missing canonical wiki remote enforcement toggle")
+
+    if "BANANA_WIKI_DIR:-artifacts/wiki-sync/wiki-worktree" not in workflow_sync_text:
+        issues.append("WIKI_SYNC missing isolated wiki worktree default path")
+
+    if "Refusing to use repository .wiki as sync worktree" not in workflow_sync_text:
+        issues.append("WIKI_SYNC missing repository .wiki protection guard")
+
+    allowlist_entries = parse_wiki_allowlist(WIKI_ALLOWLIST_FILE, issues)
+    wiki_paths: set[str] = set()
+
+    if not WIKI_SOURCE_DIR.exists() or not WIKI_SOURCE_DIR.is_dir():
+        issues.append("WIKI_ALLOWLIST missing .wiki source directory")
+    else:
+        wiki_paths = list_markdown_paths(WIKI_SOURCE_DIR)
+
+    if allowlist_entries and wiki_paths:
+        unexpected_wiki_paths = sorted(wiki_paths - allowlist_entries)
+        if unexpected_wiki_paths:
+            issues.append(
+                "WIKI_ALLOWLIST unexpected .wiki markdown files: "
+                + summarize_path_set(unexpected_wiki_paths)
+            )
+
+        missing_wiki_paths = sorted(allowlist_entries - wiki_paths)
+        if missing_wiki_paths:
+            issues.append(
+                "WIKI_ALLOWLIST missing expected .wiki markdown files: "
+                + summarize_path_set(missing_wiki_paths)
+            )
+
+    if not SPECIFY_WIKI_HUMAN_REFERENCE_DIR.exists() or not SPECIFY_WIKI_HUMAN_REFERENCE_DIR.is_dir():
+        issues.append("WIKI_MIRROR missing canonical mirror directory: .specify/wiki/human-reference")
+    elif wiki_paths:
+        canonical_wiki_paths = list_markdown_paths(SPECIFY_WIKI_HUMAN_REFERENCE_DIR)
+
+        missing_in_canonical = sorted(wiki_paths - canonical_wiki_paths)
+        if missing_in_canonical:
+            issues.append(
+                "WIKI_MIRROR missing pages in .specify/wiki/human-reference: "
+                + summarize_path_set(missing_in_canonical)
+                + " (run: bash scripts/wiki-consume-into-specify.sh)"
+            )
+
+        unexpected_in_canonical = sorted(canonical_wiki_paths - wiki_paths)
+        if unexpected_in_canonical:
+            issues.append(
+                "WIKI_MIRROR unexpected extra pages in .specify/wiki/human-reference: "
+                + summarize_path_set(unexpected_in_canonical)
+                + " (run: bash scripts/wiki-consume-into-specify.sh)"
+            )
 
     if not SCRIPT_ENSURE_SPECKIT.exists():
         issues.append("SCRIPT missing Spec Kit preflight helper: scripts/workflow-ensure-speckit.sh")

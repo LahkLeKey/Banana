@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="06811b13-8ccf-494d-841c-4f92304e9946" name="Zephr@FOURTYSIXTY 2026-04-25 13:09:41" runUser="FOURTYSIXTY\Zephr" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-04-25T13:09:41.6733162-05:00" queuing="2026-04-25T13:09:41.6733170-05:00" start="2026-04-25T13:09:39.3591249-05:00" finish="2026-04-25T13:09:41.9511262-05:00" />
+  <TestSettings name="default" id="0a1397ea-3310-4e47-ac2f-e648beb63f43">
+    <Deployment runDeploymentRoot="Zephr_FOURTYSIXTY_2026-04-25_13_09_41" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="72b79d3a-efce-4c06-8588-b6bc9bf5d348" testId="c4e042b3-9068-cc69-f728-1df4bd20b203" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_UsesManagedNpgsqlClient_WhenPostgresConnectionIsConfigured" computerName="FOURTYSIXTY" duration="00:00:00.1217605" startTime="2026-04-25T13:09:40.9669099-05:00" endTime="2026-04-25T13:09:40.9669220-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="72b79d3a-efce-4c06-8588-b6bc9bf5d348" />
+    <UnitTestResult executionId="45da4f32-a44b-40eb-af14-8d66782c3ba2" testId="d0cd4ca2-06ee-c2db-3393-8f444891536a" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_WhenValidationFails_ReturnsBadRequest" computerName="FOURTYSIXTY" duration="00:00:00.0126608" startTime="2026-04-25T13:09:41.7105329-05:00" endTime="2026-04-25T13:09:41.7105338-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="45da4f32-a44b-40eb-af14-8d66782c3ba2" />
+    <UnitTestResult executionId="96bc3f42-4c9e-466e-aba7-9c6c76b6e219" testId="5c6cf2f7-02c0-f0f3-941a-9b695c0f3554" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_WhenDatabaseStepThrowsDatabaseAccessException_ReturnsServiceUnavailable" computerName="FOURTYSIXTY" duration="00:00:00.0141736" startTime="2026-04-25T13:09:41.6831746-05:00" endTime="2026-04-25T13:09:41.6831747-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="96bc3f42-4c9e-466e-aba7-9c6c76b6e219" />
+    <UnitTestResult executionId="91b3b8da-3bed-42e7-a38b-6f0a5c85569e" testId="3d175f18-fbaa-d6a2-376a-89ad7b435952" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.PredictRipeness_ReturnsExpectedBody" computerName="FOURTYSIXTY" duration="00:00:00.0212973" startTime="2026-04-25T13:09:41.8645535-05:00" endTime="2026-04-25T13:09:41.8645540-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="91b3b8da-3bed-42e7-a38b-6f0a5c85569e" />
+    <UnitTestResult executionId="4142f92b-fc55-4e47-bee4-16c11a5d06f6" testId="4a70cb09-b775-f7b0-9317-f75014c3c8c6" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.DataAccessClientResolution_FallsBackToNativeDal_WhenModeIsOutOfRange" computerName="FOURTYSIXTY" duration="00:00:00.0115592" startTime="2026-04-25T13:09:41.8419825-05:00" endTime="2026-04-25T13:09:41.8419827-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4142f92b-fc55-4e47-bee4-16c11a5d06f6" />
+    <UnitTestResult executionId="39a03aaa-a093-4970-9cbb-26e45b78eaa3" testId="32b7cca8-1d61-913e-20af-81ba5be1154d" testName="Banana.IntegrationTests.BananaEndpointTests.GetBanana_ReturnsOk_WhenNativeLibraryIsAvailable" computerName="FOURTYSIXTY" duration="00:00:00.7790996" startTime="2026-04-25T13:09:41.6227085-05:00" endTime="2026-04-25T13:09:41.6227088-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="39a03aaa-a093-4970-9cbb-26e45b78eaa3" />
+    <UnitTestResult executionId="afa15bab-6430-4b66-8c28-dd291692cec3" testId="45b22764-92b2-f999-3e69-7ad45b10ea06" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_UsesManagedNpgsqlClient_WhenQueryReturnsMoreThanOneRow" computerName="FOURTYSIXTY" duration="00:00:00.0005083" startTime="2026-04-25T13:09:41.6686584-05:00" endTime="2026-04-25T13:09:41.6686587-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="afa15bab-6430-4b66-8c28-dd291692cec3" />
+    <UnitTestResult executionId="1fa7c92a-a16c-4b2a-ac58-17f31c327b39" testId="2931358c-7c91-505a-22d3-795f28d4103c" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.DataAccessClientResolution_UsesManagedClient_WhenConfigured" computerName="FOURTYSIXTY" duration="00:00:00.0105133" startTime="2026-04-25T13:09:41.7949929-05:00" endTime="2026-04-25T13:09:41.7949932-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1fa7c92a-a16c-4b2a-ac58-17f31c327b39" />
+    <UnitTestResult executionId="a46936ec-76ea-4187-8252-2866b5bfed70" testId="1cbb1afa-cc46-abf4-3ebe-b71989f4c504" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_UsesPipelineAndReturnsExpectedBody" computerName="FOURTYSIXTY" duration="00:00:00.6571814" startTime="2026-04-25T13:09:41.6473068-05:00" endTime="2026-04-25T13:09:41.6473069-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a46936ec-76ea-4187-8252-2866b5bfed70" />
+    <UnitTestResult executionId="d7c36686-5e86-4e10-a773-0b63681a990f" testId="5719ad4c-ce95-6fe2-a177-cff2f47b7ce6" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_WhenNativeStepThrowsNativeInteropException_ReturnsInternalServerError" computerName="FOURTYSIXTY" duration="00:00:00.0437534" startTime="2026-04-25T13:09:41.6680523-05:00" endTime="2026-04-25T13:09:41.6680525-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d7c36686-5e86-4e10-a773-0b63681a990f" />
+    <UnitTestResult executionId="f55363f1-8529-44eb-9c2b-27cbf039d32a" testId="8dc41ad1-61e0-28b8-529a-3ccca35ea1e8" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_WhenUnhandledExceptionOccurs_ReturnsInternalServerError" computerName="FOURTYSIXTY" duration="00:00:00.0140136" startTime="2026-04-25T13:09:41.6975020-05:00" endTime="2026-04-25T13:09:41.6975022-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f55363f1-8529-44eb-9c2b-27cbf039d32a" />
+    <UnitTestResult executionId="5a3ba0b4-8240-43b0-b357-74cbfb50886f" testId="7ccc59d9-de66-5367-0b3c-28fbdcbe33ae" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.CreateBatch_AndGetBatchStatus_ReturnExpectedBody" computerName="FOURTYSIXTY" duration="00:00:00.0165854" startTime="2026-04-25T13:09:41.8923763-05:00" endTime="2026-04-25T13:09:41.8923766-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5a3ba0b4-8240-43b0-b357-74cbfb50886f" />
+    <UnitTestResult executionId="fd2bc45c-dba0-4b8f-9f85-5fa9ea6497b0" testId="142048e3-c176-4429-8ca9-7269a7d0be8a" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.CoreSuccessE2E_BananaConsoleJourney_ReturnsExpectedPayloads" computerName="FOURTYSIXTY" duration="00:00:00.0732674" startTime="2026-04-25T13:09:41.7842920-05:00" endTime="2026-04-25T13:09:41.7842925-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fd2bc45c-dba0-4b8f-9f85-5fa9ea6497b0" />
+    <UnitTestResult executionId="28073bd9-7835-4d54-abba-b359043649a6" testId="93463640-d7cc-06d1-15d2-44c3718b76de" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_UsesManagedNpgsqlClient_WhenQueryReturnsNoRows" computerName="FOURTYSIXTY" duration="00:00:00.0007514" startTime="2026-04-25T13:09:41.8428333-05:00" endTime="2026-04-25T13:09:41.8428334-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="28073bd9-7835-4d54-abba-b359043649a6" />
+    <UnitTestResult executionId="430785d0-67bb-4ae9-85ed-58b32123d9fe" testId="36c43133-46bf-d72f-2046-823fe0f9fb8e" testName="Banana.IntegrationTests.BananaPipelineIntegrationTests.CoreSuccessE2E_NotBananaJourney_ReturnsPolymorphicClassification" computerName="FOURTYSIXTY" duration="00:00:00.0349390" startTime="2026-04-25T13:09:41.8302952-05:00" endTime="2026-04-25T13:09:41.8302959-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="430785d0-67bb-4ae9-85ed-58b32123d9fe" />
+    <UnitTestResult executionId="e5971143-b12a-4e2f-b713-7ad13ddacc72" testId="08177bfb-8c0d-522b-2ae9-58da1c4bcea3" testName="Banana.IntegrationTests.BananaEndpointTests.GetBanana_ReturnsExpectedResponseBody_WhenNativeLibraryIsAvailable" computerName="FOURTYSIXTY" duration="00:00:00.0062676" startTime="2026-04-25T13:09:41.6474061-05:00" endTime="2026-04-25T13:09:41.6474061-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e5971143-b12a-4e2f-b713-7ad13ddacc72" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_WhenValidationFails_ReturnsBadRequest" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="d0cd4ca2-06ee-c2db-3393-8f444891536a">
+      <Execution id="45da4f32-a44b-40eb-af14-8d66782c3ba2" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="GetBanana_WhenValidationFails_ReturnsBadRequest" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaEndpointTests.GetBanana_ReturnsExpectedResponseBody_WhenNativeLibraryIsAvailable" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="08177bfb-8c0d-522b-2ae9-58da1c4bcea3">
+      <Execution id="e5971143-b12a-4e2f-b713-7ad13ddacc72" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaEndpointTests" name="GetBanana_ReturnsExpectedResponseBody_WhenNativeLibraryIsAvailable" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.CreateBatch_AndGetBatchStatus_ReturnExpectedBody" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="7ccc59d9-de66-5367-0b3c-28fbdcbe33ae">
+      <Execution id="5a3ba0b4-8240-43b0-b357-74cbfb50886f" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="CreateBatch_AndGetBatchStatus_ReturnExpectedBody" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_WhenNativeStepThrowsNativeInteropException_ReturnsInternalServerError" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="5719ad4c-ce95-6fe2-a177-cff2f47b7ce6">
+      <Execution id="d7c36686-5e86-4e10-a773-0b63681a990f" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="GetBanana_WhenNativeStepThrowsNativeInteropException_ReturnsInternalServerError" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_UsesManagedNpgsqlClient_WhenQueryReturnsNoRows" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="93463640-d7cc-06d1-15d2-44c3718b76de">
+      <Execution id="28073bd9-7835-4d54-abba-b359043649a6" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="GetBanana_UsesManagedNpgsqlClient_WhenQueryReturnsNoRows" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_WhenUnhandledExceptionOccurs_ReturnsInternalServerError" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="8dc41ad1-61e0-28b8-529a-3ccca35ea1e8">
+      <Execution id="f55363f1-8529-44eb-9c2b-27cbf039d32a" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="GetBanana_WhenUnhandledExceptionOccurs_ReturnsInternalServerError" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.PredictRipeness_ReturnsExpectedBody" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="3d175f18-fbaa-d6a2-376a-89ad7b435952">
+      <Execution id="91b3b8da-3bed-42e7-a38b-6f0a5c85569e" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="PredictRipeness_ReturnsExpectedBody" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_UsesManagedNpgsqlClient_WhenPostgresConnectionIsConfigured" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="c4e042b3-9068-cc69-f728-1df4bd20b203">
+      <Execution id="72b79d3a-efce-4c06-8588-b6bc9bf5d348" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="GetBanana_UsesManagedNpgsqlClient_WhenPostgresConnectionIsConfigured" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_WhenDatabaseStepThrowsDatabaseAccessException_ReturnsServiceUnavailable" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="5c6cf2f7-02c0-f0f3-941a-9b695c0f3554">
+      <Execution id="96bc3f42-4c9e-466e-aba7-9c6c76b6e219" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="GetBanana_WhenDatabaseStepThrowsDatabaseAccessException_ReturnsServiceUnavailable" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_UsesPipelineAndReturnsExpectedBody" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="1cbb1afa-cc46-abf4-3ebe-b71989f4c504">
+      <Execution id="a46936ec-76ea-4187-8252-2866b5bfed70" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="GetBanana_UsesPipelineAndReturnsExpectedBody" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.GetBanana_UsesManagedNpgsqlClient_WhenQueryReturnsMoreThanOneRow" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="45b22764-92b2-f999-3e69-7ad45b10ea06">
+      <Execution id="afa15bab-6430-4b66-8c28-dd291692cec3" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="GetBanana_UsesManagedNpgsqlClient_WhenQueryReturnsMoreThanOneRow" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaEndpointTests.GetBanana_ReturnsOk_WhenNativeLibraryIsAvailable" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="32b7cca8-1d61-913e-20af-81ba5be1154d">
+      <Execution id="39a03aaa-a093-4970-9cbb-26e45b78eaa3" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaEndpointTests" name="GetBanana_ReturnsOk_WhenNativeLibraryIsAvailable" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.DataAccessClientResolution_FallsBackToNativeDal_WhenModeIsOutOfRange" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="4a70cb09-b775-f7b0-9317-f75014c3c8c6">
+      <Execution id="4142f92b-fc55-4e47-bee4-16c11a5d06f6" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="DataAccessClientResolution_FallsBackToNativeDal_WhenModeIsOutOfRange" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.DataAccessClientResolution_UsesManagedClient_WhenConfigured" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="2931358c-7c91-505a-22d3-795f28d4103c">
+      <Execution id="1fa7c92a-a16c-4b2a-ac58-17f31c327b39" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="DataAccessClientResolution_UsesManagedClient_WhenConfigured" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.CoreSuccessE2E_NotBananaJourney_ReturnsPolymorphicClassification" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="36c43133-46bf-d72f-2046-823fe0f9fb8e">
+      <Execution id="430785d0-67bb-4ae9-85ed-58b32123d9fe" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="CoreSuccessE2E_NotBananaJourney_ReturnsPolymorphicClassification" />
+    </UnitTest>
+    <UnitTest name="Banana.IntegrationTests.BananaPipelineIntegrationTests.CoreSuccessE2E_BananaConsoleJourney_ReturnsExpectedPayloads" storage="c:\github\banana\tests\integration\bin\debug\net8.0\banana.integrationtests.dll" id="142048e3-c176-4429-8ca9-7269a7d0be8a">
+      <Execution id="fd2bc45c-dba0-4b8f-9f85-5fa9ea6497b0" />
+      <TestMethod codeBase="C:\Github\Banana\tests\integration\bin\Debug\net8.0\Banana.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Banana.IntegrationTests.BananaPipelineIntegrationTests" name="CoreSuccessE2E_BananaConsoleJourney_ReturnsExpectedPayloads" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="c4e042b3-9068-cc69-f728-1df4bd20b203" executionId="72b79d3a-efce-4c06-8588-b6bc9bf5d348" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d0cd4ca2-06ee-c2db-3393-8f444891536a" executionId="45da4f32-a44b-40eb-af14-8d66782c3ba2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5c6cf2f7-02c0-f0f3-941a-9b695c0f3554" executionId="96bc3f42-4c9e-466e-aba7-9c6c76b6e219" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3d175f18-fbaa-d6a2-376a-89ad7b435952" executionId="91b3b8da-3bed-42e7-a38b-6f0a5c85569e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4a70cb09-b775-f7b0-9317-f75014c3c8c6" executionId="4142f92b-fc55-4e47-bee4-16c11a5d06f6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="32b7cca8-1d61-913e-20af-81ba5be1154d" executionId="39a03aaa-a093-4970-9cbb-26e45b78eaa3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45b22764-92b2-f999-3e69-7ad45b10ea06" executionId="afa15bab-6430-4b66-8c28-dd291692cec3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2931358c-7c91-505a-22d3-795f28d4103c" executionId="1fa7c92a-a16c-4b2a-ac58-17f31c327b39" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1cbb1afa-cc46-abf4-3ebe-b71989f4c504" executionId="a46936ec-76ea-4187-8252-2866b5bfed70" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5719ad4c-ce95-6fe2-a177-cff2f47b7ce6" executionId="d7c36686-5e86-4e10-a773-0b63681a990f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8dc41ad1-61e0-28b8-529a-3ccca35ea1e8" executionId="f55363f1-8529-44eb-9c2b-27cbf039d32a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7ccc59d9-de66-5367-0b3c-28fbdcbe33ae" executionId="5a3ba0b4-8240-43b0-b357-74cbfb50886f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="142048e3-c176-4429-8ca9-7269a7d0be8a" executionId="fd2bc45c-dba0-4b8f-9f85-5fa9ea6497b0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="93463640-d7cc-06d1-15d2-44c3718b76de" executionId="28073bd9-7835-4d54-abba-b359043649a6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="36c43133-46bf-d72f-2046-823fe0f9fb8e" executionId="430785d0-67bb-4ae9-85ed-58b32123d9fe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="08177bfb-8c0d-522b-2ae9-58da1c4bcea3" executionId="e5971143-b12a-4e2f-b713-7ad13ddacc72" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="16" executed="16" passed="16" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.15)&#xD;
+[xUnit.net 00:00:00.59]   Discovering: Banana.IntegrationTests&#xD;
+[xUnit.net 00:00:00.63]   Discovered:  Banana.IntegrationTests&#xD;
+[xUnit.net 00:00:00.63]   Starting:    Banana.IntegrationTests&#xD;
+info: Banana.Api.Pipeline.Steps.AuditStep[0]&#xD;
+      Banana pipeline executed for purchases=10, multiplier=2, nativeBanana=20, bonusBanana=10&#xD;
+info: Banana.Api[0]&#xD;
+      Loaded native library from C:\Github\Banana\build\native\bin\Release\banana_native.dll&#xD;
+info: Banana.Api[0]&#xD;
+      Loaded native library from C:\Github\Banana\build\native\bin\Release\banana_native.dll&#xD;
+info: Banana.Api[0]&#xD;
+      Loaded native library from C:\Github\Banana\build\native\bin\Release\banana_native.dll&#xD;
+info: Banana.Api[0]&#xD;
+      Loaded native library from C:\Github\Banana\build\native\bin\Release\banana_native.dll&#xD;
+info: Banana.Api.Pipeline.Steps.AuditStep[0]&#xD;
+      Banana pipeline executed for purchases=10, multiplier=2, nativeBanana=150, bonusBanana=10&#xD;
+info: Banana.Api.Pipeline.Steps.AuditStep[0]&#xD;
+      Banana pipeline executed for purchases=10, multiplier=2, nativeBanana=150, bonusBanana=10&#xD;
+fail: Banana.Api.Middleware.ErrorHandlingMiddleware[0]&#xD;
+      Native interop failure&#xD;
+      Banana.Api.NativeInterop.NativeInteropException: Injected native failure&#xD;
+         at Banana.IntegrationTests.BananaPipelineIntegrationTests.FakeNativeBananaClient.Calculate(Int32 purchases, Int32 multiplier) in C:\Github\Banana\tests\integration\BananaPipelineIntegrationTests.cs:line 490&#xD;
+         at Banana.Api.Pipeline.Steps.NativeCalculationStep.Execute(PipelineContext input, Func`2 next) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\Steps\NativeCalculationStep.cs:line 27&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.&lt;&gt;c__DisplayClass2_1.&lt;Execute&gt;b__1(T current) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 35&#xD;
+         at Banana.Api.Pipeline.Steps.DatabaseAccessStep.Execute(PipelineContext input, Func`2 next) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\Steps\DatabaseAccessStep.cs:line 35&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.&lt;&gt;c__DisplayClass2_1.&lt;Execute&gt;b__1(T current) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 35&#xD;
+         at Banana.Api.Pipeline.Steps.ValidationStep.Execute(PipelineContext input, Func`2 next) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\Steps\ValidationStep.cs:line 21&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.&lt;&gt;c__DisplayClass2_1.&lt;Execute&gt;b__1(T current) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 35&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.Execute(T input) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 38&#xD;
+         at Banana.Api.Services.BananaService.Calculate(Int32 purchases, Int32 multiplier) in C:\Github\Banana\src\c-sharp\asp.net\Services\BananaService.cs:line 31&#xD;
+         at Banana.Api.Controllers.BananaController.Get(Int32 purchases, Int32 multiplier) in C:\Github\Banana\src\c-sharp\asp.net\Controllers\BananaController.cs:line 42&#xD;
+         at lambda_method96(Closure, Object, Object[])&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.SyncObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeActionMethodAsync()&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeNextActionFilterAsync()&#xD;
+      --- End of stack trace from previous location ---&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()&#xD;
+      --- End of stack trace from previous location ---&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)&#xD;
+         at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)&#xD;
+         at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)&#xD;
+         at Banana.Api.Middleware.ErrorHandlingMiddleware.Invoke(HttpContext context) in C:\Github\Banana\src\c-sharp\asp.net\Middleware\ErrorHandlingMiddleware.cs:line 37&#xD;
+fail: Banana.Api.Middleware.ErrorHandlingMiddleware[0]&#xD;
+      Database access failure&#xD;
+      Banana.Api.DataAccess.DatabaseAccessException: Injected database-stage failure&#xD;
+         at Banana.IntegrationTests.BananaPipelineIntegrationTests.ThrowingDataAccessPipelineClient.Execute(DbAccessRequest request) in C:\Github\Banana\tests\integration\BananaPipelineIntegrationTests.cs:line 703&#xD;
+         at Banana.Api.Pipeline.Steps.DatabaseAccessStep.Execute(PipelineContext input, Func`2 next) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\Steps\DatabaseAccessStep.cs:line 28&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.&lt;&gt;c__DisplayClass2_1.&lt;Execute&gt;b__1(T current) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 35&#xD;
+         at Banana.Api.Pipeline.Steps.ValidationStep.Execute(PipelineContext input, Func`2 next) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\Steps\ValidationStep.cs:line 21&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.&lt;&gt;c__DisplayClass2_1.&lt;Execute&gt;b__1(T current) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 35&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.Execute(T input) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 38&#xD;
+         at Banana.Api.Services.BananaService.Calculate(Int32 purchases, Int32 multiplier) in C:\Github\Banana\src\c-sharp\asp.net\Services\BananaService.cs:line 31&#xD;
+         at Banana.Api.Controllers.BananaController.Get(Int32 purchases, Int32 multiplier) in C:\Github\Banana\src\c-sharp\asp.net\Controllers\BananaController.cs:line 42&#xD;
+         at lambda_method104(Closure, Object, Object[])&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.SyncObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeActionMethodAsync()&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeNextActionFilterAsync()&#xD;
+      --- End of stack trace from previous location ---&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()&#xD;
+      --- End of stack trace from previous location ---&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)&#xD;
+         at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)&#xD;
+         at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)&#xD;
+         at Banana.Api.Middleware.ErrorHandlingMiddleware.Invoke(HttpContext context) in C:\Github\Banana\src\c-sharp\asp.net\Middleware\ErrorHandlingMiddleware.cs:line 37&#xD;
+fail: Banana.Api.Middleware.ErrorHandlingMiddleware[0]&#xD;
+      Unhandled error&#xD;
+      System.InvalidOperationException: Injected unhandled failure&#xD;
+         at Banana.IntegrationTests.BananaPipelineIntegrationTests.FakeNativeBananaClient.Calculate(Int32 purchases, Int32 multiplier) in C:\Github\Banana\tests\integration\BananaPipelineIntegrationTests.cs:line 491&#xD;
+         at Banana.Api.Pipeline.Steps.NativeCalculationStep.Execute(PipelineContext input, Func`2 next) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\Steps\NativeCalculationStep.cs:line 27&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.&lt;&gt;c__DisplayClass2_1.&lt;Execute&gt;b__1(T current) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 35&#xD;
+         at Banana.Api.Pipeline.Steps.DatabaseAccessStep.Execute(PipelineContext input, Func`2 next) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\Steps\DatabaseAccessStep.cs:line 35&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.&lt;&gt;c__DisplayClass2_1.&lt;Execute&gt;b__1(T current) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 35&#xD;
+         at Banana.Api.Pipeline.Steps.ValidationStep.Execute(PipelineContext input, Func`2 next) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\Steps\ValidationStep.cs:line 21&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.&lt;&gt;c__DisplayClass2_1.&lt;Execute&gt;b__1(T current) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 35&#xD;
+         at Banana.Api.Pipeline.PipelineExecutor`1.Execute(T input) in C:\Github\Banana\src\c-sharp\asp.net\Pipeline\PipelineExecutor.cs:line 38&#xD;
+         at Banana.Api.Services.BananaService.Calculate(Int32 purchases, Int32 multiplier) in C:\Github\Banana\src\c-sharp\asp.net\Services\BananaService.cs:line 31&#xD;
+         at Banana.Api.Controllers.BananaController.Get(Int32 purchases, Int32 multiplier) in C:\Github\Banana\src\c-sharp\asp.net\Controllers\BananaController.cs:line 42&#xD;
+         at lambda_method109(Closure, Object, Object[])&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.SyncObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeActionMethodAsync()&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeNextActionFilterAsync()&#xD;
+      --- End of stack trace from previous location ---&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()&#xD;
+      --- End of stack trace from previous location ---&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)&#xD;
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)&#xD;
+         at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)&#xD;
+         at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)&#xD;
+         at Banana.Api.Middleware.ErrorHandlingMiddleware.Invoke(HttpContext context) in C:\Github\Banana\src\c-sharp\asp.net\Middleware\ErrorHandlingMiddleware.cs:line 37&#xD;
+info: Banana.Api.Pipeline.Steps.AuditStep[0]&#xD;
+      Banana pipeline executed for purchases=8, multiplier=4, nativeBanana=32, bonusBanana=0&#xD;
+[xUnit.net 00:00:01.72]   Finished:    Banana.IntegrationTests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

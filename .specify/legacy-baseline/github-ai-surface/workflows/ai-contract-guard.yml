@@ -1,0 +1,26 @@
+name: AI Contract Guard
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  validate-ai-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate AI contracts and terminology guard
+        run: |
+          python scripts/validate-ai-contracts.py
+
+      - name: Smoke test spec-driven agent attribution
+        run: |
+          bash scripts/smoke-test-spec-driven-agents.sh

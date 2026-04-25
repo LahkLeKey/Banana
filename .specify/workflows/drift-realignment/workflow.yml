@@ -1,0 +1,65 @@
+schema_version: "1.0"
+workflow:
+  id: "drift-realignment"
+  name: "Drift Realignment Cycle"
+  version: "1.0.0"
+  author: "Banana"
+  description: "Runs specify -> plan -> tasks with explicit drift-alignment gates rooted in .specify"
+
+requires:
+  speckit_version: ">=0.7.2"
+  integrations:
+    any: ["copilot", "claude", "gemini"]
+
+inputs:
+  spec:
+    type: string
+    required: true
+    prompt: "Describe the scope to realign"
+  integration:
+    type: string
+    default: "copilot"
+    prompt: "Integration to use (e.g. copilot, claude, gemini)"
+
+steps:
+  - id: specify
+    command: speckit.specify
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.spec }}"
+
+  - id: review-spec-boundaries
+    type: gate
+    message: "Confirm generated spec has explicit in-scope, out-of-scope, and assumptions sections."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: plan
+    command: speckit.plan
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.spec }}"
+
+  - id: review-plan-traceability
+    type: gate
+    message: "Confirm plan preserves story-to-requirement traceability and ownership lanes."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: tasks
+    command: speckit.tasks
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.spec }}"
+
+  - id: review-task-drift
+    type: gate
+    message: "Confirm tasks are traceable to approved requirements before implementation."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: review-wiki-freeze
+    type: gate
+    message: "Confirm .wiki markdown pages match .specify/wiki/human-reference-allowlist.txt and canonical mirror parity remains intact."
+    options: [approve, reject]
+    on_reject: abort
