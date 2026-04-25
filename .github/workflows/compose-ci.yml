@@ -508,6 +508,81 @@ jobs:
         if: always()
         run: docker compose --profile runtime down -v --remove-orphans
 
+  e2e-smoke:
+    runs-on: ubuntu-latest
+    env:
+      BANANA_E2E_BOOTSTRAP_SERVICES: api
+      BANANA_E2E_HEALTH_TIMEOUT_SEC: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Bootstrap E2E runtime
+        run: bash scripts/compose-e2e-bootstrap.sh
+
+      - name: Run E2E smoke contract tests
+        run: |
+          mkdir -p .artifacts/e2e/test-results
+          dotnet test tests/e2e/Banana.E2eTests.csproj -c Release \
+            --results-directory .artifacts/e2e/test-results \
+            --logger "trx;LogFileName=e2e-smoke.trx"
+
+      - name: Capture smoke API payloads
+        if: always()
+        run: |
+          mkdir -p .artifacts/e2e/smoke
+          curl -fsS "http://localhost:8080/health" > .artifacts/e2e/smoke/health.json || true
+          curl -fsS "http://localhost:8080/banana?purchases=2&multiplier=3" > .artifacts/e2e/smoke/banana.json || true
+
+      - name: Capture compose diagnostics
+        if: always()
+        run: |
+          mkdir -p .artifacts/e2e/diagnostics
+          docker compose --profile apps ps > .artifacts/e2e/diagnostics/compose-ps.txt || true
+          docker compose --profile apps logs --no-color api > .artifacts/e2e/diagnostics/api.log || true
+
+      - name: Add E2E smoke summary to GitHub Actions summary
+        if: always()
+        run: |
+          {
+            echo "## E2E Smoke Summary"
+            echo
+            echo "- Bootstrap service set: api"
+            echo "- Health URL: http://localhost:8080/health"
+            if [[ -f .artifacts/e2e/smoke/health.json ]]; then
+              echo
+              echo "### Health Payload"
+              echo
+              echo '```json'
+              cat .artifacts/e2e/smoke/health.json
+              echo '```'
+            fi
+            if [[ -f .artifacts/e2e/smoke/banana.json ]]; then
+              echo
+              echo "### Banana Payload"
+              echo
+              echo '```json'
+              cat .artifacts/e2e/smoke/banana.json
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Teardown E2E runtime
+        if: always()
+        run: bash scripts/compose-e2e-teardown.sh
+
+      - name: Upload E2E smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-smoke-artifacts
+          path: .artifacts/e2e
+
   compose-electron:
     runs-on: ubuntu-latest
     steps:
