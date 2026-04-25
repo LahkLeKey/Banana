@@ -48,6 +48,11 @@ const BUILTIN_NOT_BANANA_TOKENS = [
   'noise',
 ];
 
+const STOPWORDS = new Set([
+  'a',  'an', 'and', 'are', 'as', 'at',   'be',  'by',   'for', 'from', 'in',
+  'is', 'it', 'of',  'on',  'or', 'that', 'the', 'this', 'to',  'with',
+]);
+
 function buildBuiltinFallback(): TrainedModel {
   const weights = new Map<string, number>();
   for (const token of BUILTIN_BANANA_TOKENS) weights.set(token, 1);
@@ -69,10 +74,31 @@ function resolveArtifactPath(): string|undefined {
     'artifacts/not-banana-model-readiness-check/vocabulary.json',
     'artifacts/not-banana-model/vocabulary.json',
   ];
-  for (const candidate of candidates) {
-    const full = resolve(candidate);
-    if (existsSync(full)) return full;
+
+  // Search from both current working directory and this module's directory
+  // so API execution from nested paths can still discover repo-level artifacts.
+  const roots = new Set<string>();
+
+  function addAncestors(start: string, maxDepth = 12) {
+    let current = resolve(start);
+    for (let i = 0; i < maxDepth; i += 1) {
+      roots.add(current);
+      const parent = resolve(current, '..');
+      if (parent === current) break;
+      current = parent;
+    }
   }
+
+  addAncestors(process.cwd(), 10);
+  addAncestors(import.meta.dir, 14);
+
+  for (const root of roots) {
+    for (const candidate of candidates) {
+      const full = resolve(root, candidate);
+      if (existsSync(full)) return full;
+    }
+  }
+
   return undefined;
 }
 
@@ -142,12 +168,13 @@ export function __resetTrainedModelCacheForTests() {
 export function tokenize(text: string): string[] {
   return text.toLowerCase()
       .split(/[^a-z0-9']+/)
-      .filter((token) => token.length > 0);
+      .filter((token) => token.length > 0 && !STOPWORDS.has(token));
 }
 
 export type ScoredText = {
   banana_score: number; matched_banana_tokens: string[];
   matched_not_banana_tokens: string[];
+  matched_token_count: number;
   token_count: number;
 };
 
@@ -159,6 +186,7 @@ export function scoreText(
       banana_score: 0.5,
       matched_banana_tokens: [],
       matched_not_banana_tokens: [],
+      matched_token_count: 0,
       token_count: 0,
     };
   }
@@ -192,6 +220,7 @@ export function scoreText(
     banana_score: bananaScore,
     matched_banana_tokens: Array.from(new Set(matchedBanana)).sort(),
     matched_not_banana_tokens: Array.from(new Set(matchedNotBanana)).sort(),
+    matched_token_count: matchedBanana.length + matchedNotBanana.length,
     token_count: tokens.length,
   };
 }

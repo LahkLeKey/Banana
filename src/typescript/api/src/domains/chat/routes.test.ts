@@ -49,6 +49,7 @@ describe('chat routes', () => {
         expect(messagePayload.user_message.role).toBe('user');
         expect(messagePayload.assistant_message.role).toBe('assistant');
         expect(messagePayload.assistant_message.content).toContain('banana');
+        expect(messagePayload.assistant_message.content).toContain('[model=');
 
         const duplicateRes = await app.inject({
           method: 'POST',

@@ -21,10 +21,10 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
     const model = loadTrainedModel();
     const scored = scoreText(parsed.data.text, model);
 
-    if (scored.token_count === 0) {
+    if (scored.token_count === 0 || scored.matched_token_count === 0) {
       return reply.status(400).send({
         error: 'invalid_argument',
-        message: 'text must contain signal tokens',
+        message: 'text must contain known banana/not-banana signal tokens',
       });
     }
 
@@ -37,6 +37,7 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
       threshold: parsed.data.threshold,
       matched_tokens: scored.matched_banana_tokens,
       matched_not_banana_tokens: scored.matched_not_banana_tokens,
+      matched_token_count: scored.matched_token_count,
       token_count: scored.token_count,
       model: {
         source: model.source,

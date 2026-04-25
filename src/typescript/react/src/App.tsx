@@ -6,31 +6,13 @@ import {
     type ChatMessage,
     type ChatSession,
 } from "@banana/ui";
-
-type CreateSessionResponse = {
-    session: ChatSession;
-    welcome_message: ChatMessage;
-};
-
-type SendMessageResponse = {
-    session_id: string;
-    duplicate: boolean;
-    user_message: ChatMessage;
-    assistant_message: ChatMessage;
-};
-
-type ErrorPayload = {
-    error?: {
-        message?: string;
-    };
-};
-
-const ELECTRON_BRIDGE = typeof window !== "undefined" ? window.banana : undefined;
-const API_BASE_URL =
-    import.meta.env.VITE_BANANA_API_BASE_URL || ELECTRON_BRIDGE?.apiBaseUrl || "";
-const PLATFORM = ELECTRON_BRIDGE?.platform
-    ? `electron-${ELECTRON_BRIDGE.platform}`
-    : "web";
+import {
+    createChatSession,
+    fetchBananaSummary,
+    resolveApiBaseUrl,
+    resolvePlatformLabel,
+    sendChatMessage,
+} from "./lib/api";
 
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
     const merged = [...existing];
@@ -44,15 +26,6 @@ function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMe
     return merged;
 }
 
-async function parseApiError(response: Response): Promise<string> {
-    try {
-        const payload = (await response.json()) as ErrorPayload;
-        return payload.error?.message ?? `request failed (${response.status})`;
-    } catch {
-        return `request failed (${response.status})`;
-    }
-}
-
 export function App() {
     const [banana, setBanana] = useState<number | null>(null);
     const [session, setSession] = useState<ChatSession | null>(null);
@@ -63,16 +36,16 @@ export function App() {
     const [isSending, setIsSending] = useState(false);
     const messageCounter = useRef(0);
 
-    const chatUnavailable = API_BASE_URL.length === 0;
-    const platformLabel = useMemo(() => PLATFORM, []);
+    const apiBaseUrl = useMemo(() => resolveApiBaseUrl(), []);
+    const platformLabel = useMemo(() => resolvePlatformLabel(), []);
+    const chatUnavailable = apiBaseUrl.length === 0;
 
     useEffect(() => {
-        if (!API_BASE_URL) return;
-        fetch(`${API_BASE_URL}/banana?purchases=3&multiplier=2`)
-            .then((r) => r.json())
-            .then((d: { banana: number }) => setBanana(d.banana))
+        if (!apiBaseUrl) return;
+        fetchBananaSummary(apiBaseUrl)
+            .then((payload) => setBanana(payload.banana))
             .catch(() => setBanana(null));
-    }, []);
+    }, [apiBaseUrl]);
 
     useEffect(() => {
         if (chatUnavailable) {
@@ -86,20 +59,7 @@ export function App() {
             setIsBootstrapping(true);
             setChatError(null);
             try {
-                const response = await fetch(`${API_BASE_URL}/chat/sessions`, {
-                    method: "POST",
-                    headers: { "content-type": "application/json" },
-                    body: JSON.stringify({
-                        platform: platformLabel,
-                        metadata: { source: "react-portal" },
-                    }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(await parseApiError(response));
-                }
-
-                const payload = (await response.json()) as CreateSessionResponse;
+                const payload = await createChatSession(apiBaseUrl, platformLabel);
                 if (!cancelled) {
                     setSession(payload.session);
                     setMessages([payload.welcome_message]);
@@ -123,10 +83,10 @@ export function App() {
         return () => {
             cancelled = true;
         };
-    }, [chatUnavailable, platformLabel]);
+    }, [apiBaseUrl, chatUnavailable, platformLabel]);
 
     const sendMessage = useCallback(async () => {
-        if (!session || !API_BASE_URL) return;
+        if (!session || !apiBaseUrl) return;
 
         const content = draft.trim();
         if (!content) return;
@@ -137,23 +97,12 @@ export function App() {
 
         try {
             messageCounter.current += 1;
-            const response = await fetch(
-                `${API_BASE_URL}/chat/sessions/${session.id}/messages`,
-                {
-                    method: "POST",
-                    headers: { "content-type": "application/json" },
-                    body: JSON.stringify({
-                        content,
-                        client_message_id: `${platformLabel}-${session.id}-${messageCounter.current}`,
-                    }),
-                }
+            const payload = await sendChatMessage(
+                apiBaseUrl,
+                session.id,
+                content,
+                `${platformLabel}-${session.id}-${messageCounter.current}`,
             );
-
-            if (!response.ok) {
-                throw new Error(await parseApiError(response));
-            }
-
-            const payload = (await response.json()) as SendMessageResponse;
             setMessages((existing) =>
                 mergeMessages(existing, [payload.user_message, payload.assistant_message])
             );
@@ -164,7 +113,7 @@ export function App() {
         } finally {
             setIsSending(false);
         }
-    }, [draft, platformLabel, session]);
+    }, [apiBaseUrl, draft, platformLabel, session]);
 
     function onSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -174,7 +123,7 @@ export function App() {
     return (
         <main className="mx-auto max-w-3xl space-y-4 p-6">
             <h1 className="text-2xl font-semibold">Banana v2</h1>
-            <p className="text-sm text-gray-600">API base: {API_BASE_URL || "<unset>"}</p>
+            <p className="text-sm text-gray-600">API base: {apiBaseUrl || "<unset>"}</p>
 
             <div className="flex items-center gap-2">
                 <BananaBadge count={banana ?? 0}>(today)</BananaBadge>

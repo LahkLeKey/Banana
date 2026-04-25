@@ -46,12 +46,6 @@ const PostMessageBody = z.object({
 
 const sessions = new Map<string, SessionState>();
 
-function tokenize(text: string): string[] {
-  return text.toLowerCase()
-      .split(/[^a-z0-9']+/)
-      .filter((token) => token.length > 0);
-}
-
 function clamp01(value: number): number {
   if (value < 0) return 0;
   if (value > 1) return 1;
