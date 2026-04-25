@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       incremental_plan_json:
-        description: 'Optional JSON array (or {"increments": [...]}) describing autonomous incremental slices'
+        description: 'Optional override JSON array (or {"increments": [...]}); when empty, the native deterministic model renders a plan from docs/automation/agent-pulse/autonomous-self-training-default-increments.json'
         required: false
         default: ""
       wiki_dry_run:
@@ -53,8 +53,12 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
       BANANA_SDLC_ID: autonomous-self-train
-      BANANA_SDLC_INCREMENT_PLAN_JSON: >-
-        ${{ github.event.inputs.incremental_plan_json || '[{"id":"feedback-corpus","change_command":"python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved --max-entries 8 --consume --require-human-review --minimum-human-reviewers 1 --report artifacts/not-banana-feedback/sdlc-apply-report.json","commit_message":"chore(feedback): apply approved feedback into corpus","pr_title":"triage(feedback): apply approved inbox updates","pr_body":"Autonomous self-training increment: apply approved not-banana feedback in bounded batches.","labels":"automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,feedback-loop,agent:banana-classifier-agent"},{"id":"training-docs","change_command":"python scripts/train-not-banana-model.py --corpus data/not-banana/corpus.json --output artifacts/not-banana-model --training-profile ci --session-mode single --max-sessions 1 && mkdir -p src/native/core/domain/generated && cp artifacts/not-banana-model/banana_signal_tokens.h src/native/core/domain/generated/banana_signal_tokens.h","commit_message":"chore(model): refresh generated not-banana vocabulary header","pr_title":"triage(model): refresh generated not-banana vocabulary","pr_body":"Autonomous self-training increment: retrain bounded not-banana vocabulary and refresh generated native header.","labels":"automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,model-training,agent:banana-classifier-agent"}]' }}
+      BANANA_SDLC_INCREMENT_PLAN_MODEL: native-deterministic-agent-pulse
+      BANANA_SDLC_INCREMENT_PLAN_JSON: ${{ github.event.inputs.incremental_plan_json || '' }}
+      BANANA_SDLC_INCREMENT_CATALOG_PATH: docs/automation/agent-pulse/autonomous-self-training-default-increments.json
+      BANANA_SDLC_INCREMENT_PLAN_PATH: docs/automation/agent-pulse/autonomous-self-training-default-increments.json
+      BANANA_SDLC_REQUIRED_CLASSIFIER_TRAINING_FRAGMENT: training-profile ci --session-mode single --max-sessions 1
+      BANANA_SDLC_REQUIRED_CLASSIFIER_AGENT_LABEL: agent:banana-classifier-agent
       BANANA_BASE_BRANCH: main
       BANANA_BRANCH_PREFIX: sdlc
       BANANA_DRAFT_PR: 'false'

@@ -11,6 +11,8 @@ RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-1}"
 SDLC_ID="${BANANA_SDLC_ID:-banana-sdlc}"
 PLAN_JSON="${BANANA_SDLC_INCREMENT_PLAN_JSON:-}"
 PLAN_PATH="${BANANA_SDLC_INCREMENT_PLAN_PATH:-}"
+PLAN_MODEL="${BANANA_SDLC_INCREMENT_PLAN_MODEL:-}"
+PLAN_CATALOG_PATH="${BANANA_SDLC_INCREMENT_CATALOG_PATH:-docs/automation/agent-pulse/autonomous-self-training-default-increments.json}"
 DEFAULT_BASE_BRANCH="${BANANA_BASE_BRANCH:-main}"
 DEFAULT_BRANCH_PREFIX="${BANANA_BRANCH_PREFIX:-sdlc}"
 DEFAULT_DRAFT_PR="${BANANA_DRAFT_PR:-true}"
@@ -38,6 +40,19 @@ fi
 PLAN_INPUT_PATH="${OUTPUT_DIR}/plan-${RUN_ID}-attempt-${RUN_ATTEMPT}.json"
 PLAN_ROWS_PATH="${OUTPUT_DIR}/plan-rows-${RUN_ID}-attempt-${RUN_ATTEMPT}.tsv"
 WIKI_REPORT_PATH="${OUTPUT_DIR}/wiki-sync-${RUN_ID}-attempt-${RUN_ATTEMPT}.json"
+DETERMINISTIC_PLAN_PATH="${BANANA_SDLC_DETERMINISTIC_PLAN_PATH:-${OUTPUT_DIR}/deterministic-agent-pulse-plan-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
+DETERMINISTIC_MODEL_JSON_PATH="${BANANA_SDLC_DETERMINISTIC_MODEL_JSON_PATH:-${OUTPUT_DIR}/deterministic-agent-pulse-model-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
+DETERMINISTIC_MODEL_BINARY_PATH="${BANANA_SDLC_DETERMINISTIC_MODEL_BINARY_PATH:-${OUTPUT_DIR}/banana_agent_pulse_model_cli-${RUN_ID}-attempt-${RUN_ATTEMPT}}"
+
+if [[ -z "$PLAN_JSON" && "$PLAN_MODEL" == "native-deterministic-agent-pulse" ]]; then
+  echo "Rendering deterministic SDLC plan from native C model..."
+  bash scripts/generate-deterministic-agent-pulse-plan.sh \
+    --catalog "$PLAN_CATALOG_PATH" \
+    --output "$DETERMINISTIC_PLAN_PATH" \
+    --model-json "$DETERMINISTIC_MODEL_JSON_PATH" \
+    --model-bin "$DETERMINISTIC_MODEL_BINARY_PATH"
+  PLAN_PATH="$DETERMINISTIC_PLAN_PATH"
+fi
 
 if [[ -n "$PLAN_JSON" ]]; then
   printf '%s\n' "$PLAN_JSON" > "$PLAN_INPUT_PATH"
@@ -245,7 +260,7 @@ if [[ "$ENABLE_WIKI_SYNC" == "true" ]]; then
   bash scripts/workflow-sync-wiki.sh
 fi
 
-python - "$SUMMARY_PATH" "$OUTPUT_DIR" "$WIKI_REPORT_PATH" <<'PY'
+python - "$SUMMARY_PATH" "$OUTPUT_DIR" "$WIKI_REPORT_PATH" "$RUN_ID" "$RUN_ATTEMPT" <<'PY'
 import json
 import pathlib
 import sys
@@ -253,9 +268,12 @@ import sys
 summary_path = pathlib.Path(sys.argv[1])
 output_dir = pathlib.Path(sys.argv[2])
 wiki_report_path = pathlib.Path(sys.argv[3])
+run_id = sys.argv[4]
+run_attempt = sys.argv[5]
 
 increment_reports = []
-for report_path in sorted(output_dir.glob("increment-*.json")):
+pattern = f"increment-*-{run_id}-attempt-{run_attempt}.json"
+for report_path in sorted(output_dir.glob(pattern)):
     try:
         increment_reports.append(json.loads(report_path.read_text(encoding="utf-8")))
     except Exception:
