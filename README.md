@@ -345,6 +345,7 @@ Automated SDLC orchestration (incremental PR slices + wiki sync):
 - Wiki layer runs after PR orchestration via `scripts/workflow-sync-wiki.sh` and can push commits to the GitHub wiki repo (or run dry-run for validation).
 - Input `wiki_remote_url` defaults to the canonical Banana wiki target (`https://github.com/LahkLeKey/Banana.wiki.git`).
 - Default wiki sync now mirrors key `.github` contracts (workflows, instructions, and Copilot instructions) so wiki runbooks stay aligned with automation truth.
+- Wiki sync now publishes explicit navigation sections for Human Reading and AI Audit Trails (`Human-Reading-Guide.md`, `AI-Audit-Trails.md`) and updates a navigation block in `Home.md`.
 - Weekday scheduled SDLC runs force strict wiki sync behavior (`BANANA_WIKI_STRICT=true`) so wiki clone/push failures fail the run.
 - Workflow runs on `workflow_dispatch` and on a weekday schedule for unattended incremental automation.
 - Default plan includes:

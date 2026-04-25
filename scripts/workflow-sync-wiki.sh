@@ -227,6 +227,11 @@ for entry in "${mapping_entries[@]}"; do
   expected_targets+=("$target_path")
 done
 
+declare -a sorted_expected_targets=()
+if [[ ${#expected_targets[@]} -gt 0 ]]; then
+  mapfile -t sorted_expected_targets < <(printf '%s\n' "${expected_targets[@]}" | awk 'NF && !seen[$0]++' | sort)
+fi
+
 INDEX_PAGE="$WIKI_DIR/Auto-SDLC-Snapshots.md"
 {
   echo "# Automated SDLC Wiki Snapshots"
@@ -238,11 +243,139 @@ INDEX_PAGE="$WIKI_DIR/Auto-SDLC-Snapshots.md"
   echo
   echo "## Synced Pages"
   echo
-  for target in "${expected_targets[@]}"; do
+  for target in "${sorted_expected_targets[@]}"; do
     echo "- [${target}](${target})"
   done
   echo
 } > "$INDEX_PAGE"
+
+AI_AUDIT_PAGE="$WIKI_DIR/AI-Audit-Trails.md"
+{
+  echo "# AI Audit Trails"
+  echo
+  echo "This section indexes pages generated or synced by automation for traceability and diagnostics."
+  echo
+  echo "- Source commit: ${repo_head}"
+  echo "- Synced at (UTC): ${timestamp_utc}"
+  echo
+  echo "## Primary Audit Pages"
+  echo
+  echo "- [Auto-SDLC-Snapshots.md](Auto-SDLC-Snapshots.md)"
+  echo
+  echo "## Auto-Synced Source Mirrors"
+  echo
+  if [[ ${#sorted_expected_targets[@]} -eq 0 ]]; then
+    echo "- No auto-synced pages were generated in this run."
+  else
+    for target in "${sorted_expected_targets[@]}"; do
+      echo "- [${target}](${target})"
+    done
+  fi
+  echo
+} > "$AI_AUDIT_PAGE"
+
+declare -a human_pages=()
+while IFS= read -r wiki_file; do
+  rel_path="${wiki_file#"$WIKI_DIR/"}"
+  if [[ "$rel_path" == .git/* ]]; then
+    continue
+  fi
+
+  if [[ "$rel_path" == Auto-* ]]; then
+    continue
+  fi
+
+  if [[ "$rel_path" == "AI-Audit-Trails.md" || "$rel_path" == "Human-Reading-Guide.md" ]]; then
+    continue
+  fi
+
+  human_pages+=("$rel_path")
+done < <(find "$WIKI_DIR" -type f -name "*.md" | sort)
+
+declare -a sorted_human_pages=()
+if [[ ${#human_pages[@]} -gt 0 ]]; then
+  mapfile -t sorted_human_pages < <(printf '%s\n' "${human_pages[@]}" | awk 'NF && !seen[$0]++' | sort)
+fi
+
+HUMAN_GUIDE_PAGE="$WIKI_DIR/Human-Reading-Guide.md"
+{
+  echo "# Human Reading Guide"
+  echo
+  echo "This section highlights human-oriented wiki pages and operational references."
+  echo
+  echo "## Start Here"
+  echo
+  echo "- [Home.md](Home.md)"
+  echo "- [Architecture-Diagrams.md](Architecture-Diagrams.md)"
+  echo "- [First-Day-Checklist.md](First-Day-Checklist.md)"
+  echo
+  echo "## Human-Curated Pages"
+  echo
+  if [[ ${#sorted_human_pages[@]} -eq 0 ]]; then
+    echo "- No human-curated pages detected yet."
+  else
+    for page in "${sorted_human_pages[@]}"; do
+      echo "- [${page}](${page})"
+    done
+  fi
+  echo
+  echo "## AI Audit Trails"
+  echo
+  echo "- [AI-Audit-Trails.md](AI-Audit-Trails.md)"
+  echo "- [Auto-SDLC-Snapshots.md](Auto-SDLC-Snapshots.md)"
+  echo
+} > "$HUMAN_GUIDE_PAGE"
+
+HOME_PAGE="$WIKI_DIR/Home.md"
+python - "$HOME_PAGE" "$repo_head" "$timestamp_utc" <<'PY'
+import pathlib
+import re
+import sys
+
+home_path = pathlib.Path(sys.argv[1])
+source_commit = sys.argv[2]
+synced_at = sys.argv[3]
+
+start_marker = "<!-- AUTO-SYNC-WIKI-NAV START -->"
+end_marker = "<!-- AUTO-SYNC-WIKI-NAV END -->"
+
+nav_block = "\n".join(
+    [
+        start_marker,
+        "## Wiki Navigation",
+        "",
+        "### Human Reading",
+        "- [Human-Reading-Guide.md](Human-Reading-Guide.md)",
+        "",
+        "### AI Audit Trails",
+        "- [AI-Audit-Trails.md](AI-Audit-Trails.md)",
+        "- [Auto-SDLC-Snapshots.md](Auto-SDLC-Snapshots.md)",
+        "",
+        f"- Source commit: {source_commit}",
+        f"- Synced at (UTC): {synced_at}",
+        end_marker,
+    ]
+)
+
+if home_path.exists():
+    content = home_path.read_text(encoding="utf-8")
+else:
+    content = "# Banana Wiki\n"
+
+pattern = re.compile(
+    re.escape(start_marker) + r".*?" + re.escape(end_marker),
+    flags=re.DOTALL,
+)
+
+if pattern.search(content):
+    updated = pattern.sub(nav_block, content)
+else:
+    if not content.endswith("\n"):
+        content += "\n"
+    updated = content + "\n" + nav_block + "\n"
+
+home_path.write_text(updated, encoding="utf-8")
+PY
 
 git -C "$WIKI_DIR" add -A
 

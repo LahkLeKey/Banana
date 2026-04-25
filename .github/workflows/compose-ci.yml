@@ -294,9 +294,9 @@ jobs:
 
       - name: Generate integration uncovered-lines artifact
         run: |
-          report_file="$(find .artifacts/coverage/integration-report -maxdepth 1 -type f -name '*.xml' | head -n 1)"
-          if [[ -z "$report_file" ]]; then
-            echo "No integration Cobertura XML report found in .artifacts/coverage/integration-report"
+          report_file=".artifacts/coverage/integration-report/Cobertura.xml"
+          if [[ ! -f "$report_file" ]]; then
+            echo "Expected integration Cobertura XML report not found at $report_file"
             exit 1
           fi
 
