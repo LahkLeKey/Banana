@@ -29,6 +29,7 @@ agents:
   - compose-runtime-agent
   - mobile-runtime-agent
   - workflow-agent
+  - technical-writer-agent
   - banana-reviewer
 handoffs:
   - label: Plan The Change
@@ -61,6 +62,9 @@ handoffs:
   - label: Implement Workflow Slice
     agent: workflow-agent
     prompt: Implement the scoped workflow or coverage automation changes and validate the nearest local mirror path.
+  - label: Implement Documentation Slice
+    agent: technical-writer-agent
+    prompt: Organize wiki and docs with explicit human-readable and AI-audit tracks, and keep sync automation aligned.
   - label: Triage Failing Tests
     agent: test-triage-agent
     prompt: Isolate the failing validation stage, identify the real owner, and propose the narrowest useful fix path.

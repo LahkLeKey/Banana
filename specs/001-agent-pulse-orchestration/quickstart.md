@@ -37,6 +37,8 @@ bash scripts/generate-deterministic-agent-pulse-plan.sh \
 ## 5. Inspect management-facing activity docs
 
 - Index: `docs/automation/agent-pulse/README.md`
+- Human-readable guide: `docs/automation/agent-pulse/Human-Reading-Guide.md`
+- AI audit index: `docs/automation/agent-pulse/AI-Audit-Trails.md`
 - Per-agent roots: `docs/automation/agent-pulse/agents/*/README.md`
 - Per-agent run snapshots: `docs/automation/agent-pulse/agents/*/runs/*.md`
 

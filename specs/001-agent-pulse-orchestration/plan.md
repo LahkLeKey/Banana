@@ -5,7 +5,7 @@
 
 ## Summary
 
-Replace the large inline autonomous increment JSON in the workflow with a repository-managed default plan file, expand the default plan to cover a wider suite of agent-owned increments, and introduce a native C deterministic model that guides per-agent increment ordering and pulse repetition for management-visible commit cadence.
+Replace the large inline autonomous increment JSON in the workflow with a repository-managed default plan file, expand the default plan to cover a wider suite of agent-owned increments (including documentation ownership), and introduce a native C deterministic model that guides per-agent increment ordering and pulse repetition for management-visible commit cadence.
 
 ## Technical Context
 
@@ -16,7 +16,7 @@ Replace the large inline autonomous increment JSON in the workflow with a reposi
 **Target Platform**: GitHub-hosted Ubuntu runners, developer Git Bash/PowerShell on Windows  
 **Project Type**: Delivery automation workflow and scripting  
 **Performance Goals**: Preserve bounded run behavior while handling expanded agent increments in the existing scheduled cadence  
-**Constraints**: Keep `speckit-driven` governance labels, preserve required reviewer flow, keep existing not-banana training increments, and maintain manual `incremental_plan_json` override behavior  
+**Constraints**: Keep `speckit-driven` governance labels, preserve required reviewer flow, keep existing not-banana training increments, maintain manual `incremental_plan_json` override behavior, and preserve human-readable vs AI-audit documentation split for management visibility  
 **Scale/Scope**: Workflow env and script-driven plan parsing, native deterministic model source + CLI + tests, deterministic plan renderer scripts, and management-facing docs index
 
 ## Constitution Check
@@ -67,6 +67,8 @@ docs/
 └── automation/
     └── agent-pulse/
         ├── README.md
+        ├── Human-Reading-Guide.md
+        ├── AI-Audit-Trails.md
         └── agents/
             └── *.md
 
