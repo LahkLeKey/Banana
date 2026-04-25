@@ -295,6 +295,8 @@ Automation pull request orchestration for triaged code changes:
   - `change_command`
   - optional branch/label/reviewer overrides
 - The workflow creates a branch, commits generated changes, opens a PR, and labels it with `requires-human-approval`, `copilot-auto-approve`, and `speckit-driven` by default.
+- Real-update guard defaults to enabled: automation PRs are created only when changed files match source/workflow patterns (`src/**`, `tests/**`, `scripts/**`, `.github/workflows/**`, `docker/**`, `docker-compose.yml`, `CMakeLists.txt`, `Directory.Build.props`).
+- Use workflow inputs `require_real_updates`, `skip_non_real_updates`, and `real_update_path_patterns` to tune this behavior.
 - The workflow now runs `scripts/workflow-sync-wiki.sh` in the same run by default (`sync_wiki=true`).
 - Wiki remote defaults to `https://github.com/LahkLeKey/Banana.wiki.git` and enforces this canonical target by default (`BANANA_ENFORCE_CANONICAL_WIKI_REMOTE=true`).
 
@@ -337,6 +339,8 @@ Automated SDLC orchestration (incremental PR slices + wiki sync):
 - Run workflow `Orchestrate Banana SDLC` to execute multiple incremental automation slices in one run.
 - Each increment uses the same GH CLI PR engine as `Orchestrate Triaged Item Pull Request`, but with per-slice commands, commit messages, and PR metadata.
 - Inputs support inline `incremental_plan_json` plus global defaults for base branch, labels, reviewers, draft mode, and no-op behavior.
+- Real-update guard defaults to enabled for every increment; non-impact/docs-only increments are skipped by default.
+- Use workflow inputs `require_real_updates`, `skip_non_real_updates`, and `real_update_path_patterns` to adjust incremental scope policy.
 - AI contract preflight validation runs by default (`validate_ai_contracts=true`) and fails fast if `.github` prompt/agent/instruction/skill or wiki-sync contracts drift.
 - Wiki layer runs after PR orchestration via `scripts/workflow-sync-wiki.sh` and can push commits to the GitHub wiki repo (or run dry-run for validation).
 - Input `wiki_remote_url` defaults to the canonical Banana wiki target (`https://github.com/LahkLeKey/Banana.wiki.git`).
@@ -344,14 +348,15 @@ Automated SDLC orchestration (incremental PR slices + wiki sync):
 - Weekday scheduled SDLC runs force strict wiki sync behavior (`BANANA_WIKI_STRICT=true`) so wiki clone/push failures fail the run.
 - Workflow runs on `workflow_dispatch` and on a weekday schedule for unattended incremental automation.
 - Default plan includes:
-  - feedback ingestion into `data/not-banana/corpus.json`
-  - retraining + generated header refresh in `src/native/core/domain/generated/banana_signal_tokens.h`
+  - classifier feedback ingestion + retraining with generated header refresh in `src/native/core/domain/generated/banana_signal_tokens.h`
+  - Banana API coverage denominator manifest synchronization in `src/c-sharp/asp.net/coverage-denominator.json`
 - Machine-readable summary artifacts are written under `artifacts/sdlc-orchestration/`.
 
 Autonomous cloud self-training cycle (bounded incremental proof of concept):
 
 - Workflow `Orchestrate Autonomous Self-Training Cycle` runs small incremental SDLC slices on weekday schedules and after merge of prior autonomous-cycle PRs.
 - The workflow uses bounded resource defaults (`training-profile ci`, `session-mode single`, `max-sessions 1`, and capped feedback ingestion) to keep cloud resource usage minimal.
+- Default autonomous catalog now favors source/workflow updates (classifier refresh + coverage denominator sync) instead of markdown-only pulse snapshots.
 - Generated PRs use labels `copilot-auto-approve`, `copilot-autonomous-cycle`, and `speckit-driven` so Copilot triage can approve and continue the cycle automatically while preserving provenance for spec-kit-driven integrations.
 - Wiki sync is strict and pinned to `https://github.com/LahkLeKey/Banana.wiki.git` for every autonomous run.
 
@@ -418,6 +423,14 @@ bash scripts/compose-local-workflows.sh sdlc
 ```
 
 - To run against GitHub for real PR creation, provide `GH_TOKEN` and set `BANANA_LOCAL_DRY_RUN=false`.
+
+Coverage contracts (Banana.Api):
+
+- `Compose CI` now validates `src/c-sharp/asp.net/coverage-denominator.json` via `scripts/check-banana-api-coverage-denominator.sh` before .NET coverage jobs run.
+- `Compose CI` enforces a strict unit-test line-rate gate (100%) using `scripts/check-dotnet-coverage-threshold.sh` against `.artifacts/coverage/unit-report/Summary.txt`.
+- `Compose CI` generates integration uncovered-line inventory artifacts (`uncovered-lines.json` and `uncovered-lines.txt`) from the integration Cobertura report using `scripts/export-cobertura-uncovered-lines.py`.
+- `Compose CI` also emits integration line-rate gate diagnostics (`integration-line-rate-gate.json`) for incremental hardening toward the 100% target.
+- When adding or removing Banana API `.cs` files, update `src/c-sharp/asp.net/coverage-denominator.json` in the same PR to avoid denominator drift failures.
 
 ## Learn More
 

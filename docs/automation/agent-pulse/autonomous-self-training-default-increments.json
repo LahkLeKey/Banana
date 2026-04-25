@@ -1,74 +1,18 @@
 [
     {
         "id": "classifier-feedback-training",
-        "change_command": "python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved --max-entries 8 --consume --require-human-review --minimum-human-reviewers 1 --report artifacts/not-banana-feedback/sdlc-apply-report.json && python scripts/train-not-banana-model.py --corpus data/not-banana/corpus.json --output artifacts/not-banana-model --training-profile ci --session-mode single --max-sessions 1 && mkdir -p src/native/core/domain/generated && cp artifacts/not-banana-model/banana_signal_tokens.h src/native/core/domain/generated/banana_signal_tokens.h && python scripts/record-agent-pulse-activity.py --agent banana-classifier-agent --increment-id classifier-feedback-training --intent \"Apply approved feedback and refresh classifier vocabulary snapshot\"",
+        "change_command": "python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved --max-entries 8 --consume --require-human-review --minimum-human-reviewers 1 --report artifacts/not-banana-feedback/sdlc-apply-report.json && python scripts/train-not-banana-model.py --corpus data/not-banana/corpus.json --output artifacts/not-banana-model --training-profile ci --session-mode single --max-sessions 1 && mkdir -p src/native/core/domain/generated && cp artifacts/not-banana-model/banana_signal_tokens.h src/native/core/domain/generated/banana_signal_tokens.h",
         "commit_message": "chore(classifier): apply feedback and refresh vocabulary snapshot",
         "pr_title": "triage(classifier): feedback and vocabulary refresh",
-        "pr_body": "Autonomous self-training increment: apply approved not-banana feedback, refresh generated vocabulary, and emit management visibility snapshot.",
+        "pr_body": "Autonomous self-training increment: apply approved not-banana feedback and refresh generated native vocabulary header.",
         "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,feedback-loop,model-training,agent:banana-classifier-agent"
     },
     {
-        "id": "api-pipeline-contract-pulse",
-        "change_command": "python scripts/record-agent-pulse-activity.py --agent api-pipeline-agent --increment-id api-pipeline-contract-pulse --intent \"Record API pipeline lane visibility snapshot for management pulse\"",
-        "commit_message": "chore(api): publish pipeline visibility snapshot",
-        "pr_title": "triage(api): pipeline visibility snapshot",
-        "pr_body": "Autonomous self-training increment: publish management visibility snapshot for API pipeline lane.",
-        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:api-pipeline-agent"
-    },
-    {
-        "id": "csharp-api-service-pulse",
-        "change_command": "python scripts/record-agent-pulse-activity.py --agent csharp-api-agent --increment-id csharp-api-service-pulse --intent \"Record C# API lane visibility snapshot for management pulse\"",
-        "commit_message": "chore(csharp-api): publish service visibility snapshot",
-        "pr_title": "triage(csharp-api): service visibility snapshot",
-        "pr_body": "Autonomous self-training increment: publish management visibility snapshot for C# API service lane.",
-        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:csharp-api-agent"
-    },
-    {
-        "id": "native-core-domain-pulse",
-        "change_command": "python scripts/record-agent-pulse-activity.py --agent native-core-agent --increment-id native-core-domain-pulse --intent \"Record native core lane visibility snapshot for management pulse\"",
-        "commit_message": "chore(native): publish core visibility snapshot",
-        "pr_title": "triage(native): core visibility snapshot",
-        "pr_body": "Autonomous self-training increment: publish management visibility snapshot for native core lane.",
-        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:native-core-agent"
-    },
-    {
-        "id": "react-ui-flow-pulse",
-        "change_command": "python scripts/record-agent-pulse-activity.py --agent react-ui-agent --increment-id react-ui-flow-pulse --intent \"Record React UI lane visibility snapshot for management pulse\"",
-        "commit_message": "chore(react): publish UI visibility snapshot",
-        "pr_title": "triage(react): UI visibility snapshot",
-        "pr_body": "Autonomous self-training increment: publish management visibility snapshot for React UI lane.",
-        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:react-ui-agent"
-    },
-    {
-        "id": "electron-runtime-pulse",
-        "change_command": "python scripts/record-agent-pulse-activity.py --agent electron-agent --increment-id electron-runtime-pulse --intent \"Record Electron lane visibility snapshot for management pulse\"",
-        "commit_message": "chore(electron): publish runtime visibility snapshot",
-        "pr_title": "triage(electron): runtime visibility snapshot",
-        "pr_body": "Autonomous self-training increment: publish management visibility snapshot for Electron runtime lane.",
-        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:electron-agent"
-    },
-    {
-        "id": "mobile-runtime-pulse",
-        "change_command": "python scripts/record-agent-pulse-activity.py --agent mobile-runtime-agent --increment-id mobile-runtime-pulse --intent \"Record mobile runtime lane visibility snapshot for management pulse\"",
-        "commit_message": "chore(mobile): publish runtime visibility snapshot",
-        "pr_title": "triage(mobile): runtime visibility snapshot",
-        "pr_body": "Autonomous self-training increment: publish management visibility snapshot for mobile runtime lane.",
-        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:mobile-runtime-agent"
-    },
-    {
-        "id": "integration-gate-pulse",
-        "change_command": "python scripts/record-agent-pulse-activity.py --agent integration-agent --increment-id integration-gate-pulse --intent \"Record integration lane visibility snapshot for management pulse\"",
-        "commit_message": "chore(integration): publish gate visibility snapshot",
-        "pr_title": "triage(integration): gate visibility snapshot",
-        "pr_body": "Autonomous self-training increment: publish management visibility snapshot for integration lane.",
-        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:integration-agent"
-    },
-    {
-        "id": "workflow-governance-pulse",
-        "change_command": "python scripts/record-agent-pulse-activity.py --agent workflow-agent --increment-id workflow-governance-pulse --intent \"Record workflow governance lane visibility snapshot for management pulse\"",
-        "commit_message": "chore(workflow): publish governance visibility snapshot",
-        "pr_title": "triage(workflow): governance visibility snapshot",
-        "pr_body": "Autonomous self-training increment: publish management visibility snapshot for workflow governance lane.",
-        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:workflow-agent"
+        "id": "api-coverage-denominator-sync",
+        "change_command": "python scripts/sync-banana-api-coverage-denominator.py",
+        "commit_message": "chore(api): sync coverage denominator manifest",
+        "pr_title": "triage(api): sync coverage denominator manifest",
+        "pr_body": "Autonomous source increment: keep Banana.Api coverage denominator manifest aligned with current source files.",
+        "labels": "automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,coverage-100,agent:workflow-agent"
     }
 ]

@@ -75,6 +75,9 @@ jobs:
       BANANA_PR_REVIEWERS: ''
       BANANA_SDLC_SKIP_NO_CHANGES: 'true'
       BANANA_SDLC_CONTINUE_ON_ERROR: ${{ github.event.inputs.continue_on_error || 'true' }}
+      BANANA_SDLC_REQUIRE_REAL_UPDATES: 'true'
+      BANANA_SDLC_SKIP_NON_REAL_UPDATES: 'true'
+      BANANA_REAL_UPDATE_PATH_PATTERNS: src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props
       BANANA_SDLC_ENABLE_WIKI_SYNC: 'true'
       BANANA_SDLC_VALIDATE_AI_CONTRACTS: 'true'
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}

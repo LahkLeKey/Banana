@@ -63,6 +63,26 @@ on:
         options:
           - "true"
           - "false"
+      require_real_updates:
+        description: Require each increment to touch source/workflow impact paths before PR creation
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      skip_non_real_updates:
+        description: Skip increment PR creation when changed files are docs/non-impact only
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      real_update_path_patterns:
+        description: Comma-separated glob patterns treated as source/workflow impact paths
+        required: false
+        default: "src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props"
       sync_wiki:
         description: Run wiki synchronization layer after incremental PR orchestration
         required: false
@@ -134,6 +154,9 @@ jobs:
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_SDLC_SKIP_NO_CHANGES: ${{ github.event.inputs.skip_no_changes || 'true' }}
       BANANA_SDLC_CONTINUE_ON_ERROR: ${{ github.event.inputs.continue_on_error || 'false' }}
+      BANANA_SDLC_REQUIRE_REAL_UPDATES: ${{ github.event.inputs.require_real_updates || 'true' }}
+      BANANA_SDLC_SKIP_NON_REAL_UPDATES: ${{ github.event.inputs.skip_non_real_updates || 'true' }}
+      BANANA_REAL_UPDATE_PATH_PATTERNS: ${{ github.event.inputs.real_update_path_patterns || 'src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props' }}
       BANANA_SDLC_ENABLE_WIKI_SYNC: ${{ github.event.inputs.sync_wiki || 'true' }}
       BANANA_SDLC_VALIDATE_AI_CONTRACTS: ${{ github.event.inputs.validate_ai_contracts || 'true' }}
       BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}

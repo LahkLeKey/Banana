@@ -20,17 +20,29 @@ PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval,c
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
 SKIP_IF_NO_CHANGES="${BANANA_SKIP_IF_NO_CHANGES:-false}"
+REQUIRE_REAL_UPDATES="${BANANA_REQUIRE_REAL_UPDATES:-true}"
+SKIP_NON_REAL_UPDATES="${BANANA_SKIP_DOCS_ONLY_CHANGES:-true}"
+REAL_UPDATE_PATH_PATTERNS="${BANANA_REAL_UPDATE_PATH_PATTERNS:-src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props}"
 PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-}"
 REQUIRED_HUMAN_REVIEWER="${BANANA_REQUIRED_HUMAN_REVIEWER:-LahkLeKey}"
 AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-}"
 AGENT_CONTRIBUTOR_LOGIN_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_LOGIN:-}"
 AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
 AGENT_CONTRIBUTOR_EMAIL_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_EMAIL:-}"
+AGENT_IDENTITY_REGISTRY_PATH="${BANANA_AGENT_IDENTITY_REGISTRY_PATH:-docs/automation/agent-pulse/agent-identities.json}"
 AGENT_CONTRIBUTOR_SLUG=""
 AGENT_CONTRIBUTOR_LOGIN=""
 AGENT_CONTRIBUTOR_NAME=""
 AGENT_CONTRIBUTOR_EMAIL=""
 AGENT_CONTRIBUTOR_LABEL=""
+AGENT_CONTRIBUTOR_ICON=""
+AGENT_CONTRIBUTOR_PROFILE_URL=""
+AGENT_CONTRIBUTOR_FOLLOWABLE="false"
+AGENT_CONTRIBUTOR_CAN_ASSIGN="false"
+AGENT_IDENTITY_DISPLAY_NAME=""
+AGENT_IDENTITY_GITHUB_LOGIN=""
+AGENT_IDENTITY_CONTRIBUTOR_NAME=""
+AGENT_IDENTITY_CONTRIBUTOR_EMAIL=""
 PR_AUTHOR_TOKEN_SOURCE="github-token"
 
 write_pr_output() {
@@ -55,6 +67,9 @@ write_pr_output() {
   PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG="$AGENT_CONTRIBUTOR_SLUG" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_LOGIN="$AGENT_CONTRIBUTOR_LOGIN" \
   PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL="$AGENT_CONTRIBUTOR_LABEL" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_ICON="$AGENT_CONTRIBUTOR_ICON" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_PROFILE_URL="$AGENT_CONTRIBUTOR_PROFILE_URL" \
+  PR_OUTPUT_AGENT_CONTRIBUTOR_FOLLOWABLE="$AGENT_CONTRIBUTOR_FOLLOWABLE" \
   PR_OUTPUT_REQUIRED_HUMAN_REVIEWER="$REQUIRED_HUMAN_REVIEWER" \
   PR_OUTPUT_AUTHOR_TOKEN_SOURCE="$PR_AUTHOR_TOKEN_SOURCE" \
   python - "$PR_OUTPUT_PATH" <<'PY'
@@ -79,6 +94,9 @@ payload = {
     "automation_contributor_slug": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_SLUG", ""),
     "automation_contributor_login": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LOGIN", ""),
     "automation_contributor_label": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_LABEL", ""),
+    "automation_contributor_icon": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_ICON", ""),
+    "automation_contributor_profile_url": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_PROFILE_URL", ""),
+    "automation_contributor_followable": os.environ.get("PR_OUTPUT_AGENT_CONTRIBUTOR_FOLLOWABLE", ""),
     "required_human_reviewer": os.environ.get("PR_OUTPUT_REQUIRED_HUMAN_REVIEWER", ""),
     "author_token_source": os.environ.get("PR_OUTPUT_AUTHOR_TOKEN_SOURCE", ""),
 }
@@ -119,6 +137,65 @@ parse_list_input() {
       out_items+=("$item")
     fi
   done
+}
+
+collect_workspace_changed_files() {
+  mapfile -t WORKSPACE_CHANGED_FILES < <(git status --porcelain --untracked-files=all | awk '{print $2}' | sed 's#\\#/#g')
+}
+
+collect_staged_changed_files() {
+  mapfile -t STAGED_CHANGED_FILES < <(git diff --cached --name-only --diff-filter=ACMRTUXB | sed 's#\\#/#g')
+}
+
+evaluate_real_update_scope() {
+  local source_label="$1"
+  shift
+
+  local -a changed_files=("$@")
+  local -a patterns=()
+  local -a matched_real_updates=()
+  local changed_file
+  local pattern
+
+  if [[ "$REQUIRE_REAL_UPDATES" != "true" ]]; then
+    return 0
+  fi
+
+  parse_list_input "$REAL_UPDATE_PATH_PATTERNS" patterns
+  if [[ ${#patterns[@]} -eq 0 ]]; then
+    echo "::error::BANANA_REAL_UPDATE_PATH_PATTERNS is empty while BANANA_REQUIRE_REAL_UPDATES=true."
+    exit 1
+  fi
+
+  for changed_file in "${changed_files[@]}"; do
+    for pattern in "${patterns[@]}"; do
+      if [[ "$changed_file" == $pattern ]]; then
+        matched_real_updates+=("$changed_file")
+        break
+      fi
+    done
+  done
+
+  if [[ ${#matched_real_updates[@]} -gt 0 ]]; then
+    echo "Real-update scope check passed (${source_label}): ${#matched_real_updates[@]} matching files."
+    return 0
+  fi
+
+  echo "Changed files (${source_label}) did not match required real-update path patterns."
+  if [[ ${#changed_files[@]} -eq 0 ]]; then
+    echo "  (no changed files detected)"
+  else
+    printf '  - %s\n' "${changed_files[@]}"
+  fi
+
+  if [[ "$SKIP_NON_REAL_UPDATES" == "true" ]]; then
+    echo "Skipping PR creation by policy (non-impact/doc-only changes)."
+    write_pr_output "skipped" "" "" "non-impact/doc-only changes"
+    exit 0
+  fi
+
+  echo "::error::Change set did not touch required source/workflow paths."
+  exit 1
 }
 
 slugify_agent_contributor() {
@@ -162,6 +239,66 @@ append_csv_item_if_missing() {
   fi
 }
 
+load_agent_identity_profile() {
+  local slug="$1"
+  local serialized
+
+  AGENT_IDENTITY_DISPLAY_NAME=""
+  AGENT_IDENTITY_GITHUB_LOGIN=""
+  AGENT_IDENTITY_CONTRIBUTOR_NAME=""
+  AGENT_IDENTITY_CONTRIBUTOR_EMAIL=""
+  AGENT_CONTRIBUTOR_ICON=""
+  AGENT_CONTRIBUTOR_PROFILE_URL=""
+  AGENT_CONTRIBUTOR_FOLLOWABLE="false"
+
+  if [[ ! -f "$AGENT_IDENTITY_REGISTRY_PATH" ]]; then
+    return 0
+  fi
+
+  serialized="$(python - "$AGENT_IDENTITY_REGISTRY_PATH" "$slug" <<'PY'
+import json
+import pathlib
+import shlex
+import sys
+
+registry_path = pathlib.Path(sys.argv[1])
+agent_slug = sys.argv[2]
+entry = {}
+
+try:
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+except Exception:
+    payload = {}
+
+for candidate in payload.get("agents", []):
+    if str(candidate.get("slug", "")).strip() == agent_slug:
+        entry = candidate
+        break
+
+def clean(value: object) -> str:
+  return str(value or "").replace("\n", " ").strip()
+
+values = {
+  "AGENT_IDENTITY_DISPLAY_NAME": clean(entry.get("display_name", "")),
+  "AGENT_CONTRIBUTOR_ICON": clean(entry.get("icon", "")),
+  "AGENT_IDENTITY_GITHUB_LOGIN": clean(entry.get("github_login", "")),
+  "AGENT_CONTRIBUTOR_PROFILE_URL": clean(entry.get("follow_url", "")),
+  "AGENT_CONTRIBUTOR_FOLLOWABLE": clean(entry.get("followable", "false")).lower(),
+  "AGENT_IDENTITY_CONTRIBUTOR_NAME": clean(entry.get("contributor_name", "")),
+  "AGENT_IDENTITY_CONTRIBUTOR_EMAIL": clean(entry.get("contributor_email", "")),
+}
+
+if values["AGENT_CONTRIBUTOR_FOLLOWABLE"] not in {"true", "false"}:
+  values["AGENT_CONTRIBUTOR_FOLLOWABLE"] = "false"
+
+for key, value in values.items():
+  print(f"{key}={shlex.quote(value)}")
+PY
+)"
+
+  eval "$serialized"
+}
+
 resolve_agent_contributor() {
   local candidate="${AGENT_CONTRIBUTOR_OVERRIDE:-}"
   local label
@@ -182,11 +319,49 @@ resolve_agent_contributor() {
   fi
 
   AGENT_CONTRIBUTOR_SLUG="$(slugify_agent_contributor "$candidate")"
-  AGENT_CONTRIBUTOR_LOGIN="${AGENT_CONTRIBUTOR_LOGIN_OVERRIDE:-$AGENT_CONTRIBUTOR_SLUG}"
+  load_agent_identity_profile "$AGENT_CONTRIBUTOR_SLUG"
+
+  if [[ -n "$AGENT_CONTRIBUTOR_LOGIN_OVERRIDE" ]]; then
+    AGENT_CONTRIBUTOR_LOGIN="$AGENT_CONTRIBUTOR_LOGIN_OVERRIDE"
+  elif [[ -n "$AGENT_IDENTITY_GITHUB_LOGIN" ]]; then
+    AGENT_CONTRIBUTOR_LOGIN="$AGENT_IDENTITY_GITHUB_LOGIN"
+  else
+    AGENT_CONTRIBUTOR_LOGIN="$AGENT_CONTRIBUTOR_SLUG"
+  fi
+
   AGENT_CONTRIBUTOR_LABEL="contributor:${AGENT_CONTRIBUTOR_SLUG}"
 
-  AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_NAME_OVERRIDE:-$AGENT_CONTRIBUTOR_LOGIN}"
-  AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_EMAIL_OVERRIDE:-${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com}"
+  if [[ -n "$AGENT_CONTRIBUTOR_NAME_OVERRIDE" ]]; then
+    AGENT_CONTRIBUTOR_NAME="$AGENT_CONTRIBUTOR_NAME_OVERRIDE"
+  elif [[ -n "$AGENT_IDENTITY_CONTRIBUTOR_NAME" ]]; then
+    AGENT_CONTRIBUTOR_NAME="$AGENT_IDENTITY_CONTRIBUTOR_NAME"
+  elif [[ -n "$AGENT_IDENTITY_DISPLAY_NAME" && -n "$AGENT_CONTRIBUTOR_ICON" ]]; then
+    AGENT_CONTRIBUTOR_NAME="${AGENT_CONTRIBUTOR_ICON} ${AGENT_IDENTITY_DISPLAY_NAME}"
+  elif [[ -n "$AGENT_IDENTITY_DISPLAY_NAME" ]]; then
+    AGENT_CONTRIBUTOR_NAME="$AGENT_IDENTITY_DISPLAY_NAME"
+  else
+    AGENT_CONTRIBUTOR_NAME="$AGENT_CONTRIBUTOR_LOGIN"
+  fi
+
+  if [[ -n "$AGENT_CONTRIBUTOR_EMAIL_OVERRIDE" ]]; then
+    AGENT_CONTRIBUTOR_EMAIL="$AGENT_CONTRIBUTOR_EMAIL_OVERRIDE"
+  elif [[ -n "$AGENT_IDENTITY_CONTRIBUTOR_EMAIL" ]]; then
+    AGENT_CONTRIBUTOR_EMAIL="$AGENT_IDENTITY_CONTRIBUTOR_EMAIL"
+  else
+    AGENT_CONTRIBUTOR_EMAIL="${AGENT_CONTRIBUTOR_LOGIN}@users.noreply.github.com"
+  fi
+
+  if [[ -z "$AGENT_CONTRIBUTOR_PROFILE_URL" ]]; then
+    AGENT_CONTRIBUTOR_PROFILE_URL="docs/automation/agent-pulse/agents/${AGENT_CONTRIBUTOR_SLUG}/"
+  fi
+
+  if [[ -n "$AGENT_CONTRIBUTOR_LOGIN_OVERRIDE" ]]; then
+    AGENT_CONTRIBUTOR_CAN_ASSIGN="true"
+  elif [[ "$AGENT_CONTRIBUTOR_FOLLOWABLE" == "true" && -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
+    AGENT_CONTRIBUTOR_CAN_ASSIGN="true"
+  else
+    AGENT_CONTRIBUTOR_CAN_ASSIGN="false"
+  fi
 
   PR_LABELS="$(append_csv_item_if_missing "$PR_LABELS" "$AGENT_CONTRIBUTOR_LABEL")"
 }
@@ -202,7 +377,10 @@ fi
 
 PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
 
-echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>"
+echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}> (icon=${AGENT_CONTRIBUTOR_ICON:-n/a}, follow=${AGENT_CONTRIBUTOR_PROFILE_URL})"
+if [[ "$AGENT_CONTRIBUTOR_FOLLOWABLE" != "true" ]]; then
+  echo "::notice::Pulse will show a default avatar for '${AGENT_CONTRIBUTOR_SLUG}' until a real GitHub login/avatar is mapped in docs/automation/agent-pulse/agent-identities.json."
+fi
 
 TRIAGE_ID_SLUG="$(echo "$TRIAGE_ID" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
 if [[ -z "$TRIAGE_ID_SLUG" ]]; then
@@ -216,11 +394,14 @@ WORK_BRANCH="${BRANCH_PREFIX}/${TRIAGE_ID_SLUG}-run-${RUN_ID}-attempt-${RUN_ATTE
 echo "Applying triaged code changes..."
 eval "$CHANGE_COMMAND"
 
+collect_workspace_changed_files
+evaluate_real_update_scope "workspace" "${WORKSPACE_CHANGED_FILES[@]:-}"
+
 if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   PLAN_DIR="artifacts/local-workflow-dry-run/triaged-pr"
   mkdir -p "$PLAN_DIR"
 
-  CHANGED_FILES="$(git status --porcelain --untracked-files=all | awk '{print $2}' | paste -sd ',' -)"
+  CHANGED_FILES="$(printf '%s\n' "${WORKSPACE_CHANGED_FILES[@]:-}" | paste -sd ',' -)"
   if [[ -z "$CHANGED_FILES" ]]; then
     CHANGED_FILES=""
     echo "Dry-run mode: no repository changes produced by change command."
@@ -243,6 +424,9 @@ if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   "automation_contributor_email": "${AGENT_CONTRIBUTOR_EMAIL}",
   "automation_contributor_login": "${AGENT_CONTRIBUTOR_LOGIN}",
   "automation_contributor_label": "${AGENT_CONTRIBUTOR_LABEL}",
+  "automation_contributor_icon": "${AGENT_CONTRIBUTOR_ICON}",
+  "automation_contributor_profile_url": "${AGENT_CONTRIBUTOR_PROFILE_URL}",
+  "automation_contributor_followable": "${AGENT_CONTRIBUTOR_FOLLOWABLE}",
   "required_human_reviewer": "${REQUIRED_HUMAN_REVIEWER}",
   "reviewers": "${PARSED_REVIEWERS_CSV}",
   "open_draft": "${DRAFT_PR}",
@@ -265,6 +449,8 @@ git fetch origin "$BASE_BRANCH"
 git checkout -B "$WORK_BRANCH" "origin/$BASE_BRANCH"
 
 git add -A
+collect_staged_changed_files
+
 if git diff --cached --quiet; then
   if [[ "$SKIP_IF_NO_CHANGES" == "true" ]]; then
     echo "No file changes were produced by change_command. Skipping PR creation by policy."
@@ -275,6 +461,8 @@ if git diff --cached --quiet; then
   echo "::error::No file changes were produced by change_command."
   exit 1
 fi
+
+evaluate_real_update_scope "staged" "${STAGED_CHANGED_FILES[@]:-}"
 
 git config user.name "$AGENT_CONTRIBUTOR_NAME"
 git config user.email "$AGENT_CONTRIBUTOR_EMAIL"
@@ -297,6 +485,9 @@ This pull request was orchestrated for a triaged item and requires human approva
 - Source branch: ${WORK_BRANCH}
 - Automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}>
 - Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}
+- Automation contributor icon: ${AGENT_CONTRIBUTOR_ICON}
+- Automation contributor profile: ${AGENT_CONTRIBUTOR_PROFILE_URL}
+- Automation contributor followable: ${AGENT_CONTRIBUTOR_FOLLOWABLE}
 - Required human reviewer: ${REQUIRED_HUMAN_REVIEWER}
 
 Command executed:
@@ -315,6 +506,21 @@ if [[ -n "$PR_BODY_OVERRIDE" ]]; then
     PR_BODY="${PR_BODY}
 
 - Automation contributor login: ${AGENT_CONTRIBUTOR_LOGIN}"
+  fi
+  if [[ "$PR_BODY" != *"Automation contributor icon:"* ]]; then
+    PR_BODY="${PR_BODY}
+
+- Automation contributor icon: ${AGENT_CONTRIBUTOR_ICON}"
+  fi
+  if [[ "$PR_BODY" != *"Automation contributor profile:"* ]]; then
+    PR_BODY="${PR_BODY}
+
+- Automation contributor profile: ${AGENT_CONTRIBUTOR_PROFILE_URL}"
+  fi
+  if [[ "$PR_BODY" != *"Automation contributor followable:"* ]]; then
+    PR_BODY="${PR_BODY}
+
+- Automation contributor followable: ${AGENT_CONTRIBUTOR_FOLLOWABLE}"
   fi
   if [[ "$PR_BODY" != *"Required human reviewer:"* ]]; then
     PR_BODY="${PR_BODY}
@@ -349,7 +555,7 @@ for raw_label in "${label_items[@]}"; do
   fi
 done
 
-if [[ -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
+if [[ "$AGENT_CONTRIBUTOR_CAN_ASSIGN" == "true" && -n "$AGENT_CONTRIBUTOR_LOGIN" ]]; then
   if ! gh pr edit "$pr_number" --add-assignee "$AGENT_CONTRIBUTOR_LOGIN" >/dev/null 2>&1; then
     echo "::warning::Failed to assign contributor '$AGENT_CONTRIBUTOR_LOGIN' to PR #$pr_number."
   fi

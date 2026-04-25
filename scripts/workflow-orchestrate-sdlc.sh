@@ -20,6 +20,9 @@ DEFAULT_LABELS="${BANANA_PR_LABELS:-automation,sdlc,triaged-item,requires-human-
 DEFAULT_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 SKIP_NO_CHANGES="${BANANA_SDLC_SKIP_NO_CHANGES:-true}"
 CONTINUE_ON_ERROR="${BANANA_SDLC_CONTINUE_ON_ERROR:-false}"
+SDLC_REQUIRE_REAL_UPDATES="${BANANA_SDLC_REQUIRE_REAL_UPDATES:-true}"
+SDLC_SKIP_NON_REAL_UPDATES="${BANANA_SDLC_SKIP_NON_REAL_UPDATES:-true}"
+REAL_UPDATE_PATH_PATTERNS="${BANANA_REAL_UPDATE_PATH_PATTERNS:-src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props}"
 INCREMENT_TIMEOUT_SECONDS="${BANANA_SDLC_INCREMENT_TIMEOUT_SECONDS:-900}"
 ENABLE_WIKI_SYNC="${BANANA_SDLC_ENABLE_WIKI_SYNC:-true}"
 WIKI_DRY_RUN="${BANANA_WIKI_DRY_RUN:-false}"
@@ -63,20 +66,20 @@ else
   cat > "$PLAN_INPUT_PATH" <<'EOF'
 [
   {
-    "id": "feedback-corpus",
-    "change_command": "python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved --consume --require-human-review --minimum-human-reviewers 1 --report artifacts/not-banana-feedback/sdlc-apply-report.json",
-    "commit_message": "chore(feedback): apply approved feedback into corpus",
-    "pr_title": "triage(feedback): apply approved inbox updates",
-    "pr_body": "Automated SDLC increment: apply approved not-banana feedback into corpus.",
-    "labels": "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,feedback-loop,agent:banana-classifier-agent"
+    "id": "classifier-feedback-training",
+    "change_command": "python scripts/apply-not-banana-feedback.py --feedback data/not-banana/feedback/inbox.json --corpus data/not-banana/corpus.json --status-filter approved --consume --require-human-review --minimum-human-reviewers 1 --report artifacts/not-banana-feedback/sdlc-apply-report.json && python scripts/train-not-banana-model.py --corpus data/not-banana/corpus.json --output artifacts/not-banana-model --training-profile ci --session-mode single --max-sessions 1 && mkdir -p src/native/core/domain/generated && cp artifacts/not-banana-model/banana_signal_tokens.h src/native/core/domain/generated/banana_signal_tokens.h",
+    "commit_message": "chore(classifier): apply feedback and refresh vocabulary snapshot",
+    "pr_title": "triage(classifier): feedback and vocabulary refresh",
+    "pr_body": "Automated SDLC increment: apply approved not-banana feedback and refresh generated native vocabulary header.",
+    "labels": "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,feedback-loop,model-training,agent:banana-classifier-agent"
   },
   {
-    "id": "training-docs",
-    "change_command": "python scripts/train-not-banana-model.py --corpus data/not-banana/corpus.json --output artifacts/not-banana-model --training-profile ci --session-mode single --max-sessions 1 && mkdir -p src/native/core/domain/generated && cp artifacts/not-banana-model/banana_signal_tokens.h src/native/core/domain/generated/banana_signal_tokens.h",
-    "commit_message": "chore(model): refresh generated not-banana vocabulary header",
-    "pr_title": "triage(model): refresh generated not-banana vocabulary",
-    "pr_body": "Automated SDLC increment: retrain not-banana vocabulary and refresh generated native header.",
-    "labels": "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,model-training,agent:banana-classifier-agent"
+    "id": "api-coverage-denominator-sync",
+    "change_command": "python scripts/sync-banana-api-coverage-denominator.py",
+    "commit_message": "chore(api): sync coverage denominator manifest",
+    "pr_title": "triage(api): sync coverage denominator manifest",
+    "pr_body": "Automated SDLC increment: keep Banana.Api coverage denominator manifest aligned with source file inventory.",
+    "labels": "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,coverage-100,agent:workflow-agent"
   }
 ]
 EOF
@@ -222,6 +225,9 @@ while IFS=$'\t' read -r increment_id change_b64 commit_b64 title_b64 body_b64 la
   export BANANA_PR_LABELS="$labels"
   export BANANA_PR_REVIEWERS="$reviewers"
   export BANANA_SKIP_IF_NO_CHANGES="$SKIP_NO_CHANGES"
+  export BANANA_REQUIRE_REAL_UPDATES="$SDLC_REQUIRE_REAL_UPDATES"
+  export BANANA_SKIP_DOCS_ONLY_CHANGES="$SDLC_SKIP_NON_REAL_UPDATES"
+  export BANANA_REAL_UPDATE_PATH_PATTERNS="$REAL_UPDATE_PATH_PATTERNS"
   export BANANA_PR_OUTPUT_PATH="$increment_report_path"
 
   increment_exit_code=0
