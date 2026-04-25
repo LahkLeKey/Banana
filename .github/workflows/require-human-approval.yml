@@ -101,12 +101,20 @@ jobs:
               !!requiredApproverReview &&
               requiredApproverReview.state === "APPROVED" &&
               requiredApproverReview.commitId === pr.head.sha;
+            const requiredApproverIsAuthor =
+              requiredApproverLogin.toLowerCase() === (pr.user?.login || "").toLowerCase();
 
             if (!hasRequiredApproverApproval) {
-              core.setFailed(
-                `Automation pull requests require a current-head approval from ${requiredApproverLogin} before merge.`
+              if (!requiredApproverIsAuthor) {
+                core.setFailed(
+                  `Automation pull requests require a current-head approval from ${requiredApproverLogin} before merge.`
+                );
+                return;
+              }
+
+              core.notice(
+                `Required approver '${requiredApproverLogin}' is also the pull request author; skipping self-approval requirement for head ${pr.head.sha}.`
               );
-              return;
             }
 
             const approvingHumans = [];
@@ -121,10 +129,16 @@ jobs:
             }
 
             if (approvingHumans.length < 1) {
-              core.setFailed(
-                "Automation pull requests require at least one human approval before merge."
+              if (!requiredApproverIsAuthor) {
+                core.setFailed(
+                  "Automation pull requests require at least one human approval before merge."
+                );
+                return;
+              }
+
+              core.notice(
+                "Required approver matches pull request author; allowing this automation PR without an additional human approval."
               );
-              return;
             }
 
             core.notice(`Human approvals: ${approvingHumans.join(", ")}`);
