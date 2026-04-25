@@ -1,5 +1,0 @@
-{
-    "$schema": "./README.md",
-    "description": "Feedback inbox for promoting approved classifier observations into the not-banana training corpus.",
-    "entries": []
-}
