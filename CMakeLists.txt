@@ -29,6 +29,7 @@ endif()
 set(BANANA_CORE_SOURCES
     src/native/core/domain/banana_agriculture.c
     src/native/core/domain/banana_application.c
+    src/native/core/domain/banana_agent_pulse_model.c
     src/native/core/domain/banana_cultivation.c
     src/native/core/domain/banana_events.c
     src/native/core/domain/banana_integration.c
@@ -112,6 +113,26 @@ if(BANANA_BUILD_SHARED_LIBRARY)
     )
 endif()
 
+add_executable(banana_agent_pulse_model_cli
+    src/native/core/domain/banana_agent_pulse_model_cli.c
+    src/native/core/domain/banana_agent_pulse_model.c
+)
+
+target_include_directories(banana_agent_pulse_model_cli
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
+)
+
+if(MSVC)
+    target_compile_options(banana_agent_pulse_model_cli PRIVATE /W4)
+else()
+    target_compile_options(banana_agent_pulse_model_cli PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+set_target_properties(banana_agent_pulse_model_cli PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
 if(BANANA_ENABLE_NATIVE_TESTS)
     enable_testing()
 
@@ -190,4 +211,22 @@ if(BANANA_ENABLE_NATIVE_TESTS)
     endif()
 
     add_test(NAME banana_core_tests COMMAND banana_core_tests)
+
+    add_executable(banana_agent_pulse_model_tests
+        tests/native/banana_agent_pulse_model_tests.c
+        src/native/core/domain/banana_agent_pulse_model.c
+    )
+
+    target_include_directories(banana_agent_pulse_model_tests
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/native/core
+    )
+
+    if(MSVC)
+        target_compile_options(banana_agent_pulse_model_tests PRIVATE /W4)
+    else()
+        target_compile_options(banana_agent_pulse_model_tests PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME banana_agent_pulse_model_tests COMMAND banana_agent_pulse_model_tests)
 endif()
