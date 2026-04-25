@@ -9,6 +9,9 @@
 #include "banana_wrapper.h"
 #include "banana_core.h"
 #include "banana_dal.h"
+#include "domain/ml/regression/banana_wrapper_ml_regression.h"
+#include "domain/ml/binary/banana_wrapper_ml_binary.h"
+#include "domain/ml/transformer/banana_wrapper_ml_transformer.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -46,44 +49,34 @@ int banana_db_query_banana_profile(const char* profile_id, char** out_json) {
     return banana_dal_query_profile(profile_id, out_json);
 }
 
-/* === Classifier (stub: deterministic placeholders; spec 006 FR-003 says
-       v2 keeps modules with consumers — these are consumed by ASP.NET 007). === */
+/* === Classifier / ML === */
 
 int banana_predict_banana_regression_score(const char* input_json, double* out_score) {
-    if (!input_json || !out_score) return BANANA_INVALID_ARGUMENT;
-    *out_score = 0.5;
-    return BANANA_OK;
-}
-
-static int classifier_stub_json(const char* label, char** out_json) {
-    if (!out_json) return BANANA_INVALID_ARGUMENT;
-    const char* fmt = "{\"label\":\"%s\",\"confidence\":0.5}";
-    size_t n = strlen(fmt) + strlen(label) + 1;
-    char* buf = (char*)malloc(n);
-    if (!buf) return BANANA_INTERNAL_ERROR;
-    snprintf(buf, n, fmt, label);
-    *out_json = buf;
-    return BANANA_OK;
+    return banana_wrapper_ml_predict_regression_score(input_json, out_score);
 }
 
 int banana_classify_banana_binary(const char* input_json, char** out_json) {
-    (void)input_json;
-    return classifier_stub_json("banana", out_json);
+    return banana_wrapper_ml_classify_binary(input_json, out_json);
 }
 
 int banana_classify_banana_transformer(const char* input_json, char** out_json) {
-    (void)input_json;
-    return classifier_stub_json("banana", out_json);
+    return banana_wrapper_ml_classify_transformer(input_json, out_json);
 }
 
 int banana_classify_not_banana_junk(const char* input_json, char** out_json) {
-    (void)input_json;
-    return classifier_stub_json("not_banana", out_json);
+    return banana_wrapper_ml_classify_not_banana_junk(input_json, out_json);
 }
 
 int banana_predict_banana_ripeness(const char* input_json, char** out_json) {
     (void)input_json;
-    return classifier_stub_json("ripe", out_json);
+    if (!out_json) return BANANA_INVALID_ARGUMENT;
+    const char* payload = "{\"label\":\"ripe\",\"confidence\":0.750000}";
+    size_t n = strlen(payload) + 1;
+    char* buf = (char*)malloc(n);
+    if (!buf) return BANANA_INTERNAL_ERROR;
+    memcpy(buf, payload, n);
+    *out_json = buf;
+    return BANANA_OK;
 }
 
 /* === Batch / harvest / truck (stub passthroughs; spec 006 keeps surface). === */

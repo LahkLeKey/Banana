@@ -16,12 +16,21 @@ set(BANANA_CORE_SOURCES
   src/native/core/banana_ripeness.c
   src/native/core/banana_batch.c
   src/native/core/banana_truck.c
+  src/native/core/domain/banana_ml_models.c
   src/native/core/domain/banana_not_banana.c
+  src/native/core/domain/ml/shared/banana_ml_shared.c
+  src/native/core/domain/ml/regression/banana_ml_regression.c
+  src/native/core/domain/ml/binary/banana_ml_binary.c
+  src/native/core/domain/ml/transformer/banana_ml_transformer.c
   src/native/core/dal/banana_dal.c
 )
 
 set(BANANA_WRAPPER_SOURCES
   src/native/wrapper/banana_wrapper.c
+  src/native/wrapper/domain/ml/shared/banana_wrapper_ml_json.c
+  src/native/wrapper/domain/ml/regression/banana_wrapper_ml_regression.c
+  src/native/wrapper/domain/ml/binary/banana_wrapper_ml_binary.c
+  src/native/wrapper/domain/ml/transformer/banana_wrapper_ml_transformer.c
 )
 
 add_library(banana_native SHARED
