@@ -2,6 +2,8 @@ import type {FastifyInstance, FastifyReply} from 'fastify';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 
+import {loadTrainedModel, scoreText} from '../not-banana/model';
+
 type ChatRole = 'user'|'assistant'|'system';
 type ChatStatus = 'accepted'|'complete';
 
@@ -42,34 +44,6 @@ const PostMessageBody = z.object({
   client_message_id: z.string().trim().min(1).max(128).optional(),
 });
 
-const BananaTokens = new Set([
-  'banana',
-  'ripe',
-  'peel',
-  'smoothie',
-  'plantation',
-  'harvest',
-  'bunch',
-  'cavendish',
-  'fruit',
-  'crate',
-  'bread',
-  'cartons',
-]);
-
-const NotBananaTokens = new Set([
-  'plastic',
-  'battery',
-  'engine',
-  'asphalt',
-  'steel',
-  'concrete',
-  'garbage',
-  'waste',
-  'junk',
-  'noise',
-]);
-
 const sessions = new Map<string, SessionState>();
 
 function tokenize(text: string): string[] {
@@ -85,19 +59,17 @@ function clamp01(value: number): number {
 }
 
 function bananaSignalScore(content: string):
-    {score: number; matched: string[]} {
-  const tokens = tokenize(content);
-  if (tokens.length === 0) {
-    return {score: 0.5, matched: []};
+    {score: number; matched: string[]; modelSource: string} {
+  const model = loadTrainedModel();
+  const scored = scoreText(content, model);
+  if (scored.token_count === 0) {
+    return {score: 0.5, matched: [], modelSource: model.source};
   }
-
-  const bananaMatched = tokens.filter((token) => BananaTokens.has(token));
-  const notBananaMatched = tokens.filter((token) => NotBananaTokens.has(token));
-  const bananaRatio = bananaMatched.length / tokens.length;
-  const notBananaRatio = notBananaMatched.length / tokens.length;
-  const score = clamp01(0.5 + (bananaRatio * 0.85) - (notBananaRatio * 0.85));
-
-  return {score, matched: Array.from(new Set(bananaMatched)).sort()};
+  return {
+    score: clamp01(scored.banana_score),
+    matched: scored.matched_banana_tokens,
+    modelSource: model.source,
+  };
 }
 
 function buildAssistantReply(content: string): string {
@@ -106,17 +78,20 @@ function buildAssistantReply(content: string): string {
     const matched =
         signal.matched.length > 0 ? signal.matched.join(',') : 'banana';
     return `banana-forward signal detected (${matched}) with confidence ${
-        signal.score.toFixed(2)}`;
+        signal.score.toFixed(2)} [model=${signal.modelSource}]`;
   }
 
   if (signal.score <= 0.34) {
     return `not-banana signal is stronger right now (score=${
         signal.score.toFixed(
-            2)}); include banana context for a fruit-focused answer`;
+            2)}); include banana context for a fruit-focused answer [model=${
+        signal.modelSource}]`;
   }
 
   return `mixed signal detected (banana_score=${
-      signal.score.toFixed(2)}); ask a follow-up for clearer banana context`;
+      signal.score.toFixed(
+          2)}); ask a follow-up for clearer banana context [model=${
+      signal.modelSource}]`;
 }
 
 function toSessionEcho(session: SessionState): SessionEcho {
