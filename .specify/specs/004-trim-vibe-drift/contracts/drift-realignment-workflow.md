@@ -33,6 +33,11 @@ For each drift finding, produce:
 - decision_owner (string, required)
 - decision_timestamp_utc (string, required)
 
+Decision logs are persisted to:
+
+- `.specify/specs/<active-feature>/decision-log.md`
+- `.specify/specs/<active-feature>/decision-log.jsonl`
+
 ## Traceability Output Schema
 
 A planning-ready traceability map entry includes:
@@ -43,6 +48,10 @@ A planning-ready traceability map entry includes:
 - implementation_owner (string, required)
 - validation_owner (string, required)
 - status (enum: proposed, approved, deferred, required)
+
+Traceability findings and map output are persisted to:
+
+- `.specify/specs/<active-feature>/traceability-report.md`
 
 ## Behavioral Guarantees
 

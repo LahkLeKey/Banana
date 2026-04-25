@@ -31,16 +31,16 @@ hooks:
     command: speckit.git.commit
     enabled: true
     optional: true
-    prompt: Commit outstanding changes before planning?
-    description: Auto-commit before implementation planning
+    prompt: Run scope-boundary validation and commit outstanding changes before planning?
+    description: Run .specify/scripts/bash/validate-spec-boundaries.sh, then auto-commit before implementation planning
     condition: null
   before_tasks:
   - extension: git
     command: speckit.git.commit
     enabled: true
     optional: true
-    prompt: Commit outstanding changes before task generation?
-    description: Auto-commit before task generation
+    prompt: Run task-traceability validation and commit outstanding changes before task generation?
+    description: Run .specify/scripts/bash/validate-task-traceability.sh, then auto-commit before task generation
     condition: null
   before_implement:
   - extension: git

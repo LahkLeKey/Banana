@@ -17,9 +17,9 @@
 
 **Purpose**: Establish `.specify`-native orchestration entry points and workflow registration.
 
-- [ ] T001 Create dedicated workflow definition in .specify/workflows/drift-realignment/workflow.yml
-- [ ] T002 [P] Register drift realignment workflow in .specify/workflows/workflow-registry.json
-- [ ] T003 [P] Create workflow usage notes in .specify/workflows/drift-realignment/README.md
+- [x] T001 [FR-001] Create dedicated workflow definition in .specify/workflows/drift-realignment/workflow.yml
+- [x] T002 [P] [FR-010] Register drift realignment workflow in .specify/workflows/workflow-registry.json
+- [x] T003 [P] [FR-010] Create workflow usage notes in .specify/workflows/drift-realignment/README.md
 
 ---
 
@@ -29,11 +29,11 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Create orchestration entry script in .specify/scripts/bash/orchestrate-drift-realignment.sh
-- [ ] T005 [P] Create scope-boundary validator in .specify/scripts/bash/validate-spec-boundaries.sh
-- [ ] T006 [P] Create task-traceability validator in .specify/scripts/bash/validate-task-traceability.sh
-- [ ] T007 Add lifecycle hooks for drift orchestration in .specify/extensions.yml
-- [ ] T008 Document foundational `.specify` command flow in .specify/specs/004-trim-vibe-drift/quickstart.md
+- [x] T004 [FR-001] Create orchestration entry script in .specify/scripts/bash/orchestrate-drift-realignment.sh
+- [x] T005 [P] [FR-003] Create scope-boundary validator in .specify/scripts/bash/validate-spec-boundaries.sh
+- [x] T006 [P] [FR-005] Create task-traceability validator in .specify/scripts/bash/validate-task-traceability.sh
+- [x] T007 [FR-010] Add lifecycle hooks for drift orchestration in .specify/extensions.yml
+- [x] T008 [FR-004] Document foundational `.specify` command flow in .specify/specs/004-trim-vibe-drift/quickstart.md
 
 **Checkpoint**: Foundation ready - user story implementation can now begin.
 
@@ -47,11 +47,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [P] [US1] Add mandatory In Scope and Out of Scope sections in .specify/templates/spec-template.md
-- [ ] T010 [US1] Add scope-boundary quality checks in .specify/templates/checklist-template.md
-- [ ] T011 [P] [US1] Add scope enforcement step in .specify/workflows/drift-realignment/workflow.yml
-- [ ] T012 [US1] Add scope-boundary checklist items in .specify/templates/checklist-template.md
-- [ ] T013 [US1] Document scope-first author flow in .specify/specs/004-trim-vibe-drift/quickstart.md
+- [x] T009 [P] [US1] [FR-003] Add mandatory In Scope and Out of Scope sections in .specify/templates/spec-template.md
+- [x] T010 [US1] [FR-003] Add scope-boundary quality checks in .specify/templates/checklist-template.md
+- [x] T011 [P] [US1] [FR-003] Add scope enforcement step in .specify/workflows/drift-realignment/workflow.yml
+- [x] T012 [US1] [FR-003] Add scope-boundary checklist items in .specify/templates/checklist-template.md
+- [x] T013 [US1] [FR-004] Document scope-first author flow in .specify/specs/004-trim-vibe-drift/quickstart.md
 
 **Checkpoint**: User Story 1 is complete when scope boundaries are mandatory and visible in generated specs.
 
@@ -65,11 +65,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [P] [US2] Implement requirement extraction and task mapping in .specify/scripts/bash/validate-task-traceability.sh
-- [ ] T015 [P] [US2] Implement drift categorization output in .specify/scripts/bash/validate-task-traceability.sh
-- [ ] T016 [US2] Add traceability-gate step in .specify/workflows/drift-realignment/workflow.yml
-- [ ] T017 [US2] Add before_tasks hook wiring for traceability checks in .specify/extensions.yml
-- [ ] T018 [US2] Add local drift-check command examples in .specify/specs/004-trim-vibe-drift/quickstart.md
+- [x] T014 [P] [US2] [FR-005] Implement requirement extraction and task mapping in .specify/scripts/bash/validate-task-traceability.sh
+- [x] T015 [P] [US2] [FR-006] Implement drift categorization output in .specify/scripts/bash/validate-task-traceability.sh
+- [x] T016 [US2] [FR-006] Add traceability-gate step in .specify/workflows/drift-realignment/workflow.yml
+- [x] T017 [US2] [FR-005] Add before_tasks hook wiring for traceability checks in .specify/extensions.yml
+- [x] T018 [US2] [FR-006] Add local drift-check command examples in .specify/specs/004-trim-vibe-drift/quickstart.md
 
 **Checkpoint**: User Story 2 is complete when drift checks can fail planning flows on non-traceable tasks.
 
@@ -83,11 +83,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T019 [P] [US3] Create decision-log template in .specify/templates/decision-log-template.md
-- [ ] T020 [US3] Add decision recording helper in .specify/scripts/bash/record-realignment-decision.sh
-- [ ] T021 [US3] Add post-plan decision-log step in .specify/workflows/drift-realignment/workflow.yml
-- [ ] T022 [US3] Add decision-log artifact metadata in .specify/workflows/workflow-registry.json
-- [ ] T023 [US3] Align decision schema details in .specify/specs/004-trim-vibe-drift/contracts/drift-realignment-workflow.md
+- [x] T019 [P] [US3] [FR-009] Create decision-log template in .specify/templates/decision-log-template.md
+- [x] T020 [US3] [FR-009] Add decision recording helper in .specify/scripts/bash/record-realignment-decision.sh
+- [x] T021 [US3] [FR-009] Add post-plan decision-log step in .specify/workflows/drift-realignment/workflow.yml
+- [x] T022 [US3] [FR-010] Add decision-log artifact metadata in .specify/workflows/workflow-registry.json
+- [x] T023 [US3] [FR-009] Align decision schema details in .specify/specs/004-trim-vibe-drift/contracts/drift-realignment-workflow.md
 
 **Checkpoint**: User Story 3 is complete when realignment decisions are consistently recorded and reviewable.
 
@@ -97,14 +97,14 @@
 
 **Purpose**: Final hardening and parity checks for `.specify` orchestration.
 
-- [ ] T024 [P] Add end-to-end `.specify` workflow command sequence in .specify/workflows/drift-realignment/README.md
-- [ ] T025 [P] Add validation command matrix in .specify/specs/004-trim-vibe-drift/quickstart.md
-- [ ] T026 Add orchestration troubleshooting notes in .specify/workflows/drift-realignment/README.md
-- [ ] T027 [P] Update plan pointer verification notes in .github/copilot-instructions.md
-- [ ] T028 Add AI contract validation note for `.specify` changes in .specify/specs/004-trim-vibe-drift/quickstart.md
-- [ ] T029 [P] Add temporary wiki freeze allowlist in .specify/wiki/human-reference-allowlist.txt
-- [ ] T030 Enforce wiki allowlist and mirror parity in scripts/wiki-consume-into-specify.sh and scripts/validate-ai-contracts.py
-- [ ] T031 Prevent wiki sync worktree writes into repository .wiki in scripts/workflow-sync-wiki.sh
+- [x] T024 [P] [FR-010] Add end-to-end `.specify` workflow command sequence in .specify/workflows/drift-realignment/README.md
+- [x] T025 [P] [FR-005] Add validation command matrix in .specify/specs/004-trim-vibe-drift/quickstart.md
+- [x] T026 [FR-010] Add orchestration troubleshooting notes in .specify/workflows/drift-realignment/README.md
+- [x] T027 [P] [FR-010] Update plan pointer verification notes in .github/copilot-instructions.md
+- [x] T028 [FR-010] Add AI contract validation note for `.specify` changes in .specify/specs/004-trim-vibe-drift/quickstart.md
+- [x] T029 [P] [FR-011] Add temporary wiki freeze allowlist in .specify/wiki/human-reference-allowlist.txt
+- [x] T030 [FR-011][FR-012] Enforce wiki allowlist and mirror parity in scripts/wiki-consume-into-specify.sh and scripts/validate-ai-contracts.py
+- [x] T031 [FR-012] Prevent wiki sync worktree writes into repository .wiki in scripts/workflow-sync-wiki.sh
 
 ---
 

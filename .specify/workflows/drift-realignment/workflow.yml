@@ -28,9 +28,9 @@ steps:
     input:
       args: "{{ inputs.spec }}"
 
-  - id: review-spec-boundaries
+  - id: scope-enforcement
     type: gate
-    message: "Confirm generated spec has explicit in-scope, out-of-scope, and assumptions sections."
+    message: "Run `bash .specify/scripts/bash/validate-spec-boundaries.sh` and approve only when generated spec has explicit and non-empty in-scope, out-of-scope, and assumptions sections."
     options: [approve, reject]
     on_reject: abort
 
@@ -52,9 +52,15 @@ steps:
     input:
       args: "{{ inputs.spec }}"
 
-  - id: review-task-drift
+  - id: traceability-gate
     type: gate
-    message: "Confirm tasks are traceable to approved requirements before implementation."
+    message: "Run `bash .specify/scripts/bash/validate-task-traceability.sh` and approve only when tasks are traceable (or drift findings are explicitly categorized)."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: record-realignment-decisions
+    type: gate
+    message: "For each defer/split/reject drift finding, record a decision using `bash .specify/scripts/bash/record-realignment-decision.sh ...` and approve only when the decision log is updated."
     options: [approve, reject]
     on_reject: abort
 

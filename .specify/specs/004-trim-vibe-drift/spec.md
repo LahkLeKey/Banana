@@ -5,6 +5,20 @@
 **Status**: Draft  
 **Input**: User description: "use specify cli to trim down vibe code drift to realign the project into a more specific solution"
 
+## In Scope
+
+- Add `.specify`-native workflow, script, and template guardrails that enforce bounded planning scope.
+- Detect planning drift by validating task traceability against approved user stories and requirements.
+- Record defer/split/reject decisions in auditable artifacts with owner and timestamp metadata.
+- Enforce temporary wiki freeze and mirror parity validation for human-reference pages.
+
+## Out of Scope
+
+- Product runtime feature behavior changes in native, ASP.NET, or frontend execution paths.
+- Data model redesign for business-domain entities outside planning-governance artifacts.
+- Replacing Spec Kit core engine behavior outside repository-local workflow/template/script contracts.
+- Permanent expansion of `.wiki` page surface beyond explicit allowlist governance.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Scope-First Feature Definition (Priority: P1)
