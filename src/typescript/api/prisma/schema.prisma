@@ -1,0 +1,47 @@
+// schema.prisma — v2. NO `url` field on the datasource (Prisma 7 lints reject
+// inline url). DATABASE_URL is wired via prisma.config.ts (spec 008).
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// === Polymorphic API audit log (collapses 5 v1 *ApiCall tables) ===
+model ApiCall {
+    id           BigInt   @id @default(autoincrement())
+    domain       String // banana | batch | ripeness | not-banana | ml
+    route        String
+    statusCode   Int
+    requestJson  String
+    responseJson String
+    createdAt    DateTime @default(now())
+
+    @@index([domain, createdAt])
+}
+
+model BananaCalculation {
+    id         BigInt   @id @default(autoincrement())
+    purchases  Int
+    multiplier Int
+    banana     Int
+    message    String
+    source     String
+    createdAt  DateTime @default(now())
+}
+
+model NotBananaClassification {
+    id                   BigInt   @id @default(autoincrement())
+    classification       String
+    bananaProbability    Float
+    notBananaProbability Float
+    junkConfidence       Float
+    actorCount           Int
+    entityCount          Int
+    requestJson          String
+    responseJson         String
+    source               String
+    createdAt            DateTime @default(now())
+}

@@ -1,0 +1,45 @@
+{
+  "folders": [
+    { "name": "Banana", "path": "." },
+    { "name": "specs", "path": ".specify/specs" },
+    { "name": "native", "path": "src/native" },
+    { "name": "asp.net", "path": "src/c-sharp/asp.net" },
+    { "name": "ts/api", "path": "src/typescript/api" },
+    { "name": "ts/react", "path": "src/typescript/react" },
+    { "name": "ts/electron", "path": "src/typescript/electron" },
+    { "name": "ts/react-native", "path": "src/typescript/react-native" },
+    { "name": "ts/shared-ui", "path": "src/typescript/shared/ui" },
+    { "name": "tests", "path": "tests" },
+    { "name": "docker", "path": "docker" },
+    { "name": "scripts", "path": "scripts" }
+  ],
+  "settings": {
+    "files.eol": "\n",
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/build": true,
+      "**/.artifacts": true,
+      "**/bin": true,
+      "**/obj": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/build": true,
+      "**/.artifacts": true,
+      ".specify/legacy-baseline/**": true
+    },
+    "[shellscript]": { "files.eol": "\n" },
+    "dotnet.defaultSolution": "src/c-sharp/asp.net/Banana.Api.csproj"
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-dotnettools.csharp",
+      "ms-vscode.cmake-tools",
+      "oven.bun-vscode",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-azuretools.vscode-docker",
+      "Prisma.prisma"
+    ]
+  }
+}

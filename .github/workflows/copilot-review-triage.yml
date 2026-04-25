@@ -1,0 +1,735 @@
+name: Copilot Review Triage
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: Pull request number to triage when dispatched manually
+        required: true
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - converted_to_draft
+      - edited
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+
+jobs:
+  copilot-review-triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Triage Copilot review threads and approve when ready
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const dispatchPullNumber = Number(context.payload.inputs?.pull_number || 0);
+            const pullNumber = context.payload.pull_request?.number || dispatchPullNumber;
+            if (!pullNumber || Number.isNaN(pullNumber)) {
+              core.notice("No pull request context found for this event.");
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const copilotLogin = "copilot-pull-request-reviewer";
+            const pendingLabel = "copilot-triage-pending";
+            const readyLabel = "copilot-triage-ready";
+            const autoApproveOptInLabel = "copilot-auto-approve";
+            const autonomousCycleLabel = "copilot-autonomous-cycle";
+            const speckitDrivenLabel = "speckit-driven";
+            const triageIdeaLabel = "triage-idea";
+            const copilotSuggestionLabel = "copilot-suggestion";
+            const triageIdeaWorkflowId = "orchestrate-triage-idea-cloud.yml";
+            const summaryMarker = "<!-- banana-copilot-triage-summary -->";
+            const { createHash } = require("node:crypto");
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullNumber,
+            });
+
+            const labels = (pr.labels || []).map((label) => label.name);
+            const prAuthorType = pr.user?.type || "";
+            const automationAuthor =
+              prAuthorType === "Bot" ||
+              (pr.user?.login || "").toLowerCase().endsWith("[bot]");
+            const isAutomationPr =
+              labels.includes("requires-human-approval") ||
+              labels.includes("automation") ||
+              automationAuthor;
+            const isAutonomousCycle = labels.includes(autonomousCycleLabel);
+            const isSpeckitDriven = labels.includes(speckitDrivenLabel);
+            const hasCopilotBypassLabel = isAutonomousCycle || isSpeckitDriven;
+            const canAutoApprove = isAutomationPr || labels.includes(autoApproveOptInLabel);
+            const enforceCopilotReview =
+              isAutomationPr || labels.includes(autoApproveOptInLabel) || hasCopilotBypassLabel;
+
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+                return;
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+              }
+
+              try {
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name,
+                  color,
+                  description,
+                });
+              } catch (createError) {
+                if (createError.status !== 422) {
+                  throw createError;
+                }
+              }
+            }
+
+            async function addLabel(name) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pullNumber,
+                labels: [name],
+              });
+            }
+
+            async function removeLabel(name) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number: pullNumber,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+              }
+            }
+
+            async function upsertSummaryComment(body) {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: pullNumber,
+                per_page: 100,
+              });
+
+              const existing = comments.find(
+                (comment) =>
+                  comment.user?.login === "github-actions[bot]" &&
+                  comment.body?.includes(summaryMarker)
+              );
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existing.id,
+                  body,
+                });
+                return;
+              }
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullNumber,
+                body,
+              });
+            }
+
+            function truncateText(value, maxLength) {
+              if (!value) {
+                return "";
+              }
+              if (value.length <= maxLength) {
+                return value;
+              }
+
+              return `${value.slice(0, Math.max(0, maxLength - 3))}...`;
+            }
+
+            function extractMarker(body, markerName) {
+              const pattern = new RegExp(`<!--\\s*${markerName}:([^\\s]+)\\s*-->`, "i");
+              const match = (body || "").match(pattern);
+              return match ? match[1].trim() : "";
+            }
+
+            function buildSuggestionKey(item) {
+              const raw = [
+                String(pullNumber),
+                String(item.path || ""),
+                String(item.line || ""),
+                String(item.url || ""),
+                String(item.summary || ""),
+              ].join("|");
+
+              return createHash("sha256").update(raw).digest("hex").slice(0, 24);
+            }
+
+            function buildSuggestionIssueTitle(item) {
+              const location = item.line > 0 ? `${item.path}:${item.line}` : item.path;
+              return truncateText(`copilot suggestion: PR #${pullNumber} ${location}`, 120);
+            }
+
+            function buildSuggestionIssueBody(item, key) {
+              const location = item.line > 0 ? `${item.path}:${item.line}` : item.path;
+              return [
+                `<!-- copilot-suggestion-pr:${pullNumber} -->`,
+                `<!-- copilot-suggestion-key:${key} -->`,
+                `<!-- copilot-suggestion-source-sha:${pr.head.sha} -->`,
+                "",
+                "## Copilot Suggestion Intake",
+                "",
+                `- Source pull request: ${pr.html_url}`,
+                `- Source suggestion thread: ${item.url || pr.html_url}`,
+                `- Source location: ${location}`,
+                "",
+                "## Suggestion Summary",
+                "",
+                item.summary || "No suggestion summary available.",
+                "",
+                "## Requested Automation",
+                "",
+                "- Queue this suggestion as an incremental triage issue.",
+                "- Run cloud triage orchestration to produce a focused fix PR.",
+              ].join("\n");
+            }
+
+            async function dispatchTriageIdeaWorkflow(issueNumber) {
+              try {
+                await github.rest.actions.createWorkflowDispatch({
+                  owner,
+                  repo,
+                  workflow_id: triageIdeaWorkflowId,
+                  ref: pr.head.ref,
+                  inputs: {
+                    issue_number: String(issueNumber),
+                    issue_labels: `${triageIdeaLabel},${copilotSuggestionLabel},automation,${speckitDrivenLabel}`,
+                    pr_labels: `automation,triaged-item,${autoApproveOptInLabel},${autonomousCycleLabel},${speckitDrivenLabel}`,
+                    base_branch: pr.base.ref,
+                    branch_prefix: "triage-copilot",
+                    draft_pr: "false",
+                    skip_if_no_changes: "true",
+                    sync_wiki: "true",
+                  },
+                });
+
+                return {
+                  dispatched: true,
+                  reason: "",
+                };
+              } catch (error) {
+                const reason = error.message || "workflow dispatch failed";
+                core.warning(
+                  `Unable to dispatch ${triageIdeaWorkflowId} for issue #${issueNumber}: ${reason}`
+                );
+                return {
+                  dispatched: false,
+                  reason,
+                };
+              }
+            }
+
+            async function syncSuggestionIssues(unresolvedSuggestions) {
+              const openIssues = await github.paginate(github.rest.issues.listForRepo, {
+                owner,
+                repo,
+                state: "open",
+                labels: copilotSuggestionLabel,
+                per_page: 100,
+              });
+
+              const issuesByKey = new Map();
+              for (const issue of openIssues) {
+                if (issue.pull_request) {
+                  continue;
+                }
+
+                const issuePrMarker = extractMarker(issue.body || "", "copilot-suggestion-pr");
+                if (issuePrMarker !== String(pullNumber)) {
+                  continue;
+                }
+
+                const issueKey = extractMarker(issue.body || "", "copilot-suggestion-key");
+                if (!issueKey) {
+                  continue;
+                }
+
+                issuesByKey.set(issueKey, issue);
+              }
+
+              const activeKeys = new Set();
+              const activeIssues = [];
+              const createdIssues = [];
+              const closedIssues = [];
+              const dispatchWarnings = [];
+
+              for (const item of unresolvedSuggestions) {
+                const key = buildSuggestionKey(item);
+                activeKeys.add(key);
+
+                const expectedTitle = buildSuggestionIssueTitle(item);
+                const expectedBody = buildSuggestionIssueBody(item, key);
+                const requiredLabels = [
+                  copilotSuggestionLabel,
+                  triageIdeaLabel,
+                  "automation",
+                  speckitDrivenLabel,
+                ];
+
+                const existingIssue = issuesByKey.get(key);
+                if (existingIssue) {
+                  if (existingIssue.title !== expectedTitle || (existingIssue.body || "") !== expectedBody) {
+                    await github.rest.issues.update({
+                      owner,
+                      repo,
+                      issue_number: existingIssue.number,
+                      title: expectedTitle,
+                      body: expectedBody,
+                    });
+                  }
+
+                  const existingLabels = (existingIssue.labels || []).map((label) =>
+                    typeof label === "string" ? label : label.name
+                  );
+                  const missingLabels = requiredLabels.filter(
+                    (label) => !existingLabels.includes(label)
+                  );
+                  if (missingLabels.length > 0) {
+                    await github.rest.issues.addLabels({
+                      owner,
+                      repo,
+                      issue_number: existingIssue.number,
+                      labels: missingLabels,
+                    });
+                  }
+
+                  activeIssues.push({
+                    key,
+                    number: existingIssue.number,
+                    url: existingIssue.html_url,
+                    title: expectedTitle,
+                  });
+                  continue;
+                }
+
+                const { data: createdIssue } = await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title: expectedTitle,
+                  body: expectedBody,
+                  labels: requiredLabels,
+                });
+
+                createdIssues.push({
+                  key,
+                  number: createdIssue.number,
+                  url: createdIssue.html_url,
+                  title: createdIssue.title,
+                });
+                activeIssues.push({
+                  key,
+                  number: createdIssue.number,
+                  url: createdIssue.html_url,
+                  title: createdIssue.title,
+                });
+
+                const dispatchResult = await dispatchTriageIdeaWorkflow(createdIssue.number);
+                if (!dispatchResult.dispatched) {
+                  dispatchWarnings.push(
+                    `Issue #${createdIssue.number}: ${dispatchResult.reason || "dispatch failed"}`
+                  );
+                }
+              }
+
+              for (const [issueKey, existingIssue] of issuesByKey.entries()) {
+                if (activeKeys.has(issueKey)) {
+                  continue;
+                }
+
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number: existingIssue.number,
+                  state: "closed",
+                });
+
+                closedIssues.push({
+                  key: issueKey,
+                  number: existingIssue.number,
+                  url: existingIssue.html_url,
+                  title: existingIssue.title,
+                });
+              }
+
+              return {
+                activeIssues,
+                createdIssues,
+                closedIssues,
+                dispatchWarnings,
+              };
+            }
+
+            async function requestCopilotReview() {
+              try {
+                await github.rest.pulls.requestReviewers({
+                  owner,
+                  repo,
+                  pull_number: pullNumber,
+                  reviewers: [copilotLogin],
+                });
+
+                return {
+                  requested: true,
+                  reason: "",
+                };
+              } catch (error) {
+                if (error.status === 422 || error.status === 403) {
+                  const reason = error.message || "unable to request Copilot reviewer";
+                  core.warning(`Could not request Copilot review automatically: ${reason}`);
+                  return {
+                    requested: false,
+                    reason,
+                  };
+                }
+
+                throw error;
+              }
+            }
+
+            async function enableAutoMergeIfEligible() {
+              if (!hasCopilotBypassLabel) {
+                return;
+              }
+
+              if (pr.auto_merge) {
+                core.notice("Auto-merge already enabled for this pull request.");
+                return;
+              }
+
+              try {
+                await github.graphql(
+                  `
+                  mutation($pullRequestId: ID!) {
+                    enablePullRequestAutoMerge(
+                      input: {
+                        pullRequestId: $pullRequestId
+                        mergeMethod: SQUASH
+                      }
+                    ) {
+                      pullRequest {
+                        id
+                      }
+                    }
+                  }
+                  `,
+                  {
+                    pullRequestId: pr.node_id,
+                  }
+                );
+
+                core.notice("Enabled auto-merge for Copilot bypass-labeled pull request.");
+              } catch (error) {
+                core.warning(
+                  `Unable to enable auto-merge for Copilot bypass-labeled pull request: ${error.message}`
+                );
+              }
+            }
+
+            await ensureLabel(
+              pendingLabel,
+              "D73A4A",
+              "Copilot review has unresolved findings requiring triage"
+            );
+            await ensureLabel(
+              readyLabel,
+              "0E8A16",
+              "Copilot review findings are triaged and ready for approval"
+            );
+            await ensureLabel(
+              autoApproveOptInLabel,
+              "1D76DB",
+              "Allow automated approval for non-automation PRs after Copilot triage completes"
+            );
+            await ensureLabel(
+              autonomousCycleLabel,
+              "0366D6",
+              "Allow autonomous Copilot-reviewed automation cycle including auto-merge"
+            );
+            await ensureLabel(
+              speckitDrivenLabel,
+              "0B63A5",
+              "Bypass human gate after Copilot triage while marking spec-kit-driven integration provenance"
+            );
+            await ensureLabel(
+              triageIdeaLabel,
+              "FBCA04",
+              "Idea queued for cloud triage orchestration"
+            );
+            await ensureLabel(
+              copilotSuggestionLabel,
+              "C5DEF5",
+              "Copilot review suggestion triaged into issue backlog"
+            );
+
+            const reviewThreads = [];
+            let cursor = null;
+            for (;;) {
+              const result = await github.graphql(
+                `
+                query ($owner: String!, $repo: String!, $number: Int!, $cursor: String) {
+                  repository(owner: $owner, name: $repo) {
+                    pullRequest(number: $number) {
+                      reviewThreads(first: 100, after: $cursor) {
+                        pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                        nodes {
+                          isResolved
+                          isOutdated
+                          path
+                          line
+                          startLine
+                          comments(first: 100) {
+                            nodes {
+                              body
+                              url
+                              author {
+                                login
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                `,
+                {
+                  owner,
+                  repo,
+                  number: pullNumber,
+                  cursor,
+                }
+              );
+
+              const connection = result.repository?.pullRequest?.reviewThreads;
+              if (!connection) {
+                break;
+              }
+
+              for (const node of connection.nodes || []) {
+                reviewThreads.push(node);
+              }
+
+              if (!connection.pageInfo?.hasNextPage) {
+                break;
+              }
+
+              cursor = connection.pageInfo.endCursor;
+            }
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number: pullNumber,
+              per_page: 100,
+            });
+
+            let copilotThreadCount = 0;
+            const unresolved = [];
+            for (const thread of reviewThreads) {
+              const comments = thread.comments?.nodes || [];
+              const copilotComments = comments.filter(
+                (comment) => comment.author?.login === copilotLogin
+              );
+
+              if (!copilotComments.length) {
+                continue;
+              }
+
+              copilotThreadCount += 1;
+              const latest = copilotComments[copilotComments.length - 1];
+
+              if (!thread.isResolved && !thread.isOutdated) {
+                const normalizedBody = (latest.body || "")
+                  .replace(/\s+/g, " ")
+                  .trim()
+                  .slice(0, 220);
+
+                unresolved.push({
+                  path: thread.path || "(unknown file)",
+                  line: thread.line || thread.startLine || 0,
+                  url: latest.url || pr.html_url,
+                  summary: normalizedBody || "No details provided by Copilot.",
+                });
+              }
+            }
+
+            const hasCopilotReview = reviews.some(
+              (review) => review.user?.login === copilotLogin
+            );
+            const hasCopilotActivity = copilotThreadCount > 0 || hasCopilotReview;
+
+            if (!hasCopilotActivity) {
+              await addLabel(pendingLabel);
+              await removeLabel(readyLabel);
+
+              if (enforceCopilotReview) {
+                const reviewRequest = await requestCopilotReview();
+                if (!reviewRequest.requested && hasCopilotBypassLabel) {
+                  await addLabel(readyLabel);
+                  await removeLabel(pendingLabel);
+
+                  await upsertSummaryComment(
+                    `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n\nCopilot reviewer assignment is currently unavailable (${reviewRequest.reason || "manual request required"}). Continuing autonomous bypass triage and recording readiness for gated approval checks.\n`
+                  );
+
+                  core.notice(
+                    "Proceeding without direct Copilot review activity because bypass labels are present and reviewer assignment is unavailable."
+                  );
+                } else {
+                  const requestSummary = reviewRequest.requested
+                    ? "Requested Copilot review and waiting for findings."
+                    : `Copilot review request could not be submitted automatically (${reviewRequest.reason || "manual request required"}).`;
+
+                  await upsertSummaryComment(
+                    `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n\n${requestSummary}\n`
+                  );
+
+                  core.setFailed(
+                    "Awaiting Copilot review activity before triage can continue."
+                  );
+                  return;
+                }
+              }
+
+              if (!enforceCopilotReview) {
+                await upsertSummaryComment(
+                  `${summaryMarker}\n## Copilot Review Triage\n\nNo Copilot review findings were detected yet for this pull request.\n`
+                );
+                core.notice("No Copilot review findings detected yet.");
+                return;
+              }
+            }
+
+            const suggestionIssueSync = await syncSuggestionIssues(unresolved);
+
+            if (unresolved.length > 0) {
+              await addLabel(pendingLabel);
+              await removeLabel(readyLabel);
+
+              const lines = unresolved.map((item) => {
+                const location = item.line > 0 ? `${item.path}:${item.line}` : item.path;
+                return `- [${location}](${item.url}) - ${item.summary}`;
+              });
+
+              const issueLines = suggestionIssueSync.activeIssues.map(
+                (item) => `- [#${item.number}](${item.url}) - ${item.title}`
+              );
+
+              const dispatchWarningLines = suggestionIssueSync.dispatchWarnings.map(
+                (warning) => `- ${warning}`
+              );
+
+              await upsertSummaryComment(
+                `${summaryMarker}\n## Copilot Review Triage\n\n${unresolved.length} unresolved Copilot review thread(s) still need triage before automated approval.\n\n${lines.join("\n")}\n\n### Suggestion Issues\n${issueLines.length > 0 ? issueLines.join("\n") : "- No suggestion issues were generated."}\n${dispatchWarningLines.length > 0 ? `\n### Dispatch Warnings\n${dispatchWarningLines.join("\n")}\n` : ""}`
+              );
+
+              core.setFailed(
+                `Copilot review triage has ${unresolved.length} unresolved finding(s). Suggestion issues have been synchronized for incremental remediation.`
+              );
+              return;
+            }
+
+            await addLabel(readyLabel);
+            await removeLabel(pendingLabel);
+
+            let readySummary = canAutoApprove
+              ? "All Copilot review threads are triaged for the current revision. This pull request is ready for approval."
+              : "All Copilot review threads are triaged for the current revision. This pull request is ready for human approval. Add label `copilot-auto-approve` to permit automated approval on non-automation pull requests.";
+
+            if (hasCopilotBypassLabel) {
+              readySummary = `${readySummary} Auto-merge will be enabled for this autonomous cycle once automated approval is up to date.`;
+            }
+
+            if (suggestionIssueSync.closedIssues.length > 0) {
+              readySummary = `${readySummary} Closed ${suggestionIssueSync.closedIssues.length} stale Copilot suggestion issue(s) after triage completion.`;
+            }
+
+            await upsertSummaryComment(
+              `${summaryMarker}\n## Copilot Review Triage\n\n${readySummary}\n`
+            );
+
+            if (pr.draft) {
+              core.notice("Pull request is still draft; skipping automated approval.");
+              return;
+            }
+
+            if (!canAutoApprove) {
+              core.notice(
+                "Skipping automated approval because this pull request is not automation-managed and does not include the copilot-auto-approve label."
+              );
+              return;
+            }
+
+            const latestReviewByUser = new Map();
+            for (const review of reviews) {
+              if (!review.user?.login) {
+                continue;
+              }
+              latestReviewByUser.set(review.user.login, review);
+            }
+
+            const botLogin = "github-actions[bot]";
+            const prAuthorLogin = (pr.user?.login || "").toLowerCase();
+            if (prAuthorLogin === botLogin.toLowerCase()) {
+              core.notice(
+                "Skipping automated approval because github-actions[bot] cannot approve its own pull request."
+              );
+              await enableAutoMergeIfEligible();
+              return;
+            }
+
+            const latestBotReview = latestReviewByUser.get(botLogin);
+            if (
+              latestBotReview &&
+              latestBotReview.state === "APPROVED" &&
+              latestBotReview.commit_id === pr.head.sha
+            ) {
+              core.notice("Automated approval already exists for the current head commit.");
+            } else {
+              await github.rest.pulls.createReview({
+                owner,
+                repo,
+                pull_number: pullNumber,
+                event: "APPROVE",
+                body: "Copilot triage complete: no unresolved Copilot findings remain on this revision.",
+              });
+
+              core.notice("Submitted automated approval after Copilot triage completion.");
+            }
+
+            await enableAutoMergeIfEligible();

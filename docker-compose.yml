@@ -1,0 +1,179 @@
+name: banana-container
+
+# Profiles (spec 012): runtime, tests, electron, apps, all, api-fastify, android-emulator (gated).
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: cinterop
+      POSTGRES_PASSWORD: cinterop
+      POSTGRES_DB: cinterop
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinterop -d cinterop"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    profiles: ["runtime", "tests", "electron", "apps", "all", "api-fastify"]
+
+  native-build:
+    build:
+      context: .
+      dockerfile: docker/native-builder.Dockerfile
+    command: ["bash", "-lc", "cp -f /workspace/build/native/libbanana_native.so /artifacts/libbanana_native.so && ls -l /artifacts"]
+    volumes:
+      - native-artifacts:/artifacts
+    profiles: ["runtime", "tests", "all", "electron", "apps", "api-fastify"]
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    depends_on:
+      native-build:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      BANANA_NATIVE_PATH: /native
+      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+    ports:
+      - "8080:8080"
+    volumes:
+      - native-artifacts:/native:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    profiles: ["runtime", "electron", "apps", "all", "api-fastify"]
+
+  api-fastify:
+    build:
+      context: .
+      dockerfile: docker/api-fastify.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
+      PORT: "8081"
+    ports:
+      - "8081:8081"
+    profiles: ["api-fastify", "apps", "all"]
+
+  test-unit:
+    build:
+      context: .
+      dockerfile: docker/tests.Dockerfile
+    command: ["bash", "-lc", "dotnet test src/c-sharp/asp.net --filter Category=Unit"]
+    profiles: ["tests"]
+
+  test-integration:
+    build:
+      context: .
+      dockerfile: docker/tests.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      native-build:
+        condition: service_completed_successfully
+    environment:
+      BANANA_NATIVE_PATH: /native
+      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+    volumes:
+      - native-artifacts:/native:ro
+    command: ["bash", "-lc", "dotnet test src/c-sharp/asp.net --filter Category=Integration"]
+    profiles: ["tests"]
+
+  test-all:
+    build:
+      context: .
+      dockerfile: docker/tests.Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      native-build:
+        condition: service_completed_successfully
+    environment:
+      BANANA_NATIVE_PATH: /native
+      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+    volumes:
+      - native-artifacts:/native:ro
+    command: ["bash", "-lc", "scripts/run-tests-with-coverage.sh"]
+    profiles: ["tests"]
+
+  electron-example:
+    build:
+      context: .
+      dockerfile: docker/electron.Dockerfile
+    command: ["bash", "-lc", "cd src/typescript/electron && npm run smoke"]
+    profiles: ["electron"]
+
+  electron-desktop:
+    build:
+      context: .
+      dockerfile: docker/electron.Dockerfile
+    environment:
+      DISPLAY: ${DISPLAY:-:0}
+      BANANA_ELECTRON_RENDERER_URL: http://react-app:5173
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - /mnt/wslg:/mnt/wslg
+    depends_on:
+      - react-app
+    profiles: ["electron", "apps"]
+
+  react-app:
+    build:
+      context: .
+      dockerfile: docker/react.Dockerfile
+    environment:
+      VITE_BANANA_API_BASE_URL: http://api:8080
+    ports:
+      - "5173:5173"
+    profiles: ["apps", "electron"]
+
+  react-native-web:
+    build:
+      context: .
+      dockerfile: docker/react-native.Dockerfile
+    command: ["bash", "-lc", "cd src/typescript/react-native && bun run web"]
+    ports:
+      - "19006:19006"
+    profiles: ["apps"]
+
+  android-emulator:
+    build:
+      context: .
+      dockerfile: docker/react-native.Dockerfile
+    command: ["bash", "-lc", "scripts/compose-mobile-emulators-wsl2.sh"]
+    devices:
+      - /dev/kvm
+    profiles: ["android-emulator"]
+
+  workflow-train-not-banana-local:
+    build:
+      context: .
+      dockerfile: docker/workflow-local.Dockerfile
+    command: ["bash", "-lc", "scripts/workflow-local-train-not-banana.sh"]
+    profiles: ["workflows"]
+
+  workflow-orchestrate-triaged-local:
+    build:
+      context: .
+      dockerfile: docker/workflow-local.Dockerfile
+    command: ["bash", "-lc", "scripts/workflow-local-orchestrate-triaged-item-pr.sh"]
+    profiles: ["workflows"]
+
+  workflow-orchestrate-sdlc-local:
+    build:
+      context: .
+      dockerfile: docker/workflow-local.Dockerfile
+    command: ["bash", "-lc", "scripts/workflow-local-orchestrate-sdlc.sh"]
+    profiles: ["workflows"]
+
+volumes:
+  native-artifacts:

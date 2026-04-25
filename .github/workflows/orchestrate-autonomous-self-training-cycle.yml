@@ -1,0 +1,98 @@
+name: Orchestrate Autonomous Self-Training Cycle
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      incremental_plan_json:
+        description: 'Optional override JSON array (or {"increments": [...]}); when empty, the native deterministic model renders a plan from docs/automation/agent-pulse/autonomous-self-training-default-increments.json'
+        required: false
+        default: ""
+      wiki_dry_run:
+        description: Run wiki synchronization in dry-run mode
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      wiki_push:
+        description: Push wiki commits to remote when wiki sync is not dry-run
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      wiki_sync_mapping:
+        description: Optional newline-delimited source|target mapping for wiki sync
+        required: false
+        default: ""
+      continue_on_error:
+        description: Continue later increments if one increment fails
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+  schedule:
+    - cron: "30 5,11,17 * * 1-5"
+  pull_request_target:
+    types:
+      - closed
+
+jobs:
+  autonomous-self-training:
+    if: >-
+      ${{
+        github.event_name != 'pull_request_target' ||
+        (
+          github.event.pull_request.merged == true &&
+          (contains(github.event.pull_request.labels.*.name, 'copilot-autonomous-cycle') || contains(github.event.pull_request.labels.*.name, 'speckit-driven')) &&
+          github.event.pull_request.user.type != 'Bot' &&
+          startsWith(github.event.pull_request.head.ref, 'sdlc/') == false
+        )
+      }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
+      BANANA_SDLC_ID: autonomous-self-train
+      BANANA_SDLC_INCREMENT_PLAN_MODEL: native-deterministic-agent-pulse
+      BANANA_SDLC_INCREMENT_PLAN_JSON: ${{ github.event.inputs.incremental_plan_json || '' }}
+      BANANA_SDLC_INCREMENT_CATALOG_PATH: docs/automation/agent-pulse/autonomous-self-training-default-increments.json
+      BANANA_SDLC_INCREMENT_PLAN_PATH: docs/automation/agent-pulse/autonomous-self-training-default-increments.json
+      BANANA_SDLC_REQUIRED_CLASSIFIER_TRAINING_FRAGMENT: training-profile ci --session-mode single --max-sessions 1
+      BANANA_SDLC_REQUIRED_CLASSIFIER_AGENT_LABEL: agent:banana-classifier-agent
+      BANANA_BASE_BRANCH: main
+      BANANA_BRANCH_PREFIX: sdlc
+      BANANA_DRAFT_PR: 'false'
+      BANANA_PR_LABELS: automation,sdlc,triaged-item,copilot-auto-approve,copilot-autonomous-cycle,speckit-driven,agent:workflow-agent
+      BANANA_PR_REVIEWERS: ''
+      BANANA_SDLC_SKIP_NO_CHANGES: 'true'
+      BANANA_SDLC_CONTINUE_ON_ERROR: ${{ github.event.inputs.continue_on_error || 'true' }}
+      BANANA_SDLC_REQUIRE_REAL_UPDATES: 'true'
+      BANANA_SDLC_SKIP_NON_REAL_UPDATES: 'true'
+      BANANA_REAL_UPDATE_PATH_PATTERNS: src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props
+      BANANA_SDLC_ENABLE_WIKI_SYNC: 'true'
+      BANANA_SDLC_VALIDATE_AI_CONTRACTS: 'true'
+      BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
+      BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}
+      BANANA_WIKI_STRICT: 'true'
+      BANANA_WIKI_COMMIT_MESSAGE: 'docs(wiki): sync autonomous self-training SDLC snapshots'
+      BANANA_WIKI_REMOTE_URL: https://github.com/LahkLeKey/Banana.wiki.git
+      BANANA_ENFORCE_CANONICAL_WIKI_REMOTE: 'true'
+      BANANA_WIKI_SYNC_MAPPING: ${{ github.event.inputs.wiki_sync_mapping || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run bounded autonomous SDLC increments
+        run: |
+          bash scripts/workflow-orchestrate-sdlc.sh

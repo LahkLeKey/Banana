@@ -1,0 +1,29 @@
+# Build outputs
+build/
+out/
+.artifacts/
+
+# Node — never let host node_modules leak into Linux builds (009/012 contract)
+**/node_modules
+**/.next
+**/.vite
+**/.turbo
+**/dist
+
+# .NET
+**/bin
+**/obj
+
+# Python
+**/__pycache__
+**/.venv
+
+# Editor / VCS
+.git
+.gitignore
+.vscode
+.specify/legacy-baseline
+
+# Logs / dumps
+*.log
+*.stackdump
