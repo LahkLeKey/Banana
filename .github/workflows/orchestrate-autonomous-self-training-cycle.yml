@@ -47,7 +47,16 @@ on:
 
 jobs:
   autonomous-self-training:
-    if: ${{ github.event_name != 'pull_request_target' || (github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'copilot-autonomous-cycle') || contains(github.event.pull_request.labels.*.name, 'speckit-driven'))) }}
+    if: >-
+      ${{
+        github.event_name != 'pull_request_target' ||
+        (
+          github.event.pull_request.merged == true &&
+          (contains(github.event.pull_request.labels.*.name, 'copilot-autonomous-cycle') || contains(github.event.pull_request.labels.*.name, 'speckit-driven')) &&
+          github.event.pull_request.user.type != 'Bot' &&
+          startsWith(github.event.pull_request.head.ref, 'sdlc/') == false
+        )
+      }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
