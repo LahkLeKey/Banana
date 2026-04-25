@@ -16,6 +16,7 @@ set(BANANA_CORE_SOURCES
   src/native/core/banana_ripeness.c
   src/native/core/banana_batch.c
   src/native/core/banana_truck.c
+  src/native/core/domain/banana_not_banana.c
   src/native/core/dal/banana_dal.c
 )
 

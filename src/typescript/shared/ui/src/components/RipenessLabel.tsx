@@ -1,5 +1,5 @@
 // @banana/ui annotation: cross-platform.
-import type { Ripeness } from "../types.ts";
+import type { Ripeness } from "../types";
 
 const COLORS: Record<Ripeness, string> = {
     green: "bg-green-200 text-green-900",

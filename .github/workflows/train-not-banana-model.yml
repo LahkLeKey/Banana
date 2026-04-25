@@ -134,7 +134,7 @@ on:
 
 jobs:
   prepare-release-matrix:
-    if: ${{ github.actor != 'github-actions[bot]' }}
+    if: ${{ github.event_name == 'schedule' || github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     outputs:
       release_matrix: ${{ steps.build.outputs.release_matrix }}
@@ -246,7 +246,7 @@ jobs:
           PY
 
   train:
-    if: ${{ github.actor != 'github-actions[bot]' }}
+    if: ${{ github.event_name == 'schedule' || github.actor != 'github-actions[bot]' }}
     needs: prepare-release-matrix
     runs-on: ubuntu-latest
     strategy:
@@ -525,7 +525,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   verify-native-rebuild:
-    if: ${{ github.actor != 'github-actions[bot]' }}
+    if: ${{ github.event_name == 'schedule' || github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     needs: train
     steps:

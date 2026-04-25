@@ -1,0 +1,19 @@
+{
+    "schema_version": 1,
+    "project": "Banana.Api",
+    "generated_at_utc": "2026-04-25T22:25:39Z",
+    "tracked_file_count": 11,
+    "tracked_files": [
+        "Controllers/BananaController.cs",
+        "Controllers/BatchController.cs",
+        "Controllers/NotBananaController.cs",
+        "Controllers/RipenessController.cs",
+        "NativeInterop/INativeBananaClient.cs",
+        "NativeInterop/NativeBananaClient.cs",
+        "NativeInterop/NativeMethods.cs",
+        "NativeInterop/NativeStatusCode.cs",
+        "Pipeline/PipelineContext.cs",
+        "Pipeline/StatusMapping.cs",
+        "Program.cs"
+    ]
+}

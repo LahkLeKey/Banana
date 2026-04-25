@@ -1,0 +1,126 @@
+{
+    "schema_version": 1,
+    "description": "Seed corpus for banana vs not-banana training.",
+    "samples": [
+        {
+            "id": "banana-001",
+            "label": "banana",
+            "text": "fresh banana bunch from the market",
+            "source": "seed"
+        },
+        {
+            "id": "banana-002",
+            "label": "banana",
+            "text": "ripe yellow banana smoothie",
+            "source": "seed"
+        },
+        {
+            "id": "banana-003",
+            "label": "banana",
+            "text": "banana peel compost for garden",
+            "source": "seed"
+        },
+        {
+            "id": "banana-004",
+            "label": "banana",
+            "text": "organic cavendish banana crate",
+            "source": "seed"
+        },
+        {
+            "id": "banana-005",
+            "label": "banana",
+            "text": "banana bread with cinnamon",
+            "source": "seed"
+        },
+        {
+            "id": "banana-006",
+            "label": "banana",
+            "text": "green banana chips snack",
+            "source": "seed"
+        },
+        {
+            "id": "banana-007",
+            "label": "banana",
+            "text": "banana plantation harvest batch",
+            "source": "seed"
+        },
+        {
+            "id": "banana-008",
+            "label": "banana",
+            "text": "sweet banana pudding dessert",
+            "source": "seed"
+        },
+        {
+            "id": "banana-009",
+            "label": "banana",
+            "text": "banana fruit label on produce shelf",
+            "source": "seed"
+        },
+        {
+            "id": "banana-010",
+            "label": "banana",
+            "text": "truck loaded with banana cartons",
+            "source": "seed"
+        },
+        {
+            "id": "not-001",
+            "label": "not-banana",
+            "text": "usb cable and power adapter",
+            "source": "seed"
+        },
+        {
+            "id": "not-002",
+            "label": "not-banana",
+            "text": "steel wrench for bike repair",
+            "source": "seed"
+        },
+        {
+            "id": "not-003",
+            "label": "not-banana",
+            "text": "wireless keyboard and mouse",
+            "source": "seed"
+        },
+        {
+            "id": "not-004",
+            "label": "not-banana",
+            "text": "office stapler with paper clips",
+            "source": "seed"
+        },
+        {
+            "id": "not-005",
+            "label": "not-banana",
+            "text": "ceramic coffee mug and coaster",
+            "source": "seed"
+        },
+        {
+            "id": "not-006",
+            "label": "not-banana",
+            "text": "router firmware update package",
+            "source": "seed"
+        },
+        {
+            "id": "not-007",
+            "label": "not-banana",
+            "text": "laptop battery replacement kit",
+            "source": "seed"
+        },
+        {
+            "id": "not-008",
+            "label": "not-banana",
+            "text": "paint roller and wall primer",
+            "source": "seed"
+        },
+        {
+            "id": "not-009",
+            "label": "not-banana",
+            "text": "book shelf assembly screws",
+            "source": "seed"
+        },
+        {
+            "id": "not-010",
+            "label": "not-banana",
+            "text": "vacuum cleaner HEPA filter",
+            "source": "seed"
+        }
+    ]
+}

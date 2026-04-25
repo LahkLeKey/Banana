@@ -3,7 +3,7 @@
 import { registerRootComponent } from 'expo';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, Text, View } from 'react-native';
-import { BananaBadge, RipenessLabel } from '@banana/ui';
+import { BananaBadge, RipenessLabel } from '@banana/ui/native';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_BANANA_API_BASE_URL ?? '';
 
