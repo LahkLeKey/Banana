@@ -2,5 +2,6 @@
 // Deep imports are forbidden by lint; everything cross-platform-safe is
 // re-exported here.
 export {BananaBadge} from './components/BananaBadge';
+export {ChatMessageBubble} from './components/ChatMessageBubble';
 export {RipenessLabel} from './components/RipenessLabel';
-export type {Ripeness} from './types';
+export type {ChatMessage, ChatMessageStatus, ChatRole, ChatSession, Ripeness,} from './types';

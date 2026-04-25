@@ -8,11 +8,14 @@ the single source of truth across slices.
 
 | Route group | Canonical owner | Notes |
 |-------------|-----------------|-------|
-| `/api/banana/...`     | TBD (Phase 0) | Decide during inventory |
-| `/api/batch/...`      | TBD | |
-| `/api/not-banana/...` | TBD | |
-| `/api/ripeness/...`   | TBD | |
-| `/api/<typescript-only>/...` | `008` | |
+| `/api/banana/...`     | `007` | ASP.NET pipeline + native interop canonical |
+| `/api/batch/...`      | `007` | ASP.NET canonical |
+| `/api/not-banana/...` | `007` | ASP.NET canonical public surface |
+| `/ml/...` | `007` | ASP.NET-managed native ML inference endpoints |
+| `/health` and `/ready` | `008` | Fastify health/readiness endpoints |
+| `/corpus/feedback` | `008` | TypeScript-only feedback ingestion |
+| `/not-banana/score` | `008` | TypeScript-only deterministic token scoring |
+| `/chat/sessions/...` | `008` | Canonical chatbot session + messaging contract |
 
 Frontends consume one base URL per app (`VITE_BANANA_API_BASE_URL` for web).
 A reverse proxy or API gateway may multiplex; that decision lives in

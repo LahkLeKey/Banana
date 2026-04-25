@@ -5,3 +5,7 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+interface Window {
+  banana?: {apiBaseUrl: string; platform: string;};
+}
