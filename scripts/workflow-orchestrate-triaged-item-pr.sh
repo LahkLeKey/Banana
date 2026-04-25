@@ -140,7 +140,13 @@ parse_list_input() {
 }
 
 collect_workspace_changed_files() {
-  mapfile -t WORKSPACE_CHANGED_FILES < <(git status --porcelain --untracked-files=all | awk '{print $2}' | sed 's#\\#/#g')
+  mapfile -t WORKSPACE_CHANGED_FILES < <(
+    {
+      git diff --name-only --diff-filter=ACMRTUXB
+      git diff --cached --name-only --diff-filter=ACMRTUXB
+      git ls-files --others --exclude-standard
+    } | sed 's#\\#/#g' | awk 'NF && !seen[$0]++'
+  )
 }
 
 collect_staged_changed_files() {
@@ -270,7 +276,16 @@ try:
 except Exception:
     payload = {}
 
-for candidate in payload.get("agents", []):
+if not isinstance(payload, dict):
+  payload = {}
+
+agents = payload.get("agents", [])
+if not isinstance(agents, list):
+  agents = []
+
+for candidate in agents:
+    if not isinstance(candidate, dict):
+        continue
     if str(candidate.get("slug", "")).strip() == agent_slug:
         entry = candidate
         break
@@ -395,13 +410,13 @@ echo "Applying triaged code changes..."
 eval "$CHANGE_COMMAND"
 
 collect_workspace_changed_files
-evaluate_real_update_scope "workspace" "${WORKSPACE_CHANGED_FILES[@]:-}"
+evaluate_real_update_scope "workspace" "${WORKSPACE_CHANGED_FILES[@]}"
 
 if [[ "$LOCAL_DRY_RUN" == "true" ]]; then
   PLAN_DIR="artifacts/local-workflow-dry-run/triaged-pr"
   mkdir -p "$PLAN_DIR"
 
-  CHANGED_FILES="$(printf '%s\n' "${WORKSPACE_CHANGED_FILES[@]:-}" | paste -sd ',' -)"
+  CHANGED_FILES="$(printf '%s\n' "${WORKSPACE_CHANGED_FILES[@]}" | paste -sd ',' -)"
   if [[ -z "$CHANGED_FILES" ]]; then
     CHANGED_FILES=""
     echo "Dry-run mode: no repository changes produced by change command."
@@ -462,7 +477,7 @@ if git diff --cached --quiet; then
   exit 1
 fi
 
-evaluate_real_update_scope "staged" "${STAGED_CHANGED_FILES[@]:-}"
+evaluate_real_update_scope "staged" "${STAGED_CHANGED_FILES[@]}"
 
 git config user.name "$AGENT_CONTRIBUTOR_NAME"
 git config user.email "$AGENT_CONTRIBUTOR_EMAIL"

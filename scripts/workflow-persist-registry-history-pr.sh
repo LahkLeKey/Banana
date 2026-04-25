@@ -141,7 +141,16 @@ try:
 except Exception:
     payload = {}
 
-for candidate in payload.get("agents", []):
+if not isinstance(payload, dict):
+  payload = {}
+
+agents = payload.get("agents", [])
+if not isinstance(agents, list):
+  agents = []
+
+for candidate in agents:
+    if not isinstance(candidate, dict):
+        continue
     if str(candidate.get("slug", "")).strip() == agent_slug:
         entry = candidate
         break

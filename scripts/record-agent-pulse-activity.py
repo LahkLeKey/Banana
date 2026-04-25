@@ -73,7 +73,16 @@ def load_agent_identity(registry_path: pathlib.Path, agent_slug: str) -> dict[st
     except json.JSONDecodeError:
         return fallback
 
-    for entry in payload.get("agents", []):
+    if not isinstance(payload, dict):
+        return fallback
+
+    agents = payload.get("agents", [])
+    if not isinstance(agents, list):
+        return fallback
+
+    for entry in agents:
+        if not isinstance(entry, dict):
+            continue
         if slugify(str(entry.get("slug", ""))) != agent_slug:
             continue
 
