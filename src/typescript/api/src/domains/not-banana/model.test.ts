@@ -6,7 +6,11 @@ import {dirname, join} from 'node:path';
 import {__resetTrainedModelCacheForTests, loadTrainedModel, scoreText,} from './model';
 
 function createVocabularyArtifact(
-    entries: Array<{token: string; weight: number}>): string {
+    entries: Array<{token: string; weight: number}>, options?: {
+      minSignalScore?: number;
+      trainingProfile?: string;
+      sessionMode?: string;
+    }): string {
   const dir = mkdtempSync(join(tmpdir(), 'banana-model-test-'));
   const filePath = join(dir, 'vocabulary.json');
   writeFileSync(
@@ -24,18 +28,43 @@ function createVocabularyArtifact(
                                 })),
       }),
       'utf8');
+
+  if (options &&
+      (options.minSignalScore !== undefined ||
+       options.trainingProfile !== undefined ||
+       options.sessionMode !== undefined)) {
+    const metricsPath = join(dir, 'metrics.json');
+    writeFileSync(
+        metricsPath, JSON.stringify({
+          schema_version: 1,
+          generated_at_utc: '2026-04-25T00:00:00Z',
+          metrics: {
+            min_signal_score: options.minSignalScore,
+            training_profile: options.trainingProfile,
+            session_mode: options.sessionMode,
+          },
+        }),
+        'utf8');
+  }
+
   return filePath;
 }
 
 describe('not-banana trained model loader', () => {
   test('loads trained vocabulary artifact when present', () => {
     __resetTrainedModelCacheForTests();
-    const artifact = createVocabularyArtifact([
-      {token: 'banana', weight: 1},
-      {token: 'ripe', weight: 1},
-      {token: 'plastic', weight: -1},
-      {token: 'battery', weight: -1},
-    ]);
+    const artifact = createVocabularyArtifact(
+        [
+          {token: 'banana', weight: 1},
+          {token: 'ripe', weight: 1},
+          {token: 'plastic', weight: -1},
+          {token: 'battery', weight: -1},
+        ],
+        {
+          minSignalScore: 0.8,
+          trainingProfile: 'ci',
+          sessionMode: 'single',
+        });
     try {
       process.env.BANANA_NOT_BANANA_MODEL_PATH = artifact;
 
@@ -44,6 +73,9 @@ describe('not-banana trained model loader', () => {
       expect(model.source).toBe('trained-artifact');
       expect(model.vocab_size).toBeGreaterThan(0);
       expect(model.banana_tokens.has('banana')).toBe(true);
+      expect(model.recommended_threshold).toBeCloseTo(0.8, 4);
+      expect(model.metrics?.training_profile).toBe('ci');
+      expect(model.metrics?.session_mode).toBe('single');
 
       const positive = scoreText('ripe banana bunch from harvest', model);
       expect(positive.banana_score).toBeGreaterThanOrEqual(0.5);
@@ -67,6 +99,8 @@ describe('not-banana trained model loader', () => {
     expect(model.source).toBe('builtin-fallback');
     expect(model.banana_tokens.has('banana')).toBe(true);
     expect(model.not_banana_tokens.has('plastic')).toBe(true);
+    expect(model.recommended_threshold).toBe(0.5);
+    expect(model.metrics).toBeUndefined();
   });
 
   test('returns neutral score for empty token input', () => {

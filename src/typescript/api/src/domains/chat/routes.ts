@@ -52,38 +52,51 @@ function clamp01(value: number): number {
   return value;
 }
 
-function bananaSignalScore(content: string):
-    {score: number; matched: string[]; modelSource: string} {
+function bananaSignalScore(content: string): {
+  score: number; matched: string[]; modelSource: string; threshold: number;
+} {
   const model = loadTrainedModel();
   const scored = scoreText(content, model);
   if (scored.token_count === 0) {
-    return {score: 0.5, matched: [], modelSource: model.source};
+    return {
+      score: 0.5,
+      matched: [],
+      modelSource: model.source,
+      threshold: clamp01(model.recommended_threshold),
+    };
   }
   return {
     score: clamp01(scored.banana_score),
     matched: scored.matched_banana_tokens,
     modelSource: model.source,
+    threshold: clamp01(model.recommended_threshold),
   };
 }
 
 function buildAssistantReply(content: string): string {
   const signal = bananaSignalScore(content);
-  if (signal.score >= 0.66) {
+  const positiveThreshold = signal.threshold;
+  const negativeThreshold = clamp01(1 - positiveThreshold);
+
+  if (signal.score >= positiveThreshold) {
     const matched =
         signal.matched.length > 0 ? signal.matched.join(',') : 'banana';
     return `banana-forward signal detected (${matched}) with confidence ${
-        signal.score.toFixed(2)} [model=${signal.modelSource}]`;
+        signal.score.toFixed(2)} (threshold=${
+        positiveThreshold.toFixed(2)}) [model=${signal.modelSource}]`;
   }
 
-  if (signal.score <= 0.34) {
+  if (signal.score <= negativeThreshold) {
     return `not-banana signal is stronger right now (score=${
-        signal.score.toFixed(
+        signal.score.toFixed(2)}, threshold=${
+        positiveThreshold.toFixed(
             2)}); include banana context for a fruit-focused answer [model=${
         signal.modelSource}]`;
   }
 
   return `mixed signal detected (banana_score=${
-      signal.score.toFixed(
+      signal.score.toFixed(2)}, threshold=${
+      positiveThreshold.toFixed(
           2)}); ask a follow-up for clearer banana context [model=${
       signal.modelSource}]`;
 }

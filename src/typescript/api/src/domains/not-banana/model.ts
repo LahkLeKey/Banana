@@ -3,7 +3,7 @@
 // signal-token set when no artifact is available so runtime stays operational
 // in dev / test without any training step.
 import {existsSync, readFileSync} from 'node:fs';
-import {resolve} from 'node:path';
+import {dirname, resolve} from 'node:path';
 
 export type TrainedVocabularyEntry = {
   token: string; banana_count: number; not_banana_count: number;
@@ -17,7 +17,18 @@ export type TrainedModel = {
   artifact_path?: string;
   generated_at_utc?: string; vocab_size: number; banana_tokens: Set<string>;
   not_banana_tokens: Set<string>;
-  weights: Map<string, number>;
+  recommended_threshold: number;
+  metrics?: ModelMetrics; weights: Map<string, number>;
+};
+
+export type ModelMetrics = {
+  min_signal_score?: number;
+  min_f1?: number;
+  holdout_f1?: number;
+  holdout_accuracy?: number;
+  training_profile?: string;
+  session_mode?: string;
+  selected_session?: number;
 };
 
 const BUILTIN_BANANA_TOKENS = [
@@ -53,6 +64,12 @@ const STOPWORDS = new Set([
   'is', 'it', 'of',  'on',  'or', 'that', 'the', 'this', 'to',  'with',
 ]);
 
+function clamp01(value: number): number {
+  if (value < 0) return 0;
+  if (value > 1) return 1;
+  return value;
+}
+
 function buildBuiltinFallback(): TrainedModel {
   const weights = new Map<string, number>();
   for (const token of BUILTIN_BANANA_TOKENS) weights.set(token, 1);
@@ -62,8 +79,49 @@ function buildBuiltinFallback(): TrainedModel {
     vocab_size: BUILTIN_BANANA_TOKENS.length + BUILTIN_NOT_BANANA_TOKENS.length,
     banana_tokens: new Set(BUILTIN_BANANA_TOKENS),
     not_banana_tokens: new Set(BUILTIN_NOT_BANANA_TOKENS),
+    recommended_threshold: 0.5,
     weights,
   };
+}
+
+function readModelMetrics(metricsPath: string): ModelMetrics|undefined {
+  if (!existsSync(metricsPath)) return undefined;
+
+  try {
+    const parsed = JSON.parse(readFileSync(metricsPath, 'utf8')) as {
+      metrics?: {
+        min_signal_score?: number;
+        min_f1?: number;
+        holdout_f1?: number;
+        holdout_accuracy?: number;
+        training_profile?: string;
+        session_mode?: string;
+        selected_session?: number;
+      };
+    };
+
+    const metrics = parsed.metrics;
+    if (!metrics || typeof metrics !== 'object') return undefined;
+
+    return {
+      min_signal_score: typeof metrics.min_signal_score === 'number' ?
+          clamp01(metrics.min_signal_score) :
+          undefined,
+      min_f1: typeof metrics.min_f1 === 'number' ? clamp01(metrics.min_f1) :
+                                                   undefined,
+      holdout_f1: typeof metrics.holdout_f1 === 'number' ?
+          clamp01(metrics.holdout_f1) :
+          undefined,
+      holdout_accuracy: typeof metrics.holdout_accuracy === 'number' ?
+          clamp01(metrics.holdout_accuracy) :
+          undefined,
+      training_profile: metrics.training_profile,
+      session_mode: metrics.session_mode,
+      selected_session: metrics.selected_session,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 function resolveArtifactPath(): string|undefined {
@@ -130,6 +188,10 @@ function parseTrainedVocabulary(
       notBanana.add(token);
   }
 
+  const metrics =
+      readModelMetrics(resolve(dirname(artifactPath), 'metrics.json'));
+  const recommendedThreshold = metrics?.min_signal_score ?? 0.5;
+
   return {
     source: 'trained-artifact',
     artifact_path: artifactPath,
@@ -137,6 +199,8 @@ function parseTrainedVocabulary(
     vocab_size: parsed.vocab_size ?? parsed.vocabulary.length,
     banana_tokens: banana,
     not_banana_tokens: notBanana,
+    recommended_threshold: recommendedThreshold,
+    metrics,
     weights,
   };
 }

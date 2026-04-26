@@ -5,7 +5,7 @@ import {loadTrainedModel, scoreText} from './model';
 
 const ScoreRequest = z.object({
   text: z.string().min(1),
-  threshold: z.number().min(0).max(1).default(0.5),
+  threshold: z.number().min(0).max(1).optional(),
 });
 
 export async function registerNotBananaRoutes(app: FastifyInstance) {
@@ -20,6 +20,10 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
 
     const model = loadTrainedModel();
     const scored = scoreText(parsed.data.text, model);
+    const threshold = parsed.data.threshold ?? model.recommended_threshold;
+    const thresholdSource = parsed.data.threshold !== undefined ? 'request' :
+        model.metrics?.min_signal_score !== undefined           ? 'model' :
+                                                                  'default';
 
     if (scored.token_count === 0 || scored.matched_token_count === 0) {
       return reply.status(400).send({
@@ -28,13 +32,13 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
       });
     }
 
-    const label =
-        scored.banana_score >= parsed.data.threshold ? 'banana' : 'not_banana';
+    const label = scored.banana_score >= threshold ? 'banana' : 'not_banana';
 
     return reply.status(200).send({
       label,
       banana_score: Number(scored.banana_score.toFixed(4)),
-      threshold: parsed.data.threshold,
+      threshold,
+      threshold_source: thresholdSource,
       matched_tokens: scored.matched_banana_tokens,
       matched_not_banana_tokens: scored.matched_not_banana_tokens,
       matched_token_count: scored.matched_token_count,
@@ -44,6 +48,8 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
         vocab_size: model.vocab_size,
         artifact_path: model.artifact_path,
         generated_at_utc: model.generated_at_utc,
+        recommended_threshold: model.recommended_threshold,
+        metrics: model.metrics,
       },
     });
   });
@@ -55,6 +61,8 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
       vocab_size: model.vocab_size,
       artifact_path: model.artifact_path,
       generated_at_utc: model.generated_at_utc,
+      recommended_threshold: model.recommended_threshold,
+      metrics: model.metrics,
       banana_token_sample: Array.from(model.banana_tokens).slice(0, 20).sort(),
       not_banana_token_sample:
           Array.from(model.not_banana_tokens).slice(0, 20).sort(),

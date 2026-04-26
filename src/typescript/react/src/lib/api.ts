@@ -17,16 +17,27 @@ type BananaSummaryResponse = {
   banana: number;
 };
 
-export function resolveApiBaseUrl(): string {
-  const electronBridge =
-      typeof window !== 'undefined' ? window.banana : undefined;
-  return import.meta.env.VITE_BANANA_API_BASE_URL ||
-      electronBridge?.apiBaseUrl || '';
+type ElectronBridge = {
+  apiBaseUrl: string; platform: string;
+};
+
+function resolveElectronBridge(): ElectronBridge|undefined {
+  return typeof window !== 'undefined' ? window.banana : undefined;
 }
 
-export function resolvePlatformLabel(): string {
-  const electronBridge =
-      typeof window !== 'undefined' ? window.banana : undefined;
+function resolveViteApiBaseUrl(): string {
+  const importMeta = import.meta as {env?: {VITE_BANANA_API_BASE_URL?: string}};
+  return importMeta.env?.VITE_BANANA_API_BASE_URL ?? '';
+}
+
+export function resolveApiBaseUrl(
+    viteBaseUrl = resolveViteApiBaseUrl(),
+    electronBridge = resolveElectronBridge()): string {
+  return viteBaseUrl || electronBridge?.apiBaseUrl || '';
+}
+
+export function resolvePlatformLabel(electronBridge = resolveElectronBridge()):
+    string {
   return electronBridge?.platform ? `electron-${electronBridge.platform}` :
                                     'web';
 }
