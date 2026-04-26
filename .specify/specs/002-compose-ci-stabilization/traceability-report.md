@@ -1,9 +1,9 @@
 # Traceability Report
 
-- Spec: .specify/specs/002-compose-ci-stabilization/spec.md
-- Tasks: .specify/specs/002-compose-ci-stabilization/tasks.md
-- Total tasks: 36
-- Mapped tasks: 36
+- Spec: /c/Github/Banana/.specify/specs/002-compose-ci-stabilization/spec.md
+- Tasks: /c/Github/Banana/.specify/specs/002-compose-ci-stabilization/tasks.md
+- Total tasks: 42
+- Mapped tasks: 42
 - Drift findings: 0
 
 ## Traceability Map
@@ -35,6 +35,10 @@
 | T023 | user_story | US2 | approved |
 | T024 | user_story | US2 | approved |
 | T025 | user_story | US2 | approved |
+| T037 | requirement | FR-013 | approved |
+| T038 | requirement | FR-011 | approved |
+| T039 | requirement | FR-012 | approved |
+| T040 | requirement | FR-014 | approved |
 | T026 | user_story | US3 | approved |
 | T027 | user_story | US3 | approved |
 | T028 | user_story | US3 | approved |
@@ -46,6 +50,8 @@
 | T034 | requirement | FR-001 | approved |
 | T035 | requirement | FR-009 | approved |
 | T036 | requirement | FR-010 | approved |
+| T041 | requirement | FR-013 | approved |
+| T042 | requirement | FR-012 | approved |
 
 ## Drift Findings
 

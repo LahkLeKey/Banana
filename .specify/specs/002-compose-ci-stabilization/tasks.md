@@ -10,7 +10,7 @@
 - [x] T001 Define shared lane artifact root and lane metadata variables (FR-001, FR-007) in .github/workflows/compose-ci.yml
 - [x] T002 [P] Add compose lane preflight helper (FR-006) in scripts/compose-ci-preflight.sh
 - [x] T003 [P] Add compose diagnostics collection helper (FR-002, FR-009) in scripts/compose-ci-collect-diagnostics.sh
-- [x] T004 [P] Add artifact manifest helper (FR-003, FR-004) in scripts/compose-ci-artifact-manifest.sh
+- [x] T004 [P] Add artifact manifest helper (FR-003, FR-004, FR-013) in scripts/compose-ci-artifact-manifest.sh
 - [x] T005 Ensure shell script LF and execute-bit contract (FR-006) in .gitattributes
 
 ---
@@ -26,7 +26,7 @@
 - [x] T008 [P] Add deterministic stage/error mapping (FR-001, FR-006) to scripts/compose-tests.sh
 - [x] T009 [P] Add deterministic health timeout/stage mapping (FR-001, FR-006) to scripts/compose-runtime.sh
 - [x] T010 [P] Add deterministic smoke stage/error mapping (FR-001, FR-006) to scripts/compose-electron.sh
-- [x] T011 Add always-on diagnostics upload skeleton (FR-002, FR-003) for compose lanes in .github/workflows/compose-ci.yml
+- [x] T011 Add always-on diagnostics upload skeleton (FR-002, FR-003, FR-014) for compose lanes in .github/workflows/compose-ci.yml
 
 **Checkpoint**: Shared lane contract is in place and user story implementation can proceed.
 
@@ -67,6 +67,13 @@
 - [ ] T023 [US2] Ensure integration/e2e optional project checks emit explicit skip evidence in .github/workflows/compose-ci.yml
 - [ ] T024 [US2] Add compose-lane diagnostics contract notes in .specify/wiki/ci-compose-stabilization.md
 - [ ] T025 [US2] Publish human-facing compose-lane diagnostics runbook in .wiki/ci-compose-stabilization.md
+- [ ] T037 [US2] Add path-safe artifact upload guards for non-compose jobs (`typescript-api-tests`, `dotnet-integration-tests-coverage`) in .github/workflows/compose-ci.yml (FR-013)
+
+### Implementation for User Story 4
+
+- [ ] T038 [US4] Extend deterministic result records to merge-gated non-compose coverage/test jobs in .github/workflows/compose-ci.yml (FR-011, FR-014)
+- [ ] T039 [P] [US4] Add permission failure remediation metadata for exit `126` evidence in scripts/compose-tests.sh and scripts/compose-ci-preflight.sh (FR-012)
+- [ ] T040 [P] [US4] Add aggregate failed-job summary artifact generation in .github/workflows/compose-ci.yml (FR-014)
 
 **Checkpoint**: Failures and skips produce actionable evidence without missing-path upload errors.
 
@@ -100,6 +107,8 @@
 - [ ] T034 Execute 10-run deterministic verification (FR-001, FR-003, FR-004) and record outcomes in .artifacts/spec/002-compose-ci-stabilization-verification.md
 - [ ] T035 Update merge-gate troubleshooting section (FR-009) in README.md
 - [ ] T036 Run wiki synchronization workflow script (FR-010) and capture output in .artifacts/spec/002-compose-ci-stabilization-wiki-sync.log
+- [ ] T041 [P] Audit merge-gated runs for zero missing-path upload warnings (FR-013) and append findings in .artifacts/spec/002-compose-ci-stabilization-verification.md
+- [ ] T042 [P] Validate permission-denied failures include remediation context (FR-012) and append findings in .artifacts/spec/002-compose-ci-stabilization-verification.md
 
 ---
 
@@ -111,6 +120,7 @@
 - **Phase 2 (Foundational)**: depends on Phase 1 and blocks all user stories.
 - **Phase 3 (US1)**: starts after Phase 2.
 - **Phase 4 (US2)**: starts after Phase 2, can run in parallel with late US1 tasks if no file conflicts.
+- **US4 implementation tasks (T038-T040)**: start after Phase 2 and can run in parallel with US2 where files do not overlap.
 - **Phase 5 (US3)**: starts after Phase 2, may run parallel to US2 where files do not overlap.
 - **Phase 6 (Polish)**: after selected story completion.
 
@@ -118,6 +128,7 @@
 
 - **US1 (P1)**: no dependency on other stories once foundational work is complete.
 - **US2 (P1)**: depends on foundational helpers from Phases 1-2; independent from US1 feature logic.
+- **US4 (P1)**: depends on foundational helpers from Phases 1-2; complements US2 evidence requirements.
 - **US3 (P2)**: depends on foundational workflow structure; independent of US1/US2 business flow.
 
 ### Within Each User Story
@@ -134,6 +145,7 @@
 - **Foundational**: T008, T009, T010 can run in parallel after T006/T007.
 - **US1**: T012, T013, T014 can be split by lane owner, then converge on T015-T017.
 - **US2**: T019, T020, T021 can run in parallel before T022-T023.
+- **US4**: T039 and T040 can run in parallel after T038 scaffolding.
 - **US3**: T027 and T029 can run in parallel before T028.
 - **Polish**: T032 and T033 can run in parallel.
 
@@ -167,11 +179,13 @@ Task T010 -> scripts/compose-electron.sh
 
 1. Add US1 deterministic lane outcomes.
 2. Add US2 artifact and diagnostics guarantees.
-3. Add US3 runtime compatibility enforcement.
-4. Finish with Phase 6 cross-cutting validation and documentation sync.
+3. Add US4 merge-gated aggregate and permission-remediation guarantees.
+4. Add US3 runtime compatibility enforcement.
+5. Finish with Phase 6 cross-cutting validation and documentation sync.
 
 ### Parallel Team Strategy
 
 1. Engineer A: lane determinism and lane scripts (US1).
 2. Engineer B: diagnostics and artifact publication (US2).
-3. Engineer C: runtime compatibility checks and exception policy (US3).
+3. Engineer C: non-compose deterministic result and aggregate summary work (US4).
+4. Engineer D: runtime compatibility checks and exception policy (US3).

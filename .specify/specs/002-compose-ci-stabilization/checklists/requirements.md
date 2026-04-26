@@ -32,3 +32,4 @@
 ## Notes
 
 - This spec is focused on CI reliability hardening for compose-driven validation lanes and merge-gate evidence quality.
+- Updated on 2026-04-26 with additional requirements for permission-denied failure remediation, non-compose deterministic failure evidence, and path-safe artifact publication.
