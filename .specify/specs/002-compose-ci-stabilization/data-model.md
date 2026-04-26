@@ -7,21 +7,27 @@ Represents the terminal outcome for a single merge-gated lane.
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | lane_name | string | yes | Canonical lane key (`compose-tests`, `compose-runtime`, `compose-electron`, `e2e-smoke`, etc.) |
-| profile | string | yes | Compose profile or runtime surface associated with lane |
+| profile | string | no | Compose profile or runtime surface associated with lane when emitted by lane runtime |
 | stage | string | yes | Stage where terminal outcome was decided (`preflight`, `compose-up`, `health-check`, `test-run`, `artifact-upload`) |
 | status | enum | yes | `pass`, `fail`, `skip` |
 | exit_code | integer | no | Populated for executable command terminal states |
 | failing_service | string | no | Service name when failure maps to a specific compose service |
 | reason_code | string | yes | Stable classification (`timeout`, `permission`, `missing_optional_surface`, `runtime_deprecation`, `unknown`) |
-| started_at | datetime | yes | Lane start timestamp |
-| finished_at | datetime | yes | Lane end timestamp |
-| diagnostics_bundle_path | string | yes | Relative path to lane diagnostics bundle |
+| started_at | datetime | no | Lane start timestamp when timing capture is emitted |
+| finished_at | datetime | no | Lane end timestamp when timing capture is emitted |
+| diagnostics_bundle_path | string | no | Relative path to lane diagnostics bundle when bundle-path emission is enabled |
 
 ### Validation Rules
 
 - `status=pass` requires `exit_code=0` when command execution occurred.
 - `status=fail` requires non-empty `stage` and `reason_code`.
 - `status=skip` requires `reason_code` that explains skip semantics.
+- If both `started_at` and `finished_at` are present, `finished_at` must be greater than or equal to `started_at`.
+- If `diagnostics_bundle_path` is present, it must be a repository-relative path under the lane artifact root.
+
+### Schema Alignment Rule
+
+- Field requiredness and validation behavior must remain synchronized across `spec.md`, `data-model.md`, `scripts/compose-ci-write-lane-result.sh`, and `scripts/validate-compose-ci-lane-contract.sh`.
 
 ## Entity: ComposeDiagnosticsBundle
 

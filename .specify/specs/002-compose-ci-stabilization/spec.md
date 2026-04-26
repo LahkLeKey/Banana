@@ -19,6 +19,8 @@
 - Keep terminology guard contracts valid by preventing reintroduction of blocked legacy terms in touched workflow/docs/scripts surfaces.
 - Stabilize `copilot-review-triage` workflow outcomes so policy-blocking unresolved findings remain actionable and distinguishable from runtime/infrastructure failures.
 - Remove Node runtime deprecation drift in `copilot-review-triage` so triage outcomes are not masked by unrelated runtime warnings.
+- Keep lane contract documentation, lane result payloads, and contract validation logic synchronized so required fields are authoritative and drift-free.
+- Keep tracked workspace configuration files portable across developer machines and CI environments by avoiding machine-specific absolute paths.
 
 ## Out of Scope *(mandatory)*
 
@@ -105,6 +107,22 @@ As a maintainer, I can distinguish unresolved Copilot feedback from workflow run
 2. **Given** unresolved findings are policy-blocking, **When** the job exits, **Then** the failure summary clearly reports policy-blocking triage status without implying infrastructure/runtime breakage.
 3. **Given** `copilot-review-triage` executes on current runners, **When** annotations are emitted, **Then** Node 20 deprecation warnings are absent.
 
+---
+
+### User Story 6 - Keep contract schema and tooling assumptions aligned (Priority: P1)
+
+As a maintainer, I can trust lane contract docs and validators to describe and enforce the same schema and preflight assumptions used by the workflow.
+
+**Why this priority**: Schema drift and missing preflight dependency checks create avoidable review churn and non-actionable CI failures.
+
+**Independent Test**: Compare contract/data-model requiredness against emitted `lane-result.json` fields and validator checks, and run preflight checks for health-check lanes with missing dependencies.
+
+**Acceptance Scenarios**:
+
+1. **Given** lane-result schema fields are documented, **When** lane results are emitted and validated, **Then** field requiredness and validation rules remain consistent across spec, data model, writer, and validator.
+2. **Given** a lane depends on runtime health checks, **When** preflight executes, **Then** required tooling dependencies are checked before lane execution and failures are classified as preflight contract violations.
+3. **Given** repository-level workspace settings are tracked, **When** contributors run from different clone roots or operating systems, **Then** settings remain functional without machine-specific absolute paths.
+
 ### Edge Cases
 
 - Compose service exits before health checks complete, producing partial startup logs.
@@ -119,6 +137,8 @@ As a maintainer, I can distinguish unresolved Copilot feedback from workflow run
 - Legacy blocked terminology appears in touched automation/docs content and fails terminology guard checks.
 - `copilot-review-triage` fails due unresolved Copilot findings after suggestion issue synchronization, requiring deterministic policy-state evidence.
 - Runtime deprecation warnings in `copilot-review-triage` (for example, Node 20-backed action versions) obscure the primary triage-blocking signal.
+- Lane contract docs mark fields as required while writer/validator omit or do not enforce the same fields.
+- Tracked workspace settings include absolute machine paths that break on non-authoring environments.
 
 ## Requirements *(mandatory)*
 
@@ -143,6 +163,9 @@ As a maintainer, I can distinguish unresolved Copilot feedback from workflow run
 - **FR-017**: `copilot-review-triage` MUST execute using Node 24-compatible JavaScript action runtimes and produce zero Node 20 deprecation annotations.
 - **FR-018**: When unresolved Copilot findings exist, `copilot-review-triage` MUST publish deterministic triage-pending evidence that includes unresolved finding count, linked finding locations, and synchronized suggestion issue references.
 - **FR-019**: Policy-blocking unresolved Copilot findings MUST be clearly distinguishable from infrastructure/runtime failures in workflow summaries and annotations.
+- **FR-020**: Compose lane contract artifacts (`spec.md`, `data-model.md`, lane result writer, and contract validator) MUST maintain a single authoritative schema for lane-result field requiredness and validation behavior.
+- **FR-021**: For lanes that execute runtime health checks, preflight contracts MUST verify required health-check tooling dependencies before lane execution and classify missing dependencies as preflight contract violations.
+- **FR-022**: Repository-tracked workspace settings for this feature MUST avoid machine-specific absolute paths and MUST use workspace-relative or environment-agnostic paths.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -154,6 +177,7 @@ As a maintainer, I can distinguish unresolved Copilot feedback from workflow run
 - **WorkflowRuntimeCompatibilityRecord**: Tracking record for runtime deprecation warnings, owners, and remediation deadlines.
 - **AIContractParityRecord**: Verification record that wiki allowlist entries, live `.wiki` pages, and canonical `.specify/wiki/human-reference` pages are synchronized.
 - **CopilotReviewTriageRecord**: Per-run triage status record with policy state (`pending` or `ready`), unresolved finding count, synchronized suggestion issue references, and runtime compatibility status.
+- **LaneContractSchemaAlignmentRecord**: Verification record that lane-result field requiredness and validation rules remain synchronized between documentation and executable contract checks.
 
 ## Success Criteria *(mandatory)*
 
@@ -172,6 +196,8 @@ As a maintainer, I can distinguish unresolved Copilot feedback from workflow run
 - **SC-011**: Across a 10-run PR synchronize verification window, `copilot-review-triage` emits zero Node 20 deprecation warnings.
 - **SC-012**: 100% of `copilot-review-triage` runs with unresolved findings publish deterministic triage-pending evidence with unresolved count and linked suggestion issues.
 - **SC-013**: 100% of policy-blocking `copilot-review-triage` outcomes are classifiable without ambiguity as triage state failures rather than runtime/infrastructure failures.
+- **SC-014**: Across the 002 closure verification window, lane contract schema parity checks report zero documentation-versus-validator requiredness mismatches.
+- **SC-015**: 100% of tracked workspace settings touched by this feature pass portability checks with no machine-specific absolute path values.
 
 ## Assumptions
 
