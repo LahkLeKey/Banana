@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "1970-01-01T00:00:00Z",
+  "run_fingerprint": "f5e77bab5a6214061db3500708493050af9c5f8f965c5e8fbbbdd8a3d175d10c",
+  "metrics": {
+    "holdout_precision": 1.0,
+    "holdout_recall": 1.0,
+    "holdout_f1": 1.0,
+    "holdout_accuracy": 1.0,
+    "tp": 2.0,
+    "fp": 0.0,
+    "fn": 0.0,
+    "tn": 4.0,
+    "signal_score": 1.0,
+    "min_signal_score": 0.7,
+    "min_f1": 0.7,
+    "meets_thresholds": true,
+    "training_profile": "ci",
+    "session_mode": "single",
+    "evaluated_sessions": 1,
+    "selected_session": 1
+  }
+}
