@@ -269,3 +269,374 @@ As a maintainer, I can run coverage gates on local and CI environments with the 
   - **Mitigation**: Declare retry budgets and classify over-budget results separately as flake contract failures.
 - **Risk**: Exception records become permanent debt.
   - **Mitigation**: Enforce expiration, remediation plan, and aggregate exception visibility.
+
+## Implementation Coverage Requirements
+
+### Binding Requirement: All Implementations MUST Achieve 80% Actual Measured Coverage
+
+Every product implementation—native, ASP.NET, and TypeScript applications—**MUST achieve and sustain 80% actual measured coverage** across unit, integration, and applicable e2e test layers. This is a **release-blocking requirement** and cannot be waived by exception governance.
+
+**What "80% actual measured coverage" means:**
+- Measured, not estimated or theoretical
+- Normalized via the shared `coverage-normalize-lane-result.sh` contract
+- Expressed as `measured_percent` in normalized lane results
+- Enforceable per (domain, layer, lane) tuple
+- Deterministic across reruns (except declared flake-contract scenarios)
+
+**Coverage must be achieved for:**
+- **All unit test layers** covering implementation logic in each application
+- **All integration layers** covering cross-component and API-data contracts
+- **E2E layers** covering runtime channel flow inventory (API+React, Electron, mobile)
+
+**This requirement is met when:**
+1. All normalized lane results in a 10-run baseline verification window show `status: "pass"` for all applicable tuples
+2. No applicable tuple shows `measured_percent < 80` without an active, valid exception record
+3. Exception records, if present, have complete metadata and documented remediation plans
+4. Aggregate summary at the end of each run lists zero failing tuples across all applicable domains and layers
+
+### Per-Application Coverage Target Inventory
+
+| Application | Unit Surface | Integration Surface | E2E Surface | Threshold |
+|---|---|---|---|---|
+| **Native C Core** | Algorithm + state machine logic in `src/native/core` | DAL + PostgreSQL interop in `src/native/core/dal` | N/A | 80% |
+| **Native Wrapper** | ABI exports + buffer handling in `src/native/wrapper` | Managed interop calls + status code translation | N/A | 80% |
+| **ASP.NET API** | Service logic + business rules in `src/c-sharp/asp.net` | Controller-service-pipeline-middleware flow | API+React e2e flow inventory | 80% |
+| **TypeScript API** | Route handlers + middleware + data access in `src/typescript/api` | API internal integration contracts | Part of API+React e2e | 80% |
+| **React UI** | Component logic + state management in `src/typescript/react` | UI-to-API integration paths | API+React e2e flow inventory | 80% |
+| **Electron Desktop** | Main + preload + bridge logic in `src/typescript/electron` | Electron-to-native bridge calls | Electron e2e flow inventory | 80% |
+| **React Native Mobile** | Component + native module logic in `src/typescript/react-native` | Mobile-to-native bridge calls | Mobile e2e flow inventory | 80% |
+| **Shared UI Package** | Common component + utility logic in `src/typescript/shared/ui` | Package consumption in React/Electron/Mobile | Referenced by all consuming applications | 80% |
+
+---
+
+## Test Plan Scaffolds
+
+### Per-Application Test Strategies
+
+Each application has a scaffold test plan below. These define the structure and acceptance criteria for achieving 80% measured coverage. Implementation teams must fill in specific test cases following these templates.
+
+#### 1. Native C Core (`src/native/core`)
+
+**Unit Test Strategy**
+
+- **Scope**: Algorithm logic, state machine transitions, core data structures
+- **Framework**: CMake + C test runner (as defined in `tests/native/core`)
+- **Coverage Tool**: gcovr (XML output → normalized lane result)
+- **Target Surface**: All core model logic, error paths, boundary conditions
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| State Machines | Main classifier/inference state transitions | All transitions exercised; no unreachable states |
+| Algorithm Logic | Core inference + decision paths | All branches covered; happy path + error paths |
+| Data Structures | Model initialization, serialization, validation | All constructors, setters, getters covered |
+| Error Handling | Exception paths, null checks, buffer overflows | All error paths exercised with synthetic inputs |
+
+**Integration Test Strategy**
+
+- **Scope**: DAL + PostgreSQL queries, data flow through core model
+- **Precondition**: `BANANA_PG_CONNECTION` configured (fails as `preflight_contract_violation` if missing)
+- **Coverage Tool**: gcovr (DAL layer attribution)
+- **Target Surface**: All PostgreSQL-backed model queries + payload shaping
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Database Queries | All SQL paths in DAL | All queries executed; result mapping validated |
+| Data Validation | Input validation from database rows | All validation paths exercised |
+| Transaction Flow | Rollback + commit paths | Error recovery + success paths covered |
+| Payload Shaping | Native-to-managed data transformation | All data shapes tested; no silent conversions |
+
+**Target**: ≥80% measured coverage in both `native-unit` and `native-integration` lanes
+
+---
+
+#### 2. Native Wrapper (`src/native/wrapper`)
+
+**Unit Test Strategy**
+
+- **Scope**: ABI exports, buffer management, status code translation
+- **Framework**: CMake + C test runner
+- **Coverage Tool**: gcovr
+- **Target Surface**: All exported functions, parameter validation, return paths
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| ABI Exports | All public functions in wrapper | All entry points callable; signatures validated |
+| Buffer Ownership | Memory allocation + deallocation paths | All malloc/free paths exercised; no leaks |
+| Status Translation | Error mapping to managed status codes | All failure paths → status code covered |
+| Boundary Conditions | Max buffer sizes, null pointers, edge cases | All limits tested; graceful degradation validated |
+
+**Integration Test Strategy**
+
+- **Scope**: Managed interop calls, P/Invoke contracts
+- **Target Surface**: ASP.NET-to-native interop call paths
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Interop Calls | All P/Invoke entry points from ASP.NET | All calls exercised from managed code |
+| Data Marshalling | Managed ↔ native type conversion | All conversions tested; no data loss |
+| Callback Paths | Async + callback invocations | All callback scenarios exercised |
+| Exception Translation | Native exceptions → managed exceptions | All error codes mapped correctly |
+
+**Target**: ≥80% measured coverage in `native-unit` and `native-integration` lanes
+
+---
+
+#### 3. ASP.NET API (`src/c-sharp/asp.net`)
+
+**Unit Test Strategy**
+
+- **Scope**: Service logic, business rules, data access abstractions
+- **Framework**: xUnit + Moq
+- **Coverage Tool**: dotnet test (Cobertura XML)
+- **Target Surface**: All service methods, middleware, pipeline steps, DI configuration
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Service Logic | Business rule validation, state transitions | All methods tested; both success + error paths |
+| Data Access Abstraction | Repository patterns, query builders | All CRUD paths exercised |
+| Middleware | Request/response interceptors, auth, logging | All middleware stages tested |
+| Pipeline Steps | Ordered execution, side effects, cancellation | All step paths + combinations tested |
+
+**Integration Test Strategy**
+
+- **Scope**: Controller → service → pipeline → native interop flow
+- **Preconditions**: `BANANA_PG_CONNECTION` + `BANANA_NATIVE_PATH` configured
+- **Coverage Tool**: dotnet test (Cobertura XML)
+- **Target Surface**: Full API request-response flow including database + native calls
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| API Endpoints | All controller routes + HTTP verbs | All endpoints callable; status codes correct |
+| Request Validation | Input validation, model binding | Valid + invalid inputs tested |
+| Database Integration | Entity Framework flows, queries | All queries executed; payloads validated |
+| Native Interop | Service → native wrapper calls | All interop calls tested with mocked + live wrapper |
+| Error Handling | Exception handling, status translation | All error paths → HTTP status code |
+| Authorization | Authentication + authorization gates | All auth scenarios tested |
+
+**E2E Test Strategy**
+
+- **Scope**: API+React flow inventory (declared runtime channel flows)
+- **Target Surface**: API response payloads covering all data shapes used by React
+- **Coverage Tool**: e2e flow manifest → normalized lane result
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| API Response Shapes | All JSON payloads returned to React | Every data shape exercised in e2e flows |
+| Status Codes | HTTP status codes for all scenarios | All success + error statuses returned + handled |
+| Data Consistency | Cache invalidation, state synchronization | Consistency contract validated across flows |
+
+**Target**: ≥80% in `dotnet-unit`, `dotnet-integration`, and `aspnet-e2e` lanes
+
+---
+
+#### 4. TypeScript API (`src/typescript/api`)
+
+**Unit Test Strategy**
+
+- **Scope**: Route handlers, middleware, data access logic
+- **Framework**: Vitest + node-mock-http
+- **Coverage Tool**: Bun coverage reporting
+- **Target Surface**: All route handlers, middleware logic, service methods
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Route Handlers | All endpoint handlers, parameter parsing | All handlers tested; valid + invalid inputs |
+| Middleware | Auth, logging, error handling, CORS | All middleware paths exercised |
+| Data Access | Database queries, query builders | All query paths tested |
+| Error Handling | Exception paths, status codes | All error scenarios → correct response |
+
+**Integration Test Strategy**
+
+- **Scope**: Route → middleware → data access → database flow
+- **Preconditions**: `BANANA_PG_CONNECTION` configured
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: Full API request flow through data layer
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Request Flow | End-to-end request handling | All paths from request entry to DB query |
+| Query Execution | Database integration | All queries executed; results correct |
+| Error Recovery | Transaction rollback, error propagation | Error scenarios handled correctly |
+
+**Target**: ≥80% in `typescript-api-unit` and `typescript-api-integration` lanes
+
+---
+
+#### 5. React UI (`src/typescript/react`)
+
+**Unit Test Strategy**
+
+- **Scope**: Component logic, hooks, state management
+- **Framework**: Vitest + React Testing Library
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: All components, custom hooks, state managers
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Components | Render logic, props handling, event handlers | All components tested; user interactions |
+| Hooks | Custom hooks, state updates, side effects | All hook paths exercised |
+| State Management | Redux/Zustand actions, selectors, reducers | All state paths tested |
+| Conditional Rendering | All render branches, visibility toggles | All branches exercised |
+| Error Boundaries | Error handling, fallback UI | Error scenarios + recovery tested |
+
+**Integration Test Strategy**
+
+- **Scope**: Component-to-API integration, data flow
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: Component tree + API call integration
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| API Integration | Component-to-API data fetching | All API calls + response handling |
+| User Flows | Multi-step user journeys | Key user workflows end-to-end |
+| Error States | API errors, network failures | Error scenarios + retry logic |
+
+**E2E Test Strategy**
+
+- **Scope**: React runtime flow inventory (declared flows in e2e manifest)
+- **Coverage Tool**: e2e flow manifest tracking
+- **Target Surface**: User-visible workflows exercised in e2e channel
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| User Flows | All declared end-user workflows | Each flow exercised; expected outputs |
+| Data Persistence | Client state, caching, refresh | State persisted + reloaded correctly |
+| Error Recovery | User recovery from errors | Users can retry and recover |
+
+**Target**: ≥80% in `react-unit`, `react-integration`, and `react-e2e` lanes
+
+---
+
+#### 6. Electron Desktop (`src/typescript/electron`)
+
+**Unit Test Strategy**
+
+- **Scope**: Main process logic, preload, bridge code
+- **Framework**: Vitest + Electron mock
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: Main thread, preload, IPC bridge, native module calls
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Main Process | Window creation, lifecycle, menu | All main process paths tested |
+| Preload | IPC message forwarding, security | All preload paths exercised |
+| IPC Bridge | Message send/receive, error handling | All bridge calls tested |
+| Native Module Calls | System APIs, file I/O, native invocations | All native entry points tested |
+
+**Integration Test Strategy**
+
+- **Scope**: Electron-to-React + Electron-to-native flows
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: Full UI-to-native bridge
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| UI-Bridge Flow | React → preload → main → native | Full flow tested end-to-end |
+| Async IPC | Promise-based IPC, callbacks | Async patterns exercised |
+| Error Propagation | IPC errors → React error handling | Error paths correct |
+
+**E2E Test Strategy**
+
+- **Scope**: Electron runtime flow inventory
+- **Coverage Tool**: e2e flow manifest
+- **Target Surface**: Desktop user flows
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Desktop Workflows | All declared Electron flows | Flows executed; outcomes verified |
+| Window Management | Multiple windows, focus, lifecycle | Window scenarios tested |
+
+**Target**: ≥80% in `electron-unit`, `electron-integration`, and `electron-e2e` lanes
+
+---
+
+#### 7. React Native Mobile (`src/typescript/react-native`)
+
+**Unit Test Strategy**
+
+- **Scope**: Component logic, hooks, native module bindings
+- **Framework**: Vitest + React Native Testing Library
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: Mobile components, native module calls, state management
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Components | Mobile component logic, platform variations | All components tested; iOS + Android |
+| Native Modules | Native module bindings, bridging | All native entry points tested |
+| State Management | Mobile state, persistence | State lifecycle + persistence |
+| Platform Specific | iOS-only + Android-only code paths | All platform variations exercised |
+
+**Integration Test Strategy**
+
+- **Scope**: Mobile component-to-native flow, API integration
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: Component → native module → platform integration
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Native Integration | Component → native module calls | All integration paths exercised |
+| API Integration | Mobile → API data flow | API contracts honored on mobile |
+| Platform Contracts | iOS/Android-specific behavior | Both platforms validated |
+
+**E2E Test Strategy**
+
+- **Scope**: Mobile runtime flow inventory (Android emulator + iOS preview)
+- **Coverage Tool**: e2e flow manifest
+- **Target Surface**: Mobile user workflows
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Mobile Workflows | Declared mobile user flows | Flows exercised on emulator/preview |
+| Cross-Platform | Same flows on iOS + Android | Consistency across platforms |
+
+**Target**: ≥80% in `react-native-unit`, `react-native-integration`, and `mobile-e2e` lanes
+
+---
+
+#### 8. Shared UI Package (`src/typescript/shared/ui`)
+
+**Unit Test Strategy**
+
+- **Scope**: Shared component logic, utility functions, styling
+- **Framework**: Vitest + React Testing Library
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: All exported components, hooks, utilities
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| Shared Components | Reusable UI components, props | All components tested across contexts |
+| Utilities | Shared utility functions, helpers | All utility paths exercised |
+| Styling | Theme logic, responsive behavior | Styling logic tested |
+| Composition | Component composition patterns | Multiple composition scenarios |
+
+**Integration Test Strategy**
+
+- **Scope**: Shared UI consumption in React, Electron, React Native
+- **Coverage Tool**: Bun coverage
+- **Target Surface**: Shared package used by all consuming applications
+
+| Test Category | Coverage Area | Acceptance Criteria |
+|---|---|---|
+| React Integration | Shared components in React app | All uses tested in React context |
+| Electron Integration | Shared components in Electron app | All uses tested in desktop context |
+| Mobile Integration | Shared components in React Native | All uses tested on mobile |
+| Cross-Platform | Platform-specific variants, overrides | All platform variations covered |
+
+**Target**: ≥80% in `shared-ui-unit` and `shared-ui-integration` lanes
+
+---
+
+## Test Plan Execution Checklist
+
+For each implementation, verify:
+
+- [ ] All unit tests are runnable and pass locally
+- [ ] All integration tests execute with required environment variables (`BANANA_PG_CONNECTION`, `BANANA_NATIVE_PATH`, etc.)
+- [ ] All e2e tests are declared in the corresponding e2e flow manifest
+- [ ] Coverage measurement runs without errors (gcovr for native, dotnet test for ASP.NET, Bun for TypeScript)
+- [ ] Normalized lane results show `measured_percent ≥ 80` for all applicable (domain, layer, lane) tuples
+- [ ] No applicable tuple shows "not-applicable" unless explicitly justified in the denominator policy
+- [ ] Exception records, if used, contain complete metadata and active expiration dates
+- [ ] Aggregate coverage summary lists all tuples and confirms zero failing tuples
+
+**Release Gate**: ✓ All implementations have ≥80% actual measured coverage across unit, integration, and applicable e2e layers
