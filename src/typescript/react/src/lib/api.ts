@@ -127,3 +127,26 @@ export async function fetchEnsembleVerdict(
     body: JSON.stringify({inputJson: JSON.stringify({text})}),
   });
 }
+
+/**
+ * Slice 023 -- typed helper for the slice 017
+ * `POST /ml/ensemble/embedding` route. Returns the legacy verdict plus
+ * the 4-dim embedding fingerprint when the cascade escalated; embedding
+ * is null on cheap-path verdicts. Field shape is snapshot-locked in
+ * `api.test.ts`.
+ */
+export type EnsembleVerdictWithEmbedding = {
+  verdict: EnsembleVerdict; embedding: number[] | null;
+};
+
+export async function fetchEnsembleVerdictWithEmbedding(
+    baseUrl: string,
+    text: string,
+    ): Promise<EnsembleVerdictWithEmbedding> {
+  return requestJson<EnsembleVerdictWithEmbedding>(
+      baseUrl, '/ml/ensemble/embedding', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({inputJson: JSON.stringify({text})}),
+      });
+}

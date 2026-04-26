@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, test} from 'bun:test';
 
-import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
+import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
 
 const originalFetch = globalThis.fetch;
 
@@ -196,4 +196,84 @@ describe('react api client', () => {
         const inner = JSON.parse(body.inputJson) as {text: string};
         expect(inner.text).toBe('yellow fruit on the counter maybe');
       });
+
+  test(
+      'fetchEnsembleVerdictWithEmbedding returns verdict and 4-dim embedding',
+      async () => {
+        let lastUrl = '';
+        let lastInit: RequestInit|undefined;
+
+        globalThis.fetch =
+            (async (input: RequestInfo|URL, init?: RequestInit) => {
+              lastUrl = String(input);
+              lastInit = init;
+              return new Response(
+                  JSON.stringify({
+                    verdict: {
+                      label: 'banana',
+                      score: 0.83,
+                      did_escalate: true,
+                      calibration_magnitude: 0.6,
+                      status: 'ok',
+                    },
+                    embedding: [0.42, -0.11, 0.07, 0.83],
+                  }),
+                  {
+                    status: 200,
+                    headers: {'content-type': 'application/json'},
+                  });
+            }) as typeof fetch;
+
+        const result = await fetchEnsembleVerdictWithEmbedding(
+            'http://api.example', 'yellow fruit on the counter maybe');
+
+        expect(result.verdict.label).toBe('banana');
+        expect(result.verdict.did_escalate).toBe(true);
+        expect(result.embedding).toEqual([0.42, -0.11, 0.07, 0.83]);
+
+        expect(lastUrl).toBe('http://api.example/ml/ensemble/embedding');
+        expect(lastInit?.method).toBe('POST');
+        const body = JSON.parse(String(lastInit?.body)) as {inputJson: string};
+        const inner = JSON.parse(body.inputJson) as {text: string};
+        expect(inner.text).toBe('yellow fruit on the counter maybe');
+      });
+
+  test(
+      'fetchEnsembleVerdictWithEmbedding accepts a null embedding (cheap-path verdict)',
+      async () => {
+        globalThis.fetch = (async () => new Response(
+                                JSON.stringify({
+                                  verdict: {
+                                    label: 'banana',
+                                    score: 0.95,
+                                    did_escalate: false,
+                                    calibration_magnitude: 0.7,
+                                    status: 'ok',
+                                  },
+                                  embedding: null,
+                                }),
+                                {
+                                  status: 200,
+                                  headers: {'content-type': 'application/json'},
+                                })) as typeof fetch;
+
+        const result = await fetchEnsembleVerdictWithEmbedding(
+            'http://api.example', 'ripe banana');
+
+        expect(result.embedding).toBeNull();
+        expect(result.verdict.did_escalate).toBe(false);
+      });
+
+  test('fetchEnsembleVerdictWithEmbedding propagates 5xx errors', async () => {
+    globalThis.fetch =
+        (async () => new Response(
+             JSON.stringify({error: {message: 'ensemble unavailable'}}), {
+               status: 503,
+               headers: {'content-type': 'application/json'},
+             })) as typeof fetch;
+
+    await expect(
+        fetchEnsembleVerdictWithEmbedding('http://api.example', 'ambiguous'))
+        .rejects.toThrow('ensemble unavailable');
+  });
 });

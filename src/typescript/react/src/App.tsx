@@ -2,21 +2,29 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import {
     BananaBadge,
     ChatMessageBubble,
+    EscalationPanel,
     RipenessLabel,
     type ChatMessage,
     type ChatSession,
+    type EmbeddingSummary,
     type EnsembleVerdict,
 } from "@banana/ui";
 import {
     createChatSession,
     fetchBananaSummary,
-    fetchEnsembleVerdict,
+    fetchEnsembleVerdictWithEmbedding,
     predictRipeness,
     type RipenessResponse,
     resolveApiBaseUrl,
     resolvePlatformLabel,
     sendChatMessage,
 } from "./lib/api";
+import {
+    RETRY_BUTTON_COPY,
+    VERDICT_EMPTY_COPY,
+    errorWording,
+    verdictCopy,
+} from "./lib/copy";
 
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
     const merged = [...existing];
@@ -41,9 +49,11 @@ export function App() {
     const [ripenessError, setRipenessError] = useState<string | null>(null);
     const [isPredictingRipeness, setIsPredictingRipeness] = useState(false);
     const [ensembleVerdict, setEnsembleVerdict] = useState<EnsembleVerdict | null>(null);
+    const [ensembleEmbedding, setEnsembleEmbedding] = useState<number[] | null>(null);
     const [ensembleError, setEnsembleError] = useState<string | null>(null);
     const [isPredictingEnsemble, setIsPredictingEnsemble] = useState(false);
     const [ensembleInput, setEnsembleInput] = useState("");
+    const [lastSubmittedSample, setLastSubmittedSample] = useState<string | null>(null);
     const [isBootstrapping, setIsBootstrapping] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const messageCounter = useRef(0);
@@ -164,19 +174,56 @@ export function App() {
         if (!apiBaseUrl || value.length === 0) {
             return;
         }
-        setIsPredictingEnsemble(true);
-        setEnsembleError(null);
-        try {
-            const verdict = await fetchEnsembleVerdict(apiBaseUrl, value);
-            setEnsembleVerdict(verdict);
-        } catch (error: unknown) {
-            setEnsembleError(
-                error instanceof Error ? error.message : "failed to predict ensemble"
-            );
-            setEnsembleVerdict(null);
-        } finally {
-            setIsPredictingEnsemble(false);
+        await runEnsembleVerdict(value);
+    }
+
+    const runEnsembleVerdict = useCallback(
+        async (sample: string) => {
+            if (!apiBaseUrl || sample.length === 0) {
+                return;
+            }
+            setIsPredictingEnsemble(true);
+            setEnsembleError(null);
+            setLastSubmittedSample(sample);
+            try {
+                const result = await fetchEnsembleVerdictWithEmbedding(
+                    apiBaseUrl,
+                    sample,
+                );
+                setEnsembleVerdict(result.verdict);
+                setEnsembleEmbedding(result.embedding);
+            } catch (error: unknown) {
+                setEnsembleError(errorWording(error));
+                setEnsembleVerdict(null);
+                setEnsembleEmbedding(null);
+            } finally {
+                setIsPredictingEnsemble(false);
+            }
+        },
+        [apiBaseUrl],
+    );
+
+    const loadEscalationSummary = useCallback(
+        async (): Promise<EmbeddingSummary> => ({ embedding: ensembleEmbedding }),
+        [ensembleEmbedding],
+    );
+
+    function onEnsembleInputChange(value: string) {
+        setEnsembleInput(value);
+        // Typing a new sample invalidates the previous error + retry
+        // affordance per baseline (retry preserves last submitted draft;
+        // editing breaks that contract).
+        if (lastSubmittedSample !== null) {
+            setLastSubmittedSample(null);
+            setEnsembleError(null);
         }
+    }
+
+    function onRetryEnsemble() {
+        if (lastSubmittedSample === null) {
+            return;
+        }
+        void runEnsembleVerdict(lastSubmittedSample);
     }
 
     return (
@@ -201,7 +248,7 @@ export function App() {
                     <textarea
                         className="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                         disabled={chatUnavailable || isPredictingEnsemble}
-                        onChange={(event) => setEnsembleInput(event.target.value)}
+                        onChange={(event) => onEnsembleInputChange(event.target.value)}
                         placeholder="Describe a possible banana"
                         value={ensembleInput}
                     />
@@ -213,7 +260,37 @@ export function App() {
                         {isPredictingEnsemble ? "Predicting..." : "Predict ensemble"}
                     </button>
                 </form>
-                {ensembleError ? <p className="text-xs text-red-700">{ensembleError}</p> : null}
+                <div data-testid="ensemble-verdict-surface" className="space-y-2 text-sm">
+                    {ensembleError ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <p data-testid="ensemble-error" className="text-xs text-red-700">
+                                {ensembleError}
+                            </p>
+                            {lastSubmittedSample !== null ? (
+                                <button
+                                    type="button"
+                                    data-testid="ensemble-retry"
+                                    onClick={onRetryEnsemble}
+                                    disabled={isPredictingEnsemble}
+                                    className="rounded-md border border-amber-700 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {RETRY_BUTTON_COPY}
+                                </button>
+                            ) : null}
+                        </div>
+                    ) : ensembleVerdict ? (
+                        <p data-testid="ensemble-verdict-copy" className="font-medium text-slate-900">
+                            {verdictCopy(ensembleVerdict)}
+                            {ensembleVerdict.did_escalate ? (
+                                <EscalationPanel loadSummary={loadEscalationSummary} />
+                            ) : null}
+                        </p>
+                    ) : (
+                        <p data-testid="ensemble-verdict-empty" className="text-slate-500">
+                            {VERDICT_EMPTY_COPY}
+                        </p>
+                    )}
+                </div>
             </section>
 
             <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

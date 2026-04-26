@@ -2,11 +2,23 @@
 
 **Branch**: `023-react-verdict-ux-polish`
 **Source SPIKE**: [020 Frontend Classifier Experience](../020-frontend-classifier-experience-spike/spec.md)
-**Status**: GATED.
+**Status**: COMPLETE (2026-04-26).
 
-## Trigger
+## Outcome
 
-SPIKE 020 acknowledged + product greenlight to start React adoption.
+- Canonical verdict copy + escalation cue rendered byte-identically
+  across all five baseline states.
+- Escalation panel ([EscalationPanel.tsx](../../../src/typescript/shared/ui/src/components/EscalationPanel.tsx))
+  added to `@banana/ui` with lazy-loading + error/empty fallbacks.
+- React App rewired to call slice 017's `/ml/ensemble/embedding`
+  via `fetchEnsembleVerdictWithEmbedding`.
+- Inline retry button preserves the last submitted draft and clears
+  on input edit.
+- Validation lane (`tsc shared/ui`, `tsc react`, `bun test`) clean:
+  25 pass, 0 fail.
+- Side fix: `scripts/dedupe-react.mjs` postinstall hook + bunfig
+  preload de-dup react/react-dom across `@banana/ui` and the React
+  app to avoid duplicate-react hook errors at runtime.
 
 ## Phases (mapped to tasks.md)
 
