@@ -1,17 +1,57 @@
 {
   "folders": [
-    { "name": "(Monorepo) Banana", "path": "." },
-    { "name": "(Monorepo) Tests", "path": "tests" },
-    { "name": "(Monorepo) Docker", "path": "docker" },
-    { "name": "(Monorepo) Scripts", "path": "scripts" },
-    { "name": "(Specify) Specs", "path": ".specify/specs" },
-    { "name": "(C) Native", "path": "src/native" },
-    { "name": "(C#) Api", "path": "src/c-sharp/asp.net" },
-    { "name": "(TS) Api", "path": "src/typescript/api" },
-    { "name": "(TS) Electron", "path": "src/typescript/electron" },
-    { "name": "(TS) React", "path": "src/typescript/react" },
-    { "name": "(TS) React-Native", "path": "src/typescript/react-native" },
-    { "name": "(TS) Shared-UI", "path": "src/typescript/shared/ui" },
+    {
+      "name": "(Monorepo) Banana",
+      "path": "."
+    },
+    {
+      "name": "(Monorepo) Docker",
+      "path": "docker"
+    },
+    {
+      "name": "(Monorepo) Tests",
+      "path": "tests"
+    },
+    {
+      "name": "(Monorepo) Training Data",
+      "path": "data"
+    },
+    {
+      "name": "(Monorepo) Scripts",
+      "path": "scripts"
+    },
+    {
+      "name": "(Specify) Specs",
+      "path": ".specify/specs"
+    },
+    {
+      "name": "(C) Native",
+      "path": "src/native"
+    },
+    {
+      "name": "(C#) Api",
+      "path": "src/c-sharp/asp.net"
+    },
+    {
+      "name": "(TS) Api",
+      "path": "src/typescript/api"
+    },
+    {
+      "name": "(TS) Electron",
+      "path": "src/typescript/electron"
+    },
+    {
+      "name": "(TS) React",
+      "path": "src/typescript/react"
+    },
+    {
+      "name": "(TS) React-Native",
+      "path": "src/typescript/react-native"
+    },
+    {
+      "name": "(TS) Shared-UI",
+      "path": "src/typescript/shared/ui"
+    }
   ],
   "settings": {
     "files.eol": "\n",
