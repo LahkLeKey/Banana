@@ -31,9 +31,21 @@ stage="compose-up"
 exit_code=0
 reason_code="success"
 
-if ! docker compose "${compose_args[@]}"; then
+if docker compose "${compose_args[@]}"; then
+	exit_code=0
+else
 	exit_code=$?
-	reason_code="compose_up_failed"
+	case "$exit_code" in
+		124)
+			reason_code="timeout"
+			;;
+		126)
+			reason_code="permission"
+			;;
+		*)
+			reason_code="compose_up_failed"
+			;;
+	esac
 fi
 
 if (( exit_code == 0 )) && [[ -n "$health_url" ]]; then

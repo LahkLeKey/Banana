@@ -24,13 +24,18 @@ fi
 compose_args+=("$test_service")
 
 exit_code=0
-if ! docker compose "${compose_args[@]}"; then
+if docker compose "${compose_args[@]}"; then
+	exit_code=0
+else
 	exit_code=$?
 fi
 
 reason_code="success"
 if (( exit_code != 0 )); then
 	case "$exit_code" in
+		1)
+			reason_code="compose_test_failure"
+			;;
 		124)
 			reason_code="timeout"
 			;;

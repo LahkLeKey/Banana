@@ -531,6 +531,7 @@ jobs:
           chmod +x scripts/compose-ci-write-lane-result.sh
           chmod +x scripts/compose-ci-collect-diagnostics.sh
           chmod +x scripts/compose-ci-artifact-manifest.sh
+          chmod +x scripts/validate-compose-ci-lane-contract.sh
 
       - name: Preflight compose tests lane
         run: |
@@ -574,6 +575,29 @@ jobs:
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
             --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/test-all.log"
 
+      - name: Validate compose tests lane contract
+        if: always()
+        run: bash scripts/validate-compose-ci-lane-contract.sh --lane "$BANANA_CI_LANE"
+
+      - name: Add compose tests lane summary
+        if: always()
+        run: |
+          {
+            echo "## Compose Tests Lane Summary"
+            echo
+            echo "### Lane Result"
+            echo
+            echo '```json'
+            cat "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json"
+            echo '```'
+            echo
+            echo "### Artifact Manifest"
+            echo
+            echo '```json'
+            cat "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/artifact-manifest.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload compose tests artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -600,6 +624,7 @@ jobs:
           chmod +x scripts/compose-ci-write-lane-result.sh
           chmod +x scripts/compose-ci-collect-diagnostics.sh
           chmod +x scripts/compose-ci-artifact-manifest.sh
+          chmod +x scripts/validate-compose-ci-lane-contract.sh
 
       - name: Preflight compose runtime lane
         run: |
@@ -646,6 +671,29 @@ jobs:
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/preflight.txt" \
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
             --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/api.log"
+
+      - name: Validate compose runtime lane contract
+        if: always()
+        run: bash scripts/validate-compose-ci-lane-contract.sh --lane "$BANANA_CI_LANE"
+
+      - name: Add compose runtime lane summary
+        if: always()
+        run: |
+          {
+            echo "## Compose Runtime Lane Summary"
+            echo
+            echo "### Lane Result"
+            echo
+            echo '```json'
+            cat "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json"
+            echo '```'
+            echo
+            echo "### Artifact Manifest"
+            echo
+            echo '```json'
+            cat "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/artifact-manifest.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload compose runtime artifacts
         if: always()
@@ -767,6 +815,7 @@ jobs:
           chmod +x scripts/compose-ci-write-lane-result.sh
           chmod +x scripts/compose-ci-collect-diagnostics.sh
           chmod +x scripts/compose-ci-artifact-manifest.sh
+          chmod +x scripts/validate-compose-ci-lane-contract.sh
 
       - name: Preflight compose electron lane
         run: |
@@ -811,6 +860,29 @@ jobs:
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/preflight.txt" \
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
             --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/electron-example.log"
+
+      - name: Validate compose electron lane contract
+        if: always()
+        run: bash scripts/validate-compose-ci-lane-contract.sh --lane "$BANANA_CI_LANE"
+
+      - name: Add compose electron lane summary
+        if: always()
+        run: |
+          {
+            echo "## Compose Electron Lane Summary"
+            echo
+            echo "### Lane Result"
+            echo
+            echo '```json'
+            cat "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json"
+            echo '```'
+            echo
+            echo "### Artifact Manifest"
+            echo
+            echo '```json'
+            cat "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/artifact-manifest.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload compose electron artifacts
         if: always()

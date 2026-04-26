@@ -24,13 +24,18 @@ compose_args+=("$service_name")
 
 stage="compose-up"
 exit_code=0
-if ! docker compose "${compose_args[@]}"; then
+if docker compose "${compose_args[@]}"; then
+	exit_code=0
+else
 	exit_code=$?
 fi
 
 reason_code="success"
 if (( exit_code != 0 )); then
 	case "$exit_code" in
+		1)
+			reason_code="smoke_command_failed"
+			;;
 		124)
 			reason_code="timeout"
 			;;
