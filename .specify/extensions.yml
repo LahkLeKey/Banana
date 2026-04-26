@@ -4,23 +4,23 @@ settings:
 hooks:
   before_constitution:
   - extension: git
-    command: speckit.git.initialize
+    command: specify.git.initialize
     enabled: true
     optional: false
-    prompt: Execute speckit.git.initialize?
+    prompt: Execute specify.git.initialize?
     description: Initialize Git repository before constitution setup
     condition: null
   before_specify:
   - extension: git
-    command: speckit.git.feature
+    command: specify.git.feature
     enabled: true
     optional: false
-    prompt: Execute speckit.git.feature?
+    prompt: Execute specify.git.feature?
     description: Create feature branch before specification
     condition: null
   before_clarify:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit outstanding changes before clarification?
@@ -28,7 +28,7 @@ hooks:
     condition: null
   before_plan:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Run scope-boundary validation and commit outstanding changes before planning?
@@ -36,7 +36,7 @@ hooks:
     condition: null
   before_tasks:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Run task-traceability validation and commit outstanding changes before task generation?
@@ -44,7 +44,7 @@ hooks:
     condition: null
   before_implement:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit outstanding changes before implementation?
@@ -52,7 +52,7 @@ hooks:
     condition: null
   before_checklist:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit outstanding changes before checklist?
@@ -60,7 +60,7 @@ hooks:
     condition: null
   before_analyze:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit outstanding changes before analysis?
@@ -68,7 +68,7 @@ hooks:
     condition: null
   before_taskstoissues:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit outstanding changes before issue sync?
@@ -76,7 +76,7 @@ hooks:
     condition: null
   after_constitution:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit constitution changes?
@@ -84,7 +84,7 @@ hooks:
     condition: null
   after_specify:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit specification changes?
@@ -92,7 +92,7 @@ hooks:
     condition: null
   after_clarify:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit clarification changes?
@@ -100,7 +100,7 @@ hooks:
     condition: null
   after_plan:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit plan changes?
@@ -108,7 +108,7 @@ hooks:
     condition: null
   after_tasks:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit task changes?
@@ -116,7 +116,7 @@ hooks:
     condition: null
   after_implement:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit implementation changes?
@@ -124,7 +124,7 @@ hooks:
     condition: null
   after_checklist:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit checklist changes?
@@ -132,7 +132,7 @@ hooks:
     condition: null
   after_analyze:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit analysis results?
@@ -140,7 +140,7 @@ hooks:
     condition: null
   after_taskstoissues:
   - extension: git
-    command: speckit.git.commit
+    command: specify.git.commit
     enabled: true
     optional: true
     prompt: Commit after syncing issues?

@@ -23,11 +23,11 @@ Source: `.github/prompts/*.prompt.md`. 25 prompts. The validator
 | `iterate-the-backlog.prompt.md` | `Auto-Prompts/iterate-the-backlog.md` | value-risk-prioritization-agent |
 | `plan-banana-change.prompt.md` | `Auto-Prompts/plan-banana-change.md` | banana-planner |
 | `review-banana-change.prompt.md` | `Auto-Prompts/review-banana-change.md` | banana-reviewer |
-| `speckit.git.commit.prompt.md` | `Auto-Prompts/speckit.git.commit.md` | speckit.git.commit |
-| `speckit.git.feature.prompt.md` | `Auto-Prompts/speckit.git.feature.md` | speckit.git.feature |
-| `speckit.git.initialize.prompt.md` | `Auto-Prompts/speckit.git.initialize.md` | speckit.git.initialize |
-| `speckit.git.remote.prompt.md` | `Auto-Prompts/speckit.git.remote.md` | speckit.git.remote |
-| `speckit.git.validate.prompt.md` | `Auto-Prompts/speckit.git.validate.md` | speckit.git.validate |
+| `specify.git.commit.prompt.md` | `Auto-Prompts/specify.git.commit.md` | specify.git.commit |
+| `specify.git.feature.prompt.md` | `Auto-Prompts/specify.git.feature.md` | specify.git.feature |
+| `specify.git.initialize.prompt.md` | `Auto-Prompts/specify.git.initialize.md` | specify.git.initialize |
+| `specify.git.remote.prompt.md` | `Auto-Prompts/specify.git.remote.md` | specify.git.remote |
+| `specify.git.validate.prompt.md` | `Auto-Prompts/specify.git.validate.md` | specify.git.validate |
 | `sprint.prompt.md` | `Auto-Prompts/sprint.md` | banana-sdlc |
 | `triage.prompt.md` | `Auto-Prompts/triage.md` | banana-sdlc |
 | `validate-banana-change.prompt.md` | `Auto-Prompts/validate-banana-change.md` | integration-agent |

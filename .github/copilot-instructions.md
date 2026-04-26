@@ -6,7 +6,7 @@
 - Break broad work into helper-sized slices and prefer the narrowest helper agent that owns the touched files: banana classifier, native core, native DAL, native wrapper, API pipeline, API interop, React UI, Electron, mobile runtime, compose runtime, workflow, technical writer, value-risk prioritization, or test triage.
 - Use parent domain agents only when more than one helper in the same domain must move together.
 - Prefer existing entry points over inventing new ones: workspace tasks, `scripts/*.sh`, CMake targets, `dotnet` test projects, Bun scripts, and Docker Compose profiles.
-- For Spec Kit-driven work, verify `.specify/feature.json` points at the intended feature and that the corresponding `.specify/specs/<feature>/plan.md` exists before implementation.
+- For Spec Kit-driven work, use the Specify CLI flow (`specify specify`, `specify plan`, `specify tasks`) and verify `.specify/feature.json` points at the intended feature and that the corresponding `.specify/specs/<feature>/plan.md` exists before implementation.
 - For `003-coverage-80-rehydration` execution, validate normalized lane schema parity, tuple completeness, and workspace-relative evidence paths before closing tasks.
 - For native or integration work, assume `BANANA_PG_CONNECTION` is required whenever PostgreSQL-backed flows are exercised.
 - For ASP.NET local/runtime work, keep `BANANA_NATIVE_PATH` explicit and avoid hardcoded machine-specific paths.
@@ -41,6 +41,5 @@
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read:
-.specify/specs/003-coverage-80-rehydration/plan.md
+shell commands, and other important information, read the current plan
 <!-- SPECKIT END -->

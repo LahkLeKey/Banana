@@ -73,9 +73,9 @@ Keep these contracts steady while you iterate quickly:
 
 For AI-driven feature work, run the Spec Kit flow before implementation:
 
-1. `/speckit.specify "<feature description>"`
-2. `/speckit.plan`
-3. `/speckit.tasks`
+1. `specify specify "<feature description>"`
+2. `specify plan`
+3. `specify tasks`
 4. Implement and validate through existing Banana workflow entry points.
 
 ## Fast Developer Loop

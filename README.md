@@ -22,3 +22,26 @@ Use this checklist when a merge-gated coverage run fails:
 4. Confirm evidence bundle paths are workspace-relative and present in artifacts.
 5. Verify whether active exceptions are listed and whether any exception has expired.
 6. For integration tuple failures, confirm `BANANA_PG_CONNECTION` and `BANANA_NATIVE_PATH` contracts were satisfied.
+
+## Spec Kit Workflow Wrapper
+
+Use the parser-driven helper to run and inspect Spec Kit workflow state from one place:
+
+```bash
+bash scripts/workflow-specify.sh doctor
+```
+
+Useful commands:
+
+```bash
+bash scripts/workflow-specify.sh status
+bash scripts/workflow-specify.sh paths
+bash scripts/workflow-specify.sh run-full "Realign scope for native test coverage"
+bash scripts/workflow-specify.sh run-workflow "Add API traceability gate" speckit copilot
+```
+
+Notes:
+
+- The script auto-adds `C:/Users/Zephr/.local/bin` to `PATH` when available so `specify` can be discovered in Git Bash after `uv tool install`.
+- `run-full` defaults to workflow `drift-realignment` and integration `copilot`.
+- Override defaults with `BANANA_SPECIFY_WORKFLOW_ID` and `BANANA_SPECIFY_INTEGRATION`.

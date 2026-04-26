@@ -9,7 +9,7 @@ All business behavior begins in native C under `src/native`; upper layers orches
 Managed flows must preserve the `controller -> service -> pipeline -> native interop` architecture. Cross-layer behavior changes require explicit contract updates in the touched layers.
 
 ### III. Spec First Delivery
-AI-assisted work follows Spec Kit stages before implementation: `/speckit.specify`, `/speckit.plan`, and `/speckit.tasks`. Emergency fixes may bypass this only with explicit human approval and a follow-up spec update.
+AI-assisted work follows Spec Kit stages before implementation via the Specify CLI: `specify specify`, `specify plan`, and `specify tasks`. Emergency fixes may bypass this only with explicit human approval and a follow-up spec update.
 
 ### IV. Verifiable Quality Gates
 Every change must run domain-appropriate validation before merge, including workflow-required checks for automation pull requests.

@@ -23,7 +23,7 @@ inputs:
 
 steps:
   - id: specify
-    command: speckit.specify
+    command: specify.specify
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.spec }}"
@@ -35,7 +35,7 @@ steps:
     on_reject: abort
 
   - id: plan
-    command: speckit.plan
+    command: specify.plan
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.spec }}"
@@ -47,7 +47,7 @@ steps:
     on_reject: abort
 
   - id: tasks
-    command: speckit.tasks
+    command: specify.tasks
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.spec }}"

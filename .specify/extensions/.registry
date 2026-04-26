@@ -9,11 +9,11 @@
       "priority": 10,
       "registered_commands": {
         "copilot": [
-          "speckit.git.feature",
-          "speckit.git.validate",
-          "speckit.git.remote",
-          "speckit.git.initialize",
-          "speckit.git.commit"
+          "specify.git.feature",
+          "specify.git.validate",
+          "specify.git.remote",
+          "specify.git.initialize",
+          "specify.git.commit"
         ]
       },
       "registered_skills": [],
