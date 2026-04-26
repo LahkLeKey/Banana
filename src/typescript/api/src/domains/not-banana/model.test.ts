@@ -3,19 +3,22 @@ import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join} from 'node:path';
 
-import {__resetTrainedModelCacheForTests, loadTrainedModel, scoreText,} from './model';
+import {__resetTrainedModelCacheForTests, loadTrainedModel, scoreText, TRAINING_ARTIFACT_SCHEMA_VERSION,} from './model';
 
 function createVocabularyArtifact(
     entries: Array<{token: string; weight: number}>, options?: {
       minSignalScore?: number;
       trainingProfile?: string;
       sessionMode?: string;
+      schemaVersion?: number;
+      metricsSchemaVersion?: number;
     }): string {
   const dir = mkdtempSync(join(tmpdir(), 'banana-model-test-'));
   const filePath = join(dir, 'vocabulary.json');
   writeFileSync(
       filePath, JSON.stringify({
-        schema_version: 1,
+        schema_version:
+            options?.schemaVersion ?? TRAINING_ARTIFACT_SCHEMA_VERSION,
         generated_at_utc: '2026-04-25T00:00:00Z',
         vocab_size: entries.length,
         vocabulary: entries.map((entry) => ({
@@ -36,7 +39,8 @@ function createVocabularyArtifact(
     const metricsPath = join(dir, 'metrics.json');
     writeFileSync(
         metricsPath, JSON.stringify({
-          schema_version: 1,
+          schema_version:
+              options?.metricsSchemaVersion ?? TRAINING_ARTIFACT_SCHEMA_VERSION,
           generated_at_utc: '2026-04-25T00:00:00Z',
           metrics: {
             min_signal_score: options.minSignalScore,
@@ -101,12 +105,66 @@ describe('not-banana trained model loader', () => {
     expect(model.not_banana_tokens.has('plastic')).toBe(true);
     expect(model.recommended_threshold).toBe(0.5);
     expect(model.metrics).toBeUndefined();
+    expect(model.fallback_reason?.startsWith('artifact_parse_error:'))
+        .toBe(true);
+  });
+
+  test('falls back when vocabulary schema version is unsupported', () => {
+    __resetTrainedModelCacheForTests();
+    const artifact = createVocabularyArtifact(
+        [
+          {token: 'banana', weight: 1},
+          {token: 'ripe', weight: 1},
+        ],
+        {
+          schemaVersion: 999,
+          minSignalScore: 0.8,
+          trainingProfile: 'ci',
+          sessionMode: 'single',
+        });
+    try {
+      process.env.BANANA_NOT_BANANA_MODEL_PATH = artifact;
+      const model = loadTrainedModel(true);
+      expect(model.source).toBe('builtin-fallback');
+      expect(model.fallback_reason)
+          .toContain('unsupported_vocabulary_schema_version');
+    } finally {
+      rmSync(dirname(artifact), {recursive: true, force: true});
+    }
+  });
+
+  test('falls back when metrics schema version is unsupported', () => {
+    __resetTrainedModelCacheForTests();
+    const artifact = createVocabularyArtifact(
+        [
+          {token: 'banana', weight: 1},
+          {token: 'ripe', weight: 1},
+        ],
+        {
+          metricsSchemaVersion: 999,
+          minSignalScore: 0.8,
+          trainingProfile: 'ci',
+          sessionMode: 'single',
+        });
+    try {
+      process.env.BANANA_NOT_BANANA_MODEL_PATH = artifact;
+      const model = loadTrainedModel(true);
+      expect(model.source).toBe('builtin-fallback');
+      expect(model.fallback_reason)
+          .toContain('unsupported_metrics_schema_version');
+    } finally {
+      rmSync(dirname(artifact), {recursive: true, force: true});
+    }
   });
 
   test('returns neutral score for empty token input', () => {
     __resetTrainedModelCacheForTests();
-    process.env.BANANA_NOT_BANANA_MODEL_PATH = '';
+    process.env.BANANA_NOT_BANANA_MODEL_PATH =
+        join(tmpdir(), 'banana-model-test-missing', 'vocabulary.json');
     const model = loadTrainedModel(true);
+    expect(model.source).toBe('builtin-fallback');
+    expect(model.fallback_reason?.startsWith('artifact_parse_error:'))
+        .toBe(true);
     const scored = scoreText('', model);
     expect(scored.token_count).toBe(0);
     expect(scored.matched_token_count).toBe(0);

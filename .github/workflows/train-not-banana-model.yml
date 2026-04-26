@@ -126,6 +126,7 @@ on:
       - data/not-banana/**
       - '!data/not-banana/model-release-history/**'
       - scripts/train-not-banana-model.py
+      - scripts/validate-not-banana-runtime-contract.py
       - scripts/manage-not-banana-model-image.py
       - scripts/workflow-persist-registry-history-pr.sh
       - .github/workflows/train-not-banana-model.yml
@@ -282,6 +283,14 @@ jobs:
             --max-sessions "$BANANA_TRAIN_MAX_SESSIONS" \
             --min-signal-score "$BANANA_TRAIN_MIN_SIGNAL" \
             --min-f1 "$BANANA_TRAIN_MIN_F1"
+
+      - name: Validate runtime artifact contract (${{ matrix.release_id }})
+        env:
+          BANANA_RELEASE_ID: ${{ matrix.release_id }}
+        run: |
+          MODEL_OUTPUT_DIR="artifacts/not-banana-model/${BANANA_RELEASE_ID}"
+          python scripts/validate-not-banana-runtime-contract.py \
+            --model-dir "$MODEL_OUTPUT_DIR"
 
       - name: Print metrics (${{ matrix.release_id }})
         env:
@@ -550,6 +559,11 @@ jobs:
             --training-profile ci \
             --session-mode single \
             --max-sessions 1
+
+      - name: Validate deterministic runtime artifact contract
+        run: |
+          python scripts/validate-not-banana-runtime-contract.py \
+            --model-dir artifacts/not-banana-model
 
       - name: Stage generated header next to native source
         run: |

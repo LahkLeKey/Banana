@@ -5,6 +5,8 @@
 import {existsSync, readFileSync} from 'node:fs';
 import {dirname, resolve} from 'node:path';
 
+export const TRAINING_ARTIFACT_SCHEMA_VERSION = 1;
+
 export type TrainedVocabularyEntry = {
   token: string; banana_count: number; not_banana_count: number;
   support: number;
@@ -15,6 +17,7 @@ export type TrainedVocabularyEntry = {
 export type TrainedModel = {
   source: 'trained-artifact'|'builtin-fallback';
   artifact_path?: string;
+  fallback_reason?: string;
   generated_at_utc?: string; vocab_size: number; banana_tokens: Set<string>;
   not_banana_tokens: Set<string>;
   recommended_threshold: number;
@@ -70,12 +73,13 @@ function clamp01(value: number): number {
   return value;
 }
 
-function buildBuiltinFallback(): TrainedModel {
+function buildBuiltinFallback(reason?: string): TrainedModel {
   const weights = new Map<string, number>();
   for (const token of BUILTIN_BANANA_TOKENS) weights.set(token, 1);
   for (const token of BUILTIN_NOT_BANANA_TOKENS) weights.set(token, -1);
   return {
     source: 'builtin-fallback',
+    fallback_reason: reason,
     vocab_size: BUILTIN_BANANA_TOKENS.length + BUILTIN_NOT_BANANA_TOKENS.length,
     banana_tokens: new Set(BUILTIN_BANANA_TOKENS),
     not_banana_tokens: new Set(BUILTIN_NOT_BANANA_TOKENS),
@@ -84,11 +88,14 @@ function buildBuiltinFallback(): TrainedModel {
   };
 }
 
-function readModelMetrics(metricsPath: string): ModelMetrics|undefined {
-  if (!existsSync(metricsPath)) return undefined;
+function readModelMetrics(metricsPath: string): ModelMetrics {
+  if (!existsSync(metricsPath)) {
+    throw new Error('missing_metrics_artifact');
+  }
 
   try {
     const parsed = JSON.parse(readFileSync(metricsPath, 'utf8')) as {
+      schema_version?: number;
       metrics?: {
         min_signal_score?: number;
         min_f1?: number;
@@ -100,8 +107,15 @@ function readModelMetrics(metricsPath: string): ModelMetrics|undefined {
       };
     };
 
+    if (parsed.schema_version !== TRAINING_ARTIFACT_SCHEMA_VERSION) {
+      throw new Error(`unsupported_metrics_schema_version:${
+          String(parsed.schema_version)}`);
+    }
+
     const metrics = parsed.metrics;
-    if (!metrics || typeof metrics !== 'object') return undefined;
+    if (!metrics || typeof metrics !== 'object') {
+      throw new Error('metrics_payload_missing');
+    }
 
     return {
       min_signal_score: typeof metrics.min_signal_score === 'number' ?
@@ -119,8 +133,9 @@ function readModelMetrics(metricsPath: string): ModelMetrics|undefined {
       session_mode: metrics.session_mode,
       selected_session: metrics.selected_session,
     };
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (error instanceof Error) throw error;
+    throw new Error('invalid_metrics_artifact');
   }
 }
 
@@ -169,16 +184,41 @@ function parseTrainedVocabulary(
     vocabulary?: TrainedVocabularyEntry[];
   };
 
+  if (parsed.schema_version !== TRAINING_ARTIFACT_SCHEMA_VERSION) {
+    throw new Error(`unsupported_vocabulary_schema_version:${
+        String(parsed.schema_version)}`);
+  }
+
+  if (typeof parsed.generated_at_utc !== 'string' ||
+      parsed.generated_at_utc.length === 0) {
+    throw new Error('missing_generated_at_utc');
+  }
+
   if (!parsed.vocabulary || !Array.isArray(parsed.vocabulary)) {
     throw new Error(`vocabulary.json missing 'vocabulary' array`);
+  }
+
+  if (typeof parsed.vocab_size === 'number' &&
+      parsed.vocab_size !== parsed.vocabulary.length) {
+    throw new Error(`vocab_size_mismatch:declared=${parsed.vocab_size},actual=${
+        parsed.vocabulary.length}`);
   }
 
   const banana = new Set<string>();
   const notBanana = new Set<string>();
   const weights = new Map<string, number>();
 
-  for (const entry of parsed.vocabulary) {
-    if (!entry || typeof entry.token !== 'string') continue;
+  for (let index = 0; index < parsed.vocabulary.length; index += 1) {
+    const entry = parsed.vocabulary[index];
+    if (!entry || typeof entry.token !== 'string' ||
+        entry.token.trim().length === 0) {
+      throw new Error(`invalid_vocabulary_entry_token:index=${index}`);
+    }
+
+    if (typeof entry.weight !== 'number' || !Number.isFinite(entry.weight)) {
+      throw new Error(`invalid_vocabulary_entry_weight:index=${index}`);
+    }
+
     const token = entry.token.toLowerCase();
     const weight = Number(entry.weight ?? 0);
     weights.set(token, weight);
@@ -186,6 +226,10 @@ function parseTrainedVocabulary(
       banana.add(token);
     else if (weight < 0)
       notBanana.add(token);
+  }
+
+  if (weights.size === 0) {
+    throw new Error('empty_vocabulary_weights');
   }
 
   const metrics =
@@ -212,15 +256,16 @@ export function loadTrainedModel(force = false): TrainedModel {
 
   const artifactPath = resolveArtifactPath();
   if (!artifactPath) {
-    cached = buildBuiltinFallback();
+    cached = buildBuiltinFallback('artifact_not_found');
     return cached;
   }
 
   try {
     const text = readFileSync(artifactPath, 'utf8');
     cached = parseTrainedVocabulary(text, artifactPath);
-  } catch {
-    cached = buildBuiltinFallback();
+  } catch (error) {
+    cached = buildBuiltinFallback(`artifact_parse_error:${
+        error instanceof Error ? error.message : 'unknown'}`);
   }
   return cached;
 }
