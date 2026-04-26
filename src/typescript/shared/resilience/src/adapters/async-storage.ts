@@ -15,13 +15,14 @@ import type {StorageAdapter} from '../types';
  * inside the shared `@banana/resilience` package.
  */
 export interface AsyncStorageLike {
-  getItem(key: string): Promise<string | null>;
+  getItem(key: string): Promise<string|null>;
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
   getAllKeys(): Promise<readonly string[]>;
 }
 
-export function createAsyncStorageAdapter(client: AsyncStorageLike): StorageAdapter {
+export function createAsyncStorageAdapter(client: AsyncStorageLike):
+    StorageAdapter {
   return {
     async get(key) {
       return client.getItem(key);
@@ -29,7 +30,7 @@ export function createAsyncStorageAdapter(client: AsyncStorageLike): StorageAdap
     async set(key, value) {
       await client.setItem(key, value);
     },
-    async delete(key) {
+    async delete (key) {
       await client.removeItem(key);
     },
     async keys(prefix) {

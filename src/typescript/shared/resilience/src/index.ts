@@ -1,7 +1,7 @@
 // Slice 029 -- @banana/resilience public surface.
-export {createIndexedDbAdapter, createInMemoryAdapter} from './adapters/indexeddb';
 export {createAsyncStorageAdapter} from './adapters/async-storage';
 export type {AsyncStorageLike} from './adapters/async-storage';
+export {createIndexedDbAdapter, createInMemoryAdapter} from './adapters/indexeddb';
 export {createVerdictHistory} from './history';
 export type {CreateVerdictHistoryOptions} from './history';
 export {createRequestQueue} from './queue';
