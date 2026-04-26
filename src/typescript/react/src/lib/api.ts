@@ -1,4 +1,4 @@
-import type {ChatMessage, ChatSession} from '@banana/ui';
+import type {ChatMessage, ChatSession, Ripeness} from '@banana/ui';
 
 type ErrorPayload = {
   error?: {message?: string;};
@@ -11,6 +11,10 @@ export type CreateSessionResponse = {
 export type SendMessageResponse = {
   session_id: string; duplicate: boolean; user_message: ChatMessage;
   assistant_message: ChatMessage;
+};
+
+export type RipenessResponse = {
+  label: Ripeness; confidence: number;
 };
 
 type BananaSummaryResponse = {
@@ -95,4 +99,15 @@ export async function sendChatMessage(
           client_message_id: clientMessageId,
         }),
       });
+}
+
+export async function predictRipeness(
+    baseUrl: string,
+    inputJson: string,
+    ): Promise<RipenessResponse> {
+  return requestJson<RipenessResponse>(baseUrl, '/ripeness/predict', {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify({inputJson}),
+  });
 }

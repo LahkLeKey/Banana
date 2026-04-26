@@ -1,0 +1,4 @@
+{"event": "step_started", "step_id": "specify", "type": "command", "timestamp": "2026-04-26T14:00:17.209725+00:00"}
+{"event": "step_completed", "step_id": "specify", "status": "failed", "timestamp": "2026-04-26T14:00:17.235430+00:00"}
+{"event": "step_failed", "step_id": "specify", "error": "Cannot dispatch command 'specify.specify': integration 'copilot' CLI not found or not installed. Install the CLI tool or check 'specify integration list'.", "timestamp": "2026-04-26T14:00:17.236338+00:00"}
+{"event": "workflow_finished", "status": "failed", "timestamp": "2026-04-26T14:00:17.238110+00:00"}

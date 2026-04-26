@@ -30,7 +30,17 @@ public sealed class NativeBananaClient : INativeBananaClient
     }
 
     public NativeStatusCode PredictRegressionScore(string inputJson, out double score)
-        => (NativeStatusCode)NativeMethods.PredictRegressionScore(inputJson, out score);
+    {
+        try
+        {
+            return (NativeStatusCode)NativeMethods.PredictRegressionScore(inputJson, out score);
+        }
+        catch (Exception ex) when (IsInteropUnavailable(ex))
+        {
+            score = 0.0;
+            return NativeStatusCode.NativeUnavailable;
+        }
+    }
 
     public NativeStatusCode ClassifyBananaBinary(string inputJson, out string json)        => CallJson(inputJson, out json, NativeMethods.ClassifyBananaBinary);
     public NativeStatusCode ClassifyBananaTransformer(string inputJson, out string json)   => CallJson(inputJson, out json, NativeMethods.ClassifyBananaTransformer);
@@ -75,10 +85,26 @@ public sealed class NativeBananaClient : INativeBananaClient
     private delegate int Single(string s, out IntPtr ptr);
     private static NativeStatusCode CallJson(string s, out string json, Single fn)
     {
-        var rc = fn(s, out var ptr);
-        json = TakeUtf8(ptr);
-        return (NativeStatusCode)rc;
+        try
+        {
+            var rc = fn(s, out var ptr);
+            json = TakeUtf8(ptr);
+            return (NativeStatusCode)rc;
+        }
+        catch (Exception ex) when (IsInteropUnavailable(ex))
+        {
+            json = string.Empty;
+            return NativeStatusCode.NativeUnavailable;
+        }
     }
+
+    private static bool IsInteropUnavailable(Exception ex) => ex is
+        DllNotFoundException or
+        EntryPointNotFoundException or
+        BadImageFormatException or
+        TypeInitializationException or
+        FileNotFoundException or
+        FileLoadException;
 
     private static string TakeUtf8(IntPtr ptr)
     {

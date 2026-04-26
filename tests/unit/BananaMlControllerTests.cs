@@ -3,6 +3,8 @@ using System.Text.Json;
 using Banana.Api.Controllers;
 using Banana.Api.NativeInterop;
 using Banana.Api.Pipeline;
+using Banana.Api.Pipeline.Mapping;
+using Banana.Api.Pipeline.Results;
 using Banana.Api.Tests.Unit.TestDoubles;
 
 using Microsoft.AspNetCore.Mvc;
@@ -21,8 +23,9 @@ public sealed class BananaMlControllerTests
             PredictRegressionStatus = NativeStatusCode.Ok,
             PredictRegressionValue = 0.8125,
         };
+        var mapper = new SpyNativeJsonMapper();
         var ctx = new PipelineContext();
-        var controller = new BananaMlController(fake, ctx);
+        var controller = new BananaMlController(fake, mapper, ctx);
 
         var result = controller.Regression(new BananaMlController.MlRequest("{\"text\":\"ripe banana bunch\"}"));
 
@@ -42,19 +45,39 @@ public sealed class BananaMlControllerTests
             ClassifyBananaBinaryStatus = NativeStatusCode.Ok,
             ClassifyBananaBinaryJson = nativeJson,
         };
+        var mapper = new SpyNativeJsonMapper();
         var ctx = new PipelineContext();
-        var controller = new BananaMlController(fake, ctx);
+        var controller = new BananaMlController(fake, mapper, ctx);
 
         var result = controller.Binary(new BananaMlController.MlRequest("{\"text\":\"banana bread crate\"}"));
 
         var ok = Assert.IsType<OkObjectResult>(result);
-        var payload = SerializeToElement(ok.Value);
-        var json = payload.GetProperty("json").GetString();
-        Assert.NotNull(json);
-        Assert.Contains("\"jaccard\"", json);
-        Assert.Contains("\"confusion_matrix\"", json);
+        var payload = Assert.IsType<BinaryClassificationResult>(ok.Value);
+        Assert.Equal("banana", payload.Label);
+        Assert.True(payload.Confidence > 0.0);
+        Assert.True(payload.Metrics.ContainsKey("jaccard"));
+        Assert.True(payload.Metrics.ContainsKey("confusion_matrix"));
+        Assert.Equal(1, mapper.BinaryDeserializeCalls);
         Assert.Equal("/ml/binary", ctx.Route);
         Assert.Equal(NativeStatusCode.Ok, ctx.LastStatus);
+    }
+
+    [Fact]
+    public void Binary_WhenMapperReturnsNull_ReturnsInvalidNativePayload()
+    {
+        var fake = new FakeNativeBananaClient
+        {
+            ClassifyBananaBinaryStatus = NativeStatusCode.Ok,
+            ClassifyBananaBinaryJson = "{\"label\":\"banana\"}",
+        };
+        var mapper = new NullNativeJsonMapper();
+        var ctx = new PipelineContext();
+        var controller = new BananaMlController(fake, mapper, ctx);
+
+        var result = controller.Binary(new BananaMlController.MlRequest("{\"text\":\"banana\"}"));
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(500, objectResult.StatusCode);
     }
 
     [Fact]
@@ -64,8 +87,9 @@ public sealed class BananaMlControllerTests
         {
             ClassifyBananaTransformerStatus = NativeStatusCode.InvalidArgument,
         };
+        var mapper = new SpyNativeJsonMapper();
         var ctx = new PipelineContext();
-        var controller = new BananaMlController(fake, ctx);
+        var controller = new BananaMlController(fake, mapper, ctx);
 
         var result = controller.Transformer(new BananaMlController.MlRequest("{}"));
 
@@ -74,33 +98,40 @@ public sealed class BananaMlControllerTests
         Assert.Equal(NativeStatusCode.InvalidArgument, ctx.LastStatus);
     }
 
-    [Fact]
-    public void NotBananaController_PassesNativeMetricsJsonThroughManagedEndpoint()
-    {
-        const string nativeJson = "{\"model\":\"binary\",\"label\":\"not_banana\",\"jaccard\":1.0,\"confusion_matrix\":{\"tp\":0,\"fp\":0,\"fn\":0,\"tn\":1}}";
-        var fake = new FakeNativeBananaClient
-        {
-            ClassifyNotBananaJunkStatus = NativeStatusCode.Ok,
-            ClassifyNotBananaJunkJson = nativeJson,
-        };
-        var ctx = new PipelineContext();
-        var controller = new NotBananaController(fake, ctx);
-
-        var result = controller.Junk(new NotBananaController.JunkRequest("{\"text\":\"plastic engine junk\"}"));
-
-        var ok = Assert.IsType<OkObjectResult>(result);
-        var payload = SerializeToElement(ok.Value);
-        var json = payload.GetProperty("json").GetString();
-        Assert.NotNull(json);
-        Assert.Contains("\"jaccard\"", json);
-        Assert.Contains("\"confusion_matrix\"", json);
-        Assert.Equal("/not-banana/junk", ctx.Route);
-        Assert.Equal(NativeStatusCode.Ok, ctx.LastStatus);
-    }
-
     private static JsonElement SerializeToElement(object? value)
     {
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(value));
         return document.RootElement.Clone();
+    }
+
+    private sealed class SpyNativeJsonMapper : INativeJsonMapper
+    {
+        public int BinaryDeserializeCalls { get; private set; }
+
+        public T? Deserialize<T>(string json)
+        {
+            if (typeof(T) == typeof(BinaryClassificationResult))
+            {
+                BinaryDeserializeCalls++;
+                return (T)(object)new BinaryClassificationResult
+                {
+                    Label = "banana",
+                    Confidence = 0.88,
+                    Model = "binary",
+                    Metrics = new Dictionary<string, JsonElement>
+                    {
+                        ["jaccard"] = JsonDocument.Parse("0.5").RootElement.Clone(),
+                        ["confusion_matrix"] = JsonDocument.Parse("{\"tp\":1,\"fp\":1,\"fn\":0,\"tn\":0}").RootElement.Clone(),
+                    },
+                };
+            }
+
+            return default;
+        }
+    }
+
+    private sealed class NullNativeJsonMapper : INativeJsonMapper
+    {
+        public T? Deserialize<T>(string json) => default;
     }
 }

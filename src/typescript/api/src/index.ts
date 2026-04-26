@@ -8,11 +8,13 @@ import {registerChatRoutes} from './domains/chat/routes.ts';
 import {registerNotBananaRoutes} from './domains/not-banana/routes.ts';
 import {registerCorpusRoutes} from './routes/corpus.ts';
 import {registerHealthRoutes} from './routes/health.ts';
+import {registerRipenessRoutes} from './routes/ripeness.ts';
 
 const app = Fastify({logger: true});
 
 await registerHealthRoutes(app);
 await registerCorpusRoutes(app);
+await registerRipenessRoutes(app);
 await registerNotBananaRoutes(app);
 await registerChatRoutes(app);
 

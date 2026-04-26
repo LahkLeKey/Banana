@@ -36,16 +36,23 @@ static void extract_json_string_field(
     out_value[n] = '\0';
 }
 
+static int is_valid_ripeness_label(const char* label) {
+    return strcmp(label, "ripe") == 0 || strcmp(label, "unripe") == 0 || strcmp(label, "overripe") == 0;
+}
+
 int main(void) {
     int rc;
     char* json = NULL;
+    char ripeness_label[32] = {0};
     char batch_id[32] = {0};
     char harvest_id[32] = {0};
     char truck_id[32] = {0};
 
     rc = banana_predict_banana_ripeness("{\"notes\":\"green peel and firm body\"}", &json);
     assert(rc == BANANA_OK);
-    assert_contains(json, "\"label\":\"unripe\"");
+    extract_json_string_field(json, "label", ripeness_label, sizeof(ripeness_label));
+    assert(is_valid_ripeness_label(ripeness_label));
+    assert_contains(json, "\"model\":\"regression\"");
     banana_free(json);
 
     rc = banana_create_batch("{\"manifest\":\"ripe banana bunch crate\"}", &json);

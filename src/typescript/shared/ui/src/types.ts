@@ -1,4 +1,4 @@
-export type Ripeness = 'green'|'yellow'|'spotted'|'brown';
+export type Ripeness = 'ripe'|'unripe'|'overripe';
 
 export type ChatRole = 'user'|'assistant'|'system';
 export type ChatMessageStatus = 'accepted'|'complete';
