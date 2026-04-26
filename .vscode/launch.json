@@ -1,0 +1,94 @@
+{
+    "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "Frontends: API + React",
+            "configurations": ["API: Bun dev", "React: Vite dev"],
+            "stopAll": true,
+            "presentation": { "group": "frontends", "order": 1 }
+        },
+        {
+            "name": "Frontends: API + Electron",
+            "configurations": ["API: Bun dev", "Electron: smoke"],
+            "stopAll": true,
+            "presentation": { "group": "frontends", "order": 2 }
+        },
+        {
+            "name": "Frontends: API + React Native (web)",
+            "configurations": ["API: Bun dev", "React Native: Expo web"],
+            "stopAll": true,
+            "presentation": { "group": "frontends", "order": 3 }
+        }
+    ],
+    "configurations": [
+        {
+            "name": "API: Bun dev",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "bun",
+            "runtimeArgs": ["run", "dev"],
+            "cwd": "${workspaceFolder:(Monorepo) Banana}/src/typescript/api",
+            "console": "integratedTerminal",
+            "env": {
+                "BANANA_API_PORT": "8080",
+                "BANANA_NOT_BANANA_MODEL_PATH": ""
+            },
+            "presentation": { "group": "frontends", "order": 10 }
+        },
+        {
+            "name": "React: Vite dev",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "bun",
+            "runtimeArgs": ["run", "dev"],
+            "cwd": "${workspaceFolder:(Monorepo) Banana}/src/typescript/react",
+            "console": "integratedTerminal",
+            "env": {
+                "VITE_BANANA_API_BASE_URL": "http://localhost:8080"
+            },
+            "presentation": { "group": "frontends", "order": 11 }
+        },
+        {
+            "name": "Electron: smoke",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder:(Monorepo) Banana}/src/typescript/electron/smoke.js",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}/src/typescript/electron",
+            "console": "integratedTerminal",
+            "presentation": { "group": "frontends", "order": 12 }
+        },
+        {
+            "name": "React Native: Expo web",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "bunx",
+            "runtimeArgs": ["expo", "start", "--web"],
+            "cwd": "${workspaceFolder:(Monorepo) Banana}/src/typescript/react-native",
+            "console": "integratedTerminal",
+            "env": {
+                "EXPO_PUBLIC_BANANA_API_BASE_URL": "http://localhost:8080"
+            },
+            "presentation": { "group": "frontends", "order": 13 }
+        },
+        {
+            "name": "Train: not-banana (ci profile)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:(Monorepo) Banana}/scripts/train-not-banana-model.py",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "args": ["--training-profile", "ci", "--session-mode", "single", "--max-sessions", "1"],
+            "console": "integratedTerminal",
+            "presentation": { "group": "training", "order": 20 }
+        },
+        {
+            "name": "Train: not-banana (local profile)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:(Monorepo) Banana}/scripts/train-not-banana-model.py",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "args": ["--training-profile", "local"],
+            "console": "integratedTerminal",
+            "presentation": { "group": "training", "order": 21 }
+        }
+    ]
+}
