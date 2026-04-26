@@ -5,7 +5,7 @@
 
 ## Summary
 
-Stabilize merge-gated Compose CI behavior by making lane terminal states deterministic, publishing lane-scoped diagnostics and fallback artifacts for all outcomes, and removing or explicitly tracking Node runtime deprecation exposure in merge workflows. Delivery focuses on `.github/workflows/compose-ci.yml` and related compose/e2e shell entry points so failures are actionable in a single run.
+Stabilize merge-gated Compose CI behavior by making lane terminal states deterministic, publishing lane-scoped diagnostics and fallback artifacts for all outcomes, and removing or explicitly tracking Node runtime deprecation exposure in merge workflows. Delivery focuses on `.github/workflows/compose-ci.yml` and related compose/e2e shell entry points so failures are actionable in a single run, while also keeping AI contract/wiki parity and terminology guard checks green.
 
 ## Technical Context
 
@@ -16,7 +16,7 @@ Stabilize merge-gated Compose CI behavior by making lane terminal states determi
 **Target Platform**: GitHub-hosted `ubuntu-latest` runners (primary) and local Windows + Docker Desktop + Ubuntu WSL2 contract (secondary)
 **Project Type**: CI and runtime orchestration in a multi-language monorepo  
 **Performance Goals**: Deterministic lane terminal state for every baseline rerun; one-pass triage with complete diagnostics; zero missing-path upload failures  
-**Constraints**: Preserve existing compose profiles and runtime contracts; keep Bun package manager and API/native evidence links intact; avoid product behavior changes  
+**Constraints**: Preserve existing compose profiles and runtime contracts; keep Bun package manager and API/native evidence links intact; avoid product behavior changes; satisfy `validate-ai-contracts.py` wiki and terminology guard contracts  
 **Scale/Scope**: One merge-gated workflow plus compose/e2e support scripts and documentation contracts used by maintainers and release owners
 
 ## Constitution Check
@@ -30,6 +30,7 @@ Stabilize merge-gated Compose CI behavior by making lane terminal states determi
   - Required validation surface: compose lanes, e2e smoke artifacts, native and .NET coverage jobs, and artifact publication outcomes.
 - **V. Documentation and Wiki Parity**: PASS with explicit follow-up requirement.
   - Any workflow/runbook behavior changes must be reflected in `.specify/wiki/` and `.wiki/` through the same SDLC slice.
+  - Allowlist parity in `.specify/wiki/human-reference-allowlist.txt` and mirror parity in `.specify/wiki/human-reference` are required for guard compliance.
 
 ## Project Structure
 
@@ -62,6 +63,9 @@ scripts/
 ├── compose-electron.sh
 ├── compose-e2e-bootstrap.sh
 ├── compose-e2e-teardown.sh
+├── check-workflow-runtime-deprecations.sh
+├── compose-ci-write-job-result.sh
+├── compose-ci-aggregate-failures.sh
 ├── run-tests-with-coverage.sh
 └── run-native-c-tests-with-coverage.sh
 
@@ -70,6 +74,12 @@ scripts/
 ```
 
 **Structure Decision**: Keep all implementation inside the delivery/runtime domain (`.github/workflows`, `scripts`, `docker-compose.yml`) and documentation surfaces (`.specify/wiki`, `.wiki`) to avoid cross-layer drift and preserve existing architecture boundaries.
+
+## AI Contract Guard Alignment
+
+- Maintain three-way wiki parity for any new human-facing pages: `.wiki/`, `.specify/wiki/human-reference-allowlist.txt`, and `.specify/wiki/human-reference/`.
+- Run `python .specify/scripts/validate-ai-contracts.py` as a closure gate after workflow/doc updates.
+- Treat terminology guard failures as blocking quality regressions for this feature and remediate before merge.
 
 ## Complexity Tracking
 

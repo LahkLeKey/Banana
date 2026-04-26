@@ -15,6 +15,8 @@
 - Eliminate artifact upload warning paths that currently emit missing-path warnings in merge-gated jobs.
 - Require actionable permission-failure diagnostics (including exit code `126`) with direct remediation context.
 - Track and eliminate Node runtime deprecation exposure in merge-gated workflows.
+- Keep AI contract guard wiki contracts valid by maintaining `.wiki/` page allowlist parity and canonical mirror parity for newly added runbooks.
+- Keep terminology guard contracts valid by preventing reintroduction of blocked legacy terms in touched workflow/docs/scripts surfaces.
 
 ## Out of Scope *(mandatory)*
 
@@ -94,6 +96,9 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 - Lane succeeds functionally but still fails due missing artifact files at upload step.
 - Multiple merge-gated jobs fail in one run and require a single deterministic aggregate summary.
 - Workflow gates pass while runtime deprecation warnings accumulate toward forced runtime cutoff.
+- New `.wiki` pages are added without corresponding `.specify/wiki/human-reference-allowlist.txt` updates.
+- New `.wiki` pages are added without matching mirror pages under `.specify/wiki/human-reference`.
+- Legacy blocked terminology appears in touched automation/docs content and fails terminology guard checks.
 
 ## Requirements *(mandatory)*
 
@@ -113,6 +118,8 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 - **FR-012**: Permission-denied failures (including exit code `126`) MUST include actionable remediation context that identifies the failing surface or contract.
 - **FR-013**: Merge-gated artifact publication steps MUST be path-safe: each configured upload path MUST resolve to produced output or explicit skip/fallback evidence without missing-path warnings.
 - **FR-014**: Merge-gated workflows MUST publish a machine-readable aggregate summary of failed jobs with stage and reason attribution.
+- **FR-015**: Any new human-facing `.wiki` markdown page introduced by this feature MUST be present in `.specify/wiki/human-reference-allowlist.txt` and mirrored in `.specify/wiki/human-reference`.
+- **FR-016**: Changes in workflow/scripts/docs touched by this feature MUST satisfy AI terminology guard rules with zero legacy blocked-term findings.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -122,6 +129,7 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 - **ArtifactPublicationRecord**: Expected-versus-produced artifact manifest used to detect and prevent missing-path uploads.
 - **FailureAggregateSummary**: Machine-readable run summary enumerating failed merge-gated jobs with stage/reason attribution.
 - **WorkflowRuntimeCompatibilityRecord**: Tracking record for runtime deprecation warnings, owners, and remediation deadlines.
+- **AIContractParityRecord**: Verification record that wiki allowlist entries, live `.wiki` pages, and canonical `.specify/wiki/human-reference` pages are synchronized.
 
 ## Success Criteria *(mandatory)*
 
@@ -135,6 +143,8 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 - **SC-006**: Across a 10-run merge-gated verification window, missing-path upload warnings are zero for compose and non-compose jobs.
 - **SC-007**: 100% of permission-denied failures include remediation context identifying the failing surface.
 - **SC-008**: 100% of failed merge-gated coverage/test jobs publish deterministic stage/reason/exit evidence.
+- **SC-009**: AI Contract Guard reports zero `WIKI_ALLOWLIST` and `WIKI_MIRROR` issues for this feature branch.
+- **SC-010**: AI terminology guard reports zero blocked legacy-term findings for files touched by this feature.
 
 ## Assumptions
 
