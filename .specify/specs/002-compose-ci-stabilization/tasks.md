@@ -104,11 +104,14 @@
 
 - [x] T032 [P] Run boundary validation for 002 spec (FR-010) and archive output in .artifacts/spec/002-compose-ci-stabilization-boundaries.json
 - [x] T033 [P] Run task traceability validation (FR-009) and archive output in .artifacts/spec/002-compose-ci-stabilization-traceability.json
-- [ ] T034 Execute 10-run deterministic verification (FR-001, FR-003, FR-004) and record outcomes in .artifacts/spec/002-compose-ci-stabilization-verification.md
-- [ ] T035 Update merge-gate troubleshooting section (FR-009) in README.md
-- [ ] T036 Run wiki synchronization workflow script (FR-010) and capture output in .artifacts/spec/002-compose-ci-stabilization-wiki-sync.log
-- [ ] T041 [P] Audit merge-gated runs for zero missing-path upload warnings (FR-013) and append findings in .artifacts/spec/002-compose-ci-stabilization-verification.md
-- [ ] T042 [P] Validate permission-denied failures include remediation context (FR-012) and append findings in .artifacts/spec/002-compose-ci-stabilization-verification.md
+- [x] T034 Execute 10-run deterministic verification (FR-001, FR-003, FR-004) and record outcomes in .artifacts/spec/002-compose-ci-stabilization-verification.md
+- [x] T035 Update merge-gate troubleshooting section (FR-009) in README.md
+- [x] T036 Run wiki synchronization workflow script (FR-010) and capture output in .artifacts/spec/002-compose-ci-stabilization-wiki-sync.log
+- [x] T041 [P] Audit merge-gated runs for zero missing-path upload warnings (FR-013) and append findings in .artifacts/spec/002-compose-ci-stabilization-verification.md
+- [x] T042 [P] Validate permission-denied failures include remediation context (FR-012) and append findings in .artifacts/spec/002-compose-ci-stabilization-verification.md
+- [x] T043 Upgrade `copilot-review-triage` JavaScript action runtime to Node24-compatible versions (FR-017) in .github/workflows/copilot-review-triage.yml
+- [x] T044 [P] Enforce Node24 opt-in for `copilot-review-triage` and archive compatibility evidence (FR-017) in .github/workflows/copilot-review-triage.yml and .artifacts/spec/runtime-compatibility/
+- [x] T045 [P] Validate deterministic policy-state triage evidence for unresolved Copilot findings (FR-018, FR-019) and capture closure notes in .artifacts/spec/002-compose-ci-stabilization-verification.md
 
 ---
 
