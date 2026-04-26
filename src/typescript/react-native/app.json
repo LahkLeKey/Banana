@@ -16,7 +16,9 @@
             "infoPlist": {
                 "CFBundleURLTypes": [
                     {
-                        "CFBundleURLSchemes": ["banana"]
+                        "CFBundleURLSchemes": [
+                            "banana"
+                        ]
                     }
                 ],
                 "NSExtensionAttributes": {
@@ -31,13 +33,26 @@
             "intentFilters": [
                 {
                     "action": "SEND",
-                    "category": ["DEFAULT"],
-                    "data": [{ "mimeType": "text/plain" }]
+                    "category": [
+                        "DEFAULT"
+                    ],
+                    "data": [
+                        {
+                            "mimeType": "text/plain"
+                        }
+                    ]
                 },
                 {
                     "action": "VIEW",
-                    "category": ["DEFAULT", "BROWSABLE"],
-                    "data": [{ "scheme": "banana" }]
+                    "category": [
+                        "DEFAULT",
+                        "BROWSABLE"
+                    ],
+                    "data": [
+                        {
+                            "scheme": "banana"
+                        }
+                    ]
                 }
             ]
         }

@@ -2,14 +2,14 @@
 // Slice 025 swaps the chat scaffold for the customer verdict flow:
 // CaptureScreen -> VerdictScreen with optional share-sheet ingest.
 
-import {useEffect, useState} from 'react';
-import {registerRootComponent} from 'expo';
-import {StatusBar} from 'expo-status-bar';
-import {Linking} from 'react-native';
-import {CaptureScreen} from './screens/CaptureScreen';
-import {VerdictScreen} from './screens/VerdictScreen';
-import {registerShareListener} from './share-handler';
-import type {EnsembleVerdictWithEmbedding} from './lib/api';
+import { useEffect, useState } from 'react';
+import { registerRootComponent } from 'expo';
+import { StatusBar } from 'expo-status-bar';
+import { Linking } from 'react-native';
+import { CaptureScreen } from './screens/CaptureScreen';
+import { VerdictScreen } from './screens/VerdictScreen';
+import { registerShareListener } from './share-handler';
+import type { EnsembleVerdictWithEmbedding } from './lib/api';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_BANANA_API_BASE_URL ?? '';
 

@@ -5,11 +5,12 @@
 
 import type {EnsembleVerdict} from '@banana/ui/native';
 
-type ErrorPayload = {error?: {message?: string}};
+type ErrorPayload = {
+  error?: {message?: string}
+};
 
 export type EnsembleVerdictWithEmbedding = {
-  verdict: EnsembleVerdict;
-  embedding: number[] | null;
+  verdict: EnsembleVerdict; embedding: number[] | null;
 };
 
 async function parseApiError(response: Response): Promise<string> {

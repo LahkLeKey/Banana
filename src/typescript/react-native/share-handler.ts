@@ -6,15 +6,19 @@
 // JS-side seam so unit-style code can drive the same flow with a
 // stub `getInitialUrl` / `addEventListener` implementation.
 
-export type ShareEvent = {text: string};
+export type ShareEvent = {
+  text: string
+};
 export type ShareListener = (event: ShareEvent) => void;
 
 export type LinkingLike = {
-  getInitialURL: () => Promise<string | null>;
+  getInitialURL: () => Promise<string|null>;
   addEventListener: (
       type: 'url',
       handler: (event: {url: string}) => void,
-      ) => {remove: () => void};
+      ) => {
+    remove: () => void
+  };
 };
 
 /**
@@ -23,7 +27,7 @@ export type LinkingLike = {
  * and the iOS share-extension `URLScheme` callback) and returns the
  * extracted text payload.
  */
-export function parseShareUrl(url: string | null): ShareEvent | null {
+export function parseShareUrl(url: string|null): ShareEvent|null {
   if (!url) return null;
   try {
     const parsed = new URL(url);
@@ -55,5 +59,7 @@ export function registerShareListener(
     const event = parseShareUrl(url);
     if (event) listener(event);
   });
-  return () => { sub.remove(); };
+  return () => {
+    sub.remove();
+  };
 }

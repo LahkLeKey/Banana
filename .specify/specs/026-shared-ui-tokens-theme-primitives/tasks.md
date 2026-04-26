@@ -5,38 +5,38 @@
 
 ## Phase 1 -- Setup
 
-- [ ] T001 Repoint `.specify/feature.json` -> `026-shared-ui-tokens-theme-primitives`.
-- [ ] T002 Author `README.md` execution tracker.
+- [x] T001 Repoint `.specify/feature.json` -> `026-shared-ui-tokens-theme-primitives`.
+- [x] T002 Author `README.md` execution tracker.
 
 ## Phase 2 -- Token TS module
 
-- [ ] T003 Author `src/typescript/shared/ui/src/tokens/index.ts`
+- [x] T003 Author `src/typescript/shared/ui/src/tokens/index.ts`
   exporting `tokens` per the SPIKE 021 token contract.
-- [ ] T004 Author `src/typescript/shared/ui/src/tokens/README.md`
+- [x] T004 Author `src/typescript/shared/ui/src/tokens/README.md`
   documenting how to add a token.
 
 ## Phase 3 -- Generation script
 
-- [ ] T005 Author `src/typescript/shared/ui/scripts/generate-web-tokens.ts`
+- [x] T005 Author `src/typescript/shared/ui/scripts/generate-web-tokens.ts`
   emitting `tokens/web.css` from `tokens/index.ts`.
-- [ ] T006 Add `tokens:gen` script to
+- [x] T006 Add `tokens:gen` script to
   `src/typescript/shared/ui/package.json`.
-- [ ] T007 Run generation; commit `tokens/web.css`.
+- [x] T007 Run generation; commit `tokens/web.css`.
 
 ## Phase 4 -- Tailwind + native re-export
 
-- [ ] T008 Extend `src/typescript/shared/ui/tailwind.config.ts` to
+- [x] T008 Extend `src/typescript/shared/ui/tailwind.config.ts` to
   map semantic colors onto CSS variables.
-- [ ] T009 Re-export tokens from
+- [x] T009 Re-export tokens from
   `src/typescript/shared/ui/src/index.ts` and create
   `src/typescript/shared/ui/src/native/tokens.ts` re-export for
   `@banana/ui/native/tokens`.
 
 ## Phase 5 -- Lock test + validation
 
-- [ ] T010 Add `src/typescript/shared/ui/tokens.test.ts` snapshot
+- [x] T010 Add `src/typescript/shared/ui/tokens.test.ts` snapshot
   locking the generated CSS.
-- [ ] T011 Run validation lane
+- [x] T011 Run validation lane
   (`bun run tokens:gen`,
   `git diff --exit-code src/typescript/shared/ui/src/tokens/web.css`,
   `bun run --cwd src/typescript/shared/ui tsc --noEmit`,
@@ -44,7 +44,7 @@
 
 ## Phase 6 -- Close-out
 
-- [ ] T012 Update README to COMPLETE; mark all tasks `[x]`.
+- [x] T012 Update README to COMPLETE; mark all tasks `[x]`.
 
 ## Out of scope
 
