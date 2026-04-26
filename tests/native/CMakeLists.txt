@@ -27,6 +27,10 @@ add_executable(banana_test_ml_transformer test_ml_transformer.c)
 target_link_libraries(banana_test_ml_transformer PRIVATE banana_native)
 add_test(NAME banana_test_ml_transformer COMMAND banana_test_ml_transformer)
 
+add_executable(banana_test_ml_transformer_quant test_ml_transformer_quant.c)
+target_link_libraries(banana_test_ml_transformer_quant PRIVATE banana_native)
+add_test(NAME banana_test_ml_transformer_quant COMMAND banana_test_ml_transformer_quant)
+
 # Windows: ensure the wrapper DLL sits next to the test executable.
 if(WIN32)
   add_custom_command(TARGET banana_test_calc POST_BUILD
@@ -57,4 +61,8 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
       $<TARGET_FILE:banana_native>
       $<TARGET_FILE_DIR:banana_test_ml_transformer>)
+  add_custom_command(TARGET banana_test_ml_transformer_quant POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:banana_native>
+      $<TARGET_FILE_DIR:banana_test_ml_transformer_quant>)
 endif()

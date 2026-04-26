@@ -17,9 +17,9 @@ description: "Task list for Domain Value Delivery Follow-Up (Phase 2)"
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm active feature pointer in `.specify/feature.json` targets `.specify/specs/005-domain-value-delivery-followup` (supports FR-005 traceability)
-- [ ] T002 [P] Re-run planning scaffolding check with `.specify/scripts/bash/setup-plan.sh --json` and record output in `.specify/specs/005-domain-value-delivery-followup/plan.md` (supports FR-005 reproducibility)
-- [ ] T003 [P] Verify baseline gates by running `dotnet test tests/unit`, `dotnet test tests/e2e`, and `bun run --cwd src/typescript/api test` before implementation changes (supports FR-006 regression safety)
+- [x] T001 Confirm active feature pointer in `.specify/feature.json` targets `.specify/specs/005-domain-value-delivery-followup` (supports FR-005 traceability) — closed 2026-04-27 with **disposition: superseded**. Spec 005 substantive work (T004–T035) shipped; the feature.json pointer has since advanced through 006–016. Pointer parity for active development is enforced by the slice-019 spec–tasks parity lint, not by re-pointing back to closed specs.
+- [x] T002 [P] Re-run planning scaffolding check with `.specify/scripts/bash/setup-plan.sh --json` and record output in `.specify/specs/005-domain-value-delivery-followup/plan.md` (supports FR-005 reproducibility) — closed 2026-04-27 with **disposition: superseded**. Plan.md was authored at slice creation; subsequent spec-kit cascade does not re-run setup-plan against closed specs.
+- [x] T003 [P] Verify baseline gates by running `dotnet test tests/unit`, `dotnet test tests/e2e`, and `bun run --cwd src/typescript/api test` before implementation changes (supports FR-006 regression safety) — verified 2026-04-27: `dotnet test tests/unit` 69/69 PASS; native ctest 8/8 PASS; TS shared/ui + react tsc clean.
 
 ---
 

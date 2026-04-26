@@ -80,6 +80,18 @@ extern "C" {
 #define BANANA_ML_TRANSFORMER_BIAS              0.05
 
 /*
+ * Slice 016 (U-001) -- additive int8-quantized embedding helper.
+ * The quantized vector has the same dimension as the source double
+ * vector. Reconstruction error bound:
+ *   max(abs(reconstruct(quant) - original)) < scale/2 + epsilon
+ * where reconstruct[i] = (out_quant[i] - out_zero) * out_scale.
+ * EMBEDDING_QUANT_DIM is fixed-equal to EMBEDDING_DIM so that downstream
+ * consumers can size both buffers from a single constant.
+ */
+#define BANANA_ML_TRANSFORMER_EMBEDDING_QUANT_DIM         BANANA_ML_TRANSFORMER_EMBEDDING_DIM
+#define BANANA_ML_TRANSFORMER_EMBEDDING_QUANT_RECON_EPS   1.0e-9
+
+/*
  * Optional diagnostics requested by the caller. Both buffers, if non-NULL
  * and the corresponding flag is set, are filled by the callee.
  */
@@ -101,6 +113,21 @@ int banana_ml_transformer_classify(const BananaMlFeatureVector* features,
 int banana_ml_transformer_classify_ex(const BananaMlFeatureVector* features,
                                        const BananaMlTransformerOptions* options,
                                        BananaMlClassificationResult* out_result);
+
+#include <stdint.h>
+
+/*
+ * Slice 016 (U-001) -- symmetric int8 quantization of an arbitrary
+ * embedding vector. Computes scale = max(abs(in[i])) / 127, zero = 0,
+ * out[i] = round(in[i] / scale). When the input is all-zero, scale is
+ * set to 1.0 and out[i]=0. Returns BANANA_OK on success,
+ * BANANA_INVALID_ARGUMENT if any pointer is NULL or `dim` is 0.
+ */
+int banana_ml_transformer_embedding_quantize(const double* in,
+                                              size_t dim,
+                                              int8_t* out,
+                                              double* out_scale,
+                                              int8_t* out_zero);
 
 #ifdef __cplusplus
 }

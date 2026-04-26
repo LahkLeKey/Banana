@@ -80,6 +80,18 @@ int banana_classify_banana_transformer_ex(const char* input_json,
                                                       out_json);
 }
 
+int banana_classify_banana_transformer_quant_embedding(const char* input_json,
+                                                        signed char* out_quant,
+                                                        double* out_scale,
+                                                        signed char* out_zero,
+                                                        char** out_json) {
+    return banana_wrapper_ml_classify_transformer_quant_embedding(input_json,
+                                                                    out_quant,
+                                                                    out_scale,
+                                                                    out_zero,
+                                                                    out_json);
+}
+
 int banana_classify_not_banana_junk(const char* input_json, char** out_json) {
     return banana_wrapper_ml_classify_not_banana_junk(input_json, out_json);
 }

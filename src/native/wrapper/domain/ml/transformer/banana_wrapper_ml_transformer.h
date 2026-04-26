@@ -44,6 +44,18 @@ int banana_wrapper_ml_classify_transformer_ex(const char* input_json,
                                                 double* out_attention_weights,
                                                 char** out_json);
 
+/*
+ * Slice 016 -- additive int8-quantized embedding variant of the
+ * transformer wrapper. Mirrors the public ABI export
+ * `banana_classify_banana_transformer_quant_embedding` declared in
+ * `banana_wrapper.h`.
+ */
+int banana_wrapper_ml_classify_transformer_quant_embedding(const char* input_json,
+                                                             signed char* out_quant,
+                                                             double* out_scale,
+                                                             signed char* out_zero,
+                                                             char** out_json);
+
 #ifdef __cplusplus
 }
 #endif
