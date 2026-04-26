@@ -15,4 +15,11 @@ ensemble in slice 013+).
 
 Owner / next action: open a Future-tag issue when the first consumer lands.
 
+**Re-scored by 013 SPIKE (2026-04-26)**:
+disposition = `defer-with-trigger`; trigger = "slice 014 (ASP.NET ensemble)
+serializes the embedding into a cross-process payload". See
+[../../013-ml-brain-composition-spike/analysis/deferred-registry.md](../../013-ml-brain-composition-spike/analysis/deferred-registry.md)
+and the gated readiness packet
+[../../013-ml-brain-composition-spike/analysis/followup-C-quantized-embedding.md](../../013-ml-brain-composition-spike/analysis/followup-C-quantized-embedding.md).
+
 ## (None other open at slice close.)
