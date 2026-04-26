@@ -16,6 +16,9 @@ mkdir -p "$lane_dir"
 stage_file="$lane_dir/stage.txt"
 reason_file="$lane_dir/reason-code.txt"
 exit_file="$lane_dir/exit-code.txt"
+remediation_file="$lane_dir/remediation.txt"
+
+rm -f "$remediation_file"
 
 compose_args=(--profile tests up --abort-on-container-exit --exit-code-from "$test_service")
 if [[ "${BANANA_COMPOSE_TEST_BUILD:-true}" == "true" ]]; then
@@ -41,6 +44,14 @@ if (( exit_code != 0 )); then
 			;;
 		126)
 			reason_code="permission"
+			cat > "$remediation_file" <<'EOF'
+Compose tests lane failed with a permission-related exit code (126).
+
+Remediation checklist:
+1. Ensure scripts/compose-tests.sh and dependent scripts are executable.
+2. Ensure Docker Compose can execute the selected service entrypoint.
+3. Confirm shell scripts copied into containers use LF endings.
+EOF
 			;;
 		*)
 			reason_code="compose_command_failed"

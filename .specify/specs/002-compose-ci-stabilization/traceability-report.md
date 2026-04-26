@@ -1,7 +1,7 @@
 # Traceability Report
 
-- Spec: /c/Github/Banana/.specify/specs/002-compose-ci-stabilization/spec.md
-- Tasks: /c/Github/Banana/.specify/specs/002-compose-ci-stabilization/tasks.md
+- Spec: .specify/specs/002-compose-ci-stabilization/spec.md
+- Tasks: .specify/specs/002-compose-ci-stabilization/tasks.md
 - Total tasks: 42
 - Mapped tasks: 42
 - Drift findings: 0

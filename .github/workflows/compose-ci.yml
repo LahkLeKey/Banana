@@ -7,8 +7,44 @@ on:
 env:
   BANANA_CI_ARTIFACT_ROOT: .artifacts/compose-ci
   BANANA_CI_LANE_SCHEMA_VERSION: "1"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  workflow-runtime-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare runtime compatibility script
+        run: chmod +x scripts/check-workflow-runtime-deprecations.sh
+
+      - name: Run workflow runtime compatibility check
+        run: |
+          bash scripts/check-workflow-runtime-deprecations.sh \
+            --workflow .github/workflows/compose-ci.yml \
+            --exceptions .github/workflows/runtime-compatibility-exceptions.yml \
+            --output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.json \
+            --text-output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt
+
+      - name: Add workflow runtime compatibility summary
+        if: always()
+        run: |
+          {
+            echo "## Workflow Runtime Compatibility"
+            echo
+            echo '```text'
+            cat .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload workflow runtime compatibility artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-runtime-compatibility
+          path: .artifacts/compose-ci/runtime-compatibility
+
   native-c-tests-coverage:
     runs-on: ubuntu-latest
     services:
@@ -29,12 +65,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare CI job result scripts
+        run: |
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-write-job-result.sh
+
       - name: Install native coverage dependencies
+        id: install_native_cov_deps
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends build-essential cmake gcovr libpq-dev postgresql-client
 
       - name: Wait for PostgreSQL
+        id: wait_native_postgres
         run: |
           for i in {1..30}; do
             if pg_isready -h 127.0.0.1 -p 5432 -U cinterop -d cinterop; then
@@ -46,6 +89,7 @@ jobs:
           exit 1
 
       - name: Assert native DB connection target
+        id: assert_native_db_target
         env:
           BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
@@ -65,17 +109,59 @@ jobs:
           echo "Native DB target: host=$host port=$port"
 
       - name: Run native C tests with 80% coverage gate
+        id: run_native_cov_gate
         env:
           BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
         run: |
           chmod +x scripts/run-native-c-tests-with-coverage.sh
           scripts/run-native-c-tests-with-coverage.sh
 
+      - name: Write native C job result record
+        if: always()
+        run: |
+          job_status="pass"
+          stage="native-tests"
+          reason_code="success"
+          exit_code="0"
+
+          if [[ "${{ steps.install_native_cov_deps.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="install-dependencies"
+            reason_code="dependency_install_failed"
+            exit_code="1"
+          elif [[ "${{ steps.wait_native_postgres.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="wait-postgres"
+            reason_code="postgres_unavailable"
+            exit_code="1"
+          elif [[ "${{ steps.assert_native_db_target.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="assert-db-target"
+            reason_code="db_contract_invalid"
+            exit_code="1"
+          elif [[ "${{ steps.run_native_cov_gate.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="native-tests"
+            reason_code="native_coverage_failed"
+            exit_code="1"
+          fi
+
+          bash scripts/compose-ci-write-job-result.sh \
+            --job native-c-tests-coverage \
+            --status "$job_status" \
+            --stage "$stage" \
+            --reason-code "$reason_code" \
+            --exit-code "$exit_code"
+
       - name: Print native C summary in job output
         if: always()
         run: |
           echo "===== Native C Coverage Summary ====="
-          cat .artifacts/native-c/Summary.txt
+          if [[ -f .artifacts/native-c/Summary.txt ]]; then
+            cat .artifacts/native-c/Summary.txt
+          else
+            echo "Summary not available; native tests likely failed before report generation."
+          fi
 
       - name: Add native C summary to GitHub Actions summary
         if: always()
@@ -84,9 +170,20 @@ jobs:
             echo "## Native C Coverage Summary"
             echo
             echo '```text'
-            cat .artifacts/native-c/Summary.txt
+            if [[ -f .artifacts/native-c/Summary.txt ]]; then
+              cat .artifacts/native-c/Summary.txt
+            else
+              echo "Summary not available; native tests likely failed before report generation."
+            fi
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload native C job result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-c-tests-job-result
+          path: .artifacts/compose-ci/jobs/native-c-tests-coverage
 
       - name: Upload native C coverage artifacts
         if: always()
@@ -101,9 +198,44 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare CI job result scripts
+        run: |
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-write-job-result.sh
+
       - name: Validate Banana.Api denominator manifest
+        id: validate_api_denominator
         run: |
           bash scripts/check-banana-api-coverage-denominator.sh
+
+      - name: Write denominator validation job result record
+        if: always()
+        run: |
+          job_status="pass"
+          stage="coverage-denominator"
+          reason_code="success"
+          exit_code="0"
+
+          if [[ "${{ steps.validate_api_denominator.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="coverage-denominator"
+            reason_code="coverage_denominator_invalid"
+            exit_code="1"
+          fi
+
+          bash scripts/compose-ci-write-job-result.sh \
+            --job dotnet-api-coverage-denominator \
+            --status "$job_status" \
+            --stage "$stage" \
+            --reason-code "$reason_code" \
+            --exit-code "$exit_code"
+
+      - name: Upload denominator validation job result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-api-coverage-denominator-job-result
+          path: .artifacts/compose-ci/jobs/dotnet-api-coverage-denominator
 
   dotnet-unit-tests-coverage:
     needs:
@@ -127,17 +259,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare CI job result scripts
+        run: |
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-write-job-result.sh
+
       - name: Setup .NET
+        id: setup_dotnet_unit
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
       - name: Install native dependencies
+        id: install_native_deps_unit
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends cmake libpq-dev postgresql-client
 
       - name: Wait for PostgreSQL
+        id: wait_postgres_unit
         run: |
           for i in {1..30}; do
             if pg_isready -h 127.0.0.1 -p 5432 -U cinterop -d cinterop; then
@@ -149,11 +289,13 @@ jobs:
           exit 1
 
       - name: Build native library
+        id: build_native_unit
         run: |
           cmake -S . -B build/native -DCMAKE_BUILD_TYPE=Release -DBANANA_ENABLE_POSTGRES=ON
           cmake --build build/native --config Release
 
       - name: Run unit tests with coverage
+        id: run_unit_tests_cov
         env:
           BANANA_NATIVE_PATH: ${{ github.workspace }}/build/native/bin
           BANANA_PG_CONNECTION: host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop
@@ -164,9 +306,11 @@ jobs:
             --logger "trx;LogFileName=unit.trx"
 
       - name: Install ReportGenerator
+        id: install_reportgen_unit
         run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.11
 
       - name: Generate unit coverage report
+        id: generate_unit_report
         run: |
           export PATH="$PATH:$HOME/.dotnet/tools"
           reportgenerator \
@@ -176,6 +320,7 @@ jobs:
             -assemblyfilters:"+Banana.Api;-*Tests"
 
       - name: Enforce .NET unit line-rate gate (100%)
+        id: enforce_unit_line_gate
         run: |
           bash scripts/check-dotnet-coverage-threshold.sh \
             .artifacts/coverage/unit-report/Summary.txt \
@@ -183,11 +328,88 @@ jobs:
             .artifacts/coverage/unit-report/unit-line-rate-gate.json \
             unit-line-rate
 
+      - name: Write .NET unit job result record
+        if: always()
+        run: |
+          job_status="pass"
+          stage="unit-line-gate"
+          reason_code="success"
+          exit_code="0"
+
+          if [[ "${{ steps.setup_dotnet_unit.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="setup-dotnet"
+            reason_code="dotnet_setup_failed"
+            exit_code="1"
+          elif [[ "${{ steps.install_native_deps_unit.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="install-dependencies"
+            reason_code="dependency_install_failed"
+            exit_code="1"
+          elif [[ "${{ steps.wait_postgres_unit.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="wait-postgres"
+            reason_code="postgres_unavailable"
+            exit_code="1"
+          elif [[ "${{ steps.build_native_unit.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="build-native"
+            reason_code="native_build_failed"
+            exit_code="1"
+          elif [[ "${{ steps.run_unit_tests_cov.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="unit-tests"
+            reason_code="unit_tests_failed"
+            exit_code="1"
+          elif [[ "${{ steps.install_reportgen_unit.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="install-reportgenerator"
+            reason_code="coverage_tool_install_failed"
+            exit_code="1"
+          elif [[ "${{ steps.generate_unit_report.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="generate-coverage-report"
+            reason_code="coverage_report_failed"
+            exit_code="1"
+          elif [[ "${{ steps.enforce_unit_line_gate.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="unit-line-gate"
+            reason_code="coverage_gate_failed"
+            exit_code="1"
+          fi
+
+          bash scripts/compose-ci-write-job-result.sh \
+            --job dotnet-unit-tests-coverage \
+            --status "$job_status" \
+            --stage "$stage" \
+            --reason-code "$reason_code" \
+            --exit-code "$exit_code"
+
+      - name: Ensure unit artifact paths exist
+        if: always()
+        run: |
+          mkdir -p .artifacts/test-results/unit
+          mkdir -p .artifacts/coverage/unit-report
+
+          if [[ ! -f .artifacts/coverage/unit-report/Summary.txt ]]; then
+            cat > .artifacts/coverage/unit-report/Summary.txt <<'EOF'
+            Unit coverage summary was not produced because an earlier stage failed.
+            EOF
+          fi
+
+          if [[ -z "$(find .artifacts/test-results/unit -type f -print -quit 2>/dev/null)" ]]; then
+            : > .artifacts/test-results/unit/.placeholder
+          fi
+
       - name: Print .NET unit coverage summary in job output
         if: always()
         run: |
           echo "===== .NET Unit Coverage Summary ====="
-          cat .artifacts/coverage/unit-report/Summary.txt
+          if [[ -f .artifacts/coverage/unit-report/Summary.txt ]]; then
+            cat .artifacts/coverage/unit-report/Summary.txt
+          else
+            echo "Unit summary not available."
+          fi
           if [[ -f .artifacts/coverage/unit-report/unit-line-rate-gate.json ]]; then
             echo "===== .NET Unit Coverage Gate ====="
             cat .artifacts/coverage/unit-report/unit-line-rate-gate.json
@@ -200,7 +422,11 @@ jobs:
             echo "## .NET Unit Coverage Summary"
             echo
             echo '```text'
-            cat .artifacts/coverage/unit-report/Summary.txt
+            if [[ -f .artifacts/coverage/unit-report/Summary.txt ]]; then
+              cat .artifacts/coverage/unit-report/Summary.txt
+            else
+              echo "Unit summary not available."
+            fi
             echo '```'
             if [[ -f .artifacts/coverage/unit-report/unit-line-rate-gate.json ]]; then
               echo
@@ -226,6 +452,13 @@ jobs:
           name: unit-coverage-report
           path: .artifacts/coverage/unit-report
 
+      - name: Upload .NET unit job result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-unit-tests-job-result
+          path: .artifacts/compose-ci/jobs/dotnet-unit-tests-coverage
+
   dotnet-integration-tests-coverage:
     needs:
       - dotnet-api-coverage-denominator
@@ -248,17 +481,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare CI job result scripts
+        run: |
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-write-job-result.sh
+
       - name: Setup .NET
+        id: setup_dotnet_integration
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
       - name: Install native dependencies
+        id: install_native_deps_integration
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends cmake libpq-dev postgresql-client
 
       - name: Wait for PostgreSQL
+        id: wait_postgres_integration
         run: |
           for i in {1..30}; do
             if pg_isready -h 127.0.0.1 -p 5432 -U cinterop -d cinterop; then
@@ -270,6 +511,7 @@ jobs:
           exit 1
 
       - name: Build native library
+        id: build_native_integration
         run: |
           cmake -S . -B build/native -DCMAKE_BUILD_TYPE=Release -DBANANA_ENABLE_POSTGRES=ON
           cmake --build build/native --config Release
@@ -284,6 +526,7 @@ jobs:
           fi
 
       - name: Run integration tests with coverage
+        id: run_integration_tests_cov
         if: steps.detect_integration.outputs.exists == 'true'
         env:
           BANANA_NATIVE_PATH: ${{ github.workspace }}/build/native/bin
@@ -295,10 +538,12 @@ jobs:
             --logger "trx;LogFileName=integration.trx"
 
       - name: Install ReportGenerator
+        id: install_reportgen_integration
         if: steps.detect_integration.outputs.exists == 'true'
         run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.11
 
       - name: Generate integration coverage report
+        id: generate_integration_report
         if: steps.detect_integration.outputs.exists == 'true'
         run: |
           export PATH="$PATH:$HOME/.dotnet/tools"
@@ -309,6 +554,7 @@ jobs:
             -assemblyfilters:"+Banana.Api;-*Tests"
 
       - name: Generate integration uncovered-lines artifact
+        id: generate_integration_uncovered
         if: steps.detect_integration.outputs.exists == 'true'
         run: |
           report_file=".artifacts/coverage/integration-report/Cobertura.xml"
@@ -323,6 +569,7 @@ jobs:
             --output-text .artifacts/coverage/integration-report/uncovered-lines.txt
 
       - name: Generate .NET integration line-rate gate diagnostics (100%)
+        id: generate_integration_line_gate
         if: steps.detect_integration.outputs.exists == 'true'
         run: |
           bash scripts/check-dotnet-coverage-threshold.sh \
@@ -332,6 +579,7 @@ jobs:
             integration-line-rate || true
 
       - name: Write placeholder integration diagnostics when project is absent
+        id: write_integration_placeholder
         if: steps.detect_integration.outputs.exists != 'true'
         run: |
           mkdir -p .artifacts/test-results/integration
@@ -355,11 +603,109 @@ jobs:
           : > .artifacts/coverage/integration-report/uncovered-lines.txt
           : > .artifacts/test-results/integration/.placeholder
 
+      - name: Write .NET integration job result record
+        if: always()
+        run: |
+          job_status="pass"
+          stage="integration-line-gate"
+          reason_code="success"
+          exit_code="0"
+
+          if [[ "${{ steps.setup_dotnet_integration.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="setup-dotnet"
+            reason_code="dotnet_setup_failed"
+            exit_code="1"
+          elif [[ "${{ steps.install_native_deps_integration.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="install-dependencies"
+            reason_code="dependency_install_failed"
+            exit_code="1"
+          elif [[ "${{ steps.wait_postgres_integration.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="wait-postgres"
+            reason_code="postgres_unavailable"
+            exit_code="1"
+          elif [[ "${{ steps.build_native_integration.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="build-native"
+            reason_code="native_build_failed"
+            exit_code="1"
+          elif [[ "${{ steps.detect_integration.outputs.exists }}" != "true" ]]; then
+            job_status="skip"
+            stage="project-detection"
+            reason_code="integration_project_missing"
+            exit_code="0"
+          elif [[ "${{ steps.run_integration_tests_cov.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="integration-tests"
+            reason_code="integration_tests_failed"
+            exit_code="1"
+          elif [[ "${{ steps.install_reportgen_integration.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="install-reportgenerator"
+            reason_code="coverage_tool_install_failed"
+            exit_code="1"
+          elif [[ "${{ steps.generate_integration_report.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="generate-coverage-report"
+            reason_code="coverage_report_failed"
+            exit_code="1"
+          elif [[ "${{ steps.generate_integration_uncovered.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="export-uncovered-lines"
+            reason_code="uncovered_lines_export_failed"
+            exit_code="1"
+          fi
+
+          bash scripts/compose-ci-write-job-result.sh \
+            --job dotnet-integration-tests-coverage \
+            --status "$job_status" \
+            --stage "$stage" \
+            --reason-code "$reason_code" \
+            --exit-code "$exit_code"
+
+      - name: Ensure integration artifact paths exist
+        if: always()
+        run: |
+          mkdir -p .artifacts/test-results/integration
+          mkdir -p .artifacts/coverage/integration-report
+
+          if [[ ! -f .artifacts/coverage/integration-report/Summary.txt ]]; then
+            cat > .artifacts/coverage/integration-report/Summary.txt <<'EOF'
+            Integration coverage summary was not produced because an earlier stage failed.
+            EOF
+          fi
+
+          if [[ ! -f .artifacts/coverage/integration-report/integration-line-rate-gate.json ]]; then
+            cat > .artifacts/coverage/integration-report/integration-line-rate-gate.json <<'EOF'
+            {
+              "schema_version": 1,
+              "gate": "integration-line-rate",
+              "passed": false,
+              "skipped": false,
+              "reason": "integration_artifacts_missing"
+            }
+            EOF
+          fi
+
+          if [[ -z "$(find .artifacts/test-results/integration -type f -print -quit 2>/dev/null)" ]]; then
+            : > .artifacts/test-results/integration/.placeholder
+          fi
+
+          if [[ ! -f .artifacts/coverage/integration-report/uncovered-lines.txt ]]; then
+            : > .artifacts/coverage/integration-report/uncovered-lines.txt
+          fi
+
       - name: Print .NET integration coverage summary in job output
         if: always()
         run: |
           echo "===== .NET Integration Coverage Summary ====="
-          cat .artifacts/coverage/integration-report/Summary.txt
+          if [[ -f .artifacts/coverage/integration-report/Summary.txt ]]; then
+            cat .artifacts/coverage/integration-report/Summary.txt
+          else
+            echo "Integration summary not available."
+          fi
           if [[ -f .artifacts/coverage/integration-report/integration-line-rate-gate.json ]]; then
             echo "===== .NET Integration Coverage Gate ====="
             cat .artifacts/coverage/integration-report/integration-line-rate-gate.json
@@ -376,7 +722,11 @@ jobs:
             echo "## .NET Integration Coverage Summary"
             echo
             echo '```text'
-            cat .artifacts/coverage/integration-report/Summary.txt
+            if [[ -f .artifacts/coverage/integration-report/Summary.txt ]]; then
+              cat .artifacts/coverage/integration-report/Summary.txt
+            else
+              echo "Integration summary not available."
+            fi
             echo '```'
             if [[ -f .artifacts/coverage/integration-report/integration-line-rate-gate.json ]]; then
               echo
@@ -410,33 +760,53 @@ jobs:
           name: integration-coverage-report
           path: .artifacts/coverage/integration-report
 
+      - name: Upload .NET integration job result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-integration-tests-job-result
+          path: .artifacts/compose-ci/jobs/dotnet-integration-tests-coverage
+
   dotnet-api-coverage-aggregate:
     runs-on: ubuntu-latest
     needs:
       - dotnet-unit-tests-coverage
       - dotnet-integration-tests-coverage
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare CI job result scripts
+        run: |
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-write-job-result.sh
+
       - name: Setup .NET
+        id: setup_dotnet_aggregate
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
       - name: Download unit test results
+        id: download_unit_results
         uses: actions/download-artifact@v4
         with:
           name: unit-test-results
           path: .artifacts/aggregate/unit
 
       - name: Download integration test results
+        id: download_integration_results
         uses: actions/download-artifact@v4
         with:
           name: integration-test-results
           path: .artifacts/aggregate/integration
 
       - name: Install ReportGenerator
+        id: install_reportgen_aggregate
         run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.11
 
       - name: Generate aggregate API coverage report
+        id: generate_aggregate_report
         run: |
           export PATH="$PATH:$HOME/.dotnet/tools"
           reportgenerator \
@@ -445,11 +815,67 @@ jobs:
             -reporttypes:"Cobertura;HtmlInline;TextSummary" \
             -assemblyfilters:"+Banana.Api;-*Tests"
 
+      - name: Write aggregate API coverage job result record
+        if: always()
+        run: |
+          job_status="pass"
+          stage="aggregate-report"
+          reason_code="success"
+          exit_code="0"
+
+          if [[ "${{ steps.setup_dotnet_aggregate.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="setup-dotnet"
+            reason_code="dotnet_setup_failed"
+            exit_code="1"
+          elif [[ "${{ steps.download_unit_results.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="download-unit-results"
+            reason_code="unit_results_missing"
+            exit_code="1"
+          elif [[ "${{ steps.download_integration_results.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="download-integration-results"
+            reason_code="integration_results_missing"
+            exit_code="1"
+          elif [[ "${{ steps.install_reportgen_aggregate.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="install-reportgenerator"
+            reason_code="coverage_tool_install_failed"
+            exit_code="1"
+          elif [[ "${{ steps.generate_aggregate_report.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="aggregate-report"
+            reason_code="aggregate_report_failed"
+            exit_code="1"
+          fi
+
+          bash scripts/compose-ci-write-job-result.sh \
+            --job dotnet-api-coverage-aggregate \
+            --status "$job_status" \
+            --stage "$stage" \
+            --reason-code "$reason_code" \
+            --exit-code "$exit_code"
+
+      - name: Ensure aggregate coverage artifact path exists
+        if: always()
+        run: |
+          mkdir -p .artifacts/coverage/aggregate-report
+          if [[ ! -f .artifacts/coverage/aggregate-report/Summary.txt ]]; then
+            cat > .artifacts/coverage/aggregate-report/Summary.txt <<'EOF'
+            Aggregate coverage summary was not produced because an earlier stage failed.
+            EOF
+          fi
+
       - name: Print .NET aggregate API coverage summary in job output
         if: always()
         run: |
           echo "===== .NET Aggregate API Coverage Summary ====="
-          cat .artifacts/coverage/aggregate-report/Summary.txt
+          if [[ -f .artifacts/coverage/aggregate-report/Summary.txt ]]; then
+            cat .artifacts/coverage/aggregate-report/Summary.txt
+          else
+            echo "Aggregate summary not available."
+          fi
 
       - name: Add .NET aggregate API coverage summary to GitHub Actions summary
         if: always()
@@ -458,7 +884,11 @@ jobs:
             echo "## .NET Aggregate API Coverage Summary"
             echo
             echo '```text'
-            cat .artifacts/coverage/aggregate-report/Summary.txt
+            if [[ -f .artifacts/coverage/aggregate-report/Summary.txt ]]; then
+              cat .artifacts/coverage/aggregate-report/Summary.txt
+            else
+              echo "Aggregate summary not available."
+            fi
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -469,6 +899,13 @@ jobs:
           name: dotnet-coverage-aggregate
           path: .artifacts/coverage/aggregate-report
 
+      - name: Upload aggregate coverage job result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-api-coverage-aggregate-job-result
+          path: .artifacts/compose-ci/jobs/dotnet-api-coverage-aggregate
+
   typescript-api-tests:
     runs-on: ubuntu-latest
     defaults:
@@ -478,24 +915,85 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare CI job result scripts
+        run: |
+          chmod +x "$GITHUB_WORKSPACE/scripts/compose-ci-write-lane-result.sh"
+          chmod +x "$GITHUB_WORKSPACE/scripts/compose-ci-write-job-result.sh"
+
       - name: Setup Bun
+        id: setup_bun_typescript
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.9
 
       - name: Install dependencies
+        id: install_typescript_deps
         run: bun install --frozen-lockfile
 
       - name: Type check
+        id: typecheck_typescript_api
         run: bun run build
 
       - name: Run TypeScript API tests with coverage
+        id: run_typescript_api_tests
         run: |
-          mkdir -p ../../.artifacts/typescript-api
+          mkdir -p "$GITHUB_WORKSPACE/.artifacts/typescript-api"
           if find src -type f \( -name "*.test.ts" -o -name "*.spec.ts" -o -name "*.test.tsx" -o -name "*.spec.tsx" \) | grep -q .; then
-            bun test --coverage | tee ../../.artifacts/typescript-api/coverage.txt
+            bun test --coverage | tee "$GITHUB_WORKSPACE/.artifacts/typescript-api/coverage.txt"
+            echo "executed" > "$GITHUB_WORKSPACE/.artifacts/typescript-api/test-run-mode.txt"
           else
-            echo "No TypeScript API test files found; coverage run skipped." | tee ../../.artifacts/typescript-api/coverage.txt
+            echo "No TypeScript API test files found; coverage run skipped." | tee "$GITHUB_WORKSPACE/.artifacts/typescript-api/coverage.txt"
+            echo "no-tests" > "$GITHUB_WORKSPACE/.artifacts/typescript-api/test-run-mode.txt"
+          fi
+
+      - name: Write TypeScript API job result record
+        if: always()
+        run: |
+          job_status="pass"
+          stage="tests"
+          reason_code="success"
+          exit_code="0"
+
+          if [[ "${{ steps.setup_bun_typescript.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="setup-bun"
+            reason_code="bun_setup_failed"
+            exit_code="1"
+          elif [[ "${{ steps.install_typescript_deps.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="install-dependencies"
+            reason_code="dependency_install_failed"
+            exit_code="1"
+          elif [[ "${{ steps.typecheck_typescript_api.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="type-check"
+            reason_code="typecheck_failed"
+            exit_code="1"
+          elif [[ "${{ steps.run_typescript_api_tests.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="tests"
+            reason_code="typescript_tests_failed"
+            exit_code="1"
+          elif [[ -f "$GITHUB_WORKSPACE/.artifacts/typescript-api/test-run-mode.txt" ]] && [[ "$(cat "$GITHUB_WORKSPACE/.artifacts/typescript-api/test-run-mode.txt")" == "no-tests" ]]; then
+            job_status="skip"
+            stage="tests"
+            reason_code="typescript_tests_missing"
+            exit_code="0"
+          fi
+
+          bash "$GITHUB_WORKSPACE/scripts/compose-ci-write-job-result.sh" \
+            --job typescript-api-tests \
+            --status "$job_status" \
+            --stage "$stage" \
+            --reason-code "$reason_code" \
+            --exit-code "$exit_code"
+
+      - name: Ensure TypeScript API artifact path exists
+        if: always()
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/.artifacts/typescript-api"
+          if [[ ! -f "$GITHUB_WORKSPACE/.artifacts/typescript-api/coverage.txt" ]]; then
+            echo "TypeScript API coverage output missing due to an earlier stage failure." > "$GITHUB_WORKSPACE/.artifacts/typescript-api/coverage.txt"
           fi
 
       - name: Add TypeScript API coverage output to GitHub Actions summary
@@ -505,7 +1003,7 @@ jobs:
             echo "## TypeScript API Test Coverage Output"
             echo
             echo '```text'
-            cat ../../.artifacts/typescript-api/coverage.txt
+            cat "$GITHUB_WORKSPACE/.artifacts/typescript-api/coverage.txt"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -515,6 +1013,13 @@ jobs:
         with:
           name: typescript-api-coverage-output
           path: .artifacts/typescript-api
+
+      - name: Upload TypeScript API job result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-api-tests-job-result
+          path: .artifacts/compose-ci/jobs/typescript-api-tests
 
   compose-tests:
     runs-on: ubuntu-latest
@@ -573,7 +1078,8 @@ jobs:
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json" \
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/preflight.txt" \
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
-            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/test-all.log"
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/test-all.log" \
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/remediation.txt"
 
       - name: Validate compose tests lane contract
         if: always()
@@ -670,7 +1176,8 @@ jobs:
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json" \
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/preflight.txt" \
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
-            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/api.log"
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/api.log" \
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/remediation.txt"
 
       - name: Validate compose runtime lane contract
         if: always()
@@ -715,12 +1222,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare CI job result scripts
+        run: |
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-write-job-result.sh
+
       - name: Setup .NET
+        id: setup_dotnet_e2e
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
       - name: Bootstrap E2E runtime
+        id: bootstrap_e2e_runtime
         run: bash scripts/compose-e2e-bootstrap.sh
 
       - name: Detect E2E test project
@@ -733,6 +1247,7 @@ jobs:
           fi
 
       - name: Run E2E smoke contract tests
+        id: run_e2e_smoke_tests
         if: steps.detect_e2e.outputs.exists == 'true'
         run: |
           mkdir -p .artifacts/e2e/test-results
@@ -741,6 +1256,7 @@ jobs:
             --logger "trx;LogFileName=e2e-smoke.trx"
 
       - name: Mark E2E tests as skipped when project is absent
+        id: mark_e2e_skipped
         if: steps.detect_e2e.outputs.exists != 'true'
         run: |
           mkdir -p .artifacts/e2e/test-results
@@ -790,8 +1306,51 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Teardown E2E runtime
+        id: teardown_e2e_runtime
         if: always()
         run: bash scripts/compose-e2e-teardown.sh
+
+      - name: Write E2E smoke job result record
+        if: always()
+        run: |
+          job_status="pass"
+          stage="teardown"
+          reason_code="success"
+          exit_code="0"
+
+          if [[ "${{ steps.setup_dotnet_e2e.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="setup-dotnet"
+            reason_code="dotnet_setup_failed"
+            exit_code="1"
+          elif [[ "${{ steps.bootstrap_e2e_runtime.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="bootstrap"
+            reason_code="e2e_bootstrap_failed"
+            exit_code="1"
+          elif [[ "${{ steps.detect_e2e.outputs.exists }}" != "true" ]]; then
+            job_status="skip"
+            stage="project-detection"
+            reason_code="e2e_project_missing"
+            exit_code="0"
+          elif [[ "${{ steps.run_e2e_smoke_tests.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="e2e-tests"
+            reason_code="e2e_tests_failed"
+            exit_code="1"
+          elif [[ "${{ steps.teardown_e2e_runtime.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="teardown"
+            reason_code="e2e_teardown_failed"
+            exit_code="1"
+          fi
+
+          bash scripts/compose-ci-write-job-result.sh \
+            --job e2e-smoke \
+            --status "$job_status" \
+            --stage "$stage" \
+            --reason-code "$reason_code" \
+            --exit-code "$exit_code"
 
       - name: Upload E2E smoke artifacts
         if: always()
@@ -799,6 +1358,13 @@ jobs:
         with:
           name: e2e-smoke-artifacts
           path: .artifacts/e2e
+
+      - name: Upload E2E smoke job result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-smoke-job-result
+          path: .artifacts/compose-ci/jobs/e2e-smoke
 
   compose-electron:
     runs-on: ubuntu-latest
@@ -859,7 +1425,8 @@ jobs:
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json" \
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/preflight.txt" \
             --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
-            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/electron-example.log"
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/electron-example.log" \
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/remediation.txt"
 
       - name: Validate compose electron lane contract
         if: always()
@@ -894,3 +1461,123 @@ jobs:
       - name: Cleanup electron profile
         if: always()
         run: docker compose --profile electron down -v --remove-orphans
+
+  compose-ci-failure-aggregate:
+    if: always()
+    runs-on: ubuntu-latest
+    needs:
+      - native-c-tests-coverage
+      - dotnet-api-coverage-denominator
+      - dotnet-unit-tests-coverage
+      - dotnet-integration-tests-coverage
+      - dotnet-api-coverage-aggregate
+      - typescript-api-tests
+      - compose-tests
+      - compose-runtime
+      - compose-electron
+      - e2e-smoke
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare failure aggregate script
+        run: chmod +x scripts/compose-ci-aggregate-failures.sh
+
+      - name: Download compose tests artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: compose-tests-artifacts
+          path: .artifacts/aggregate/compose-tests
+
+      - name: Download compose runtime artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: compose-runtime-artifacts
+          path: .artifacts/aggregate/compose-runtime
+
+      - name: Download compose electron artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: compose-electron-artifacts
+          path: .artifacts/aggregate/compose-electron
+
+      - name: Download native C job result artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: native-c-tests-job-result
+          path: .artifacts/aggregate/job-results/native-c-tests-coverage
+
+      - name: Download denominator job result artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-api-coverage-denominator-job-result
+          path: .artifacts/aggregate/job-results/dotnet-api-coverage-denominator
+
+      - name: Download .NET unit job result artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-unit-tests-job-result
+          path: .artifacts/aggregate/job-results/dotnet-unit-tests-coverage
+
+      - name: Download .NET integration job result artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-integration-tests-job-result
+          path: .artifacts/aggregate/job-results/dotnet-integration-tests-coverage
+
+      - name: Download aggregate API coverage job result artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-api-coverage-aggregate-job-result
+          path: .artifacts/aggregate/job-results/dotnet-api-coverage-aggregate
+
+      - name: Download TypeScript API job result artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: typescript-api-tests-job-result
+          path: .artifacts/aggregate/job-results/typescript-api-tests
+
+      - name: Download E2E smoke job result artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-smoke-job-result
+          path: .artifacts/aggregate/job-results/e2e-smoke
+
+      - name: Build failure aggregate summary
+        run: |
+          bash scripts/compose-ci-aggregate-failures.sh \
+            --search-root .artifacts/aggregate \
+            --output .artifacts/compose-ci/failure-aggregate-summary.json \
+            --text-output .artifacts/compose-ci/failure-aggregate-summary.txt
+
+      - name: Add failure aggregate summary
+        if: always()
+        run: |
+          {
+            echo "## Compose CI Failure Aggregate"
+            echo
+            echo '```text'
+            cat .artifacts/compose-ci/failure-aggregate-summary.txt
+            echo '```'
+            echo
+            echo '```json'
+            cat .artifacts/compose-ci/failure-aggregate-summary.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload failure aggregate artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-ci-failure-aggregate
+          path: .artifacts/compose-ci/failure-aggregate-summary.json

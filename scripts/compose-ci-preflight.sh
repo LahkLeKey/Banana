@@ -58,6 +58,7 @@ mkdir -p "$diagnostics_dir"
 stage_file="$lane_dir/stage.txt"
 reason_file="$lane_dir/reason-code.txt"
 exit_file="$lane_dir/exit-code.txt"
+remediation_file="$lane_dir/remediation.txt"
 report_file="$diagnostics_dir/preflight.txt"
 
 {
@@ -68,6 +69,7 @@ report_file="$diagnostics_dir/preflight.txt"
 } > "$report_file"
 
 failures=0
+permission_contract_failures=0
 
 record_ok() {
   echo "ok:$1" >> "$report_file"
@@ -78,7 +80,15 @@ record_warn() {
 }
 
 record_error() {
-  echo "error:$1" >> "$report_file"
+  local error_code="$1"
+  echo "error:$error_code" >> "$report_file"
+
+  case "$error_code" in
+    script-not-readable:*|script-not-executable:*|missing-command:docker|docker-compose-v2-unavailable)
+      permission_contract_failures=$((permission_contract_failures + 1))
+      ;;
+  esac
+
   failures=$((failures + 1))
 }
 
@@ -130,12 +140,28 @@ fi
 
 if (( failures > 0 )); then
   echo "preflight" > "$stage_file"
-  echo "preflight_contract_violation" > "$reason_file"
+
+  reason_code="preflight_contract_violation"
+  if (( permission_contract_failures > 0 )); then
+    reason_code="permission_contract_violation"
+    cat > "$remediation_file" <<'EOF'
+Preflight detected a permission or executable contract violation.
+
+Remediation checklist:
+1. Ensure lane entry scripts are executable and LF-normalized.
+2. Ensure Docker Compose v2 is installed and available in PATH.
+3. Verify the CI shell can read and execute scripts under scripts/.
+EOF
+    echo "remediation_file=$remediation_file" >> "$report_file"
+  fi
+
+  echo "$reason_code" > "$reason_file"
   echo "1" > "$exit_file"
   echo "Preflight failed for lane '$lane'. See $report_file"
   exit 1
 fi
 
+rm -f "$remediation_file"
 echo "preflight" > "$stage_file"
 echo "success" > "$reason_file"
 echo "0" > "$exit_file"

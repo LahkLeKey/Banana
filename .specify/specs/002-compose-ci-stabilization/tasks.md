@@ -40,12 +40,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Refactor compose-tests job to consume lane helpers and write lane result records in .github/workflows/compose-ci.yml
-- [ ] T013 [US1] Refactor compose-runtime job to consume lane helpers and write lane result records in .github/workflows/compose-ci.yml
-- [ ] T014 [US1] Refactor compose-electron job to consume lane helpers and write lane result records in .github/workflows/compose-ci.yml
-- [ ] T015 [P] [US1] Add lane terminal summaries to GitHub step summary in .github/workflows/compose-ci.yml
-- [ ] T016 [US1] Add deterministic lane contract validator script in scripts/validate-compose-ci-lane-contract.sh
-- [ ] T017 [US1] Run lane contract validator inside compose jobs in .github/workflows/compose-ci.yml
+- [x] T012 [US1] Refactor compose-tests job to consume lane helpers and write lane result records in .github/workflows/compose-ci.yml
+- [x] T013 [US1] Refactor compose-runtime job to consume lane helpers and write lane result records in .github/workflows/compose-ci.yml
+- [x] T014 [US1] Refactor compose-electron job to consume lane helpers and write lane result records in .github/workflows/compose-ci.yml
+- [x] T015 [P] [US1] Add lane terminal summaries to GitHub step summary in .github/workflows/compose-ci.yml
+- [x] T016 [US1] Add deterministic lane contract validator script in scripts/validate-compose-ci-lane-contract.sh
+- [x] T017 [US1] Run lane contract validator inside compose jobs in .github/workflows/compose-ci.yml
 
 **Checkpoint**: Compose lane pass/fail outcomes are deterministic and attributable.
 
@@ -59,21 +59,21 @@
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Extend compose lane jobs to always run diagnostics collection helpers in .github/workflows/compose-ci.yml
-- [ ] T019 [P] [US2] Add fallback/skip manifest generation for optional surfaces in scripts/compose-ci-artifact-manifest.sh
-- [ ] T020 [P] [US2] Update e2e runtime bootstrap diagnostics output in scripts/compose-e2e-bootstrap.sh
-- [ ] T021 [P] [US2] Update e2e runtime teardown to preserve diagnostics on failure in scripts/compose-e2e-teardown.sh
-- [ ] T022 [US2] Add artifact publication records and upload gates in .github/workflows/compose-ci.yml
-- [ ] T023 [US2] Ensure integration/e2e optional project checks emit explicit skip evidence in .github/workflows/compose-ci.yml
-- [ ] T024 [US2] Add compose-lane diagnostics contract notes in .specify/wiki/ci-compose-stabilization.md
-- [ ] T025 [US2] Publish human-facing compose-lane diagnostics runbook in .wiki/ci-compose-stabilization.md
-- [ ] T037 [US2] Add path-safe artifact upload guards for non-compose jobs (`typescript-api-tests`, `dotnet-integration-tests-coverage`) in .github/workflows/compose-ci.yml (FR-013)
+- [x] T018 [US2] Extend compose lane jobs to always run diagnostics collection helpers in .github/workflows/compose-ci.yml
+- [x] T019 [P] [US2] Add fallback/skip manifest generation for optional surfaces in scripts/compose-ci-artifact-manifest.sh
+- [x] T020 [P] [US2] Update e2e runtime bootstrap diagnostics output in scripts/compose-e2e-bootstrap.sh
+- [x] T021 [P] [US2] Update e2e runtime teardown to preserve diagnostics on failure in scripts/compose-e2e-teardown.sh
+- [x] T022 [US2] Add artifact publication records and upload gates in .github/workflows/compose-ci.yml
+- [x] T023 [US2] Ensure integration/e2e optional project checks emit explicit skip evidence in .github/workflows/compose-ci.yml
+- [x] T024 [US2] Add compose-lane diagnostics contract notes in .specify/wiki/ci-compose-stabilization.md
+- [x] T025 [US2] Publish human-facing compose-lane diagnostics runbook in .wiki/ci-compose-stabilization.md
+- [x] T037 [US2] Add path-safe artifact upload guards for non-compose jobs (`typescript-api-tests`, `dotnet-integration-tests-coverage`) in .github/workflows/compose-ci.yml (FR-013)
 
 ### Implementation for User Story 4
 
-- [ ] T038 [US4] Extend deterministic result records to merge-gated non-compose coverage/test jobs in .github/workflows/compose-ci.yml (FR-011, FR-014)
-- [ ] T039 [P] [US4] Add permission failure remediation metadata for exit `126` evidence in scripts/compose-tests.sh and scripts/compose-ci-preflight.sh (FR-012)
-- [ ] T040 [P] [US4] Add aggregate failed-job summary artifact generation in .github/workflows/compose-ci.yml (FR-014)
+- [x] T038 [US4] Extend deterministic result records to merge-gated non-compose coverage/test jobs in .github/workflows/compose-ci.yml (FR-011, FR-014)
+- [x] T039 [P] [US4] Add permission failure remediation metadata for exit `126` evidence in scripts/compose-tests.sh and scripts/compose-ci-preflight.sh (FR-012)
+- [x] T040 [P] [US4] Add aggregate failed-job summary artifact generation in .github/workflows/compose-ci.yml (FR-014)
 
 **Checkpoint**: Failures and skips produce actionable evidence without missing-path upload errors.
 
@@ -87,12 +87,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Upgrade runtime-backed action references in .github/workflows/compose-ci.yml to deprecation-safe versions
-- [ ] T027 [P] [US3] Add workflow runtime compatibility check script in scripts/check-workflow-runtime-deprecations.sh
-- [ ] T028 [US3] Run runtime compatibility check and publish results in .github/workflows/compose-ci.yml
-- [ ] T029 [P] [US3] Add bounded exception registry for runtime warnings in .github/workflows/runtime-compatibility-exceptions.yml
-- [ ] T030 [US3] Document owner/date exception policy in .specify/wiki/ci-runtime-compatibility.md
-- [ ] T031 [US3] Document human runbook for runtime warning triage in .wiki/ci-runtime-compatibility.md
+- [x] T026 [US3] Upgrade runtime-backed action references in .github/workflows/compose-ci.yml to deprecation-safe versions
+- [x] T027 [P] [US3] Add workflow runtime compatibility check script in scripts/check-workflow-runtime-deprecations.sh
+- [x] T028 [US3] Run runtime compatibility check and publish results in .github/workflows/compose-ci.yml
+- [x] T029 [P] [US3] Add bounded exception registry for runtime warnings in .github/workflows/runtime-compatibility-exceptions.yml
+- [x] T030 [US3] Document owner/date exception policy in .specify/wiki/ci-runtime-compatibility.md
+- [x] T031 [US3] Document human runbook for runtime warning triage in .wiki/ci-runtime-compatibility.md
 
 **Checkpoint**: Runtime deprecation drift is removed or explicitly owned with deadlines.
 
@@ -102,8 +102,8 @@
 
 **Purpose**: Validate the full feature slice and close SDLC/documentation loops.
 
-- [ ] T032 [P] Run boundary validation for 002 spec (FR-010) and archive output in .artifacts/spec/002-compose-ci-stabilization-boundaries.json
-- [ ] T033 [P] Run task traceability validation (FR-009) and archive output in .artifacts/spec/002-compose-ci-stabilization-traceability.json
+- [x] T032 [P] Run boundary validation for 002 spec (FR-010) and archive output in .artifacts/spec/002-compose-ci-stabilization-boundaries.json
+- [x] T033 [P] Run task traceability validation (FR-009) and archive output in .artifacts/spec/002-compose-ci-stabilization-traceability.json
 - [ ] T034 Execute 10-run deterministic verification (FR-001, FR-003, FR-004) and record outcomes in .artifacts/spec/002-compose-ci-stabilization-verification.md
 - [ ] T035 Update merge-gate troubleshooting section (FR-009) in README.md
 - [ ] T036 Run wiki synchronization workflow script (FR-010) and capture output in .artifacts/spec/002-compose-ci-stabilization-wiki-sync.log

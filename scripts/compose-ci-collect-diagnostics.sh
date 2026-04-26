@@ -75,7 +75,7 @@ else
   docker ps > "$diagnostics_dir/docker-ps.txt" 2>&1 || true
 fi
 
-for metadata_file in stage.txt reason-code.txt exit-code.txt status.txt lane-result.json; do
+for metadata_file in stage.txt reason-code.txt exit-code.txt status.txt lane-result.json remediation.txt; do
   if [[ -f "$lane_dir/$metadata_file" ]]; then
     cp "$lane_dir/$metadata_file" "$diagnostics_dir/$metadata_file"
   fi
