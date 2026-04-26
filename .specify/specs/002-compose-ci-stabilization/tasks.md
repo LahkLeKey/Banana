@@ -7,11 +7,11 @@
 
 **Purpose**: Establish shared lane tooling and artifact conventions used by all stories.
 
-- [ ] T001 Define shared lane artifact root and lane metadata variables (FR-001, FR-007) in .github/workflows/compose-ci.yml
-- [ ] T002 [P] Add compose lane preflight helper (FR-006) in scripts/compose-ci-preflight.sh
-- [ ] T003 [P] Add compose diagnostics collection helper (FR-002, FR-009) in scripts/compose-ci-collect-diagnostics.sh
-- [ ] T004 [P] Add artifact manifest helper (FR-003, FR-004) in scripts/compose-ci-artifact-manifest.sh
-- [ ] T005 Ensure shell script LF and execute-bit contract (FR-006) in .gitattributes
+- [x] T001 Define shared lane artifact root and lane metadata variables (FR-001, FR-007) in .github/workflows/compose-ci.yml
+- [x] T002 [P] Add compose lane preflight helper (FR-006) in scripts/compose-ci-preflight.sh
+- [x] T003 [P] Add compose diagnostics collection helper (FR-002, FR-009) in scripts/compose-ci-collect-diagnostics.sh
+- [x] T004 [P] Add artifact manifest helper (FR-003, FR-004) in scripts/compose-ci-artifact-manifest.sh
+- [x] T005 Ensure shell script LF and execute-bit contract (FR-006) in .gitattributes
 
 ---
 
@@ -21,12 +21,12 @@
 
 **⚠️ CRITICAL**: No user story work starts before this phase is complete.
 
-- [ ] T006 Integrate preflight helper execution into compose lanes (FR-001, FR-006) in .github/workflows/compose-ci.yml
-- [ ] T007 [P] Add lane result writer helper (FR-001, FR-002) in scripts/compose-ci-write-lane-result.sh
-- [ ] T008 [P] Add deterministic stage/error mapping (FR-001, FR-006) to scripts/compose-tests.sh
-- [ ] T009 [P] Add deterministic health timeout/stage mapping (FR-001, FR-006) to scripts/compose-runtime.sh
-- [ ] T010 [P] Add deterministic smoke stage/error mapping (FR-001, FR-006) to scripts/compose-electron.sh
-- [ ] T011 Add always-on diagnostics upload skeleton (FR-002, FR-003) for compose lanes in .github/workflows/compose-ci.yml
+- [x] T006 Integrate preflight helper execution into compose lanes (FR-001, FR-006) in .github/workflows/compose-ci.yml
+- [x] T007 [P] Add lane result writer helper (FR-001, FR-002) in scripts/compose-ci-write-lane-result.sh
+- [x] T008 [P] Add deterministic stage/error mapping (FR-001, FR-006) to scripts/compose-tests.sh
+- [x] T009 [P] Add deterministic health timeout/stage mapping (FR-001, FR-006) to scripts/compose-runtime.sh
+- [x] T010 [P] Add deterministic smoke stage/error mapping (FR-001, FR-006) to scripts/compose-electron.sh
+- [x] T011 Add always-on diagnostics upload skeleton (FR-002, FR-003) for compose lanes in .github/workflows/compose-ci.yml
 
 **Checkpoint**: Shared lane contract is in place and user story implementation can proceed.
 

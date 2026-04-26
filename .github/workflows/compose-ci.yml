@@ -4,6 +4,10 @@ on:
   push:
   workflow_dispatch:
 
+env:
+  BANANA_CI_ARTIFACT_ROOT: .artifacts/compose-ci
+  BANANA_CI_LANE_SCHEMA_VERSION: "1"
+
 jobs:
   native-c-tests-coverage:
     runs-on: ubuntu-latest
@@ -514,13 +518,68 @@ jobs:
 
   compose-tests:
     runs-on: ubuntu-latest
+    env:
+      BANANA_CI_LANE: compose-tests
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Docker Compose tests profile
+      - name: Prepare compose lane scripts
         run: |
-          docker compose --profile tests up --build --abort-on-container-exit --exit-code-from test-all test-all
+          chmod +x scripts/compose-tests.sh
+          chmod +x scripts/compose-ci-preflight.sh
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-collect-diagnostics.sh
+          chmod +x scripts/compose-ci-artifact-manifest.sh
+
+      - name: Preflight compose tests lane
+        run: |
+          bash scripts/compose-ci-preflight.sh \
+            --lane "$BANANA_CI_LANE" \
+            --profile tests \
+            --entry-script scripts/compose-tests.sh
+
+      - name: Run compose tests lane
+        id: run_compose_tests
+        run: bash scripts/compose-tests.sh
+
+      - name: Write compose tests lane result
+        if: always()
+        run: |
+          lane_status="fail"
+          if [[ "${{ steps.run_compose_tests.outcome }}" == "success" ]]; then
+            lane_status="pass"
+          fi
+
+          bash scripts/compose-ci-write-lane-result.sh \
+            --lane "$BANANA_CI_LANE" \
+            --status "$lane_status"
+
+      - name: Collect compose tests diagnostics
+        if: always()
+        run: |
+          bash scripts/compose-ci-collect-diagnostics.sh \
+            --lane "$BANANA_CI_LANE" \
+            --profile tests \
+            --service test-all
+
+      - name: Build compose tests artifact manifest
+        if: always()
+        run: |
+          bash scripts/compose-ci-artifact-manifest.sh \
+            --lane "$BANANA_CI_LANE" \
+            --artifact-name compose-tests-artifacts \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json" \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/preflight.txt" \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/test-all.log"
+
+      - name: Upload compose tests artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-tests-artifacts
+          path: .artifacts/compose-ci/compose-tests
 
       - name: Cleanup tests profile
         if: always()
@@ -528,23 +587,72 @@ jobs:
 
   compose-runtime:
     runs-on: ubuntu-latest
+    env:
+      BANANA_CI_LANE: compose-runtime
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Start runtime profile
-        run: docker compose --profile runtime up --build -d api
-
-      - name: Wait for API
+      - name: Prepare compose lane scripts
         run: |
-          for i in {1..30}; do
-            if curl -fsS "http://localhost:8080/health"; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "API did not become ready in time"
-          exit 1
+          chmod +x scripts/compose-runtime.sh
+          chmod +x scripts/compose-ci-preflight.sh
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-collect-diagnostics.sh
+          chmod +x scripts/compose-ci-artifact-manifest.sh
+
+      - name: Preflight compose runtime lane
+        run: |
+          bash scripts/compose-ci-preflight.sh \
+            --lane "$BANANA_CI_LANE" \
+            --profile runtime \
+            --entry-script scripts/compose-runtime.sh
+
+      - name: Run compose runtime lane
+        id: run_compose_runtime
+        env:
+          BANANA_RUNTIME_BUILD: "true"
+          BANANA_RUNTIME_HEALTH_URL: http://localhost:8080/health
+          BANANA_RUNTIME_HEALTH_TIMEOUT_SEC: "60"
+        run: bash scripts/compose-runtime.sh api
+
+      - name: Write compose runtime lane result
+        if: always()
+        run: |
+          lane_status="fail"
+          if [[ "${{ steps.run_compose_runtime.outcome }}" == "success" ]]; then
+            lane_status="pass"
+          fi
+
+          bash scripts/compose-ci-write-lane-result.sh \
+            --lane "$BANANA_CI_LANE" \
+            --status "$lane_status"
+
+      - name: Collect compose runtime diagnostics
+        if: always()
+        run: |
+          bash scripts/compose-ci-collect-diagnostics.sh \
+            --lane "$BANANA_CI_LANE" \
+            --profile runtime \
+            --service api
+
+      - name: Build compose runtime artifact manifest
+        if: always()
+        run: |
+          bash scripts/compose-ci-artifact-manifest.sh \
+            --lane "$BANANA_CI_LANE" \
+            --artifact-name compose-runtime-artifacts \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json" \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/preflight.txt" \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/api.log"
+
+      - name: Upload compose runtime artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-runtime-artifacts
+          path: .artifacts/compose-ci/compose-runtime
 
       - name: Cleanup runtime profile
         if: always()
@@ -646,13 +754,70 @@ jobs:
 
   compose-electron:
     runs-on: ubuntu-latest
+    env:
+      BANANA_CI_LANE: compose-electron
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Docker Compose electron profile
+      - name: Prepare compose lane scripts
         run: |
-          docker compose --profile electron up --build --abort-on-container-exit --exit-code-from electron-example electron-example
+          chmod +x scripts/compose-electron.sh
+          chmod +x scripts/compose-ci-preflight.sh
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-collect-diagnostics.sh
+          chmod +x scripts/compose-ci-artifact-manifest.sh
+
+      - name: Preflight compose electron lane
+        run: |
+          bash scripts/compose-ci-preflight.sh \
+            --lane "$BANANA_CI_LANE" \
+            --profile electron \
+            --entry-script scripts/compose-electron.sh
+
+      - name: Run compose electron lane
+        id: run_compose_electron
+        env:
+          BANANA_ELECTRON_BUILD: "true"
+        run: bash scripts/compose-electron.sh
+
+      - name: Write compose electron lane result
+        if: always()
+        run: |
+          lane_status="fail"
+          if [[ "${{ steps.run_compose_electron.outcome }}" == "success" ]]; then
+            lane_status="pass"
+          fi
+
+          bash scripts/compose-ci-write-lane-result.sh \
+            --lane "$BANANA_CI_LANE" \
+            --status "$lane_status"
+
+      - name: Collect compose electron diagnostics
+        if: always()
+        run: |
+          bash scripts/compose-ci-collect-diagnostics.sh \
+            --lane "$BANANA_CI_LANE" \
+            --profile electron \
+            --service electron-example
+
+      - name: Build compose electron artifact manifest
+        if: always()
+        run: |
+          bash scripts/compose-ci-artifact-manifest.sh \
+            --lane "$BANANA_CI_LANE" \
+            --artifact-name compose-electron-artifacts \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/lane-result.json" \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/preflight.txt" \
+            --expected "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/compose-ps.txt" \
+            --optional "$BANANA_CI_ARTIFACT_ROOT/$BANANA_CI_LANE/diagnostics/electron-example.log"
+
+      - name: Upload compose electron artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-electron-artifacts
+          path: .artifacts/compose-ci/compose-electron
 
       - name: Cleanup electron profile
         if: always()

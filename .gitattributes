@@ -3,3 +3,9 @@
 
 # Ensure shell scripts keep Linux shebang compatibility.
 *.sh text eol=lf
+
+# Keep workflow files normalized for Linux runners.
+.github/workflows/*.yml text eol=lf
+
+# Scope script normalization to repository delivery entry points.
+scripts/**/*.sh text eol=lf
