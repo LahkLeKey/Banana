@@ -92,3 +92,26 @@ Capture these outputs in closure validation:
 - Exception snapshot references (if used)
 - Failure taxonomy counts by class
 - Verification window notes for repeat-run consistency
+
+## 9. Portability parity checks
+
+Validate normalized lane results enforce workspace-relative evidence paths:
+
+```bash
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+for p in Path('.artifacts').rglob('coverage-lane-result.json'):
+	payload = json.loads(p.read_text(encoding='utf-8'))
+	evidence = payload.get('evidence_bundle_path', '')
+	if evidence.startswith('/') or ':' in evidence or '/../' in evidence or evidence.startswith('../'):
+		raise SystemExit(f'Path portability violation in {p}: {evidence}')
+print('Path portability checks passed')
+PY
+```
+
+Expected:
+
+- No normalized lane result contains absolute or parent-traversal evidence paths.
+- Local and CI artifacts use the same schema and path semantics.

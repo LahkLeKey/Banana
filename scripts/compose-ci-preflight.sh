@@ -154,6 +154,29 @@ if [[ -n "$profile" ]]; then
   fi
 fi
 
+requires_integration_dependencies="false"
+if [[ "$lane" == *"integration"* || "$profile" == "integration" ]]; then
+  requires_integration_dependencies="true"
+fi
+
+if [[ "$requires_integration_dependencies" == "true" ]]; then
+  if [[ -n "${BANANA_PG_CONNECTION:-}" ]]; then
+    record_ok "integration-dependency:banana-pg-connection"
+  else
+    record_error "integration-dependency-missing:banana-pg-connection"
+  fi
+
+  if [[ -n "${BANANA_NATIVE_PATH:-}" ]]; then
+    if [[ -d "$BANANA_NATIVE_PATH" ]]; then
+      record_ok "integration-dependency:banana-native-path"
+    else
+      record_error "integration-dependency-invalid:banana-native-path"
+    fi
+  else
+    record_error "integration-dependency-missing:banana-native-path"
+  fi
+fi
+
 if (( failures > 0 )); then
   echo "preflight" > "$stage_file"
 

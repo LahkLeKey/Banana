@@ -66,11 +66,27 @@ Coverage percentages are valid only when policy contract is attached.
 
 E2e lanes must compute denominator using a machine-readable flow manifest.
 
+### Machine-readable format
+
+```json
+{
+  "channel": "api-react",
+  "manifest_version": "v1",
+  "declared_flows": [
+    { "flow_id": "api-health", "description": "api-health" },
+    { "flow_id": "api-banana", "description": "api-banana" }
+  ],
+  "required_flow_count": 2,
+  "exercised_flow_ids": ["api-health", "api-banana"],
+  "exercised_percent": 100.0
+}
+```
+
 ### Required fields
 
-- `channel`
+- `channel` in `{api-react, electron, mobile}`
 - `manifest_version`
-- `declared_flows`
+- `declared_flows` (array of `{flow_id, description}`)
 - `required_flow_count`
 - `exercised_flow_ids`
 - `exercised_percent`
@@ -80,6 +96,8 @@ E2e lanes must compute denominator using a machine-readable flow manifest.
 - `required_flow_count` must equal declared flow count.
 - `exercised_percent` must use canonical rounding rule.
 - Missing manifest for required e2e lane is a `coverage_contract_violation`.
+- E2e lane status `pass` requires `exercised_percent >= threshold_percent`.
+- E2e lane status `fail` with `exercised_percent < threshold_percent` must use `threshold_violation`.
 
 ## Exception Contract
 
