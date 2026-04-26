@@ -2,6 +2,7 @@
     "expo": {
         "name": "Banana",
         "slug": "banana",
+        "scheme": "banana",
         "version": "0.1.0",
         "orientation": "portrait",
         "userInterfaceStyle": "automatic",
@@ -9,6 +10,36 @@
             "android",
             "ios",
             "web"
-        ]
+        ],
+        "ios": {
+            "bundleIdentifier": "com.banana.app",
+            "infoPlist": {
+                "CFBundleURLTypes": [
+                    {
+                        "CFBundleURLSchemes": ["banana"]
+                    }
+                ],
+                "NSExtensionAttributes": {
+                    "NSExtensionActivationRule": {
+                        "NSExtensionActivationSupportsText": true
+                    }
+                }
+            }
+        },
+        "android": {
+            "package": "com.banana.app",
+            "intentFilters": [
+                {
+                    "action": "SEND",
+                    "category": ["DEFAULT"],
+                    "data": [{ "mimeType": "text/plain" }]
+                },
+                {
+                    "action": "VIEW",
+                    "category": ["DEFAULT", "BROWSABLE"],
+                    "data": [{ "scheme": "banana" }]
+                }
+            ]
+        }
     }
 }
