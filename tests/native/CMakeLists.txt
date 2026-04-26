@@ -19,6 +19,14 @@ add_executable(banana_test_ml_regression test_ml_regression.c)
 target_link_libraries(banana_test_ml_regression PRIVATE banana_native)
 add_test(NAME banana_test_ml_regression COMMAND banana_test_ml_regression)
 
+add_executable(banana_test_ml_binary test_ml_binary.c)
+target_link_libraries(banana_test_ml_binary PRIVATE banana_native)
+add_test(NAME banana_test_ml_binary COMMAND banana_test_ml_binary)
+
+add_executable(banana_test_ml_transformer test_ml_transformer.c)
+target_link_libraries(banana_test_ml_transformer PRIVATE banana_native)
+add_test(NAME banana_test_ml_transformer COMMAND banana_test_ml_transformer)
+
 # Windows: ensure the wrapper DLL sits next to the test executable.
 if(WIN32)
   add_custom_command(TARGET banana_test_calc POST_BUILD
@@ -41,4 +49,12 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
       $<TARGET_FILE:banana_native>
       $<TARGET_FILE_DIR:banana_test_ml_regression>)
+  add_custom_command(TARGET banana_test_ml_binary POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:banana_native>
+      $<TARGET_FILE_DIR:banana_test_ml_binary>)
+  add_custom_command(TARGET banana_test_ml_transformer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:banana_native>
+      $<TARGET_FILE_DIR:banana_test_ml_transformer>)
 endif()

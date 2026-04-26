@@ -21,9 +21,9 @@ description: "Task list for Full Brain Transformer Runnable C Code"
 
 **Purpose**: Stage feature workspace and confirm preset path is healthy.
 
-- [ ] T001 Create execution tracker in `.specify/specs/012-full-brain-transformer-runnable/README.md`
-- [ ] T002 [P] Capture in-scope files in `.specify/specs/012-full-brain-transformer-runnable/analysis/in-scope-files.md`
-- [ ] T003 [P] Capture validation commands in `.specify/specs/012-full-brain-transformer-runnable/analysis/validation-commands.md`
+- [x] T001 Create execution tracker in `.specify/specs/012-full-brain-transformer-runnable/README.md`
+- [x] T002 [P] Capture in-scope files in `.specify/specs/012-full-brain-transformer-runnable/analysis/in-scope-files.md`
+- [x] T003 [P] Capture validation commands in `.specify/specs/012-full-brain-transformer-runnable/analysis/validation-commands.md`
 
 ---
 
@@ -33,9 +33,9 @@ description: "Task list for Full Brain Transformer Runnable C Code"
 
 **⚠️ CRITICAL**: User story tasks start only after this phase is complete.
 
-- [ ] T004 [P] Document context token schema (Left score slot, Right label slot, raw feature slots) in `src/native/core/domain/ml/transformer/banana_ml_transformer.h`
-- [ ] T005 [P] Document JSON output shape contract in `src/native/wrapper/domain/ml/transformer/banana_wrapper_ml_transformer.h`
-- [ ] T006 Define embedding output shape (dim, expected L2 norm bound) in `src/native/core/domain/ml/transformer/banana_ml_transformer.h`
+- [x] T004 [P] Document context token schema (Left score slot, Right label slot, raw feature slots) in `src/native/core/domain/ml/transformer/banana_ml_transformer.h`
+- [x] T005 [P] Document JSON output shape contract in `src/native/wrapper/domain/ml/transformer/banana_wrapper_ml_transformer.h`
+- [x] T006 Define embedding output shape (dim, expected L2 norm bound) in `src/native/core/domain/ml/transformer/banana_ml_transformer.h`
 
 **Checkpoint**: Input/output contracts are fixed and reviewable.
 
@@ -49,11 +49,11 @@ description: "Task list for Full Brain Transformer Runnable C Code"
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Add null-pointer guard for features and out_result in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
-- [ ] T008 [US1] Add well-formed context token block contract test in `tests/native/test_ml_transformer.c`
-- [ ] T009 [US1] Add null-pointer guard test in `tests/native/test_ml_transformer.c`
-- [ ] T010 [US1] Register `banana_test_ml_transformer` ctest target in `tests/native/CMakeLists.txt`
-- [ ] T011 [US1] Capture US1 evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/us1-input-contract-evidence.md`
+- [x] T007 [US1] Add null-pointer guard for features and out_result in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
+- [x] T008 [US1] Add well-formed context token block contract test in `tests/native/test_ml_transformer.c`
+- [x] T009 [US1] Add null-pointer guard test in `tests/native/test_ml_transformer.c`
+- [x] T010 [US1] Register `banana_test_ml_transformer` ctest target in `tests/native/CMakeLists.txt`
+- [x] T011 [US1] Capture US1 evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/us1-input-contract-evidence.md`
 
 **Checkpoint**: Input format contract is enforced at runtime with passing native test.
 
@@ -67,10 +67,10 @@ description: "Task list for Full Brain Transformer Runnable C Code"
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Audit `src/native/core/domain/ml/transformer/banana_ml_transformer.c` for nondeterminism (time, PRNG, uninitialized memory)
-- [ ] T013 [US2] Lock seed to documented constant in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
-- [ ] T014 [US2] Add 5-call byte-identical idempotence test in `tests/native/test_ml_transformer.c`
-- [ ] T015 [US2] Capture US2 evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/us2-idempotence-evidence.md`
+- [x] T012 [US2] Audit `src/native/core/domain/ml/transformer/banana_ml_transformer.c` for nondeterminism (time, PRNG, uninitialized memory)
+- [x] T013 [US2] Lock seed to documented constant in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
+- [x] T014 [US2] Add 5-call byte-identical idempotence test in `tests/native/test_ml_transformer.c`
+- [x] T015 [US2] Capture US2 evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/us2-idempotence-evidence.md`
 
 **Checkpoint**: Idempotence is enforced and verifiable.
 
@@ -84,10 +84,10 @@ description: "Task list for Full Brain Transformer Runnable C Code"
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Define `assert_embedding_valid(const double* vec, size_t dim, double max_norm)` helper in `tests/native/test_ml_transformer.c`
-- [ ] T017 [US3] Apply helper to current transformer output (stub fingerprint vector) in `tests/native/test_ml_transformer.c`
-- [ ] T018 [US3] Add helper failure-mode test (NULL vec, zero dim) in `tests/native/test_ml_transformer.c`
-- [ ] T019 [US3] Capture US3 evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/us3-embedding-helper-evidence.md`
+- [x] T016 [US3] Define `assert_embedding_valid(const double* vec, size_t dim, double max_norm)` helper in `tests/native/test_ml_transformer.c`
+- [x] T017 [US3] Apply helper to current transformer output (stub fingerprint vector) in `tests/native/test_ml_transformer.c`
+- [x] T018 [US3] Add helper failure-mode test (NULL vec, zero dim) in `tests/native/test_ml_transformer.c`
+- [x] T019 [US3] Capture US3 evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/us3-embedding-helper-evidence.md`
 
 **Checkpoint**: Embedding assertion pattern is reusable for future vector outputs.
 
@@ -101,12 +101,12 @@ description: "Task list for Full Brain Transformer Runnable C Code"
 
 ### Implementation for User Story 4
 
-- [ ] T020 [US4] Add `BANANA_TRANSFORMER_LOG_ATTENTION` env-var or compile-flag toggle in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
-- [ ] T021 [US4] Populate per-row attention buffer summing to ~1.0 when toggle is on in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
-- [ ] T022 [US4] Skip allocation when toggle is off (default-off bit-for-bit equivalence) in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
-- [ ] T023 [US4] Add attention-on test (buffer populated, weights finite, sum ≈ 1.0) in `tests/native/test_ml_transformer.c`
-- [ ] T024 [US4] Add attention-off test (buffer NULL, output unchanged vs prior baseline) in `tests/native/test_ml_transformer.c`
-- [ ] T025 [US4] Capture US4 evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/us4-attention-evidence.md`
+- [x] T020 [US4] Add `BANANA_TRANSFORMER_LOG_ATTENTION` env-var or compile-flag toggle in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
+- [x] T021 [US4] Populate per-row attention buffer summing to ~1.0 when toggle is on in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
+- [x] T022 [US4] Skip allocation when toggle is off (default-off bit-for-bit equivalence) in `src/native/core/domain/ml/transformer/banana_ml_transformer.c`
+- [x] T023 [US4] Add attention-on test (buffer populated, weights finite, sum ≈ 1.0) in `tests/native/test_ml_transformer.c`
+- [x] T024 [US4] Add attention-off test (buffer NULL, output unchanged vs prior baseline) in `tests/native/test_ml_transformer.c`
+- [x] T025 [US4] Capture US4 evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/us4-attention-evidence.md`
 
 **Checkpoint**: Attention-map logging is operational under toggle.
 
@@ -116,11 +116,11 @@ description: "Task list for Full Brain Transformer Runnable C Code"
 
 **Purpose**: Final consistency, validation, and closure.
 
-- [ ] T026 Run `cmake --preset default && cmake --build --preset default && ctest --preset default --output-on-failure` and capture full evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/native-lane-evidence.md`
-- [ ] T027 [P] Update `.specify/specs/012-full-brain-transformer-runnable/quickstart.md` (create if missing) with exact commands used
-- [ ] T028 Verify analysis artifact completeness in `.specify/specs/012-full-brain-transformer-runnable/analysis/`
-- [ ] T029 Document residual U-001 quantization follow-up in `.specify/specs/012-full-brain-transformer-runnable/analysis/residual-followups.md`
-- [ ] T030 Mark all tasks complete in `.specify/specs/012-full-brain-transformer-runnable/tasks.md`
+- [x] T026 Run `cmake --preset default && cmake --build --preset default && ctest --preset default --output-on-failure` and capture full evidence in `.specify/specs/012-full-brain-transformer-runnable/analysis/native-lane-evidence.md`
+- [x] T027 [P] Update `.specify/specs/012-full-brain-transformer-runnable/quickstart.md` (create if missing) with exact commands used
+- [x] T028 Verify analysis artifact completeness in `.specify/specs/012-full-brain-transformer-runnable/analysis/`
+- [x] T029 Document residual U-001 quantization follow-up in `.specify/specs/012-full-brain-transformer-runnable/analysis/residual-followups.md`
+- [x] T030 Mark all tasks complete in `.specify/specs/012-full-brain-transformer-runnable/tasks.md`
 
 ---
 

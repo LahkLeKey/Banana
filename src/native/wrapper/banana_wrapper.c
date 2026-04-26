@@ -59,8 +59,25 @@ int banana_classify_banana_binary(const char* input_json, char** out_json) {
     return banana_wrapper_ml_classify_binary(input_json, out_json);
 }
 
+int banana_classify_banana_binary_with_threshold(const char* input_json,
+                                                  double threshold,
+                                                  char** out_json) {
+    return banana_wrapper_ml_classify_binary_with_threshold(input_json, threshold, out_json);
+}
+
 int banana_classify_banana_transformer(const char* input_json, char** out_json) {
     return banana_wrapper_ml_classify_transformer(input_json, out_json);
+}
+
+int banana_classify_banana_transformer_ex(const char* input_json,
+                                           int log_attention,
+                                           double* out_embedding,
+                                           double* out_attention_weights,
+                                           char** out_json) {
+    return banana_wrapper_ml_classify_transformer_ex(input_json, log_attention,
+                                                      out_embedding,
+                                                      out_attention_weights,
+                                                      out_json);
 }
 
 int banana_classify_not_banana_junk(const char* input_json, char** out_json) {

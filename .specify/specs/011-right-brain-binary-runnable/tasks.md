@@ -21,9 +21,9 @@ description: "Task list for Right Brain Binary Runnable C Code"
 
 **Purpose**: Stage feature workspace and confirm preset path is healthy.
 
-- [ ] T001 Create execution tracker in `.specify/specs/011-right-brain-binary-runnable/README.md`
-- [ ] T002 [P] Capture in-scope files in `.specify/specs/011-right-brain-binary-runnable/analysis/in-scope-files.md`
-- [ ] T003 [P] Capture validation commands in `.specify/specs/011-right-brain-binary-runnable/analysis/validation-commands.md`
+- [x] T001 Create execution tracker in `.specify/specs/011-right-brain-binary-runnable/README.md`
+- [x] T002 [P] Capture in-scope files in `.specify/specs/011-right-brain-binary-runnable/analysis/in-scope-files.md`
+- [x] T003 [P] Capture validation commands in `.specify/specs/011-right-brain-binary-runnable/analysis/validation-commands.md`
 
 ---
 
@@ -33,9 +33,9 @@ description: "Task list for Right Brain Binary Runnable C Code"
 
 **⚠️ CRITICAL**: User story tasks start only after this phase is complete.
 
-- [ ] T004 [P] Choose and document operating point (precision target, recall target, default threshold) in `src/native/core/domain/ml/binary/banana_ml_binary.h`
-- [ ] T005 [P] Document JSON shape contract (`model`, `label`, `confidence`, `confusion_matrix`, `jaccard`) in `src/native/wrapper/domain/ml/binary/banana_wrapper_ml_binary.h`
-- [ ] T006 Define affine calibration constants (`a`, `b`) and document semantics in `src/native/core/domain/ml/binary/banana_ml_binary.h`
+- [x] T004 [P] Choose and document operating point (precision target, recall target, default threshold) in `src/native/core/domain/ml/binary/banana_ml_binary.h`
+- [x] T005 [P] Document JSON shape contract (`model`, `label`, `confidence`, `confusion_matrix`, `jaccard`) in `src/native/wrapper/domain/ml/binary/banana_wrapper_ml_binary.h`
+- [x] T006 Define affine calibration constants (`a`, `b`) and document semantics in `src/native/core/domain/ml/binary/banana_ml_binary.h`
 
 **Checkpoint**: Operating point and contracts are fixed and reviewable.
 
@@ -49,10 +49,10 @@ description: "Task list for Right Brain Binary Runnable C Code"
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Apply affine calibration of raw score before threshold in `src/native/core/domain/ml/binary/banana_ml_binary.c`
-- [ ] T008 [US1] Add positive-sample calibration test (label=banana, confidence>=threshold) in `tests/native/test_ml_binary.c`
-- [ ] T009 [US1] Register `banana_test_ml_binary` ctest target in `tests/native/CMakeLists.txt`
-- [ ] T010 [US1] Capture US1 evidence in `.specify/specs/011-right-brain-binary-runnable/analysis/us1-operating-point-evidence.md`
+- [x] T007 [US1] Apply affine calibration of raw score before threshold in `src/native/core/domain/ml/binary/banana_ml_binary.c`
+- [x] T008 [US1] Add positive-sample calibration test (label=banana, confidence>=threshold) in `tests/native/test_ml_binary.c`
+- [x] T009 [US1] Register `banana_test_ml_binary` ctest target in `tests/native/CMakeLists.txt`
+- [x] T010 [US1] Capture US1 evidence in `.specify/specs/011-right-brain-binary-runnable/analysis/us1-operating-point-evidence.md`
 
 **Checkpoint**: Operating point is enforced at runtime with passing native test.
 
@@ -66,10 +66,10 @@ description: "Task list for Right Brain Binary Runnable C Code"
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Add obviously-not-banana payload test (engine oil) in `tests/native/test_ml_binary.c`
-- [ ] T012 [US2] Add empty-text payload test (deterministic documented behavior) in `tests/native/test_ml_binary.c`
-- [ ] T013 [US2] Add banana-adjacent payload test (banana-flavored / banana-yellow plastic) in `tests/native/test_ml_binary.c`
-- [ ] T014 [US2] Capture US2 evidence in `.specify/specs/011-right-brain-binary-runnable/analysis/us2-negative-samples-evidence.md`
+- [x] T011 [US2] Add obviously-not-banana payload test (engine oil) in `tests/native/test_ml_binary.c`
+- [x] T012 [US2] Add empty-text payload test (deterministic documented behavior) in `tests/native/test_ml_binary.c`
+- [x] T013 [US2] Add banana-adjacent payload test (banana-flavored / banana-yellow plastic) in `tests/native/test_ml_binary.c`
+- [x] T014 [US2] Capture US2 evidence in `.specify/specs/011-right-brain-binary-runnable/analysis/us2-negative-samples-evidence.md`
 
 **Checkpoint**: Negative-sample acceptance scenario is enforced.
 
@@ -83,10 +83,10 @@ description: "Task list for Right Brain Binary Runnable C Code"
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] Confirm or add `_with_threshold` entry point in `src/native/core/domain/ml/binary/banana_ml_binary.h` and `.c`
-- [ ] T016 [US3] Wire threshold parameter through `src/native/wrapper/domain/ml/binary/banana_wrapper_ml_binary.c`
-- [ ] T017 [US3] Add monotone threshold-sweep test (label transitions banana→not_banana exactly once) in `tests/native/test_ml_binary.c`
-- [ ] T018 [US3] Capture US3 evidence in `.specify/specs/011-right-brain-binary-runnable/analysis/us3-threshold-sweep-evidence.md`
+- [x] T015 [US3] Confirm or add `_with_threshold` entry point in `src/native/core/domain/ml/binary/banana_ml_binary.h` and `.c`
+- [x] T016 [US3] Wire threshold parameter through `src/native/wrapper/domain/ml/binary/banana_wrapper_ml_binary.c`
+- [x] T017 [US3] Add monotone threshold-sweep test (label transitions banana→not_banana exactly once) in `tests/native/test_ml_binary.c`
+- [x] T018 [US3] Capture US3 evidence in `.specify/specs/011-right-brain-binary-runnable/analysis/us3-threshold-sweep-evidence.md`
 
 **Checkpoint**: Threshold is operator-tunable and verifiably monotone.
 
@@ -100,9 +100,9 @@ description: "Task list for Right Brain Binary Runnable C Code"
 
 ### Implementation for User Story 4
 
-- [ ] T019 [US4] Ensure deterministic field ordering in `src/native/wrapper/domain/ml/binary/banana_wrapper_ml_binary.c`
-- [ ] T020 [US4] Add explicit field-presence assertions for `model`, `label`, `confidence`, `confusion_matrix`, `jaccard` in `tests/native/test_ml_binary.c`
-- [ ] T021 [US4] Add null-pointer guard test for binary classify in `tests/native/test_ml_binary.c`
+- [x] T019 [US4] Ensure deterministic field ordering in `src/native/wrapper/domain/ml/binary/banana_wrapper_ml_binary.c`
+- [x] T020 [US4] Add explicit field-presence assertions for `model`, `label`, `confidence`, `confusion_matrix`, `jaccard` in `tests/native/test_ml_binary.c`
+- [x] T021 [US4] Add null-pointer guard test for binary classify in `tests/native/test_ml_binary.c`
 
 **Checkpoint**: JSON contract is field-locked, not substring-matched.
 
@@ -112,10 +112,10 @@ description: "Task list for Right Brain Binary Runnable C Code"
 
 **Purpose**: Final consistency, validation, and closure.
 
-- [ ] T022 Run `cmake --preset default && cmake --build --preset default && ctest --preset default --output-on-failure` and capture full evidence in `.specify/specs/011-right-brain-binary-runnable/analysis/native-lane-evidence.md`
-- [ ] T023 [P] Update `.specify/specs/011-right-brain-binary-runnable/quickstart.md` (create if missing) with exact commands used
-- [ ] T024 Verify analysis artifact completeness in `.specify/specs/011-right-brain-binary-runnable/analysis/`
-- [ ] T025 Mark all tasks complete in `.specify/specs/011-right-brain-binary-runnable/tasks.md`
+- [x] T022 Run `cmake --preset default && cmake --build --preset default && ctest --preset default --output-on-failure` and capture full evidence in `.specify/specs/011-right-brain-binary-runnable/analysis/native-lane-evidence.md`
+- [x] T023 [P] Update `.specify/specs/011-right-brain-binary-runnable/quickstart.md` (create if missing) with exact commands used
+- [x] T024 Verify analysis artifact completeness in `.specify/specs/011-right-brain-binary-runnable/analysis/`
+- [x] T025 Mark all tasks complete in `.specify/specs/011-right-brain-binary-runnable/tasks.md`
 
 ---
 

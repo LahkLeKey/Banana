@@ -21,9 +21,9 @@ description: "Task list for Left Brain Regression Runnable C Code"
 
 **Purpose**: Stage feature workspace and confirm preset path is healthy.
 
-- [ ] T001 Create execution tracker in `.specify/specs/010-left-brain-regression-runnable/README.md`
-- [ ] T002 [P] Capture in-scope files in `.specify/specs/010-left-brain-regression-runnable/analysis/in-scope-files.md`
-- [ ] T003 [P] Capture validation commands in `.specify/specs/010-left-brain-regression-runnable/analysis/validation-commands.md`
+- [x] T001 Create execution tracker in `.specify/specs/010-left-brain-regression-runnable/README.md`
+- [x] T002 [P] Capture in-scope files in `.specify/specs/010-left-brain-regression-runnable/analysis/in-scope-files.md`
+- [x] T003 [P] Capture validation commands in `.specify/specs/010-left-brain-regression-runnable/analysis/validation-commands.md`
 
 ---
 
@@ -33,9 +33,9 @@ description: "Task list for Left Brain Regression Runnable C Code"
 
 **⚠️ CRITICAL**: User story tasks start only after this phase is complete.
 
-- [ ] T004 [P] Document input feature contract (slot names, ranges) in `src/native/core/domain/ml/regression/banana_ml_regression.h`
-- [ ] T005 [P] Document output range and clamping contract in `src/native/core/domain/ml/regression/banana_ml_regression.h`
-- [ ] T006 Document consumer usage pattern (ordinal-only, threshold guidance) in `src/native/wrapper/domain/ml/regression/banana_wrapper_ml_regression.h`
+- [x] T004 [P] Document input feature contract (slot names, ranges) in `src/native/core/domain/ml/regression/banana_ml_regression.h`
+- [x] T005 [P] Document output range and clamping contract in `src/native/core/domain/ml/regression/banana_ml_regression.h`
+- [x] T006 Document consumer usage pattern (ordinal-only, threshold guidance) in `src/native/wrapper/domain/ml/regression/banana_wrapper_ml_regression.h`
 
 **Checkpoint**: Contract surface is fixed and reviewable.
 
@@ -49,11 +49,11 @@ description: "Task list for Left Brain Regression Runnable C Code"
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Add NaN/Inf rejection guard in `src/native/core/domain/ml/regression/banana_ml_regression.c`
-- [ ] T008 [US1] Add null-pointer guard contract test in `tests/native/test_ml_regression.c`
-- [ ] T009 [US1] Add full-feature-vector contract test in `tests/native/test_ml_regression.c`
-- [ ] T010 [US1] Register `banana_test_ml_regression` ctest target in `tests/native/CMakeLists.txt`
-- [ ] T011 [US1] Capture US1 evidence in `.specify/specs/010-left-brain-regression-runnable/analysis/us1-contract-evidence.md`
+- [x] T007 [US1] Add NaN/Inf rejection guard in `src/native/core/domain/ml/regression/banana_ml_regression.c`
+- [x] T008 [US1] Add null-pointer guard contract test in `tests/native/test_ml_regression.c`
+- [x] T009 [US1] Add full-feature-vector contract test in `tests/native/test_ml_regression.c`
+- [x] T010 [US1] Register `banana_test_ml_regression` ctest target in `tests/native/CMakeLists.txt`
+- [x] T011 [US1] Capture US1 evidence in `.specify/specs/010-left-brain-regression-runnable/analysis/us1-contract-evidence.md`
 
 **Checkpoint**: Contract is enforced at runtime with passing native test.
 
@@ -67,10 +67,10 @@ description: "Task list for Left Brain Regression Runnable C Code"
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Add all-zero feature vector boundary test in `tests/native/test_ml_regression.c`
-- [ ] T013 [US2] Add all-one feature vector boundary test in `tests/native/test_ml_regression.c`
-- [ ] T014 [US2] Add out-of-range input (e.g., 5.0 / -5.0) clamping test in `tests/native/test_ml_regression.c`
-- [ ] T015 [US2] Capture US2 evidence in `.specify/specs/010-left-brain-regression-runnable/analysis/us2-boundary-evidence.md`
+- [x] T012 [US2] Add all-zero feature vector boundary test in `tests/native/test_ml_regression.c`
+- [x] T013 [US2] Add all-one feature vector boundary test in `tests/native/test_ml_regression.c`
+- [x] T014 [US2] Add out-of-range input (e.g., 5.0 / -5.0) clamping test in `tests/native/test_ml_regression.c`
+- [x] T015 [US2] Capture US2 evidence in `.specify/specs/010-left-brain-regression-runnable/analysis/us2-boundary-evidence.md`
 
 **Checkpoint**: Boundary contract is verifiably enforced.
 
@@ -84,10 +84,10 @@ description: "Task list for Left Brain Regression Runnable C Code"
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Add clearly-banana calibration anchor (`score > 0.65`) in `tests/native/test_ml_regression.c`
-- [ ] T017 [US3] Add ambiguous calibration anchor (`0.30 < score < 0.70`) in `tests/native/test_ml_regression.c`
-- [ ] T018 [US3] Add clearly-not-banana calibration anchor (`score < 0.35`) in `tests/native/test_ml_regression.c`
-- [ ] T019 [US3] Capture US3 evidence in `.specify/specs/010-left-brain-regression-runnable/analysis/us3-calibration-evidence.md`
+- [x] T016 [US3] Add clearly-banana calibration anchor (`score > 0.65`) in `tests/native/test_ml_regression.c`
+- [x] T017 [US3] Add ambiguous calibration anchor (`0.30 < score < 0.70`) in `tests/native/test_ml_regression.c`
+- [x] T018 [US3] Add clearly-not-banana calibration anchor (`score < 0.35`) in `tests/native/test_ml_regression.c`
+- [x] T019 [US3] Capture US3 evidence in `.specify/specs/010-left-brain-regression-runnable/analysis/us3-calibration-evidence.md`
 
 **Checkpoint**: Calibration drift is detectable at CI time.
 
@@ -101,8 +101,8 @@ description: "Task list for Left Brain Regression Runnable C Code"
 
 ### Implementation for User Story 4
 
-- [ ] T020 [US4] Add ordinal-only interpretation note in `src/native/wrapper/domain/ml/regression/banana_wrapper_ml_regression.h`
-- [ ] T021 [US4] Add threshold guidance referencing calibration anchors in `src/native/wrapper/domain/ml/regression/banana_wrapper_ml_regression.h`
+- [x] T020 [US4] Add ordinal-only interpretation note in `src/native/wrapper/domain/ml/regression/banana_wrapper_ml_regression.h`
+- [x] T021 [US4] Add threshold guidance referencing calibration anchors in `src/native/wrapper/domain/ml/regression/banana_wrapper_ml_regression.h`
 
 **Checkpoint**: Consumer contract is explicit and discoverable in headers.
 
@@ -112,10 +112,10 @@ description: "Task list for Left Brain Regression Runnable C Code"
 
 **Purpose**: Final consistency, validation, and closure.
 
-- [ ] T022 Run `cmake --preset default && cmake --build --preset default && ctest --preset default --output-on-failure` and capture full evidence in `.specify/specs/010-left-brain-regression-runnable/analysis/native-lane-evidence.md`
-- [ ] T023 [P] Update `.specify/specs/010-left-brain-regression-runnable/quickstart.md` (create if missing) with exact commands used
-- [ ] T024 Verify analysis artifact completeness in `.specify/specs/010-left-brain-regression-runnable/analysis/`
-- [ ] T025 Mark all tasks complete in `.specify/specs/010-left-brain-regression-runnable/tasks.md`
+- [x] T022 Run `cmake --preset default && cmake --build --preset default && ctest --preset default --output-on-failure` and capture full evidence in `.specify/specs/010-left-brain-regression-runnable/analysis/native-lane-evidence.md`
+- [x] T023 [P] Update `.specify/specs/010-left-brain-regression-runnable/quickstart.md` (create if missing) with exact commands used
+- [x] T024 Verify analysis artifact completeness in `.specify/specs/010-left-brain-regression-runnable/analysis/`
+- [x] T025 Mark all tasks complete in `.specify/specs/010-left-brain-regression-runnable/tasks.md`
 
 ---
 

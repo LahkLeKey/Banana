@@ -40,7 +40,9 @@ extern "C" {
 /* Monotonic ABI version. Adding symbols increments minor; breaking changes
  * require a major bump and a parent-spec (005) update. */
 #define BANANA_WRAPPER_ABI_VERSION_MAJOR 2
-#define BANANA_WRAPPER_ABI_VERSION_MINOR 0
+/* Minor 1: additive `banana_classify_banana_binary_with_threshold` (slice 011).
+ * Minor 2: additive `banana_classify_banana_transformer_ex` (slice 012). */
+#define BANANA_WRAPPER_ABI_VERSION_MINOR 2
 
 /* NativeStatusCode — stable numeric values; mirrored by managed enum.
  * DO NOT renumber. v1 used 0..6; v2 preserves them (FR-001).
@@ -71,7 +73,32 @@ BANANA_API int banana_db_query_banana_profile(const char* profile_id, char** out
 /* === Classifier / ML === */
 BANANA_API int banana_predict_banana_regression_score(const char* input_json, double* out_score);
 BANANA_API int banana_classify_banana_binary(const char* input_json, char** out_json);
+BANANA_API int banana_classify_banana_binary_with_threshold(const char* input_json,
+                                                             double threshold,
+                                                             char** out_json);
 BANANA_API int banana_classify_banana_transformer(const char* input_json, char** out_json);
+
+/*
+ * Diagnostics variant of banana_classify_banana_transformer (slice 012, FB-R03/FB-R04).
+ *
+ * `out_embedding` (nullable) MUST point to 4 doubles (BANANA_ML_TRANSFORMER_EMBEDDING_DIM)
+ * when non-NULL. The function writes the (banana_context, not_banana_context,
+ * attention_delta, banana_probability) fingerprint vector.
+ *
+ * `out_attention_weights` (nullable) MUST point to 8 doubles
+ * (BANANA_ML_TRANSFORMER_ATTENTION_DIM) when non-NULL AND `log_attention != 0`.
+ * The function writes per-feature normalized attention weights summing to ~1.0.
+ * When `log_attention == 0` the buffer is left untouched and the hot path is
+ * bit-for-bit equivalent to banana_classify_banana_transformer.
+ *
+ * `out_json` MUST be non-NULL; same JSON shape as the legacy entry. Caller
+ * frees the JSON string via banana_free().
+ */
+BANANA_API int banana_classify_banana_transformer_ex(const char* input_json,
+                                                      int log_attention,
+                                                      double* out_embedding,
+                                                      double* out_attention_weights,
+                                                      char** out_json);
 BANANA_API int banana_classify_not_banana_junk(const char* input_json, char** out_json);
 BANANA_API int banana_predict_banana_ripeness(const char* input_json, char** out_json);
 
