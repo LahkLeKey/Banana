@@ -18,6 +18,16 @@
             "configurations": ["API: Bun dev", "React Native: Expo web"],
             "stopAll": true,
             "presentation": { "group": "frontends", "order": 3 }
+        },
+        {
+            "name": "Train: all (ci profile)",
+            "configurations": [
+                "Train: not-banana (ci profile)",
+                "Train: banana (ci profile)",
+                "Train: ripeness (ci profile)"
+            ],
+            "stopAll": true,
+            "presentation": { "group": "training", "order": 1 }
         }
     ],
     "configurations": [
@@ -76,7 +86,13 @@
             "request": "launch",
             "program": "${workspaceFolder:(Monorepo) Banana}/scripts/train-not-banana-model.py",
             "cwd": "${workspaceFolder:(Monorepo) Banana}",
-            "args": ["--training-profile", "ci", "--session-mode", "single", "--max-sessions", "1"],
+            "args": [
+                "--corpus", "data/not-banana/corpus.json",
+                "--output", "${workspaceFolder:(Monorepo) Banana}/artifacts/training/not-banana/local",
+                "--training-profile", "ci",
+                "--session-mode", "single",
+                "--max-sessions", "1"
+            ],
             "console": "integratedTerminal",
             "presentation": { "group": "training", "order": 20 }
         },
@@ -86,9 +102,73 @@
             "request": "launch",
             "program": "${workspaceFolder:(Monorepo) Banana}/scripts/train-not-banana-model.py",
             "cwd": "${workspaceFolder:(Monorepo) Banana}",
-            "args": ["--training-profile", "local"],
+            "args": [
+                "--corpus", "data/not-banana/corpus.json",
+                "--output", "${workspaceFolder:(Monorepo) Banana}/artifacts/training/not-banana/local",
+                "--training-profile", "local"
+            ],
             "console": "integratedTerminal",
             "presentation": { "group": "training", "order": 21 }
+        },
+        {
+            "name": "Train: banana (ci profile)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:(Monorepo) Banana}/scripts/train-banana-model.py",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "args": [
+                "--corpus", "data/banana/corpus.json",
+                "--output", "${workspaceFolder:(Monorepo) Banana}/artifacts/training/banana/local",
+                "--training-profile", "ci",
+                "--session-mode", "single",
+                "--max-sessions", "1"
+            ],
+            "console": "integratedTerminal",
+            "presentation": { "group": "training", "order": 22 }
+        },
+        {
+            "name": "Train: banana (local profile)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:(Monorepo) Banana}/scripts/train-banana-model.py",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "args": [
+                "--corpus", "data/banana/corpus.json",
+                "--output", "${workspaceFolder:(Monorepo) Banana}/artifacts/training/banana/local",
+                "--training-profile", "local"
+            ],
+            "console": "integratedTerminal",
+            "presentation": { "group": "training", "order": 23 }
+        },
+        {
+            "name": "Train: ripeness (ci profile)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:(Monorepo) Banana}/scripts/train-ripeness-model.py",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "args": [
+                "--corpus", "data/ripeness/corpus.json",
+                "--output", "${workspaceFolder:(Monorepo) Banana}/artifacts/training/ripeness/local",
+                "--training-profile", "ci",
+                "--session-mode", "single",
+                "--max-sessions", "1"
+            ],
+            "console": "integratedTerminal",
+            "presentation": { "group": "training", "order": 24 }
+        },
+        {
+            "name": "Train: ripeness (local profile)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:(Monorepo) Banana}/scripts/train-ripeness-model.py",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "args": [
+                "--corpus", "data/ripeness/corpus.json",
+                "--output", "${workspaceFolder:(Monorepo) Banana}/artifacts/training/ripeness/local",
+                "--training-profile", "local"
+            ],
+            "console": "integratedTerminal",
+            "presentation": { "group": "training", "order": 25 }
         }
     ]
 }

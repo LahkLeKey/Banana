@@ -1,0 +1,135 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Train: not-banana (ci profile)",
+      "type": "shell",
+      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
+      "args": [
+        "scripts/train-not-banana-model.py",
+        "--corpus",
+        "data/not-banana/corpus.json",
+        "--output",
+        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/not-banana/local",
+        "--training-profile",
+        "ci",
+        "--session-mode",
+        "single",
+        "--max-sessions",
+        "1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Train: not-banana (local profile)",
+      "type": "shell",
+      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
+      "args": [
+        "scripts/train-not-banana-model.py",
+        "--corpus",
+        "data/not-banana/corpus.json",
+        "--output",
+        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/not-banana/local",
+        "--training-profile",
+        "local"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Train: banana (ci profile)",
+      "type": "shell",
+      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
+      "args": [
+        "scripts/train-banana-model.py",
+        "--corpus",
+        "data/banana/corpus.json",
+        "--output",
+        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/banana/local",
+        "--training-profile",
+        "ci",
+        "--session-mode",
+        "single",
+        "--max-sessions",
+        "1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Train: banana (local profile)",
+      "type": "shell",
+      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
+      "args": [
+        "scripts/train-banana-model.py",
+        "--corpus",
+        "data/banana/corpus.json",
+        "--output",
+        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/banana/local",
+        "--training-profile",
+        "local"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Train: ripeness (ci profile)",
+      "type": "shell",
+      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
+      "args": [
+        "scripts/train-ripeness-model.py",
+        "--corpus",
+        "data/ripeness/corpus.json",
+        "--output",
+        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/ripeness/local",
+        "--training-profile",
+        "ci",
+        "--session-mode",
+        "single",
+        "--max-sessions",
+        "1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Train: ripeness (local profile)",
+      "type": "shell",
+      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
+      "args": [
+        "scripts/train-ripeness-model.py",
+        "--corpus",
+        "data/ripeness/corpus.json",
+        "--output",
+        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/ripeness/local",
+        "--training-profile",
+        "local"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Train: all (ci profile)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Train: not-banana (ci profile)",
+        "Train: banana (ci profile)",
+        "Train: ripeness (ci profile)"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
