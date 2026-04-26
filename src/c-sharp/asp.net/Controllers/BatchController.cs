@@ -1,39 +1,34 @@
-using Banana.Api.Models;
-using Banana.Api.Services;
-
+using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Banana.Api.Controllers;
 
 [ApiController]
 [Route("batches")]
-/// <summary>
-/// HTTP endpoints that manage tracked banana batches.
-/// </summary>
-public sealed class BatchController : ControllerBase
+public sealed class BatchController(INativeBananaClient native, PipelineContext ctx) : ControllerBase
 {
-    private readonly IBatchService _batchService;
-
-    public BatchController(IBatchService batchService)
-    {
-        _batchService = batchService;
-    }
+    public sealed record CreateBatchRequest(string InputJson);
 
     [HttpPost("create")]
-    [ProducesResponseType(typeof(BananaBatchResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<BananaBatchResponse> Create([FromBody] BananaBatchCreateRequest request)
+    public IActionResult Create([FromBody] CreateBatchRequest req)
     {
-        return Ok(_batchService.Create(request));
+        ctx.Route = "/batches/create";
+        var rc = native.CreateBatch(req.InputJson, out var json);
+        ctx.LastStatus = rc;
+        return rc == NativeStatusCode.Ok
+            ? Ok(new { json })
+            : StatusMapping.ToActionResult(rc);
     }
 
     [HttpGet("{id}/status")]
-    [ProducesResponseType(typeof(BananaBatchResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<BananaBatchResponse> GetStatus([FromRoute] string id)
+    public IActionResult Status([FromRoute] string id)
     {
-        return Ok(_batchService.GetStatus(id));
+        ctx.Route = $"/batches/{id}/status";
+        var rc = native.GetBatchStatus(id, out var json);
+        ctx.LastStatus = rc;
+        return rc == NativeStatusCode.Ok
+            ? Ok(new { id, json })
+            : StatusMapping.ToActionResult(rc);
     }
 }

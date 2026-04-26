@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Banana.Api", "Banana.Api.csproj", "{E53F6B54-A2A4-6A7E-96D8-24AE2E0AC316}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E53F6B54-A2A4-6A7E-96D8-24AE2E0AC316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E53F6B54-A2A4-6A7E-96D8-24AE2E0AC316}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E53F6B54-A2A4-6A7E-96D8-24AE2E0AC316}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E53F6B54-A2A4-6A7E-96D8-24AE2E0AC316}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FB6AADC3-AF27-461D-91F0-5121EFD67367}
+	EndGlobalSection
+EndGlobal

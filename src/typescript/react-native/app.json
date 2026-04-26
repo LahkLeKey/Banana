@@ -1,10 +1,14 @@
 {
     "expo": {
-        "name": "Banana React Native",
-        "slug": "banana-react-native",
-        "version": "1.0.0",
+        "name": "Banana",
+        "slug": "banana",
+        "version": "0.1.0",
         "orientation": "portrait",
-        "userInterfaceStyle": "light",
-        "newArchEnabled": true
+        "userInterfaceStyle": "automatic",
+        "platforms": [
+            "android",
+            "ios",
+            "web"
+        ]
     }
 }

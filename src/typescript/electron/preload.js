@@ -1,9 +1,8 @@
-const { contextBridge, ipcRenderer } = require("electron");
+// Electron preload (spec 010). Exposes a typed, narrow bridge to renderer.
+// No direct ipc/node access leaks past this seam.
+const {contextBridge} = require('electron');
 
-contextBridge.exposeInMainWorld("bananaQA", {
-  getConfig: () => ipcRenderer.invoke("banana:config"),
-  checkHealth: (payload) => ipcRenderer.invoke("banana:health", payload),
-  runNative: (payload) => ipcRenderer.invoke("banana:native", payload),
-  runApi: (payload) => ipcRenderer.invoke("banana:api", payload),
-  runCompare: (payload) => ipcRenderer.invoke("banana:compare", payload),
+contextBridge.exposeInMainWorld('banana', {
+  apiBaseUrl: process.env.BANANA_API_BASE_URL ?? '',
+  platform: process.platform,
 });

@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
+# Spec 010 — Electron smoke (NOT the desktop UI runtime).
 set -euo pipefail
-
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-cd "$ROOT_DIR"
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-banana-container}"
-docker compose --profile electron up --build --abort-on-container-exit --exit-code-from electron-example electron-example
+cd "$(dirname "$0")/.."
+exec docker compose --profile electron run --rm electron-example npm run smoke

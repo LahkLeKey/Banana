@@ -1,7 +1,7 @@
-export {Badge, type BadgeProps, badgeVariants} from './components/ui/badge';
-export {Button, type ButtonProps, buttonVariants} from './components/ui/button';
-export {Card, CardContent, CardDescription, CardHeader, CardTitle} from './components/ui/card';
-export {Input} from './components/ui/input';
-export {Label} from './components/ui/label';
-export {cn} from './lib/utils';
-export {bananaUiPreset} from './tailwind/preset';
+// @banana/ui — public surface (spec 009 contract).
+// Deep imports are forbidden by lint; everything cross-platform-safe is
+// re-exported here.
+export {BananaBadge} from './components/BananaBadge';
+export {ChatMessageBubble} from './components/ChatMessageBubble';
+export {RipenessLabel} from './components/RipenessLabel';
+export type {ChatMessage, ChatMessageStatus, ChatRole, ChatSession, Ripeness,} from './types';

@@ -1,67 +1,50 @@
 #ifndef BANANA_ML_MODELS_H
 #define BANANA_ML_MODELS_H
 
-#include "banana_domain_status.h"
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define BANANA_ML_FEATURE_COUNT 8
-#define BANANA_ML_TOKEN_FEATURE_COUNT 4
-#define BANANA_ML_MAX_SEQUENCE_LENGTH 16
-
-typedef enum BananaMlLabel {
-    BANANA_ML_LABEL_NOT_BANANA = 0,
-    BANANA_ML_LABEL_BANANA = 1
-} BananaMlLabel;
+typedef struct BananaMlConfusionMatrix {
+    int tp;
+    int fp;
+    int fn;
+    int tn;
+} BananaMlConfusionMatrix;
 
 typedef struct BananaMlFeatureVector {
-    double values[BANANA_ML_FEATURE_COUNT];
+    size_t token_count;
+    size_t unique_token_count;
+    size_t banana_hits;
+    size_t not_banana_hits;
+    size_t positive_bigram_hits;
+    size_t negative_bigram_hits;
+    double banana_signal_ratio;
+    double not_banana_signal_ratio;
+    double unique_token_ratio;
+    double length_ratio;
+    double positive_bigram_ratio;
+    double negative_bigram_ratio;
+    double banana_attention_ratio;
+    double not_banana_attention_ratio;
 } BananaMlFeatureVector;
 
-typedef struct BananaMlBinaryClassification {
-    BananaMlLabel predicted_label;
-    double banana_probability;
-    double not_banana_probability;
-    double decision_margin;
-    double jaccard_similarity;
-    double confusion_true_positive;
-    double confusion_false_positive;
-    double confusion_false_negative;
-    double confusion_true_negative;
-} BananaMlBinaryClassification;
+typedef struct BananaMlClassificationResult {
+    const char* label;
+    double confidence;
+    double banana_score;
+    double not_banana_score;
+    double jaccard;
+    BananaMlConfusionMatrix confusion;
+} BananaMlClassificationResult;
 
-typedef struct BananaMlToken {
-    double values[BANANA_ML_TOKEN_FEATURE_COUNT];
-} BananaMlToken;
-
-typedef struct BananaMlTransformerInput {
-    BananaMlToken tokens[BANANA_ML_MAX_SEQUENCE_LENGTH];
-    int token_count;
-} BananaMlTransformerInput;
-
-typedef struct BananaMlTransformerClassification {
-    BananaMlLabel predicted_label;
-    double banana_probability;
-    double not_banana_probability;
-    double attention_focus;
-} BananaMlTransformerClassification;
-
-BananaStatus banana_ml_predict_regression_score(
-    const BananaMlFeatureVector* features,
-    double* out_score
-);
-
-BananaStatus banana_ml_predict_binary_classification(
-    const BananaMlFeatureVector* features,
-    BananaMlBinaryClassification* out_classification
-);
-
-BananaStatus banana_ml_predict_transformer_classification(
-    const BananaMlTransformerInput* input,
-    BananaMlTransformerClassification* out_classification
-);
+/* Returns BananaStatusCode values declared in banana_wrapper.h. */
+int banana_ml_predict_regression_score(const char* input_json, double* out_score);
+int banana_ml_classify_binary(const char* input_json, BananaMlClassificationResult* out_result);
+int banana_ml_classify_transformer(const char* input_json, BananaMlClassificationResult* out_result);
+int banana_ml_classify_not_banana_junk(const char* input_json, BananaMlClassificationResult* out_result);
 
 #ifdef __cplusplus
 }

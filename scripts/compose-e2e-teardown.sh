@@ -1,25 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$(dirname "$0")/.."
 
-cd "$ROOT_DIR"
-
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-banana-container}"
-
-COMPOSE_PROFILES="${BANANA_E2E_COMPOSE_PROFILES:-apps}"
-COMPOSE_ARGS=()
-
-for profile in $COMPOSE_PROFILES; do
-    COMPOSE_ARGS+=(--profile "$profile")
-done
-
-COMPOSE_ARGS+=(down --remove-orphans)
-
-if [[ "${BANANA_E2E_TEARDOWN_VOLUMES:-0}" == "1" ]]; then
-    COMPOSE_ARGS+=(--volumes)
+if [[ "${BANANA_E2E_PRESERVE_RUNTIME:-false}" == "true" ]]; then
+  echo "BANANA_E2E_PRESERVE_RUNTIME=true; skipping compose teardown."
+  exit 0
 fi
 
-docker compose "${COMPOSE_ARGS[@]}"
+PROFILE="${BANANA_E2E_COMPOSE_PROFILE:-apps}"
+docker compose --profile "$PROFILE" down -v --remove-orphans
 
-echo "E2E runtime teardown complete for compose project: $COMPOSE_PROJECT_NAME"
+echo "Tore down E2E runtime profile '$PROFILE'."

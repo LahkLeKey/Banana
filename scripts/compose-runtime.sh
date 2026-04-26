@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
+# Spec 012 — full runtime stack.
 set -euo pipefail
-
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-cd "$ROOT_DIR"
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-banana-container}"
-docker compose --profile runtime up --build api
+cd "$(dirname "$0")/.."
+exec docker compose --profile runtime up -d "$@"

@@ -1,21 +1,5 @@
 #!/usr/bin/env python3
-"""Train the polymorphic not-banana signal vocabulary from a labeled corpus.
-
-The trainer learns which lowercase ASCII tokens most reliably indicate that a
-polymorphic /not-banana/junk payload is actually a BANANA. It can run either a
-single baseline session or an incremental resource-aware sweep (CI/local/
-overnight profiles), and emits:
-
-    - vocabulary.json: learned tokens with per-token signal scores and evaluation
-        metrics for the selected session.
-    - banana_signal_tokens.h: generated C header that can replace the inline
-        vocabulary in src/native/core/domain/banana_not_banana.c.
-    - metrics.json: precision/recall/F1/accuracy for the selected hold-out run.
-    - sessions.json: per-session hyperparameters and hold-out metrics.
-
-The implementation is intentionally dependency-free (Python standard library
-only) so it runs identically in local and CI environments.
-"""
+"""Deterministic not-banana trainer used by local and CI workflows."""
 
 from __future__ import annotations
 
@@ -24,943 +8,372 @@ import json
 import os
 import random
 import re
-import sys
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from statistics import mean
+from typing import Iterable
 
-TOKEN_REGEX = re.compile(r"[a-z0-9]+")
-MAX_DEPTH = 5
-MAX_CHILDREN_PER_NODE = 128
-SPLIT_SEED = 1729
-DEFAULT_HOLDOUT_FRACTION = 0.3
-DEFAULT_VOCAB_SIZE = 24
-DEFAULT_MIN_BANANA_OCCURRENCES = 1
-DEFAULT_MIN_SIGNAL_SCORE = 0.7
-DEFAULT_MIN_TOKEN_LENGTH = 3
-DEFAULT_ALLOW_NUMERIC_TOKENS = False
-DEFAULT_TRAINING_PROFILE = "auto"
-DEFAULT_SESSION_MODE = "incremental"
-
-# Structural / polymorphic-schema keys and ids that appear in both classes
-# and therefore carry no class signal. They are excluded so the learned
-# vocabulary represents real domain words instead of envelope fields.
-STRUCTURAL_STOP_WORDS = frozenset(
-    {
-        "actor",
-        "actorid",
-        "actorkey",
-        "actors",
-        "actortype",
-        "entity",
-        "entityid",
-        "entitykey",
-        "entities",
-        "entitytype",
-        "junk",
-        "kind",
-        "metadata",
-        "type",
-        "id",
-        "key",
-    }
-)
-
-
-@dataclass
-class Sample:
-    label: str
-    payload: dict[str, Any]
-    tokens: set[str] = field(default_factory=set)
+TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
+PROFILE_DEFAULTS = {
+    "ci": {"sessions": 4, "vocab_size": 24},
+    "local": {"sessions": 12, "vocab_size": 32},
+    "overnight": {"sessions": 32, "vocab_size": 48},
+}
 
 
 @dataclass(frozen=True)
-class SessionConfig:
-    vocab_size: int
-    min_banana_occurrences: int
-    min_signal_score: float
-    holdout_fraction: float
-    decision_threshold: float
+class Sample:
+    text: str
+    label: str
 
 
-def detect_cpu_count() -> int:
-    return max(1, os.cpu_count() or 1)
+def utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def clamp_int(value: int, min_value: int, max_value: int) -> int:
-    return max(min_value, min(max_value, value))
-
-
-def unique_ints(values: Iterable[int], min_value: int, max_value: int) -> list[int]:
-    seen: set[int] = set()
-    output: list[int] = []
-
-    for value in values:
-        clamped = clamp_int(int(value), min_value, max_value)
-        if clamped not in seen:
-            seen.add(clamped)
-            output.append(clamped)
-
-    return output
-
-
-def unique_floats(values: Iterable[float], min_value: float, max_value: float) -> list[float]:
-    seen: set[float] = set()
-    output: list[float] = []
-
-    for value in values:
-        clamped = round(max(min_value, min(max_value, float(value))), 4)
-        if clamped not in seen:
-            seen.add(clamped)
-            output.append(clamped)
-
-    return output
-
-
-def resolve_training_profile(profile: str) -> str:
-    if profile != "auto":
-        return profile
-
-    env_profile = os.environ.get("BANANA_TRAIN_PROFILE", "").strip().lower()
-    if env_profile in {"ci", "local", "overnight"}:
-        return env_profile
-
-    if os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true":
-        return "ci"
-
-    cpu_count = detect_cpu_count()
-    if cpu_count >= 12:
-        return "overnight"
-
-    return "local"
-
-
-def resolve_max_sessions(profile: str, requested_max_sessions: int) -> int:
-    if requested_max_sessions > 0:
-        return requested_max_sessions
-
-    cpu_count = detect_cpu_count()
-    if profile == "ci":
-        return min(8, max(3, cpu_count + 1))
-    if profile == "overnight":
-        return min(72, max(16, cpu_count * 6))
-
-    return min(24, max(6, cpu_count * 3))
-
-
-def build_session_plan(
-    args: argparse.Namespace,
-    training_profile: str,
-    max_sessions: int,
-    session_mode: str,
-) -> list[SessionConfig]:
-    baseline = SessionConfig(
-        vocab_size=args.vocab_size,
-        min_banana_occurrences=args.min_banana_occurrences,
-        min_signal_score=args.min_signal_score,
-        holdout_fraction=args.holdout_fraction,
-        decision_threshold=args.decision_threshold,
-    )
-
-    if session_mode == "single":
-        return [baseline]
-
-    if training_profile == "ci":
-        vocab_values = unique_ints(
-            [baseline.vocab_size, baseline.vocab_size + 4, baseline.vocab_size + 8],
-            min_value=4,
-            max_value=256,
-        )
-        signal_values = unique_floats(
-            [
-                baseline.min_signal_score,
-                baseline.min_signal_score - 0.05,
-                baseline.min_signal_score + 0.05,
-            ],
-            min_value=0.0,
-            max_value=1.0,
-        )
-        occurrence_values = unique_ints(
-            [baseline.min_banana_occurrences, baseline.min_banana_occurrences + 1],
-            min_value=1,
-            max_value=32,
-        )
-        decision_values = unique_floats(
-            [
-                baseline.decision_threshold,
-                baseline.decision_threshold - 0.05,
-                baseline.decision_threshold + 0.05,
-            ],
-            min_value=0.01,
-            max_value=0.99,
-        )
-        holdout_values = unique_floats([baseline.holdout_fraction], 0.05, 0.95)
-    elif training_profile == "overnight":
-        vocab_values = unique_ints(
-            [
-                baseline.vocab_size,
-                baseline.vocab_size + 4,
-                baseline.vocab_size + 8,
-                baseline.vocab_size + 12,
-                baseline.vocab_size + 16,
-                baseline.vocab_size + 24,
-            ],
-            min_value=4,
-            max_value=512,
-        )
-        signal_values = unique_floats(
-            [
-                baseline.min_signal_score,
-                baseline.min_signal_score - 0.1,
-                baseline.min_signal_score - 0.05,
-                baseline.min_signal_score + 0.05,
-                baseline.min_signal_score + 0.1,
-            ],
-            min_value=0.0,
-            max_value=1.0,
-        )
-        occurrence_values = unique_ints(
-            [
-                baseline.min_banana_occurrences,
-                baseline.min_banana_occurrences + 1,
-                baseline.min_banana_occurrences + 2,
-            ],
-            min_value=1,
-            max_value=32,
-        )
-        decision_values = unique_floats(
-            [
-                baseline.decision_threshold,
-                baseline.decision_threshold - 0.1,
-                baseline.decision_threshold - 0.05,
-                baseline.decision_threshold + 0.05,
-                baseline.decision_threshold + 0.1,
-            ],
-            min_value=0.01,
-            max_value=0.99,
-        )
-        holdout_values = unique_floats(
-            [baseline.holdout_fraction, 0.25, 0.3, 0.35],
-            min_value=0.05,
-            max_value=0.95,
-        )
-    else:
-        vocab_values = unique_ints(
-            [baseline.vocab_size, baseline.vocab_size + 4, baseline.vocab_size + 8, baseline.vocab_size + 12],
-            min_value=4,
-            max_value=512,
-        )
-        signal_values = unique_floats(
-            [
-                baseline.min_signal_score,
-                baseline.min_signal_score - 0.05,
-                baseline.min_signal_score + 0.05,
-            ],
-            min_value=0.0,
-            max_value=1.0,
-        )
-        occurrence_values = unique_ints(
-            [baseline.min_banana_occurrences, baseline.min_banana_occurrences + 1, baseline.min_banana_occurrences + 2],
-            min_value=1,
-            max_value=32,
-        )
-        decision_values = unique_floats(
-            [
-                baseline.decision_threshold,
-                baseline.decision_threshold - 0.05,
-                baseline.decision_threshold + 0.05,
-            ],
-            min_value=0.01,
-            max_value=0.99,
-        )
-        holdout_values = unique_floats(
-            [baseline.holdout_fraction, 0.25, 0.3],
-            min_value=0.05,
-            max_value=0.95,
-        )
-
-    sessions: list[SessionConfig] = []
-    seen: set[tuple[int, int, float, float, float]] = set()
-
-    def add_session(candidate: SessionConfig) -> None:
-        if len(sessions) >= max_sessions:
-            return
-
-        key = (
-            candidate.vocab_size,
-            candidate.min_banana_occurrences,
-            candidate.min_signal_score,
-            candidate.holdout_fraction,
-            candidate.decision_threshold,
-        )
-        if key in seen:
-            return
-
-        seen.add(key)
-        sessions.append(candidate)
-
-    add_session(baseline)
-
-    for value in vocab_values:
-        add_session(
-            SessionConfig(
-                vocab_size=value,
-                min_banana_occurrences=baseline.min_banana_occurrences,
-                min_signal_score=baseline.min_signal_score,
-                holdout_fraction=baseline.holdout_fraction,
-                decision_threshold=baseline.decision_threshold,
-            )
-        )
-    for value in signal_values:
-        add_session(
-            SessionConfig(
-                vocab_size=baseline.vocab_size,
-                min_banana_occurrences=baseline.min_banana_occurrences,
-                min_signal_score=value,
-                holdout_fraction=baseline.holdout_fraction,
-                decision_threshold=baseline.decision_threshold,
-            )
-        )
-    for value in occurrence_values:
-        add_session(
-            SessionConfig(
-                vocab_size=baseline.vocab_size,
-                min_banana_occurrences=value,
-                min_signal_score=baseline.min_signal_score,
-                holdout_fraction=baseline.holdout_fraction,
-                decision_threshold=baseline.decision_threshold,
-            )
-        )
-    for value in decision_values:
-        add_session(
-            SessionConfig(
-                vocab_size=baseline.vocab_size,
-                min_banana_occurrences=baseline.min_banana_occurrences,
-                min_signal_score=baseline.min_signal_score,
-                holdout_fraction=baseline.holdout_fraction,
-                decision_threshold=value,
-            )
-        )
-    for value in holdout_values:
-        add_session(
-            SessionConfig(
-                vocab_size=baseline.vocab_size,
-                min_banana_occurrences=baseline.min_banana_occurrences,
-                min_signal_score=baseline.min_signal_score,
-                holdout_fraction=value,
-                decision_threshold=baseline.decision_threshold,
-            )
-        )
-
-    for vocab_size in vocab_values:
-        for min_signal_score in signal_values:
-            add_session(
-                SessionConfig(
-                    vocab_size=vocab_size,
-                    min_banana_occurrences=baseline.min_banana_occurrences,
-                    min_signal_score=min_signal_score,
-                    holdout_fraction=baseline.holdout_fraction,
-                    decision_threshold=baseline.decision_threshold,
-                )
-            )
-    for decision_threshold in decision_values:
-        for min_signal_score in signal_values:
-            add_session(
-                SessionConfig(
-                    vocab_size=baseline.vocab_size,
-                    min_banana_occurrences=baseline.min_banana_occurrences,
-                    min_signal_score=min_signal_score,
-                    holdout_fraction=baseline.holdout_fraction,
-                    decision_threshold=decision_threshold,
-                )
-            )
-    for holdout_fraction in holdout_values:
-        for vocab_size in vocab_values:
-            add_session(
-                SessionConfig(
-                    vocab_size=vocab_size,
-                    min_banana_occurrences=baseline.min_banana_occurrences,
-                    min_signal_score=baseline.min_signal_score,
-                    holdout_fraction=holdout_fraction,
-                    decision_threshold=baseline.decision_threshold,
-                )
-            )
-
-    return sessions[:max_sessions]
-
-
-def session_score_key(session_result: dict[str, Any]) -> tuple[float, float, float, float, int]:
-    metrics = session_result["metrics"]
-    params = session_result["hyperparameters"]
-    return (
-        float(metrics["f1"]),
-        float(metrics["accuracy"]),
-        float(metrics["precision"]),
-        float(metrics["recall"]),
-        -int(params["vocab_size"]),
-    )
-
-
-def tokenise_string(value: str) -> Iterable[str]:
-    return TOKEN_REGEX.findall(value.lower())
-
-
-def token_has_ascii_alpha(token: str) -> bool:
-    for char in token:
-        if "a" <= char <= "z":
-            return True
-    return False
-
-
-def token_passes_quality_filters(
-    token: str,
-    min_token_length: int,
-    allow_numeric_tokens: bool,
-) -> bool:
-    if len(token) < min_token_length:
-        return False
-
-    if not allow_numeric_tokens and not token_has_ascii_alpha(token):
-        return False
-
-    return True
-
-
-def _add_token(token: str, tokens: set[str]) -> None:
-    if token and token not in STRUCTURAL_STOP_WORDS:
-        tokens.add(token)
-
-
-def collect_tokens(value: Any, tokens: set[str], depth: int = 0) -> None:
-    if depth > MAX_DEPTH or value is None:
-        return
-
-    if isinstance(value, str):
-        for token in tokenise_string(value):
-            _add_token(token, tokens)
-        return
-
-    if isinstance(value, bool):
-        _add_token("true" if value else "false", tokens)
-        return
-
-    if isinstance(value, (int, float)):
-        _add_token(str(value).lower(), tokens)
-        return
-
-    if isinstance(value, list):
-        for entry in value[:MAX_CHILDREN_PER_NODE]:
-            collect_tokens(entry, tokens, depth + 1)
-        return
-
-    if isinstance(value, dict):
-        for key, entry in list(value.items())[:MAX_CHILDREN_PER_NODE]:
-            for token in tokenise_string(str(key)):
-                _add_token(token, tokens)
-            collect_tokens(entry, tokens, depth + 1)
-
-
-def load_corpus(path: Path) -> list[Sample]:
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    samples_raw = raw.get("samples")
-    if not isinstance(samples_raw, list) or not samples_raw:
-        raise ValueError(f"Corpus at {path} must contain a non-empty 'samples' array.")
-
-    samples: list[Sample] = []
-    for index, entry in enumerate(samples_raw):
-        if not isinstance(entry, dict):
-            raise ValueError(f"Sample #{index} must be an object.")
-
-        label = entry.get("label")
-        payload = entry.get("payload")
-
-        if label not in {"BANANA", "NOT_BANANA"}:
-            raise ValueError(f"Sample #{index} has invalid label '{label}'.")
-        if not isinstance(payload, dict):
-            raise ValueError(f"Sample #{index} payload must be an object.")
-
-        tokens: set[str] = set()
-        collect_tokens(payload, tokens)
-        samples.append(Sample(label=label, payload=payload, tokens=tokens))
-
-    return samples
-
-
-def deterministic_split(
-    samples: list[Sample], holdout_fraction: float
-) -> tuple[list[Sample], list[Sample]]:
-    if not 0.0 < holdout_fraction < 1.0:
-        raise ValueError("holdout_fraction must be between 0 and 1 exclusive.")
-
-    rng = random.Random(SPLIT_SEED)
-    indices = list(range(len(samples)))
-    rng.shuffle(indices)
-
-    holdout_size = max(1, int(round(len(samples) * holdout_fraction)))
-    holdout_indices = set(indices[:holdout_size])
-
-    train = [s for i, s in enumerate(samples) if i not in holdout_indices]
-    holdout = [s for i, s in enumerate(samples) if i in holdout_indices]
-    return train, holdout
-
-
-def learn_vocabulary(
-    train: list[Sample],
-    vocab_size: int,
-    min_banana_occurrences: int,
-    min_signal_score: float,
-    min_token_length: int,
-    allow_numeric_tokens: bool,
-) -> list[dict[str, Any]]:
-    banana_counts: Counter[str] = Counter()
-    not_banana_counts: Counter[str] = Counter()
-
-    for sample in train:
-        target = banana_counts if sample.label == "BANANA" else not_banana_counts
-        for token in sample.tokens:
-            target[token] += 1
-
-    total_banana = sum(1 for s in train if s.label == "BANANA") or 1
-    total_not_banana = sum(1 for s in train if s.label == "NOT_BANANA") or 1
-
-    candidates: list[dict[str, Any]] = []
-    for token, banana_count in banana_counts.items():
-        if not token_passes_quality_filters(token, min_token_length, allow_numeric_tokens):
-            continue
-
-        if banana_count < min_banana_occurrences:
-            continue
-
-        not_banana_count = not_banana_counts.get(token, 0)
-        banana_rate = banana_count / total_banana
-        not_banana_rate = not_banana_count / total_not_banana
-        # Laplace-smoothed signal score in [0, 1]; tokens that appear mostly in
-        # BANANA samples score higher.
-        signal_score = (banana_rate + 1e-3) / (banana_rate + not_banana_rate + 2e-3)
-
-        if signal_score < min_signal_score:
-            continue
-
-        candidates.append(
-            {
-                "token": token,
-                "banana_count": banana_count,
-                "not_banana_count": not_banana_count,
-                "banana_rate": round(banana_rate, 4),
-                "not_banana_rate": round(not_banana_rate, 4),
-                "signal_score": round(signal_score, 4),
-            }
-        )
-
-    candidates.sort(
-        key=lambda entry: (-entry["signal_score"], -entry["banana_count"], entry["token"])
-    )
-    return candidates[:vocab_size]
-
-
-def classify(
-    tokens: set[str],
-    vocabulary_scores: dict[str, float],
-    decision_threshold: float,
-) -> str:
-    if not tokens:
-        return "NOT_BANANA"
-
-    score = sum(vocabulary_scores.get(token, 0.0) for token in tokens)
-    return "BANANA" if score >= decision_threshold else "NOT_BANANA"
-
-
-def evaluate(
-    samples: list[Sample],
-    vocabulary_scores: dict[str, float],
-    decision_threshold: float,
-) -> dict[str, float]:
-    if not samples:
-        return {"precision": 0.0, "recall": 0.0, "f1": 0.0, "accuracy": 0.0, "support": 0}
-
-    true_positive = 0
-    false_positive = 0
-    false_negative = 0
-    true_negative = 0
-
-    for sample in samples:
-        prediction = classify(sample.tokens, vocabulary_scores, decision_threshold)
-        if sample.label == "BANANA" and prediction == "BANANA":
-            true_positive += 1
-        elif sample.label == "NOT_BANANA" and prediction == "BANANA":
-            false_positive += 1
-        elif sample.label == "BANANA" and prediction == "NOT_BANANA":
-            false_negative += 1
-        else:
-            true_negative += 1
-
-    precision_denom = true_positive + false_positive
-    recall_denom = true_positive + false_negative
-    precision = true_positive / precision_denom if precision_denom else 0.0
-    recall = true_positive / recall_denom if recall_denom else 0.0
-    f1_denom = precision + recall
-    f1 = (2 * precision * recall / f1_denom) if f1_denom else 0.0
-    accuracy = (true_positive + true_negative) / len(samples)
-
-    return {
-        "precision": round(precision, 4),
-        "recall": round(recall, 4),
-        "f1": round(f1, 4),
-        "accuracy": round(accuracy, 4),
-        "support": len(samples),
-        "true_positive": true_positive,
-        "false_positive": false_positive,
-        "false_negative": false_negative,
-        "true_negative": true_negative,
-    }
-
-
-def render_c_header(vocabulary: list[dict[str, Any]]) -> str:
-    lines = [
-        "/* Auto-generated by scripts/train-not-banana-model.py.",
-        " * Do not edit by hand. Re-run the trainer to refresh this file.",
-        " * Generated from data/not-banana/corpus.json.",
-        " */",
-        "#ifndef BANANA_NOT_BANANA_GENERATED_VOCABULARY_H",
-        "#define BANANA_NOT_BANANA_GENERATED_VOCABULARY_H",
-        "",
-        "static const char* const k_banana_signal_tokens_generated[] = {",
-    ]
-
-    for entry in vocabulary:
-        token = entry["token"].replace("\\", "\\\\").replace("\"", "\\\"")
-        lines.append(f"    \"{token}\",")
-
-    lines.extend(
-        [
-            "};",
-            "",
-            "static const int k_banana_signal_token_count_generated =",
-            "    (int)(sizeof(k_banana_signal_tokens_generated) / "
-            "sizeof(k_banana_signal_tokens_generated[0]));",
-            "",
-            "#endif",
-            "",
-        ]
-    )
-
-    return "\n".join(lines)
-
-
-def write_outputs(
-    output_dir: Path,
-    vocabulary: list[dict[str, Any]],
-    metrics: dict[str, float],
-    train_size: int,
-    holdout_size: int,
-    args: argparse.Namespace,
-    training_profile: str,
-    session_mode: str,
-    session_results: list[dict[str, Any]],
-    selected_session: dict[str, Any],
-    resource_context: dict[str, Any],
-) -> None:
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    selected_hyperparameters = selected_session["hyperparameters"]
-
-    vocabulary_payload = {
-        "schema_version": 1,
-        "model_id": "not-banana-vocabulary-v1",
-        "trained_from": str(args.corpus),
-        "training_profile": training_profile,
-        "session_mode": session_mode,
-        "resource_context": resource_context,
-        "session_count": len(session_results),
-        "selected_session_index": selected_session["session_index"],
-        "train_size": train_size,
-        "holdout_size": holdout_size,
-        "hyperparameters": {
-            "vocab_size": selected_hyperparameters["vocab_size"],
-            "min_banana_occurrences": selected_hyperparameters[
-                "min_banana_occurrences"
-            ],
-            "min_signal_score": selected_hyperparameters["min_signal_score"],
-            "min_token_length": selected_hyperparameters["min_token_length"],
-            "allow_numeric_tokens": selected_hyperparameters["allow_numeric_tokens"],
-            "holdout_fraction": selected_hyperparameters["holdout_fraction"],
-            "decision_threshold": selected_hyperparameters["decision_threshold"],
-            "split_seed": SPLIT_SEED,
-        },
-        "requested_hyperparameters": {
-            "vocab_size": args.vocab_size,
-            "min_banana_occurrences": args.min_banana_occurrences,
-            "min_signal_score": args.min_signal_score,
-            "min_token_length": args.min_token_length,
-            "allow_numeric_tokens": args.allow_numeric_tokens,
-            "holdout_fraction": args.holdout_fraction,
-            "decision_threshold": args.decision_threshold,
-            "training_profile": args.training_profile,
-            "session_mode": args.session_mode,
-            "max_sessions": args.max_sessions,
-            "split_seed": SPLIT_SEED,
-        },
-        "vocabulary": vocabulary,
-        "metrics": metrics,
-        "sessions": session_results,
-    }
-
-    (output_dir / "vocabulary.json").write_text(
-        json.dumps(vocabulary_payload, indent=2, sort_keys=False) + "\n",
-        encoding="utf-8",
-    )
-
-    (output_dir / "metrics.json").write_text(
-        json.dumps(
-            {
-                "training_profile": training_profile,
-                "session_mode": session_mode,
-                "resource_context": resource_context,
-                "session_count": len(session_results),
-                "selected_session_index": selected_session["session_index"],
-                "holdout": metrics,
-                "sessions": session_results,
-            },
-            indent=2,
-            sort_keys=False,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-
-    (output_dir / "sessions.json").write_text(
-        json.dumps(
-            {
-                "training_profile": training_profile,
-                "session_mode": session_mode,
-                "resource_context": resource_context,
-                "session_count": len(session_results),
-                "selected_session_index": selected_session["session_index"],
-                "sessions": session_results,
-            },
-            indent=2,
-            sort_keys=False,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-
-    (output_dir / "banana_signal_tokens.h").write_text(
-        render_c_header(vocabulary), encoding="utf-8"
-    )
-
-
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--corpus",
-        type=Path,
-        default=Path("data/not-banana/corpus.json"),
-        help="Path to labeled corpus JSON.",
-    )
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=Path("artifacts/not-banana-model"),
-        help="Output directory for trained artifacts.",
-    )
-    parser.add_argument(
-        "--vocab-size",
-        type=int,
-        default=DEFAULT_VOCAB_SIZE,
-        help="Maximum number of tokens kept in the learned vocabulary.",
-    )
-    parser.add_argument(
-        "--min-banana-occurrences",
-        type=int,
-        default=DEFAULT_MIN_BANANA_OCCURRENCES,
-        help="Minimum number of BANANA samples a token must appear in to be kept.",
-    )
-    parser.add_argument(
-        "--min-signal-score",
-        type=float,
-        default=DEFAULT_MIN_SIGNAL_SCORE,
-        help="Minimum BANANA-vs-NOT_BANANA signal score required to keep a token.",
-    )
-    parser.add_argument(
-        "--min-token-length",
-        type=int,
-        default=DEFAULT_MIN_TOKEN_LENGTH,
-        help="Minimum token length required before a token is eligible for the vocabulary.",
-    )
-    parser.add_argument(
-        "--allow-numeric-tokens",
-        action=argparse.BooleanOptionalAction,
-        default=DEFAULT_ALLOW_NUMERIC_TOKENS,
-        help="Allow tokens that contain no alphabetic characters (for example pure numbers).",
-    )
-    parser.add_argument(
-        "--holdout-fraction",
-        type=float,
-        default=DEFAULT_HOLDOUT_FRACTION,
-        help="Fraction of samples reserved for evaluation.",
-    )
-    parser.add_argument(
-        "--decision-threshold",
-        type=float,
-        default=0.5,
-        help="Sum of signal_score weights at or above which a sample is "
-             "predicted BANANA during evaluation.",
-    )
-    parser.add_argument(
-        "--min-f1",
-        type=float,
-        default=0.0,
-        help="Optional minimum F1 score on the hold-out split. Non-zero "
-             "values cause the trainer to exit non-zero when the gate fails.",
-    )
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train banana vs not-banana vocabulary model.")
+    parser.add_argument("--corpus", required=True, help="Path to corpus JSON file.")
+    parser.add_argument("--output", required=True, help="Output directory for artifacts.")
+    parser.add_argument("--vocab-size", type=int, default=24, help="Maximum number of learned tokens.")
     parser.add_argument(
         "--training-profile",
-        choices=["auto", "ci", "local", "overnight"],
-        default=DEFAULT_TRAINING_PROFILE,
-        help="Resource profile used to size the incremental training sweep.",
+        choices=["ci", "local", "overnight", "auto"],
+        default="ci",
+        help="Resource profile for session defaults.",
     )
     parser.add_argument(
         "--session-mode",
         choices=["single", "incremental"],
-        default=DEFAULT_SESSION_MODE,
-        help="Run a single baseline session or an incremental parameter sweep.",
+        default="incremental",
+        help="Single runs one session; incremental evaluates multiple sessions.",
     )
     parser.add_argument(
         "--max-sessions",
         type=int,
         default=0,
-        help="Upper bound on sessions to evaluate. 0 selects a profile-based default.",
+        help="Maximum evaluated sessions. 0 uses profile default.",
     )
-    return parser.parse_args(argv)
+    parser.add_argument("--min-signal-score", type=float, default=0.7, help="Minimum signal score gate.")
+    parser.add_argument("--min-f1", type=float, default=0.7, help="Minimum hold-out F1 gate.")
+    parser.add_argument("--min-token-length", type=int, default=3, help="Minimum token length.")
+    parser.add_argument(
+        "--allow-numeric-tokens",
+        action="store_true",
+        help="Allow numeric-only tokens in learned vocabulary.",
+    )
+    return parser.parse_args()
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
+def normalize_label(label: str) -> str:
+    cleaned = label.strip().lower().replace("_", "-")
+    if cleaned == "banana":
+        return "banana"
+    if cleaned in {"not-banana", "notbanana", "not banana"}:
+        return "not-banana"
+    raise ValueError(f"Unsupported label '{label}'. Expected banana or not-banana.")
 
-    if args.max_sessions < 0:
-        raise ValueError("max-sessions must be zero or greater.")
-    if args.min_token_length < 1:
-        raise ValueError("min-token-length must be at least 1.")
 
-    samples = load_corpus(args.corpus)
-    training_profile = resolve_training_profile(args.training_profile)
-    max_sessions = resolve_max_sessions(training_profile, args.max_sessions)
-    resource_context = {
-        "cpu_count": detect_cpu_count(),
-        "github_actions": os.environ.get("GITHUB_ACTIONS", "").strip().lower()
-        == "true",
+def load_corpus(path: Path) -> list[Sample]:
+    if not path.exists():
+        raise FileNotFoundError(f"Corpus file not found: {path}")
+
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(payload, dict):
+        raw_samples = payload.get("samples", [])
+    elif isinstance(payload, list):
+        raw_samples = payload
+    else:
+        raise ValueError("Corpus JSON must be an array or an object with a 'samples' array.")
+
+    samples: list[Sample] = []
+    for index, item in enumerate(raw_samples):
+        if not isinstance(item, dict):
+            raise ValueError(f"Corpus entry #{index + 1} must be an object.")
+        text = str(item.get("text", "")).strip()
+        if not text:
+            raise ValueError(f"Corpus entry #{index + 1} has empty text.")
+        label = normalize_label(str(item.get("label", "")))
+        samples.append(Sample(text=text, label=label))
+
+    if len(samples) < 6:
+        raise ValueError("Corpus must provide at least 6 samples to evaluate hold-out metrics.")
+    return samples
+
+
+def resolve_profile(profile: str) -> str:
+    if profile != "auto":
+        return profile
+    if os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true":
+        return "ci"
+    cpu_count = os.cpu_count() or 1
+    if cpu_count >= 16:
+        return "overnight"
+    return "local"
+
+
+def resolve_sessions(profile: str, session_mode: str, max_sessions: int) -> int:
+    if session_mode == "single":
+        return 1
+    default_sessions = PROFILE_DEFAULTS[profile]["sessions"]
+    return max_sessions if max_sessions > 0 else default_sessions
+
+
+def resolve_vocab_size(profile: str, requested_vocab_size: int) -> int:
+    if requested_vocab_size > 0:
+        return requested_vocab_size
+    return PROFILE_DEFAULTS[profile]["vocab_size"]
+
+
+def tokenize(text: str, min_token_length: int, allow_numeric_tokens: bool) -> list[str]:
+    tokens = []
+    for raw in TOKEN_PATTERN.findall(text.lower()):
+        token = raw.strip("'")
+        if not token:
+            continue
+        if len(token) < min_token_length:
+            continue
+        if not allow_numeric_tokens and token.isdigit():
+            continue
+        tokens.append(token)
+    return tokens
+
+
+def split_train_holdout(samples: list[Sample], seed: int) -> tuple[list[Sample], list[Sample]]:
+    ordered = samples[:]
+    random.Random(seed).shuffle(ordered)
+    holdout_size = max(1, len(ordered) // 4)
+    holdout = ordered[:holdout_size]
+    train = ordered[holdout_size:]
+    if not train:
+        train = holdout
+        holdout = ordered[-1:]
+    return train, holdout
+
+
+def learn_vocabulary(
+    train_samples: list[Sample],
+    vocab_size: int,
+    min_token_length: int,
+    allow_numeric_tokens: bool,
+) -> tuple[list[dict[str, float | int | str]], dict[str, float], float]:
+    banana_counts: Counter[str] = Counter()
+    not_banana_counts: Counter[str] = Counter()
+
+    for sample in train_samples:
+        unique_tokens = set(tokenize(sample.text, min_token_length, allow_numeric_tokens))
+        for token in unique_tokens:
+            if sample.label == "banana":
+                banana_counts[token] += 1
+            else:
+                not_banana_counts[token] += 1
+
+    scored: list[dict[str, float | int | str]] = []
+    all_tokens = set(banana_counts) | set(not_banana_counts)
+    for token in all_tokens:
+        banana_hits = banana_counts[token]
+        not_hits = not_banana_counts[token]
+        support = banana_hits + not_hits
+        if support == 0:
+            continue
+        signed_weight = (banana_hits - not_hits) / support
+        signal = abs(signed_weight)
+        scored.append(
+            {
+                "token": token,
+                "banana_count": banana_hits,
+                "not_banana_count": not_hits,
+                "support": support,
+                "weight": round(signed_weight, 6),
+                "signal": round(signal, 6),
+            }
+        )
+
+    scored.sort(key=lambda row: (-abs(float(row["weight"])), -int(row["support"]), str(row["token"])))
+    selected = scored[:vocab_size]
+    weights = {str(item["token"]): float(item["weight"]) for item in selected}
+    signal_score = mean(abs(value) for value in weights.values()) if weights else 0.0
+    return selected, weights, round(signal_score, 6)
+
+
+def predict_label(
+    text: str,
+    weights: dict[str, float],
+    min_token_length: int,
+    allow_numeric_tokens: bool,
+) -> tuple[str, float]:
+    unique_tokens = set(tokenize(text, min_token_length, allow_numeric_tokens))
+    score = sum(weights[token] for token in unique_tokens if token in weights)
+    label = "banana" if score >= 0 else "not-banana"
+    return label, score
+
+
+def safe_divide(numerator: float, denominator: float) -> float:
+    if denominator == 0:
+        return 0.0
+    return numerator / denominator
+
+
+def evaluate(
+    holdout_samples: list[Sample],
+    weights: dict[str, float],
+    min_token_length: int,
+    allow_numeric_tokens: bool,
+) -> dict[str, float]:
+    tp = fp = fn = tn = 0
+    for sample in holdout_samples:
+        predicted, _ = predict_label(sample.text, weights, min_token_length, allow_numeric_tokens)
+        actual_not = sample.label == "not-banana"
+        predicted_not = predicted == "not-banana"
+        if predicted_not and actual_not:
+            tp += 1
+        elif predicted_not and not actual_not:
+            fp += 1
+        elif not predicted_not and actual_not:
+            fn += 1
+        else:
+            tn += 1
+
+    precision = safe_divide(tp, tp + fp)
+    recall = safe_divide(tp, tp + fn)
+    f1 = safe_divide(2 * precision * recall, precision + recall)
+    accuracy = safe_divide(tp + tn, tp + fp + fn + tn)
+
+    return {
+        "holdout_precision": round(precision, 6),
+        "holdout_recall": round(recall, 6),
+        "holdout_f1": round(f1, 6),
+        "holdout_accuracy": round(accuracy, 6),
+        "tp": float(tp),
+        "fp": float(fp),
+        "fn": float(fn),
+        "tn": float(tn),
     }
-    session_plan = build_session_plan(
-        args=args,
-        training_profile=training_profile,
-        max_sessions=max_sessions,
-        session_mode=args.session_mode,
-    )
 
-    selected_session_result: dict[str, Any] | None = None
-    selected_vocabulary: list[dict[str, Any]] = []
-    session_results: list[dict[str, Any]] = []
 
-    for session_index, session in enumerate(session_plan, start=1):
-        train, holdout = deterministic_split(samples, session.holdout_fraction)
-        vocabulary = learn_vocabulary(
-            train,
-            vocab_size=session.vocab_size,
-            min_banana_occurrences=session.min_banana_occurrences,
-            min_signal_score=session.min_signal_score,
+def write_header(path: Path, tokens: Iterable[str]) -> None:
+    token_lines = "\n".join(f'    "{token}",' for token in tokens)
+    header = f"""/* Auto-generated by scripts/train-not-banana-model.py */
+#ifndef BANANA_SIGNAL_TOKENS_GENERATED_H
+#define BANANA_SIGNAL_TOKENS_GENERATED_H
+
+static const char* const k_banana_signal_tokens_generated[] = {{
+{token_lines}
+}};
+
+static const unsigned long k_banana_signal_tokens_generated_count =
+    sizeof(k_banana_signal_tokens_generated) / sizeof(k_banana_signal_tokens_generated[0]);
+
+#endif /* BANANA_SIGNAL_TOKENS_GENERATED_H */
+"""
+    path.write_text(header, encoding="utf-8")
+
+
+def main() -> int:
+    args = parse_args()
+
+    corpus_path = Path(args.corpus)
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    samples = load_corpus(corpus_path)
+
+    profile = resolve_profile(args.training_profile)
+    sessions_to_run = resolve_sessions(profile, args.session_mode, args.max_sessions)
+    vocab_size = resolve_vocab_size(profile, args.vocab_size)
+
+    sessions: list[dict[str, object]] = []
+    for session_index in range(sessions_to_run):
+        seed = 20260425 + session_index
+        train_samples, holdout_samples = split_train_holdout(samples, seed)
+        vocabulary, weights, signal_score = learn_vocabulary(
+            train_samples=train_samples,
+            vocab_size=vocab_size,
             min_token_length=args.min_token_length,
             allow_numeric_tokens=args.allow_numeric_tokens,
         )
-        vocabulary_scores = {
-            entry["token"]: entry["signal_score"] for entry in vocabulary
-        }
-        metrics = evaluate(holdout, vocabulary_scores, session.decision_threshold)
-
-        session_result = {
-            "session_index": session_index,
-            "train_size": len(train),
-            "holdout_size": len(holdout),
-            "token_count": len(vocabulary),
-            "hyperparameters": {
-                "vocab_size": session.vocab_size,
-                "min_banana_occurrences": session.min_banana_occurrences,
-                "min_signal_score": session.min_signal_score,
-                "min_token_length": args.min_token_length,
-                "allow_numeric_tokens": args.allow_numeric_tokens,
-                "holdout_fraction": session.holdout_fraction,
-                "decision_threshold": session.decision_threshold,
-                "split_seed": SPLIT_SEED,
-            },
-            "metrics": metrics,
-        }
-        session_results.append(session_result)
-
-        if selected_session_result is None:
-            selected_session_result = session_result
-            selected_vocabulary = vocabulary
-            continue
-
-        if session_score_key(session_result) > session_score_key(selected_session_result):
-            selected_session_result = session_result
-            selected_vocabulary = vocabulary
-
-    if selected_session_result is None:
-        raise RuntimeError("Trainer did not produce any training sessions.")
-
-    metrics = selected_session_result["metrics"]
-    train_size = int(selected_session_result["train_size"])
-    holdout_size = int(selected_session_result["holdout_size"])
-
-    write_outputs(
-        output_dir=args.output,
-        vocabulary=selected_vocabulary,
-        metrics=metrics,
-        train_size=train_size,
-        holdout_size=holdout_size,
-        args=args,
-        training_profile=training_profile,
-        session_mode=args.session_mode,
-        session_results=session_results,
-        selected_session=selected_session_result,
-        resource_context=resource_context,
-    )
-
-    print(
-        "trained vocabulary tokens="
-        f"{len(selected_vocabulary)} train={train_size} holdout={holdout_size} "
-        f"profile={training_profile} sessions={len(session_results)} "
-        f"selected_session={selected_session_result['session_index']} "
-        f"f1={metrics['f1']} precision={metrics['precision']} "
-        f"recall={metrics['recall']} accuracy={metrics['accuracy']}"
-    )
-
-    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
-    if summary_path:
-        with open(summary_path, "a", encoding="utf-8") as handle:
-            handle.write("## Not-Banana Trainer\n\n")
-            handle.write(f"- profile: {training_profile}\n")
-            handle.write(f"- session mode: {args.session_mode}\n")
-            handle.write(f"- sessions evaluated: {len(session_results)}\n")
-            handle.write(
-                f"- selected session: {selected_session_result['session_index']}\n"
-            )
-            handle.write(f"- vocabulary size: {len(selected_vocabulary)}\n")
-            handle.write(f"- train samples: {train_size}\n")
-            handle.write(f"- holdout samples: {holdout_size}\n")
-            handle.write(f"- precision: {metrics['precision']}\n")
-            handle.write(f"- recall: {metrics['recall']}\n")
-            handle.write(f"- f1: {metrics['f1']}\n")
-            handle.write(f"- accuracy: {metrics['accuracy']}\n")
-
-    if args.min_f1 > 0.0 and metrics["f1"] < args.min_f1:
-        print(
-            f"::error::F1 {metrics['f1']} below required gate {args.min_f1}",
-            file=sys.stderr,
+        metrics = evaluate(
+            holdout_samples=holdout_samples,
+            weights=weights,
+            min_token_length=args.min_token_length,
+            allow_numeric_tokens=args.allow_numeric_tokens,
         )
-        return 1
+        session = {
+            "session_index": session_index + 1,
+            "seed": seed,
+            "training_size": len(train_samples),
+            "holdout_size": len(holdout_samples),
+            "vocabulary_size": len(vocabulary),
+            "signal_score": signal_score,
+            "metrics": metrics,
+            "vocabulary": vocabulary,
+        }
+        sessions.append(session)
 
+    selected = max(
+        sessions,
+        key=lambda item: (
+            float(item["metrics"]["holdout_f1"]),
+            float(item["signal_score"]),
+            float(item["metrics"]["holdout_accuracy"]),
+        ),
+    )
+
+    selected_metrics = dict(selected["metrics"])
+    selected_metrics.update(
+        {
+            "signal_score": round(float(selected["signal_score"]), 6),
+            "min_signal_score": round(float(args.min_signal_score), 6),
+            "min_f1": round(float(args.min_f1), 6),
+            "meets_thresholds": (
+                float(selected["signal_score"]) >= float(args.min_signal_score)
+                and float(selected["metrics"]["holdout_f1"]) >= float(args.min_f1)
+            ),
+            "training_profile": profile,
+            "session_mode": args.session_mode,
+            "evaluated_sessions": sessions_to_run,
+            "selected_session": int(selected["session_index"]),
+        }
+    )
+
+    selected_vocabulary = list(selected["vocabulary"])
+    selected_tokens = [str(entry["token"]) for entry in selected_vocabulary]
+
+    vocabulary_payload = {
+        "schema_version": 1,
+        "generated_at_utc": utc_now(),
+        "corpus_path": str(corpus_path),
+        "corpus_size": len(samples),
+        "training_profile": profile,
+        "session_mode": args.session_mode,
+        "vocab_size": vocab_size,
+        "vocabulary": selected_vocabulary,
+        "metrics": selected_metrics,
+    }
+
+    metrics_payload = {
+        "schema_version": 1,
+        "generated_at_utc": utc_now(),
+        "metrics": selected_metrics,
+    }
+
+    sessions_payload = {
+        "schema_version": 1,
+        "generated_at_utc": utc_now(),
+        "sessions": sessions,
+    }
+
+    (output_dir / "vocabulary.json").write_text(json.dumps(vocabulary_payload, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "metrics.json").write_text(json.dumps(metrics_payload, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "sessions.json").write_text(json.dumps(sessions_payload, indent=2) + "\n", encoding="utf-8")
+    write_header(output_dir / "banana_signal_tokens.h", selected_tokens)
+
+    print(json.dumps({"output": str(output_dir), "metrics": selected_metrics}, indent=2))
+
+    if not selected_metrics["meets_thresholds"]:
+        return 2
     return 0
 
 

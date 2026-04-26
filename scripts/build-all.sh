@@ -1,16 +1,9 @@
 #!/usr/bin/env bash
+# Spec 005 — top-level build orchestrator. Native -> dotnet.
 set -euo pipefail
+cd "$(dirname "$0")/.."
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BUILD_DIR="$ROOT_DIR/build/native"
+cmake -S . -B build/native -DCMAKE_BUILD_TYPE=Release
+cmake --build build/native --config Release
 
-cmake -S "$ROOT_DIR" -B "$BUILD_DIR"
-cmake --build "$BUILD_DIR" --config Release
-
-dotnet restore "$ROOT_DIR/src/c-sharp/asp.net/Banana.Api.csproj"
-dotnet build "$ROOT_DIR/src/c-sharp/asp.net/Banana.Api.csproj" -c Release --no-restore
-
-dotnet test "$ROOT_DIR/tests/unit/Banana.UnitTests.csproj" -c Release
-dotnet test "$ROOT_DIR/tests/integration/Banana.IntegrationTests.csproj" -c Release
-
-echo "Build and test completed."
+dotnet build Banana.sln -c Debug

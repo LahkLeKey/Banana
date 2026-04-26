@@ -1,110 +1,100 @@
 #!/usr/bin/env python3
-"""Regenerate Banana.Api coverage denominator manifest from current source files."""
+"""Synchronize or validate the Banana.Api coverage denominator manifest."""
 
 from __future__ import annotations
 
 import argparse
-import fnmatch
 import json
-import pathlib
-import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+API_ROOT = ROOT / "src" / "c-sharp" / "asp.net"
+DEFAULT_MANIFEST = API_ROOT / "coverage-denominator.json"
 
 
-def fail(message: str) -> None:
-    print(message, file=sys.stderr)
-    raise SystemExit(1)
+def utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def normalize_path(value: str) -> str:
-    return value.replace("\\", "/")
+def collect_cs_files(api_root: Path) -> list[str]:
+    files: list[str] = []
+    for candidate in sorted(api_root.rglob("*.cs")):
+        relative_parts = candidate.relative_to(api_root).parts
+        if "obj" in relative_parts or "bin" in relative_parts:
+            continue
+        files.append(candidate.relative_to(api_root).as_posix())
+    return files
 
 
-def discover_files(root_dir: pathlib.Path, manifest: dict) -> list[str]:
-    source_root_raw = manifest.get("sourceRoot")
-    if not isinstance(source_root_raw, str) or not source_root_raw:
-        fail("Manifest must define sourceRoot as a non-empty string.")
+def build_manifest(files: list[str]) -> dict:
+    return {
+        "schema_version": 1,
+        "project": "Banana.Api",
+        "generated_at_utc": utc_now(),
+        "tracked_file_count": len(files),
+        "tracked_files": files,
+    }
 
-    source_root = (root_dir / source_root_raw).resolve()
-    if not source_root.exists() or not source_root.is_dir():
-        fail(f"Manifest sourceRoot does not exist: {source_root_raw}")
 
-    include_patterns = manifest.get("includePatterns")
-    if not isinstance(include_patterns, list) or not include_patterns:
-        fail("Manifest must define includePatterns as a non-empty array.")
+def check_manifest(manifest_path: Path, expected_files: list[str]) -> tuple[bool, dict]:
+    if not manifest_path.exists():
+        return False, {
+            "ok": False,
+            "error": f"Manifest missing at {manifest_path}",
+            "expected_count": len(expected_files),
+        }
 
-    exclude_patterns = manifest.get("excludePatterns", [])
-    if not isinstance(exclude_patterns, list):
-        fail("Manifest excludePatterns must be an array.")
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    tracked_files = payload.get("tracked_files", [])
+    if not isinstance(tracked_files, list):
+        return False, {"ok": False, "error": "tracked_files must be an array."}
 
-    files: set[str] = set()
-    for pattern in include_patterns:
-        if not isinstance(pattern, str) or not pattern:
-            fail("Manifest includePatterns entries must be non-empty strings.")
+    tracked_set = set(str(item) for item in tracked_files)
+    expected_set = set(expected_files)
+    added = sorted(expected_set - tracked_set)
+    removed = sorted(tracked_set - expected_set)
 
-        for candidate in source_root.glob(pattern):
-            if not candidate.is_file():
-                continue
+    count_value = payload.get("tracked_file_count")
+    count_matches = count_value == len(expected_files)
+    list_matches = not added and not removed
+    ok = bool(count_matches and list_matches)
 
-            root_relative = normalize_path(str(candidate.relative_to(root_dir)))
-            source_relative = normalize_path(str(candidate.relative_to(source_root)))
+    report = {
+        "ok": ok,
+        "manifest_path": str(manifest_path),
+        "tracked_file_count": payload.get("tracked_file_count"),
+        "expected_file_count": len(expected_files),
+        "added": added,
+        "removed": removed,
+    }
+    return ok, report
 
-            excluded = False
-            for exclude_pattern in exclude_patterns:
-                if not isinstance(exclude_pattern, str):
-                    fail("Manifest excludePatterns entries must be strings.")
-                if fnmatch.fnmatch(root_relative, exclude_pattern) or fnmatch.fnmatch(source_relative, exclude_pattern):
-                    excluded = True
-                    break
 
-            if not excluded:
-                files.add(root_relative)
-
-    return sorted(files)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Sync or validate coverage-denominator manifest.")
+    parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
+    parser.add_argument("--check", action="store_true", help="Validate manifest instead of writing.")
+    parser.add_argument("--quiet", action="store_true", help="Suppress report output.")
+    return parser.parse_args()
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--manifest",
-        default="src/c-sharp/asp.net/coverage-denominator.json",
-        help="Path to Banana.Api coverage denominator manifest.",
-    )
-    args = parser.parse_args()
+    args = parse_args()
+    manifest_path = Path(args.manifest)
 
-    root_dir = pathlib.Path(__file__).resolve().parents[1]
-    manifest_path = pathlib.Path(args.manifest)
-    if not manifest_path.is_absolute():
-        manifest_path = root_dir / manifest_path
+    expected_files = collect_cs_files(API_ROOT)
+    if args.check:
+        ok, report = check_manifest(manifest_path, expected_files)
+        if not args.quiet:
+            print(json.dumps(report, indent=2))
+        return 0 if ok else 1
 
-    if not manifest_path.exists():
-        fail(f"Manifest not found: {manifest_path}")
-
-    try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        fail(f"Manifest is not valid JSON: {exc}")
-
-    if not isinstance(manifest, dict):
-        fail("Manifest root must be a JSON object.")
-
-    if manifest.get("schemaVersion") != 1:
-        fail("Manifest schemaVersion must be 1.")
-
-    if manifest.get("project") != "Banana.Api":
-        fail("Manifest project must be 'Banana.Api'.")
-
-    files = discover_files(root_dir, manifest)
-    updated_manifest = dict(manifest)
-    updated_manifest["files"] = files
-
-    serialized = json.dumps(updated_manifest, indent=4) + "\n"
-    current = manifest_path.read_text(encoding="utf-8")
-    if current == serialized:
-        print(f"Banana.Api coverage denominator manifest already current ({len(files)} files).")
-        return 0
-
-    manifest_path.write_text(serialized, encoding="utf-8")
-    print(f"Updated Banana.Api coverage denominator manifest ({len(files)} files): {manifest_path}")
+    manifest = build_manifest(expected_files)
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    if not args.quiet:
+        print(json.dumps({"written": True, "manifest": str(manifest_path), "count": len(expected_files)}, indent=2))
     return 0
 
 

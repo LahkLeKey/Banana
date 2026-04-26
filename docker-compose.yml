@@ -1,5 +1,7 @@
 name: banana-container
 
+# Profiles (spec 012): runtime, tests, electron, apps, all, api-fastify, android-emulator (gated).
+
 services:
   postgres:
     image: postgres:16
@@ -18,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: docker/native-builder.Dockerfile
-    command: ["bash", "-lc", "mkdir -p /artifacts && cp -f /workspace/out/native/bin/libbanana_native.so /artifacts/libbanana_native.so && ls -l /artifacts"]
+    command: ["bash", "-lc", "cp -f /workspace/build/native/libbanana_native.so /artifacts/libbanana_native.so && ls -l /artifacts"]
     volumes:
       - native-artifacts:/artifacts
     profiles: ["runtime", "tests", "all", "electron", "apps", "api-fastify"]
@@ -53,43 +55,21 @@ services:
       context: .
       dockerfile: docker/api-fastify.Dockerfile
     depends_on:
-      api:
-        condition: service_healthy
-      native-build:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     environment:
-      BANANA_API_HOST: 0.0.0.0
-      BANANA_API_PORT: 8180
-      BANANA_BANANA_DOMAIN_MODE: auto
-      BANANA_BATCH_DOMAIN_MODE: auto
-      BANANA_NATIVE_PATH: /native
-      BANANA_LEGACY_API_BASE_URL: http://api:8080
-      BANANA_LEGACY_ML_API_BASE_URL: http://api:8080
       DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
+      PORT: "8081"
     ports:
-      - "8180:8180"
-    volumes:
-      - native-artifacts:/native:ro
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8180/health >/dev/null || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-    profiles: ["api-fastify"]
+      - "8081:8081"
+    profiles: ["api-fastify", "apps", "all"]
 
   test-unit:
     build:
       context: .
       dockerfile: docker/tests.Dockerfile
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
-    command: ["bash", "-lc", "dotnet test tests/unit/CInteropSharp.UnitTests.csproj -c Release --collect:\"XPlat Code Coverage\""]
-    profiles: ["tests", "all"]
+    command: ["bash", "-lc", "dotnet test src/c-sharp/asp.net --filter Category=Unit"]
+    profiles: ["tests"]
 
   test-integration:
     build:
@@ -98,11 +78,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      native-build:
+        condition: service_completed_successfully
     environment:
-      BANANA_NATIVE_PATH: /workspace/build/native/bin
+      BANANA_NATIVE_PATH: /native
       BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
-    command: ["bash", "-lc", "dotnet test tests/integration/CInteropSharp.IntegrationTests.csproj -c Release --collect:\"XPlat Code Coverage\""]
-    profiles: ["tests", "all"]
+    volumes:
+      - native-artifacts:/native:ro
+    command: ["bash", "-lc", "dotnet test src/c-sharp/asp.net --filter Category=Integration"]
+    profiles: ["tests"]
 
   test-all:
     build:
@@ -111,183 +95,85 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      native-build:
+        condition: service_completed_successfully
     environment:
-      BANANA_NATIVE_PATH: /workspace/build/native/bin
+      BANANA_NATIVE_PATH: /native
       BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
     volumes:
-      - ./artifacts:/artifacts
-    command: ["bash", "-lc", "/workspace/scripts/run-tests-with-coverage.sh"]
-    profiles: ["tests", "all"]
+      - native-artifacts:/native:ro
+    command: ["bash", "-lc", "scripts/run-tests-with-coverage.sh"]
+    profiles: ["tests"]
 
   electron-example:
     build:
       context: .
       dockerfile: docker/electron.Dockerfile
-    depends_on:
-      api:
-        condition: service_healthy
-      native-build:
-        condition: service_completed_successfully
-    environment:
-      BANANA_API_URL: http://api:8080
-      BANANA_NATIVE_PATH: /native
-    command: ["npm", "run", "smoke"]
-    volumes:
-      - native-artifacts:/native:ro
-    profiles: ["electron", "all"]
+    command: ["bash", "-lc", "cd src/typescript/electron && npm run smoke"]
+    profiles: ["electron"]
 
   electron-desktop:
     build:
       context: .
       dockerfile: docker/electron.Dockerfile
-    depends_on:
-      api:
-        condition: service_healthy
-      native-build:
-        condition: service_completed_successfully
-      react-app:
-        condition: service_started
     environment:
-      BANANA_API_URL: http://api:8080
-      BANANA_NATIVE_PATH: /native
-      BANANA_ELECTRON_RENDERER_URL: http://react-app:5173
       DISPLAY: ${DISPLAY:-:0}
-      WAYLAND_DISPLAY: ${WAYLAND_DISPLAY:-wayland-0}
-      XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR:-/mnt/wslg/runtime-dir}
-      PULSE_SERVER: ${PULSE_SERVER:-/mnt/wslg/PulseServer}
-      LIBGL_ALWAYS_SOFTWARE: ${LIBGL_ALWAYS_SOFTWARE:-1}
-      ELECTRON_DISABLE_SANDBOX: "1"
-      ELECTRON_ENABLE_LOGGING: "1"
-    command: ["bash", "-lc", "bash ./run-desktop.sh"]
+      BANANA_ELECTRON_RENDERER_URL: http://react-app:5173
     volumes:
-      - native-artifacts:/native:ro
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
       - /mnt/wslg:/mnt/wslg
-    shm_size: "1gb"
-    profiles: ["electron-desktop"]
+    depends_on:
+      - react-app
+    profiles: ["electron", "apps"]
 
   react-app:
     build:
       context: .
       dockerfile: docker/react.Dockerfile
-    depends_on:
-      api:
-        condition: service_healthy
     environment:
       VITE_BANANA_API_BASE_URL: http://api:8080
     ports:
       - "5173:5173"
-    profiles: ["apps", "all"]
+    profiles: ["apps", "electron"]
 
   react-native-web:
     build:
       context: .
       dockerfile: docker/react-native.Dockerfile
-    depends_on:
-      api:
-        condition: service_healthy
-    environment:
-      EXPO_PUBLIC_BANANA_API_BASE_URL: http://localhost:8080
+    command: ["bash", "-lc", "cd src/typescript/react-native && bun run web"]
     ports:
-      - "19006:8081"
-    profiles: ["apps", "all"]
+      - "19006:19006"
+    profiles: ["apps"]
 
   android-emulator:
-    image: budtmo/docker-android:emulator_14.0
-    depends_on:
-      react-native-web:
-        condition: service_started
-    environment:
-      DEVICE: "Samsung Galaxy S10"
-      APPIUM: "false"
-      WEB_VNC: "true"
-      EMULATOR_ARGS: "-gpu swiftshader_indirect -no-snapshot-save -no-boot-anim"
-    privileged: true
-    shm_size: "2gb"
-    ports:
-      - "6080:6080"
-      - "5554:5554"
-      - "5555:5555"
+    build:
+      context: .
+      dockerfile: docker/react-native.Dockerfile
+    command: ["bash", "-lc", "scripts/compose-mobile-emulators-wsl2.sh"]
+    devices:
+      - /dev/kvm
     profiles: ["android-emulator"]
 
   workflow-train-not-banana-local:
     build:
       context: .
       dockerfile: docker/workflow-local.Dockerfile
-    working_dir: /workspace
-    environment:
-      BANANA_RELEASE_ID: "${BANANA_RELEASE_ID:-local-validation}"
-      BANANA_TRAIN_VOCAB_SIZE: "${BANANA_TRAIN_VOCAB_SIZE:-24}"
-      BANANA_TRAIN_PROFILE: "${BANANA_TRAIN_PROFILE:-ci}"
-      BANANA_TRAIN_SESSION_MODE: "${BANANA_TRAIN_SESSION_MODE:-single}"
-      BANANA_TRAIN_MAX_SESSIONS: "${BANANA_TRAIN_MAX_SESSIONS:-1}"
-      BANANA_TRAIN_MIN_SIGNAL: "${BANANA_TRAIN_MIN_SIGNAL:-0.7}"
-      BANANA_TRAIN_MIN_F1: "${BANANA_TRAIN_MIN_F1:-0.7}"
-      BANANA_PERSIST_REGISTRY_HISTORY: "${BANANA_PERSIST_REGISTRY_HISTORY:-true}"
-      BANANA_REGISTRY_HISTORY_BRANCH: "${BANANA_REGISTRY_HISTORY_BRANCH:-model-release-history}"
-      BANANA_REGISTRY_HISTORY_PATH: "${BANANA_REGISTRY_HISTORY_PATH:-data/not-banana/model-release-history}"
-      BANANA_REGISTRY_PR_BASE_BRANCH: "${BANANA_REGISTRY_PR_BASE_BRANCH:-main}"
-      BANANA_REGISTRY_OPEN_DRAFT_PR: "${BANANA_REGISTRY_OPEN_DRAFT_PR:-true}"
-      BANANA_REGISTRY_PR_LABELS: "${BANANA_REGISTRY_PR_LABELS:-automation,model-training,requires-human-approval}"
-      BANANA_REGISTRY_PR_REVIEWERS: "${BANANA_REGISTRY_PR_REVIEWERS:-}"
-      BANANA_LOCAL_DRY_RUN: "${BANANA_LOCAL_DRY_RUN:-true}"
-      GH_TOKEN: "${GH_TOKEN:-}"
-    volumes:
-      - .:/workspace
-    command: ["bash", "-lc", "bash scripts/workflow-local-train-not-banana.sh"]
-    profiles: ["workflow-local"]
+    command: ["bash", "-lc", "scripts/workflow-local-train-not-banana.sh"]
+    profiles: ["workflows"]
 
   workflow-orchestrate-triaged-local:
     build:
       context: .
       dockerfile: docker/workflow-local.Dockerfile
-    working_dir: /workspace
-    environment:
-      BANANA_TRIAGE_ID: "${BANANA_TRIAGE_ID:-local-safe-noop}"
-      BANANA_TRIAGE_CHANGE_COMMAND: "${BANANA_TRIAGE_CHANGE_COMMAND:-:}"
-      BANANA_BASE_BRANCH: "${BANANA_BASE_BRANCH:-main}"
-      BANANA_BRANCH_PREFIX: "${BANANA_BRANCH_PREFIX:-triage}"
-      BANANA_COMMIT_MESSAGE: "${BANANA_COMMIT_MESSAGE:-chore(triage): automated triaged change}"
-      BANANA_PR_TITLE: "${BANANA_PR_TITLE:-}"
-      BANANA_PR_BODY: "${BANANA_PR_BODY:-}"
-      BANANA_DRAFT_PR: "${BANANA_DRAFT_PR:-true}"
-      BANANA_PR_LABELS: "${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval}"
-      BANANA_PR_REVIEWERS: "${BANANA_PR_REVIEWERS:-}"
-      BANANA_LOCAL_DRY_RUN: "${BANANA_LOCAL_DRY_RUN:-true}"
-      GH_TOKEN: "${GH_TOKEN:-}"
-    volumes:
-      - .:/workspace
-    command: ["bash", "-lc", "bash scripts/workflow-local-orchestrate-triaged-item-pr.sh"]
-    profiles: ["workflow-local"]
+    command: ["bash", "-lc", "scripts/workflow-local-orchestrate-triaged-item-pr.sh"]
+    profiles: ["workflows"]
 
   workflow-orchestrate-sdlc-local:
     build:
       context: .
       dockerfile: docker/workflow-local.Dockerfile
-    working_dir: /workspace
-    environment:
-      BANANA_SDLC_ID: "${BANANA_SDLC_ID:-banana-sdlc}"
-      BANANA_SDLC_INCREMENT_PLAN_JSON: "${BANANA_SDLC_INCREMENT_PLAN_JSON:-}"
-      BANANA_BASE_BRANCH: "${BANANA_BASE_BRANCH:-main}"
-      BANANA_BRANCH_PREFIX: "${BANANA_BRANCH_PREFIX:-sdlc}"
-      BANANA_DRAFT_PR: "${BANANA_DRAFT_PR:-true}"
-      BANANA_PR_LABELS: "${BANANA_PR_LABELS:-automation,sdlc,triaged-item,requires-human-approval}"
-      BANANA_PR_REVIEWERS: "${BANANA_PR_REVIEWERS:-}"
-      BANANA_SDLC_SKIP_NO_CHANGES: "${BANANA_SDLC_SKIP_NO_CHANGES:-true}"
-      BANANA_SDLC_CONTINUE_ON_ERROR: "${BANANA_SDLC_CONTINUE_ON_ERROR:-false}"
-      BANANA_SDLC_ENABLE_WIKI_SYNC: "${BANANA_SDLC_ENABLE_WIKI_SYNC:-true}"
-      BANANA_WIKI_DRY_RUN: "${BANANA_WIKI_DRY_RUN:-true}"
-      BANANA_WIKI_PUSH: "${BANANA_WIKI_PUSH:-false}"
-      BANANA_WIKI_STRICT: "${BANANA_WIKI_STRICT:-false}"
-      BANANA_WIKI_DIR: "${BANANA_WIKI_DIR:-artifacts/wiki-sync/local-wiki-dry-run}"
-      BANANA_WIKI_SYNC_MAPPING: "${BANANA_WIKI_SYNC_MAPPING:-}"
-      BANANA_WIKI_COMMIT_MESSAGE: "${BANANA_WIKI_COMMIT_MESSAGE:-docs(wiki): sync automated SDLC documentation snapshots}"
-      BANANA_LOCAL_DRY_RUN: "${BANANA_LOCAL_DRY_RUN:-true}"
-      GH_TOKEN: "${GH_TOKEN:-}"
-    volumes:
-      - .:/workspace
-    command: ["bash", "-lc", "bash scripts/workflow-local-orchestrate-sdlc.sh"]
-    profiles: ["workflow-local"]
+    command: ["bash", "-lc", "scripts/workflow-local-orchestrate-sdlc.sh"]
+    profiles: ["workflows"]
 
 volumes:
   native-artifacts:

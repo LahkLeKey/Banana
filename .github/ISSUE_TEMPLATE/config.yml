@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Human agent-target intake templates
-    url: https://github.com/LahkLeKey/Banana/issues/new/choose
-    about: Use a Human Intake template to target a specific static helper agent.
-  - name: AI-generated triage queue
-    url: https://github.com/LahkLeKey/Banana/issues?q=is%3Aissue+is%3Aopen+label%3Aai-generated
-    about: View automation-generated triage issues separately from human issue templates.

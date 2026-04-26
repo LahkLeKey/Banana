@@ -1,27 +1,28 @@
-#include "../shared/banana_ml_internal.h"
+#include "banana_ml_regression.h"
+#include "domain/ml/shared/banana_ml_shared.h"
+#include "banana_status.h"
 
-static const double k_regression_weights[BANANA_ML_FEATURE_COUNT] = {
-    0.23, -0.19, 0.31, 0.11, -0.08, 0.17, 0.21, -0.14
-};
+int banana_ml_regression_predict(const BananaMlFeatureVector* features, double* out_score) {
+    double linear;
+    double score;
 
-BananaStatus banana_ml_predict_regression_score(
-    const BananaMlFeatureVector* features,
-    double* out_score
-) {
-    BananaStatus status = BANANA_OK;
-    double score = 0.0;
-
-    if (out_score == 0) {
-        return BANANA_ERROR_INVALID_INPUT;
+    if (!features || !out_score) {
+        return BANANA_INVALID_ARGUMENT;
     }
 
-    status = banana_ml_internal_validate_feature_vector(features);
-    if (status != BANANA_OK) {
-        return status;
-    }
+    /* Deterministic linear blend tuned for banana-vs-not-banana scoring. */
+    linear = 0.20
+        + (1.40 * features->banana_signal_ratio)
+        - (1.10 * features->not_banana_signal_ratio)
+        + (0.30 * features->unique_token_ratio)
+        + (0.20 * features->length_ratio)
+        + (0.40 * features->positive_bigram_ratio)
+        - (0.30 * features->negative_bigram_ratio)
+        + (0.35 * features->banana_attention_ratio)
+        - (0.25 * features->not_banana_attention_ratio);
 
-    score = banana_ml_internal_linear_score(k_regression_weights, features, 0.12);
-    *out_score = banana_ml_internal_clamp(score, 0.0, 1.0);
+    score = banana_ml_sigmoid_approx((linear * 2.0) - 0.8);
+    *out_score = banana_ml_clamp01(score);
 
     return BANANA_OK;
 }

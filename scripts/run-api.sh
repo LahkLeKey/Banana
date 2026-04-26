@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+# Spec 007 — local ASP.NET run with explicit BANANA_NATIVE_PATH.
 set -euo pipefail
+cd "$(dirname "$0")/.."
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+: "${BANANA_NATIVE_PATH:=$PWD/build/native}"
+export BANANA_NATIVE_PATH
 
-export BANANA_NATIVE_PATH="${BANANA_NATIVE_PATH:-$ROOT_DIR/build/native/bin/Release}"
-
-dotnet run --project "$ROOT_DIR/src/c-sharp/asp.net/Banana.Api.csproj"
+exec dotnet run --project src/c-sharp/asp.net/Banana.Api.csproj

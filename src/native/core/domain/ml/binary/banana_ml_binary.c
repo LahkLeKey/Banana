@@ -1,71 +1,66 @@
-#include "../shared/banana_ml_internal.h"
+#include "banana_ml_binary.h"
+#include "domain/ml/shared/banana_ml_shared.h"
+#include "banana_status.h"
 
-static const double k_binary_weights[BANANA_ML_FEATURE_COUNT] = {
-    1.40, -1.20, 1.10, 0.90, -1.30, 0.80, 1.00, -1.10
-};
+static int banana_ml_binary_classify_impl(const BananaMlFeatureVector* features,
+                                          double banana_bias,
+                                          double not_banana_bias,
+                                          BananaMlClassificationResult* out_result) {
+    double banana_linear;
+    double not_banana_linear;
+    double banana_probability;
+    double not_banana_probability;
+    int predicted_is_banana;
+    int actual_is_banana;
 
-static double banana_ml_binary_jaccard_similarity(double tp, double fp, double fn) {
-    double denominator = tp + fp + fn;
-
-    if (denominator <= 0.0) {
-        return 0.0;
+    if (!features || !out_result) {
+        return BANANA_INVALID_ARGUMENT;
     }
 
-    return banana_ml_internal_clamp(tp / denominator, 0.0, 1.0);
-}
+    banana_linear = banana_bias
+        + (1.80 * features->banana_signal_ratio)
+        - (1.20 * features->not_banana_signal_ratio)
+        + (0.45 * features->positive_bigram_ratio)
+        - (0.20 * features->negative_bigram_ratio)
+        + (0.35 * features->banana_attention_ratio)
+        - (0.20 * features->not_banana_attention_ratio)
+        + (0.10 * features->unique_token_ratio);
 
-static void banana_ml_binary_fill_soft_confusion_matrix(
-    double banana_probability,
-    double not_banana_probability,
-    BananaMlBinaryClassification* out_classification
-) {
-    double tp = banana_probability * banana_probability;
-    double fp = banana_probability * not_banana_probability;
-    double fn = not_banana_probability * banana_probability;
-    double tn = not_banana_probability * not_banana_probability;
+    not_banana_linear = not_banana_bias
+        + (1.80 * features->not_banana_signal_ratio)
+        - (1.20 * features->banana_signal_ratio)
+        + (0.45 * features->negative_bigram_ratio)
+        - (0.20 * features->positive_bigram_ratio)
+        + (0.35 * features->not_banana_attention_ratio)
+        - (0.20 * features->banana_attention_ratio)
+        + (0.12 * (1.0 - features->unique_token_ratio));
 
-    out_classification->confusion_true_positive = tp;
-    out_classification->confusion_false_positive = fp;
-    out_classification->confusion_false_negative = fn;
-    out_classification->confusion_true_negative = tn;
-    out_classification->jaccard_similarity = banana_ml_binary_jaccard_similarity(tp, fp, fn);
-}
+    banana_probability = banana_ml_sigmoid_approx((banana_linear - not_banana_linear) * 2.0);
+    banana_probability = banana_ml_clamp01(banana_probability);
+    not_banana_probability = 1.0 - banana_probability;
 
-BananaStatus banana_ml_predict_binary_classification(
-    const BananaMlFeatureVector* features,
-    BananaMlBinaryClassification* out_classification
-) {
-    BananaStatus status = BANANA_OK;
-    double margin = 0.0;
-    double probability = 0.0;
+    predicted_is_banana = banana_probability >= 0.5;
+    actual_is_banana =
+        (features->banana_signal_ratio + (0.25 * features->positive_bigram_ratio)) >=
+        (features->not_banana_signal_ratio + (0.25 * features->negative_bigram_ratio));
 
-    if (out_classification == 0) {
-        return BANANA_ERROR_INVALID_INPUT;
-    }
+    banana_ml_fill_confusion(predicted_is_banana, actual_is_banana, &out_result->confusion);
 
-    status = banana_ml_internal_validate_feature_vector(features);
-    if (status != BANANA_OK) {
-        return status;
-    }
-
-    margin = banana_ml_internal_linear_score(k_binary_weights, features, -0.20);
-
-    probability = banana_ml_internal_clamp(
-        banana_ml_internal_pseudo_sigmoid(margin),
-        0.0,
-        1.0
-    );
-
-    out_classification->predicted_label =
-        probability >= 0.5 ? BANANA_ML_LABEL_BANANA : BANANA_ML_LABEL_NOT_BANANA;
-
-    out_classification->banana_probability = probability;
-    out_classification->not_banana_probability = 1.0 - probability;
-    out_classification->decision_margin = margin;
-    banana_ml_binary_fill_soft_confusion_matrix(
-        out_classification->banana_probability,
-        out_classification->not_banana_probability,
-        out_classification);
+    out_result->label = predicted_is_banana ? "banana" : "not_banana";
+    out_result->banana_score = banana_probability;
+    out_result->not_banana_score = not_banana_probability;
+    out_result->confidence = predicted_is_banana ? banana_probability : not_banana_probability;
+    out_result->jaccard = banana_ml_jaccard_for_banana(&out_result->confusion);
 
     return BANANA_OK;
+}
+
+int banana_ml_binary_classify(const BananaMlFeatureVector* features,
+                              BananaMlClassificationResult* out_result) {
+    return banana_ml_binary_classify_impl(features, 0.10, 0.10, out_result);
+}
+
+int banana_ml_binary_classify_with_not_banana_bias(const BananaMlFeatureVector* features,
+                                                    BananaMlClassificationResult* out_result) {
+    return banana_ml_binary_classify_impl(features, 0.00, 0.18, out_result);
 }

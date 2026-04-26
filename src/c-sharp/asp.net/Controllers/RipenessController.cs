@@ -1,33 +1,23 @@
-using Banana.Api.Models;
-using Banana.Api.Services;
-
+using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Banana.Api.Controllers;
 
 [ApiController]
 [Route("ripeness")]
-/// <summary>
-/// HTTP endpoint that exposes banana ripeness prediction to external clients.
-/// </summary>
-public sealed class RipenessController : ControllerBase
+public sealed class RipenessController(INativeBananaClient native, PipelineContext ctx) : ControllerBase
 {
-    private readonly IRipenessService _ripenessService;
-
-    public RipenessController(IRipenessService ripenessService)
-    {
-        _ripenessService = ripenessService;
-    }
+    public sealed record RipenessRequest(string InputJson);
 
     [HttpPost("predict")]
-    [ProducesResponseType(typeof(BananaRipenessResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    /// <summary>
-    /// Predicts ripeness for a banana batch using telemetry history.
-    /// </summary>
-    public ActionResult<BananaRipenessResponse> Predict([FromBody] BananaRipenessRequest request)
+    public IActionResult Predict([FromBody] RipenessRequest req)
     {
-        return Ok(_ripenessService.Predict(request));
+        ctx.Route = "/ripeness/predict";
+        var rc = native.PredictBananaRipeness(req.InputJson, out var json);
+        ctx.LastStatus = rc;
+        return rc == NativeStatusCode.Ok
+            ? Ok(new { json })
+            : StatusMapping.ToActionResult(rc);
     }
 }

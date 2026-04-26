@@ -3,9 +3,10 @@
 - Treat Banana as a multi-language monorepo with four primary domains: native C under `src/native`, ASP.NET under `src/c-sharp/asp.net`, React/Electron/Mobile under `src/typescript`, and delivery/runtime assets under `docker`, `scripts`, and `.github/workflows`.
 - Preserve the controller -> service -> pipeline -> native interop flow documented in `docs/developer-onboarding.md`.
 - Keep changes scoped to the touched domain unless a cross-layer contract actually changes.
-- Break broad work into helper-sized slices and prefer the narrowest helper agent that owns the touched files: banana classifier, native core, native DAL, native wrapper, API pipeline, API interop, React UI, Electron, mobile runtime, compose runtime, workflow, technical writer, or test triage.
+- Break broad work into helper-sized slices and prefer the narrowest helper agent that owns the touched files: banana classifier, native core, native DAL, native wrapper, API pipeline, API interop, React UI, Electron, mobile runtime, compose runtime, workflow, technical writer, value-risk prioritization, or test triage.
 - Use parent domain agents only when more than one helper in the same domain must move together.
 - Prefer existing entry points over inventing new ones: workspace tasks, `scripts/*.sh`, CMake targets, `dotnet` test projects, Bun scripts, and Docker Compose profiles.
+- For Spec Kit-driven work, verify `.specify/feature.json` points at the intended feature and that the corresponding `.specify/specs/<feature>/plan.md` exists before implementation.
 - For native or integration work, assume `BANANA_PG_CONNECTION` is required whenever PostgreSQL-backed flows are exercised.
 - For ASP.NET local/runtime work, keep `BANANA_NATIVE_PATH` explicit and avoid hardcoded machine-specific paths.
 - For React work, preserve Bun as the package manager and `VITE_BANANA_API_BASE_URL` as the API base URL contract.
@@ -14,6 +15,8 @@
 - Treat feedback-loop updates as SDLC inputs that should flow through incremental feature branches and automated pull requests.
 - For automation-driven changes, prefer GH CLI orchestration entry points (`scripts/workflow-orchestrate-triaged-item-pr.sh` and `scripts/workflow-orchestrate-sdlc.sh`) over one-off branch/PR commands.
 - Keep wiki updates in the same orchestration path (via `scripts/workflow-sync-wiki.sh`) when delivery behavior, workflows, or runbooks change.
+- Treat `.specify/wiki/` as the canonical AI-consumable wiki store and keep `.wiki/` as a human-reference publication surface.
+- Until expanded intentionally, enforce `.wiki` markdown pages via `.specify/wiki/human-reference-allowlist.txt` to prevent unreviewed page growth.
 
 ## Runtime Contract Lessons (2026-04)
 
@@ -38,5 +41,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read:
-specs/001-agent-pulse-orchestration/plan.md
+.specify/specs/004-trim-vibe-drift/plan.md
 <!-- SPECKIT END -->

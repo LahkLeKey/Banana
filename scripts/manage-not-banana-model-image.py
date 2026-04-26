@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Manage immutable not-banana model images and channel promotion.
-
-This script packages trainer outputs into immutable model images, verifies image
-integrity, and promotes channel pointers (candidate/stable) for safe rollback.
-"""
+"""Manage immutable not-banana model images and channel pointers."""
 
 from __future__ import annotations
 
@@ -11,45 +7,31 @@ import argparse
 import hashlib
 import hmac
 import json
-import os
-import re
 import shutil
-import socket
-import sys
 import tarfile
-import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-
-MODEL_FAMILY = "not-banana-vocabulary-v1"
-DEFAULT_MODEL_DIR = Path("artifacts/not-banana-model")
-DEFAULT_REGISTRY_DIR = Path("artifacts/not-banana-model-registry")
-DEFAULT_REGISTRY_HISTORY_DIR = Path("data/not-banana/model-release-history")
-DEFAULT_RESTORE_OUTPUT_ROOT = Path("artifacts")
-REQUIRED_FILES = (
-    "vocabulary.json",
-    "metrics.json",
-    "sessions.json",
-    "banana_signal_tokens.h",
-)
-OPTIONAL_FILES = ("drift.json",)
-DEFAULT_SIGNING_KEY_ENV = "BANANA_MODEL_SIGNING_KEY"
-DEFAULT_SIGNING_KEY_ID_ENV = "BANANA_MODEL_SIGNING_KEY_ID"
-DEFAULT_SNAPSHOT_DIR = Path("artifacts/not-banana-model-registry-snapshots")
-DEFAULT_UPLOAD_TIMEOUT_SEC = 60
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def iso_compact_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+def read_json(path: Path, default: dict | list | None = None):
+    if not path.exists():
+        if default is None:
+            raise FileNotFoundError(path)
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-def sha256_file(path: Path) -> str:
+def write_json(path: Path, payload: dict | list) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(65536), b""):
@@ -57,1138 +39,402 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def load_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+def ensure_registry(registry_dir: Path) -> None:
+    (registry_dir / "images").mkdir(parents=True, exist_ok=True)
+    (registry_dir / "channels").mkdir(parents=True, exist_ok=True)
 
 
-def write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+def channel_file(registry_dir: Path, channel: str) -> Path:
+    return registry_dir / "channels" / f"{channel}.json"
 
 
-def normalize_label(value: str) -> str:
-    sanitized = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip())
-    sanitized = sanitized.strip("-._")
-    return sanitized or iso_compact_now()
+def read_channel_image_id(registry_dir: Path, channel: str) -> str:
+    payload = read_json(channel_file(registry_dir, channel))
+    image_id = str(payload.get("image_id", "")).strip()
+    if not image_id:
+        raise ValueError(f"Channel '{channel}' does not contain an image_id.")
+    return image_id
 
 
-def resolve_cli_or_env(explicit_value: str | None, env_name: str | None) -> str | None:
-    if explicit_value:
-        return explicit_value
-
-    if env_name:
-        env_value = os.environ.get(env_name)
-        if env_value:
-            return env_value
-
-    return None
-
-
-def canonical_manifest_payload(manifest: dict[str, Any]) -> bytes:
-    payload = dict(manifest)
-    payload.pop("signature", None)
-    return json.dumps(
-        payload,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=True,
-    ).encode("utf-8")
-
-
-def sign_manifest(manifest: dict[str, Any], signing_key: str) -> str:
-    return hmac.new(
-        signing_key.encode("utf-8"),
-        canonical_manifest_payload(manifest),
-        hashlib.sha256,
-    ).hexdigest()
-
-
-def validate_manifest_signature(
-    manifest: dict[str, Any],
-    signing_key: str | None,
-    require_signature: bool,
-) -> list[str]:
-    errors: list[str] = []
-    signature = manifest.get("signature")
-
-    if not isinstance(signature, dict):
-        if require_signature:
-            errors.append("Manifest is missing signature block.")
-        return errors
-
-    algorithm = str(signature.get("algorithm", "")).strip().lower()
-    signature_value = str(signature.get("value", "")).strip()
-
-    if algorithm != "hmac-sha256":
-        if require_signature:
-            errors.append(
-                f"Manifest signature algorithm '{algorithm or '<empty>'}' is not allowed."
-            )
-        return errors
-
-    if not signature_value:
-        errors.append("Manifest signature value is empty.")
-        return errors
-
-    if not signing_key:
-        errors.append("No signing key available to verify manifest signature.")
-        return errors
-
-    expected = sign_manifest(manifest, signing_key)
-    if not hmac.compare_digest(signature_value, expected):
-        errors.append("Manifest signature mismatch; image metadata may be tampered.")
-
-    return errors
-
-
-def parse_headers(header_values: list[str]) -> dict[str, str]:
-    headers: dict[str, str] = {}
-
-    for raw in header_values:
-        if ":" not in raw:
-            raise ValueError(
-                f"Invalid upload header '{raw}'. Use the format 'Header-Name: value'."
-            )
-        name, value = raw.split(":", 1)
-        header_name = name.strip()
-        header_value = value.strip()
-        if not header_name:
-            raise ValueError(f"Invalid upload header '{raw}'; empty header name.")
-        headers[header_name] = header_value
-
-    return headers
-
-
-def upload_file_put(
-    url: str,
-    file_path: Path,
-    headers: dict[str, str],
-    timeout_sec: int,
-) -> None:
-    payload = file_path.read_bytes()
-    request = urllib.request.Request(url=url, data=payload, method="PUT")
-    for key, value in headers.items():
-        request.add_header(key, value)
-    request.add_header("Content-Length", str(len(payload)))
-
-    with urllib.request.urlopen(request, timeout=timeout_sec) as response:
-        status = getattr(response, "status", 200)
-        if status >= 300:
-            raise ValueError(
-                f"Upload to {url} failed with HTTP status {status}."
-            )
-
-
-def append_github_output(values: dict[str, str]) -> None:
-    output_path = os.environ.get("GITHUB_OUTPUT", "").strip()
-    if not output_path:
-        return
-
-    with open(output_path, "a", encoding="utf-8") as handle:
-        for key, value in values.items():
-            handle.write(f"{key}={value}\n")
-
-
-def remove_path(path: Path) -> None:
-    if path.is_dir():
-        shutil.rmtree(path)
-    elif path.exists():
-        path.unlink()
-
-
-def load_or_create_index(registry_dir: Path) -> dict[str, Any]:
-    index_path = registry_dir / "index.json"
-    if index_path.exists():
-        return load_json(index_path)
-
-    return {
-        "schema_version": 1,
-        "model_family": MODEL_FAMILY,
-        "created_at_utc": utc_now(),
-        "updated_at_utc": utc_now(),
-        "images": [],
-    }
-
-
-def save_index(registry_dir: Path, index_payload: dict[str, Any]) -> None:
-    index_payload["updated_at_utc"] = utc_now()
-    write_json(registry_dir / "index.json", index_payload)
-
-
-def read_channel_pointer(registry_dir: Path, channel: str) -> dict[str, Any] | None:
-    path = registry_dir / "channels" / f"{channel}.json"
-    if not path.exists():
-        return None
-    return load_json(path)
-
-
-def write_channel_pointer(
-    registry_dir: Path,
-    channel: str,
-    image_id: str,
-    model_digest: str,
-    holdout_metrics: dict[str, Any],
-) -> None:
-    pointer = {
-        "channel": channel,
-        "image_id": image_id,
-        "model_digest": model_digest,
-        "updated_at_utc": utc_now(),
-        "metrics": {
-            "precision": holdout_metrics.get("precision", 0.0),
-            "recall": holdout_metrics.get("recall", 0.0),
-            "f1": holdout_metrics.get("f1", 0.0),
-            "accuracy": holdout_metrics.get("accuracy", 0.0),
-        },
-    }
-    write_json(registry_dir / "channels" / f"{channel}.json", pointer)
-
-
-def resolve_image_id(
-    registry_dir: Path,
-    image_id: str | None,
-    channel: str | None,
-) -> str:
+def resolve_image_id(registry_dir: Path, channel: str | None, image_id: str | None) -> str:
     if image_id:
         return image_id
-
-    if not channel:
-        raise ValueError("Either --image-id or --channel/--from-channel is required.")
-
-    pointer = read_channel_pointer(registry_dir, channel)
-    if not pointer:
-        raise ValueError(f"Channel '{channel}' is not set in the registry.")
-
-    resolved = str(pointer.get("image_id", "")).strip()
-    if not resolved:
-        raise ValueError(f"Channel '{channel}' has no image_id pointer.")
-
-    return resolved
+    if channel:
+        return read_channel_image_id(registry_dir, channel)
+    raise ValueError("Either --image-id or --channel/--from-channel is required.")
 
 
-def image_dir(registry_dir: Path, image_id: str) -> Path:
-    return registry_dir / "images" / image_id
+def manifest_payload_for_signing(payload: dict) -> bytes:
+    clone = dict(payload)
+    clone.pop("signature", None)
+    return json.dumps(clone, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
-def manifest_path(registry_dir: Path, image_id: str) -> Path:
-    return image_dir(registry_dir, image_id) / "manifest.json"
-
-
-def load_manifest(registry_dir: Path, image_id: str) -> dict[str, Any]:
-    path = manifest_path(registry_dir, image_id)
-    if not path.exists():
-        raise ValueError(f"Image '{image_id}' does not exist in registry.")
-    return load_json(path)
-
-
-def compute_model_digest(file_checksums: dict[str, str]) -> str:
-    digest = hashlib.sha256()
-    for file_name in REQUIRED_FILES:
-        digest.update(file_name.encode("utf-8"))
-        digest.update(b":")
-        digest.update(file_checksums[file_name].encode("ascii"))
-        digest.update(b"\n")
-    return digest.hexdigest()
-
-
-def image_entry_from_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
-    metrics = manifest.get("metrics") or {}
-    channels = manifest.get("channels") or []
-    training = manifest.get("training") or {}
-    signature = manifest.get("signature") or {}
-
-    return {
-        "image_id": manifest.get("image_id"),
-        "created_at_utc": manifest.get("created_at_utc"),
-        "model_digest": manifest.get("model_digest"),
-        "parent_image_id": manifest.get("parent_image_id"),
-        "channels": channels,
-        "training_profile": training.get("training_profile", "unknown"),
-        "session_mode": training.get("session_mode", "unknown"),
-        "session_count": training.get("session_count", 0),
-        "signature": {
-            "algorithm": signature.get("algorithm", "none"),
-            "key_id": signature.get("key_id", ""),
-        },
-        "metrics": {
-            "precision": metrics.get("precision", 0.0),
-            "recall": metrics.get("recall", 0.0),
-            "f1": metrics.get("f1", 0.0),
-            "accuracy": metrics.get("accuracy", 0.0),
-        },
+def sign_manifest(payload: dict, signing_key: str, key_id: str) -> dict:
+    signature = hmac.new(
+        signing_key.encode("utf-8"), manifest_payload_for_signing(payload), hashlib.sha256
+    ).hexdigest()
+    payload["signature"] = {
+        "algorithm": "hmac-sha256",
+        "key_id": key_id,
+        "value": signature,
     }
+    return payload
 
 
-def upsert_index_entry(index_payload: dict[str, Any], entry: dict[str, Any]) -> None:
-    images = index_payload.setdefault("images", [])
-    image_id = entry.get("image_id")
+def verify_signature(payload: dict, signing_key: str) -> bool:
+    signature = payload.get("signature")
+    if not isinstance(signature, dict):
+        return False
+    expected = hmac.new(
+        signing_key.encode("utf-8"), manifest_payload_for_signing(payload), hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(str(signature.get("value", "")), expected)
 
-    for idx, existing in enumerate(images):
-        if existing.get("image_id") == image_id:
-            images[idx] = entry
-            return
 
-    images.append(entry)
+def update_index(registry_dir: Path, image_id: str, channel: str | None, metrics: dict) -> None:
+    index_path = registry_dir / "index.json"
+    index = read_json(
+        index_path,
+        {
+            "schema_version": 1,
+            "updated_at_utc": utc_now(),
+            "images": {},
+            "channels": {},
+        },
+    )
+    if not isinstance(index.get("images"), dict):
+        index["images"] = {}
+    if not isinstance(index.get("channels"), dict):
+        index["channels"] = {}
+
+    index["images"][image_id] = {
+        "created_at_utc": utc_now(),
+        "path": f"images/{image_id}",
+        "holdout_f1": float(metrics.get("holdout_f1", 0.0)),
+        "signal_score": float(metrics.get("signal_score", 0.0)),
+    }
+    if channel:
+        index["channels"][channel] = image_id
+
+    index["updated_at_utc"] = utc_now()
+    write_json(index_path, index)
+
+
+def load_metrics(model_dir: Path) -> dict:
+    metrics_path = model_dir / "metrics.json"
+    payload = read_json(metrics_path)
+    metrics = payload.get("metrics") if isinstance(payload, dict) else None
+    if not isinstance(metrics, dict):
+        raise ValueError(f"Expected metrics object in {metrics_path}")
+    return metrics
 
 
 def create_image(args: argparse.Namespace) -> int:
-    model_dir = args.model_dir
-    registry_dir = args.registry_dir
+    model_dir = Path(args.model_dir)
+    registry_dir = Path(args.registry_dir)
+    ensure_registry(registry_dir)
 
-    signing_key = resolve_cli_or_env(args.signing_key, args.signing_key_env)
-    key_id = resolve_cli_or_env(args.key_id, args.key_id_env) or ""
-    if args.require_signing_key and not signing_key:
-        print(
-            "::error::Manifest signing key is required but was not provided.",
-            file=sys.stderr,
-        )
-        return 1
-
-    missing = [name for name in REQUIRED_FILES if not (model_dir / name).exists()]
+    required_files = ["metrics.json", "vocabulary.json", "sessions.json", "banana_signal_tokens.h"]
+    missing = [name for name in required_files if not (model_dir / name).exists()]
     if missing:
-        print(
-            f"::error::Missing required model artifacts in {model_dir}: {', '.join(missing)}",
-            file=sys.stderr,
-        )
-        return 1
+        raise FileNotFoundError(f"Missing required model files: {', '.join(missing)}")
 
-    vocabulary_payload = load_json(model_dir / "vocabulary.json")
-    metrics_payload = load_json(model_dir / "metrics.json")
+    metrics = load_metrics(model_dir)
+    vocabulary_digest = file_sha256(model_dir / "vocabulary.json")
+    seed = f"{utc_now()}:{vocabulary_digest}:{model_dir}"
+    image_id = f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}-{hashlib.sha256(seed.encode('utf-8')).hexdigest()[:12]}"
 
-    holdout_metrics = metrics_payload.get("holdout") or vocabulary_payload.get("metrics") or {}
-    drift_payload: dict[str, Any] | None = None
-    drift_path = model_dir / "drift.json"
-    if drift_path.exists():
-        drift_payload = load_json(drift_path)
+    image_dir = registry_dir / "images" / image_id
+    if image_dir.exists():
+        raise FileExistsError(f"Image directory already exists: {image_dir}")
 
-    file_hashes: dict[str, str] = {}
-    files_to_copy = list(REQUIRED_FILES)
-    for optional_name in OPTIONAL_FILES:
-        if (model_dir / optional_name).exists():
-            files_to_copy.append(optional_name)
+    shutil.copytree(model_dir, image_dir / "model")
 
-    for file_name in files_to_copy:
-        file_hashes[file_name] = sha256_file(model_dir / file_name)
+    model_files: dict[str, str] = {}
+    for file_path in sorted((image_dir / "model").rglob("*")):
+        if file_path.is_file():
+            rel = file_path.relative_to(image_dir / "model").as_posix()
+            model_files[rel] = file_sha256(file_path)
 
-    model_digest = compute_model_digest(file_hashes)
-    image_id = args.image_id or f"nbm-{iso_compact_now()}-{model_digest[:12]}"
-
-    target_dir = image_dir(registry_dir, image_id)
-    if target_dir.exists() and not args.allow_existing_image_id:
-        print(
-            f"::error::Image id '{image_id}' already exists. Use --image-id with a new value.",
-            file=sys.stderr,
-        )
-        return 1
-
-    parent_image_id = args.parent_image_id
-    if not parent_image_id and args.parent_from_channel:
-        pointer = read_channel_pointer(registry_dir, args.parent_from_channel)
-        if pointer:
-            parent_image_id = pointer.get("image_id")
-
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    manifest_files: list[dict[str, Any]] = []
-    for file_name in files_to_copy:
-        src = model_dir / file_name
-        dst = target_dir / file_name
-        shutil.copy2(src, dst)
-        manifest_files.append(
-            {
-                "path": file_name,
-                "size_bytes": dst.stat().st_size,
-                "sha256": file_hashes[file_name],
-            }
-        )
-
-    training_payload = {
-        "training_profile": vocabulary_payload.get("training_profile", "unknown"),
-        "session_mode": vocabulary_payload.get("session_mode", "unknown"),
-        "session_count": vocabulary_payload.get("session_count", 0),
-        "selected_session_index": vocabulary_payload.get("selected_session_index", 0),
-        "hyperparameters": vocabulary_payload.get("hyperparameters", {}),
-        "requested_hyperparameters": vocabulary_payload.get("requested_hyperparameters", {}),
-        "resource_context": vocabulary_payload.get("resource_context", {}),
-    }
-
-    drift_summary = {
-        "added_count": 0,
-        "removed_count": 0,
-    }
-    if drift_payload:
-        drift_summary = {
-            "added_count": len(drift_payload.get("added", [])),
-            "removed_count": len(drift_payload.get("removed", [])),
-        }
+    parent_image_id = None
+    if args.parent_from_channel:
+        try:
+            parent_image_id = read_channel_image_id(registry_dir, args.parent_from_channel)
+        except FileNotFoundError:
+            parent_image_id = None
 
     manifest = {
         "schema_version": 1,
-        "model_family": MODEL_FAMILY,
         "image_id": image_id,
         "created_at_utc": utc_now(),
-        "model_digest": model_digest,
+        "channel": args.channel,
         "parent_image_id": parent_image_id,
-        "channels": [args.channel],
-        "source": {
-            "host": socket.gethostname(),
-            "cwd": str(Path.cwd()),
-            "git_sha": os.environ.get("GITHUB_SHA", ""),
-            "github_run_id": os.environ.get("GITHUB_RUN_ID", ""),
-            "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", ""),
-            "github_workflow": os.environ.get("GITHUB_WORKFLOW", ""),
-        },
-        "training": training_payload,
-        "metrics": {
-            "precision": holdout_metrics.get("precision", 0.0),
-            "recall": holdout_metrics.get("recall", 0.0),
-            "f1": holdout_metrics.get("f1", 0.0),
-            "accuracy": holdout_metrics.get("accuracy", 0.0),
-        },
-        "drift_summary": drift_summary,
-        "files": manifest_files,
-        "safety": {
-            "lifecycle_state": "candidate",
-            "notes": "Promote to stable only after validation and policy checks.",
-        },
+        "metrics": metrics,
+        "files": model_files,
     }
 
-    if signing_key:
-        manifest["signature"] = {
-            "algorithm": "hmac-sha256",
-            "key_id": key_id,
-            "signed_at_utc": utc_now(),
-            "value": sign_manifest(manifest, signing_key),
-        }
-    else:
-        manifest["signature"] = {
-            "algorithm": "none",
-            "key_id": key_id,
-            "signed_at_utc": utc_now(),
-            "value": "",
-        }
+    signing_key = None
+    if args.signing_key_env:
+        signing_key = __import__("os").environ.get(args.signing_key_env, "")
 
-    write_json(target_dir / "manifest.json", manifest)
-
-    index_payload = load_or_create_index(registry_dir)
-    upsert_index_entry(index_payload, image_entry_from_manifest(manifest))
-    save_index(registry_dir, index_payload)
-
-    write_channel_pointer(
-        registry_dir=registry_dir,
-        channel=args.channel,
-        image_id=image_id,
-        model_digest=model_digest,
-        holdout_metrics=manifest["metrics"],
-    )
-
-    append_github_output(
-        {
-            "model_image_id": image_id,
-            "model_digest": model_digest,
-            "model_channel": args.channel,
-        }
-    )
-
-    print(
-        f"created image_id={image_id} channel={args.channel} model_digest={model_digest}"
-    )
-    return 0
-
-
-def verify_image_integrity(
-    registry_dir: Path,
-    image_id: str,
-    signing_key: str | None,
-    require_signature: bool,
-) -> tuple[bool, list[str]]:
-    errors: list[str] = []
-    manifest = load_manifest(registry_dir, image_id)
-    manifest_files = manifest.get("files")
-    if not isinstance(manifest_files, list) or not manifest_files:
-        return False, ["Manifest has no files list."]
-
-    computed_hashes: dict[str, str] = {}
-    for entry in manifest_files:
-        file_name = str(entry.get("path", "")).strip()
-        expected = str(entry.get("sha256", "")).strip()
-        if not file_name or not expected:
-            errors.append("Manifest file entry missing path or sha256.")
-            continue
-
-        file_path = image_dir(registry_dir, image_id) / file_name
-        if not file_path.exists():
-            errors.append(f"Missing file '{file_name}' in image '{image_id}'.")
-            continue
-
-        actual = sha256_file(file_path)
-        computed_hashes[file_name] = actual
-        if actual != expected:
-            errors.append(
-                f"Checksum mismatch for '{file_name}' (expected={expected}, actual={actual})."
-            )
-
-    for required_name in REQUIRED_FILES:
-        if required_name not in computed_hashes:
-            file_path = image_dir(registry_dir, image_id) / required_name
-            if file_path.exists():
-                computed_hashes[required_name] = sha256_file(file_path)
-
-    if all(name in computed_hashes for name in REQUIRED_FILES):
-        digest = compute_model_digest(computed_hashes)
-        expected_digest = str(manifest.get("model_digest", "")).strip()
-        if digest != expected_digest:
-            errors.append(
-                f"Model digest mismatch (expected={expected_digest}, actual={digest})."
-            )
-
-    errors.extend(
-        validate_manifest_signature(
-            manifest=manifest,
-            signing_key=signing_key,
-            require_signature=require_signature,
+    if args.require_signing_key and not signing_key:
+        raise ValueError(
+            f"Required signing key env var '{args.signing_key_env}' is empty or not set."
         )
-    )
 
-    return len(errors) == 0, errors
+    if signing_key:
+        key_id = __import__("os").environ.get(args.key_id_env, "") if args.key_id_env else ""
+        manifest = sign_manifest(manifest, signing_key, key_id)
 
+    write_json(image_dir / "manifest.json", manifest)
 
-def verify_command(args: argparse.Namespace) -> int:
-    image_id = resolve_image_id(args.registry_dir, args.image_id, args.channel)
-    signing_key = resolve_cli_or_env(args.signing_key, args.signing_key_env)
-    ok, errors = verify_image_integrity(
-        args.registry_dir,
-        image_id,
-        signing_key=signing_key,
-        require_signature=args.require_signature,
-    )
+    channel_payload = {
+        "schema_version": 1,
+        "channel": args.channel,
+        "image_id": image_id,
+        "updated_at_utc": utc_now(),
+    }
+    write_json(channel_file(registry_dir, args.channel), channel_payload)
+    update_index(registry_dir, image_id, args.channel, metrics)
 
-    if not ok:
-        for error in errors:
-            print(f"::error::{error}", file=sys.stderr)
-        return 1
-
-    append_github_output({"verified_image_id": image_id})
-    print(f"verified image_id={image_id} integrity=ok")
+    print(json.dumps({"created": True, "image_id": image_id, "channel": args.channel}, indent=2))
     return 0
+
+
+def verify_image(args: argparse.Namespace) -> int:
+    registry_dir = Path(args.registry_dir)
+    image_id = resolve_image_id(registry_dir, args.channel, args.image_id)
+
+    image_dir = registry_dir / "images" / image_id
+    manifest_path = image_dir / "manifest.json"
+    manifest = read_json(manifest_path)
+    files = manifest.get("files", {})
+    if not isinstance(files, dict):
+        raise ValueError("Manifest files field is invalid.")
+
+    mismatches: list[str] = []
+    missing: list[str] = []
+    for rel_path, expected_hash in files.items():
+        candidate = image_dir / "model" / rel_path
+        if not candidate.exists():
+            missing.append(rel_path)
+            continue
+        actual_hash = file_sha256(candidate)
+        if actual_hash != expected_hash:
+            mismatches.append(rel_path)
+
+    signature_present = isinstance(manifest.get("signature"), dict)
+    signing_key = __import__("os").environ.get(args.signing_key_env, "") if args.signing_key_env else ""
+    signature_valid = False
+    if signature_present and signing_key:
+        signature_valid = verify_signature(manifest, signing_key)
+
+    if args.require_signature and not signature_present:
+        signature_valid = False
+
+    valid = not missing and not mismatches
+    if args.require_signature:
+        valid = valid and signature_present and signature_valid
+
+    report = {
+        "valid": valid,
+        "image_id": image_id,
+        "missing_files": missing,
+        "mismatched_files": mismatches,
+        "signature_present": signature_present,
+        "signature_valid": signature_valid if signature_present else None,
+    }
+    print(json.dumps(report, indent=2))
+    return 0 if valid else 1
 
 
 def promote_image(args: argparse.Namespace) -> int:
-    image_id = resolve_image_id(args.registry_dir, args.image_id, args.from_channel)
-    signing_key = resolve_cli_or_env(args.signing_key, args.signing_key_env)
+    registry_dir = Path(args.registry_dir)
+    image_id = resolve_image_id(registry_dir, args.from_channel, args.image_id)
+    manifest = read_json(registry_dir / "images" / image_id / "manifest.json")
 
-    ok, errors = verify_image_integrity(
-        args.registry_dir,
-        image_id,
-        signing_key=signing_key,
-        require_signature=not args.allow_unsigned,
-    )
-    if not ok:
-        for error in errors:
-            print(f"::error::{error}", file=sys.stderr)
-        return 1
+    metrics = manifest.get("metrics", {})
+    holdout_f1 = float(metrics.get("holdout_f1", 0.0))
+    removed_tokens = float(metrics.get("removed_tokens", 0.0))
 
-    manifest = load_manifest(args.registry_dir, image_id)
-    metrics = manifest.get("metrics") or {}
-    f1_score = float(metrics.get("f1", 0.0))
+    if holdout_f1 < float(args.min_f1):
+        raise ValueError(f"Promotion blocked: holdout_f1={holdout_f1:.4f} below min_f1={args.min_f1}.")
 
-    if args.to_channel == "stable" and f1_score < args.min_f1:
-        print(
-            f"::error::Refusing stable promote: f1={f1_score} below min_f1={args.min_f1}",
-            file=sys.stderr,
+    if removed_tokens > float(args.max_removed_tokens):
+        raise ValueError(
+            f"Promotion blocked: removed_tokens={removed_tokens:.0f} exceeds max={args.max_removed_tokens}."
         )
-        return 1
 
-    drift_summary = manifest.get("drift_summary") or {}
-    removed_count = int(drift_summary.get("removed_count", 0))
-    if (
-        args.to_channel == "stable"
-        and removed_count > args.max_removed_tokens
-        and not args.allow_large_removal
-    ):
-        print(
-            "::error::Refusing stable promote: removed token count "
-            f"{removed_count} exceeds max_removed_tokens={args.max_removed_tokens}",
-            file=sys.stderr,
-        )
-        return 1
+    signature_present = isinstance(manifest.get("signature"), dict)
+    if not args.allow_unsigned and not signature_present:
+        raise ValueError("Promotion blocked: manifest signature is required.")
 
-    channels = list(manifest.get("channels") or [])
-    if args.to_channel not in channels:
-        channels.append(args.to_channel)
-    manifest["channels"] = channels
+    if signature_present and args.signing_key_env:
+        signing_key = __import__("os").environ.get(args.signing_key_env, "")
+        if signing_key and not verify_signature(manifest, signing_key):
+            raise ValueError("Promotion blocked: signature verification failed.")
 
-    safety = dict(manifest.get("safety") or {})
-    if args.to_channel == "stable":
-        safety["lifecycle_state"] = "stable"
-    else:
-        safety["lifecycle_state"] = args.to_channel
-    manifest["safety"] = safety
-
-    write_json(manifest_path(args.registry_dir, image_id), manifest)
-
-    write_channel_pointer(
-        registry_dir=args.registry_dir,
-        channel=args.to_channel,
-        image_id=image_id,
-        model_digest=str(manifest.get("model_digest", "")),
-        holdout_metrics=metrics,
-    )
-
-    index_payload = load_or_create_index(args.registry_dir)
-    upsert_index_entry(index_payload, image_entry_from_manifest(manifest))
-    save_index(args.registry_dir, index_payload)
-
-    append_github_output(
-        {
-            "promoted_image_id": image_id,
-            "promoted_channel": args.to_channel,
-        }
-    )
+    pointer = {
+        "schema_version": 1,
+        "channel": args.to_channel,
+        "image_id": image_id,
+        "updated_at_utc": utc_now(),
+    }
+    write_json(channel_file(registry_dir, args.to_channel), pointer)
+    update_index(registry_dir, image_id, args.to_channel, metrics if isinstance(metrics, dict) else {})
 
     print(
-        f"promoted image_id={image_id} to_channel={args.to_channel} "
-        f"f1={f1_score} removed_tokens={removed_count}"
+        json.dumps(
+            {
+                "promoted": True,
+                "image_id": image_id,
+                "to_channel": args.to_channel,
+                "holdout_f1": holdout_f1,
+            },
+            indent=2,
+        )
     )
     return 0
 
 
-def status_command(args: argparse.Namespace) -> int:
-    registry_dir = args.registry_dir
-    index_payload = load_or_create_index(registry_dir)
-
-    channels_dir = registry_dir / "channels"
-    channels: dict[str, Any] = {}
-    if channels_dir.exists():
-        for path in sorted(channels_dir.glob("*.json")):
-            channels[path.stem] = load_json(path)
-
-    images = list(index_payload.get("images") or [])
-    images_sorted = sorted(
-        images,
-        key=lambda item: str(item.get("created_at_utc", "")),
-        reverse=True,
+def status_registry(args: argparse.Namespace) -> int:
+    registry_dir = Path(args.registry_dir)
+    index = read_json(
+        registry_dir / "index.json",
+        {
+            "schema_version": 1,
+            "updated_at_utc": utc_now(),
+            "images": {},
+            "channels": {},
+        },
     )
+
+    channels: dict[str, dict] = {}
+    for channel_path in sorted((registry_dir / "channels").glob("*.json")):
+        channel_name = channel_path.stem
+        channels[channel_name] = read_json(channel_path)
 
     payload = {
         "registry_dir": str(registry_dir),
-        "image_count": len(images_sorted),
-        "updated_at_utc": index_payload.get("updated_at_utc", ""),
+        "updated_at_utc": index.get("updated_at_utc"),
+        "image_count": len(index.get("images", {})) if isinstance(index.get("images"), dict) else 0,
         "channels": channels,
-        "recent_images": images_sorted[:10],
+        "images": index.get("images", {}),
     }
 
     if args.json:
-        print(json.dumps(payload, indent=2, sort_keys=False))
-        return 0
-
-    print(f"registry={registry_dir}")
-    print(f"image_count={payload['image_count']}")
-
-    if not channels:
-        print("channels=<none>")
+        print(json.dumps(payload, indent=2))
     else:
-        for channel_name, pointer in channels.items():
-            print(
-                f"channel={channel_name} image_id={pointer.get('image_id')} "
-                f"f1={pointer.get('metrics', {}).get('f1', 0.0)}"
-            )
-
-    for entry in payload["recent_images"]:
-        print(
-            "image="
-            f"{entry.get('image_id')} "
-            f"channels={','.join(entry.get('channels') or [])} "
-            f"f1={entry.get('metrics', {}).get('f1', 0.0)} "
-            f"signature={entry.get('signature', {}).get('algorithm', 'none')}"
-        )
-
+        for channel_name, channel_data in channels.items():
+            print(f"{channel_name}: {channel_data.get('image_id', '<unset>')}")
     return 0
 
 
-def snapshot_command(args: argparse.Namespace) -> int:
-    registry_dir = args.registry_dir
-    if not registry_dir.exists() or not registry_dir.is_dir():
-        print(
-            f"::error::Registry directory '{registry_dir}' does not exist.",
-            file=sys.stderr,
-        )
-        return 1
+def upload_file(path: Path, url: str, upload_header: str | None) -> None:
+    headers = {"Content-Type": "application/octet-stream"}
+    if upload_header:
+        if ":" not in upload_header:
+            raise ValueError("Upload header must use the format 'Name: value'.")
+        name, value = upload_header.split(":", 1)
+        headers[name.strip()] = value.strip()
 
-    default_label = (
-        f"run-{os.environ.get('GITHUB_RUN_ID', 'local')}-"
-        f"attempt-{os.environ.get('GITHUB_RUN_ATTEMPT', '1')}-"
-        f"{iso_compact_now()}"
-    )
-    snapshot_label = normalize_label(args.label or default_label)
-    archive_name = f"not-banana-model-registry-{snapshot_label}.tar.gz"
+    data = path.read_bytes()
+    request = urllib.request.Request(url=url, data=data, method="PUT", headers=headers)
+    with urllib.request.urlopen(request, timeout=60) as response:
+        if response.status >= 300:
+            raise RuntimeError(f"Upload failed with status {response.status} for {url}")
 
-    snapshot_dir = args.snapshot_dir
+
+def snapshot_registry(args: argparse.Namespace) -> int:
+    registry_dir = Path(args.registry_dir)
+    snapshot_dir = Path(args.snapshot_dir)
     snapshot_dir.mkdir(parents=True, exist_ok=True)
-    archive_path = snapshot_dir / archive_name
+
+    label = args.label or f"snapshot-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
+    archive_path = snapshot_dir / f"{label}.tar.gz"
+
     with tarfile.open(archive_path, "w:gz") as archive:
         archive.add(registry_dir, arcname=registry_dir.name)
 
-    archive_sha256 = sha256_file(archive_path)
-    sha_path = snapshot_dir / f"{archive_name}.sha256"
-    sha_path.write_text(
-        f"{archive_sha256}  {archive_name}\n",
-        encoding="utf-8",
-    )
+    digest = file_sha256(archive_path)
+    sha_path = snapshot_dir / f"{label}.tar.gz.sha256"
+    sha_path.write_text(f"{digest}  {archive_path.name}\n", encoding="utf-8")
 
     metadata = {
         "schema_version": 1,
-        "snapshot_label": snapshot_label,
+        "label": label,
         "created_at_utc": utc_now(),
-        "registry_dir": str(registry_dir),
-        "archive": {
-            "path": str(archive_path),
-            "file_name": archive_name,
-            "size_bytes": archive_path.stat().st_size,
-            "sha256": archive_sha256,
-        },
-        "sha_file": {
-            "path": str(sha_path),
-            "file_name": sha_path.name,
-        },
+        "archive": str(archive_path),
+        "sha256": digest,
+        "archive_size_bytes": archive_path.stat().st_size,
     }
-
-    try:
-        headers = parse_headers(args.upload_header)
-    except ValueError as exc:
-        print(f"::error::{exc}", file=sys.stderr)
-        return 1
-
-    upload_url = args.upload_url
-    upload_sha_url = args.upload_sha_url
-    if upload_url:
-        try:
-            upload_file_put(
-                url=upload_url,
-                file_path=archive_path,
-                headers=headers,
-                timeout_sec=args.timeout_sec,
-            )
-        except (urllib.error.URLError, ValueError) as exc:
-            print(f"::error::Failed to upload snapshot archive: {exc}", file=sys.stderr)
-            return 1
-        metadata["archive"]["upload_url"] = upload_url
-
-    if upload_sha_url:
-        try:
-            upload_file_put(
-                url=upload_sha_url,
-                file_path=sha_path,
-                headers=headers,
-                timeout_sec=args.timeout_sec,
-            )
-        except (urllib.error.URLError, ValueError) as exc:
-            print(f"::error::Failed to upload snapshot sha file: {exc}", file=sys.stderr)
-            return 1
-        metadata["sha_file"]["upload_url"] = upload_sha_url
-
-    metadata_path = snapshot_dir / f"{archive_name}.json"
+    metadata_path = snapshot_dir / f"{label}.json"
     write_json(metadata_path, metadata)
 
-    append_github_output(
-        {
-            "registry_snapshot_archive": str(archive_path),
-            "registry_snapshot_sha256": archive_sha256,
-            "registry_snapshot_sha_file": str(sha_path),
-            "registry_snapshot_metadata": str(metadata_path),
-        }
-    )
+    if args.upload_url:
+        upload_file(archive_path, args.upload_url, args.upload_header)
+    if args.upload_sha_url:
+        upload_file(sha_path, args.upload_sha_url, args.upload_header)
 
-    print(
-        "snapshot created "
-        f"archive={archive_path} sha256={archive_sha256} metadata={metadata_path}"
-    )
+    print(json.dumps(metadata, indent=2))
     return 0
 
 
-def resolve_history_snapshot_id(history_dir: Path, requested_snapshot: str | None) -> str:
-    snapshot = str(requested_snapshot or "").strip()
-    if snapshot and snapshot.lower() != "latest":
-        return snapshot
-
-    latest_path = history_dir / "latest.json"
-    if not latest_path.exists():
-        raise ValueError(
-            f"History metadata not found at '{latest_path}'. "
-            "Use --snapshot with a timestamp folder name."
-        )
-
-    latest_payload = load_json(latest_path)
-    snapshots = latest_payload.get("snapshots") or []
-    if isinstance(snapshots, list):
-        for item in snapshots:
-            snapshot_id = str(item).strip()
-            if snapshot_id:
-                return snapshot_id
-
-    updated_at_utc = str(latest_payload.get("updated_at_utc", "")).strip()
-    if updated_at_utc:
-        return updated_at_utc
-
-    raise ValueError(
-        f"History metadata '{latest_path}' does not contain a usable snapshot id."
-    )
-
-
-def restore_history_command(args: argparse.Namespace) -> int:
-    history_dir = args.history_path
-    if not history_dir.exists() or not history_dir.is_dir():
-        print(
-            f"::error::History directory '{history_dir}' does not exist.",
-            file=sys.stderr,
-        )
-        return 1
-
-    try:
-        snapshot_id = resolve_history_snapshot_id(history_dir, args.snapshot)
-    except ValueError as exc:
-        print(f"::error::{exc}", file=sys.stderr)
-        return 1
-
-    snapshot_dir = history_dir / snapshot_id
-    if not snapshot_dir.exists() or not snapshot_dir.is_dir():
-        print(
-            f"::error::Snapshot '{snapshot_id}' does not exist under '{history_dir}'.",
-            file=sys.stderr,
-        )
-        return 1
-
-    release_bundles: dict[str, Path] = {}
-    for entry in sorted(snapshot_dir.iterdir()):
-        if not entry.is_dir():
-            continue
-        if not entry.name.startswith("not-banana-model-"):
-            continue
-        release_id = entry.name[len("not-banana-model-") :]
-        if release_id:
-            release_bundles[release_id] = entry
-
-    if not release_bundles:
-        print(
-            f"::error::No not-banana model release bundles were found in '{snapshot_dir}'.",
-            file=sys.stderr,
-        )
-        return 1
-
-    requested_release_ids = list(args.release_id or [])
-    selected_releases: dict[str, Path]
-    if requested_release_ids:
-        selected_releases = {}
-        missing_release_ids: list[str] = []
-        for release_id in requested_release_ids:
-            bundle_dir = release_bundles.get(release_id)
-            if not bundle_dir:
-                missing_release_ids.append(release_id)
-                continue
-            selected_releases[release_id] = bundle_dir
-
-        if missing_release_ids:
-            available = ", ".join(sorted(release_bundles.keys()))
-            missing = ", ".join(sorted(set(missing_release_ids)))
-            print(
-                "::error::Requested release ids were not found in snapshot "
-                f"'{snapshot_id}': {missing}. Available: {available}",
-                file=sys.stderr,
-            )
-            return 1
-    else:
-        selected_releases = dict(sorted(release_bundles.items()))
-
-    output_root = args.output_root
-    output_root.mkdir(parents=True, exist_ok=True)
-
-    restored_releases: list[dict[str, Any]] = []
-    for release_id, bundle_dir in selected_releases.items():
-        release_record: dict[str, Any] = {
-            "release_id": release_id,
-            "bundle_dir": str(bundle_dir),
-            "restored": {},
-        }
-
-        source_target_pairs = (
-            (
-                bundle_dir / "not-banana-model" / release_id,
-                output_root / "not-banana-model" / release_id,
-                "not-banana-model",
-            ),
-            (
-                bundle_dir / "not-banana-model-registry" / release_id,
-                output_root / "not-banana-model-registry" / release_id,
-                "not-banana-model-registry",
-            ),
-            (
-                bundle_dir / "not-banana-model-registry-snapshots" / release_id,
-                output_root / "not-banana-model-registry-snapshots" / release_id,
-                "not-banana-model-registry-snapshots",
-            ),
-        )
-
-        restored_any = False
-        for source_dir, target_dir, category in source_target_pairs:
-            if not source_dir.exists() or not source_dir.is_dir():
-                continue
-
-            if target_dir.exists():
-                if not args.overwrite:
-                    print(
-                        "::error::Target path already exists and overwrite is disabled: "
-                        f"'{target_dir}'",
-                        file=sys.stderr,
-                    )
-                    return 1
-                remove_path(target_dir)
-
-            target_dir.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(source_dir, target_dir)
-            release_record["restored"][category] = str(target_dir)
-            restored_any = True
-
-        if not restored_any:
-            print(
-                "::warning::Release bundle has no recognized restore directories: "
-                f"{bundle_dir}",
-                file=sys.stderr,
-            )
-            continue
-
-        restored_releases.append(release_record)
-
-    if not restored_releases:
-        print(
-            "::error::No release artifacts were restored from the selected snapshot.",
-            file=sys.stderr,
-        )
-        return 1
-
-    restore_report = {
-        "schema_version": 1,
-        "history_dir": str(history_dir),
-        "snapshot_id": snapshot_id,
-        "restored_at_utc": utc_now(),
-        "output_root": str(output_root),
-        "release_count": len(restored_releases),
-        "releases": restored_releases,
-    }
-
-    report_path = output_root / "not-banana-model-restore-report.json"
-    write_json(report_path, restore_report)
-
-    append_github_output(
-        {
-            "registry_history_snapshot": snapshot_id,
-            "registry_restore_output_root": str(output_root),
-            "registry_restore_release_ids": ",".join(
-                [item["release_id"] for item in restored_releases]
-            ),
-            "registry_restore_report": str(report_path),
-        }
-    )
-
-    release_ids = ",".join([item["release_id"] for item in restored_releases])
-    print(
-        "history restored "
-        f"snapshot={snapshot_id} releases={release_ids} report={report_path}"
-    )
-    return 0
-
-
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Manage not-banana model image registry.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    create_parser = subparsers.add_parser(
-        "create", help="Create an immutable model image from trainer artifacts."
-    )
-    create_parser.add_argument("--model-dir", type=Path, default=DEFAULT_MODEL_DIR)
-    create_parser.add_argument("--registry-dir", type=Path, default=DEFAULT_REGISTRY_DIR)
-    create_parser.add_argument("--channel", default="candidate")
-    create_parser.add_argument("--image-id", default="")
-    create_parser.add_argument("--parent-image-id", default="")
-    create_parser.add_argument("--parent-from-channel", default="stable")
-    create_parser.add_argument("--signing-key", default="")
-    create_parser.add_argument(
-        "--signing-key-env",
-        default=DEFAULT_SIGNING_KEY_ENV,
-        help="Environment variable name containing the manifest signing key.",
-    )
-    create_parser.add_argument("--key-id", default="")
-    create_parser.add_argument(
-        "--key-id-env",
-        default=DEFAULT_SIGNING_KEY_ID_ENV,
-        help="Environment variable name containing the signing key identifier.",
-    )
-    create_parser.add_argument(
-        "--require-signing-key",
-        action="store_true",
-        help="Fail when signing key is missing.",
-    )
-    create_parser.add_argument(
-        "--allow-existing-image-id",
-        action="store_true",
-        help="Allow writing into an existing image directory.",
-    )
-    create_parser.set_defaults(handler=create_image)
+    create = subparsers.add_parser("create", help="Create a new immutable model image.")
+    create.add_argument("--model-dir", required=True)
+    create.add_argument("--registry-dir", required=True)
+    create.add_argument("--channel", required=True)
+    create.add_argument("--parent-from-channel")
+    create.add_argument("--require-signing-key", action="store_true")
+    create.add_argument("--signing-key-env", default="BANANA_MODEL_SIGNING_KEY")
+    create.add_argument("--key-id-env", default="BANANA_MODEL_SIGNING_KEY_ID")
+    create.set_defaults(func=create_image)
 
-    verify_parser = subparsers.add_parser(
-        "verify", help="Verify image checksums and digest."
-    )
-    verify_parser.add_argument("--registry-dir", type=Path, default=DEFAULT_REGISTRY_DIR)
-    verify_parser.add_argument("--image-id", default="")
-    verify_parser.add_argument("--channel", default="")
-    verify_parser.add_argument("--signing-key", default="")
-    verify_parser.add_argument(
-        "--signing-key-env",
-        default=DEFAULT_SIGNING_KEY_ENV,
-        help="Environment variable name containing the manifest signing key.",
-    )
-    verify_parser.add_argument(
-        "--require-signature",
-        action="store_true",
-        help="Require signed manifests and validate signatures.",
-    )
-    verify_parser.set_defaults(handler=verify_command)
+    verify = subparsers.add_parser("verify", help="Verify image integrity and optional signature.")
+    verify.add_argument("--registry-dir", required=True)
+    verify.add_argument("--channel")
+    verify.add_argument("--image-id")
+    verify.add_argument("--require-signature", action="store_true")
+    verify.add_argument("--signing-key-env", default="BANANA_MODEL_SIGNING_KEY")
+    verify.set_defaults(func=verify_image)
 
-    promote_parser = subparsers.add_parser(
-        "promote", help="Promote an image to a channel (for example stable)."
-    )
-    promote_parser.add_argument("--registry-dir", type=Path, default=DEFAULT_REGISTRY_DIR)
-    promote_parser.add_argument("--image-id", default="")
-    promote_parser.add_argument("--from-channel", default="")
-    promote_parser.add_argument("--to-channel", required=True)
-    promote_parser.add_argument("--min-f1", type=float, default=0.7)
-    promote_parser.add_argument("--max-removed-tokens", type=int, default=4)
-    promote_parser.add_argument("--allow-large-removal", action="store_true")
-    promote_parser.add_argument("--signing-key", default="")
-    promote_parser.add_argument(
-        "--signing-key-env",
-        default=DEFAULT_SIGNING_KEY_ENV,
-        help="Environment variable name containing the manifest signing key.",
-    )
-    promote_parser.add_argument(
-        "--allow-unsigned",
-        action="store_true",
-        help="Allow promotion of unsigned manifests.",
-    )
-    promote_parser.set_defaults(handler=promote_image)
+    promote = subparsers.add_parser("promote", help="Promote an image to a channel.")
+    promote.add_argument("--registry-dir", required=True)
+    promote.add_argument("--from-channel")
+    promote.add_argument("--to-channel", required=True)
+    promote.add_argument("--image-id")
+    promote.add_argument("--min-f1", type=float, default=0.8)
+    promote.add_argument("--max-removed-tokens", type=float, default=4)
+    promote.add_argument("--allow-unsigned", action="store_true")
+    promote.add_argument("--signing-key-env", default="BANANA_MODEL_SIGNING_KEY")
+    promote.set_defaults(func=promote_image)
 
-    status_parser = subparsers.add_parser(
-        "status", help="Print registry status and channel pointers."
-    )
-    status_parser.add_argument("--registry-dir", type=Path, default=DEFAULT_REGISTRY_DIR)
-    status_parser.add_argument("--json", action="store_true")
-    status_parser.set_defaults(handler=status_command)
+    status = subparsers.add_parser("status", help="Print registry status.")
+    status.add_argument("--registry-dir", required=True)
+    status.add_argument("--json", action="store_true")
+    status.set_defaults(func=status_registry)
 
-    snapshot_parser = subparsers.add_parser(
-        "snapshot",
-        help="Create and optionally upload a long-term registry snapshot archive.",
-    )
-    snapshot_parser.add_argument("--registry-dir", type=Path, default=DEFAULT_REGISTRY_DIR)
-    snapshot_parser.add_argument("--snapshot-dir", type=Path, default=DEFAULT_SNAPSHOT_DIR)
-    snapshot_parser.add_argument("--label", default="")
-    snapshot_parser.add_argument("--upload-url", default="")
-    snapshot_parser.add_argument("--upload-sha-url", default="")
-    snapshot_parser.add_argument(
-        "--upload-header",
-        action="append",
-        default=[],
-        help="Extra upload header in 'Header-Name: value' form. Repeatable.",
-    )
-    snapshot_parser.add_argument(
-        "--timeout-sec",
-        type=int,
-        default=DEFAULT_UPLOAD_TIMEOUT_SEC,
-    )
-    snapshot_parser.set_defaults(handler=snapshot_command)
+    snapshot = subparsers.add_parser("snapshot", help="Create a registry snapshot archive.")
+    snapshot.add_argument("--registry-dir", required=True)
+    snapshot.add_argument("--snapshot-dir", required=True)
+    snapshot.add_argument("--label")
+    snapshot.add_argument("--upload-url")
+    snapshot.add_argument("--upload-sha-url")
+    snapshot.add_argument("--upload-header")
+    snapshot.set_defaults(func=snapshot_registry)
 
-    restore_parser = subparsers.add_parser(
-        "restore-history",
-        help="Restore source-controlled registry-history bundles into local artifacts.",
-    )
-    restore_parser.add_argument(
-        "--history-path",
-        type=Path,
-        default=DEFAULT_REGISTRY_HISTORY_DIR,
-    )
-    restore_parser.add_argument(
-        "--snapshot",
-        default="latest",
-        help="Snapshot folder id to restore, or 'latest' to resolve via latest.json.",
-    )
-    restore_parser.add_argument(
-        "--output-root",
-        type=Path,
-        default=DEFAULT_RESTORE_OUTPUT_ROOT,
-    )
-    restore_parser.add_argument(
-        "--release-id",
-        action="append",
-        default=[],
-        help="Release id to restore. Repeat to restore multiple. Defaults to all releases in snapshot.",
-    )
-    restore_parser.add_argument(
-        "--overwrite",
-        dest="overwrite",
-        action="store_true",
-        help="Overwrite existing target directories (default).",
-    )
-    restore_parser.add_argument(
-        "--no-overwrite",
-        dest="overwrite",
-        action="store_false",
-        help="Fail if any target directory already exists.",
-    )
-    restore_parser.set_defaults(handler=restore_history_command, overwrite=True)
-
-    return parser.parse_args(argv)
+    return parser
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
-
-    if hasattr(args, "timeout_sec") and int(args.timeout_sec) <= 0:
-        raise ValueError("timeout-sec must be greater than zero.")
-
-    if hasattr(args, "image_id") and isinstance(args.image_id, str):
-        args.image_id = args.image_id.strip() or None
-    if hasattr(args, "channel") and isinstance(args.channel, str):
-        args.channel = args.channel.strip() or None
-    if hasattr(args, "from_channel") and isinstance(args.from_channel, str):
-        args.from_channel = args.from_channel.strip() or None
-    if hasattr(args, "parent_image_id") and isinstance(args.parent_image_id, str):
-        args.parent_image_id = args.parent_image_id.strip() or None
-    if hasattr(args, "parent_from_channel") and isinstance(args.parent_from_channel, str):
-        args.parent_from_channel = args.parent_from_channel.strip() or None
-    if hasattr(args, "to_channel") and isinstance(args.to_channel, str):
-        args.to_channel = args.to_channel.strip() or None
-    if hasattr(args, "signing_key") and isinstance(args.signing_key, str):
-        args.signing_key = args.signing_key.strip() or None
-    if hasattr(args, "signing_key_env") and isinstance(args.signing_key_env, str):
-        args.signing_key_env = args.signing_key_env.strip() or None
-    if hasattr(args, "key_id") and isinstance(args.key_id, str):
-        args.key_id = args.key_id.strip() or None
-    if hasattr(args, "key_id_env") and isinstance(args.key_id_env, str):
-        args.key_id_env = args.key_id_env.strip() or None
-    if hasattr(args, "label") and isinstance(args.label, str):
-        args.label = args.label.strip() or None
-    if hasattr(args, "upload_url") and isinstance(args.upload_url, str):
-        args.upload_url = args.upload_url.strip() or None
-    if hasattr(args, "upload_sha_url") and isinstance(args.upload_sha_url, str):
-        args.upload_sha_url = args.upload_sha_url.strip() or None
-    if hasattr(args, "snapshot") and isinstance(args.snapshot, str):
-        args.snapshot = args.snapshot.strip() or None
-    if hasattr(args, "release_id") and isinstance(args.release_id, list):
-        args.release_id = [
-            item.strip()
-            for item in args.release_id
-            if isinstance(item, str) and item.strip()
-        ]
-
-    return int(args.handler(args))
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    return int(args.func(args))
 
 
 if __name__ == "__main__":

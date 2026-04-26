@@ -5,6 +5,26 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+## In Scope *(mandatory)*
+
+<!--
+  ACTION REQUIRED: List the specific outcomes included in this feature slice.
+  Keep these bounded and directly tied to user value.
+-->
+
+- [In-scope outcome 1]
+- [In-scope outcome 2]
+
+## Out of Scope *(mandatory)*
+
+<!--
+  ACTION REQUIRED: List explicit exclusions for this slice.
+  Use this section to prevent implementation drift.
+-->
+
+- [Out-of-scope item 1]
+- [Out-of-scope item 2]
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--

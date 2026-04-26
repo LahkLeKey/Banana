@@ -1,14 +1,12 @@
-FROM node:20-bookworm-slim
-
+# React Native / Expo web preview (spec 011).
+FROM oven/bun:1.1
+WORKDIR /workspace
+COPY src/typescript/shared/ui/package.json ./src/typescript/shared/ui/
+RUN bun install --cwd /workspace/src/typescript/shared/ui || true
+COPY src/typescript/shared ./src/typescript/shared
+COPY src/typescript/react-native/package.json ./src/typescript/react-native/
+RUN cd src/typescript/react-native && bun install
+COPY src/typescript/react-native ./src/typescript/react-native
+EXPOSE 8081 19006
 WORKDIR /workspace/src/typescript/react-native
-
-COPY src/typescript/react-native/package.json src/typescript/react-native/package-lock.json ./
-COPY src/typescript/shared/ui/package.json /workspace/src/typescript/shared/ui/package.json
-COPY src/typescript/shared/ui/src /workspace/src/typescript/shared/ui/src
-RUN npm ci --no-audit --no-fund
-
-COPY src/typescript/react-native/ ./
-
-EXPOSE 8081
-
-CMD ["npx", "expo", "start", "--web", "--host", "lan", "--port", "8081"]
+CMD ["bun", "run", "web"]

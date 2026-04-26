@@ -1,22 +1,13 @@
 {
-    "name": "banana-native-electron-bridge",
-    "version": "1.0.0",
+    "name": "@banana/electron",
+    "version": "0.1.0",
     "private": true,
-    "description": "Banana QA desktop app with native and API smoke paths",
     "main": "main.js",
     "scripts": {
-        "start": "node ./node_modules/electron/cli.js .",
-        "start:ui": "bun run renderer:build && node ./node_modules/electron/cli.js .",
-        "renderer:dev": "bun run --cwd renderer dev",
-        "renderer:build": "bun run --cwd renderer build",
-        "renderer:check": "bun run --cwd renderer check",
-        "smoke": "node smoke.js",
-        "example": "npm run smoke"
+        "start": "electron .",
+        "smoke": "node smoke.js"
     },
     "dependencies": {
-        "electron": "^28.3.3",
-        "ffi-napi": "^4.0.3",
-        "ref-napi": "^3.0.3"
-    },
-    "packageManager": "bun@1.1.26"
+        "electron": "^33.0.0"
+    }
 }

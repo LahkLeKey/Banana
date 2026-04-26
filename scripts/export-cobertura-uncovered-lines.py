@@ -1,129 +1,69 @@
 #!/usr/bin/env python3
-"""Export uncovered line inventory from a Cobertura XML report."""
+"""Export uncovered lines from a Cobertura XML report."""
 
 from __future__ import annotations
 
 import argparse
 import json
-import pathlib
-import sys
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
-def _tag_name(tag: str) -> str:
-    if "}" in tag:
-        return tag.rsplit("}", 1)[1]
-    return tag
-
-
-def _iter_elements(root: ET.Element, name: str):
-    for element in root.iter():
-        if _tag_name(element.tag) == name:
-            yield element
-
-
-def _parse_hits(raw_hits: str | None) -> int:
-    if raw_hits is None:
-        return 0
-    try:
-        return int(float(raw_hits))
-    except ValueError:
-        return 0
-
-
-def _parse_line_number(raw_number: str | None) -> int | None:
-    if raw_number is None:
-        return None
-    try:
-        return int(raw_number)
-    except ValueError:
-        return None
-
-
-def build_inventory(report_path: pathlib.Path) -> dict:
-    tree = ET.parse(report_path)
-    root = tree.getroot()
-
-    uncovered_by_file: dict[str, set[int]] = {}
-
-    for class_element in _iter_elements(root, "class"):
-        filename = (class_element.attrib.get("filename") or "").replace("\\", "/").strip()
-        if not filename:
-            continue
-
-        for line_element in _iter_elements(class_element, "line"):
-            line_number = _parse_line_number(line_element.attrib.get("number"))
-            if line_number is None:
-                continue
-
-            hits = _parse_hits(line_element.attrib.get("hits"))
-            if hits > 0:
-                continue
-
-            uncovered_by_file.setdefault(filename, set()).add(line_number)
-
-    files = []
-    total_uncovered_lines = 0
-    for file_path, lines in sorted(uncovered_by_file.items()):
-        ordered_lines = sorted(lines)
-        uncovered_count = len(ordered_lines)
-        total_uncovered_lines += uncovered_count
-        files.append(
-            {
-                "file": file_path,
-                "uncoveredLineCount": uncovered_count,
-                "lines": ordered_lines,
-            }
-        )
-
-    files.sort(key=lambda item: (-item["uncoveredLineCount"], item["file"]))
-
-    return {
-        "reportPath": str(report_path).replace("\\", "/"),
-        "uncoveredFileCount": len(files),
-        "uncoveredLineCount": total_uncovered_lines,
-        "files": files,
-    }
-
-
-def write_text_report(payload: dict, output_path: pathlib.Path) -> None:
-    lines: list[str] = []
-    lines.append(f"Uncovered file count: {payload['uncoveredFileCount']}")
-    lines.append(f"Uncovered line count: {payload['uncoveredLineCount']}")
-    lines.append("")
-
-    for item in payload["files"]:
-        numbers = ",".join(str(number) for number in item["lines"])
-        lines.append(f"{item['file']} ({item['uncoveredLineCount']}): {numbers}")
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Extract uncovered lines from Cobertura report.")
+    parser.add_argument("--report", required=True, help="Path to Cobertura XML report.")
+    parser.add_argument("--output-json", required=True, help="Output JSON path.")
+    parser.add_argument("--output-text", required=True, help="Output text path.")
+    return parser.parse_args()
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--report", required=True, help="Path to Cobertura XML report.")
-    parser.add_argument("--output-json", required=True, help="Path to write uncovered-line JSON payload.")
-    parser.add_argument("--output-text", required=True, help="Path to write uncovered-line text summary.")
-    args = parser.parse_args()
-
-    report_path = pathlib.Path(args.report)
+    args = parse_args()
+    report_path = Path(args.report)
     if not report_path.exists():
-        print(f"Cobertura report not found: {report_path}", file=sys.stderr)
-        return 1
+        raise FileNotFoundError(f"Cobertura report not found: {report_path}")
 
-    payload = build_inventory(report_path)
+    root = ET.parse(report_path).getroot()
 
-    output_json = pathlib.Path(args.output_json)
+    uncovered_by_file: dict[str, list[int]] = {}
+    for class_node in root.findall(".//class"):
+        filename = class_node.get("filename") or class_node.get("name") or "<unknown>"
+        for line_node in class_node.findall("./lines/line"):
+            hits_raw = line_node.get("hits", "0")
+            line_raw = line_node.get("number", "0")
+            try:
+                hits = int(hits_raw)
+                line_number = int(line_raw)
+            except ValueError:
+                continue
+            if hits == 0 and line_number > 0:
+                uncovered_by_file.setdefault(filename, []).append(line_number)
+
+    files_payload = []
+    text_lines: list[str] = []
+    total = 0
+    for file_path in sorted(uncovered_by_file):
+        lines = sorted(set(uncovered_by_file[file_path]))
+        total += len(lines)
+        files_payload.append({"path": file_path, "lines": lines, "count": len(lines)})
+        text_lines.extend(f"{file_path}:{line}" for line in lines)
+
+    json_payload = {
+        "schema_version": 1,
+        "report": str(report_path),
+        "total_uncovered_lines": total,
+        "files": files_payload,
+    }
+
+    output_json = Path(args.output_json)
+    output_text = Path(args.output_text)
     output_json.parent.mkdir(parents=True, exist_ok=True)
-    output_json.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    output_text.parent.mkdir(parents=True, exist_ok=True)
 
-    write_text_report(payload, pathlib.Path(args.output_text))
+    output_json.write_text(json.dumps(json_payload, indent=2) + "\n", encoding="utf-8")
+    output_text.write_text("\n".join(text_lines) + ("\n" if text_lines else ""), encoding="utf-8")
 
-    print(
-        "Generated uncovered-line inventory: "
-        f"files={payload['uncoveredFileCount']} lines={payload['uncoveredLineCount']}"
-    )
+    print(json.dumps({"files": len(files_payload), "total_uncovered_lines": total}, indent=2))
     return 0
 
 

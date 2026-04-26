@@ -1,22 +1,12 @@
-FROM oven/bun:1.3.9
-
-RUN apt-get update \
-	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl \
-	&& rm -rf /var/lib/apt/lists/*
-
+# Fastify TypeScript API (spec 008). Bun + Prisma 7 (prisma.config.ts).
+FROM oven/bun:1.1
+WORKDIR /workspace
+COPY src/typescript/api/package.json src/typescript/api/bun.lockb* ./src/typescript/api/
+COPY src/typescript/api/prisma ./src/typescript/api/prisma
+COPY src/typescript/api/prisma.config.ts ./src/typescript/api/
+RUN cd src/typescript/api && bun install --frozen-lockfile || bun install
+COPY src/typescript/api ./src/typescript/api
+ENV NODE_ENV=production
+EXPOSE 8081
 WORKDIR /workspace/src/typescript/api
-
-COPY src/typescript/api/package.json ./package.json
-COPY src/typescript/api/bun.lock ./bun.lock
-COPY src/typescript/api/tsconfig.json ./tsconfig.json
-COPY src/typescript/api/prisma.config.ts ./prisma.config.ts
-COPY src/typescript/api/prisma ./prisma
-COPY src/typescript/api/src ./src
-COPY src/typescript/api/tests ./tests
-
-RUN bun install --frozen-lockfile
-RUN bun run check
-
-EXPOSE 8180
-
-CMD ["bun", "run", "start:gateway"]
+CMD ["bun", "run", "src/index.ts"]

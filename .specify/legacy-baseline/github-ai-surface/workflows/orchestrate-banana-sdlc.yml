@@ -1,0 +1,177 @@
+name: Orchestrate Banana SDLC
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdlc_id:
+        description: SDLC orchestration identifier used as incremental PR prefix
+        required: false
+        default: "banana-sdlc"
+      incremental_plan_json:
+        description: 'Optional JSON array (or {"increments": [...]}) describing incremental PR slices'
+        required: false
+        default: ""
+      base_branch:
+        description: Base branch used for generated incremental pull requests
+        required: false
+        default: "main"
+      branch_prefix:
+        description: Branch prefix used for generated incremental pull requests
+        required: false
+        default: "sdlc"
+      draft_pr:
+        description: Open generated incremental pull requests as draft
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      labels:
+        description: Labels applied to generated incremental pull requests
+        required: false
+        default: "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent"
+      reviewers:
+        description: Optional reviewer usernames as comma-separated values or [array] syntax
+        required: false
+        default: ""
+      allow_actions_actor:
+        description: Allow workflow_dispatch runs triggered by github-actions[bot]
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      skip_no_changes:
+        description: Skip PR creation for increments that produce no file changes
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      continue_on_error:
+        description: Continue executing later increments if an earlier increment fails
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      require_real_updates:
+        description: Require each increment to touch source/workflow impact paths before PR creation
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      skip_non_real_updates:
+        description: Skip increment PR creation when changed files are docs/non-impact only
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      real_update_path_patterns:
+        description: Comma-separated glob patterns treated as source/workflow impact paths
+        required: false
+        default: "src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props"
+      sync_wiki:
+        description: Run wiki synchronization layer after incremental PR orchestration
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      validate_ai_contracts:
+        description: Validate .github AI customization and wiki-sync contracts before running increments
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      wiki_dry_run:
+        description: Run wiki synchronization in dry-run mode
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      wiki_push:
+        description: Push wiki commits to remote when wiki sync is not dry-run
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      wiki_strict:
+        description: Fail workflow when wiki repository cannot be cloned or pushed
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      wiki_commit_message:
+        description: Commit message used for wiki synchronization commits
+        required: false
+        default: "docs(wiki): sync automated SDLC documentation snapshots"
+      wiki_remote_url:
+        description: Optional explicit wiki git remote URL
+        required: false
+        default: "https://github.com/LahkLeKey/Banana.wiki.git"
+      wiki_sync_mapping:
+        description: Optional newline-delimited source|target mapping for wiki sync
+        required: false
+        default: ""
+  schedule:
+    - cron: "0 4 * * 1-5"
+
+jobs:
+  orchestrate-sdlc:
+    if: ${{ github.event_name == 'schedule' || github.actor != 'github-actions[bot]' || (github.event_name == 'workflow_dispatch' && github.event.inputs.allow_actions_actor == 'true') }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
+      BANANA_SDLC_ID: ${{ github.event.inputs.sdlc_id || 'banana-sdlc' }}
+      BANANA_SDLC_INCREMENT_PLAN_JSON: ${{ github.event.inputs.incremental_plan_json || '' }}
+      BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
+      BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'sdlc' }}
+      BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
+      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent' }}
+      BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
+      BANANA_SDLC_SKIP_NO_CHANGES: ${{ github.event.inputs.skip_no_changes || 'true' }}
+      BANANA_SDLC_CONTINUE_ON_ERROR: ${{ github.event.inputs.continue_on_error || 'false' }}
+      BANANA_SDLC_REQUIRE_REAL_UPDATES: ${{ github.event.inputs.require_real_updates || 'true' }}
+      BANANA_SDLC_SKIP_NON_REAL_UPDATES: ${{ github.event.inputs.skip_non_real_updates || 'true' }}
+      BANANA_REAL_UPDATE_PATH_PATTERNS: ${{ github.event.inputs.real_update_path_patterns || 'src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props' }}
+      BANANA_SDLC_ENABLE_WIKI_SYNC: ${{ github.event.inputs.sync_wiki || 'true' }}
+      BANANA_SDLC_VALIDATE_AI_CONTRACTS: ${{ github.event.inputs.validate_ai_contracts || 'true' }}
+      BANANA_WIKI_DRY_RUN: ${{ github.event.inputs.wiki_dry_run || 'false' }}
+      BANANA_WIKI_PUSH: ${{ github.event.inputs.wiki_push || 'true' }}
+      BANANA_WIKI_STRICT: ${{ github.event_name == 'schedule' && 'true' || github.event.inputs.wiki_strict || 'false' }}
+      BANANA_WIKI_COMMIT_MESSAGE: "${{ github.event.inputs.wiki_commit_message || 'docs(wiki): sync automated SDLC documentation snapshots' }}"
+      BANANA_WIKI_REMOTE_URL: "${{ github.event.inputs.wiki_remote_url || 'https://github.com/LahkLeKey/Banana.wiki.git' }}"
+      BANANA_ENFORCE_CANONICAL_WIKI_REMOTE: 'true'
+      BANANA_WIKI_SYNC_MAPPING: ${{ github.event.inputs.wiki_sync_mapping || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Orchestrate incremental SDLC pull requests and wiki sync
+        run: |
+          bash scripts/workflow-orchestrate-sdlc.sh
