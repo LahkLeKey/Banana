@@ -49,10 +49,10 @@ public sealed class BananaMlControllerTests
 
         var ok = Assert.IsType<OkObjectResult>(result);
         var payload = SerializeToElement(ok.Value);
-        var json = payload.GetProperty("json").GetString();
-        Assert.NotNull(json);
-        Assert.Contains("\"jaccard\"", json);
-        Assert.Contains("\"confusion_matrix\"", json);
+        Assert.Equal("banana", payload.GetProperty("label").GetString());
+        Assert.True(payload.GetProperty("confidence").GetDouble() > 0.0);
+        Assert.True(payload.TryGetProperty("jaccard", out _));
+        Assert.True(payload.TryGetProperty("confusion_matrix", out _));
         Assert.Equal("/ml/binary", ctx.Route);
         Assert.Equal(NativeStatusCode.Ok, ctx.LastStatus);
     }
@@ -90,10 +90,10 @@ public sealed class BananaMlControllerTests
 
         var ok = Assert.IsType<OkObjectResult>(result);
         var payload = SerializeToElement(ok.Value);
-        var json = payload.GetProperty("json").GetString();
-        Assert.NotNull(json);
-        Assert.Contains("\"jaccard\"", json);
-        Assert.Contains("\"confusion_matrix\"", json);
+        Assert.Equal("not_banana", payload.GetProperty("label").GetString());
+        Assert.Equal("binary", payload.GetProperty("model").GetString());
+        Assert.True(payload.TryGetProperty("jaccard", out _));
+        Assert.True(payload.TryGetProperty("confusion_matrix", out _));
         Assert.Equal("/not-banana/junk", ctx.Route);
         Assert.Equal(NativeStatusCode.Ok, ctx.LastStatus);
     }

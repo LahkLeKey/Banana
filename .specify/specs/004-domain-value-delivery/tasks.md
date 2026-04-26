@@ -44,7 +44,7 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
 - [X] T005 [P] Update `COLORS` map in `src/typescript/shared/ui/src/components/RipenessLabel.tsx`: remove keys `green`, `yellow`, `spotted`, `brown`; add `ripe: "bg-yellow-200 text-yellow-900"`, `unripe: "bg-green-200 text-green-900"`, `overripe: "bg-amber-700 text-amber-50"`
 - [X] T006 [P] Add unknown-value guard to `src/typescript/shared/ui/src/components/RipenessLabel.tsx`: if `COLORS[value]` is undefined, fall back to a neutral style (e.g., `bg-gray-100 text-gray-600`) and render the raw string — prevents runtime crash on stale API responses
 - [X] T007 [P] Create `src/c-sharp/asp.net/Pipeline/RipenessResult.cs`: `namespace Banana.Api.Pipeline; public sealed record RipenessResult(string Label, double Confidence, string Model);`
-- [ ] T008 Verify type fix: run `bun run --cwd src/typescript/shared/ui tsc --noEmit` — confirm zero errors after T004–T006
+- [X] T008 Verify type fix: run `bun run --cwd src/typescript/shared/ui tsc --noEmit` — confirm zero errors after T004–T006
 
 ---
 
@@ -58,7 +58,7 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
 - [X] T011 [P] [US2] Update `src/c-sharp/asp.net/Controllers/BananaMlController.cs`: apply same pattern as T010 — deserialize native JSON string to typed result record; define a `BinaryClassificationResult` and/or `TransformerClassificationResult` record in `src/c-sharp/asp.net/Pipeline/` appropriate to the endpoint's return shape
 - [X] T012 [P] [US2] Update `src/c-sharp/asp.net/Controllers/NotBananaController.cs`: apply same deserialization pattern — remove `Ok(new { json })` if present; define appropriate result record in Pipeline/
 - [X] T013 [US2] Run `dotnet build src/c-sharp/asp.net/Banana.Api.csproj` — confirm zero compile errors after T009–T012
-- [ ] T014 [US2] Run `dotnet test tests/unit` and `dotnet test tests/integration` — confirm all existing tests pass; if any test asserts on the old `{ "json": "..." }` shape, update it to assert on the new typed property shape
+- [X] T014 [US2] Run `dotnet test tests/unit` and `dotnet test tests/integration` — confirm all existing tests pass; if any test asserts on the old `{ "json": "..." }` shape, update it to assert on the new typed property shape
 
 ---
 
@@ -76,8 +76,8 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
   4. Format output: `snprintf(payload, sizeof(payload), "{\"label\":\"%s\",\"confidence\":%.4f,\"model\":\"regression\"}", label, score)`
   5. Call existing `duplicate_json(payload, out_json)` helper to set `*out_json`
   6. Keep `count_term_ci` as a static helper only if referenced elsewhere in the file; otherwise remove it
-- [ ] T016 [US3] Add or update ripeness label-domain test in `tests/native/` (create `tests/native/test_ripeness.c` if it does not exist, or add cases to an existing ripeness test file): assert that `banana_core_predict_ripeness` returns `BANANA_OK` for a valid input, and that the returned `label` field in the output JSON is one of `"ripe"`, `"unripe"`, or `"overripe"`
-- [ ] T017 [US3] Rebuild and run native tests: `cmake --build build/native && ctest --test-dir build/native` — all tests pass
+- [X] T016 [US3] Add or update ripeness label-domain test in `tests/native/` (create `tests/native/test_ripeness.c` if it does not exist, or add cases to an existing ripeness test file): assert that `banana_core_predict_ripeness` returns `BANANA_OK` for a valid input, and that the returned `label` field in the output JSON is one of `"ripe"`, `"unripe"`, or `"overripe"`
+- [X] T017 [US3] Rebuild and run native tests: `cmake --build build/native && ctest --test-dir build/native` — all tests pass
 
 ---
 
@@ -167,8 +167,8 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
   ```
 - [X] T027 [US4] Wire `PipelineRunner<PipelineContext>` and `InputValidationStep` into `src/c-sharp/asp.net/Controllers/RipenessController.cs`: inject `PipelineRunner<PipelineContext>` via constructor; set `ctx.InputJson = req.InputJson`; call `var pipelineResult = await runner.RunAsync(ctx, ct)` before the native call; if `!pipelineResult.IsSuccess` return `BadRequest(pipelineResult.Problem)`
 - [X] T028 [US4] Register `InputValidationStep` and `PipelineRunner<PipelineContext>` in DI in `src/c-sharp/asp.net/Program.cs`: `builder.Services.AddScoped<IPipelineStep<PipelineContext>, InputValidationStep>(); builder.Services.AddScoped<PipelineRunner<PipelineContext>>();`
-- [ ] T029 [US4] Create `tests/unit/PipelineRunnerTests.cs` with at minimum: (a) test that steps execute in ascending `Order`; (b) test that a failing step (IsSuccess=false) halts execution and no subsequent step is called; (c) test that `PipelineRunner` with zero steps returns `IsSuccess=true`
-- [ ] T030 [US4] Run `dotnet test tests/unit` — all tests including T029 pass; `PipelineRunner` branch coverage ≥ 80%
+- [X] T029 [US4] Create `tests/unit/PipelineRunnerTests.cs` with at minimum: (a) test that steps execute in ascending `Order`; (b) test that a failing step (IsSuccess=false) halts execution and no subsequent step is called; (c) test that `PipelineRunner` with zero steps returns `IsSuccess=true`
+- [X] T030 [US4] Run `dotnet test tests/unit` — all tests including T029 pass; `PipelineRunner` branch coverage ≥ 80%
 
 ---
 
@@ -176,10 +176,10 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
 
 **Purpose**: Confirm all four layers compose correctly end-to-end and no regression was introduced.
 
-- [ ] T031 Run full test suite: `cmake --build build/native && ctest --test-dir build/native` (native), `dotnet test tests/unit && dotnet test tests/integration` (ASP.NET), `bun run --cwd src/typescript/shared/ui tsc --noEmit` and `bun run --cwd src/typescript/react tsc --noEmit` (TypeScript) — all pass
-- [ ] T032 [P] Verify 503 path: start the API with `BANANA_NATIVE_PATH` pointing to a non-existent path; confirm `POST /ripeness/predict` returns HTTP 503 (not 500 with a stack trace)
-- [ ] T033 [P] Verify empty-input path: call `POST /ripeness/predict` with `{"inputJson":""}` — confirm HTTP 400 (not a native crash)
-- [ ] T034 Update `src/typescript/shared/ui` package version (patch bump in `src/typescript/shared/ui/package.json`) so downstream React and Electron builds pick up the `Ripeness` type change cleanly
+- [X] T031 Run full test suite: `cmake --build build/native && ctest --test-dir build/native` (native), `dotnet test tests/unit && dotnet test tests/integration` (ASP.NET), `bun run --cwd src/typescript/shared/ui tsc --noEmit` and `bun run --cwd src/typescript/react tsc --noEmit` (TypeScript) — all pass
+- [X] T032 [P] Verify 503 path: start the API with `BANANA_NATIVE_PATH` pointing to a non-existent path; confirm `POST /ripeness/predict` returns HTTP 503 (not 500 with a stack trace)
+- [X] T033 [P] Verify empty-input path: call `POST /ripeness/predict` with `{"inputJson":""}` — confirm HTTP 400 (not a native crash)
+- [X] T034 Update `src/typescript/shared/ui` package version (patch bump in `src/typescript/shared/ui/package.json`) so downstream React and Electron builds pick up the `Ripeness` type change cleanly
 
 ---
 
