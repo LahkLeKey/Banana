@@ -5,39 +5,39 @@
 
 ## Phase 1 -- Setup
 
-- [ ] T001 Repoint `.specify/feature.json` -> `031-react-native-persistence-retry`.
-- [ ] T002 Author `README.md` execution tracker.
+- [x] T001 Repoint `.specify/feature.json` -> `031-react-native-persistence-retry`.
+- [x] T002 Author `README.md` execution tracker.
 
 ## Phase 2 -- AsyncStorage adapter
 
-- [ ] T003 Add `src/typescript/shared/resilience/src/adapters/async-storage.ts`.
-- [ ] T004 Add adapter contract test reusing the shared suite from
+- [x] T003 Add `src/typescript/shared/resilience/src/adapters/async-storage.ts`.
+- [x] T004 Add adapter contract test reusing the shared suite from
   slice 029 (parametrized over storage backend).
 
 ## Phase 3 -- RN bootstrap + adoption
 
-- [ ] T005 Add `src/typescript/react-native/lib/resilience-bootstrap.ts`.
-- [ ] T006 Wire queue + history into
+- [x] T005 Add `src/typescript/react-native/lib/resilience-bootstrap.ts`.
+- [x] T006 Wire queue + history into
   `src/typescript/react-native/index.tsx`; preserve draft on failure.
-- [ ] T007 Add `@banana/resilience`,
+- [x] T007 Add `@banana/resilience`,
   `@react-native-async-storage/async-storage`,
   `@react-native-community/netinfo` to
   `src/typescript/react-native/package.json`.
-- [ ] T008 Wire NetInfo online-listener drain trigger.
+- [x] T008 Wire NetInfo online-listener drain trigger.
 
 ## Phase 4 -- History screen
 
-- [ ] T009 Add `src/typescript/react-native/screens/HistoryScreen.tsx`
+- [x] T009 Add `src/typescript/react-native/screens/HistoryScreen.tsx`
   surfacing last-N verdicts via `VerdictHistory.list()`.
-- [ ] T010 Add navigation entry to history screen.
+- [x] T010 Add navigation entry to history screen.
 
 ## Phase 5 -- Close-out
 
-- [ ] T011 Run validation lane
+- [x] T011 Run validation lane
   (`bun run --cwd src/typescript/shared/resilience tsc --noEmit`,
   `bun run --cwd src/typescript/shared/resilience test`,
   `bun run --cwd src/typescript/react-native tsc --noEmit`).
-- [ ] T012 Update README to COMPLETE; mark all tasks `[x]`.
+- [x] T012 Update README to COMPLETE; mark all tasks `[x]`.
 
 ## Out of scope
 

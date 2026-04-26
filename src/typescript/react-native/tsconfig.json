@@ -7,7 +7,9 @@
     "lib": ["es2022", "dom"],
     "types": ["react-native", "expo"],
     "outDir": "dist",
-    "rootDir": "."
+    "paths": {
+      "@banana/resilience": ["../shared/resilience/src/index.ts"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }
