@@ -15,6 +15,14 @@
   ],
   "settings": {
     "files.eol": "\n",
+    "cmake.useCMakePresets": "always",
+    "cmake.configurePreset": "default",
+    "cmake.buildPreset": "default",
+    "cmake.testPreset": "default",
+    "cmake.defaultConfigurePreset": "default",
+    "cmake.defaultBuildPreset": "default",
+    "cmake.defaultTestPreset": "default",
+    "cmake.configureOnOpen": false,
     "files.exclude": {
       "**/node_modules": true,
       "**/build": true,
