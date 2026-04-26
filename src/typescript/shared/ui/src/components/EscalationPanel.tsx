@@ -9,6 +9,7 @@
 // -- drift = bug.
 
 import { useState, type ReactNode } from "react";
+import { tokens } from "../tokens";
 
 export type EmbeddingSummary = {
     /**
@@ -84,19 +85,38 @@ export function EscalationPanel({
                 data-testid="escalation-panel-trigger"
                 onClick={() => void toggle()}
                 aria-expanded={open}
-                className="ml-2 text-xs font-medium text-amber-700 underline underline-offset-2 hover:text-amber-800"
+                style={{
+                    marginInlineStart: tokens.space[2],
+                    fontSize: tokens.font.size.xs,
+                    fontWeight: tokens.font.weight.medium,
+                    color: tokens.color.escalation.accent,
+                    background: 'transparent',
+                    border: 'none',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                }}
             >
                 {triggerLabel}
             </button>
             {open ? (
                 <div
                     data-testid="escalation-panel-body"
-                    className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
+                    style={{
+                        marginBlockStart: tokens.space[2],
+                        borderRadius: tokens.radius.md,
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        borderColor: tokens.color.escalation.accent,
+                        backgroundColor: tokens.color.escalation.bg,
+                        padding: tokens.space[3],
+                        fontSize: tokens.font.size.xs,
+                        color: tokens.color.escalation.fg,
+                    }}
                 >
                     {loading ? (
                         <span data-testid="escalation-panel-loading">Loading...</span>
                     ) : error ? (
-                        <span data-testid="escalation-panel-error" className="text-red-700">
+                        <span data-testid="escalation-panel-error" style={{ color: tokens.color.text.error }}>
                             {error}
                         </span>
                     ) : summary ? (
@@ -123,15 +143,15 @@ function DefaultSummary({ summary }: { summary: EmbeddingSummary }) {
     return (
         <table
             data-testid="escalation-panel-fingerprint"
-            className="w-full table-fixed text-left"
+            style={{ width: '100%', tableLayout: 'fixed', textAlign: 'left' }}
         >
             <tbody>
                 {summary.embedding.map((value, index) => (
                     <tr key={index}>
-                        <th className="font-medium text-amber-900">
+                        <th style={{ fontWeight: tokens.font.weight.medium, color: tokens.color.escalation.fg }}>
                             {COMPONENT_LABELS[index] ?? `dim_${index}`}
                         </th>
-                        <td className="text-right tabular-nums">{value.toFixed(4)}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{value.toFixed(4)}</td>
                     </tr>
                 ))}
             </tbody>

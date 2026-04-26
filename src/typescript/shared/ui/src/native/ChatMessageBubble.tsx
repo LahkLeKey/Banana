@@ -1,51 +1,43 @@
+// @banana/ui native annotation: React Native primitives only.
+// Slice 027 -- token-driven.
 import { Text, View } from 'react-native';
-
+import { tokens } from '../tokens';
 import type { ChatMessage } from '../types';
 
-function bubbleColors(role: ChatMessage['role']): { backgroundColor: string; borderColor: string; textColor: string; align: 'flex-start' | 'flex-end' | 'center' } {
+type ChatRole = ChatMessage['role'];
+
+function bubbleTone(role: ChatRole): { bg: string; fg: string; align: 'flex-start' | 'flex-end' | 'center' } {
     if (role === 'user') {
-        return {
-            backgroundColor: '#fef3c7',
-            borderColor: '#fcd34d',
-            textColor: '#78350f',
-            align: 'flex-end',
-        };
+        return { bg: tokens.color.banana.bg, fg: tokens.color.banana.fg, align: 'flex-end' };
     }
-
     if (role === 'assistant') {
-        return {
-            backgroundColor: '#ecfccb',
-            borderColor: '#bef264',
-            textColor: '#3f6212',
-            align: 'flex-start',
-        };
+        return { bg: tokens.color.surface.muted, fg: tokens.color.text.default, align: 'flex-start' };
     }
-
-    return {
-        backgroundColor: '#f1f5f9',
-        borderColor: '#cbd5e1',
-        textColor: '#334155',
-        align: 'center',
-    };
+    return { bg: tokens.color.surface.muted, fg: tokens.color.text.muted, align: 'center' };
 }
 
 export function ChatMessageBubble({ message }: { message: ChatMessage }) {
-    const colors = bubbleColors(message.role);
+    const tone = bubbleTone(message.role);
     return (
-        <View style={{ alignSelf: colors.align, maxWidth: '92%', marginBottom: 8 }}>
+        <View style={{ alignSelf: tone.align, maxWidth: '92%', marginBottom: tokens.space[2] }}>
             <View
                 style={{
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: colors.borderColor,
-                    backgroundColor: colors.backgroundColor,
-                    paddingHorizontal: 10,
-                    paddingVertical: 8,
+                    borderRadius: tokens.radius.md,
+                    backgroundColor: tone.bg,
+                    paddingHorizontal: tokens.space[3],
+                    paddingVertical: tokens.space[2],
                 }}>
-                <Text style={{ color: colors.textColor, fontSize: 14, lineHeight: 18 }}>
+                <Text style={{ color: tone.fg, fontSize: tokens.font.size.sm, lineHeight: 18 }}>
                     {message.content}
                 </Text>
-                <Text style={{ color: colors.textColor, fontSize: 10, marginTop: 6, textTransform: 'uppercase' }}>
+                <Text
+                    style={{
+                        color: tone.fg,
+                        fontSize: 10,
+                        marginTop: tokens.space[1],
+                        textTransform: 'uppercase',
+                        opacity: 0.7,
+                    }}>
                     {message.role} - {message.status}
                 </Text>
             </View>

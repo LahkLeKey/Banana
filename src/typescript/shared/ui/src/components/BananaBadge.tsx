@@ -1,21 +1,18 @@
 // @banana/ui annotation: cross-platform (no DOM-only deps).
-import type { ReactNode } from "react";
-import type { EnsembleVerdict } from "../types";
+// Slice 027 -- token-driven. Public props preserved.
+import type { ReactNode } from 'react';
+import { tokens } from '../tokens';
+import type { EnsembleVerdict } from '../types';
 
 type CountVariantProps = {
-    variant?: "count";
+    variant?: 'count';
     count: number;
     children?: ReactNode;
 };
 
 type EnsembleVariantProps = {
-    variant: "ensemble";
+    variant: 'ensemble';
     verdict: EnsembleVerdict;
-    /**
-     * Slice 015 US3 -- when false (default), the rendered DOM is
-     * byte-identical to the same badge with the flag absent. Only set true
-     * when the consumer has opted into VITE_BANANA_SHOW_ATTENTION=1.
-     */
     showAttention?: boolean;
     children?: ReactNode;
 };
@@ -23,12 +20,24 @@ type EnsembleVariantProps = {
 export type BananaBadgeProps = CountVariantProps | EnsembleVariantProps;
 
 export function BananaBadge(props: BananaBadgeProps) {
-    if (props.variant === "ensemble") {
+    if (props.variant === 'ensemble') {
         return <EnsembleBadge {...props} />;
     }
     const { count, children } = props;
     return (
-        <span className="inline-flex items-center gap-1 rounded-md bg-yellow-200 px-2 py-1 text-xs font-medium text-yellow-900">
+        <span
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: tokens.space[1],
+                borderRadius: tokens.radius.md,
+                backgroundColor: tokens.color.banana.bg,
+                color: tokens.color.banana.fg,
+                paddingInline: tokens.space[2],
+                paddingBlock: tokens.space[1],
+                fontSize: tokens.font.size.xs,
+                fontWeight: tokens.font.weight.medium,
+            }}>
             🍌 {count}
             {children}
         </span>
@@ -36,42 +45,66 @@ export function BananaBadge(props: BananaBadgeProps) {
 }
 
 function EnsembleBadge({ verdict, showAttention, children }: EnsembleVariantProps) {
-    const labelText = verdict.label === "banana"
-        ? "banana"
-        : verdict.label === "not_banana"
-            ? "not banana"
-            : "unknown";
-    const tone = verdict.label === "banana"
-        ? "bg-yellow-200 text-yellow-900"
-        : verdict.label === "not_banana"
-            ? "bg-slate-200 text-slate-900"
-            : "bg-rose-100 text-rose-900";
+    const labelText = verdict.label === 'banana'
+        ? 'banana'
+        : verdict.label === 'not_banana'
+            ? 'not banana'
+            : 'unknown';
+    const tone = verdict.label === 'banana'
+        ? { bg: tokens.color.banana.bg, fg: tokens.color.banana.fg }
+        : verdict.label === 'not_banana'
+            ? { bg: tokens.color.notbanana.bg, fg: tokens.color.notbanana.fg }
+            : { bg: tokens.color.escalation.bg, fg: tokens.color.text.error };
     const magnitude = verdict.calibration_magnitude.toFixed(2);
 
     return (
         <span
             data-testid="banana-badge-ensemble"
             data-status={verdict.status}
-            className={`inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium ${tone}`}
-        >
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: tokens.space[2],
+                borderRadius: tokens.radius.md,
+                backgroundColor: tone.bg,
+                color: tone.fg,
+                paddingInline: tokens.space[2],
+                paddingBlock: tokens.space[1],
+                fontSize: tokens.font.size.xs,
+                fontWeight: tokens.font.weight.medium,
+            }}>
             <span>🍌 {labelText}</span>
-            <span data-testid="banana-badge-ensemble-magnitude" className="opacity-75">
+            <span data-testid="banana-badge-ensemble-magnitude" style={{ opacity: 0.75 }}>
                 m={magnitude}
             </span>
             {verdict.did_escalate ? (
                 <span
                     data-testid="banana-badge-ensemble-escalated"
-                    className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900"
-                >
+                    style={{
+                        backgroundColor: tokens.color.escalation.bg,
+                        color: tokens.color.escalation.fg,
+                        borderRadius: tokens.radius.pill,
+                        paddingInline: tokens.space[1],
+                        fontSize: 10,
+                        fontWeight: tokens.font.weight.semibold,
+                        textTransform: 'uppercase',
+                    }}>
                     escalated
                 </span>
             ) : null}
             {showAttention ? (
                 <span
                     data-testid="banana-badge-ensemble-attention"
-                    className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-indigo-900"
-                >
-                    {verdict.did_escalate ? "fb" : "rb"}
+                    style={{
+                        backgroundColor: tokens.color.surface.muted,
+                        color: tokens.color.text.muted,
+                        borderRadius: tokens.radius.pill,
+                        paddingInline: tokens.space[1],
+                        fontSize: 10,
+                        fontWeight: tokens.font.weight.semibold,
+                        textTransform: 'uppercase',
+                    }}>
+                    {verdict.did_escalate ? 'fb' : 'rb'}
                 </span>
             ) : null}
             {children}

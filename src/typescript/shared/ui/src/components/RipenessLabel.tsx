@@ -1,13 +1,28 @@
 // @banana/ui annotation: cross-platform.
-import type { Ripeness } from "../types";
+// Slice 027 -- token-driven. Public props preserved.
+import { tokens } from '../tokens';
+import type { Ripeness } from '../types';
 
-const COLORS: Record<Ripeness, string> = {
-    ripe: "bg-yellow-200 text-yellow-900",
-    unripe: "bg-green-200 text-green-900",
-    overripe: "bg-amber-700 text-amber-50",
+const TONE: Record<Ripeness, { bg: string; fg: string }> = {
+    ripe: { bg: tokens.color.banana.bg, fg: tokens.color.banana.fg },
+    unripe: { bg: tokens.color.surface.muted, fg: tokens.color.text.default },
+    overripe: { bg: tokens.color.escalation.accent, fg: tokens.color.surface.default },
 };
 
 export function RipenessLabel({ value }: { value: Ripeness }) {
-    const style = COLORS[value] ?? "bg-gray-100 text-gray-700";
-    return <span className={`rounded px-1.5 py-0.5 text-xs ${style}`}>{value}</span>;
+    const tone = TONE[value];
+    return (
+        <span
+            style={{
+                display: 'inline-block',
+                borderRadius: tokens.radius.sm,
+                backgroundColor: tone.bg,
+                color: tone.fg,
+                paddingInline: tokens.space[2],
+                paddingBlock: 2,
+                fontSize: tokens.font.size.xs,
+            }}>
+            {value}
+        </span>
+    );
 }

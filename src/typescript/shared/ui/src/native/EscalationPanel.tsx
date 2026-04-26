@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { tokens } from '../tokens';
 import type { EmbeddingSummary, EscalationPanelProps } from '../components/EscalationPanel';
 
 export type { EmbeddingSummary, EscalationPanelProps } from '../components/EscalationPanel';
@@ -40,26 +41,26 @@ export function EscalationPanel({
     }
 
     return (
-        <View testID="escalation-panel" style={{ marginTop: 8 }}>
+        <View testID="escalation-panel" style={{ marginTop: tokens.space[2] }}>
             <Pressable
                 testID="escalation-panel-trigger"
                 onPress={() => { void toggle(); }}
                 accessibilityState={{ expanded: open }}>
-                <Text style={{ color: '#b45309', textDecorationLine: 'underline', fontSize: 12, fontWeight: '600' }}>
+                <Text style={{ color: tokens.color.escalation.accent, textDecorationLine: 'underline', fontSize: tokens.font.size.xs, fontWeight: tokens.font.weight.semibold }}>
                     {triggerLabel}
                 </Text>
             </Pressable>
             {open ? (
                 <View
                     testID="escalation-panel-body"
-                    style={{ marginTop: 8, padding: 10, borderRadius: 6, borderWidth: 1, borderColor: '#fde68a', backgroundColor: '#fffbeb' }}>
+                    style={{ marginTop: tokens.space[2], padding: tokens.space[3], borderRadius: tokens.radius.md, borderWidth: 1, borderColor: tokens.color.escalation.accent, backgroundColor: tokens.color.escalation.bg }}>
                     {loading ? (
                         <View testID="escalation-panel-loading" style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <ActivityIndicator size="small" color="#b45309" />
-                            <Text style={{ marginLeft: 6, fontSize: 12, color: '#92400e' }}>Loading...</Text>
+                            <ActivityIndicator size="small" color={tokens.color.escalation.accent} />
+                            <Text style={{ marginLeft: tokens.space[1], fontSize: tokens.font.size.xs, color: tokens.color.escalation.fg }}>Loading...</Text>
                         </View>
                     ) : error ? (
-                        <Text testID="escalation-panel-error" style={{ fontSize: 12, color: '#b91c1c' }}>{error}</Text>
+                        <Text testID="escalation-panel-error" style={{ fontSize: tokens.font.size.xs, color: tokens.color.text.error }}>{error}</Text>
                     ) : summary ? (
                         <DefaultSummary summary={summary} />
                     ) : null}
@@ -72,7 +73,7 @@ export function EscalationPanel({
 function DefaultSummary({ summary }: { summary: EmbeddingSummary }) {
     if (!summary.embedding) {
         return (
-            <Text testID="escalation-panel-empty" style={{ fontSize: 12, color: '#92400e' }}>
+            <Text testID="escalation-panel-empty" style={{ fontSize: tokens.font.size.xs, color: tokens.color.escalation.fg }}>
                 No fingerprint captured for this verdict.
             </Text>
         );
@@ -81,10 +82,10 @@ function DefaultSummary({ summary }: { summary: EmbeddingSummary }) {
         <View testID="escalation-panel-fingerprint">
             {summary.embedding.map((value, index) => (
                 <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 }}>
-                    <Text style={{ fontSize: 12, color: '#92400e', fontWeight: '500' }}>
+                    <Text style={{ fontSize: tokens.font.size.xs, color: tokens.color.escalation.fg, fontWeight: tokens.font.weight.medium }}>
                         {COMPONENT_LABELS[index] ?? `dim_${index}`}
                     </Text>
-                    <Text style={{ fontSize: 12, color: '#92400e' }}>
+                    <Text style={{ fontSize: tokens.font.size.xs, color: tokens.color.escalation.fg }}>
                         {value.toFixed(4)}
                     </Text>
                 </View>
