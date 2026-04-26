@@ -1,6 +1,7 @@
 using Banana.Api.NativeInterop;
 using Banana.Api.Pipeline;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace Banana.Api.Controllers;
 
@@ -27,9 +28,13 @@ public sealed class BananaMlController(INativeBananaClient native, PipelineConte
         ctx.Route = "/ml/binary";
         var rc = native.ClassifyBananaBinary(req.InputJson, out var json);
         ctx.LastStatus = rc;
-        return rc == NativeStatusCode.Ok
-            ? Ok(new { json })
-            : StatusMapping.ToActionResult(rc);
+        if (rc != NativeStatusCode.Ok)
+        {
+            return StatusMapping.ToActionResult(rc);
+        }
+
+        var result = JsonSerializer.Deserialize<JsonElement>(json);
+        return Ok(result);
     }
 
     [HttpPost("transformer")]
@@ -38,8 +43,12 @@ public sealed class BananaMlController(INativeBananaClient native, PipelineConte
         ctx.Route = "/ml/transformer";
         var rc = native.ClassifyBananaTransformer(req.InputJson, out var json);
         ctx.LastStatus = rc;
-        return rc == NativeStatusCode.Ok
-            ? Ok(new { json })
-            : StatusMapping.ToActionResult(rc);
+        if (rc != NativeStatusCode.Ok)
+        {
+            return StatusMapping.ToActionResult(rc);
+        }
+
+        var result = JsonSerializer.Deserialize<JsonElement>(json);
+        return Ok(result);
     }
 }

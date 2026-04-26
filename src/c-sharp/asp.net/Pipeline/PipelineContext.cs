@@ -9,6 +9,7 @@ namespace Banana.Api.Pipeline;
 public sealed class PipelineContext
 {
     public string? Route { get; set; }
+    public string? InputJson { get; set; }
     public DateTime StartedAt { get; } = DateTime.UtcNow;
     public NativeStatusCode? LastStatus { get; set; }
     public Dictionary<string, string> Diagnostics { get; } = new(StringComparer.Ordinal);

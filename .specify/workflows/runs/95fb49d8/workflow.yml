@@ -1,0 +1,66 @@
+schema_version: '1.0'
+workflow:
+  id: speckit
+  name: Full SDD Cycle
+  version: 1.0.0
+  author: GitHub
+  description: "Runs specify \u2192 plan \u2192 tasks \u2192 implement with review\
+    \ gates"
+requires:
+  speckit_version: '>=0.7.2'
+  integrations:
+    any:
+    - copilot
+    - claude
+    - gemini
+inputs:
+  spec:
+    type: string
+    required: true
+    prompt: Describe what you want to build
+  integration:
+    type: string
+    default: copilot
+    prompt: Integration to use (e.g. claude, copilot, gemini)
+  scope:
+    type: string
+    default: full
+    enum:
+    - full
+    - backend-only
+    - frontend-only
+steps:
+- id: specify
+  command: specify.specify
+  integration: '{{ inputs.integration }}'
+  input:
+    args: '{{ inputs.spec }}'
+- id: review-spec
+  type: gate
+  message: Review the generated spec before planning.
+  options:
+  - approve
+  - reject
+  on_reject: abort
+- id: plan
+  command: specify.plan
+  integration: '{{ inputs.integration }}'
+  input:
+    args: '{{ inputs.spec }}'
+- id: review-plan
+  type: gate
+  message: Review the plan before generating tasks.
+  options:
+  - approve
+  - reject
+  on_reject: abort
+- id: tasks
+  command: specify.tasks
+  integration: '{{ inputs.integration }}'
+  input:
+    args: '{{ inputs.spec }}'
+- id: implement
+  command: specify.implement
+  integration: '{{ inputs.integration }}'
+  input:
+    args: '{{ inputs.spec }}'

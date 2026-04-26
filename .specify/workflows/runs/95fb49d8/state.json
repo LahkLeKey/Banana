@@ -1,0 +1,31 @@
+{
+  "run_id": "95fb49d8",
+  "workflow_id": "speckit",
+  "status": "failed",
+  "current_step_index": 0,
+  "current_step_id": "specify",
+  "step_results": {
+    "specify": {
+      "integration": "copilot",
+      "model": null,
+      "options": {},
+      "input": {
+        "args": "Domain Value Delivery end-to-end ripeness MVP"
+      },
+      "output": {
+        "command": "specify.specify",
+        "integration": "copilot",
+        "model": null,
+        "options": {},
+        "input": {
+          "args": "Domain Value Delivery end-to-end ripeness MVP"
+        },
+        "exit_code": 1,
+        "dispatched": false
+      },
+      "status": "failed"
+    }
+  },
+  "created_at": "2026-04-26T14:00:17.203500+00:00",
+  "updated_at": "2026-04-26T14:00:17.238678+00:00"
+}

@@ -9,6 +9,8 @@ import {
 import {
     createChatSession,
     fetchBananaSummary,
+    predictRipeness,
+    type RipenessResponse,
     resolveApiBaseUrl,
     resolvePlatformLabel,
     sendChatMessage,
@@ -32,6 +34,10 @@ export function App() {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [draft, setDraft] = useState("");
     const [chatError, setChatError] = useState<string | null>(null);
+    const [ripenessInput, setRipenessInput] = useState("");
+    const [ripenessResult, setRipenessResult] = useState<RipenessResponse | null>(null);
+    const [ripenessError, setRipenessError] = useState<string | null>(null);
+    const [isPredictingRipeness, setIsPredictingRipeness] = useState(false);
     const [isBootstrapping, setIsBootstrapping] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const messageCounter = useRef(0);
@@ -120,6 +126,28 @@ export function App() {
         void sendMessage();
     }
 
+    async function onRipenessSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        const value = ripenessInput.trim();
+        if (!apiBaseUrl || value.length === 0) {
+            return;
+        }
+
+        setIsPredictingRipeness(true);
+        setRipenessError(null);
+        try {
+            const result = await predictRipeness(apiBaseUrl, value);
+            setRipenessResult(result);
+        } catch (error: unknown) {
+            setRipenessError(
+                error instanceof Error ? error.message : "failed to predict ripeness"
+            );
+            setRipenessResult(null);
+        } finally {
+            setIsPredictingRipeness(false);
+        }
+    }
+
     return (
         <main className="mx-auto max-w-3xl space-y-4 p-6">
             <h1 className="text-2xl font-semibold">Banana v2</h1>
@@ -127,8 +155,36 @@ export function App() {
 
             <div className="flex items-center gap-2">
                 <BananaBadge count={banana ?? 0}>(today)</BananaBadge>
-                <RipenessLabel value="yellow" />
             </div>
+
+            <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <h2 className="text-sm font-semibold text-slate-900">Ripeness prediction</h2>
+                <form className="space-y-2" onSubmit={onRipenessSubmit}>
+                    <textarea
+                        className="min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                        disabled={chatUnavailable || isPredictingRipeness}
+                        onChange={(event) => setRipenessInput(event.target.value)}
+                        placeholder="Describe the banana sample"
+                        value={ripenessInput}
+                    />
+                    <button
+                        className="rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+                        disabled={chatUnavailable || isPredictingRipeness || ripenessInput.trim().length === 0}
+                        type="submit"
+                    >
+                        {isPredictingRipeness ? "Predicting..." : "Predict ripeness"}
+                    </button>
+                </form>
+
+                {ripenessResult ? (
+                    <div className="flex items-center gap-2 text-sm text-slate-700">
+                        <span>Result:</span>
+                        <RipenessLabel value={ripenessResult.label} />
+                        <span>confidence {ripenessResult.confidence.toFixed(4)}</span>
+                    </div>
+                ) : null}
+                {ripenessError ? <p className="text-xs text-red-700">{ripenessError}</p> : null}
+            </section>
 
             <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
