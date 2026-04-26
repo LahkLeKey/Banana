@@ -1,6 +1,17 @@
 # 016 Transformer Quantized Embedding -- Execution Tracker
 
-**Status**: GATED. DO NOT START until trigger fires.
+**Status**: COMPLETE (2026-04-27). Trigger U-001 fired by slice 017.
+
+## Outcome
+
+- New core helper `banana_ml_transformer_embedding_quantize` (symmetric int8, zero-point pinned to 0).
+- New wrapper helper `banana_wrapper_ml_classify_transformer_quant_embedding`.
+- New public ABI export `banana_classify_banana_transformer_quant_embedding`.
+- ABI minor bump 2 → 3 (additive only; legacy `_ex` JSON is byte-identical).
+- New ctest `banana_test_ml_transformer_quant` taking native lane 7/7 → 8/8.
+
+See [analysis/native-lane-evidence.md](./analysis/native-lane-evidence.md) and
+[analysis/abi-additive-evidence.md](./analysis/abi-additive-evidence.md).
 
 ## Trigger
 

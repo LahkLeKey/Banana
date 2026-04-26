@@ -30,9 +30,9 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
 
 **Purpose**: No new project initialization is required — all four domain projects exist. This phase verifies green baselines before any changes.
 
-- [ ] T001 Verify native baseline: run `cmake --build build/native && ctest --test-dir build/native` — confirm all tests pass before modifying `src/native/core/banana_ripeness.c`
-- [ ] T002 [P] Verify ASP.NET baseline: run `dotnet test tests/unit` and `dotnet test tests/integration` — confirm all tests pass before modifying any `src/c-sharp/asp.net/` files
-- [ ] T003 [P] Verify TypeScript baseline: run `bun run --cwd src/typescript/shared/ui tsc --noEmit` and `bun run --cwd src/typescript/react tsc --noEmit` — confirm no type errors before modifying any TypeScript files
+- [x] T001 Verify native baseline: run `cmake --build build/native && ctest --test-dir build/native` — confirm all tests pass before modifying `src/native/core/banana_ripeness.c` (verified 2026-04-27: ctest 8/8 PASS via `ctest --preset default`)
+- [x] T002 [P] Verify ASP.NET baseline: run `dotnet test tests/unit` and `dotnet test tests/integration` — confirm all tests pass before modifying any `src/c-sharp/asp.net/` files (verified 2026-04-27: 69/69 unit PASS)
+- [x] T003 [P] Verify TypeScript baseline: run `bun run --cwd src/typescript/shared/ui tsc --noEmit` and `bun run --cwd src/typescript/react tsc --noEmit` — confirm no type errors before modifying any TypeScript files (verified 2026-04-27: clean exit on both)
 
 ---
 

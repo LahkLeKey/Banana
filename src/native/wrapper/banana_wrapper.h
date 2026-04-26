@@ -41,8 +41,9 @@ extern "C" {
  * require a major bump and a parent-spec (005) update. */
 #define BANANA_WRAPPER_ABI_VERSION_MAJOR 2
 /* Minor 1: additive `banana_classify_banana_binary_with_threshold` (slice 011).
- * Minor 2: additive `banana_classify_banana_transformer_ex` (slice 012). */
-#define BANANA_WRAPPER_ABI_VERSION_MINOR 2
+ * Minor 2: additive `banana_classify_banana_transformer_ex` (slice 012).
+ * Minor 3: additive `banana_classify_banana_transformer_quant_embedding` (slice 016). */
+#define BANANA_WRAPPER_ABI_VERSION_MINOR 3
 
 /* NativeStatusCode — stable numeric values; mirrored by managed enum.
  * DO NOT renumber. v1 used 0..6; v2 preserves them (FR-001).
@@ -99,6 +100,29 @@ BANANA_API int banana_classify_banana_transformer_ex(const char* input_json,
                                                       double* out_embedding,
                                                       double* out_attention_weights,
                                                       char** out_json);
+
+/*
+ * Slice 016 -- additive int8-quantized embedding variant of the Full Brain
+ * transformer (Q-R01..Q-R04). Emits the same JSON shape as the legacy
+ * entries via `out_json` (caller frees with `banana_free()`), AND fills
+ * the int8 quantized embedding plus its scale and zero-point so a
+ * downstream cross-process consumer can reconstruct the original double
+ * embedding within bounded error.
+ *
+ * `out_quant`  MUST point to BANANA_ML_TRANSFORMER_EMBEDDING_DIM int8s.
+ * `out_scale`  MUST be non-NULL; set to a positive finite double.
+ * `out_zero`   MUST be non-NULL; set to the int8 zero-point such that
+ *              reconstruct[i] = (out_quant[i] - out_zero) * out_scale.
+ * `out_json`   MUST be non-NULL; same shape as the legacy ABI.
+ *
+ * The quantization helper is opt-in via this export only; the existing
+ * `_ex` ABI is unchanged (Q-R01).
+ */
+BANANA_API int banana_classify_banana_transformer_quant_embedding(const char* input_json,
+                                                                    signed char* out_quant,
+                                                                    double* out_scale,
+                                                                    signed char* out_zero,
+                                                                    char** out_json);
 BANANA_API int banana_classify_not_banana_junk(const char* input_json, char** out_json);
 BANANA_API int banana_predict_banana_ripeness(const char* input_json, char** out_json);
 

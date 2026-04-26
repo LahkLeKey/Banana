@@ -129,3 +129,57 @@ int banana_ml_transformer_classify_ex(const BananaMlFeatureVector* features,
                                        BananaMlClassificationResult* out_result) {
     return banana_ml_transformer_classify_impl(features, options, out_result);
 }
+
+int banana_ml_transformer_embedding_quantize(const double* in,
+                                              size_t dim,
+                                              int8_t* out,
+                                              double* out_scale,
+                                              int8_t* out_zero) {
+    size_t i;
+    double max_abs = 0.0;
+    double scale;
+
+    if (!in || !out || !out_scale || !out_zero || dim == 0) {
+        return BANANA_INVALID_ARGUMENT;
+    }
+
+    for (i = 0; i < dim; ++i) {
+        double v = in[i];
+        if (!isfinite(v)) {
+            return BANANA_INVALID_ARGUMENT;
+        }
+        if (v < 0.0) {
+            v = -v;
+        }
+        if (v > max_abs) {
+            max_abs = v;
+        }
+    }
+
+    /* Symmetric int8 quantization: zero-point pinned to 0; scale derived
+     * from the max absolute component so the largest magnitude lands at
+     * +/- 127. All-zero input -> scale=1.0 to preserve exact reconstruction. */
+    if (max_abs == 0.0) {
+        scale = 1.0;
+    } else {
+        scale = max_abs / 127.0;
+    }
+
+    for (i = 0; i < dim; ++i) {
+        double q = in[i] / scale;
+        long r;
+        /* round-half-away-from-zero so reconstruction error <= scale/2 */
+        if (q >= 0.0) {
+            r = (long)(q + 0.5);
+        } else {
+            r = -(long)(-q + 0.5);
+        }
+        if (r > 127) r = 127;
+        if (r < -127) r = -127;
+        out[i] = (int8_t)r;
+    }
+
+    *out_scale = scale;
+    *out_zero = 0;
+    return BANANA_OK;
+}

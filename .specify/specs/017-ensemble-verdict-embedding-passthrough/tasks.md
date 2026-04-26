@@ -48,7 +48,8 @@
   shape is byte-identical to slice 014 (no field drift).
 - [x] T012 Test asserting cheap path does NOT call
   `ClassifyBananaTransformerWithEmbedding`.
-- [x] T013 `dotnet test src/c-sharp/asp.net/asp.net.sln` green.
+- [x] T013 `dotnet test src/c-sharp/asp.net/asp.net.sln --collect:"XPlat Code Coverage"` green;
+  then `bash scripts/check-dotnet-coverage-threshold.sh` (slice 019 backfill of the spec.md Validation lane gate).
 
 ## Phase 5 -- Validation + close-out
 

@@ -58,3 +58,4 @@ Thumbs.db
 bash.exe.stackdump
 /tests/unit/TestResults
 /scripts/__pycache__
+*.pyc

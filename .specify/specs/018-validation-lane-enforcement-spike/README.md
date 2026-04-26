@@ -1,6 +1,14 @@
 # 018 Validation Lane Enforcement SPIKE -- Execution Tracker
 
-**Status**: NOT STARTED. Ready to investigate.
+**Status**: COMPLETE (8/8). Recommendation: lint script (option A). Slice 019 readiness packet ready.
+
+## Deliverables
+
+- [analysis/drift-audit.md](./analysis/drift-audit.md) -- 4 HIGH-severity gaps across slices 010, 011, 012, 017.
+- [analysis/failure-modes.md](./analysis/failure-modes.md) -- FM-D (no parity check) is dominant cause.
+- [analysis/enforcement-options.md](./analysis/enforcement-options.md) -- Option A recommended; B and C rejected with rationale.
+- [analysis/followup-readiness-packet.md](./analysis/followup-readiness-packet.md) -- slice 019 scope, 12-14 tasks.
+- [analysis/deferred-registry.md](./analysis/deferred-registry.md) -- D-001 (option C as fallback), D-002 (evidence file convention).
 **Type**: SPIKE (no production code; investigation + readiness packet only).
 
 ## Purpose

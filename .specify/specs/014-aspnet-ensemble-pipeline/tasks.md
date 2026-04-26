@@ -73,9 +73,9 @@
 
 ## Phase 8 -- Validation + close-out
 
-- [x] T024 Run native lane (`ctest --preset default`) -- expect 7/7,
+- [x] T024 Run native lane (`cmake --preset default && cmake --build --preset default && ctest --preset default --output-on-failure`) -- expect 7/7,
   capture in `analysis/native-lane-evidence.md`.
-- [x] T025 Run `dotnet test` + `scripts/check-dotnet-coverage-threshold.sh`,
+- [x] T025 Run `dotnet test src/c-sharp/asp.net/asp.net.sln --collect:"XPlat Code Coverage"` + `bash scripts/check-dotnet-coverage-threshold.sh`,
   capture in `analysis/dotnet-evidence.md`.
 - [x] T026 Close `tasks.md` (mark all `[x]`), update `README.md` with
   final status.
