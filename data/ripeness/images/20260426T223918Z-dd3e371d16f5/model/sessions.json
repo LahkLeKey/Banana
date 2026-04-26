@@ -1,0 +1,670 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "1970-01-01T00:00:00Z",
+  "run_fingerprint": "14cacfe01f8ff4763f7a72623fdcb9ce851f78e9613d6e0daf56f43def3a6919",
+  "sessions": [
+    {
+      "session_index": 1,
+      "seed": 20260426,
+      "training_size": 28,
+      "holdout_size": 4,
+      "vocabulary_size": 24,
+      "signal_score": 0.75,
+      "metrics": {
+        "macro_f1": 1.0,
+        "holdout_accuracy": 1.0,
+        "per_label": {
+          "unripe": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "ripe": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "overripe": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "spoiled": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          }
+        },
+        "confusion_matrix": {
+          "unripe": {
+            "unripe": 1,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 0
+          },
+          "ripe": {
+            "unripe": 0,
+            "ripe": 1,
+            "overripe": 0,
+            "spoiled": 0
+          },
+          "overripe": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 1,
+            "spoiled": 0
+          },
+          "spoiled": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 1
+          }
+        },
+        "holdout_size": 4
+      },
+      "vocabulary": [
+        {
+          "token": "green",
+          "support": 3,
+          "top_label": "unripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 1.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": 0.75,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 3,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "firm",
+          "support": 2,
+          "top_label": "unripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 1.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": 0.75,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 2,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "angular",
+          "support": 1,
+          "top_label": "unripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 1.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": 0.75,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 1,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "before",
+          "support": 1,
+          "top_label": "unripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 1.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": 0.75,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 1,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "days",
+          "support": 1,
+          "top_label": "unripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 1.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": 0.75,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 1,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "eating",
+          "support": 1,
+          "top_label": "unripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 1.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": 0.75,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 1,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "yellow",
+          "support": 2,
+          "top_label": "ripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 1.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": 0.75,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 2,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "balanced",
+          "support": 1,
+          "top_label": "ripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 1.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": 0.75,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 1,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "but",
+          "support": 1,
+          "top_label": "ripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 1.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": 0.75,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 1,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "creamy",
+          "support": 1,
+          "top_label": "ripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 1.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": 0.75,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 1,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "easy",
+          "support": 1,
+          "top_label": "ripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 1.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": 0.75,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 1,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "eat",
+          "support": 1,
+          "top_label": "ripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 1.0,
+            "overripe": 0.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": 0.75,
+            "overripe": -0.25,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 1,
+            "overripe": 0,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "best",
+          "support": 1,
+          "top_label": "overripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 1.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": 0.75,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 1,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "bread",
+          "support": 1,
+          "top_label": "overripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 1.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": 0.75,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 1,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "collapsing",
+          "support": 1,
+          "top_label": "overripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 1.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": 0.75,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 1,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "dark",
+          "support": 1,
+          "top_label": "overripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 1.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": 0.75,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 1,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "fermented",
+          "support": 1,
+          "top_label": "overripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 1.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": 0.75,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 1,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "for",
+          "support": 1,
+          "top_label": "overripe",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 1.0,
+            "spoiled": 0.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": 0.75,
+            "spoiled": -0.25
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 1,
+            "spoiled": 0
+          }
+        },
+        {
+          "token": "mold",
+          "support": 2,
+          "top_label": "spoiled",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 1.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": 0.75
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 2
+          }
+        },
+        {
+          "token": "bin",
+          "support": 1,
+          "top_label": "spoiled",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 1.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": 0.75
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 1
+          }
+        },
+        {
+          "token": "black",
+          "support": 1,
+          "top_label": "spoiled",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 1.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": 0.75
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 1
+          }
+        },
+        {
+          "token": "collapsed",
+          "support": 1,
+          "top_label": "spoiled",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 1.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": 0.75
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 1
+          }
+        },
+        {
+          "token": "decay",
+          "support": 1,
+          "top_label": "spoiled",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 1.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": 0.75
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 1
+          }
+        },
+        {
+          "token": "foul",
+          "support": 1,
+          "top_label": "spoiled",
+          "top_probability": 1.0,
+          "signal": 0.75,
+          "weights": {
+            "unripe": 0.0,
+            "ripe": 0.0,
+            "overripe": 0.0,
+            "spoiled": 1.0
+          },
+          "centered_weights": {
+            "unripe": -0.25,
+            "ripe": -0.25,
+            "overripe": -0.25,
+            "spoiled": 0.75
+          },
+          "counts": {
+            "unripe": 0,
+            "ripe": 0,
+            "overripe": 0,
+            "spoiled": 1
+          }
+        }
+      ]
+    }
+  ]
+}

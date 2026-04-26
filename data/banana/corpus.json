@@ -1,0 +1,114 @@
+{
+    "schema_version": 1,
+    "description": "Seed corpus for banana-positive classifier training.",
+    "samples": [
+        {
+            "id": "banana-001",
+            "label": "banana",
+            "text": "fresh banana bunch from the market",
+            "source": "seed"
+        },
+        {
+            "id": "banana-002",
+            "label": "banana",
+            "text": "ripe yellow banana smoothie",
+            "source": "seed"
+        },
+        {
+            "id": "banana-003",
+            "label": "banana",
+            "text": "banana peel compost for garden",
+            "source": "seed"
+        },
+        {
+            "id": "banana-004",
+            "label": "banana",
+            "text": "banana bread recipe with walnuts",
+            "source": "seed"
+        },
+        {
+            "id": "banana-005",
+            "label": "banana",
+            "text": "green banana chips lightly salted",
+            "source": "seed"
+        },
+        {
+            "id": "banana-006",
+            "label": "banana",
+            "text": "single banana on kitchen counter",
+            "source": "seed"
+        },
+        {
+            "id": "banana-007",
+            "label": "banana",
+            "text": "banana crate delivered at dawn",
+            "source": "seed"
+        },
+        {
+            "id": "banana-008",
+            "label": "banana",
+            "text": "sweet banana slices over oatmeal",
+            "source": "seed"
+        },
+        {
+            "id": "banana-009",
+            "label": "banana",
+            "text": "banana stand near the station",
+            "source": "seed"
+        },
+        {
+            "id": "banana-010",
+            "label": "banana",
+            "text": "overripe banana ready for baking",
+            "source": "seed"
+        },
+        {
+            "id": "banana-011",
+            "label": "banana",
+            "text": "banana puree for toddler snack",
+            "source": "seed"
+        },
+        {
+            "id": "banana-012",
+            "label": "banana",
+            "text": "banana harvest report from farm",
+            "source": "seed"
+        },
+        {
+            "id": "not-banana-001",
+            "label": "not-banana",
+            "text": "red bicycle parked outside",
+            "source": "seed"
+        },
+        {
+            "id": "not-banana-002",
+            "label": "not-banana",
+            "text": "stainless steel water bottle",
+            "source": "seed"
+        },
+        {
+            "id": "not-banana-003",
+            "label": "not-banana",
+            "text": "weather radar over coastal city",
+            "source": "seed"
+        },
+        {
+            "id": "not-banana-004",
+            "label": "not-banana",
+            "text": "ceramic coffee mug on desk",
+            "source": "seed"
+        },
+        {
+            "id": "not-banana-005",
+            "label": "not-banana",
+            "text": "blue denim jacket in closet",
+            "source": "seed"
+        },
+        {
+            "id": "not-banana-006",
+            "label": "not-banana",
+            "text": "wireless keyboard firmware update",
+            "source": "seed"
+        }
+    ]
+}

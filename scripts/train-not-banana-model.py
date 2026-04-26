@@ -4,13 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import random
 import re
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean
 from typing import Iterable
@@ -21,16 +21,13 @@ PROFILE_DEFAULTS = {
     "local": {"sessions": 12, "vocab_size": 32},
     "overnight": {"sessions": 32, "vocab_size": 48},
 }
+DETERMINISTIC_GENERATED_AT = "1970-01-01T00:00:00Z"
 
 
 @dataclass(frozen=True)
 class Sample:
     text: str
     label: str
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def parse_args() -> argparse.Namespace:
@@ -206,7 +203,8 @@ def predict_label(
 ) -> tuple[str, float]:
     unique_tokens = set(tokenize(text, min_token_length, allow_numeric_tokens))
     score = sum(weights[token] for token in unique_tokens if token in weights)
-    label = "banana" if score >= 0 else "not-banana"
+    # Prefer not-banana for neutral score to reduce sparse-token false positives.
+    label = "banana" if score > 0 else "not-banana"
     return label, score
 
 
@@ -271,6 +269,23 @@ static const unsigned long k_banana_signal_tokens_generated_count =
     path.write_text(header, encoding="utf-8")
 
 
+def stable_run_fingerprint(args: argparse.Namespace, corpus_path: Path, sample_count: int) -> str:
+    payload = {
+        "corpus": str(corpus_path),
+        "sample_count": sample_count,
+        "training_profile": args.training_profile,
+        "session_mode": args.session_mode,
+        "max_sessions": args.max_sessions,
+        "vocab_size": args.vocab_size,
+        "min_signal_score": args.min_signal_score,
+        "min_f1": args.min_f1,
+        "min_token_length": args.min_token_length,
+        "allow_numeric_tokens": bool(args.allow_numeric_tokens),
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def main() -> int:
     args = parse_args()
 
@@ -318,6 +333,7 @@ def main() -> int:
             float(item["metrics"]["holdout_f1"]),
             float(item["signal_score"]),
             float(item["metrics"]["holdout_accuracy"]),
+            -int(item["session_index"]),
         ),
     )
 
@@ -340,10 +356,12 @@ def main() -> int:
 
     selected_vocabulary = list(selected["vocabulary"])
     selected_tokens = [str(entry["token"]) for entry in selected_vocabulary]
+    run_fingerprint = stable_run_fingerprint(args, corpus_path, len(samples))
 
     vocabulary_payload = {
         "schema_version": 1,
-        "generated_at_utc": utc_now(),
+        "generated_at_utc": DETERMINISTIC_GENERATED_AT,
+        "run_fingerprint": run_fingerprint,
         "corpus_path": str(corpus_path),
         "corpus_size": len(samples),
         "training_profile": profile,
@@ -355,13 +373,15 @@ def main() -> int:
 
     metrics_payload = {
         "schema_version": 1,
-        "generated_at_utc": utc_now(),
+        "generated_at_utc": DETERMINISTIC_GENERATED_AT,
+        "run_fingerprint": run_fingerprint,
         "metrics": selected_metrics,
     }
 
     sessions_payload = {
         "schema_version": 1,
-        "generated_at_utc": utc_now(),
+        "generated_at_utc": DETERMINISTIC_GENERATED_AT,
+        "run_fingerprint": run_fingerprint,
         "sessions": sessions,
     }
 
@@ -370,7 +390,7 @@ def main() -> int:
     (output_dir / "sessions.json").write_text(json.dumps(sessions_payload, indent=2) + "\n", encoding="utf-8")
     write_header(output_dir / "banana_signal_tokens.h", selected_tokens)
 
-    print(json.dumps({"output": str(output_dir), "metrics": selected_metrics}, indent=2))
+    print(json.dumps({"output": str(output_dir), "metrics": selected_metrics, "run_fingerprint": run_fingerprint}, indent=2))
 
     if not selected_metrics["meets_thresholds"]:
         return 2

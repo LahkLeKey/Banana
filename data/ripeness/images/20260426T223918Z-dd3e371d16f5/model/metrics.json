@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "1970-01-01T00:00:00Z",
+  "run_fingerprint": "14cacfe01f8ff4763f7a72623fdcb9ce851f78e9613d6e0daf56f43def3a6919",
+  "metrics": {
+    "macro_f1": 1.0,
+    "holdout_accuracy": 1.0,
+    "per_label": {
+      "unripe": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "ripe": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "overripe": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "spoiled": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "confusion_matrix": {
+      "unripe": {
+        "unripe": 1,
+        "ripe": 0,
+        "overripe": 0,
+        "spoiled": 0
+      },
+      "ripe": {
+        "unripe": 0,
+        "ripe": 1,
+        "overripe": 0,
+        "spoiled": 0
+      },
+      "overripe": {
+        "unripe": 0,
+        "ripe": 0,
+        "overripe": 1,
+        "spoiled": 0
+      },
+      "spoiled": {
+        "unripe": 0,
+        "ripe": 0,
+        "overripe": 0,
+        "spoiled": 1
+      }
+    },
+    "holdout_size": 4,
+    "signal_score": 0.75,
+    "min_signal_score": 0.7,
+    "min_f1": 0.7,
+    "meets_thresholds": true,
+    "training_profile": "ci",
+    "session_mode": "single",
+    "evaluated_sessions": 1,
+    "selected_session": 1,
+    "label_set": [
+      "unripe",
+      "ripe",
+      "overripe",
+      "spoiled"
+    ],
+    "f1_type": "macro"
+  }
+}

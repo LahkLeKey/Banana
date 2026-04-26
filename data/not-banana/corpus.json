@@ -1,126 +1,150 @@
 {
     "schema_version": 1,
-    "description": "Seed corpus for banana vs not-banana training.",
+    "description": "Curated corpus for deterministic banana vs not-banana training.",
     "samples": [
         {
             "id": "banana-001",
             "label": "banana",
-            "text": "fresh banana bunch from the market",
-            "source": "seed"
+            "text": "fresh banana bunch from produce market",
+            "source": "curated-v1"
         },
         {
             "id": "banana-002",
             "label": "banana",
-            "text": "ripe yellow banana smoothie",
-            "source": "seed"
+            "text": "ripe yellow banana ready for breakfast",
+            "source": "curated-v1"
         },
         {
             "id": "banana-003",
             "label": "banana",
-            "text": "banana peel compost for garden",
-            "source": "seed"
+            "text": "banana peel compost for garden bed",
+            "source": "curated-v1"
         },
         {
             "id": "banana-004",
             "label": "banana",
-            "text": "organic cavendish banana crate",
-            "source": "seed"
+            "text": "banana crate unloaded from delivery truck",
+            "source": "curated-v1"
         },
         {
             "id": "banana-005",
             "label": "banana",
-            "text": "banana bread with cinnamon",
-            "source": "seed"
+            "text": "banana bread batter with mashed fruit",
+            "source": "curated-v1"
         },
         {
             "id": "banana-006",
             "label": "banana",
-            "text": "green banana chips snack",
-            "source": "seed"
+            "text": "green banana chips in snack bag",
+            "source": "curated-v1"
         },
         {
             "id": "banana-007",
             "label": "banana",
-            "text": "banana plantation harvest batch",
-            "source": "seed"
+            "text": "banana harvest report from plantation row",
+            "source": "curated-v1"
         },
         {
             "id": "banana-008",
             "label": "banana",
-            "text": "sweet banana pudding dessert",
-            "source": "seed"
+            "text": "sweet banana smoothie with oat milk",
+            "source": "curated-v1"
         },
         {
             "id": "banana-009",
             "label": "banana",
-            "text": "banana fruit label on produce shelf",
-            "source": "seed"
+            "text": "banana stand near downtown station",
+            "source": "curated-v1"
         },
         {
             "id": "banana-010",
             "label": "banana",
-            "text": "truck loaded with banana cartons",
-            "source": "seed"
+            "text": "overripe banana saved for baking",
+            "source": "curated-v1"
+        },
+        {
+            "id": "banana-011",
+            "label": "banana",
+            "text": "banana puree prepared for toddler snack",
+            "source": "curated-v1"
+        },
+        {
+            "id": "banana-012",
+            "label": "banana",
+            "text": "single banana on kitchen counter",
+            "source": "curated-v1"
         },
         {
             "id": "not-001",
             "label": "not-banana",
-            "text": "usb cable and power adapter",
-            "source": "seed"
+            "text": "torque wrench and socket set for bike repair",
+            "source": "curated-v1"
         },
         {
             "id": "not-002",
             "label": "not-banana",
-            "text": "steel wrench for bike repair",
-            "source": "seed"
+            "text": "wireless keyboard paired with mechanical mouse",
+            "source": "curated-v1"
         },
         {
             "id": "not-003",
             "label": "not-banana",
-            "text": "wireless keyboard and mouse",
-            "source": "seed"
+            "text": "ceramic coffee mug beside cork coaster",
+            "source": "curated-v1"
         },
         {
             "id": "not-004",
             "label": "not-banana",
-            "text": "office stapler with paper clips",
-            "source": "seed"
+            "text": "shipping pallet with printed logistics manifest",
+            "source": "curated-v1"
         },
         {
             "id": "not-005",
             "label": "not-banana",
-            "text": "ceramic coffee mug and coaster",
-            "source": "seed"
+            "text": "coastal weather bulletin predicts heavy rain",
+            "source": "curated-v1"
         },
         {
             "id": "not-006",
             "label": "not-banana",
-            "text": "router firmware update package",
-            "source": "seed"
+            "text": "router firmware release notes for office network",
+            "source": "curated-v1"
         },
         {
             "id": "not-007",
             "label": "not-banana",
-            "text": "laptop battery replacement kit",
-            "source": "seed"
+            "text": "legal contract appendix signed by two witnesses",
+            "source": "curated-v1"
         },
         {
             "id": "not-008",
             "label": "not-banana",
-            "text": "paint roller and wall primer",
-            "source": "seed"
+            "text": "vacuum cleaner replacement filter in storage bin",
+            "source": "curated-v1"
         },
         {
             "id": "not-009",
             "label": "not-banana",
-            "text": "book shelf assembly screws",
-            "source": "seed"
+            "text": "usb-c dock and power adapter on desk",
+            "source": "curated-v1"
         },
         {
             "id": "not-010",
             "label": "not-banana",
-            "text": "vacuum cleaner HEPA filter",
-            "source": "seed"
+            "text": "paint roller tray with interior primer",
+            "source": "curated-v1"
+        },
+        {
+            "id": "not-011",
+            "label": "not-banana",
+            "text": "bookshelf assembly guide with screw inventory",
+            "source": "curated-v1"
+        },
+        {
+            "id": "not-012",
+            "label": "not-banana",
+            "text": "stainless water bottle clipped to hiking pack",
+            "source": "curated-v1"
         }
     ]
 }

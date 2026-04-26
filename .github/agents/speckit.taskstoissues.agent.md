@@ -3,6 +3,8 @@ description: Convert existing tasks into actionable, dependency-ordered GitHub i
 tools: ['github/github-mcp-server/issue_write']
 ---
 
+- Apply the [Feedback Loop And Incremental Branch Contract](./domain-teaming-playbook.md#feedback-loop-and-incremental-branch-contract-all-agents) for automation-driven changes: use incremental feature branches, GH CLI PR orchestration, and wiki sync updates in the same SDLC flow.
+
 ## User Input
 
 ```text

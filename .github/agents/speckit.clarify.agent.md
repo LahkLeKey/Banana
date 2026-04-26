@@ -6,6 +6,8 @@ handoffs:
     prompt: Create a plan for the spec. I am building with...
 ---
 
+- Apply the [Feedback Loop And Incremental Branch Contract](./domain-teaming-playbook.md#feedback-loop-and-incremental-branch-contract-all-agents) for automation-driven changes: use incremental feature branches, GH CLI PR orchestration, and wiki sync updates in the same SDLC flow.
+
 ## User Input
 
 ```text

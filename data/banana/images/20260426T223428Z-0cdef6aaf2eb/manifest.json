@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "image_id": "20260426T223428Z-0cdef6aaf2eb",
+  "created_at_utc": "2026-04-26T22:34:28Z",
+  "channel": "candidate",
+  "parent_image_id": null,
+  "metrics": {
+    "holdout_precision": 1.0,
+    "holdout_recall": 1.0,
+    "holdout_f1": 1.0,
+    "holdout_accuracy": 1.0,
+    "tp": 2.0,
+    "fp": 0.0,
+    "fn": 0.0,
+    "tn": 2.0,
+    "signal_score": 1.0,
+    "min_signal_score": 0.7,
+    "min_f1": 0.7,
+    "meets_thresholds": true,
+    "training_profile": "ci",
+    "session_mode": "single",
+    "evaluated_sessions": 1,
+    "selected_session": 1
+  },
+  "files": {
+    "banana_signal_tokens.h": "f3af2815b1f4dbfa0c9f5ad39b3f43b5a09b84239eb757a81698f651d57e7268",
+    "metrics.json": "e18478eb0c70a050adbc06461647eb2a1ea80afa3d1c2dea903af58725c59841",
+    "sessions.json": "0378292400c51a797895b6bfc6e86439a102be6effc125799e85774a0dcbcc8a",
+    "vocabulary.json": "e54907245aebbd4afd66632996929a9beadb8d9df4a82feef3285419266b7eba"
+  }
+}

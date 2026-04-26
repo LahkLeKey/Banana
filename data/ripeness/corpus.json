@@ -1,0 +1,212 @@
+{
+    "schema_version": 1,
+    "description": "Seed corpus for ripeness multi-class classifier training.",
+    "labels": [
+        "unripe",
+        "ripe",
+        "overripe",
+        "spoiled"
+    ],
+    "splits": {
+        "eval_ids": [
+            "unripe-008",
+            "ripe-008",
+            "overripe-008",
+            "spoiled-008"
+        ]
+    },
+    "samples": [
+        {
+            "id": "unripe-001",
+            "label": "unripe",
+            "text": "banana is firm and mostly green",
+            "source": "seed"
+        },
+        {
+            "id": "unripe-002",
+            "label": "unripe",
+            "text": "bright green peel with no sweet aroma",
+            "source": "seed"
+        },
+        {
+            "id": "unripe-003",
+            "label": "unripe",
+            "text": "starchy bite and pale flesh",
+            "source": "seed"
+        },
+        {
+            "id": "unripe-004",
+            "label": "unripe",
+            "text": "hard texture and angular edges",
+            "source": "seed"
+        },
+        {
+            "id": "unripe-005",
+            "label": "unripe",
+            "text": "green skin banana not ready",
+            "source": "seed"
+        },
+        {
+            "id": "unripe-006",
+            "label": "unripe",
+            "text": "minimal fragrance and very firm",
+            "source": "seed"
+        },
+        {
+            "id": "unripe-007",
+            "label": "unripe",
+            "text": "needs several days before eating",
+            "source": "seed"
+        },
+        {
+            "id": "unripe-008",
+            "label": "unripe",
+            "text": "chalky taste with green stem",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-001",
+            "label": "ripe",
+            "text": "banana peel is yellow and sweet",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-002",
+            "label": "ripe",
+            "text": "sweet aroma and soft but not mushy",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-003",
+            "label": "ripe",
+            "text": "golden skin with tiny brown freckles",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-004",
+            "label": "ripe",
+            "text": "easy to peel and creamy texture",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-005",
+            "label": "ripe",
+            "text": "balanced sweetness and bright flavor",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-006",
+            "label": "ripe",
+            "text": "yellow banana ready to eat now",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-007",
+            "label": "ripe",
+            "text": "soft pressure response and fruity smell",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-008",
+            "label": "ripe",
+            "text": "yellow peel sweet aroma ready to eat",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-001",
+            "label": "overripe",
+            "text": "banana peel heavily spotted and very soft",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-002",
+            "label": "overripe",
+            "text": "strong sugary smell and mushy bite",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-003",
+            "label": "overripe",
+            "text": "dark patches with collapsing texture",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-004",
+            "label": "overripe",
+            "text": "best for banana bread not slicing",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-005",
+            "label": "overripe",
+            "text": "brown mottled skin and syrupy sweetness",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-006",
+            "label": "overripe",
+            "text": "very soft fruit and fermented note",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-007",
+            "label": "overripe",
+            "text": "skin is mostly brown and thin",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-008",
+            "label": "overripe",
+            "text": "very soft brown spotted banana for baking",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-001",
+            "label": "spoiled",
+            "text": "banana smells rotten and sour",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-002",
+            "label": "spoiled",
+            "text": "leaking pulp with mold growth",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-003",
+            "label": "spoiled",
+            "text": "black skin with foul odor",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-004",
+            "label": "spoiled",
+            "text": "fruit collapsed and inedible",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-005",
+            "label": "spoiled",
+            "text": "slimy texture and off taste",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-006",
+            "label": "spoiled",
+            "text": "visible mold spots and decay",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-007",
+            "label": "spoiled",
+            "text": "putrid smell from storage bin",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-008",
+            "label": "spoiled",
+            "text": "rotten sour moldy banana with foul odor",
+            "source": "seed"
+        }
+    ]
+}

@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "1970-01-01T00:00:00Z",
+  "run_fingerprint": "f5e77bab5a6214061db3500708493050af9c5f8f965c5e8fbbbdd8a3d175d10c",
+  "corpus_path": "data\\not-banana\\corpus.json",
+  "corpus_size": 24,
+  "training_profile": "ci",
+  "session_mode": "single",
+  "vocab_size": 24,
+  "vocabulary": [
+    {
+      "token": "banana",
+      "banana_count": 8,
+      "not_banana_count": 0,
+      "support": 8,
+      "weight": 1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "and",
+      "banana_count": 0,
+      "not_banana_count": 2,
+      "support": 2,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "adapter",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "appendix",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "assembly",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "baking",
+      "banana_count": 1,
+      "not_banana_count": 0,
+      "support": 1,
+      "weight": 1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "batter",
+      "banana_count": 1,
+      "not_banana_count": 0,
+      "support": 1,
+      "weight": 1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "bed",
+      "banana_count": 1,
+      "not_banana_count": 0,
+      "support": 1,
+      "weight": 1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "beside",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "bike",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "bin",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "bookshelf",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "bottle",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "bread",
+      "banana_count": 1,
+      "not_banana_count": 0,
+      "support": 1,
+      "weight": 1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "breakfast",
+      "banana_count": 1,
+      "not_banana_count": 0,
+      "support": 1,
+      "weight": 1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "ceramic",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "cleaner",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "clipped",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "coaster",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "coffee",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "compost",
+      "banana_count": 1,
+      "not_banana_count": 0,
+      "support": 1,
+      "weight": 1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "contract",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "cork",
+      "banana_count": 0,
+      "not_banana_count": 1,
+      "support": 1,
+      "weight": -1.0,
+      "signal": 1.0
+    },
+    {
+      "token": "counter",
+      "banana_count": 1,
+      "not_banana_count": 0,
+      "support": 1,
+      "weight": 1.0,
+      "signal": 1.0
+    }
+  ],
+  "metrics": {
+    "holdout_precision": 1.0,
+    "holdout_recall": 1.0,
+    "holdout_f1": 1.0,
+    "holdout_accuracy": 1.0,
+    "tp": 2.0,
+    "fp": 0.0,
+    "fn": 0.0,
+    "tn": 4.0,
+    "signal_score": 1.0,
+    "min_signal_score": 0.7,
+    "min_f1": 0.7,
+    "meets_thresholds": true,
+    "training_profile": "ci",
+    "session_mode": "single",
+    "evaluated_sessions": 1,
+    "selected_session": 1
+  }
+}
