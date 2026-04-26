@@ -96,4 +96,37 @@ public sealed class BananaMlController(
 
         return Ok(verdict);
     }
+
+    /// <summary>
+    /// Slice 017 -- additive variant of <c>/ml/ensemble</c> that also returns
+    /// the Full Brain transformer's 4-dim embedding fingerprint when the
+    /// cascade escalated. Cheap-path verdicts return embedding=null. The
+    /// legacy <c>/ml/ensemble</c> JSON shape is unchanged.
+    /// </summary>
+    [HttpPost("ensemble/embedding")]
+    public async Task<IActionResult> EnsembleWithEmbedding([FromBody] MlRequest req, CancellationToken ct)
+    {
+        ctx.Route = "/ml/ensemble/embedding";
+        ctx.InputJson = req.InputJson;
+        ctx.Ensemble = new EnsembleWorkingVerdict();
+
+        var pipelineResult = await runner.RunAsync(ctx, ct);
+        if (!pipelineResult.IsSuccess)
+        {
+            return BadRequest(pipelineResult.Problem);
+        }
+
+        var working = ctx.Ensemble;
+        var verdict = new EnsembleVerdictResult(
+            Label: working.Label,
+            Score: working.Score,
+            DidEscalate: working.DidEscalate,
+            CalibrationMagnitude: working.CalibrationMagnitude,
+            Status: working.Degraded ? "degraded" : "ok");
+
+        // Embedding is captured by the escalation step iff the cascade
+        // escalated AND the route is /ml/ensemble/embedding (P-R05).
+        var embedding = working.DidEscalate && !working.Degraded ? working.CapturedEmbedding : null;
+        return Ok(new EnsembleVerdictWithEmbeddingResult(verdict, embedding));
+    }
 }

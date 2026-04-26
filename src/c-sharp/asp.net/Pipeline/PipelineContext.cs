@@ -36,4 +36,13 @@ public sealed class EnsembleWorkingVerdict
     public bool DidEscalate { get; set; }
     public double CalibrationMagnitude { get; set; }
     public bool Degraded { get; set; }
+
+    /// <summary>
+    /// Slice 017 -- captured 4-dim transformer embedding fingerprint when
+    /// the route is <c>/ml/ensemble/embedding</c> AND the cascade
+    /// escalated. Null in all other cases. Order matches the native
+    /// fingerprint: (banana_context, not_banana_context, attention_delta,
+    /// banana_probability).
+    /// </summary>
+    public double[]? CapturedEmbedding { get; set; }
 }

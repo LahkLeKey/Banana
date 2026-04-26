@@ -15,6 +15,20 @@ public interface INativeBananaClient
     NativeStatusCode PredictRegressionScore(string inputJson, out double score);
     NativeStatusCode ClassifyBananaBinary(string inputJson, out string json);
     NativeStatusCode ClassifyBananaTransformer(string inputJson, out string json);
+
+    /// <summary>
+    /// Slice 017 -- diagnostic transformer call that additionally fills the
+    /// 4-dim embedding fingerprint (banana_context, not_banana_context,
+    /// attention_delta, banana_probability). Calls the existing native
+    /// `banana_classify_banana_transformer_ex` export with `log_attention=0`
+    /// and a caller-allocated embedding buffer. No new native export; ABI
+    /// remains 2.2.
+    ///
+    /// `embedding` MUST be a non-null double[4]. On non-OK status the
+    /// buffer contents are unspecified and the caller MUST treat the
+    /// embedding as absent.
+    /// </summary>
+    NativeStatusCode ClassifyBananaTransformerWithEmbedding(string inputJson, double[] embedding, out string json);
     NativeStatusCode ClassifyNotBananaJunk(string inputJson, out string json);
     NativeStatusCode PredictBananaRipeness(string inputJson, out string json);
 

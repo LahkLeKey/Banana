@@ -27,6 +27,11 @@ public sealed class FakeNativeBananaClient : INativeBananaClient
     public NativeStatusCode ClassifyBananaTransformerStatus { get; set; } = NativeStatusCode.InvalidArgument;
     public string ClassifyBananaTransformerJson { get; set; } = string.Empty;
 
+    public NativeStatusCode ClassifyTransformerWithEmbeddingStatus { get; set; } = NativeStatusCode.InvalidArgument;
+    public string ClassifyTransformerWithEmbeddingJson { get; set; } = string.Empty;
+    public double[] ClassifyTransformerWithEmbeddingValues { get; set; } = new double[4];
+    public int ClassifyTransformerWithEmbeddingCallCount { get; private set; }
+
     public NativeStatusCode ClassifyNotBananaJunkStatus { get; set; } = NativeStatusCode.InvalidArgument;
     public string ClassifyNotBananaJunkJson { get; set; } = string.Empty;
 
@@ -108,6 +113,19 @@ public sealed class FakeNativeBananaClient : INativeBananaClient
     {
         json = ClassifyBananaTransformerJson;
         return ClassifyBananaTransformerStatus;
+    }
+
+    public NativeStatusCode ClassifyBananaTransformerWithEmbedding(string inputJson, double[] embedding, out string json)
+    {
+        ClassifyTransformerWithEmbeddingCallCount++;
+        ArgumentNullException.ThrowIfNull(embedding);
+        if (embedding.Length != 4) throw new ArgumentException("embedding must be 4 doubles", nameof(embedding));
+        for (var i = 0; i < 4 && i < ClassifyTransformerWithEmbeddingValues.Length; i++)
+        {
+            embedding[i] = ClassifyTransformerWithEmbeddingValues[i];
+        }
+        json = ClassifyTransformerWithEmbeddingJson;
+        return ClassifyTransformerWithEmbeddingStatus;
     }
 
     public NativeStatusCode ClassifyNotBananaJunk(string inputJson, out string json)

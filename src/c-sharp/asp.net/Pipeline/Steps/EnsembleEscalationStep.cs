@@ -14,12 +14,16 @@ namespace Banana.Api.Pipeline.Steps;
 public sealed class EnsembleEscalationStep(INativeBananaClient native) : IPipelineStep<PipelineContext>
 {
     private const string EnsembleRoute = "/ml/ensemble";
+    private const string EnsembleWithEmbeddingRoute = "/ml/ensemble/embedding";
+    private const int EmbeddingDim = 4;
 
     public int Order => 200;
 
     public Task<PipelineStepResult> ExecuteAsync(PipelineContext context, CancellationToken ct)
     {
-        if (!string.Equals(context.Route, EnsembleRoute, StringComparison.Ordinal))
+        var route = context.Route;
+        var isEmbeddingRoute = string.Equals(route, EnsembleWithEmbeddingRoute, StringComparison.Ordinal);
+        if (!isEmbeddingRoute && !string.Equals(route, EnsembleRoute, StringComparison.Ordinal))
         {
             return Task.FromResult(PipelineStepResult.Ok());
         }
@@ -30,7 +34,18 @@ public sealed class EnsembleEscalationStep(INativeBananaClient native) : IPipeli
             return Task.FromResult(PipelineStepResult.Ok());
         }
 
-        var rc = native.ClassifyBananaTransformer(context.InputJson ?? string.Empty, out var json);
+        NativeStatusCode rc;
+        string json;
+        double[]? embedding = null;
+        if (isEmbeddingRoute)
+        {
+            embedding = new double[EmbeddingDim];
+            rc = native.ClassifyBananaTransformerWithEmbedding(context.InputJson ?? string.Empty, embedding, out json);
+        }
+        else
+        {
+            rc = native.ClassifyBananaTransformer(context.InputJson ?? string.Empty, out json);
+        }
         context.LastStatus = rc;
 
         if (rc != NativeStatusCode.Ok)
@@ -60,6 +75,10 @@ public sealed class EnsembleEscalationStep(INativeBananaClient native) : IPipeli
         working.Score = working.Label == "banana" ? bananaScore.Value : 1.0 - bananaScore.Value;
         working.DidEscalate = true;
         working.VerdictLocked = true;
+        if (isEmbeddingRoute)
+        {
+            working.CapturedEmbedding = embedding;
+        }
         return Task.FromResult(PipelineStepResult.Ok());
     }
 }

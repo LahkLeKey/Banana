@@ -6,11 +6,18 @@
 
 - **Source**: 009 SPIKE recommendations -> deferred again in
   [012-full-brain-transformer-runnable/analysis/residual-followups.md](../../012-full-brain-transformer-runnable/analysis/residual-followups.md).
-- **Disposition**: `defer-with-trigger`.
+- **Disposition**: `trigger-fired` (was `defer-with-trigger`).
 - **Trigger condition**: First cross-process consumer of the embedding
   lands. In practice this means slice **014** has been merged AND a
   controller / pipeline step is serializing the
   `BANANA_ML_TRANSFORMER_EMBEDDING_DIM=4` doubles into the response payload.
+- **Trigger fired**: Slice **017**
+  (`017-ensemble-verdict-embedding-passthrough`) shipped the additive
+  `/ml/ensemble/embedding` route that serializes the 4-dim embedding on
+  escalated verdicts via the existing slice-012
+  `banana_classify_banana_transformer_ex` export. ABI stayed at 2.2;
+  native ctest stayed at 7/7. The cross-process embedding consumer
+  contract is now live.
 - **Next action when triggered**: Open slice **016** using readiness packet
   [followup-C-quantized-embedding.md](./followup-C-quantized-embedding.md).
 - **Owner when triggered**: native-wrapper-agent (additive ABI), with

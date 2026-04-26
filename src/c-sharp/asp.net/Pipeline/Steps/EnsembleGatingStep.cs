@@ -21,12 +21,14 @@ public sealed class EnsembleGatingStep(INativeBananaClient native) : IPipelineSt
     public const double LowerBound = 0.35;
     public const double UpperBound = 0.65;
     private const string EnsembleRoute = "/ml/ensemble";
+    private const string EnsembleWithEmbeddingRoute = "/ml/ensemble/embedding";
 
     public int Order => 100;
 
     public Task<PipelineStepResult> ExecuteAsync(PipelineContext context, CancellationToken ct)
     {
-        if (!string.Equals(context.Route, EnsembleRoute, StringComparison.Ordinal))
+        if (!string.Equals(context.Route, EnsembleRoute, StringComparison.Ordinal)
+            && !string.Equals(context.Route, EnsembleWithEmbeddingRoute, StringComparison.Ordinal))
         {
             return Task.FromResult(PipelineStepResult.Ok());
         }
