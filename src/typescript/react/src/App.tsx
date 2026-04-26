@@ -73,6 +73,25 @@ export function App() {
             .catch(() => setBanana(null));
     }, [apiBaseUrl]);
 
+    // Slice 024 -- when running inside Electron, subscribe to verdicts
+    // pushed by the main process (tray menu / global shortcut /
+    // paste-classify) so the UI mirrors the desktop entry points.
+    useEffect(() => {
+        const bridge = (typeof window !== "undefined"
+            ? (window as unknown as { banana?: { onVerdict?: (h: (payload: unknown) => void) => (() => void) } }).banana
+            : undefined);
+        if (!bridge?.onVerdict) return;
+        const off = bridge.onVerdict((payload: unknown) => {
+            const envelope = payload as { verdict?: EnsembleVerdict; embedding?: number[] | null } | null;
+            if (envelope && envelope.verdict) {
+                setEnsembleVerdict(envelope.verdict);
+                setEnsembleEmbedding(envelope.embedding ?? null);
+                setEnsembleError(null);
+            }
+        });
+        return () => { try { off?.(); } catch { /* noop */ } };
+    }, []);
+
     useEffect(() => {
         if (chatUnavailable) {
             setChatError("set VITE_BANANA_API_BASE_URL (or BANANA_API_BASE_URL for Electron preload)");
