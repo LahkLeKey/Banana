@@ -1,6 +1,23 @@
 # 014 ASP.NET Ensemble Pipeline -- Execution Tracker
 
-**Status**: NOT STARTED. Ready to pick up.
+**Status**: COMPLETE -- 26/26 tasks done.
+
+## Result summary
+
+- New verdict DTO: [src/c-sharp/asp.net/Pipeline/Results/EnsembleVerdictResult.cs](../../../src/c-sharp/asp.net/Pipeline/Results/EnsembleVerdictResult.cs)
+- New cascade steps (Order 100/200/300):
+  [EnsembleGatingStep.cs](../../../src/c-sharp/asp.net/Pipeline/Steps/EnsembleGatingStep.cs),
+  [EnsembleEscalationStep.cs](../../../src/c-sharp/asp.net/Pipeline/Steps/EnsembleEscalationStep.cs),
+  [EnsembleCalibrationStep.cs](../../../src/c-sharp/asp.net/Pipeline/Steps/EnsembleCalibrationStep.cs)
+- New route: `POST /ml/ensemble` in [BananaMlController.cs](../../../src/c-sharp/asp.net/Controllers/BananaMlController.cs)
+- New tests (folded into the unit project; no `tests/integration/` exists):
+  [EnsembleGatingStepTests.cs](../../../tests/unit/EnsembleGatingStepTests.cs),
+  [EnsembleEscalationStepTests.cs](../../../tests/unit/EnsembleEscalationStepTests.cs),
+  [EnsembleCalibrationStepTests.cs](../../../tests/unit/EnsembleCalibrationStepTests.cs),
+  [EnsembleEndToEndTests.cs](../../../tests/unit/EnsembleEndToEndTests.cs)
+- Validation: native `ctest` 7/7 passed; managed `dotnet test` 60/60 passed; new
+  ensemble code coverage 75-100%; existing global gate (37.1% line rate) is
+  pre-existing scope outside slice 014.
 
 ## Source
 

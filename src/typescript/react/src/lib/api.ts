@@ -1,4 +1,4 @@
-import type {ChatMessage, ChatSession, Ripeness} from '@banana/ui';
+import type {ChatMessage, ChatSession, EnsembleVerdict, Ripeness} from '@banana/ui';
 
 type ErrorPayload = {
   error?: {message?: string;};
@@ -109,5 +109,21 @@ export async function predictRipeness(
     method: 'POST',
     headers: {'content-type': 'application/json'},
     body: JSON.stringify({inputJson}),
+  });
+}
+
+/**
+ * Slice 015 -- typed helper for the slice 014 `POST /ml/ensemble` route.
+ * The response shape is locked by the snapshot test in `api.test.ts`; any
+ * field-name drift on the managed side will fail this lane.
+ */
+export async function fetchEnsembleVerdict(
+    baseUrl: string,
+    text: string,
+    ): Promise<EnsembleVerdict> {
+  return requestJson<EnsembleVerdict>(baseUrl, '/ml/ensemble', {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify({inputJson: JSON.stringify({text})}),
   });
 }

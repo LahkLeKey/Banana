@@ -5,10 +5,12 @@ import {
     RipenessLabel,
     type ChatMessage,
     type ChatSession,
+    type EnsembleVerdict,
 } from "@banana/ui";
 import {
     createChatSession,
     fetchBananaSummary,
+    fetchEnsembleVerdict,
     predictRipeness,
     type RipenessResponse,
     resolveApiBaseUrl,
@@ -38,6 +40,10 @@ export function App() {
     const [ripenessResult, setRipenessResult] = useState<RipenessResponse | null>(null);
     const [ripenessError, setRipenessError] = useState<string | null>(null);
     const [isPredictingRipeness, setIsPredictingRipeness] = useState(false);
+    const [ensembleVerdict, setEnsembleVerdict] = useState<EnsembleVerdict | null>(null);
+    const [ensembleError, setEnsembleError] = useState<string | null>(null);
+    const [isPredictingEnsemble, setIsPredictingEnsemble] = useState(false);
+    const [ensembleInput, setEnsembleInput] = useState("");
     const [isBootstrapping, setIsBootstrapping] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const messageCounter = useRef(0);
@@ -45,6 +51,10 @@ export function App() {
     const apiBaseUrl = useMemo(() => resolveApiBaseUrl(), []);
     const platformLabel = useMemo(() => resolvePlatformLabel(), []);
     const chatUnavailable = apiBaseUrl.length === 0;
+    const showAttention = useMemo(() => {
+        const importMeta = import.meta as { env?: { VITE_BANANA_SHOW_ATTENTION?: string } };
+        return importMeta.env?.VITE_BANANA_SHOW_ATTENTION === "1";
+    }, []);
 
     useEffect(() => {
         if (!apiBaseUrl) return;
@@ -148,6 +158,27 @@ export function App() {
         }
     }
 
+    async function onEnsembleSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        const value = ensembleInput.trim();
+        if (!apiBaseUrl || value.length === 0) {
+            return;
+        }
+        setIsPredictingEnsemble(true);
+        setEnsembleError(null);
+        try {
+            const verdict = await fetchEnsembleVerdict(apiBaseUrl, value);
+            setEnsembleVerdict(verdict);
+        } catch (error: unknown) {
+            setEnsembleError(
+                error instanceof Error ? error.message : "failed to predict ensemble"
+            );
+            setEnsembleVerdict(null);
+        } finally {
+            setIsPredictingEnsemble(false);
+        }
+    }
+
     return (
         <main className="mx-auto max-w-3xl space-y-4 p-6">
             <h1 className="text-2xl font-semibold">Banana v2</h1>
@@ -155,7 +186,35 @@ export function App() {
 
             <div className="flex items-center gap-2">
                 <BananaBadge count={banana ?? 0}>(today)</BananaBadge>
+                {ensembleVerdict ? (
+                    <BananaBadge
+                        variant="ensemble"
+                        verdict={ensembleVerdict}
+                        showAttention={showAttention}
+                    />
+                ) : null}
             </div>
+
+            <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <h2 className="text-sm font-semibold text-slate-900">Ensemble verdict</h2>
+                <form className="space-y-2" onSubmit={onEnsembleSubmit}>
+                    <textarea
+                        className="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                        disabled={chatUnavailable || isPredictingEnsemble}
+                        onChange={(event) => setEnsembleInput(event.target.value)}
+                        placeholder="Describe a possible banana"
+                        value={ensembleInput}
+                    />
+                    <button
+                        className="rounded-md bg-yellow-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+                        disabled={chatUnavailable || isPredictingEnsemble || ensembleInput.trim().length === 0}
+                        type="submit"
+                    >
+                        {isPredictingEnsemble ? "Predicting..." : "Predict ensemble"}
+                    </button>
+                </form>
+                {ensembleError ? <p className="text-xs text-red-700">{ensembleError}</p> : null}
+            </section>
 
             <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <h2 className="text-sm font-semibold text-slate-900">Ripeness prediction</h2>

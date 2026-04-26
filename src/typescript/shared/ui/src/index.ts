@@ -4,4 +4,4 @@
 export {BananaBadge} from './components/BananaBadge';
 export {ChatMessageBubble} from './components/ChatMessageBubble';
 export {RipenessLabel} from './components/RipenessLabel';
-export type {ChatMessage, ChatMessageStatus, ChatRole, ChatSession, Ripeness,} from './types';
+export type {ChatMessage, ChatMessageStatus, ChatRole, ChatSession, EnsembleLabel, EnsembleStatus, EnsembleVerdict, Ripeness,} from './types';

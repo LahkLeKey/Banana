@@ -11,7 +11,8 @@ namespace Banana.Api.Controllers;
 public sealed class BananaMlController(
     INativeBananaClient native,
     INativeJsonMapper mapper,
-    PipelineContext ctx) : ControllerBase
+    PipelineContext ctx,
+    PipelineRunner<PipelineContext> runner) : ControllerBase
 {
     public sealed record MlRequest(string InputJson);
 
@@ -64,5 +65,35 @@ public sealed class BananaMlController(
         }
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Slice 014 -- gated cascade ensemble route. Runs the full pipeline
+    /// (input validation + ensemble gating + escalation + calibration) and
+    /// returns a single composite EnsembleVerdictResult. Cascade band is
+    /// baked at [0.35, 0.65] on the binary banana_score.
+    /// </summary>
+    [HttpPost("ensemble")]
+    public async Task<IActionResult> Ensemble([FromBody] MlRequest req, CancellationToken ct)
+    {
+        ctx.Route = "/ml/ensemble";
+        ctx.InputJson = req.InputJson;
+        ctx.Ensemble = new EnsembleWorkingVerdict();
+
+        var pipelineResult = await runner.RunAsync(ctx, ct);
+        if (!pipelineResult.IsSuccess)
+        {
+            return BadRequest(pipelineResult.Problem);
+        }
+
+        var working = ctx.Ensemble;
+        var verdict = new EnsembleVerdictResult(
+            Label: working.Label,
+            Score: working.Score,
+            DidEscalate: working.DidEscalate,
+            CalibrationMagnitude: working.CalibrationMagnitude,
+            Status: working.Degraded ? "degraded" : "ok");
+
+        return Ok(verdict);
     }
 }

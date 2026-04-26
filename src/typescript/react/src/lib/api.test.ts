@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, test} from 'bun:test';
 
-import {createChatSession, fetchBananaSummary, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
+import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
 
 const originalFetch = globalThis.fetch;
 
@@ -147,4 +147,53 @@ describe('react api client', () => {
     await expect(fetchBananaSummary('http://api.example'))
         .rejects.toThrow('banana backend down');
   });
+
+  test(
+      'fetchEnsembleVerdict snapshots the slice 014 contract shape',
+      async () => {
+        let lastUrl = '';
+        let lastInit: RequestInit|undefined;
+
+        globalThis.fetch =
+            (async (input: RequestInfo|URL, init?: RequestInit) => {
+              lastUrl = String(input);
+              lastInit = init;
+              return new Response(
+                  JSON.stringify({
+                    label: 'banana',
+                    score: 0.83,
+                    did_escalate: true,
+                    calibration_magnitude: 0.6,
+                    status: 'ok',
+                  }),
+                  {
+                    status: 200,
+                    headers: {'content-type': 'application/json'},
+                  });
+            }) as typeof fetch;
+
+        const verdict = await fetchEnsembleVerdict(
+            'http://api.example', 'yellow fruit on the counter maybe');
+
+        // Field-by-field snapshot: any drift in slice 014 wire shape breaks
+        // this test (R-R03 contract).
+        expect(Object.keys(verdict).sort()).toEqual([
+          'calibration_magnitude',
+          'did_escalate',
+          'label',
+          'score',
+          'status',
+        ]);
+        expect(verdict.label).toBe('banana');
+        expect(verdict.score).toBe(0.83);
+        expect(verdict.did_escalate).toBe(true);
+        expect(verdict.calibration_magnitude).toBe(0.6);
+        expect(verdict.status).toBe('ok');
+
+        expect(lastUrl).toBe('http://api.example/ml/ensemble');
+        expect(lastInit?.method).toBe('POST');
+        const body = JSON.parse(String(lastInit?.body)) as {inputJson: string};
+        const inner = JSON.parse(body.inputJson) as {text: string};
+        expect(inner.text).toBe('yellow fruit on the counter maybe');
+      });
 });
