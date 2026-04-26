@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: docker/native-builder.Dockerfile
-    command: ["bash", "-lc", "cp -f /workspace/build/native/libbanana_native.so /artifacts/libbanana_native.so && ls -l /artifacts"]
+    command: ["bash", "-lc", "mkdir -p /artifacts && cp -f /workspace/out/native/bin/libbanana_native.so /artifacts/libbanana_native.so && ls -l /artifacts"]
     volumes:
       - native-artifacts:/artifacts
     profiles: ["runtime", "tests", "all", "electron", "apps", "api-fastify"]

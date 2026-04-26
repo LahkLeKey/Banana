@@ -4,7 +4,7 @@ import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 
-import {__resetTrainedModelCacheForTests} from './model';
+import {__resetTrainedModelCacheForTests, TRAINING_ARTIFACT_SCHEMA_VERSION,} from './model';
 import {registerNotBananaRoutes} from './routes';
 
 function createVocabularyArtifact(
@@ -12,12 +12,14 @@ function createVocabularyArtifact(
       minSignalScore?: number;
       trainingProfile?: string;
       sessionMode?: string;
+      schemaVersion?: number;
     }): {dir: string; filePath: string} {
   const dir = mkdtempSync(join(tmpdir(), 'banana-routes-model-'));
   const filePath = join(dir, 'vocabulary.json');
   writeFileSync(
       filePath, JSON.stringify({
-        schema_version: 1,
+        schema_version:
+            options?.schemaVersion ?? TRAINING_ARTIFACT_SCHEMA_VERSION,
         generated_at_utc: '2026-04-25T00:00:00Z',
         vocab_size: entries.length,
         vocabulary: entries.map((entry) => ({
@@ -100,6 +102,7 @@ describe('not-banana routes', () => {
             model: {
               source: string; vocab_size: number;
               artifact_path?: string; recommended_threshold: number;
+              fallback_reason?: string;
             };
           };
           expect(scoreDefaultPayload.label).toBe('not_banana');
@@ -114,6 +117,7 @@ describe('not-banana routes', () => {
           expect(scoreDefaultPayload.model.source).toBe('trained-artifact');
           expect(scoreDefaultPayload.model.vocab_size).toBe(3);
           expect(scoreDefaultPayload.model.recommended_threshold).toBe(0.75);
+          expect(scoreDefaultPayload.model.fallback_reason).toBeUndefined();
 
           const scoreOverrideThreshold = await app.inject({
             method: 'POST',
@@ -144,6 +148,7 @@ describe('not-banana routes', () => {
             source: string;
             vocab_size: number;
             artifact_path?: string;
+            fallback_reason?: string;
             recommended_threshold: number;
             metrics?: {training_profile?: string; session_mode?: string};
             banana_token_sample: string[];
@@ -156,6 +161,7 @@ describe('not-banana routes', () => {
           expect(modelPayload.recommended_threshold).toBe(0.75);
           expect(modelPayload.metrics?.training_profile).toBe('ci');
           expect(modelPayload.metrics?.session_mode).toBe('single');
+          expect(modelPayload.fallback_reason).toBeUndefined();
           expect(modelPayload.banana_token_sample).toContain('banana');
           expect(modelPayload.not_banana_token_sample).toContain('plastic');
         } finally {
@@ -189,6 +195,44 @@ describe('not-banana routes', () => {
       expect(unknown.statusCode).toBe(400);
     } finally {
       await app.close();
+    }
+  });
+
+  test('exposes fallback reason when artifact schema is invalid', async () => {
+    const artifact = createVocabularyArtifact(
+        [
+          {token: 'banana', weight: 1},
+          {token: 'ripe', weight: 1},
+        ],
+        {
+          schemaVersion: 999,
+          minSignalScore: 0.75,
+          trainingProfile: 'ci',
+          sessionMode: 'single',
+        });
+    process.env.BANANA_NOT_BANANA_MODEL_PATH = artifact.filePath;
+    __resetTrainedModelCacheForTests();
+
+    const app = await createApp();
+    try {
+      const model = await app.inject({
+        method: 'GET',
+        url: '/not-banana/model',
+      });
+
+      expect(model.statusCode).toBe(200);
+      const payload = model.json() as {
+        source: string;
+        fallback_reason?: string;
+        recommended_threshold: number;
+      };
+      expect(payload.source).toBe('builtin-fallback');
+      expect(payload.fallback_reason)
+          .toContain('unsupported_vocabulary_schema_version');
+      expect(payload.recommended_threshold).toBe(0.5);
+    } finally {
+      await app.close();
+      rmSync(artifact.dir, {recursive: true, force: true});
     }
   });
 });

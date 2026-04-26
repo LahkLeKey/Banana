@@ -487,11 +487,11 @@ jobs:
 
       - name: Run TypeScript API tests with coverage
         run: |
-          mkdir -p ../../../.artifacts/typescript-api
+          mkdir -p ../../.artifacts/typescript-api
           if find src -type f \( -name "*.test.ts" -o -name "*.spec.ts" -o -name "*.test.tsx" -o -name "*.spec.tsx" \) | grep -q .; then
-            bun test --coverage | tee ../../../.artifacts/typescript-api/coverage.txt
+            bun test --coverage | tee ../../.artifacts/typescript-api/coverage.txt
           else
-            echo "No TypeScript API test files found; coverage run skipped." | tee ../../../.artifacts/typescript-api/coverage.txt
+            echo "No TypeScript API test files found; coverage run skipped." | tee ../../.artifacts/typescript-api/coverage.txt
           fi
 
       - name: Add TypeScript API coverage output to GitHub Actions summary
@@ -501,7 +501,7 @@ jobs:
             echo "## TypeScript API Test Coverage Output"
             echo
             echo '```text'
-            cat ../../../.artifacts/typescript-api/coverage.txt
+            cat ../../.artifacts/typescript-api/coverage.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -510,7 +510,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: typescript-api-coverage-output
-          path: ../../../.artifacts/typescript-api
+          path: .artifacts/typescript-api
 
   compose-tests:
     runs-on: ubuntu-latest
