@@ -1,6 +1,6 @@
 # 035 Banana Corpus + Trainer
 
-Status: IN PROGRESS (awaiting global AI-contract cleanup outside this slice)
+Status: COMPLETE
 
 ## Summary
 
@@ -14,7 +14,7 @@ Implements the first banana-positive deterministic text trainer and image-manage
 - [x] Added schema lint utility: `scripts/check-corpus-schema.py`.
 - [x] Ran deterministic double-train check and recorded evidence.
 - [x] Promoted first banana image and committed channel pointers.
-- [ ] Final parity + AI contract validation (parity pass, AI contract currently fails on pre-existing non-035 issues).
+- [x] Final parity + AI contract validation.
 
 ## Local command baseline
 

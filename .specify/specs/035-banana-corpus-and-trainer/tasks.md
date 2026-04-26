@@ -43,13 +43,9 @@
 - [x] T011 Author `analysis/local-training-runbook.md` -- step by
   step "run the trainer locally and commit the deterministic
   improvement".
-- [ ] T012 Run `python scripts/validate-ai-contracts.py` and
+- [x] T012 Run `python scripts/validate-ai-contracts.py` and
   `bash scripts/validate-spec-tasks-parity.sh --all`.
-- [ ] T013 Mark all tasks `[x]` and update README to COMPLETE.
-
-## Blockers
-
-- `scripts/validate-ai-contracts.py` currently fails on pre-existing prompt/agent/wiki contract issues unrelated to this slice; parity validation passes.
+- [x] T013 Mark all tasks `[x]` and update README to COMPLETE.
 
 ## Out of scope
 

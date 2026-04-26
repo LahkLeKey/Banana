@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "image_id": "20260426T223918Z-dd3e371d16f5",
+  "created_at_utc": "2026-04-26T22:39:19Z",
+  "channel": "candidate",
+  "parent_image_id": null,
+  "metrics": {
+    "macro_f1": 1.0,
+    "holdout_accuracy": 1.0,
+    "per_label": {
+      "unripe": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "ripe": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "overripe": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "spoiled": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "confusion_matrix": {
+      "unripe": {
+        "unripe": 1,
+        "ripe": 0,
+        "overripe": 0,
+        "spoiled": 0
+      },
+      "ripe": {
+        "unripe": 0,
+        "ripe": 1,
+        "overripe": 0,
+        "spoiled": 0
+      },
+      "overripe": {
+        "unripe": 0,
+        "ripe": 0,
+        "overripe": 1,
+        "spoiled": 0
+      },
+      "spoiled": {
+        "unripe": 0,
+        "ripe": 0,
+        "overripe": 0,
+        "spoiled": 1
+      }
+    },
+    "holdout_size": 4,
+    "signal_score": 0.75,
+    "min_signal_score": 0.7,
+    "min_f1": 0.7,
+    "meets_thresholds": true,
+    "training_profile": "ci",
+    "session_mode": "single",
+    "evaluated_sessions": 1,
+    "selected_session": 1,
+    "label_set": [
+      "unripe",
+      "ripe",
+      "overripe",
+      "spoiled"
+    ],
+    "f1_type": "macro"
+  },
+  "files": {
+    "banana_ripeness_labels.h": "7a858d4b0fa9a59fcb1560fef0d6186df97bfeb2253bef3c6b6989d2b6c0804a",
+    "metrics.json": "2c75a78e744da6ae1fac3eeda534fc7b336997032c4d90e7099044da840dcd85",
+    "sessions.json": "bc43a594ec39832d0683d33b1a52f3627f223ae3af4898841156d1af7261f49d",
+    "vocabulary.json": "d65a49e8783613aa7218ac8f3a671b530a2bcf9b54938c557ab8eb083cdde9d6"
+  }
+}
