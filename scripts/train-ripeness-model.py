@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
 
+from training_session_store import append_training_session_record, load_training_session_history, summarize_replay_drift
+
 TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
 PROFILE_DEFAULTS = {
     "ci": {"sessions": 4, "vocab_size": 24},
@@ -380,6 +382,7 @@ def main() -> int:
     profile = resolve_profile(args.training_profile)
     sessions_to_run = resolve_sessions(profile, args.session_mode, args.max_sessions)
     vocab_size = resolve_vocab_size(profile, args.vocab_size)
+    history_before = load_training_session_history(lane="ripeness")
 
     sessions: list[dict[str, object]] = []
     for session_index in range(sessions_to_run):
@@ -473,7 +476,42 @@ def main() -> int:
     (output_dir / "sessions.json").write_text(json.dumps(sessions_payload, indent=2) + "\n", encoding="utf-8")
     write_label_header(output_dir / "banana_ripeness_labels.h")
 
-    print(json.dumps({"output": str(output_dir), "metrics": selected_metrics, "run_fingerprint": run_fingerprint}, indent=2))
+    session_write = append_training_session_record(
+        lane="ripeness",
+        corpus_path=corpus_path,
+        output_dir=output_dir,
+        run_fingerprint=run_fingerprint,
+        generated_at_utc=DETERMINISTIC_GENERATED_AT,
+        training_profile=profile,
+        session_mode=args.session_mode,
+        max_sessions=args.max_sessions,
+        selected_session=int(selected_metrics["selected_session"]),
+        thresholds={
+            "min_signal_score": float(args.min_signal_score),
+            "min_f1": float(args.min_f1),
+        },
+        metrics=selected_metrics,
+    )
+    drift_summary = summarize_replay_drift(
+        lane="ripeness",
+        corpus_path=corpus_path,
+        history_records=history_before,
+        run_fingerprint=run_fingerprint,
+        current_metrics=selected_metrics,
+    )
+
+    print(
+        json.dumps(
+            {
+                "output": str(output_dir),
+                "metrics": selected_metrics,
+                "run_fingerprint": run_fingerprint,
+                "persisted_session": session_write,
+                "history_drift": drift_summary,
+            },
+            indent=2,
+        )
+    )
 
     if not selected_metrics["meets_thresholds"]:
         return 2

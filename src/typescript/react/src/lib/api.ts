@@ -1,4 +1,4 @@
-import type {ChatMessage, ChatSession, EnsembleVerdict, Ripeness} from '@banana/ui';
+import type {ChatMessage, ChatSession, EnsembleVerdict, Ripeness, TrainingAuditEvent, TrainingLane, TrainingRunRequest, TrainingRunResult} from '@banana/ui';
 
 type ErrorPayload = {
   error?: {message?: string;};
@@ -15,6 +15,25 @@ export type SendMessageResponse = {
 
 export type RipenessResponse = {
   label: Ripeness; confidence: number;
+};
+
+export type TrainingRunResponse = {
+  run: TrainingRunResult;
+};
+
+export type TrainingHistoryResponse = {
+  count: number; rows: TrainingRunResult[]; audit: TrainingAuditEvent[];
+};
+
+export type TrainingRunDetailResponse = {
+  run: TrainingRunResult; audit: TrainingAuditEvent[];
+};
+
+export type PromoteRunResponse = {
+  promoted: {
+    run_id: string; target: 'candidate' | 'stable'; threshold_passed: boolean;
+  };
+  audit_event: TrainingAuditEvent;
 };
 
 type BananaSummaryResponse = {
@@ -149,4 +168,50 @@ export async function fetchEnsembleVerdictWithEmbedding(
         headers: {'content-type': 'application/json'},
         body: JSON.stringify({inputJson: JSON.stringify({text})}),
       });
+}
+
+export async function runTrainingWorkbench(
+    baseUrl: string,
+    payload: TrainingRunRequest,
+    ): Promise<TrainingRunResponse> {
+  return requestJson<TrainingRunResponse>(baseUrl, '/training/workbench/runs', {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchTrainingWorkbenchHistory(
+    baseUrl: string,
+    lane?: TrainingLane,
+    ): Promise<TrainingHistoryResponse> {
+  const suffix = lane ? `?lane=${encodeURIComponent(lane)}` : '';
+  return requestJson<TrainingHistoryResponse>(
+      baseUrl, `/training/workbench/history${suffix}`);
+}
+
+export async function fetchTrainingWorkbenchRun(
+    baseUrl: string,
+    runId: string,
+    ): Promise<TrainingRunDetailResponse> {
+  return requestJson<TrainingRunDetailResponse>(
+      baseUrl, `/training/workbench/runs/${encodeURIComponent(runId)}`);
+}
+
+export async function promoteTrainingWorkbenchRun(
+    baseUrl: string,
+    runId: string,
+    target: 'candidate'|'stable',
+    operator_id: string,
+    reason?: string,
+    ): Promise<PromoteRunResponse> {
+  return requestJson<PromoteRunResponse>(
+      baseUrl,
+      `/training/workbench/runs/${encodeURIComponent(runId)}/promote`,
+      {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({target, operator_id, reason}),
+      },
+  );
 }
