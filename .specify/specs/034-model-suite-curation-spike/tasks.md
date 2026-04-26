@@ -5,32 +5,32 @@
 
 ## Phase 1 -- Setup
 
-- [ ] T001 Repoint `.specify/feature.json` -> `034-model-suite-curation-spike`.
+- [x] T001 Repoint `.specify/feature.json` -> `034-model-suite-curation-spike`.
 
 ## Phase 2 -- Investigation
 
-- [ ] T002 Author `analysis/existing-model-snapshot.md` -- corpus
+- [x] T002 Author `analysis/existing-model-snapshot.md` -- corpus
   shape, trainer input, model-image format, API consumer path.
-- [ ] T003 Author `analysis/initial-suite.md` -- banana,
+- [x] T003 Author `analysis/initial-suite.md` -- banana,
   not-banana, ripeness; defer escalation + intent with triggers.
-- [ ] T004 Author `analysis/corpus-schema.md` -- schema convention
+- [x] T004 Author `analysis/corpus-schema.md` -- schema convention
   + concrete examples for banana + ripeness; back-compat with the
   existing not-banana corpus.
-- [ ] T005 Author `analysis/trainer-and-image-convention.md` --
+- [x] T005 Author `analysis/trainer-and-image-convention.md` --
   per-model script vs parametrized; model-image manage pattern.
-- [ ] T006 Author `analysis/orchestrator-boundary.md` -- per-model
+- [x] T006 Author `analysis/orchestrator-boundary.md` -- per-model
   contract (label + probability + embedding + explanation hook).
 
 ## Phase 3 -- Follow-up readiness
 
-- [ ] T007 Author `analysis/followup-readiness-banana-corpus.md`.
-- [ ] T008 Author
+- [x] T007 Author `analysis/followup-readiness-banana-corpus.md`.
+- [x] T008 Author
   `analysis/followup-readiness-ripeness-corpus.md`.
 
 ## Phase 4 -- Close-out
 
-- [ ] T009 Run `bash scripts/validate-spec-tasks-parity.sh --all`.
-- [ ] T010 Mark all tasks `[x]` and update README to COMPLETE.
+- [x] T009 Run `bash scripts/validate-spec-tasks-parity.sh --all`.
+- [x] T010 Mark all tasks `[x]` and update README to COMPLETE.
 
 ## Out of scope
 
