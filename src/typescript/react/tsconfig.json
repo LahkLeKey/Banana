@@ -9,7 +9,10 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "paths": { "@banana/ui": ["../shared/ui/src/index.ts"] }
+    "paths": {
+      "@banana/ui": ["../shared/ui/src/index.ts"],
+      "@banana/resilience": ["../shared/resilience/src/index.ts"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]

@@ -2,21 +2,68 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import {
     BananaBadge,
     ChatMessageBubble,
+    ErrorText,
+    EscalationPanel,
+    RetryButton,
     RipenessLabel,
     type ChatMessage,
     type ChatSession,
+    type EmbeddingSummary,
     type EnsembleVerdict,
 } from "@banana/ui";
 import {
     createChatSession,
     fetchBananaSummary,
-    fetchEnsembleVerdict,
+    fetchEnsembleVerdictWithEmbedding,
     predictRipeness,
     type RipenessResponse,
     resolveApiBaseUrl,
     resolvePlatformLabel,
     sendChatMessage,
 } from "./lib/api";
+import {
+    VERDICT_EMPTY_COPY,
+    errorWording,
+    verdictCopy,
+} from "./lib/copy";
+import {
+    ENSEMBLE_RETRY_POLICY,
+    getEnsembleQueue,
+    getVerdictHistory,
+    type EnsembleQueuePayload,
+    type RecentVerdict,
+} from "./lib/resilience-bootstrap";
+
+// Slice 030 -- narrow Electron bridge surface for history publish +
+// drain-success signal. No-op outside Electron (web tab) since the
+// bridge is undefined.
+type ElectronBananaBridge = {
+    history?: { publish?: (list: unknown[]) => void };
+    notifyDrainSuccess?: (payload: unknown) => void;
+};
+
+function getElectronBridge(): ElectronBananaBridge | undefined {
+    if (typeof window === "undefined") return undefined;
+    return (window as unknown as { banana?: ElectronBananaBridge }).banana;
+}
+
+function publishHistoryToBridge(list: RecentVerdict[]): void {
+    const bridge = getElectronBridge();
+    try {
+        bridge?.history?.publish?.(list);
+    } catch {
+        /* bridge is best-effort */
+    }
+}
+
+function notifyDrainSuccessToBridge(verdict: EnsembleVerdict): void {
+    const bridge = getElectronBridge();
+    try {
+        bridge?.notifyDrainSuccess?.({ verdict });
+    } catch {
+        /* bridge is best-effort */
+    }
+}
 
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
     const merged = [...existing];
@@ -41,11 +88,15 @@ export function App() {
     const [ripenessError, setRipenessError] = useState<string | null>(null);
     const [isPredictingRipeness, setIsPredictingRipeness] = useState(false);
     const [ensembleVerdict, setEnsembleVerdict] = useState<EnsembleVerdict | null>(null);
+    const [ensembleEmbedding, setEnsembleEmbedding] = useState<number[] | null>(null);
     const [ensembleError, setEnsembleError] = useState<string | null>(null);
     const [isPredictingEnsemble, setIsPredictingEnsemble] = useState(false);
     const [ensembleInput, setEnsembleInput] = useState("");
+    const [lastSubmittedSample, setLastSubmittedSample] = useState<string | null>(null);
     const [isBootstrapping, setIsBootstrapping] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    // Slice 029 -- last-N verdict history (rendered as "Recent verdicts").
+    const [recentVerdicts, setRecentVerdicts] = useState<RecentVerdict[]>([]);
     const messageCounter = useRef(0);
 
     const apiBaseUrl = useMemo(() => resolveApiBaseUrl(), []);
@@ -62,6 +113,25 @@ export function App() {
             .then((payload) => setBanana(payload.banana))
             .catch(() => setBanana(null));
     }, [apiBaseUrl]);
+
+    // Slice 024 -- when running inside Electron, subscribe to verdicts
+    // pushed by the main process (tray menu / global shortcut /
+    // paste-classify) so the UI mirrors the desktop entry points.
+    useEffect(() => {
+        const bridge = (typeof window !== "undefined"
+            ? (window as unknown as { banana?: { onVerdict?: (h: (payload: unknown) => void) => (() => void) } }).banana
+            : undefined);
+        if (!bridge?.onVerdict) return;
+        const off = bridge.onVerdict((payload: unknown) => {
+            const envelope = payload as { verdict?: EnsembleVerdict; embedding?: number[] | null } | null;
+            if (envelope && envelope.verdict) {
+                setEnsembleVerdict(envelope.verdict);
+                setEnsembleEmbedding(envelope.embedding ?? null);
+                setEnsembleError(null);
+            }
+        });
+        return () => { try { off?.(); } catch { /* noop */ } };
+    }, []);
 
     useEffect(() => {
         if (chatUnavailable) {
@@ -164,19 +234,144 @@ export function App() {
         if (!apiBaseUrl || value.length === 0) {
             return;
         }
-        setIsPredictingEnsemble(true);
-        setEnsembleError(null);
-        try {
-            const verdict = await fetchEnsembleVerdict(apiBaseUrl, value);
-            setEnsembleVerdict(verdict);
-        } catch (error: unknown) {
-            setEnsembleError(
-                error instanceof Error ? error.message : "failed to predict ensemble"
-            );
-            setEnsembleVerdict(null);
-        } finally {
-            setIsPredictingEnsemble(false);
+        await runEnsembleVerdict(value);
+    }
+
+    const recordVerdict = useCallback(
+        async (sample: string, verdict: EnsembleVerdict) => {
+            const history = getVerdictHistory();
+            const entry: RecentVerdict = {
+                id: `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                capturedAt: Date.now(),
+                input: sample,
+                verdict,
+                didEscalate: Boolean(verdict.did_escalate),
+            };
+            try {
+                await history.record(entry);
+                const list = await history.list(10);
+                setRecentVerdicts(list);
+                // Slice 030 -- publish the snapshot to the Electron main
+                // process (no-op outside Electron) so the tray menu can
+                // surface the latest verdict.
+                publishHistoryToBridge(list);
+            } catch {
+                // History is best-effort; never block the UI on it.
+            }
+        },
+        [],
+    );
+
+    const runEnsembleVerdict = useCallback(
+        async (sample: string) => {
+            if (!apiBaseUrl || sample.length === 0) {
+                return;
+            }
+            setIsPredictingEnsemble(true);
+            setEnsembleError(null);
+            setLastSubmittedSample(sample);
+            try {
+                const result = await fetchEnsembleVerdictWithEmbedding(
+                    apiBaseUrl,
+                    sample,
+                );
+                setEnsembleVerdict(result.verdict);
+                setEnsembleEmbedding(result.embedding);
+                void recordVerdict(sample, result.verdict);
+            } catch (error: unknown) {
+                setEnsembleError(errorWording(error));
+                setEnsembleVerdict(null);
+                setEnsembleEmbedding(null);
+                // Slice 029 -- when offline, queue the sample so a later
+                // online drain can resolve it; preserve the draft.
+                const isOffline = typeof navigator !== "undefined" && navigator.onLine === false;
+                if (isOffline) {
+                    try {
+                        await getEnsembleQueue().enqueue({
+                            key: `ensemble:${sample}`,
+                            payload: { sample, submittedAt: Date.now() } satisfies EnsembleQueuePayload,
+                            retry: ENSEMBLE_RETRY_POLICY,
+                            enqueuedAt: Date.now(),
+                        });
+                    } catch {
+                        // Queue is best-effort; existing inline error already surfaces.
+                    }
+                }
+            } finally {
+                setIsPredictingEnsemble(false);
+            }
+        },
+        [apiBaseUrl, recordVerdict],
+    );
+
+    // Slice 029 -- on mount, hydrate the recent-verdicts surface from
+    // persistent storage (e.g., a prior browser-tab session).
+    useEffect(() => {
+        let cancelled = false;
+        getVerdictHistory()
+            .list(10)
+            .then((list) => {
+                if (!cancelled) {
+                    setRecentVerdicts(list);
+                    publishHistoryToBridge(list);
+                }
+            })
+            .catch(() => {
+                /* best-effort */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    // Slice 029 -- drain queued submissions when the browser comes back
+    // online; render whichever verdict resolves last.
+    useEffect(() => {
+        if (typeof window === "undefined" || !apiBaseUrl) return;
+        const onOnline = () => {
+            void getEnsembleQueue()
+                .drain(async (payload) => {
+                    const result = await fetchEnsembleVerdictWithEmbedding(
+                        apiBaseUrl,
+                        payload.sample,
+                    );
+                    setEnsembleVerdict(result.verdict);
+                    setEnsembleEmbedding(result.embedding);
+                    setEnsembleError(null);
+                    void recordVerdict(payload.sample, result.verdict);
+                    // Slice 030 -- signal Electron main so it raises a
+                    // drain-success native notification.
+                    notifyDrainSuccessToBridge(result.verdict);
+                })
+                .catch(() => {
+                    /* drain errors leave the job queued for next online tick */
+                });
+        };
+        window.addEventListener("online", onOnline);
+        return () => window.removeEventListener("online", onOnline);
+    }, [apiBaseUrl, recordVerdict]);
+
+    const loadEscalationSummary = useCallback(
+        async (): Promise<EmbeddingSummary> => ({ embedding: ensembleEmbedding }),
+        [ensembleEmbedding],
+    );
+
+    function onEnsembleInputChange(value: string) {
+        setEnsembleInput(value);
+        // Typing a new sample invalidates the previous error + retry
+        // affordance per baseline (retry preserves last submitted draft;
+        // editing breaks that contract).
+        if (lastSubmittedSample !== null) {
+            setLastSubmittedSample(null);
+            setEnsembleError(null);
         }
+    }
+
+    function onRetryEnsemble() {
+        if (lastSubmittedSample === null) {
+            return;
+        }
+        void runEnsembleVerdict(lastSubmittedSample);
     }
 
     return (
@@ -201,7 +396,7 @@ export function App() {
                     <textarea
                         className="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                         disabled={chatUnavailable || isPredictingEnsemble}
-                        onChange={(event) => setEnsembleInput(event.target.value)}
+                        onChange={(event) => onEnsembleInputChange(event.target.value)}
                         placeholder="Describe a possible banana"
                         value={ensembleInput}
                     />
@@ -213,7 +408,46 @@ export function App() {
                         {isPredictingEnsemble ? "Predicting..." : "Predict ensemble"}
                     </button>
                 </form>
-                {ensembleError ? <p className="text-xs text-red-700">{ensembleError}</p> : null}
+                <div data-testid="ensemble-verdict-surface" className="space-y-2 text-sm">
+                    {ensembleError ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <ErrorText data-testid="ensemble-error">
+                                {ensembleError}
+                            </ErrorText>
+                            {lastSubmittedSample !== null ? (
+                                <RetryButton
+                                    data-testid="ensemble-retry"
+                                    onClick={onRetryEnsemble}
+                                    disabled={isPredictingEnsemble}
+                                />
+                            ) : null}
+                        </div>
+                    ) : ensembleVerdict ? (
+                        <p data-testid="ensemble-verdict-copy" className="font-medium text-slate-900">
+                            {verdictCopy(ensembleVerdict)}
+                            {ensembleVerdict.did_escalate ? (
+                                <EscalationPanel loadSummary={loadEscalationSummary} />
+                            ) : null}
+                        </p>
+                    ) : (
+                        <p data-testid="ensemble-verdict-empty" className="text-slate-500">
+                            {VERDICT_EMPTY_COPY}
+                        </p>
+                    )}
+                </div>
+                {recentVerdicts.length > 0 ? (
+                    <div data-testid="recent-verdicts" className="space-y-1 border-t border-slate-100 pt-2 text-xs">
+                        <p className="font-semibold text-slate-700">Recent verdicts</p>
+                        <ul className="space-y-1 text-slate-600">
+                            {recentVerdicts.map((entry) => (
+                                <li key={entry.id} data-testid="recent-verdict-item">
+                                    <span className="font-medium text-slate-900">{verdictCopy(entry.verdict as EnsembleVerdict)}</span>
+                                    <span className="ml-2 text-slate-500">{entry.input}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ) : null}
             </section>
 
             <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -242,7 +476,7 @@ export function App() {
                         <span>confidence {ripenessResult.confidence.toFixed(4)}</span>
                     </div>
                 ) : null}
-                {ripenessError ? <p className="text-xs text-red-700">{ripenessError}</p> : null}
+                {ripenessError ? <ErrorText>{ripenessError}</ErrorText> : null}
             </section>
 
             <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -283,7 +517,7 @@ export function App() {
                     </button>
                 </form>
 
-                {chatError ? <p className="text-xs text-red-700">{chatError}</p> : null}
+                {chatError ? <ErrorText>{chatError}</ErrorText> : null}
             </section>
         </main>
     );
