@@ -12,3 +12,4 @@ Why-We-Use-A-Wrapper.md
 WSL2-Mobile-Runtime-Channels.md
 ci-compose-stabilization.md
 ci-runtime-compatibility.md
+coverage-80-exceptions.md

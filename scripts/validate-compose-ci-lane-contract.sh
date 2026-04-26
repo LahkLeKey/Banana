@@ -44,6 +44,7 @@ fi
 lane_dir="$artifact_root/$lane"
 result_file="$lane_dir/lane-result.json"
 manifest_file="$lane_dir/artifact-manifest.json"
+coverage_result_file="${BANANA_COVERAGE_ARTIFACT_ROOT:-.artifacts/coverage}/$lane/coverage-lane-result.json"
 stage_file="$lane_dir/stage.txt"
 reason_file="$lane_dir/reason-code.txt"
 exit_file="$lane_dir/exit-code.txt"
@@ -77,7 +78,7 @@ else
   exit 1
 fi
 
-"$python_bin" - "$lane" "$result_file" "$manifest_file" "$stage_file" "$reason_file" "$exit_file" <<'PY'
+"$python_bin" - "$lane" "$result_file" "$manifest_file" "$stage_file" "$reason_file" "$exit_file" "$coverage_result_file" <<'PY'
 import json
 import sys
 from datetime import datetime
@@ -89,8 +90,10 @@ manifest_file = Path(sys.argv[3])
 stage_file = Path(sys.argv[4])
 reason_file = Path(sys.argv[5])
 exit_file = Path(sys.argv[6])
+coverage_result_file = Path(sys.argv[7])
 lane_dir = result_file.parent
 artifact_root = lane_dir.parent
+spec_root = Path(".specify/specs/003-coverage-80-rehydration")
 
 errors = []
 
@@ -205,6 +208,124 @@ if diagnostics_bundle_path is not None:
           "lane-result diagnostics_bundle_path "
           f"'{diagnostics_bundle_path}' does not exist under lane artifact root"
         )
+
+def validate_coverage_result(path: Path):
+  if not path.exists():
+    return
+
+  try:
+    coverage = json.loads(path.read_text(encoding="utf-8"))
+  except Exception as exc:
+    errors.append(f"coverage result {path} is not valid JSON: {exc}")
+    return
+
+  required_fields = [
+    "lane_id",
+    "domain",
+    "layer",
+    "status",
+    "threshold_percent",
+    "denominator_policy_version",
+    "evidence_bundle_path",
+  ]
+
+  for field in required_fields:
+    if field not in coverage:
+      errors.append(f"coverage result missing required field '{field}'")
+
+  coverage_status = coverage.get("status")
+  if coverage_status not in {"pass", "fail", "skip", "not-applicable"}:
+    errors.append(f"coverage result status '{coverage_status}' is invalid")
+
+  coverage_layer = coverage.get("layer")
+  if coverage_layer not in {"unit", "integration", "e2e"}:
+    errors.append(f"coverage result layer '{coverage_layer}' is invalid")
+
+  failure_class = coverage.get("failure_class")
+  if failure_class is not None and failure_class not in {
+    "threshold_violation",
+    "coverage_contract_violation",
+    "preflight_contract_violation",
+    "flake_contract_violation",
+  }:
+    errors.append(f"coverage result failure_class '{failure_class}' is invalid")
+
+  if coverage_layer == "e2e":
+    e2e_manifest = coverage.get("e2e_flow_manifest")
+    if not isinstance(e2e_manifest, dict):
+      errors.append("coverage result e2e_flow_manifest must be an object for e2e lanes")
+    else:
+      channel = e2e_manifest.get("channel")
+      if channel not in {"api-react", "electron", "mobile"}:
+        errors.append(f"e2e_flow_manifest channel '{channel}' is invalid")
+
+      required_flow_count = e2e_manifest.get("required_flow_count")
+      declared_flows = e2e_manifest.get("declared_flows")
+      exercised_flow_ids = e2e_manifest.get("exercised_flow_ids")
+      exercised_percent = e2e_manifest.get("exercised_percent")
+
+      if not isinstance(declared_flows, list) or not declared_flows:
+        errors.append("e2e_flow_manifest declared_flows must be a non-empty array")
+      if not isinstance(required_flow_count, int):
+        errors.append("e2e_flow_manifest required_flow_count must be an integer")
+      elif isinstance(declared_flows, list) and required_flow_count != len(declared_flows):
+        errors.append("e2e_flow_manifest required_flow_count must equal declared_flows length")
+      if not isinstance(exercised_flow_ids, list):
+        errors.append("e2e_flow_manifest exercised_flow_ids must be an array")
+      if not isinstance(exercised_percent, (int, float)):
+        errors.append("e2e_flow_manifest exercised_percent must be numeric")
+
+  evidence_path = coverage.get("evidence_bundle_path")
+  if isinstance(evidence_path, str):
+    normalized = evidence_path.replace("\\", "/")
+    if normalized.startswith("/") or ":" in normalized:
+      errors.append("coverage result evidence_bundle_path must be relative")
+    if normalized == ".." or normalized.startswith("../") or "/../" in normalized:
+      errors.append("coverage result evidence_bundle_path cannot traverse parent directories")
+  else:
+    errors.append("coverage result evidence_bundle_path must be a string")
+
+  exceptions = coverage.get("exceptions")
+  if exceptions is not None:
+    if not isinstance(exceptions, dict):
+      errors.append("coverage result exceptions must be an object when present")
+    else:
+      if not isinstance(exceptions.get("valid"), bool):
+        errors.append("coverage result exceptions.valid must be boolean")
+      if not isinstance(exceptions.get("active_count"), int):
+        errors.append("coverage result exceptions.active_count must be integer")
+      if not isinstance(exceptions.get("expired_count"), int):
+        errors.append("coverage result exceptions.expired_count must be integer")
+
+
+validate_coverage_result(coverage_result_file)
+
+def validate_spec_parity():
+  data_model = spec_root / "data-model.md"
+  contract = spec_root / "contracts/coverage-lane-contract.md"
+
+  required_tokens = [
+    "threshold_violation",
+    "coverage_contract_violation",
+    "preflight_contract_violation",
+    "flake_contract_violation",
+    "unit",
+    "integration",
+    "e2e",
+  ]
+
+  for doc_path in (data_model, contract):
+    if not doc_path.exists():
+      errors.append(f"spec parity file missing: {doc_path}")
+      continue
+
+    text = doc_path.read_text(encoding="utf-8", errors="replace")
+    for token in required_tokens:
+      if token not in text:
+        errors.append(f"spec parity token '{token}' missing in {doc_path}")
+
+
+validate_spec_parity()
 
 if errors:
     print(f"Contract validation failed for lane '{lane}':")
