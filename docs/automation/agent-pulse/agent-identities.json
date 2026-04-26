@@ -1,0 +1,87 @@
+{
+    "schema_version": 1,
+    "description": "Canonical identity map for autonomous agent contributor metadata and pulse follow links.",
+    "agents": [
+        {
+            "slug": "banana-classifier-agent",
+            "display_name": "Banana Classifier Agent",
+            "icon": "Ba",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/banana-classifier-agent/",
+            "followable": false,
+            "contributor_name": "Ba Banana Classifier Agent"
+        },
+        {
+            "slug": "api-pipeline-agent",
+            "display_name": "API Pipeline Agent",
+            "icon": "Ap",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/api-pipeline-agent/",
+            "followable": false,
+            "contributor_name": "Ap API Pipeline Agent"
+        },
+        {
+            "slug": "csharp-api-agent",
+            "display_name": "CSharp API Agent",
+            "icon": "Cs",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/csharp-api-agent/",
+            "followable": false,
+            "contributor_name": "Cs CSharp API Agent"
+        },
+        {
+            "slug": "native-core-agent",
+            "display_name": "Native Core Agent",
+            "icon": "Nc",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/native-core-agent/",
+            "followable": false,
+            "contributor_name": "Nc Native Core Agent"
+        },
+        {
+            "slug": "react-ui-agent",
+            "display_name": "React UI Agent",
+            "icon": "Ru",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/react-ui-agent/",
+            "followable": false,
+            "contributor_name": "Ru React UI Agent"
+        },
+        {
+            "slug": "electron-agent",
+            "display_name": "Electron Agent",
+            "icon": "El",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/electron-agent/",
+            "followable": false,
+            "contributor_name": "El Electron Agent"
+        },
+        {
+            "slug": "mobile-runtime-agent",
+            "display_name": "Mobile Runtime Agent",
+            "icon": "Mo",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/mobile-runtime-agent/",
+            "followable": false,
+            "contributor_name": "Mo Mobile Runtime Agent"
+        },
+        {
+            "slug": "integration-agent",
+            "display_name": "Integration Agent",
+            "icon": "Au",
+            "github_login": "integration-agent",
+            "follow_url": "https://github.com/integration-agent",
+            "followable": true,
+            "contributor_name": "Au Integration Agent"
+        },
+        {
+            "slug": "workflow-agent",
+            "display_name": "Workflow Agent",
+            "icon": "Wf",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/workflow-agent/",
+            "followable": false,
+            "contributor_name": "Wf Workflow Agent"
+        }
+    ]
+}
