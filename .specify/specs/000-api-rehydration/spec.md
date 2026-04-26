@@ -7,7 +7,7 @@
 
 ## Summary
 
-Define a pre-sprint API realignment baseline with practical, arbitrary contract checks to ensure we did not vibe code into unstable behavior. This rehydration spec covers ASP.NET and TypeScript API contract continuity, typed failures, and model-metadata consistency.
+Define a pre-sprint API realignment baseline with practical, arbitrary contract checks to ensure ad-hoc changes did not introduce unstable behavior. This rehydration spec covers ASP.NET and TypeScript API contract continuity, typed failures, and model-metadata consistency.
 
 ## In Scope
 

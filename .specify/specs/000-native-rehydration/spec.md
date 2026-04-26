@@ -7,7 +7,7 @@
 
 ## Summary
 
-Define a pre-sprint native realignment baseline with intentionally pragmatic, arbitrary stability checks that reduce the risk of unreviewed vibe-coded drift. This rehydration spec verifies native ABI continuity, deterministic behavior, and safety envelopes before sprint implementation expands scope.
+Define a pre-sprint native realignment baseline with intentionally pragmatic, arbitrary stability checks that reduce the risk of unreviewed contract drift. This rehydration spec verifies native ABI continuity, deterministic behavior, and safety envelopes before sprint implementation expands scope.
 
 ## In Scope
 

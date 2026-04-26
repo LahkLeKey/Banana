@@ -9,4 +9,4 @@ mkdir -p "$OUT"
 dotnet test Banana.sln \
   --collect:"XPlat Code Coverage" \
   --results-directory "$OUT" \
-  /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+  -p:CollectCoverage=true -p:CoverletOutputFormat=cobertura
