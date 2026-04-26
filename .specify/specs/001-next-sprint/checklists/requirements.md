@@ -32,4 +32,4 @@
 ## Notes
 
 - Consolidation is complete for active retained specs (005 through 018) into one next-sprint canonical source.
-- This spec is ready for planning and can feed `/speckit.plan` for design artifacts and task generation.
+- This spec is ready for planning and can feed `specify plan` for design artifacts and task generation.

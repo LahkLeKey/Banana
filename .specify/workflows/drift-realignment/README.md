@@ -13,11 +13,11 @@ This workflow keeps feature planning centered on `.specify` and enforces drift-a
 
 ## Stage Sequence
 
-1. `speckit.specify`
+1. `specify specify`
 2. Scope-boundary review gate
-3. `speckit.plan`
+3. `specify plan`
 4. Traceability review gate
-5. `speckit.tasks`
+5. `specify tasks`
 6. Task-drift review gate
 7. Wiki-freeze and mirror-parity review gate
 
