@@ -21,10 +21,10 @@ description: "Task list for C Upstream Value Reassessment SPIKE"
 
 **Purpose**: Create reusable SPIKE output scaffolding and source references.
 
-- [ ] T001 Create SPIKE analysis workspace index in `.specify/specs/006-c-upstream-value-spike/analysis/README.md`
-- [ ] T002 [P] Create candidate template skeleton in `.specify/specs/006-c-upstream-value-spike/analysis/candidate-template.md`
-- [ ] T003 [P] Create scoring rubric worksheet in `.specify/specs/006-c-upstream-value-spike/analysis/scorecard-rubric.md`
-- [ ] T004 [P] Create upstream impact matrix template in `.specify/specs/006-c-upstream-value-spike/analysis/upstream-impact-template.md`
+- [X] T001 Create SPIKE analysis workspace index in `.specify/specs/006-c-upstream-value-spike/analysis/README.md`
+- [X] T002 [P] Create candidate template skeleton in `.specify/specs/006-c-upstream-value-spike/analysis/candidate-template.md`
+- [X] T003 [P] Create scoring rubric worksheet in `.specify/specs/006-c-upstream-value-spike/analysis/scorecard-rubric.md`
+- [X] T004 [P] Create upstream impact matrix template in `.specify/specs/006-c-upstream-value-spike/analysis/upstream-impact-template.md`
 
 ---
 
@@ -34,10 +34,10 @@ description: "Task list for C Upstream Value Reassessment SPIKE"
 
 **⚠️ CRITICAL**: User story tasks start only after this phase is complete.
 
-- [ ] T005 Define candidate inclusion/exclusion criteria in `.specify/specs/006-c-upstream-value-spike/analysis/inventory-criteria.md`
-- [ ] T006 Define normalized scoring formula and interpretation notes in `.specify/specs/006-c-upstream-value-spike/analysis/scoring-method.md`
-- [ ] T007 Define confidence and uncertainty handling policy in `.specify/specs/006-c-upstream-value-spike/analysis/confidence-policy.md`
-- [ ] T008 Define required validation-lane mapping rules in `.specify/specs/006-c-upstream-value-spike/analysis/validation-lane-mapping-rules.md`
+- [X] T005 Define candidate inclusion/exclusion criteria in `.specify/specs/006-c-upstream-value-spike/analysis/inventory-criteria.md`
+- [X] T006 Define normalized scoring formula and interpretation notes in `.specify/specs/006-c-upstream-value-spike/analysis/scoring-method.md`
+- [X] T007 Define confidence and uncertainty handling policy in `.specify/specs/006-c-upstream-value-spike/analysis/confidence-policy.md`
+- [X] T008 Define required validation-lane mapping rules in `.specify/specs/006-c-upstream-value-spike/analysis/validation-lane-mapping-rules.md`
 
 **Checkpoint**: Shared SPIKE method is fixed and reusable across all story outputs.
 
@@ -51,11 +51,11 @@ description: "Task list for C Upstream Value Reassessment SPIKE"
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Build initial candidate inventory (minimum 5) in `.specify/specs/006-c-upstream-value-spike/analysis/candidate-inventory.md`
-- [ ] T010 [US1] Map each candidate to native surfaces in `.specify/specs/006-c-upstream-value-spike/analysis/native-surface-map.md`
-- [ ] T011 [US1] Score all candidates using normalized rubric in `.specify/specs/006-c-upstream-value-spike/analysis/candidate-scorecards.md`
-- [ ] T012 [US1] Produce ranked recommendation table in `.specify/specs/006-c-upstream-value-spike/analysis/ranked-recommendations.md`
-- [ ] T013 [US1] Document ranking rationale and tie-break decisions in `.specify/specs/006-c-upstream-value-spike/analysis/ranking-rationale.md`
+- [X] T009 [US1] Build initial candidate inventory (minimum 5) in `.specify/specs/006-c-upstream-value-spike/analysis/candidate-inventory.md`
+- [X] T010 [US1] Map each candidate to native surfaces in `.specify/specs/006-c-upstream-value-spike/analysis/native-surface-map.md`
+- [X] T011 [US1] Score all candidates using normalized rubric in `.specify/specs/006-c-upstream-value-spike/analysis/candidate-scorecards.md`
+- [X] T012 [US1] Produce ranked recommendation table in `.specify/specs/006-c-upstream-value-spike/analysis/ranked-recommendations.md`
+- [X] T013 [US1] Document ranking rationale and tie-break decisions in `.specify/specs/006-c-upstream-value-spike/analysis/ranking-rationale.md`
 
 **Checkpoint**: A complete ranked list exists and can be reviewed without additional discovery.
 
@@ -69,12 +69,12 @@ description: "Task list for C Upstream Value Reassessment SPIKE"
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Select top 3 candidates from ranked list and record selection basis in `.specify/specs/006-c-upstream-value-spike/analysis/top-candidate-selection.md`
-- [ ] T015 [P] [US2] Draft readiness packet for top candidate #1 in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-packet-1.md`
-- [ ] T016 [P] [US2] Draft readiness packet for top candidate #2 in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-packet-2.md`
-- [ ] T017 [P] [US2] Draft readiness packet for top candidate #3 in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-packet-3.md`
-- [ ] T018 [US2] Consolidate top-3 packets into handoff bundle in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-packets.md`
-- [ ] T019 [US2] Capture unresolved questions and mitigations in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-open-questions.md`
+- [X] T014 [US2] Select top 3 candidates from ranked list and record selection basis in `.specify/specs/006-c-upstream-value-spike/analysis/top-candidate-selection.md`
+- [X] T015 [P] [US2] Draft readiness packet for top candidate #1 in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-packet-1.md`
+- [X] T016 [P] [US2] Draft readiness packet for top candidate #2 in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-packet-2.md`
+- [X] T017 [P] [US2] Draft readiness packet for top candidate #3 in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-packet-3.md`
+- [X] T018 [US2] Consolidate top-3 packets into handoff bundle in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-packets.md`
+- [X] T019 [US2] Capture unresolved questions and mitigations in `.specify/specs/006-c-upstream-value-spike/analysis/readiness-open-questions.md`
 
 **Checkpoint**: Follow-up story drafting can start directly from SPIKE handoff artifacts.
 
@@ -88,11 +88,11 @@ description: "Task list for C Upstream Value Reassessment SPIKE"
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Build top-candidate upstream domain impact matrix in `.specify/specs/006-c-upstream-value-spike/analysis/upstream-impact-matrix.md`
-- [ ] T021 [US3] Document contract/env assumptions impacted per top candidate in `.specify/specs/006-c-upstream-value-spike/analysis/contract-impact-notes.md`
-- [ ] T022 [US3] Define per-candidate validation lane expectations in `.specify/specs/006-c-upstream-value-spike/analysis/validation-lane-plan.md`
-- [ ] T023 [US3] Record cross-domain dependency and sequencing notes in `.specify/specs/006-c-upstream-value-spike/analysis/cross-domain-sequencing.md`
-- [ ] T024 [US3] Summarize residual release risks in `.specify/specs/006-c-upstream-value-spike/analysis/residual-risk-summary.md`
+- [X] T020 [US3] Build top-candidate upstream domain impact matrix in `.specify/specs/006-c-upstream-value-spike/analysis/upstream-impact-matrix.md`
+- [X] T021 [US3] Document contract/env assumptions impacted per top candidate in `.specify/specs/006-c-upstream-value-spike/analysis/contract-impact-notes.md`
+- [X] T022 [US3] Define per-candidate validation lane expectations in `.specify/specs/006-c-upstream-value-spike/analysis/validation-lane-plan.md`
+- [X] T023 [US3] Record cross-domain dependency and sequencing notes in `.specify/specs/006-c-upstream-value-spike/analysis/cross-domain-sequencing.md`
+- [X] T024 [US3] Summarize residual release risks in `.specify/specs/006-c-upstream-value-spike/analysis/residual-risk-summary.md`
 
 **Checkpoint**: Upstream impact is explicit and review-ready for delivery planning.
 
@@ -102,12 +102,12 @@ description: "Task list for C Upstream Value Reassessment SPIKE"
 
 **Purpose**: Final consistency, traceability, and closure updates.
 
-- [ ] T025 Reconcile terminology consistency across all 006 artifacts in `.specify/specs/006-c-upstream-value-spike/`
-- [ ] T026 [P] Cross-check `spec.md` success criteria against generated outputs and record evidence in `.specify/specs/006-c-upstream-value-spike/analysis/success-criteria-evidence.md`
-- [ ] T027 [P] Update `.specify/specs/006-c-upstream-value-spike/quickstart.md` with exact artifact review commands actually used
-- [ ] T028 Update `.specify/specs/006-c-upstream-value-spike/contracts/spike-contracts.md` if any deliverable contract detail changed during execution
-- [ ] T029 Run artifact completeness check by confirming expected files listed in `.specify/specs/006-c-upstream-value-spike/analysis/README.md`
-- [ ] T030 Mark completion evidence and task statuses in `.specify/specs/006-c-upstream-value-spike/tasks.md`
+- [X] T025 Reconcile terminology consistency across all 006 artifacts in `.specify/specs/006-c-upstream-value-spike/`
+- [X] T026 [P] Cross-check `spec.md` success criteria against generated outputs and record evidence in `.specify/specs/006-c-upstream-value-spike/analysis/success-criteria-evidence.md`
+- [X] T027 [P] Update `.specify/specs/006-c-upstream-value-spike/quickstart.md` with exact artifact review commands actually used
+- [X] T028 Update `.specify/specs/006-c-upstream-value-spike/contracts/spike-contracts.md` if any deliverable contract detail changed during execution
+- [X] T029 Run artifact completeness check by confirming expected files listed in `.specify/specs/006-c-upstream-value-spike/analysis/README.md`
+- [X] T030 Mark completion evidence and task statuses in `.specify/specs/006-c-upstream-value-spike/tasks.md`
 
 ---
 
@@ -167,3 +167,11 @@ Task: "Draft readiness packet for top candidate #3 in .specify/specs/006-c-upstr
 - This SPIKE is planning-only: no production code behavior changes are required.
 - Story outputs should be reviewable independently at each checkpoint.
 - Keep file paths and artifact names stable to preserve traceability into follow-up stories.
+
+## Completion Evidence (2026-04-26)
+
+- US1 artifacts complete: candidate inventory, surface map, scorecards, ranked recommendations, ranking rationale.
+- US2 artifacts complete: top-candidate selection, three readiness packets, consolidated packet bundle, open questions.
+- US3 artifacts complete: upstream impact matrix, contract impact notes, validation lane plan, sequencing notes, residual risk summary.
+- Polish artifacts complete: success criteria evidence, quickstart execution commands, contract reconciliation note.
+- Artifact completeness gate: `ANALYSIS_COMPLETENESS=PASS`.

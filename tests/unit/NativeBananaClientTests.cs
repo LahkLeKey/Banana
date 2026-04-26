@@ -9,6 +9,20 @@ namespace Banana.Api.Tests.Unit;
 public sealed class NativeBananaClientTests
 {
     [Fact]
+    public void INativeBananaClient_QueryBananaProfileSignature_IsStable()
+    {
+        var method = typeof(INativeBananaClient).GetMethod(nameof(INativeBananaClient.QueryBananaProfile));
+
+        Assert.NotNull(method);
+        Assert.Equal(typeof(NativeStatusCode), method!.ReturnType);
+
+        var parameters = method.GetParameters();
+        Assert.Equal(2, parameters.Length);
+        Assert.Equal(typeof(string), parameters[0].ParameterType);
+        Assert.Equal(typeof(string).MakeByRefType(), parameters[1].ParameterType);
+    }
+
+    [Fact]
     public void CallJson_WhenInteropExceptionIsThrown_ReturnsNativeUnavailable()
     {
         var callJsonMethod = typeof(NativeBananaClient).GetMethod(

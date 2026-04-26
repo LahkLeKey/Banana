@@ -12,6 +12,19 @@ namespace Banana.E2eTests.Contracts;
 public sealed class E2eRunnerContractTests
 {
     [Fact]
+    public void DbNotConfiguredContractPayloadIsStableForE2eAssertions()
+    {
+        var result = StatusMapping.ToActionResult(NativeStatusCode.DbNotConfigured);
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(503, objectResult.StatusCode);
+
+        var payload = SerializeToElement(objectResult.Value);
+        Assert.Equal("config_missing", payload.GetProperty("error").GetString());
+        Assert.Equal("Set BANANA_PG_CONNECTION.", payload.GetProperty("remediation").GetString());
+    }
+
+    [Fact]
     public void NativeUnavailableContractPayloadIsStableForE2eAssertions()
     {
         var result = StatusMapping.ToActionResult(NativeStatusCode.NativeUnavailable);

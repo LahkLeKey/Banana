@@ -16,7 +16,7 @@ public static class StatusMapping
         NativeStatusCode.Overflow         => new BadRequestObjectResult(body ?? new { error = "overflow" }),
         NativeStatusCode.NativeUnavailable => new ObjectResult(body ?? new { error = "native_unavailable", remediation = "Set BANANA_NATIVE_PATH to a valid native library path." }) { StatusCode = 503 },
         NativeStatusCode.DbNotConfigured  => new ObjectResult(new { error = "config_missing", remediation = "Set BANANA_PG_CONNECTION." }) { StatusCode = 503 },
-        NativeStatusCode.DbError          => new ObjectResult(new { error = "db_error", code = (int)code }) { StatusCode = 500 },
+        NativeStatusCode.DbError          => new ObjectResult(new { error = "db_error", code = (int)code, remediation = "Check DAL dependency availability and PostgreSQL connectivity." }) { StatusCode = 500 },
         _                                 => new ObjectResult(new { error = "internal_error", code = (int)code }) { StatusCode = 500 },
     };
 }

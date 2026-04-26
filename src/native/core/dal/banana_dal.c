@@ -36,12 +36,9 @@ int banana_dal_query_profile(const char* profile_id, char** out_json) {
     PQclear(r); PQfinish(c);
     return BANANA_OK;
 #else
-    /* libpq not linked at build time — return a typed signal so tests
-     * can detect "configured but unbuildable" vs "unconfigured". */
-    char* buf = (char*)malloc(128);
-    if (!buf) return BANANA_INTERNAL_ERROR;
-    snprintf(buf, 128, "{\"profile_id\":\"%s\",\"note\":\"libpq not linked\"}", profile_id);
-    *out_json = buf;
-    return BANANA_OK;
+    /* Dependency unavailable is an explicit non-success outcome.
+     * Do not emit synthetic success payloads when DAL cannot execute. */
+    (void)profile_id;
+    return BANANA_DB_ERROR;
 #endif
 }

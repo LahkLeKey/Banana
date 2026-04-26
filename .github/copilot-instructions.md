@@ -42,5 +42,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at `.specify/specs/006-c-upstream-value-spike/plan.md`
+at `.specify/specs/007-dal-runtime-contract-hardening/plan.md`
 <!-- SPECKIT END -->

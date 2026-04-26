@@ -1,3 +1,10 @@
 {
-    "cmake.sourceDirectory": "${workspaceFolder}/tests/native"
+	"cmake.sourceDirectory": "${workspaceFolder}/..",
+	"cmake.useCMakePresets": "always",
+	"cmake.configurePreset": "default",
+	"cmake.buildPreset": "default",
+	"cmake.testPreset": "default",
+	"cmake.defaultConfigurePreset": "default",
+	"cmake.defaultBuildPreset": "default",
+	"cmake.defaultTestPreset": "default"
 }

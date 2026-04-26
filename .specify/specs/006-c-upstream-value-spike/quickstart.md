@@ -57,6 +57,29 @@ cd /c/Github/Banana
 ls .specify/specs/006-c-upstream-value-spike
 ls .specify/specs/006-c-upstream-value-spike/contracts
 ls .specify/specs/006-c-upstream-value-spike/checklists
+ls .specify/specs/006-c-upstream-value-spike/analysis
+```
+
+## 7. Exact review commands used in execution
+
+```bash
+cd /c/Github/Banana
+
+# Confirm feature context and available docs
+.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+
+# Inspect native and upstream source surfaces (rg not required)
+find src/native/core src/native/wrapper -type f | sort
+find src/c-sharp/asp.net/Controllers src/c-sharp/asp.net/NativeInterop tests/native tests/unit tests/e2e -type f \
+	\( -name '*.cs' -o -name '*.c' -o -name '*.h' \) | grep -v '/bin/' | grep -v '/obj/' | sort
+
+# Re-check analysis completeness against expected file list
+expected='candidate-template.md scorecard-rubric.md upstream-impact-template.md inventory-criteria.md scoring-method.md confidence-policy.md validation-lane-mapping-rules.md candidate-inventory.md native-surface-map.md candidate-scorecards.md ranked-recommendations.md ranking-rationale.md top-candidate-selection.md readiness-packet-1.md readiness-packet-2.md readiness-packet-3.md readiness-packets.md readiness-open-questions.md upstream-impact-matrix.md contract-impact-notes.md validation-lane-plan.md cross-domain-sequencing.md residual-risk-summary.md success-criteria-evidence.md'
+missing=''
+for f in $expected; do
+	[[ -f .specify/specs/006-c-upstream-value-spike/analysis/$f ]] || missing="$missing $f"
+done
+[[ -z "$missing" ]] && echo "ANALYSIS_COMPLETENESS=PASS" || echo "ANALYSIS_COMPLETENESS=FAIL missing:$missing"
 ```
 
 ## Expected outcomes
