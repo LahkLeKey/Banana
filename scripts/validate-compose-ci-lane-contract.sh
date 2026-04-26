@@ -50,6 +50,8 @@ reason_file="$lane_dir/reason-code.txt"
 exit_file="$lane_dir/exit-code.txt"
 preflight_file="$lane_dir/diagnostics/preflight.txt"
 compose_ps_file="$lane_dir/diagnostics/compose-ps.txt"
+repro_file="$lane_dir/reproducibility-result.json"
+require_profile_repro="${BANANA_REQUIRE_PROFILE_REPRO:-false}"
 
 required_files=(
   "$result_file"
@@ -60,6 +62,10 @@ required_files=(
   "$preflight_file"
   "$compose_ps_file"
 )
+
+if [[ "$require_profile_repro" == "true" ]]; then
+  required_files+=("$repro_file")
+fi
 
 for file in "${required_files[@]}"; do
   if [[ ! -f "$file" ]]; then
@@ -78,7 +84,7 @@ else
   exit 1
 fi
 
-"$python_bin" - "$lane" "$result_file" "$manifest_file" "$stage_file" "$reason_file" "$exit_file" "$coverage_result_file" <<'PY'
+"$python_bin" - "$lane" "$result_file" "$manifest_file" "$stage_file" "$reason_file" "$exit_file" "$coverage_result_file" "$repro_file" "$require_profile_repro" <<'PY'
 import json
 import sys
 from datetime import datetime
@@ -91,6 +97,8 @@ stage_file = Path(sys.argv[4])
 reason_file = Path(sys.argv[5])
 exit_file = Path(sys.argv[6])
 coverage_result_file = Path(sys.argv[7])
+repro_file = Path(sys.argv[8])
+require_profile_repro = sys.argv[9].lower() == "true"
 lane_dir = result_file.parent
 artifact_root = lane_dir.parent
 spec_root = Path(".specify/specs/003-coverage-80-rehydration")
@@ -299,6 +307,36 @@ def validate_coverage_result(path: Path):
 
 
 validate_coverage_result(coverage_result_file)
+
+def validate_reproducibility(path: Path):
+  if not path.exists():
+    if require_profile_repro:
+      errors.append(f"required reproducibility result missing: {path}")
+    return
+
+  try:
+    repro = json.loads(path.read_text(encoding="utf-8"))
+  except Exception as exc:
+    errors.append(f"reproducibility result {path} is not valid JSON: {exc}")
+    return
+
+  if repro.get("status") not in {"pass", "fail"}:
+    errors.append(f"reproducibility result status '{repro.get('status')}' is invalid")
+
+  attempts = repro.get("attempts")
+  if not isinstance(attempts, list) or not attempts:
+    errors.append("reproducibility result attempts must be a non-empty array")
+    return
+
+  for idx, attempt in enumerate(attempts, start=1):
+    if not isinstance(attempt, dict):
+      errors.append(f"reproducibility attempt #{idx} must be an object")
+      continue
+    if attempt.get("status") not in {"pass", "fail"}:
+      errors.append(f"reproducibility attempt #{idx} has invalid status '{attempt.get('status')}'")
+
+
+validate_reproducibility(repro_file)
 
 def validate_spec_parity():
   data_model = spec_root / "data-model.md"

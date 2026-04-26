@@ -16,7 +16,7 @@ stage_file="$lane_dir/stage.txt"
 reason_file="$lane_dir/reason-code.txt"
 exit_file="$lane_dir/exit-code.txt"
 
-compose_args=(--profile electron up --abort-on-container-exit --exit-code-from "$service_name")
+compose_args=(--abort-on-container-exit --exit-code-from "$service_name")
 if [[ "${BANANA_ELECTRON_BUILD:-true}" == "true" ]]; then
 	compose_args+=(--build)
 fi
@@ -24,7 +24,7 @@ compose_args+=("$service_name")
 
 stage="compose-up"
 exit_code=0
-if docker compose "${compose_args[@]}"; then
+if bash scripts/compose-run-profile.sh --profile electron-smoke --action up --service "$service_name" --detach false -- "${compose_args[@]}"; then
 	exit_code=0
 else
 	exit_code=$?

@@ -42,5 +42,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at `.specify/specs/009-ml-brain-domain-spike/plan.md`
+at `.specify/specs/041-compose-orchestrated-run-profiles/plan.md`
 <!-- SPECKIT END -->

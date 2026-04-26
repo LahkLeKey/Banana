@@ -18,11 +18,7 @@ stage_file="$lane_dir/stage.txt"
 reason_file="$lane_dir/reason-code.txt"
 exit_file="$lane_dir/exit-code.txt"
 
-compose_args=(--profile "$profile" up -d)
-if [[ "${BANANA_RUNTIME_BUILD:-false}" == "true" ]]; then
-	compose_args=(--profile "$profile" up --build -d)
-fi
-
+compose_args=()
 if [[ $# -gt 0 ]]; then
 	compose_args+=("$@")
 fi
@@ -31,7 +27,15 @@ stage="compose-up"
 exit_code=0
 reason_code="success"
 
-if docker compose "${compose_args[@]}"; then
+run_profile_args=(--profile "$profile" --action up)
+if [[ "${BANANA_RUNTIME_BUILD:-false}" == "true" ]]; then
+	compose_args+=(--build)
+fi
+if [[ ${#compose_args[@]} -gt 0 ]]; then
+	run_profile_args+=(-- "${compose_args[@]}")
+fi
+
+if bash scripts/compose-run-profile.sh "${run_profile_args[@]}"; then
 	exit_code=0
 else
 	exit_code=$?
@@ -50,15 +54,18 @@ fi
 
 if (( exit_code == 0 )) && [[ -n "$health_url" ]]; then
 	stage="health-check"
-	deadline=$((SECONDS + health_timeout_sec))
-	until curl -fsS "$health_url" >/dev/null 2>&1; do
-		if (( SECONDS >= deadline )); then
-			exit_code=1
-			reason_code="health_timeout"
-			break
-		fi
-		sleep 2
-	done
+	if ! bash scripts/compose-profile-ready.sh --profile "$profile" --timeout-sec "$health_timeout_sec"; then
+		exit_code=1
+		reason_code="health_timeout"
+	fi
+fi
+
+if (( exit_code == 0 )) && [[ "${BANANA_RUNTIME_VALIDATE_REPRODUCIBILITY:-false}" == "true" ]]; then
+	stage="reproducibility-check"
+	if ! bash scripts/validate-compose-run-profiles.sh --profile "$profile" --attempts "${BANANA_PROFILE_REPRO_ATTEMPTS:-3}"; then
+		exit_code=1
+		reason_code="reproducibility_failed"
+	fi
 fi
 
 echo "$stage" > "$stage_file"

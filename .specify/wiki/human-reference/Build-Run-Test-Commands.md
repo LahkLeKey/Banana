@@ -58,6 +58,20 @@ Swagger URLs:
 
 ## Docker Compose Orchestration
 
+Canonical profile orchestration:
+
+```bash
+bash scripts/compose-run-profile.sh --profile runtime --action up
+bash scripts/compose-profile-ready.sh --profile runtime
+bash scripts/compose-run-profile.sh --profile runtime --action down
+```
+
+Profile reproducibility validation:
+
+```bash
+bash scripts/validate-compose-run-profiles.sh --profile runtime --attempts 3
+```
+
 Run full apps stack (API + React + React Native web + DB/native-build dependencies):
 
 ```bash
