@@ -58,8 +58,8 @@ WIKI_ALLOWLIST_FILE = ROOT / ".specify" / "wiki" / "human-reference-allowlist.tx
 
 AGENT_CONTRACT_FRAGMENT = "Feedback Loop And Incremental Branch Contract"
 PROMPT_WIKI_CONTRACT_HEADER = "## Wiki Updater Contract"
-SPECKIT_EXTENSION_PROMPT_PREFIX = "speckit.git."
-SPECKIT_EXTENSION_AGENT_PREFIX = "speckit.git."
+SPECKIT_EXTENSION_PROMPT_PREFIX = "specify.git."
+SPECKIT_EXTENSION_AGENT_PREFIX = "specify.git."
 SKILL_NAME_RE = re.compile(r"^[a-z0-9-]{1,64}$")
 ITERATE_BACKLOG_PROMPT = PROMPTS_DIR / "iterate-the-backlog.prompt.md"
 ITERATE_BACKLOG_PROMPT_REQUIRED_FRAGMENTS = {

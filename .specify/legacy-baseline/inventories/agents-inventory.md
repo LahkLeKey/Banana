@@ -36,11 +36,11 @@ content preserved at `../github-ai-surface/agents/`.
 
 ## Spec Kit Git agents
 
-- `speckit.git.commit`
-- `speckit.git.feature`
-- `speckit.git.initialize`
-- `speckit.git.remote`
-- `speckit.git.validate`
+- `specify.git.commit`
+- `specify.git.feature`
+- `specify.git.initialize`
+- `specify.git.remote`
+- `specify.git.validate`
 
 ## Reference
 
