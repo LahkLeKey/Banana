@@ -26,6 +26,13 @@ import {
     errorWording,
     verdictCopy,
 } from "./lib/copy";
+import {
+    ENSEMBLE_RETRY_POLICY,
+    getEnsembleQueue,
+    getVerdictHistory,
+    type EnsembleQueuePayload,
+    type RecentVerdict,
+} from "./lib/resilience-bootstrap";
 
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
     const merged = [...existing];
@@ -57,6 +64,8 @@ export function App() {
     const [lastSubmittedSample, setLastSubmittedSample] = useState<string | null>(null);
     const [isBootstrapping, setIsBootstrapping] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    // Slice 029 -- last-N verdict history (rendered as "Recent verdicts").
+    const [recentVerdicts, setRecentVerdicts] = useState<RecentVerdict[]>([]);
     const messageCounter = useRef(0);
 
     const apiBaseUrl = useMemo(() => resolveApiBaseUrl(), []);
@@ -197,6 +206,27 @@ export function App() {
         await runEnsembleVerdict(value);
     }
 
+    const recordVerdict = useCallback(
+        async (sample: string, verdict: EnsembleVerdict) => {
+            const history = getVerdictHistory();
+            const entry: RecentVerdict = {
+                id: `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                capturedAt: Date.now(),
+                input: sample,
+                verdict,
+                didEscalate: Boolean(verdict.did_escalate),
+            };
+            try {
+                await history.record(entry);
+                const list = await history.list(10);
+                setRecentVerdicts(list);
+            } catch {
+                // History is best-effort; never block the UI on it.
+            }
+        },
+        [],
+    );
+
     const runEnsembleVerdict = useCallback(
         async (sample: string) => {
             if (!apiBaseUrl || sample.length === 0) {
@@ -212,16 +242,73 @@ export function App() {
                 );
                 setEnsembleVerdict(result.verdict);
                 setEnsembleEmbedding(result.embedding);
+                void recordVerdict(sample, result.verdict);
             } catch (error: unknown) {
                 setEnsembleError(errorWording(error));
                 setEnsembleVerdict(null);
                 setEnsembleEmbedding(null);
+                // Slice 029 -- when offline, queue the sample so a later
+                // online drain can resolve it; preserve the draft.
+                const isOffline = typeof navigator !== "undefined" && navigator.onLine === false;
+                if (isOffline) {
+                    try {
+                        await getEnsembleQueue().enqueue({
+                            key: `ensemble:${sample}`,
+                            payload: { sample, submittedAt: Date.now() } satisfies EnsembleQueuePayload,
+                            retry: ENSEMBLE_RETRY_POLICY,
+                            enqueuedAt: Date.now(),
+                        });
+                    } catch {
+                        // Queue is best-effort; existing inline error already surfaces.
+                    }
+                }
             } finally {
                 setIsPredictingEnsemble(false);
             }
         },
-        [apiBaseUrl],
+        [apiBaseUrl, recordVerdict],
     );
+
+    // Slice 029 -- on mount, hydrate the recent-verdicts surface from
+    // persistent storage (e.g., a prior browser-tab session).
+    useEffect(() => {
+        let cancelled = false;
+        getVerdictHistory()
+            .list(10)
+            .then((list) => {
+                if (!cancelled) setRecentVerdicts(list);
+            })
+            .catch(() => {
+                /* best-effort */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    // Slice 029 -- drain queued submissions when the browser comes back
+    // online; render whichever verdict resolves last.
+    useEffect(() => {
+        if (typeof window === "undefined" || !apiBaseUrl) return;
+        const onOnline = () => {
+            void getEnsembleQueue()
+                .drain(async (payload) => {
+                    const result = await fetchEnsembleVerdictWithEmbedding(
+                        apiBaseUrl,
+                        payload.sample,
+                    );
+                    setEnsembleVerdict(result.verdict);
+                    setEnsembleEmbedding(result.embedding);
+                    setEnsembleError(null);
+                    void recordVerdict(payload.sample, result.verdict);
+                })
+                .catch(() => {
+                    /* drain errors leave the job queued for next online tick */
+                });
+        };
+        window.addEventListener("online", onOnline);
+        return () => window.removeEventListener("online", onOnline);
+    }, [apiBaseUrl, recordVerdict]);
 
     const loadEscalationSummary = useCallback(
         async (): Promise<EmbeddingSummary> => ({ embedding: ensembleEmbedding }),
@@ -307,6 +394,19 @@ export function App() {
                         </p>
                     )}
                 </div>
+                {recentVerdicts.length > 0 ? (
+                    <div data-testid="recent-verdicts" className="space-y-1 border-t border-slate-100 pt-2 text-xs">
+                        <p className="font-semibold text-slate-700">Recent verdicts</p>
+                        <ul className="space-y-1 text-slate-600">
+                            {recentVerdicts.map((entry) => (
+                                <li key={entry.id} data-testid="recent-verdict-item">
+                                    <span className="font-medium text-slate-900">{verdictCopy(entry.verdict as EnsembleVerdict)}</span>
+                                    <span className="ml-2 text-slate-500">{entry.input}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ) : null}
             </section>
 
             <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

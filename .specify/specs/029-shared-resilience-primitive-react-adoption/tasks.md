@@ -5,50 +5,50 @@
 
 ## Phase 1 -- Setup
 
-- [ ] T001 Repoint `.specify/feature.json` -> `029-shared-resilience-primitive-react-adoption`.
-- [ ] T002 Author `README.md` execution tracker.
+- [x] T001 Repoint `.specify/feature.json` -> `029-shared-resilience-primitive-react-adoption`.
+- [x] T002 Author `README.md` execution tracker.
 
 ## Phase 2 -- Shared package skeleton
 
-- [ ] T003 Create `src/typescript/shared/resilience/package.json`
+- [x] T003 Create `src/typescript/shared/resilience/package.json`
   (name `@banana/resilience`).
-- [ ] T004 Create `src/typescript/shared/resilience/tsconfig.json`.
-- [ ] T005 Author `src/typescript/shared/resilience/src/types.ts`
+- [x] T004 Create `src/typescript/shared/resilience/tsconfig.json`.
+- [x] T005 Author `src/typescript/shared/resilience/src/types.ts`
   per the storage contract.
 
 ## Phase 3 -- Primitive impl
 
-- [ ] T006 Author `src/typescript/shared/resilience/src/retry.ts`.
-- [ ] T007 Author `src/typescript/shared/resilience/src/queue.ts`
+- [x] T006 Author `src/typescript/shared/resilience/src/retry.ts`.
+- [x] T007 Author `src/typescript/shared/resilience/src/queue.ts`
   (RequestQueue with dedupe-by-key + retry).
-- [ ] T008 Author `src/typescript/shared/resilience/src/history.ts`
+- [x] T008 Author `src/typescript/shared/resilience/src/history.ts`
   (VerdictHistory).
-- [ ] T009 Author `src/typescript/shared/resilience/src/adapters/indexeddb.ts`.
-- [ ] T010 Author `src/typescript/shared/resilience/src/index.ts`
+- [x] T009 Author `src/typescript/shared/resilience/src/adapters/indexeddb.ts`.
+- [x] T010 Author `src/typescript/shared/resilience/src/index.ts`
   re-exports.
 
 ## Phase 4 -- Tests
 
-- [ ] T011 Add `src/typescript/shared/resilience/queue.test.ts`
+- [x] T011 Add `src/typescript/shared/resilience/queue.test.ts`
   covering happy path + retry exhaustion + dedupe.
-- [ ] T012 Add `src/typescript/shared/resilience/history.test.ts`.
+- [x] T012 Add `src/typescript/shared/resilience/history.test.ts`.
 
 ## Phase 5 -- React adoption
 
-- [ ] T013 Add `src/typescript/react/src/lib/resilience-bootstrap.ts`.
-- [ ] T014 In `src/typescript/react/src/App.tsx`, wire queue +
+- [x] T013 Add `src/typescript/react/src/lib/resilience-bootstrap.ts`.
+- [x] T014 In `src/typescript/react/src/App.tsx`, wire queue +
   history; add online-listener drain trigger; preserve draft on
   failure; surface last-N verdicts.
-- [ ] T015 Add `@banana/resilience` to `src/typescript/react/package.json`.
+- [x] T015 Add `@banana/resilience` to `src/typescript/react/package.json`.
 
 ## Phase 6 -- Close-out
 
-- [ ] T016 Run validation lane
+- [x] T016 Run validation lane
   (`bun run --cwd src/typescript/shared/resilience tsc --noEmit`,
   `bun run --cwd src/typescript/shared/resilience test`,
   `bun run --cwd src/typescript/react tsc --noEmit`,
   `bun run --cwd src/typescript/react test`).
-- [ ] T017 Update README to COMPLETE; mark all tasks `[x]`.
+- [x] T017 Update README to COMPLETE; mark all tasks `[x]`.
 
 ## Out of scope
 

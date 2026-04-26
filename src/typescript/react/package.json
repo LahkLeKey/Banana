@@ -11,6 +11,7 @@
         "postinstall": "node scripts/dedupe-react.mjs"
     },
     "dependencies": {
+        "@banana/resilience": "file:../shared/resilience",
         "@banana/ui": "file:../shared/ui",
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
