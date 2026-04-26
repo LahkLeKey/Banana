@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "updated_at_utc": "2026-04-26T22:42:47Z",
+  "images": {
+    "20260426T224247Z-5cc14b80d721": {
+      "created_at_utc": "2026-04-26T22:42:47Z",
+      "path": "images/20260426T224247Z-5cc14b80d721",
+      "holdout_f1": 1.0,
+      "signal_score": 1.0
+    }
+  },
+  "channels": {
+    "candidate": "20260426T224247Z-5cc14b80d721",
+    "stable": "20260426T224247Z-5cc14b80d721"
+  }
+}
