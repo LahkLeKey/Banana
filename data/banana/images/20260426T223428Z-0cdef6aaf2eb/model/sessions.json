@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "1970-01-01T00:00:00Z",
+  "run_fingerprint": "2bf24423f5d411e78ff4df73c925f4f06b12151054a3c98f3651505ae1b7480e",
+  "sessions": [
+    {
+      "session_index": 1,
+      "seed": 20260426,
+      "training_size": 14,
+      "holdout_size": 4,
+      "vocabulary_size": 24,
+      "signal_score": 1.0,
+      "metrics": {
+        "holdout_precision": 1.0,
+        "holdout_recall": 1.0,
+        "holdout_f1": 1.0,
+        "holdout_accuracy": 1.0,
+        "tp": 2.0,
+        "fp": 0.0,
+        "fn": 0.0,
+        "tn": 2.0
+      },
+      "vocabulary": [
+        {
+          "token": "banana",
+          "banana_count": 10,
+          "not_banana_count": 0,
+          "support": 10,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "for",
+          "banana_count": 3,
+          "not_banana_count": 0,
+          "support": 3,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "baking",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "bicycle",
+          "banana_count": 0,
+          "not_banana_count": 1,
+          "support": 1,
+          "weight": -1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "bottle",
+          "banana_count": 0,
+          "not_banana_count": 1,
+          "support": 1,
+          "weight": -1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "bread",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "ceramic",
+          "banana_count": 0,
+          "not_banana_count": 1,
+          "support": 1,
+          "weight": -1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "chips",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "city",
+          "banana_count": 0,
+          "not_banana_count": 1,
+          "support": 1,
+          "weight": -1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "coastal",
+          "banana_count": 0,
+          "not_banana_count": 1,
+          "support": 1,
+          "weight": -1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "coffee",
+          "banana_count": 0,
+          "not_banana_count": 1,
+          "support": 1,
+          "weight": -1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "compost",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "counter",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "crate",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "dawn",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "delivered",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "desk",
+          "banana_count": 0,
+          "not_banana_count": 1,
+          "support": 1,
+          "weight": -1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "farm",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "from",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "garden",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "green",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "harvest",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "kitchen",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        },
+        {
+          "token": "lightly",
+          "banana_count": 1,
+          "not_banana_count": 0,
+          "support": 1,
+          "weight": 1.0,
+          "signal": 1.0
+        }
+      ]
+    }
+  ]
+}
