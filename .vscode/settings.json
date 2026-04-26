@@ -6,6 +6,7 @@
     "cmake.defaultConfigurePreset": "default",
     "cmake.defaultBuildPreset": "default",
     "cmake.defaultTestPreset": "default",
+    "cmake.configureOnOpen": false,
     "cmake.configureSettings": {
         "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe"
     },

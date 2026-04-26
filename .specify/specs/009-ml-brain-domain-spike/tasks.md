@@ -21,9 +21,9 @@ description: "Task list for ML Brain Domain SPIKE"
 
 **Purpose**: Create SPIKE workspace scaffolding and artifact index.
 
-- [ ] T001 Create SPIKE analysis index in `.specify/specs/009-ml-brain-domain-spike/analysis/README.md`
-- [ ] T002 [P] Capture in-scope native/wrapper ML files in `.specify/specs/009-ml-brain-domain-spike/analysis/in-scope-files.md`
-- [ ] T003 [P] Capture validation lane command references in `.specify/specs/009-ml-brain-domain-spike/analysis/validation-commands.md`
+- [x] T001 Create SPIKE analysis index in `.specify/specs/009-ml-brain-domain-spike/analysis/README.md`
+- [x] T002 [P] Capture in-scope native/wrapper ML files in `.specify/specs/009-ml-brain-domain-spike/analysis/in-scope-files.md`
+- [x] T003 [P] Capture validation lane command references in `.specify/specs/009-ml-brain-domain-spike/analysis/validation-commands.md`
 
 ---
 
@@ -33,9 +33,9 @@ description: "Task list for ML Brain Domain SPIKE"
 
 **⚠️ CRITICAL**: User story tasks start only after this phase is complete.
 
-- [ ] T004 Define canonical terminology rules in `.specify/specs/009-ml-brain-domain-spike/analysis/terminology-rules.md`
-- [ ] T005 Define shared comparison dimensions in `.specify/specs/009-ml-brain-domain-spike/analysis/comparison-dimensions.md`
-- [ ] T006 Define confidence and uncertainty policy in `.specify/specs/009-ml-brain-domain-spike/analysis/confidence-policy.md`
+- [x] T004 Define canonical terminology rules in `.specify/specs/009-ml-brain-domain-spike/analysis/terminology-rules.md`
+- [x] T005 Define shared comparison dimensions in `.specify/specs/009-ml-brain-domain-spike/analysis/comparison-dimensions.md`
+- [x] T006 Define confidence and uncertainty policy in `.specify/specs/009-ml-brain-domain-spike/analysis/confidence-policy.md`
 
 **Checkpoint**: Shared SPIKE method is fixed and reusable.
 
@@ -49,14 +49,14 @@ description: "Task list for ML Brain Domain SPIKE"
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Add domain-definition review checklist in `.specify/specs/009-ml-brain-domain-spike/analysis/domain-definition-checklist.md`
+- [x] T007 [P] [US1] Add domain-definition review checklist in `.specify/specs/009-ml-brain-domain-spike/analysis/domain-definition-checklist.md`
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Draft Left/Right/Full domain definitions in `.specify/specs/009-ml-brain-domain-spike/analysis/brain-domain-definitions.md`
-- [ ] T009 [US1] Create primary model-family mappings in `.specify/specs/009-ml-brain-domain-spike/analysis/model-family-mappings.md`
-- [ ] T010 [US1] Document domain boundaries and out-of-domain rules in `.specify/specs/009-ml-brain-domain-spike/analysis/domain-boundaries.md`
-- [ ] T011 [US1] Record known domain risks in `.specify/specs/009-ml-brain-domain-spike/analysis/domain-risk-register.md`
+- [x] T008 [US1] Draft Left/Right/Full domain definitions in `.specify/specs/009-ml-brain-domain-spike/analysis/brain-domain-definitions.md`
+- [x] T009 [US1] Create primary model-family mappings in `.specify/specs/009-ml-brain-domain-spike/analysis/model-family-mappings.md`
+- [x] T010 [US1] Document domain boundaries and out-of-domain rules in `.specify/specs/009-ml-brain-domain-spike/analysis/domain-boundaries.md`
+- [x] T011 [US1] Record known domain risks in `.specify/specs/009-ml-brain-domain-spike/analysis/domain-risk-register.md`
 
 **Checkpoint**: Canonical domain vocabulary and primary mapping are complete.
 
@@ -70,14 +70,14 @@ description: "Task list for ML Brain Domain SPIKE"
 
 ### Tests for User Story 2
 
-- [ ] T012 [P] [US2] Add matrix completeness checklist in `.specify/specs/009-ml-brain-domain-spike/analysis/matrix-completeness-checklist.md`
+- [x] T012 [P] [US2] Add matrix completeness checklist in `.specify/specs/009-ml-brain-domain-spike/analysis/matrix-completeness-checklist.md`
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Build normalized comparison matrix in `.specify/specs/009-ml-brain-domain-spike/analysis/model-family-tradeoff-matrix.md`
-- [ ] T014 [US2] Score and rank model-family/domain fit in `.specify/specs/009-ml-brain-domain-spike/analysis/domain-fit-scorecards.md`
-- [ ] T015 [US2] Document ranking rationale and tie-break policy in `.specify/specs/009-ml-brain-domain-spike/analysis/ranking-rationale.md`
-- [ ] T016 [US2] Capture uncertainty impacts on ranking in `.specify/specs/009-ml-brain-domain-spike/analysis/uncertainty-impact-notes.md`
+- [x] T013 [US2] Build normalized comparison matrix in `.specify/specs/009-ml-brain-domain-spike/analysis/model-family-tradeoff-matrix.md`
+- [x] T014 [US2] Score and rank model-family/domain fit in `.specify/specs/009-ml-brain-domain-spike/analysis/domain-fit-scorecards.md`
+- [x] T015 [US2] Document ranking rationale and tie-break policy in `.specify/specs/009-ml-brain-domain-spike/analysis/ranking-rationale.md`
+- [x] T016 [US2] Capture uncertainty impacts on ranking in `.specify/specs/009-ml-brain-domain-spike/analysis/uncertainty-impact-notes.md`
 
 **Checkpoint**: Comparison and ranking outputs are review-ready.
 
@@ -91,15 +91,15 @@ description: "Task list for ML Brain Domain SPIKE"
 
 ### Tests for User Story 3
 
-- [ ] T017 [P] [US3] Add readiness-packet quality checklist in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-checklist.md`
+- [x] T017 [P] [US3] Add readiness-packet quality checklist in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-checklist.md`
 
 ### Implementation for User Story 3
 
-- [ ] T018 [US3] Draft Left Brain readiness packet in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-left-brain.md`
-- [ ] T019 [US3] Draft Right Brain readiness packet in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-right-brain.md`
-- [ ] T020 [US3] Draft Full Brain readiness packet in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-full-brain.md`
-- [ ] T021 [US3] Consolidate packet bundle in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packets.md`
-- [ ] T022 [US3] Define lane expectations and contract impacts in `.specify/specs/009-ml-brain-domain-spike/analysis/validation-lane-plan.md`
+- [x] T018 [US3] Draft Left Brain readiness packet in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-left-brain.md`
+- [x] T019 [US3] Draft Right Brain readiness packet in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-right-brain.md`
+- [x] T020 [US3] Draft Full Brain readiness packet in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-full-brain.md`
+- [x] T021 [US3] Consolidate packet bundle in `.specify/specs/009-ml-brain-domain-spike/analysis/readiness-packets.md`
+- [x] T022 [US3] Define lane expectations and contract impacts in `.specify/specs/009-ml-brain-domain-spike/analysis/validation-lane-plan.md`
 
 **Checkpoint**: Follow-up implementation candidates are selection-ready without rediscovery meetings.
 
@@ -109,11 +109,11 @@ description: "Task list for ML Brain Domain SPIKE"
 
 **Purpose**: Final consistency, success-criteria evidence, and closure tracking.
 
-- [ ] T023 Reconcile terminology consistency across `.specify/specs/009-ml-brain-domain-spike/`
-- [ ] T024 [P] Cross-check success criteria and record evidence in `.specify/specs/009-ml-brain-domain-spike/analysis/success-criteria-evidence.md`
-- [ ] T025 [P] Update `.specify/specs/009-ml-brain-domain-spike/quickstart.md` with exact execution review commands used
-- [ ] T026 Verify analysis artifact completeness in `.specify/specs/009-ml-brain-domain-spike/analysis/`
-- [ ] T027 Mark completion evidence and task statuses in `.specify/specs/009-ml-brain-domain-spike/tasks.md`
+- [x] T023 Reconcile terminology consistency across `.specify/specs/009-ml-brain-domain-spike/`
+- [x] T024 [P] Cross-check success criteria and record evidence in `.specify/specs/009-ml-brain-domain-spike/analysis/success-criteria-evidence.md`
+- [x] T025 [P] Update `.specify/specs/009-ml-brain-domain-spike/quickstart.md` with exact execution review commands used
+- [x] T026 Verify analysis artifact completeness in `.specify/specs/009-ml-brain-domain-spike/analysis/`
+- [x] T027 Mark completion evidence and task statuses in `.specify/specs/009-ml-brain-domain-spike/tasks.md`
 
 ---
 

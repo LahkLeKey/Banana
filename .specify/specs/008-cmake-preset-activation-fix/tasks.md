@@ -21,9 +21,9 @@ description: "Task list for CMake Preset Activation Fix"
 
 **Purpose**: Align feature workspace and initial validation references.
 
-- [ ] T001 Create 008 execution tracker note in `.specify/specs/008-cmake-preset-activation-fix/README.md`
-- [ ] T002 [P] Capture in-scope config surfaces in `.specify/specs/008-cmake-preset-activation-fix/analysis/in-scope-files.md`
-- [ ] T003 [P] Capture validation command references in `.specify/specs/008-cmake-preset-activation-fix/analysis/validation-commands.md`
+- [x] T001 Create 008 execution tracker note in `.specify/specs/008-cmake-preset-activation-fix/README.md`
+- [x] T002 [P] Capture in-scope config surfaces in `.specify/specs/008-cmake-preset-activation-fix/analysis/in-scope-files.md`
+- [x] T003 [P] Capture validation command references in `.specify/specs/008-cmake-preset-activation-fix/analysis/validation-commands.md`
 
 ---
 
@@ -33,9 +33,9 @@ description: "Task list for CMake Preset Activation Fix"
 
 **⚠️ CRITICAL**: User story tasks start only after this phase is complete.
 
-- [ ] T004 Define preset activation matrix in `.specify/specs/008-cmake-preset-activation-fix/analysis/preset-activation-matrix.md`
-- [ ] T005 Define workspace binding matrix in `.specify/specs/008-cmake-preset-activation-fix/analysis/workspace-binding-matrix.md`
-- [ ] T006 Define diagnostic classification expectations in `.specify/specs/008-cmake-preset-activation-fix/analysis/diagnostic-classification.md`
+- [x] T004 Define preset activation matrix in `.specify/specs/008-cmake-preset-activation-fix/analysis/preset-activation-matrix.md`
+- [x] T005 Define workspace binding matrix in `.specify/specs/008-cmake-preset-activation-fix/analysis/workspace-binding-matrix.md`
+- [x] T006 Define diagnostic classification expectations in `.specify/specs/008-cmake-preset-activation-fix/analysis/diagnostic-classification.md`
 
 **Checkpoint**: Activation/binding/diagnostic contract is fixed and reviewable.
 
@@ -49,15 +49,15 @@ description: "Task list for CMake Preset Activation Fix"
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Add CMake Tools configure acceptance checklist in `.specify/specs/008-cmake-preset-activation-fix/analysis/cmake-tools-configure-checklist.md`
+- [x] T007 [P] [US1] Add CMake Tools configure acceptance checklist in `.specify/specs/008-cmake-preset-activation-fix/analysis/cmake-tools-configure-checklist.md`
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Align root preset activation settings in `.vscode/settings.json`
-- [ ] T009 [US1] Align tests-folder workspace binding settings in `tests/.vscode/settings.json`
-- [ ] T010 [US1] Align workspace-level defaults in `Banana.code-workspace`
-- [ ] T011 [US1] Validate preset catalog contract in `CMakePresets.json`
-- [ ] T012 [US1] Run CMake Tools build configure path and capture evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/us1-configure-evidence.md`
+- [x] T008 [US1] Align root preset activation settings in `.vscode/settings.json`
+- [x] T009 [US1] Align tests-folder workspace binding settings in `tests/.vscode/settings.json`
+- [x] T010 [US1] Align workspace-level defaults in `Banana.code-workspace`
+- [x] T011 [US1] Validate preset catalog contract in `CMakePresets.json`
+- [x] T012 [US1] Run CMake Tools build configure path and capture evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/us1-configure-evidence.md`
 
 **Checkpoint**: Configure path succeeds without manual preset rescue in supported contexts.
 
@@ -71,13 +71,13 @@ description: "Task list for CMake Preset Activation Fix"
 
 ### Tests for User Story 2
 
-- [ ] T013 [P] [US2] Define discovery expectation list in `.specify/specs/008-cmake-preset-activation-fix/analysis/discovery-expected-surfaces.md`
+- [x] T013 [P] [US2] Define discovery expectation list in `.specify/specs/008-cmake-preset-activation-fix/analysis/discovery-expected-surfaces.md`
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Run `ListBuildTargets_CMakeTools` and capture evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/us2-target-discovery-evidence.md`
-- [ ] T015 [US2] Run `ListTests_CMakeTools` and capture evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/us2-test-discovery-evidence.md`
-- [ ] T016 [US2] Run native lane via CMake Tools and capture pass/fail evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/us2-native-lane-evidence.md`
+- [x] T014 [US2] Run `ListBuildTargets_CMakeTools` and capture evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/us2-target-discovery-evidence.md`
+- [x] T015 [US2] Run `ListTests_CMakeTools` and capture evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/us2-test-discovery-evidence.md`
+- [x] T016 [US2] Run native lane via CMake Tools and capture pass/fail evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/us2-native-lane-evidence.md`
 
 **Checkpoint**: Discovery and native lane execution are verifiably available in tool-integrated flow.
 
@@ -91,13 +91,13 @@ description: "Task list for CMake Preset Activation Fix"
 
 ### Tests for User Story 3
 
-- [ ] T017 [P] [US3] Define negative-test scenarios in `.specify/specs/008-cmake-preset-activation-fix/analysis/diagnostic-negative-scenarios.md`
+- [x] T017 [P] [US3] Define negative-test scenarios in `.specify/specs/008-cmake-preset-activation-fix/analysis/diagnostic-negative-scenarios.md`
 
 ### Implementation for User Story 3
 
-- [ ] T018 [US3] Execute missing-preset simulation and capture output in `.specify/specs/008-cmake-preset-activation-fix/analysis/us3-missing-preset-evidence.md`
-- [ ] T019 [US3] Execute context-mismatch simulation and capture output in `.specify/specs/008-cmake-preset-activation-fix/analysis/us3-context-mismatch-evidence.md`
-- [ ] T020 [US3] Consolidate diagnostic evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/diagnostic-summary.md`
+- [x] T018 [US3] Execute missing-preset simulation and capture output in `.specify/specs/008-cmake-preset-activation-fix/analysis/us3-missing-preset-evidence.md`
+- [x] T019 [US3] Execute context-mismatch simulation and capture output in `.specify/specs/008-cmake-preset-activation-fix/analysis/us3-context-mismatch-evidence.md`
+- [x] T020 [US3] Consolidate diagnostic evidence in `.specify/specs/008-cmake-preset-activation-fix/analysis/diagnostic-summary.md`
 
 **Checkpoint**: Diagnostics are deterministic and actionable for defined failure classes.
 
@@ -107,11 +107,11 @@ description: "Task list for CMake Preset Activation Fix"
 
 **Purpose**: Final consistency, quickstart alignment, and closure evidence.
 
-- [ ] T021 Reconcile terminology across `.specify/specs/008-cmake-preset-activation-fix/`
-- [ ] T022 [P] Update `.specify/specs/008-cmake-preset-activation-fix/quickstart.md` with exact commands used during execution
-- [ ] T023 [P] Update `.specify/specs/008-cmake-preset-activation-fix/contracts/cmake-preset-activation-contract.md` if execution changed closure details
-- [ ] T024 Verify required analysis files exist in `.specify/specs/008-cmake-preset-activation-fix/analysis/`
-- [ ] T025 Mark completion evidence and task statuses in `.specify/specs/008-cmake-preset-activation-fix/tasks.md`
+- [x] T021 Reconcile terminology across `.specify/specs/008-cmake-preset-activation-fix/`
+- [x] T022 [P] Update `.specify/specs/008-cmake-preset-activation-fix/quickstart.md` with exact commands used during execution
+- [x] T023 [P] Update `.specify/specs/008-cmake-preset-activation-fix/contracts/cmake-preset-activation-contract.md` if execution changed closure details
+- [x] T024 Verify required analysis files exist in `.specify/specs/008-cmake-preset-activation-fix/analysis/`
+- [x] T025 Mark completion evidence and task statuses in `.specify/specs/008-cmake-preset-activation-fix/tasks.md`
 
 ---
 

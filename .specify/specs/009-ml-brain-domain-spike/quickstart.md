@@ -29,23 +29,62 @@ find src/native/core/domain -type f | sort
 find src/native/wrapper/domain/ml -type f | sort
 ```
 
-## 3. Produce SPIKE artifacts
+## 3. Review SPIKE artifacts (generated 2026-04-26)
 
-Required outputs:
+All artifacts are in `.specify/specs/009-ml-brain-domain-spike/analysis/`.
 
-- canonical domain definitions (`left`, `right`, `full`)
-- primary family mappings (`regression`, `binary`, `transformer`)
-- normalized comparison matrix
-- readiness packets for each domain
+### Phase 1 — Setup
+```bash
+ls .specify/specs/009-ml-brain-domain-spike/analysis/
+```
+
+### Phase 2 — Foundational method
+```bash
+cat .specify/specs/009-ml-brain-domain-spike/analysis/terminology-rules.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/comparison-dimensions.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/confidence-policy.md
+```
+
+### Phase 3 — Domain definitions (US1)
+```bash
+cat .specify/specs/009-ml-brain-domain-spike/analysis/brain-domain-definitions.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/model-family-mappings.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/domain-boundaries.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/domain-risk-register.md
+```
+
+### Phase 4 — Tradeoff matrix (US2)
+```bash
+cat .specify/specs/009-ml-brain-domain-spike/analysis/model-family-tradeoff-matrix.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/domain-fit-scorecards.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/ranking-rationale.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/uncertainty-impact-notes.md
+```
+
+### Phase 5 — Readiness packets (US3)
+```bash
+cat .specify/specs/009-ml-brain-domain-spike/analysis/readiness-packets.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-left-brain.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-right-brain.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/readiness-packet-full-brain.md
+cat .specify/specs/009-ml-brain-domain-spike/analysis/validation-lane-plan.md
+```
 
 ## 4. Validate readiness criteria
 
 Review artifacts and confirm:
 
-- all model families mapped once as primary
-- each domain has bounded follow-up recommendations
-- required validation lanes for follow-up slices are explicit
+- [x] All model families mapped once as primary — see [model-family-mappings.md](analysis/model-family-mappings.md)
+- [x] Each domain has bounded follow-up recommendations — see [readiness-packets.md](analysis/readiness-packets.md)
+- [x] Required validation lanes for follow-up slices are explicit — see [validation-lane-plan.md](analysis/validation-lane-plan.md)
+- [x] Success criteria cross-checked — see [success-criteria-evidence.md](analysis/success-criteria-evidence.md)
 
-## 5. Prepare handoff to task generation
+## 5. Prepare handoff to implementation
 
-After review is complete, proceed to `specify tasks` for implementation-oriented slices selected from domain readiness packets.
+Recommended execution order for follow-up slices:
+
+1. **Left Brain** (Regression) — lowest risk; first deliverable is feature contract
+2. **Right Brain** (Binary) — core product value; include calibration from start
+3. **Full Brain** (Transformer) — highest complexity; requires new native test pattern
+
+After domain selection, proceed to `specify specify` (new feature spec per slice) or `specify tasks` if the selected packet is bounded enough for direct task generation.

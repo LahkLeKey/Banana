@@ -6,5 +6,6 @@
 	"cmake.testPreset": "default",
 	"cmake.defaultConfigurePreset": "default",
 	"cmake.defaultBuildPreset": "default",
-	"cmake.defaultTestPreset": "default"
+	"cmake.defaultTestPreset": "default",
+	"cmake.configureOnOpen": false
 }
