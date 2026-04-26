@@ -53,4 +53,28 @@ function notifyVerdict(payload) {
   return notification;
 }
 
-module.exports = {notifyVerdict, verdictBody, verdictTitle, VERDICT_NOTIFICATION_COPY};
+// Slice 030 -- drain-success notification copy. Surfaces when a
+// queued-while-offline verdict resolves after the channel comes back
+// online. Body re-uses the canonical verdict body so the same
+// baseline strings appear everywhere.
+const DRAIN_NOTIFICATION_TITLE = 'Banana verdict ready';
+
+function drainSuccessBody(verdict) {
+  return verdictBody(verdict);
+}
+
+function notifyDrainSuccess(payload) {
+  const {Notification} = require('electron');
+  const verdict = payload && payload.verdict ? payload.verdict : payload;
+  if (!Notification.isSupported()) {
+    return null;
+  }
+  const notification = new Notification({
+    title: DRAIN_NOTIFICATION_TITLE,
+    body: drainSuccessBody(verdict),
+  });
+  notification.show();
+  return notification;
+}
+
+module.exports = {notifyVerdict, notifyDrainSuccess, verdictBody, verdictTitle, drainSuccessBody, VERDICT_NOTIFICATION_COPY};

@@ -80,6 +80,95 @@ check('tray.js exports createTray + TRAY_MENU_LABELS with baseline copy', () => 
   assert.equal(TRAY_MENU_LABELS.showLastVerdict, 'Show last verdict');
 });
 
+// Slice 030 -- bridge gains `history.publish` + `notifyDrainSuccess`.
+check('preload.js bridge exposes slice 030 history + drain channels', () => {
+  const {IPC_CHANNELS, buildBridge} = require('./preload');
+  assert.equal(IPC_CHANNELS.historyUpdate, 'banana:history-update');
+  assert.equal(IPC_CHANNELS.drainSuccess, 'banana:drain-success');
+  const sent = [];
+  const ipcRendererStub = {
+    invoke: () => Promise.resolve('ok'),
+    on: () => {},
+    removeListener: () => {},
+    send: (channel, payload) => { sent.push([channel, payload]); },
+  };
+  const bridge = buildBridge(ipcRendererStub, IPC_CHANNELS);
+  assert.equal(typeof bridge.history.publish, 'function');
+  assert.equal(typeof bridge.notifyDrainSuccess, 'function');
+  bridge.history.publish([{id: 'v1'}]);
+  assert.deepEqual(sent[0], ['banana:history-update', [{id: 'v1'}]]);
+  bridge.notifyDrainSuccess({verdict: {label: 'banana'}});
+  assert.deepEqual(sent[1], ['banana:drain-success', {verdict: {label: 'banana'}}]);
+  // Non-array payloads to publish coerce to []
+  bridge.history.publish(null);
+  assert.deepEqual(sent[2], ['banana:history-update', []]);
+});
+
+// Slice 030 -- ipc.js exposes setupHistoryIpc + setupDrainIpc helpers.
+check('ipc.js exposes slice 030 setupHistoryIpc + setupDrainIpc helpers', () => {
+  const {IPC_CHANNELS, setupHistoryIpc, setupDrainIpc} = require('./ipc');
+  assert.equal(typeof setupHistoryIpc, 'function');
+  assert.equal(typeof setupDrainIpc, 'function');
+  const handlers = {};
+  const ipcMainStub = {
+    on: (channel, handler) => { handlers[channel] = handler; },
+    handle: () => {},
+  };
+  let history = null;
+  let drained = null;
+  setupHistoryIpc({ipcMain: ipcMainStub, onHistoryUpdate: (list) => { history = list; }});
+  setupDrainIpc({ipcMain: ipcMainStub, onDrainSuccess: (payload) => { drained = payload; }});
+  handlers[IPC_CHANNELS.historyUpdate](null, [{id: 'a'}]);
+  assert.deepEqual(history, [{id: 'a'}]);
+  // Non-array payload is dropped.
+  handlers[IPC_CHANNELS.historyUpdate](null, 'not-an-array');
+  assert.deepEqual(history, [{id: 'a'}]);
+  handlers[IPC_CHANNELS.drainSuccess](null, {verdict: {label: 'banana'}});
+  assert.deepEqual(drained, {verdict: {label: 'banana'}});
+});
+
+// Slice 030 -- notifications.js gains drainSuccessBody + notifyDrainSuccess.
+check('notifications.js exposes drain-success path with baseline copy', () => {
+  const {drainSuccessBody, notifyDrainSuccess} = require('./notifications');
+  assert.equal(typeof notifyDrainSuccess, 'function');
+  assert.equal(drainSuccessBody({label: 'banana', did_escalate: false}), 'Banana.');
+  assert.equal(drainSuccessBody({label: 'banana', did_escalate: true}), 'Banana \u2014 needs a closer look.');
+});
+
+// Slice 030 -- storage.js window-state shim round-trips via injected fs.
+check('storage.js round-trips window state via injected fs primitives', async () => {
+  const {createWindowStateStore, sanitize, DEFAULT_STATE} = require('./storage');
+  assert.equal(DEFAULT_STATE.width, 1024);
+  assert.equal(DEFAULT_STATE.height, 720);
+  // sanitize discards bogus values + clamps undersized ones.
+  const cleaned = sanitize({x: 10, y: 20, width: 100, height: 50});
+  assert.equal(cleaned.x, 10);
+  assert.equal(cleaned.width, 1024);
+  assert.equal(cleaned.height, 720);
+  let written = null;
+  const fakeStore = {data: null};
+  const store = createWindowStateStore({
+    filePath: '/tmp/banana-window-state.json',
+    readFile: async () => {
+      if (fakeStore.data === null) throw new Error('no file');
+      return fakeStore.data;
+    },
+    writeFile: async (_p, contents) => { written = contents; fakeStore.data = contents; },
+    mkdir: async () => {},
+  });
+  // First load -> defaults.
+  let state = await store.load();
+  assert.equal(state.width, 1024);
+  // Save -> persists.
+  const ok = await store.save({x: 100, y: 200, width: 1280, height: 800});
+  assert.equal(ok, true);
+  assert.ok(written.includes('1280'));
+  // Reload -> persisted values.
+  state = await store.load();
+  assert.equal(state.x, 100);
+  assert.equal(state.width, 1280);
+});
+
 check('defaultClassify hits /ml/ensemble/embedding with the slice 017 envelope', async () => {
   const {defaultClassify} = require('./ipc');
   const calls = [];

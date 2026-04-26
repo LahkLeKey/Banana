@@ -34,6 +34,37 @@ import {
     type RecentVerdict,
 } from "./lib/resilience-bootstrap";
 
+// Slice 030 -- narrow Electron bridge surface for history publish +
+// drain-success signal. No-op outside Electron (web tab) since the
+// bridge is undefined.
+type ElectronBananaBridge = {
+    history?: { publish?: (list: unknown[]) => void };
+    notifyDrainSuccess?: (payload: unknown) => void;
+};
+
+function getElectronBridge(): ElectronBananaBridge | undefined {
+    if (typeof window === "undefined") return undefined;
+    return (window as unknown as { banana?: ElectronBananaBridge }).banana;
+}
+
+function publishHistoryToBridge(list: RecentVerdict[]): void {
+    const bridge = getElectronBridge();
+    try {
+        bridge?.history?.publish?.(list);
+    } catch {
+        /* bridge is best-effort */
+    }
+}
+
+function notifyDrainSuccessToBridge(verdict: EnsembleVerdict): void {
+    const bridge = getElectronBridge();
+    try {
+        bridge?.notifyDrainSuccess?.({ verdict });
+    } catch {
+        /* bridge is best-effort */
+    }
+}
+
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
     const merged = [...existing];
     const ids = new Set(existing.map((message) => message.id));
@@ -220,6 +251,10 @@ export function App() {
                 await history.record(entry);
                 const list = await history.list(10);
                 setRecentVerdicts(list);
+                // Slice 030 -- publish the snapshot to the Electron main
+                // process (no-op outside Electron) so the tray menu can
+                // surface the latest verdict.
+                publishHistoryToBridge(list);
             } catch {
                 // History is best-effort; never block the UI on it.
             }
@@ -276,7 +311,10 @@ export function App() {
         getVerdictHistory()
             .list(10)
             .then((list) => {
-                if (!cancelled) setRecentVerdicts(list);
+                if (!cancelled) {
+                    setRecentVerdicts(list);
+                    publishHistoryToBridge(list);
+                }
             })
             .catch(() => {
                 /* best-effort */
@@ -301,6 +339,9 @@ export function App() {
                     setEnsembleEmbedding(result.embedding);
                     setEnsembleError(null);
                     void recordVerdict(payload.sample, result.verdict);
+                    // Slice 030 -- signal Electron main so it raises a
+                    // drain-success native notification.
+                    notifyDrainSuccessToBridge(result.verdict);
                 })
                 .catch(() => {
                     /* drain errors leave the job queued for next online tick */

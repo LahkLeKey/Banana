@@ -15,6 +15,13 @@
 const IPC_CHANNELS = Object.freeze({
   classifyClipboard: 'banana:classify-clipboard',
   verdict: 'banana:verdict',
+  // Slice 030 -- renderer publishes its VerdictHistory snapshot to the
+  // main process so the tray menu can read the latest verdict without
+  // owning verdict storage in the main process.
+  historyUpdate: 'banana:history-update',
+  // Slice 030 -- renderer signals when a queued-while-offline request
+  // drains successfully so main can raise a native notification.
+  drainSuccess: 'banana:drain-success',
 });
 
 /**
@@ -71,4 +78,41 @@ async function defaultClassify(text, baseUrl) {
   return response.json();
 }
 
-module.exports = {IPC_CHANNELS, setupIpc, defaultClassify};
+/**
+ * Slice 030 -- main-process listener for renderer history snapshots.
+ * The renderer is the source of truth (IndexedDB); main keeps the
+ * latest list in memory so the tray "Show last verdict" entry can
+ * read it without round-tripping back to the renderer.
+ *
+ * @param {object} deps
+ * @param {Electron.IpcMain} deps.ipcMain
+ * @param {(list: object[]) => void} deps.onHistoryUpdate
+ */
+function setupHistoryIpc(deps) {
+  const {ipcMain, onHistoryUpdate} = deps;
+  ipcMain.on(IPC_CHANNELS.historyUpdate, (_event, payload) => {
+    if (Array.isArray(payload)) {
+      try { onHistoryUpdate(payload); } catch { /* swallow */ }
+    }
+  });
+}
+
+/**
+ * Slice 030 -- main-process listener for drain-success signals from
+ * the renderer. Each payload is the verdict that just finished
+ * draining; main raises a native notification.
+ *
+ * @param {object} deps
+ * @param {Electron.IpcMain} deps.ipcMain
+ * @param {(verdict: object) => void} deps.onDrainSuccess
+ */
+function setupDrainIpc(deps) {
+  const {ipcMain, onDrainSuccess} = deps;
+  ipcMain.on(IPC_CHANNELS.drainSuccess, (_event, payload) => {
+    if (payload && typeof payload === 'object') {
+      try { onDrainSuccess(payload); } catch { /* swallow */ }
+    }
+  });
+}
+
+module.exports = {IPC_CHANNELS, setupIpc, defaultClassify, setupHistoryIpc, setupDrainIpc};

@@ -8,6 +8,9 @@
 const IPC_CHANNELS = Object.freeze({
   classifyClipboard: 'banana:classify-clipboard',
   verdict: 'banana:verdict',
+  // Slice 030
+  historyUpdate: 'banana:history-update',
+  drainSuccess: 'banana:drain-success',
 });
 
 function buildBridge(ipcRenderer, channels) {
@@ -22,6 +25,14 @@ function buildBridge(ipcRenderer, channels) {
       ipcRenderer.on(channels.verdict, wrapped);
       return () => ipcRenderer.removeListener(channels.verdict, wrapped);
     },
+    // Slice 030 -- renderer publishes its current VerdictHistory snapshot
+    // to main so the tray "Show last verdict" entry can read it.
+    history: {
+      publish: (list) => ipcRenderer.send(channels.historyUpdate, Array.isArray(list) ? list : []),
+    },
+    // Slice 030 -- renderer signals when a queued submission drained
+    // successfully so main raises a native notification.
+    notifyDrainSuccess: (payload) => ipcRenderer.send(channels.drainSuccess, payload),
   };
 }
 
