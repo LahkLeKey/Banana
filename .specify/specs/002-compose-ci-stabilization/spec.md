@@ -17,6 +17,8 @@
 - Track and eliminate Node runtime deprecation exposure in merge-gated workflows.
 - Keep AI contract guard wiki contracts valid by maintaining `.wiki/` page allowlist parity and canonical mirror parity for newly added runbooks.
 - Keep terminology guard contracts valid by preventing reintroduction of blocked legacy terms in touched workflow/docs/scripts surfaces.
+- Stabilize `copilot-review-triage` workflow outcomes so policy-blocking unresolved findings remain actionable and distinguishable from runtime/infrastructure failures.
+- Remove Node runtime deprecation drift in `copilot-review-triage` so triage outcomes are not masked by unrelated runtime warnings.
 
 ## Out of Scope *(mandatory)*
 
@@ -87,6 +89,22 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 1. **Given** merge-triggered workflows, **When** jobs execute on current GitHub runners, **Then** no Node runtime deprecation warnings appear in annotations.
 2. **Given** a dependency cannot be upgraded immediately, **When** the workflow runs, **Then** the warning is documented as a bounded, time-stamped exception with a planned remediation path.
 
+---
+
+### User Story 5 - Keep Copilot review triage signals actionable (Priority: P1)
+
+As a maintainer, I can distinguish unresolved Copilot feedback from workflow runtime breakage in one pass.
+
+**Why this priority**: Policy-driven triage failures and runtime compatibility warnings currently co-occur and obscure the true remediation path.
+
+**Independent Test**: Trigger PR synchronize events with unresolved Copilot findings and verify triage evidence stays deterministic while runtime deprecation annotations remain absent.
+
+**Acceptance Scenarios**:
+
+1. **Given** unresolved Copilot review threads exist, **When** `copilot-review-triage` runs, **Then** it records triage-pending evidence with unresolved count, linked thread locations, and synchronized suggestion issue references.
+2. **Given** unresolved findings are policy-blocking, **When** the job exits, **Then** the failure summary clearly reports policy-blocking triage status without implying infrastructure/runtime breakage.
+3. **Given** `copilot-review-triage` executes on current runners, **When** annotations are emitted, **Then** Node 20 deprecation warnings are absent.
+
 ### Edge Cases
 
 - Compose service exits before health checks complete, producing partial startup logs.
@@ -99,6 +117,8 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 - New `.wiki` pages are added without corresponding `.specify/wiki/human-reference-allowlist.txt` updates.
 - New `.wiki` pages are added without matching mirror pages under `.specify/wiki/human-reference`.
 - Legacy blocked terminology appears in touched automation/docs content and fails terminology guard checks.
+- `copilot-review-triage` fails due unresolved Copilot findings after suggestion issue synchronization, requiring deterministic policy-state evidence.
+- Runtime deprecation warnings in `copilot-review-triage` (for example, Node 20-backed action versions) obscure the primary triage-blocking signal.
 
 ## Requirements *(mandatory)*
 
@@ -120,6 +140,9 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 - **FR-014**: Merge-gated workflows MUST publish a machine-readable aggregate summary of failed jobs with stage and reason attribution.
 - **FR-015**: Any new human-facing `.wiki` markdown page introduced by this feature MUST be present in `.specify/wiki/human-reference-allowlist.txt` and mirrored in `.specify/wiki/human-reference`.
 - **FR-016**: Changes in workflow/scripts/docs touched by this feature MUST satisfy AI terminology guard rules with zero legacy blocked-term findings.
+- **FR-017**: `copilot-review-triage` MUST execute using Node 24-compatible JavaScript action runtimes and produce zero Node 20 deprecation annotations.
+- **FR-018**: When unresolved Copilot findings exist, `copilot-review-triage` MUST publish deterministic triage-pending evidence that includes unresolved finding count, linked finding locations, and synchronized suggestion issue references.
+- **FR-019**: Policy-blocking unresolved Copilot findings MUST be clearly distinguishable from infrastructure/runtime failures in workflow summaries and annotations.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -130,6 +153,7 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 - **FailureAggregateSummary**: Machine-readable run summary enumerating failed merge-gated jobs with stage/reason attribution.
 - **WorkflowRuntimeCompatibilityRecord**: Tracking record for runtime deprecation warnings, owners, and remediation deadlines.
 - **AIContractParityRecord**: Verification record that wiki allowlist entries, live `.wiki` pages, and canonical `.specify/wiki/human-reference` pages are synchronized.
+- **CopilotReviewTriageRecord**: Per-run triage status record with policy state (`pending` or `ready`), unresolved finding count, synchronized suggestion issue references, and runtime compatibility status.
 
 ## Success Criteria *(mandatory)*
 
@@ -145,6 +169,9 @@ As a platform maintainer, I can run merge-gated workflows without Node runtime d
 - **SC-008**: 100% of failed merge-gated coverage/test jobs publish deterministic stage/reason/exit evidence.
 - **SC-009**: AI Contract Guard reports zero `WIKI_ALLOWLIST` and `WIKI_MIRROR` issues for this feature branch.
 - **SC-010**: AI terminology guard reports zero blocked legacy-term findings for files touched by this feature.
+- **SC-011**: Across a 10-run PR synchronize verification window, `copilot-review-triage` emits zero Node 20 deprecation warnings.
+- **SC-012**: 100% of `copilot-review-triage` runs with unresolved findings publish deterministic triage-pending evidence with unresolved count and linked suggestion issues.
+- **SC-013**: 100% of policy-blocking `copilot-review-triage` outcomes are classifiable without ambiguity as triage state failures rather than runtime/infrastructure failures.
 
 ## Assumptions
 
