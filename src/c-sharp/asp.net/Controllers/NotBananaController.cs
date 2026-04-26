@@ -1,13 +1,17 @@
 using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline.Mapping;
+using Banana.Api.Pipeline.Results;
 using Banana.Api.Pipeline;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace Banana.Api.Controllers;
 
 [ApiController]
 [Route("not-banana")]
-public sealed class NotBananaController(INativeBananaClient native, PipelineContext ctx) : ControllerBase
+public sealed class NotBananaController(
+    INativeBananaClient native,
+    INativeJsonMapper mapper,
+    PipelineContext ctx) : ControllerBase
 {
     public sealed record JunkRequest(string InputJson);
 
@@ -22,7 +26,12 @@ public sealed class NotBananaController(INativeBananaClient native, PipelineCont
             return StatusMapping.ToActionResult(rc);
         }
 
-        var result = JsonSerializer.Deserialize<JsonElement>(json);
+        var result = mapper.Deserialize<NotBananaClassificationResult>(json);
+        if (result is null)
+        {
+            return StatusCode(500, new { error = "invalid_native_payload" });
+        }
+
         return Ok(result);
     }
 }

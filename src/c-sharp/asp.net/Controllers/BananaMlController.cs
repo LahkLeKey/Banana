@@ -1,13 +1,17 @@
 using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline.Mapping;
+using Banana.Api.Pipeline.Results;
 using Banana.Api.Pipeline;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace Banana.Api.Controllers;
 
 [ApiController]
 [Route("ml")]
-public sealed class BananaMlController(INativeBananaClient native, PipelineContext ctx) : ControllerBase
+public sealed class BananaMlController(
+    INativeBananaClient native,
+    INativeJsonMapper mapper,
+    PipelineContext ctx) : ControllerBase
 {
     public sealed record MlRequest(string InputJson);
 
@@ -33,7 +37,12 @@ public sealed class BananaMlController(INativeBananaClient native, PipelineConte
             return StatusMapping.ToActionResult(rc);
         }
 
-        var result = JsonSerializer.Deserialize<JsonElement>(json);
+        var result = mapper.Deserialize<BinaryClassificationResult>(json);
+        if (result is null)
+        {
+            return StatusCode(500, new { error = "invalid_native_payload" });
+        }
+
         return Ok(result);
     }
 
@@ -48,7 +57,12 @@ public sealed class BananaMlController(INativeBananaClient native, PipelineConte
             return StatusMapping.ToActionResult(rc);
         }
 
-        var result = JsonSerializer.Deserialize<JsonElement>(json);
+        var result = mapper.Deserialize<TransformerClassificationResult>(json);
+        if (result is null)
+        {
+            return StatusCode(500, new { error = "invalid_native_payload" });
+        }
+
         return Ok(result);
     }
 }

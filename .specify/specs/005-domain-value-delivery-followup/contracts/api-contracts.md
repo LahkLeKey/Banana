@@ -36,6 +36,7 @@ All endpoints return typed payloads and map:
 - `NativeStatusCode.NotFound` -> HTTP `404`
 - `NativeStatusCode.InvalidArgument` -> HTTP `400`
 - `NativeUnavailable` -> HTTP `503`
+- malformed native JSON payloads -> HTTP `500` with `{ "error": "invalid_native_payload" }`
 
 ### Truck HTTP endpoints
 
@@ -46,6 +47,7 @@ All endpoints return typed payloads and map:
 - `GET /trucks/{truckId}/status`
 
 All endpoints return typed payloads and apply the same status mapping policy as harvest endpoints.
+- malformed native JSON payloads -> HTTP `500` with `{ "error": "invalid_native_payload" }`
 
 ## TypeScript API Contracts
 
@@ -90,4 +92,4 @@ All endpoints return typed payloads and apply the same status mapping policy as 
 
 - ASP.NET unit tests assert typed result payload shapes and status mapping.
 - TS API route tests assert success + validation failure + upstream failure pass-through behavior.
-- e2e contract lane asserts reproducible command and endpoint contracts for ripeness, harvest, and truck surfaces.
+- e2e contract lane asserts reproducible command and endpoint contracts for ripeness, harvest, and truck surfaces via `tests/e2e/Contracts/ApiContractLaneTests.cs`.

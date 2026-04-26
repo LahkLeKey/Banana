@@ -38,7 +38,7 @@ public sealed class NativeBananaClient : INativeBananaClient
         catch (Exception ex) when (IsInteropUnavailable(ex))
         {
             score = 0.0;
-            return NativeStatusCode.DbNotConfigured;
+            return NativeStatusCode.NativeUnavailable;
         }
     }
 
@@ -94,7 +94,7 @@ public sealed class NativeBananaClient : INativeBananaClient
         catch (Exception ex) when (IsInteropUnavailable(ex))
         {
             json = string.Empty;
-            return NativeStatusCode.DbNotConfigured;
+            return NativeStatusCode.NativeUnavailable;
         }
     }
 

@@ -14,4 +14,5 @@ public enum NativeStatusCode
     DbNotConfigured = 5,
     NotFound = 6,
     BufferTooSmall = 7,
+    NativeUnavailable = 8,
 }

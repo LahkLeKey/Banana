@@ -1,4 +1,5 @@
 using Banana.Api.NativeInterop;
+using Banana.Api.Pipeline.Mapping;
 using Banana.Api.Pipeline;
 using Banana.Api.Pipeline.Steps;
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Spec 007: single typed PipelineContext + single interop seam.
 builder.Services.AddSingleton<INativeBananaClient, NativeBananaClient>();
 builder.Services.AddScoped<PipelineContext>();
+builder.Services.AddSingleton<INativeJsonMapper, NativeJsonMapper>();
 builder.Services.AddScoped<IPipelineStep<PipelineContext>, InputValidationStep>();
 builder.Services.AddScoped<PipelineRunner<PipelineContext>>();
 builder.Services.AddControllers();

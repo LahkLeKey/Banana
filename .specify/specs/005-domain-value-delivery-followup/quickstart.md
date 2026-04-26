@@ -40,14 +40,21 @@ cd /c/Github/Banana
 dotnet test tests/unit
 ```
 
-## 5. Run integration-equivalent lane (e2e contracts)
+## 5. Run US4 endpoint-focused unit checks
+
+```bash
+cd /c/Github/Banana
+dotnet test tests/unit --filter "FullyQualifiedName~HarvestController|FullyQualifiedName~TruckController"
+```
+
+## 6. Run integration-equivalent lane (e2e contracts)
 
 ```bash
 cd /c/Github/Banana
 dotnet test tests/e2e --filter "FullyQualifiedName~Contracts"
 ```
 
-## 6. Run full feature validation set
+## 7. Run full feature validation set
 
 ```bash
 cd /c/Github/Banana
