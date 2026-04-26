@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 usage() {
   cat <<'EOF'
-Usage: compose-ci-write-lane-result.sh --lane <lane> [--status <pass|fail|skip>] [--stage <stage>] [--reason-code <reason>] [--exit-code <code>] [--failing-service <service>] [--artifact-root <path>]
+Usage: compose-ci-write-lane-result.sh --lane <lane> [--status <pass|fail|skip>] [--stage <stage>] [--reason-code <reason>] [--exit-code <code>] [--failing-service <service>] [--profile <profile>] [--started-at <iso-8601>] [--finished-at <iso-8601>] [--diagnostics-bundle-path <relative-path>] [--artifact-root <path>]
 EOF
 }
 
@@ -24,6 +24,10 @@ stage=""
 reason_code=""
 exit_code=""
 failing_service=""
+profile="${BANANA_CI_LANE_PROFILE:-}"
+started_at="${BANANA_CI_LANE_STARTED_AT:-}"
+finished_at="${BANANA_CI_LANE_FINISHED_AT:-}"
+diagnostics_bundle_path="${BANANA_CI_LANE_DIAGNOSTICS_BUNDLE_PATH:-}"
 artifact_root="${BANANA_CI_ARTIFACT_ROOT:-.artifacts/compose-ci}"
 schema_version="${BANANA_CI_LANE_SCHEMA_VERSION:-1}"
 
@@ -51,6 +55,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     --failing-service)
       failing_service="$2"
+      shift 2
+      ;;
+    --profile)
+      profile="$2"
+      shift 2
+      ;;
+    --started-at)
+      started_at="$2"
+      shift 2
+      ;;
+    --finished-at)
+      finished_at="$2"
+      shift 2
+      ;;
+    --diagnostics-bundle-path)
+      diagnostics_bundle_path="$2"
       shift 2
       ;;
     --artifact-root)
@@ -127,17 +147,45 @@ else
   failing_service_json="null"
 fi
 
+if [[ -n "$profile" ]]; then
+  profile_json="\"$(json_escape "$profile")\""
+else
+  profile_json="null"
+fi
+
+if [[ -n "$started_at" ]]; then
+  started_at_json="\"$(json_escape "$started_at")\""
+else
+  started_at_json="null"
+fi
+
+if [[ -n "$finished_at" ]]; then
+  finished_at_json="\"$(json_escape "$finished_at")\""
+else
+  finished_at_json="null"
+fi
+
+if [[ -n "$diagnostics_bundle_path" ]]; then
+  diagnostics_bundle_path_json="\"$(json_escape "$diagnostics_bundle_path")\""
+else
+  diagnostics_bundle_path_json="null"
+fi
+
 now_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 cat > "$result_file" <<EOF
 {
   "schema_version": $schema_version,
   "lane_name": "$(json_escape "$lane")",
+  "profile": $profile_json,
   "status": "$(json_escape "$status")",
   "stage": "$(json_escape "$stage")",
   "reason_code": "$(json_escape "$reason_code")",
   "exit_code": $exit_code,
   "failing_service": $failing_service_json,
+  "started_at": $started_at_json,
+  "finished_at": $finished_at_json,
+  "diagnostics_bundle_path": $diagnostics_bundle_path_json,
   "recorded_at_utc": "$(json_escape "$now_utc")"
 }
 EOF

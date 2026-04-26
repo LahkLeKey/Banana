@@ -110,6 +110,22 @@ else
   record_error "docker-compose-v2-unavailable"
 fi
 
+requires_health_check="false"
+if [[ "$lane" == "compose-runtime" || "$profile" == "runtime" ]]; then
+  requires_health_check="true"
+fi
+
+if [[ -n "$entry_script" ]]; then
+  entry_script_name="$(basename "$entry_script")"
+  if [[ "$entry_script_name" == "compose-runtime.sh" ]]; then
+    requires_health_check="true"
+  fi
+fi
+
+if [[ "$requires_health_check" == "true" ]]; then
+  require_command curl
+fi
+
 if [[ -n "$entry_script" ]]; then
   if [[ -f "$entry_script" ]]; then
     record_ok "script-exists:$entry_script"

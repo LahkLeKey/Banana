@@ -80,6 +80,7 @@ fi
 "$python_bin" - "$lane" "$result_file" "$manifest_file" "$stage_file" "$reason_file" "$exit_file" <<'PY'
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 lane = sys.argv[1]
@@ -88,6 +89,8 @@ manifest_file = Path(sys.argv[3])
 stage_file = Path(sys.argv[4])
 reason_file = Path(sys.argv[5])
 exit_file = Path(sys.argv[6])
+lane_dir = result_file.parent
+artifact_root = lane_dir.parent
 
 errors = []
 
@@ -156,6 +159,52 @@ if missing_required and publication_status != "failed":
 
 if status == "fail" and publication_status == "uploaded" and missing_required:
     errors.append("failed lane cannot claim uploaded artifact state with missing required paths")
+
+
+def parse_iso8601(field_name: str, value: object):
+  if value is None:
+    return None
+
+  if not isinstance(value, str) or not value.strip():
+    errors.append(f"lane-result {field_name} must be a non-empty string when present")
+    return None
+
+  normalized = value.strip()
+  if normalized.endswith("Z"):
+    normalized = normalized[:-1] + "+00:00"
+
+  try:
+    return datetime.fromisoformat(normalized)
+  except ValueError:
+    errors.append(f"lane-result {field_name} '{value}' is not a valid ISO-8601 timestamp")
+    return None
+
+
+profile = result.get("profile")
+if profile is not None and (not isinstance(profile, str) or not profile.strip()):
+  errors.append("lane-result profile must be a non-empty string when present")
+
+started_at = parse_iso8601("started_at", result.get("started_at"))
+finished_at = parse_iso8601("finished_at", result.get("finished_at"))
+if started_at is not None and finished_at is not None and finished_at < started_at:
+  errors.append("lane-result finished_at must be greater than or equal to started_at")
+
+diagnostics_bundle_path = result.get("diagnostics_bundle_path")
+if diagnostics_bundle_path is not None:
+  if not isinstance(diagnostics_bundle_path, str) or not diagnostics_bundle_path.strip():
+    errors.append("lane-result diagnostics_bundle_path must be a non-empty string when present")
+  else:
+    normalized = diagnostics_bundle_path.strip().replace("\\", "/")
+    if normalized.startswith("/") or ":" in normalized:
+      errors.append("lane-result diagnostics_bundle_path must be a relative path")
+    else:
+      candidate_lane = (lane_dir / normalized).resolve()
+      candidate_root = (artifact_root / normalized).resolve()
+      if not candidate_lane.exists() and not candidate_root.exists():
+        errors.append(
+          "lane-result diagnostics_bundle_path "
+          f"'{diagnostics_bundle_path}' does not exist under lane artifact root"
+        )
 
 if errors:
     print(f"Contract validation failed for lane '{lane}':")

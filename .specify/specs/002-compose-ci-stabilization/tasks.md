@@ -112,6 +112,10 @@
 - [x] T043 Upgrade `copilot-review-triage` JavaScript action runtime to Node24-compatible versions (FR-017) in .github/workflows/copilot-review-triage.yml
 - [x] T044 [P] Enforce Node24 opt-in for `copilot-review-triage` and archive compatibility evidence (FR-017) in .github/workflows/copilot-review-triage.yml and .artifacts/spec/runtime-compatibility/
 - [x] T045 [P] Validate deterministic policy-state triage evidence for unresolved Copilot findings (FR-018, FR-019) and capture closure notes in .artifacts/spec/002-compose-ci-stabilization-verification.md
+- [x] T046 Align lane-result writer schema with documented optional contract fields (FR-020) in scripts/compose-ci-write-lane-result.sh
+- [x] T047 [P] Tighten lane contract validator checks for optional schema fields and parity rules (FR-020) in scripts/validate-compose-ci-lane-contract.sh
+- [x] T048 [P] Add runtime health-check dependency preflight coverage (`curl`) for runtime lanes (FR-021) in scripts/compose-ci-preflight.sh
+- [x] T049 [P] Replace machine-specific tracked workspace setting paths with workspace-relative equivalents (FR-022) in tests/.vscode/settings.json
 
 ---
 
