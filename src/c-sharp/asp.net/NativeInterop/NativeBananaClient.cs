@@ -44,6 +44,28 @@ public sealed class NativeBananaClient : INativeBananaClient
 
     public NativeStatusCode ClassifyBananaBinary(string inputJson, out string json)        => CallJson(inputJson, out json, NativeMethods.ClassifyBananaBinary);
     public NativeStatusCode ClassifyBananaTransformer(string inputJson, out string json)   => CallJson(inputJson, out json, NativeMethods.ClassifyBananaTransformer);
+
+    public NativeStatusCode ClassifyBananaTransformerWithEmbedding(string inputJson, double[] embedding, out string json)
+    {
+        ArgumentNullException.ThrowIfNull(embedding);
+        if (embedding.Length != 4) throw new ArgumentException("embedding must be exactly 4 doubles (BANANA_ML_TRANSFORMER_EMBEDDING_DIM)", nameof(embedding));
+        try
+        {
+            var rc = NativeMethods.ClassifyBananaTransformerEx(
+                inputJson,
+                logAttention: 0,
+                outEmbedding: ref embedding[0],
+                outAttentionWeights: IntPtr.Zero,
+                out var ptr);
+            json = TakeUtf8(ptr);
+            return (NativeStatusCode)rc;
+        }
+        catch (Exception ex) when (IsInteropUnavailable(ex))
+        {
+            json = string.Empty;
+            return NativeStatusCode.NativeUnavailable;
+        }
+    }
     public NativeStatusCode ClassifyNotBananaJunk(string inputJson, out string json)       => CallJson(inputJson, out json, NativeMethods.ClassifyNotBananaJunk);
     public NativeStatusCode PredictBananaRipeness(string inputJson, out string json)       => CallJson(inputJson, out json, NativeMethods.PredictBananaRipeness);
     public NativeStatusCode CreateBatch(string inputJson, out string json)                 => CallJson(inputJson, out json, NativeMethods.CreateBatch);

@@ -54,6 +54,22 @@ internal static partial class NativeMethods
     [LibraryImport(LibraryName, EntryPoint = "banana_classify_banana_transformer", StringMarshalling = StringMarshalling.Utf8)]
     public static partial int ClassifyBananaTransformer(string inputJson, out IntPtr outJson);
 
+    /// <summary>
+    /// Slice 017 -- managed binding to the existing slice-012
+    /// `banana_classify_banana_transformer_ex` export. log_attention=0 and
+    /// out_attention_weights=NULL keep the hot path bit-for-bit equivalent
+    /// to the legacy entry; only the embedding buffer is populated. The
+    /// embedding pointer is the address of the first element in a
+    /// caller-allocated double[4] (BANANA_ML_TRANSFORMER_EMBEDDING_DIM).
+    /// </summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_classify_banana_transformer_ex", StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int ClassifyBananaTransformerEx(
+        string inputJson,
+        int logAttention,
+        ref double outEmbedding,
+        IntPtr outAttentionWeights,
+        out IntPtr outJson);
+
     [LibraryImport(LibraryName, EntryPoint = "banana_classify_not_banana_junk", StringMarshalling = StringMarshalling.Utf8)]
     public static partial int ClassifyNotBananaJunk(string inputJson, out IntPtr outJson);
 

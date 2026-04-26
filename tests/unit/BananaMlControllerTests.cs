@@ -25,7 +25,7 @@ public sealed class BananaMlControllerTests
         };
         var mapper = new SpyNativeJsonMapper();
         var ctx = new PipelineContext();
-        var controller = new BananaMlController(fake, mapper, ctx);
+        var controller = new BananaMlController(fake, mapper, ctx, new PipelineRunner<PipelineContext>(Array.Empty<IPipelineStep<PipelineContext>>()));
 
         var result = controller.Regression(new BananaMlController.MlRequest("{\"text\":\"ripe banana bunch\"}"));
 
@@ -47,7 +47,7 @@ public sealed class BananaMlControllerTests
         };
         var mapper = new SpyNativeJsonMapper();
         var ctx = new PipelineContext();
-        var controller = new BananaMlController(fake, mapper, ctx);
+        var controller = new BananaMlController(fake, mapper, ctx, new PipelineRunner<PipelineContext>(Array.Empty<IPipelineStep<PipelineContext>>()));
 
         var result = controller.Binary(new BananaMlController.MlRequest("{\"text\":\"banana bread crate\"}"));
 
@@ -72,7 +72,7 @@ public sealed class BananaMlControllerTests
         };
         var mapper = new NullNativeJsonMapper();
         var ctx = new PipelineContext();
-        var controller = new BananaMlController(fake, mapper, ctx);
+        var controller = new BananaMlController(fake, mapper, ctx, new PipelineRunner<PipelineContext>(Array.Empty<IPipelineStep<PipelineContext>>()));
 
         var result = controller.Binary(new BananaMlController.MlRequest("{\"text\":\"banana\"}"));
 
@@ -89,7 +89,7 @@ public sealed class BananaMlControllerTests
         };
         var mapper = new SpyNativeJsonMapper();
         var ctx = new PipelineContext();
-        var controller = new BananaMlController(fake, mapper, ctx);
+        var controller = new BananaMlController(fake, mapper, ctx, new PipelineRunner<PipelineContext>(Array.Empty<IPipelineStep<PipelineContext>>()));
 
         var result = controller.Transformer(new BananaMlController.MlRequest("{}"));
 
