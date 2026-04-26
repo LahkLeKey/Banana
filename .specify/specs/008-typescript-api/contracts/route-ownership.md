@@ -15,6 +15,7 @@ the single source of truth across slices.
 | `/health` and `/ready` | `008` | Fastify health/readiness endpoints |
 | `/corpus/feedback` | `008` | TypeScript-only feedback ingestion |
 | `/not-banana/score` | `008` | TypeScript-only deterministic token scoring |
+| `/not-banana/model` | `008` | TypeScript model metadata + threshold provenance |
 | `/chat/sessions/...` | `008` | Canonical chatbot session + messaging contract |
 
 Frontends consume one base URL per app (`VITE_BANANA_API_BASE_URL` for web).
@@ -47,3 +48,12 @@ A reverse proxy or API gateway may multiplex; that decision lives in
 
 - `DATABASE_URL` (required).
 - Other env vars are local to this slice unless cross-listed in `012-compose-runtime`.
+
+## Training data and chatbot contract constraints
+
+- Score responses include `label`, `banana_score`, `threshold`, `threshold_source`,
+  token-match fields, and model metadata.
+- Chatbot classification semantics must reuse the same model source + threshold
+  behavior as score classification.
+- No-signal scoring requests return typed `invalid_argument` and do not
+  default to banana.

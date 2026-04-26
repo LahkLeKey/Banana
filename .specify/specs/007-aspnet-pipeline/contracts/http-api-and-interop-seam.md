@@ -37,3 +37,18 @@
 ## Coverage
 
 - `coverage-denominator.json` path and format preserved for `014-test-coverage`.
+
+## Banana/not-banana training-data and model artifacts
+
+- Managed API responses expose model-source and threshold-provenance fields
+  compatible with `008` score/chat contracts.
+- Missing or corrupt runtime artifacts return typed degradation/fallback
+  responses; no silent default-to-banana behavior.
+- Drift checks validate corpus/training-script/runtime contract compatibility
+  before release.
+
+## Chatbot interoperability
+
+- `007` and `008` banana-vs-not-banana chatbot classification semantics remain
+  parity-tested for agreed prompt sets.
+- Replay/idempotency compatibility is preserved for fallback/cutover behavior.

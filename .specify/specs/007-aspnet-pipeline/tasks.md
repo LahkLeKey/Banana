@@ -39,8 +39,28 @@ description: "Tasks for v2 ASP.NET pipeline regeneration"
 - [ ] T051 Run unit + integration + e2e suites.
 - [ ] T052 Remove v1 native fallback paths.
 
+## Phase 6 — Training-data and model metadata alignment
+
+- [ ] T060 Define managed banana/not-banana training-data contract expectations and mapping from artifact metadata.
+- [ ] T061 [P] Expose model metadata + threshold provenance in `007` banana/not-banana API responses.
+- [ ] T062 [P] Add typed fallback behavior for missing/corrupt artifacts and no-signal classification input.
+
+## Phase 7 — Chatbot interoperability
+
+- [ ] T070 Define banana-vs-not-banana chatbot interoperability contract with `008` (session/message + classification semantics).
+- [ ] T071 [P] Implement replay/idempotency-compatible classification behavior for fallback/cutover scenarios.
+- [ ] T072 [P] Add integration tests for compatibility between `007` and `008` banana/not-banana outputs.
+
+## Phase 8 — Drift and parity guards
+
+- [ ] T080 Add CI checks for corpus/training-script/native-runtime/managed-contract drift.
+- [ ] T081 Wire parity failures into release gate reporting.
+- [ ] T082 Document remediation workflow for training/artifact/chat parity regressions.
+
 ## Dependencies
 
 - T010 blocks Phase 2/3 step migrations.
 - T030 should land before bulk fake updates in T031.
 - T050 requires `006` Phase 4 cutover.
+- T060 blocks parity assertions in T072 and drift gates in T080.
+- T070 blocks T071 and chatbot fallback validation.
