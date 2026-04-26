@@ -41,5 +41,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read:
-.specify/specs/002-compose-ci-stabilization/plan.md
+.specify/specs/003-coverage-80-rehydration/plan.md
 <!-- SPECKIT END -->

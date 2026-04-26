@@ -29,6 +29,26 @@
 - [x] Feature meets measurable outcomes defined in Success Criteria
 - [x] No implementation details leak into specification
 
+## Robustness Depth (002-Style)
+
+- [x] Spec includes explicit user input framing and dependency linkage
+- [x] Scope is broken down by test layer and monorepo domain coverage surface
+- [x] Requirements include failure taxonomy and denominator governance
+- [x] Success criteria include verification windows (repeat-run determinism)
+- [x] Portability and path-safety contracts are explicit and testable
+- [x] Exception governance includes accountability and expiry handling
+- [x] Aggregate reporting requirements are one-pass triage sufficient
+- [x] Risks and mitigations are documented for likely drift points
+
+## Coverage Layer Coverage
+
+- [x] Unit layer requirements declared per domain (native, .NET, TS api/react/electron/react-native/shared-ui)
+- [x] Integration layer requirements declared per domain including interop and preflight contract
+- [x] E2E layer requirements declared per runtime channel (API+React, Electron, mobile)
+- [x] Exception governance declared (owner, rationale, expiration, remediation plan)
+- [x] Aggregate rollup and per-domain summary entities defined
+- [x] Reuses `002` lane contract, evidence path-safety, and preflight contract
+
 ## Notes
 
-- This spec defines coverage policy and validation behavior; implementation details and tool wiring are deferred to plan/tasks.
+- The spec now mirrors the detail density of 002 by adding explicit input framing, failure taxonomy, verification windows, portability contracts, and risk mitigations while still remaining implementation-agnostic.
