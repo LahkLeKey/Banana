@@ -9,8 +9,11 @@
         "web": "expo start --web"
     },
     "dependencies": {
+        "@banana/resilience": "file:../shared/resilience",
         "@banana/ui": "file:../shared/ui",
         "@expo/metro-runtime": "~4.0.1",
+        "@react-native-async-storage/async-storage": "^2.1.0",
+        "@react-native-community/netinfo": "^11.4.1",
         "expo": "~52.0.0",
         "expo-status-bar": "~2.0.0",
         "react": "18.3.1",

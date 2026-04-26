@@ -8,7 +8,8 @@
     "types": "src/index.ts",
     "exports": {
         ".": "./src/index.ts",
-        "./adapters/indexeddb": "./src/adapters/indexeddb.ts"
+        "./adapters/indexeddb": "./src/adapters/indexeddb.ts",
+        "./adapters/async-storage": "./src/adapters/async-storage.ts"
     },
     "scripts": {
         "test": "bun test"
