@@ -1,3 +1,5 @@
+@import "@banana/ui/tokens/web.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

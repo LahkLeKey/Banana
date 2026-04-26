@@ -2,7 +2,9 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import {
     BananaBadge,
     ChatMessageBubble,
+    ErrorText,
     EscalationPanel,
+    RetryButton,
     RipenessLabel,
     type ChatMessage,
     type ChatSession,
@@ -20,7 +22,6 @@ import {
     sendChatMessage,
 } from "./lib/api";
 import {
-    RETRY_BUTTON_COPY,
     VERDICT_EMPTY_COPY,
     errorWording,
     verdictCopy,
@@ -282,19 +283,15 @@ export function App() {
                 <div data-testid="ensemble-verdict-surface" className="space-y-2 text-sm">
                     {ensembleError ? (
                         <div className="flex flex-wrap items-center gap-2">
-                            <p data-testid="ensemble-error" className="text-xs text-red-700">
+                            <ErrorText data-testid="ensemble-error">
                                 {ensembleError}
-                            </p>
+                            </ErrorText>
                             {lastSubmittedSample !== null ? (
-                                <button
-                                    type="button"
+                                <RetryButton
                                     data-testid="ensemble-retry"
                                     onClick={onRetryEnsemble}
                                     disabled={isPredictingEnsemble}
-                                    className="rounded-md border border-amber-700 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    {RETRY_BUTTON_COPY}
-                                </button>
+                                />
                             ) : null}
                         </div>
                     ) : ensembleVerdict ? (
@@ -338,7 +335,7 @@ export function App() {
                         <span>confidence {ripenessResult.confidence.toFixed(4)}</span>
                     </div>
                 ) : null}
-                {ripenessError ? <p className="text-xs text-red-700">{ripenessError}</p> : null}
+                {ripenessError ? <ErrorText>{ripenessError}</ErrorText> : null}
             </section>
 
             <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -379,7 +376,7 @@ export function App() {
                     </button>
                 </form>
 
-                {chatError ? <p className="text-xs text-red-700">{chatError}</p> : null}
+                {chatError ? <ErrorText>{chatError}</ErrorText> : null}
             </section>
         </main>
     );

@@ -5,46 +5,46 @@
 
 ## Phase 1 -- Setup
 
-- [ ] T001 Repoint `.specify/feature.json` -> `028-per-channel-design-system-adoption`.
-- [ ] T002 Author `README.md` execution tracker.
+- [x] T001 Repoint `.specify/feature.json` -> `028-per-channel-design-system-adoption`.
+- [x] T002 Author `README.md` execution tracker.
 
 ## Phase 2 -- React adoption
 
-- [ ] T003 Update `src/typescript/react/src/index.css` to load
+- [x] T003 Update `src/typescript/react/src/index.css` to load
   `@banana/ui/tokens/web.css`.
-- [ ] T004 Replace inline Tailwind colors / spacing in
+- [x] T004 Replace inline Tailwind colors / spacing in
   `src/typescript/react/src/App.tsx` verdict + error surfaces with
   v2 components from slice 027.
-- [ ] T005 Sweep remaining `src/typescript/react/src/**` for any
+- [x] T005 Sweep remaining `src/typescript/react/src/**` for any
   remaining hex / px literals; replace or document exceptions.
-- [ ] T006 Update vitest snapshots if needed.
+- [x] T006 Update vitest snapshots if needed.
 
 ## Phase 3 -- React Native adoption
 
-- [ ] T007 Replace inline color hex literals in
+- [x] T007 Replace inline color hex literals in
   `src/typescript/react-native/index.tsx` with `tokens.color.*`.
-- [ ] T008 Replace inline literals in
+- [x] T008 Replace inline literals in
   `src/typescript/react-native/screens/CaptureScreen.tsx`.
-- [ ] T009 Replace inline literals in
+- [x] T009 Replace inline literals in
   `src/typescript/react-native/screens/VerdictScreen.tsx`.
-- [ ] T010 Sweep remaining RN sources for residual literals.
+- [x] T010 Sweep remaining RN sources for residual literals.
 
 ## Phase 4 -- Electron sanity
 
-- [ ] T011 Verify Electron tray icon asset path is unchanged or
+- [x] T011 Verify Electron tray icon asset path is unchanged or
   references token-derived assets (no-op if no icon-token chosen).
 
 ## Phase 5 -- Visual diff + close-out
 
-- [ ] T012 Run visual diff review for verdict / chat / ripeness
+- [x] T012 Run visual diff review for verdict / chat / ripeness
   screens (web + RN); confirm zero pixel-perceivable change.
-- [ ] T013 Run validation lane
+- [x] T013 Run validation lane
   (`bun run --cwd src/typescript/react tsc --noEmit`,
   `bun run --cwd src/typescript/react test`,
   `bun run --cwd src/typescript/react-native tsc --noEmit`,
   `bun run --cwd src/typescript/shared/ui tsc --noEmit`,
   `docker compose --profile apps run --rm electron-example npm run smoke`).
-- [ ] T014 Update README to COMPLETE; mark all tasks `[x]`.
+- [x] T014 Update README to COMPLETE; mark all tasks `[x]`.
 
 ## Out of scope
 

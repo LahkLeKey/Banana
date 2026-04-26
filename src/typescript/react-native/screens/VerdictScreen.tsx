@@ -3,7 +3,7 @@
 // fingerprint via the shared native EscalationPanel.
 
 import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
-import { EscalationPanel, type EmbeddingSummary } from '@banana/ui/native';
+import { EscalationPanel, tokens, type EmbeddingSummary } from '@banana/ui/native';
 import type { EnsembleVerdictWithEmbedding } from '../lib/api';
 import { RETRY_BUTTON_COPY, verdictCopy } from '../lib/copy';
 
@@ -21,19 +21,19 @@ export function VerdictScreen({ payload, onRetry }: VerdictScreenProps) {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, padding: 24 }}>
+        <SafeAreaView style={{ flex: 1, padding: tokens.space[6] }}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <Text style={{ fontSize: 22, fontWeight: '600', marginBottom: 16 }} accessibilityRole="header">
+                <Text style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, marginBottom: tokens.space[4] }} accessibilityRole="header">
                     Verdict
                 </Text>
                 <View
                     testID="verdict-surface"
-                    style={{ padding: 16, borderRadius: 12, backgroundColor: verdict.label === 'banana' ? '#fef9c3' : '#e2e8f0' }}>
-                    <Text testID="verdict-copy" style={{ fontSize: 18, fontWeight: '600', color: '#1f2937' }}>
+                    style={{ padding: tokens.space[4], borderRadius: tokens.radius.lg, backgroundColor: verdict.label === 'banana' ? tokens.color.banana.bg : tokens.color.notbanana.bg }}>
+                    <Text testID="verdict-copy" style={{ fontSize: tokens.font.size.md, fontWeight: tokens.font.weight.semibold, color: tokens.color.text.default }}>
                         {copy}
                     </Text>
                     {verdict.did_escalate ? (
-                        <View testID="verdict-escalation-cue" style={{ marginTop: 12 }}>
+                        <View testID="verdict-escalation-cue" style={{ marginTop: tokens.space[3] }}>
                             <EscalationPanel loadSummary={loadSummary} />
                         </View>
                     ) : null}
@@ -41,8 +41,15 @@ export function VerdictScreen({ payload, onRetry }: VerdictScreenProps) {
                 <Pressable
                     testID="verdict-retry"
                     onPress={onRetry}
-                    style={{ marginTop: 16, paddingVertical: 12, borderRadius: 8, alignItems: 'center', backgroundColor: '#0ea5e9' }}>
-                    <Text style={{ color: '#ffffff', fontWeight: '600' }}>{RETRY_BUTTON_COPY}</Text>
+                    style={{
+                        marginTop: tokens.space[4],
+                        paddingVertical: tokens.space[3],
+                        borderRadius: tokens.radius.md,
+                        alignItems: 'center',
+                        // Slice 028 exception: sky CTA color kept; no CTA-color token shipped yet.
+                        backgroundColor: '#0ea5e9',
+                    }}>
+                    <Text style={{ color: tokens.color.surface.default, fontWeight: tokens.font.weight.semibold }}>{RETRY_BUTTON_COPY}</Text>
                 </Pressable>
             </ScrollView>
         </SafeAreaView>
