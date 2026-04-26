@@ -8,7 +8,7 @@ namespace Banana.E2eTests;
 public sealed class E2eRunnerContractTests
 {
     [Fact]
-    public void CriticalJourneys_UsesStableDeterministicScenarioOrder()
+    public void CriticalJourneysUsesStableDeterministicScenarioOrder()
     {
         var contract = E2eRunnerContracts.CriticalJourneys();
 
@@ -19,7 +19,7 @@ public sealed class E2eRunnerContractTests
     }
 
     [Fact]
-    public void E2eRunSettings_UsesDefaultRuntimeContractsWhenEnvironmentIsUnset()
+    public void E2eRunSettingsUsesDefaultRuntimeContractsWhenEnvironmentIsUnset()
     {
         Environment.SetEnvironmentVariable("BANANA_E2E_COMPOSE_PROJECT", null);
         Environment.SetEnvironmentVariable("BANANA_E2E_BOOTSTRAP_SCRIPT", null);
@@ -37,7 +37,7 @@ public sealed class E2eRunnerContractTests
     }
 
     [Fact]
-    public void Validator_RejectsDuplicateScenarioIdentifiers()
+    public void ValidatorRejectsDuplicateScenarioIdentifiers()
     {
         var contract = new E2eRunnerContract(
             Name: "duplicate-case",
@@ -56,7 +56,7 @@ public sealed class E2eRunnerContractTests
     }
 
     [Fact]
-    public void Validator_AcceptsScaffoldContractWhenScriptPresenceChecksAreDisabled()
+    public void ValidatorAcceptsScaffoldContractWhenScriptPresenceChecksAreDisabled()
     {
         var contract = E2eRunnerContracts.CriticalJourneys();
         var settings = E2eRunSettings.FromEnvironment() with { RequireScriptFiles = false };
@@ -65,7 +65,7 @@ public sealed class E2eRunnerContractTests
     }
 
     [Fact]
-    public void Validator_AcceptsScaffoldContractWhenScriptPresenceChecksAreEnabled()
+    public void ValidatorAcceptsScaffoldContractWhenScriptPresenceChecksAreEnabled()
     {
         var contract = E2eRunnerContracts.CriticalJourneys();
         var settings = E2eRunSettings.FromEnvironment() with { RequireScriptFiles = true };

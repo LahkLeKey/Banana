@@ -140,7 +140,7 @@ services:
     build:
       context: .
       dockerfile: docker/react-native.Dockerfile
-    command: ["bash", "-lc", "cd src/typescript/react-native && bun run web"]
+    command: ["bash", "-lc", "bun run web"]
     ports:
       - "19006:19006"
     profiles: ["apps"]
