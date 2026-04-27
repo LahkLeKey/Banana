@@ -1,0 +1,273 @@
+{
+  "generated_at_utc": "2026-04-27T01:12:42.580Z",
+  "strict_mode": true,
+  "summary": {
+    "total_findings": 29,
+    "missing_route": 29,
+    "status_mismatch": 0,
+    "shape_mismatch": 0
+  },
+  "findings": [
+    {
+      "route_key": "GET /banana",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /batches/{id}/status",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BatchController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /chat/sessions/:sessionId",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/chat/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /corpus/feedback",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/routes/corpus.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /harvest/{batchId}/status",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/HarvestController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /not-banana/model",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/not-banana/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /ready",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/routes/health.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /training/workbench/history",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/training/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /training/workbench/runs/:runId",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/training/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "GET /trucks/{truckId}/status",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /batches/create",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BatchController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /chat/sessions",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/chat/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /chat/sessions/:sessionId/messages",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/chat/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /corpus/feedback",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/routes/corpus.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /harvest/{batchId}/bunches",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/HarvestController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /harvest/create",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/HarvestController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /ml/binary",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /ml/ensemble",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /ml/ensemble/embedding",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /ml/regression",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /ml/transformer",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /not-banana/junk",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/NotBananaController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /not-banana/score",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/not-banana/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /training/workbench/runs",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/training/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /training/workbench/runs/:runId/promote",
+      "mismatch_type": "missing_route",
+      "aspnet": null,
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/training/routes.ts"
+      },
+      "remediation": "Add matching ASP.NET route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /trucks/{truckId}/containers/{containerId}/unload",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /trucks/{truckId}/containers/load",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /trucks/{truckId}/relocate",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    },
+    {
+      "route_key": "POST /trucks/register",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception."
+    }
+  ]
+}

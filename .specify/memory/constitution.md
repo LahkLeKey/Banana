@@ -1,8 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 1.1.0
+- Version change: 1.1.0 -> 1.2.0
 - Modified principles:
 	- Added VI. One-Window Interactive Validation
+	- Added VII. Cross-API Feature Parity
 - Added sections: none
 - Removed sections: none
 - Templates requiring updates:
@@ -33,11 +34,15 @@ When workflow behavior, automation contracts, prompts, skills, or runbooks chang
 ### VI. One-Window Interactive Validation
 Frontend and desktop UX changes must be validated in an interactive in-workspace surface before task closure. For Banana this means using the VS Code integrated browser/web view flow (with compose-backed runtime services) so implementation, diagnostics, and rendered behavior are reviewed in one window.
 
+### VII. Cross-API Feature Parity
+When ASP.NET and Fastify expose overlapping capability areas, behavior parity is mandatory. Route availability, status semantics, and response-shape contracts must stay aligned or be explicitly documented as intentional divergence in the active spec before merge.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
 - Keep `BANANA_NATIVE_PATH` explicit for ASP.NET runtime wiring.
 - Preserve `VITE_BANANA_API_BASE_URL` as the frontend API base URL contract.
+- Preserve feature parity expectations across ASP.NET (`:8080`) and Fastify (`:8081`) for overlapping route contracts used by frontend/runtime channels.
 - Preserve Bun as package manager for TypeScript React/Electron/mobile domains.
 - Keep runtime-channel behavior aligned with the Windows + Docker Desktop + Ubuntu WSL2 contract.
 
@@ -49,6 +54,7 @@ Frontend and desktop UX changes must be validated in an interactive in-workspace
 - Run `scripts/validate-ai-contracts.py` whenever AI workflow contracts (prompts, agents, skills, instructions, workflows, wiki mapping) are touched.
 - Run `scripts/workflow-sync-wiki.sh` in the same change when contract surfaces move.
 - For frontend and Electron behavior checks, verify rendered state in the VS Code integrated browser against the active runtime profile before marking tasks done.
+- When a change touches overlapping ASP.NET and Fastify API capability, include parity validation evidence (or intentional-drift rationale) in the active Spec Kit artifacts before task closure.
 
 ## Governance
 
@@ -56,4 +62,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.1.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-26
+**Version**: 1.2.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-26
