@@ -82,6 +82,7 @@ As a new contributor, I want concise runbook steps for the one-window loop so I 
 - **FR-004**: System MUST preserve compatibility with existing compose profile entry points and runtime readiness checks.
 - **FR-005**: System MUST include remediation guidance for stale image/container cases that can mask updated runtime behavior.
 - **FR-006**: System MUST align governance and contributor guidance so the one-window baseline is applied consistently across new frontend slices.
+- **FR-007**: System MUST require closure evidence to record integrated browser surface, rendered assertion outcome, and remediation result when a drift signal is encountered.
 
 ### Key Entities *(include if feature involves data)*
 

@@ -44,6 +44,11 @@ type ElectronBridge = {
   apiBaseUrl: string; platform: string;
 };
 
+export type ApiBaseResolution = {
+  baseUrl: string; error: string | null;
+  source: 'vite' | 'electron' | 'localhost-default' | 'unresolved';
+};
+
 function resolveElectronBridge(): ElectronBridge|undefined {
   return typeof window !== 'undefined' ? window.banana : undefined;
 }
@@ -53,24 +58,64 @@ function resolveViteApiBaseUrl(): string {
   return importMeta.env?.VITE_BANANA_API_BASE_URL ?? '';
 }
 
+function resolveLocalhostDefaultApiBaseUrl(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const host = window.location?.hostname?.trim().toLowerCase() ?? '';
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return 'http://localhost:8080';
+  }
+
+  return '';
+}
+
+export function resolveApiBaseResolution(
+    viteBaseUrl = resolveViteApiBaseUrl(),
+    electronBridge = resolveElectronBridge(),
+    localhostDefault = resolveLocalhostDefaultApiBaseUrl()): ApiBaseResolution {
+  const normalizedVite = viteBaseUrl.trim();
+  if (normalizedVite.length > 0) {
+    return {baseUrl: normalizedVite, error: null, source: 'vite'};
+  }
+
+  const normalizedElectron = (electronBridge?.apiBaseUrl ?? '').trim();
+  if (normalizedElectron.length > 0) {
+    return {baseUrl: normalizedElectron, error: null, source: 'electron'};
+  }
+
+  const normalizedLocalhostDefault = localhostDefault.trim();
+  if (normalizedLocalhostDefault.length > 0) {
+    return {
+      baseUrl: normalizedLocalhostDefault,
+      error: null,
+      source: 'localhost-default',
+    };
+  }
+
+  return {
+    baseUrl: '',
+    error:
+        'Missing API base URL. Set VITE_BANANA_API_BASE_URL for web or BANANA_API_BASE_URL for Electron preload, then relaunch via the canonical Compose frontend profile.',
+    source: 'unresolved',
+  };
+}
+
 export function resolveApiBaseResolutionError(
     viteBaseUrl = resolveViteApiBaseUrl(),
-    electronBridge = resolveElectronBridge()): string|null {
-  if (viteBaseUrl.trim().length > 0) {
-    return null;
-  }
-
-  if ((electronBridge?.apiBaseUrl ?? '').trim().length > 0) {
-    return null;
-  }
-
-  return 'Missing API base URL. Set VITE_BANANA_API_BASE_URL for web or BANANA_API_BASE_URL for Electron preload, then relaunch via the canonical Compose frontend profile.';
+    electronBridge = resolveElectronBridge(),
+    localhostDefault = resolveLocalhostDefaultApiBaseUrl()): string|null {
+  return resolveApiBaseResolution(viteBaseUrl, electronBridge, localhostDefault)
+      .error;
 }
 
 export function resolveApiBaseUrl(
     viteBaseUrl = resolveViteApiBaseUrl(),
-    electronBridge = resolveElectronBridge()): string {
-  return viteBaseUrl.trim() || electronBridge?.apiBaseUrl?.trim() || '';
+    electronBridge = resolveElectronBridge(),
+    localhostDefault = resolveLocalhostDefaultApiBaseUrl()): string {
+  return resolveApiBaseResolution(viteBaseUrl, electronBridge, localhostDefault)
+      .baseUrl;
 }
 
 export function resolvePlatformLabel(electronBridge = resolveElectronBridge()):

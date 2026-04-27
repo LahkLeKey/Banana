@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, test} from 'bun:test';
 
-import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseResolutionError, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
+import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseResolution, resolveApiBaseResolutionError, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
 
 const originalFetch = globalThis.fetch;
 
@@ -10,29 +10,75 @@ afterEach(() => {
 
 describe('react api client', () => {
   test('resolves API base URL with env first, then bridge', () => {
-    expect(resolveApiBaseUrl('http://vite.example', {
-      apiBaseUrl: 'http://bridge.example',
-      platform: 'linux',
-    })).toBe('http://vite.example');
+    expect(resolveApiBaseUrl(
+               'http://vite.example', {
+                 apiBaseUrl: 'http://bridge.example',
+                 platform: 'linux',
+               },
+               'http://localhost:8080'))
+        .toBe('http://vite.example');
 
-    expect(resolveApiBaseUrl('', {
-      apiBaseUrl: 'http://bridge.example',
-      platform: 'linux',
-    })).toBe('http://bridge.example');
+    expect(resolveApiBaseUrl(
+               '', {
+                 apiBaseUrl: 'http://bridge.example',
+                 platform: 'linux',
+               },
+               'http://localhost:8080'))
+        .toBe('http://bridge.example');
 
-    expect(resolveApiBaseUrl('', undefined)).toBe('');
+    expect(resolveApiBaseUrl('', undefined, 'http://localhost:8080'))
+        .toBe('http://localhost:8080');
+    expect(resolveApiBaseUrl('', undefined, '')).toBe('');
+  });
+
+  test('returns detailed API base resolution source', () => {
+    expect(resolveApiBaseResolution('http://vite.example', undefined, ''))
+        .toEqual({
+          baseUrl: 'http://vite.example',
+          error: null,
+          source: 'vite',
+        });
+
+    expect(resolveApiBaseResolution(
+               '', {
+                 apiBaseUrl: 'http://bridge.example',
+                 platform: 'linux',
+               },
+               ''))
+        .toEqual({
+          baseUrl: 'http://bridge.example',
+          error: null,
+          source: 'electron',
+        });
+
+    expect(resolveApiBaseResolution('', undefined, 'http://localhost:8080'))
+        .toEqual({
+          baseUrl: 'http://localhost:8080',
+          error: null,
+          source: 'localhost-default',
+        });
+
+    expect(resolveApiBaseResolution('', undefined, '').source)
+        .toBe('unresolved');
   });
 
   test('reports explicit API base configuration error when unresolved', () => {
-    expect(resolveApiBaseResolutionError('', {
-      apiBaseUrl: 'http://bridge.example',
-      platform: 'linux',
-    })).toBeNull();
-
-    expect(resolveApiBaseResolutionError('http://vite.example', undefined))
+    expect(resolveApiBaseResolutionError(
+               '', {
+                 apiBaseUrl: 'http://bridge.example',
+                 platform: 'linux',
+               },
+               ''))
         .toBeNull();
 
-    expect(resolveApiBaseResolutionError('', undefined))
+    expect(resolveApiBaseResolutionError('http://vite.example', undefined, ''))
+        .toBeNull();
+
+    expect(
+        resolveApiBaseResolutionError('', undefined, 'http://localhost:8080'))
+        .toBeNull();
+
+    expect(resolveApiBaseResolutionError('', undefined, ''))
         .toContain('Missing API base URL');
   });
 

@@ -15,10 +15,9 @@ import {
     createChatSession,
     fetchBananaSummary,
     fetchEnsembleVerdictWithEmbedding,
-    resolveApiBaseResolutionError,
+    resolveApiBaseResolution,
     predictRipeness,
     type RipenessResponse,
-    resolveApiBaseUrl,
     resolvePlatformLabel,
     sendChatMessage,
 } from "./lib/api";
@@ -100,8 +99,9 @@ export function App() {
     const [recentVerdicts, setRecentVerdicts] = useState<RecentVerdict[]>([]);
     const messageCounter = useRef(0);
 
-    const apiBaseUrl = useMemo(() => resolveApiBaseUrl(), []);
-    const apiBaseResolutionError = useMemo(() => resolveApiBaseResolutionError(), []);
+    const apiBaseResolution = useMemo(() => resolveApiBaseResolution(), []);
+    const apiBaseUrl = apiBaseResolution.baseUrl;
+    const apiBaseResolutionError = apiBaseResolution.error;
     const platformLabel = useMemo(() => resolvePlatformLabel(), []);
     const chatUnavailable = Boolean(apiBaseResolutionError);
     const showAttention = useMemo(() => {
@@ -137,7 +137,8 @@ export function App() {
 
     useEffect(() => {
         if (chatUnavailable) {
-            setChatError(apiBaseResolutionError ?? "missing API base URL configuration");
+            // Config errors are rendered in the dedicated banner.
+            setChatError(null);
             return;
         }
 
@@ -156,7 +157,7 @@ export function App() {
                 if (!cancelled) {
                     setChatError(
                         error instanceof Error
-                            ? error.message
+                            ? `Chat bootstrap failed: ${error.message}`
                             : "failed to create chat session"
                     );
                 }

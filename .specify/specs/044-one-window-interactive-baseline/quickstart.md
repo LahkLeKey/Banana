@@ -30,13 +30,19 @@ bash scripts/compose-profile-ready.sh --profile apps
 - Confirm expected user-visible behavior for changed scope.
 - For API-base contract checks, confirm the UI resolves a concrete API base and does not remain unset.
 
-5. If behavior is unexpected, run diagnostics from the same workspace terminal:
+5. Capture closure evidence in the feature task context:
+
+- Record the integrated browser URL/channel used.
+- Record the rendered assertion outcome (pass/fail and what was observed).
+- If remediation was needed, record the remediation command path used and post-remediation rendered result.
+
+6. If behavior is unexpected, run diagnostics from the same workspace terminal:
 
 ```bash
 bash scripts/validate-frontend-config-drift.sh --require-running
 ```
 
-6. Teardown after validation:
+7. Teardown after validation:
 
 ```bash
 bash scripts/compose-run-profile.sh --profile apps --action down
