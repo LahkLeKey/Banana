@@ -98,4 +98,6 @@ function main() {
   console.log('[banana] no parity gaps detected');
 }
 
-main();
+if (process.argv[1] && process.argv[1].endsWith('detect-missing-route-gaps.mjs')) {
+  main();
+}

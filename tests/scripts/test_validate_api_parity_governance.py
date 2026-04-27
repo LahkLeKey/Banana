@@ -10,6 +10,7 @@ SCRIPT = REPO_ROOT / "scripts" / "validate-api-parity-governance.sh"
 INVENTORY = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "overlapping-routes.inventory.json"
 DRIFT = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "parity-drift-report.json"
 GATE = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "parity-gate-result.json"
+EXCEPTIONS = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "parity-exceptions.json"
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -53,9 +54,21 @@ def test_non_strict_mode_writes_drift_report() -> None:
 
 
 def test_strict_mode_fails_when_unresolved_missing_routes_exist() -> None:
-    result = _run("--strict")
-    # Current repo intentionally has non-overlapping routes across ASP.NET/Fastify.
-    assert result.returncode == 1
+    original_exceptions = EXCEPTIONS.read_text(encoding="utf-8") if EXCEPTIONS.exists() else None
+    EXCEPTIONS.write_text(
+        json.dumps({"updated_at_utc": "2026-04-26T00:00:00Z", "exceptions": []}, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
-    gate_payload = json.loads(GATE.read_text(encoding="utf-8"))
-    assert gate_payload["decision"] == "FAIL"
+    try:
+        result = _run("--strict")
+        # With no active exceptions and known cross-surface drift, strict mode must fail.
+        assert result.returncode == 1
+
+        gate_payload = json.loads(GATE.read_text(encoding="utf-8"))
+        assert gate_payload["decision"] == "FAIL"
+    finally:
+        if original_exceptions is None:
+            EXCEPTIONS.unlink(missing_ok=True)
+        else:
+            EXCEPTIONS.write_text(original_exceptions, encoding="utf-8")
