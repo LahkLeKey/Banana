@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Banana.Api.Pipeline.Results;
 
 /// <summary>
@@ -13,10 +15,12 @@ namespace Banana.Api.Pipeline.Results;
 ///   }
 ///
 /// Field order above is the documented contract for snapshot tests.
+/// JsonPropertyName attributes lock the snake_case wire shape against
+/// ASP.NET's default camelCase policy (slice 015 React badge contract).
 /// </summary>
 public sealed record EnsembleVerdictResult(
-    string Label,
-    double Score,
-    bool DidEscalate,
-    double CalibrationMagnitude,
-    string Status);
+    [property: JsonPropertyName("label")] string Label,
+    [property: JsonPropertyName("score")] double Score,
+    [property: JsonPropertyName("did_escalate")] bool DidEscalate,
+    [property: JsonPropertyName("calibration_magnitude")] double CalibrationMagnitude,
+    [property: JsonPropertyName("status")] string Status);

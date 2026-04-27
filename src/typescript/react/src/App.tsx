@@ -562,7 +562,7 @@ export function App() {
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <span>Result:</span>
                             <RipenessLabel value={ripenessResult.label} />
-                            <span>confidence {ripenessResult.confidence.toFixed(4)}</span>
+                            <span>confidence {typeof ripenessResult.confidence === "number" && Number.isFinite(ripenessResult.confidence) ? ripenessResult.confidence.toFixed(4) : "--"}</span>
                         </div>
                     ) : null}
                     {ripenessError ? <ErrorText>{ripenessError}</ErrorText> : null}
