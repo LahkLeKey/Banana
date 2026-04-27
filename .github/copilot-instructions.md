@@ -43,5 +43,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at `.specify/specs/045-frontend-runtime-unset-followup/plan.md`
+at `.specify/specs/046-chat-bootstrap-fetch-failure/plan.md`
 <!-- SPECKIT END -->

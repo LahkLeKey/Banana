@@ -20,6 +20,7 @@ profile=""
 action="up"
 service=""
 detach="true"
+service_explicit="false"
 extra_args=()
 
 while [[ $# -gt 0 ]]; do
@@ -34,6 +35,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --service)
       service="${2:-}"
+      service_explicit="true"
       shift 2
       ;;
     --detach)
@@ -66,38 +68,47 @@ case "$profile" in
   runtime)
     compose_profiles=("runtime")
     default_service="api"
+    default_services=("api")
     ;;
   apps)
     compose_profiles=("apps")
     default_service="react-app"
+    default_services=("react-app" "api-fastify")
     ;;
   tests)
     compose_profiles=("tests")
     default_service="test-all"
+    default_services=("test-all")
     ;;
   electron-smoke)
     compose_profiles=("electron")
     default_service="electron-example"
+    default_services=("electron-example")
     ;;
   electron-desktop)
     compose_profiles=("electron")
     default_service="electron-desktop"
+    default_services=("electron-desktop")
     ;;
   mobile)
     compose_profiles=("apps" "android-emulator")
     default_service="android-emulator"
+    default_services=("android-emulator")
     ;;
   workflows)
     compose_profiles=("workflows")
     default_service="workflow-train-not-banana-local"
+    default_services=("workflow-train-not-banana-local")
     ;;
   api-fastify)
     compose_profiles=("api-fastify")
     default_service="api-fastify"
+    default_services=("api-fastify")
     ;;
   all)
     compose_profiles=("all")
     default_service="api"
+    default_services=("api")
     ;;
   *)
     echo "[banana] unsupported profile '$profile'" >&2
@@ -124,7 +135,11 @@ case "$action" in
     if [[ "$detach" == "true" ]]; then
       up_args+=(-d)
     fi
-    up_args+=("$service")
+    if [[ "$service_explicit" == "true" ]]; then
+      up_args+=("$service")
+    else
+      up_args+=("${default_services[@]}")
+    fi
     up_args+=("${extra_args[@]}")
     run_compose "${up_args[@]}"
     ;;
@@ -137,7 +152,11 @@ case "$action" in
     if [[ "$detach" == "true" ]]; then
       up_args+=(-d)
     fi
-    up_args+=("$service")
+    if [[ "$service_explicit" == "true" ]]; then
+      up_args+=("$service")
+    else
+      up_args+=("${default_services[@]}")
+    fi
     up_args+=("${extra_args[@]}")
     run_compose "${up_args[@]}"
     ;;

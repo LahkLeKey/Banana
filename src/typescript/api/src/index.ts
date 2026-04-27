@@ -13,6 +13,29 @@ import {registerRipenessRoutes} from './routes/ripeness.ts';
 
 const app = Fastify({logger: true});
 
+const ALLOWED_WEB_ORIGINS = new Set([
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]);
+
+app.addHook('onRequest', async (request, reply) => {
+  const origin = (request.headers.origin ?? '').toString();
+  if (ALLOWED_WEB_ORIGINS.has(origin)) {
+    reply.header('Access-Control-Allow-Origin', origin);
+    reply.header('Vary', 'Origin');
+    reply.header(
+        'Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    reply.header(
+        'Access-Control-Allow-Headers',
+        (request.headers['access-control-request-headers'] ?? 'content-type')
+            .toString());
+  }
+
+  if (request.method === 'OPTIONS') {
+    return reply.status(204).send();
+  }
+});
+
 await registerHealthRoutes(app);
 await registerCorpusRoutes(app);
 await registerRipenessRoutes(app);

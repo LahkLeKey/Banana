@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, test} from 'bun:test';
 
-import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseResolution, resolveApiBaseResolutionError, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
+import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseResolution, resolveApiBaseResolutionError, resolveApiBaseUrl, resolveChatApiBaseUrl, resolveChatBootstrapError, resolvePlatformLabel, sendChatMessage,} from './api';
 
 const originalFetch = globalThis.fetch;
 
@@ -62,6 +62,18 @@ describe('react api client', () => {
         .toBe('unresolved');
   });
 
+  test('resolves chat API base with localhost fastify fallback', () => {
+    expect(resolveChatApiBaseUrl('http://localhost:8080', '', undefined))
+        .toBe('http://localhost:8081');
+    expect(resolveChatApiBaseUrl('http://127.0.0.1:8080', '', undefined))
+        .toBe('http://127.0.0.1:8081');
+    expect(resolveChatApiBaseUrl(
+               'http://localhost:8080', 'http://localhost:9081', undefined))
+        .toBe('http://localhost:9081');
+    expect(resolveChatApiBaseUrl('http://api.example', '', undefined))
+        .toBe('http://api.example');
+  });
+
   test('reports explicit API base configuration error when unresolved', () => {
     expect(resolveApiBaseResolutionError(
                '', {
@@ -89,6 +101,27 @@ describe('react api client', () => {
     })).toBe('electron-win32');
 
     expect(resolvePlatformLabel(undefined)).toBe('web');
+  });
+
+  test('classifies transport bootstrap failures with remediation', () => {
+    expect(resolveChatBootstrapError(new Error('Failed to fetch'))).toEqual({
+      kind: 'transport_unreachable',
+      message:
+          'Chat bootstrap transport failure: the chat runtime endpoint could not be reached.',
+      remediation:
+          'Ensure the runtime profile is healthy and the apps profile is up, then retry chat bootstrap or reload.',
+      retryable: true,
+    });
+  });
+
+  test('classifies request bootstrap failures with remediation', () => {
+    expect(resolveChatBootstrapError(new Error('request failed (404)'))).toEqual({
+      kind: 'request_failed',
+      message: 'Chat bootstrap request failed: request failed (404)',
+      remediation:
+          'Verify chat session routes are available for the configured API base, then retry.',
+      retryable: true,
+    });
   });
 
   test('fetchBananaSummary returns typed payload', async () => {

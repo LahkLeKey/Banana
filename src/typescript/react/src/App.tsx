@@ -16,6 +16,8 @@ import {
     fetchBananaSummary,
     fetchEnsembleVerdictWithEmbedding,
     resolveApiBaseResolution,
+    resolveChatApiBaseUrl,
+    resolveChatBootstrapError,
     predictRipeness,
     type RipenessResponse,
     resolvePlatformLabel,
@@ -77,6 +79,8 @@ function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMe
     return merged;
 }
 
+type ChatBootstrapState = "initializing" | "ready" | "failed";
+
 export function App() {
     const [banana, setBanana] = useState<number | null>(null);
     const [session, setSession] = useState<ChatSession | null>(null);
@@ -94,6 +98,9 @@ export function App() {
     const [ensembleInput, setEnsembleInput] = useState("");
     const [lastSubmittedSample, setLastSubmittedSample] = useState<string | null>(null);
     const [isBootstrapping, setIsBootstrapping] = useState(false);
+    const [chatBootstrapState, setChatBootstrapState] = useState<ChatBootstrapState>("initializing");
+    const [chatBootstrapRemediation, setChatBootstrapRemediation] = useState<string | null>(null);
+    const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
     const [isSending, setIsSending] = useState(false);
     // Slice 029 -- last-N verdict history (rendered as "Recent verdicts").
     const [recentVerdicts, setRecentVerdicts] = useState<RecentVerdict[]>([]);
@@ -101,9 +108,11 @@ export function App() {
 
     const apiBaseResolution = useMemo(() => resolveApiBaseResolution(), []);
     const apiBaseUrl = apiBaseResolution.baseUrl;
+    const chatApiBaseUrl = useMemo(() => resolveChatApiBaseUrl(apiBaseUrl), [apiBaseUrl]);
     const apiBaseResolutionError = apiBaseResolution.error;
     const platformLabel = useMemo(() => resolvePlatformLabel(), []);
     const chatUnavailable = Boolean(apiBaseResolutionError);
+    const chatReady = chatBootstrapState === "ready" && Boolean(session);
     const showAttention = useMemo(() => {
         const importMeta = import.meta as { env?: { VITE_BANANA_SHOW_ATTENTION?: string } };
         return importMeta.env?.VITE_BANANA_SHOW_ATTENTION === "1";
@@ -139,6 +148,8 @@ export function App() {
         if (chatUnavailable) {
             // Config errors are rendered in the dedicated banner.
             setChatError(null);
+            setChatBootstrapRemediation(null);
+            setChatBootstrapState("failed");
             return;
         }
 
@@ -146,20 +157,24 @@ export function App() {
 
         async function bootstrapSession() {
             setIsBootstrapping(true);
+            setChatBootstrapState("initializing");
             setChatError(null);
+            setChatBootstrapRemediation(null);
             try {
-                const payload = await createChatSession(apiBaseUrl, platformLabel);
+                const payload = await createChatSession(apiBaseUrl, platformLabel, chatApiBaseUrl);
                 if (!cancelled) {
                     setSession(payload.session);
                     setMessages([payload.welcome_message]);
+                    setChatBootstrapState("ready");
                 }
             } catch (error: unknown) {
                 if (!cancelled) {
-                    setChatError(
-                        error instanceof Error
-                            ? `Chat bootstrap failed: ${error.message}`
-                            : "failed to create chat session"
-                    );
+                    const resolution = resolveChatBootstrapError(error);
+                    setSession(null);
+                    setMessages([]);
+                    setChatError(resolution.message);
+                    setChatBootstrapRemediation(resolution.remediation);
+                    setChatBootstrapState("failed");
                 }
             } finally {
                 if (!cancelled) {
@@ -172,7 +187,7 @@ export function App() {
         return () => {
             cancelled = true;
         };
-    }, [apiBaseResolutionError, apiBaseUrl, chatUnavailable, platformLabel]);
+    }, [apiBaseResolutionError, apiBaseUrl, bootstrapAttempt, chatApiBaseUrl, chatUnavailable, platformLabel]);
 
     const sendMessage = useCallback(async () => {
         if (!session || !apiBaseUrl) return;
@@ -191,6 +206,7 @@ export function App() {
                 session.id,
                 content,
                 `${platformLabel}-${session.id}-${messageCounter.current}`,
+                chatApiBaseUrl,
             );
             setMessages((existing) =>
                 mergeMessages(existing, [payload.user_message, payload.assistant_message])
@@ -202,11 +218,15 @@ export function App() {
         } finally {
             setIsSending(false);
         }
-    }, [apiBaseUrl, draft, platformLabel, session]);
+    }, [apiBaseUrl, chatApiBaseUrl, draft, platformLabel, session]);
 
     function onSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         void sendMessage();
+    }
+
+    function onRetryBootstrap() {
+        setBootstrapAttempt((value) => value + 1);
     }
 
     async function onRipenessSubmit(event: FormEvent<HTMLFormElement>) {
@@ -497,7 +517,7 @@ export function App() {
             <section className="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                     <span>platform: {platformLabel}</span>
-                    <span>session: {session?.id ?? (isBootstrapping ? "initializing" : "missing")}</span>
+                    <span>session: {session?.id ?? chatBootstrapState}</span>
                 </div>
 
                 <div className="flex max-h-80 flex-col gap-2 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50 p-3">
@@ -512,7 +532,7 @@ export function App() {
                 <form className="flex flex-col gap-2 sm:flex-row" onSubmit={onSubmit}>
                     <input
                         className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                        disabled={chatUnavailable || isBootstrapping || isSending || !session}
+                        disabled={!chatReady || chatUnavailable || isBootstrapping || isSending}
                         onChange={(event) => setDraft(event.target.value)}
                         placeholder="Ask the banana assistant"
                         value={draft}
@@ -520,10 +540,10 @@ export function App() {
                     <button
                         className="rounded-md bg-lime-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
                         disabled={
+                            !chatReady ||
                             chatUnavailable ||
                             isBootstrapping ||
                             isSending ||
-                            !session ||
                             draft.trim().length === 0
                         }
                         type="submit"
@@ -533,6 +553,18 @@ export function App() {
                 </form>
 
                 {chatError ? <ErrorText>{chatError}</ErrorText> : null}
+                {chatBootstrapRemediation ? (
+                    <p className="text-xs text-slate-500" data-testid="chat-bootstrap-remediation">
+                        {chatBootstrapRemediation}
+                    </p>
+                ) : null}
+                {!chatUnavailable && !chatReady && !isBootstrapping ? (
+                    <RetryButton
+                        data-testid="chat-bootstrap-retry"
+                        onClick={onRetryBootstrap}
+                        disabled={isBootstrapping}
+                    />
+                ) : null}
             </section>
         </main>
     );

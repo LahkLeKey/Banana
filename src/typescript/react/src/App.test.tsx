@@ -69,6 +69,51 @@ async function submitEnsemble(text: string) {
 }
 
 describe('App ensemble verdict surface (slice 023)', () => {
+    test('enables chat input after healthy bootstrap', async () => {
+        globalThis.fetch = makeFetchMock(defaultBootstrap);
+        await act(async () => { render(<App />); });
+        await flush();
+
+        const chatInput = screen.getByPlaceholderText('Ask the banana assistant') as HTMLInputElement;
+        expect(chatInput.hasAttribute('disabled')).toBe(false);
+        expect(screen.getByText('session: chat_1')).not.toBeNull();
+        expect(screen.queryByTestId('chat-bootstrap-retry')).toBeNull();
+    });
+
+    test('shows bootstrap remediation and recovers after retry', async () => {
+        let bootstrapAttempts = 0;
+        globalThis.fetch = makeFetchMock((input) => {
+            const url = String(input);
+            if (url.endsWith('/chat/sessions')) {
+                bootstrapAttempts += 1;
+                if (bootstrapAttempts === 1) {
+                    throw new Error('Failed to fetch');
+                }
+                return jsonResponse({
+                    session: { id: 'chat_1', platform: 'web', created_at: 'x', updated_at: 'x', message_count: 1 },
+                    welcome_message: { id: 'm0', session_id: 'chat_1', role: 'assistant', content: 'hi', created_at: 'x', status: 'complete' },
+                }, 201);
+            }
+            return defaultBootstrap(input);
+        });
+
+        await act(async () => { render(<App />); });
+        await flush();
+
+        expect(screen.getByText('Chat bootstrap transport failure: the chat runtime endpoint could not be reached.')).not.toBeNull();
+        expect(screen.getByTestId('chat-bootstrap-remediation').textContent)
+            .toContain('Ensure the runtime profile is healthy and the apps profile is up');
+
+        await act(async () => {
+            fireEvent.click(screen.getByTestId('chat-bootstrap-retry'));
+        });
+        await flush();
+
+        expect(bootstrapAttempts).toBe(2);
+        expect(screen.getByText('session: chat_1')).not.toBeNull();
+        expect(screen.queryByTestId('chat-bootstrap-remediation')).toBeNull();
+    });
+
     test('renders empty-state copy before any submit', async () => {
         globalThis.fetch = makeFetchMock(defaultBootstrap);
         await act(async () => { render(<App />); });
