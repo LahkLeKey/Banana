@@ -33,12 +33,25 @@ WIKI_REMOTE_URL="${BANANA_WIKI_REMOTE_URL:-https://github.com/LahkLeKey/Banana.w
 WIKI_ENFORCE_CANONICAL_REMOTE="${BANANA_ENFORCE_CANONICAL_WIKI_REMOTE:-true}"
 OUTPUT_DIR="${BANANA_SDLC_OUTPUT_DIR:-artifacts/sdlc-orchestration}"
 SUMMARY_PATH="${BANANA_SDLC_SUMMARY_PATH:-${OUTPUT_DIR}/summary-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
+RUN_API_PARITY_CHECK="${BANANA_SDLC_RUN_API_PARITY_CHECK:-false}"
+API_PARITY_STRICT="${BANANA_SDLC_API_PARITY_STRICT:-false}"
 
 mkdir -p "$OUTPUT_DIR"
 
 if [[ "${BANANA_SDLC_VALIDATE_AI_CONTRACTS:-true}" == "true" ]]; then
   echo "Validating AI customization and wiki-sync contracts..."
   python scripts/validate-ai-contracts.py > "${OUTPUT_DIR}/ai-contract-report-${RUN_ID}-attempt-${RUN_ATTEMPT}.json"
+fi
+
+if [[ "$RUN_API_PARITY_CHECK" == "true" ]]; then
+  echo "Running API parity governance preflight..."
+  parity_args=()
+  if [[ "$API_PARITY_STRICT" == "true" ]]; then
+    parity_args+=(--strict)
+  else
+    parity_args+=(--inventory-only)
+  fi
+  bash scripts/validate-api-parity-governance.sh "${parity_args[@]}"
 fi
 
 PLAN_INPUT_PATH="${OUTPUT_DIR}/plan-${RUN_ID}-attempt-${RUN_ATTEMPT}.json"

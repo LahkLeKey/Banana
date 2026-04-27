@@ -36,3 +36,22 @@ export function summarizeFindings(findings) {
 
   return summary;
 }
+
+export function sortFindings(findings) {
+  return [...findings].sort((a, b) => {
+    const keyDiff = String(a.route_key).localeCompare(String(b.route_key));
+    if (keyDiff !== 0) return keyDiff;
+    return String(a.mismatch_type).localeCompare(String(b.mismatch_type));
+  });
+}
+
+export function mergeFindings(...findingGroups) {
+  const merged = [];
+  for (const group of findingGroups) {
+    if (!Array.isArray(group)) continue;
+    for (const finding of group) {
+      merged.push(finding);
+    }
+  }
+  return sortFindings(merged);
+}

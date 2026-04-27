@@ -5,7 +5,12 @@ import path from 'node:path';
 
 import {loadAspNetRouteSurface} from './lib/load-aspnet-route-surface.mjs';
 import {loadFastifyRouteSurface} from './lib/load-fastify-route-surface.mjs';
-import {createFinding, summarizeFindings, utcNowIso} from './lib/parity-finding-model.mjs';
+import {
+  createFinding,
+  sortFindings,
+  summarizeFindings,
+  utcNowIso,
+} from './lib/parity-finding-model.mjs';
 
 function parseArgs(argv) {
   const args = {
@@ -30,7 +35,7 @@ function parseArgs(argv) {
   return args;
 }
 
-function buildMissingRouteFindings(repoRoot) {
+export function buildMissingRouteFindings(repoRoot) {
   const aspnet = loadAspNetRouteSurface(repoRoot);
   const fastify = loadFastifyRouteSurface(repoRoot);
 
@@ -63,8 +68,7 @@ function buildMissingRouteFindings(repoRoot) {
     }
   }
 
-  findings.sort((a, b) => a.route_key.localeCompare(b.route_key));
-  return findings;
+  return sortFindings(findings);
 }
 
 function main() {

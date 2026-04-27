@@ -9,6 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "validate-api-parity-governance.sh"
 INVENTORY = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "overlapping-routes.inventory.json"
 DRIFT = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "parity-drift-report.json"
+GATE = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "parity-gate-result.json"
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -40,14 +41,21 @@ def test_non_strict_mode_writes_drift_report() -> None:
     result = _run()
     assert result.returncode == 0, result.stderr
     assert DRIFT.exists()
+    assert GATE.exists()
 
     payload = json.loads(DRIFT.read_text(encoding="utf-8"))
     assert "summary" in payload
     assert "findings" in payload
     assert payload["summary"]["total_findings"] >= 0
 
+    gate_payload = json.loads(GATE.read_text(encoding="utf-8"))
+    assert gate_payload["decision"] in {"PASS", "FAIL"}
+
 
 def test_strict_mode_fails_when_unresolved_missing_routes_exist() -> None:
     result = _run("--strict")
     # Current repo intentionally has non-overlapping routes across ASP.NET/Fastify.
     assert result.returncode == 1
+
+    gate_payload = json.loads(GATE.read_text(encoding="utf-8"))
+    assert gate_payload["decision"] == "FAIL"

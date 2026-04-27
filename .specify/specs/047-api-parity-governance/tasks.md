@@ -65,14 +65,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Add parity enforcement contract tests in tests/e2e/Contracts/ApiParityEnforcementContractTests.cs
-- [ ] T021 [US2] Implement status parity comparator in scripts/api-parity/compare-status-parity.mjs
-- [ ] T022 [US2] Implement response-shape parity comparator in scripts/api-parity/compare-shape-parity.mjs
-- [ ] T023 [US2] Implement actionable drift report generator in scripts/api-parity/build-drift-report.mjs
-- [ ] T024 [US2] Implement exception application logic with expiry enforcement in scripts/api-parity/apply-parity-exceptions.mjs
-- [ ] T025 [US2] Implement fail-closed parity gate evaluator in scripts/api-parity/evaluate-parity-gate.mjs
-- [ ] T026 [US2] Implement end-to-end parity enforcement command in scripts/api-parity/run-parity-gate.mjs
-- [ ] T027 [US2] Finalize gate and exception semantics in .specify/specs/047-api-parity-governance/contracts/api-parity-governance-contract.md
+- [x] T020 [P] [US2] Add parity enforcement contract tests in tests/e2e/Contracts/ApiParityEnforcementContractTests.cs
+- [x] T021 [US2] Implement status parity comparator in scripts/api-parity/compare-status-parity.mjs
+- [x] T022 [US2] Implement response-shape parity comparator in scripts/api-parity/compare-shape-parity.mjs
+- [x] T023 [US2] Implement actionable drift report generator in scripts/api-parity/build-drift-report.mjs
+- [x] T024 [US2] Implement exception application logic with expiry enforcement in scripts/api-parity/apply-parity-exceptions.mjs
+- [x] T025 [US2] Implement fail-closed parity gate evaluator in scripts/api-parity/evaluate-parity-gate.mjs
+- [x] T026 [US2] Implement end-to-end parity enforcement command in scripts/api-parity/run-parity-gate.mjs
+- [x] T027 [US2] Finalize gate and exception semantics in .specify/specs/047-api-parity-governance/contracts/api-parity-governance-contract.md
 
 **Checkpoint**: User Story 2 independently detects and blocks unresolved status/shape parity drift.
 
@@ -86,12 +86,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T028 [P] [US3] Add workflow parity regression tests in tests/e2e/Contracts/ApiParityWorkflowGateTests.cs
-- [ ] T029 [US3] Add API parity enforcement lane to .github/workflows/compose-ci.yml
-- [ ] T030 [US3] Extend lane result schema handling for api-parity lane in scripts/compose-ci-write-lane-result.sh
-- [ ] T031 [US3] Publish parity inventory, drift report, and exception ledger artifacts in .github/workflows/compose-ci.yml
-- [ ] T032 [US3] Add parity governance check invocation to scripts/workflow-orchestrate-sdlc.sh
-- [ ] T033 [US3] Add parity governance check invocation to scripts/workflow-orchestrate-triaged-item-pr.sh
+- [x] T028 [P] [US3] Add workflow parity regression tests in tests/e2e/Contracts/ApiParityWorkflowGateTests.cs
+- [x] T029 [US3] Add API parity enforcement lane to .github/workflows/compose-ci.yml
+- [x] T030 [US3] Extend lane result schema handling for api-parity lane in scripts/compose-ci-write-lane-result.sh
+- [x] T031 [US3] Publish parity inventory, drift report, and exception ledger artifacts in .github/workflows/compose-ci.yml
+- [x] T032 [US3] Add parity governance check invocation to scripts/workflow-orchestrate-sdlc.sh
+- [x] T033 [US3] Add parity governance check invocation to scripts/workflow-orchestrate-triaged-item-pr.sh
 
 **Checkpoint**: User Story 3 independently enforces parity in CI/orchestration and prevents workflow regressions.
 

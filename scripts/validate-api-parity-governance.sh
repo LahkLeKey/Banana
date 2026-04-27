@@ -58,11 +58,16 @@ if [[ "$inventory_only" == "true" ]]; then
   exit 0
 fi
 
-echo "[banana] detecting missing-route gaps"
+echo "[banana] evaluating parity gate"
+gate_args=(
+  --repo-root "$ROOT_DIR"
+  --inventory-file "$inventory_file"
+  --exceptions-file "$exceptions_file"
+  --drift-file "$drift_file"
+)
 if [[ "$strict_mode" == "true" ]]; then
-  node scripts/api-parity/detect-missing-route-gaps.mjs --repo-root "$ROOT_DIR" --out-file "$drift_file" --strict
-else
-  node scripts/api-parity/detect-missing-route-gaps.mjs --repo-root "$ROOT_DIR" --out-file "$drift_file"
+  gate_args+=(--strict)
 fi
+node scripts/api-parity/run-parity-gate.mjs "${gate_args[@]}"
 
 echo "[banana] api parity governance validation complete"
