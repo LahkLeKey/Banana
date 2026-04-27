@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, test} from 'bun:test';
 
-import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
+import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseResolutionError, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
 
 const originalFetch = globalThis.fetch;
 
@@ -21,6 +21,19 @@ describe('react api client', () => {
     })).toBe('http://bridge.example');
 
     expect(resolveApiBaseUrl('', undefined)).toBe('');
+  });
+
+  test('reports explicit API base configuration error when unresolved', () => {
+    expect(resolveApiBaseResolutionError('', {
+      apiBaseUrl: 'http://bridge.example',
+      platform: 'linux',
+    })).toBeNull();
+
+    expect(resolveApiBaseResolutionError('http://vite.example', undefined))
+        .toBeNull();
+
+    expect(resolveApiBaseResolutionError('', undefined))
+        .toContain('Missing API base URL');
   });
 
   test('resolves platform label from bridge', () => {

@@ -11,6 +11,7 @@
 - For native or integration work, assume `BANANA_PG_CONNECTION` is required whenever PostgreSQL-backed flows are exercised.
 - For ASP.NET local/runtime work, keep `BANANA_NATIVE_PATH` explicit and avoid hardcoded machine-specific paths.
 - For React work, preserve Bun as the package manager and `VITE_BANANA_API_BASE_URL` as the API base URL contract.
+- For frontend and Electron UX validation, default to the VS Code integrated browser/web view path so runtime checks, terminal diagnostics, and rendered UI verification stay in one window.
 - When behavior changes, update the nearest docs or prompt/skill references rather than scattering duplicate guidance.
 - Do not rewrite or reformat unrelated code when adding agent customizations.
 - Treat feedback-loop updates as SDLC inputs that should flow through incremental feature branches and automated pull requests.

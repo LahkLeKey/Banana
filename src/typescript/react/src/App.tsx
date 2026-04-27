@@ -15,6 +15,7 @@ import {
     createChatSession,
     fetchBananaSummary,
     fetchEnsembleVerdictWithEmbedding,
+    resolveApiBaseResolutionError,
     predictRipeness,
     type RipenessResponse,
     resolveApiBaseUrl,
@@ -100,8 +101,9 @@ export function App() {
     const messageCounter = useRef(0);
 
     const apiBaseUrl = useMemo(() => resolveApiBaseUrl(), []);
+    const apiBaseResolutionError = useMemo(() => resolveApiBaseResolutionError(), []);
     const platformLabel = useMemo(() => resolvePlatformLabel(), []);
-    const chatUnavailable = apiBaseUrl.length === 0;
+    const chatUnavailable = Boolean(apiBaseResolutionError);
     const showAttention = useMemo(() => {
         const importMeta = import.meta as { env?: { VITE_BANANA_SHOW_ATTENTION?: string } };
         return importMeta.env?.VITE_BANANA_SHOW_ATTENTION === "1";
@@ -135,7 +137,7 @@ export function App() {
 
     useEffect(() => {
         if (chatUnavailable) {
-            setChatError("set VITE_BANANA_API_BASE_URL (or BANANA_API_BASE_URL for Electron preload)");
+            setChatError(apiBaseResolutionError ?? "missing API base URL configuration");
             return;
         }
 
@@ -169,7 +171,7 @@ export function App() {
         return () => {
             cancelled = true;
         };
-    }, [apiBaseUrl, chatUnavailable, platformLabel]);
+    }, [apiBaseResolutionError, apiBaseUrl, chatUnavailable, platformLabel]);
 
     const sendMessage = useCallback(async () => {
         if (!session || !apiBaseUrl) return;
@@ -378,6 +380,18 @@ export function App() {
         <main className="mx-auto max-w-3xl space-y-4 p-6">
             <h1 className="text-2xl font-semibold">Banana v2</h1>
             <p className="text-sm text-gray-600">API base: {apiBaseUrl || "<unset>"}</p>
+            {apiBaseResolutionError ? (
+                <section
+                    className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900"
+                    data-testid="api-config-error"
+                >
+                    <p className="font-semibold">Frontend runtime configuration error</p>
+                    <p>{apiBaseResolutionError}</p>
+                    <p className="mt-1 text-xs">
+                        Remediation: run <code>Compose: frontend react down</code>, then <code>Compose: frontend react up + ready</code>.
+                    </p>
+                </section>
+            ) : null}
 
             <div className="flex items-center gap-2">
                 <BananaBadge count={banana ?? 0}>(today)</BananaBadge>

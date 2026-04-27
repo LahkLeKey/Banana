@@ -38,7 +38,7 @@
     {
       "label": "Compose: frontend react up + ready",
       "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile apps --action up && bash scripts/compose-profile-ready.sh --profile apps'",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile apps --action up -- --build && bash scripts/compose-profile-ready.sh --profile apps'",
       "options": {
         "cwd": "${workspaceFolder:(Monorepo) Banana}"
       },
@@ -70,6 +70,19 @@
       "problemMatcher": []
     },
     {
+      "label": "Validate: frontend config drift",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/validate-frontend-config-drift.sh",
+        "--require-running"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Compose: electron-desktop up + ready",
       "type": "shell",
       "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile electron-desktop --action up && bash scripts/compose-profile-ready.sh --profile electron-desktop'",
@@ -81,7 +94,7 @@
     {
       "label": "Compose: frontend electron up + ready",
       "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile electron-desktop --action up && bash scripts/compose-profile-ready.sh --profile electron-desktop'",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile electron-desktop --action up -- --build && bash scripts/compose-profile-ready.sh --profile electron-desktop'",
       "options": {
         "cwd": "${workspaceFolder:(Monorepo) Banana}"
       },
@@ -124,7 +137,7 @@
     {
       "label": "Compose: frontend mobile up + ready",
       "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile mobile --action up && bash scripts/compose-profile-ready.sh --profile mobile'",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile mobile --action up -- --build && bash scripts/compose-profile-ready.sh --profile mobile'",
       "options": {
         "cwd": "${workspaceFolder:(Monorepo) Banana}"
       },

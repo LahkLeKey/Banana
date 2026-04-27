@@ -1,3 +1,16 @@
+<!--
+Sync Impact Report
+- Version change: 1.0.0 -> 1.1.0
+- Modified principles:
+	- Added VI. One-Window Interactive Validation
+- Added sections: none
+- Removed sections: none
+- Templates requiring updates:
+	- ✅ .specify/templates/plan-template.md (validated, no update required)
+	- ✅ .specify/templates/spec-template.md (validated, no update required)
+	- ✅ .specify/templates/tasks-template.md (validated, no update required)
+- Follow-up TODOs: none
+-->
 # Banana Spec Kit Constitution
 
 ## Core Principles
@@ -17,6 +30,9 @@ Every change must run domain-appropriate validation before merge, including work
 ### V. Documentation and Wiki Parity
 When workflow behavior, automation contracts, prompts, skills, or runbooks change, repository docs and wiki snapshots must be updated in the same SDLC slice.
 
+### VI. One-Window Interactive Validation
+Frontend and desktop UX changes must be validated in an interactive in-workspace surface before task closure. For Banana this means using the VS Code integrated browser/web view flow (with compose-backed runtime services) so implementation, diagnostics, and rendered behavior are reviewed in one window.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
@@ -32,6 +48,7 @@ When workflow behavior, automation contracts, prompts, skills, or runbooks chang
 - Keep automation pull requests on provenance labels including `speckit-driven` and required-check workflows.
 - Run `scripts/validate-ai-contracts.py` whenever AI workflow contracts (prompts, agents, skills, instructions, workflows, wiki mapping) are touched.
 - Run `scripts/workflow-sync-wiki.sh` in the same change when contract surfaces move.
+- For frontend and Electron behavior checks, verify rendered state in the VS Code integrated browser against the active runtime profile before marking tasks done.
 
 ## Governance
 
@@ -39,4 +56,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-24
+**Version**: 1.1.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-26

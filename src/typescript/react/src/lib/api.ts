@@ -53,10 +53,24 @@ function resolveViteApiBaseUrl(): string {
   return importMeta.env?.VITE_BANANA_API_BASE_URL ?? '';
 }
 
+export function resolveApiBaseResolutionError(
+    viteBaseUrl = resolveViteApiBaseUrl(),
+    electronBridge = resolveElectronBridge()): string|null {
+  if (viteBaseUrl.trim().length > 0) {
+    return null;
+  }
+
+  if ((electronBridge?.apiBaseUrl ?? '').trim().length > 0) {
+    return null;
+  }
+
+  return 'Missing API base URL. Set VITE_BANANA_API_BASE_URL for web or BANANA_API_BASE_URL for Electron preload, then relaunch via the canonical Compose frontend profile.';
+}
+
 export function resolveApiBaseUrl(
     viteBaseUrl = resolveViteApiBaseUrl(),
     electronBridge = resolveElectronBridge()): string {
-  return viteBaseUrl || electronBridge?.apiBaseUrl || '';
+  return viteBaseUrl.trim() || electronBridge?.apiBaseUrl?.trim() || '';
 }
 
 export function resolvePlatformLabel(electronBridge = resolveElectronBridge()):

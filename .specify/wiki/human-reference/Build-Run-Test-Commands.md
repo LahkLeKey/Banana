@@ -102,6 +102,24 @@ Run runtime API-only profile:
 bash scripts/compose-runtime.sh
 ```
 
+Frontend config drift diagnostic (checks launch wiring, compose interpolation,
+and running container env for React):
+
+```bash
+bash scripts/validate-frontend-config-drift.sh --require-running
+```
+
+If frontend runtime output still reflects old behavior after code changes,
+relaunch using the VS Code frontend compose tasks that include `--build`
+to force image refresh and avoid stale container source.
+
+One-window interactive baseline for frontend debugging:
+
+1. Start runtime/apps using VS Code compose tasks.
+2. Open the app in the VS Code integrated browser at `http://localhost:5173`.
+3. Validate rendered UI behavior (not only env/compose values) before closing tasks.
+4. Keep diagnostics in the same window (terminal + browser + task output) to reduce drift.
+
 ## One-Click WSL2 Channel Launchers
 
 Desktop channel launcher (Windows shell):
