@@ -2,17 +2,9 @@
 
 Pass the Banana from native C into API, desktop, web, and mobile channels.
 
-This repo is a practical playground for one core idea: keep domain behavior in native C, then project it cleanly into multiple runtimes without rewriting business logic per app.
+> This repo is a practical playground for one core idea: keep domain behavior in native C, then project it cleanly into multiple runtimes without rewriting business logic per app.
 
-| Payload (text)                                             | banana_score | label       |
-|------------------------------------------------------------|--------------|-------------|
-| `ripe banana peel smoothie banana bunch banana bread`      | ~0.9507      | banana      |
-| `banana banana banana banana banana banana banana banana`  | ~0.9441      | banana      |
-| `yellow fruit on the counter maybe`                        | ~0.8287      | banana      |
-| `""` (empty)                                               | ~0.6454      | banana      |
-| `yellow plastic toy shaped like a banana` (decoy)          | ~0.4404      | not_banana  |
-| `plastic engine oil junk waste motor oil`                  | ~0.0782      | not_banana  |
-
+<img width="1114" height="1799" alt="image" src="https://github.com/user-attachments/assets/d7083e98-551a-48f1-8125-2f2af567ae83" />
 
 ## Learn More
 
