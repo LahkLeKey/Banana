@@ -1,104 +1,93 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Ensemble Predict Blank Page UX Spike
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `.specify/specs/[###-feature-name]/spec.md`
-
-**Note**: This template is filled in by the `specify plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+**Branch**: `feature/037-training-launch-surface-expansion` | **Date**: 2026-04-26 | **Spec**: [.specify/specs/042-frontend-ensemble-blank-page-spike/spec.md](.specify/specs/042-frontend-ensemble-blank-page-spike/spec.md)
+**Input**: Feature specification from `.specify/specs/042-frontend-ensemble-blank-page-spike/spec.md`
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+Investigate and eliminate the React UX regression where triggering ensemble prediction can reload into a blank page, while preserving the currently working verdict/escalation/retry baseline. The spike produces a bounded frontend implementation packet: verified root-cause hypotheses, explicit submit/state guardrails, and regression coverage requirements before coding tasks are generated.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
-
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5.x, React 18.x, Bun runtime for workspace tests  
+**Primary Dependencies**: React app runtime in `src/typescript/react`, shared components in `@banana/ui`, frontend API client in `src/typescript/react/src/lib/api.ts`  
+**Storage**: Browser local/session state and in-memory React state; no new datastore in scope  
+**Testing**: Bun unit/component tests (`bun test`) plus focused DOM behavior checks in `src/typescript/react/src/App.test.tsx`  
+**Target Platform**: Web runtime (Vite/Bun) with parity considerations for Electron bridge behavior
+**Project Type**: Frontend web application spike (React)
+**Performance Goals**: No perceptible regression in ensemble submit responsiveness versus current baseline
+**Constraints**: Must preserve existing verdict/escalation/retry UX contracts; no backend model contract changes; keep `VITE_BANANA_API_BASE_URL` contract intact
+**Scale/Scope**: Ensemble predict interaction path and related frontend state/submit wiring only
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+### Pre-Design Gate Check
+
+- Principle I (Domain Core First): PASS. Spike focuses on frontend submit UX and does not relocate native business rules.
+- Principle II (Layered Interop Contract): PASS. No controller/service/pipeline/native interop contract mutation in this planning slice.
+- Principle III (Spec First Delivery): PASS. Feature spec and plan artifacts are created before implementation.
+- Principle IV (Verifiable Quality Gates): PASS. Plan includes explicit regression test updates and reproducible validation path.
+- Principle V (Documentation and Wiki Parity): PASS. Spike includes runbook/spec artifacts and ties to existing wiki sync contract.
+
+### Post-Design Gate Check
+
+- Principle I: PASS after design remains frontend-only and bounded.
+- Principle II: PASS after contracts avoid backend/native interface changes.
+- Principle III: PASS with research/data-model/contracts/quickstart prepared for tasks phase.
+- Principle IV: PASS with measurable criteria and repeatable test commands.
+- Principle V: PASS with spec artifacts aligned for downstream documentation updates.
+
+No constitution violations are introduced by this planning scope.
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-.specify/specs/[###-feature]/
-├── plan.md              # This file (specify plan command output)
-├── research.md          # Phase 0 output (specify plan command)
-├── data-model.md        # Phase 1 output (specify plan command)
-├── quickstart.md        # Phase 1 output (specify plan command)
-├── contracts/           # Phase 1 output (specify plan command)
-└── tasks.md             # Phase 2 output (specify tasks command - NOT created by specify plan)
+.specify/specs/042-frontend-ensemble-blank-page-spike/
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+└── tasks.md
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
+src/typescript/react/
 ├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+│   ├── App.tsx
+│   ├── App.test.tsx
+│   └── lib/
+│       ├── api.ts
+│       └── resilience-bootstrap.ts
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
+src/typescript/shared/ui/
+└── src/
 
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+scripts/
+└── compose-run-profile.sh
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Use existing React app and test surfaces only. No new app package or runtime channel is introduced in this spike.
+
+## Phase 0 Research Plan
+
+- Confirm whether blank-page outcome is browser-level reload versus render-level blank state.
+- Compare submit triggers (button click vs Enter key submit) and default form behavior.
+- Audit pending-state and duplicate-submit paths for unintended navigation/state reset.
+- Validate Electron bridge interactions as non-primary but potentially contributing context.
+
+## Phase 1 Design Plan
+
+- Define bounded frontend interaction model and state transitions for ensemble submit.
+- Define contract for non-reload submit behavior and baseline-preservation checks.
+- Define regression coverage expectations for tests that fail if blank-page behavior returns.
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+No constitution exceptions or complexity justifications are required for this spike plan.

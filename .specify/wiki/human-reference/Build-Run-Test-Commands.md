@@ -194,6 +194,22 @@ dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release
 ctest --test-dir build/native -C Release --output-on-failure
 ```
 
+## Feature 042 Frontend Spike Quick Commands
+
+Focused no-reload ensemble regression checks:
+
+```bash
+cd src/typescript/react
+bun test src/App.test.tsx
+```
+
+Feature spec-task parity validation:
+
+```bash
+cd c:/Github/Banana
+python scripts/validate-spec-tasks-parity.py .specify/specs/042-frontend-ensemble-blank-page-spike
+```
+
 ## Coverage Commands
 
 Aggregated managed and native-friendly coverage flow:

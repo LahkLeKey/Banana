@@ -1,0 +1,4 @@
+Feature: 042-frontend-ensemble-blank-page-spike
+Date: 2026-04-26
+Command: python scripts/validate-spec-tasks-parity.py .specify/specs/042-frontend-ensemble-blank-page-spike
+Result: no output (no reported spec-task parity drift)

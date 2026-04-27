@@ -55,7 +55,10 @@ function EnsembleBadge({ verdict, showAttention, children }: EnsembleVariantProp
         : verdict.label === 'not_banana'
             ? { bg: tokens.color.notbanana.bg, fg: tokens.color.notbanana.fg }
             : { bg: tokens.color.escalation.bg, fg: tokens.color.text.error };
-    const magnitude = verdict.calibration_magnitude.toFixed(2);
+    const rawMagnitude = typeof verdict.calibration_magnitude === 'number'
+        ? verdict.calibration_magnitude
+        : Number.NaN;
+    const magnitude = Number.isFinite(rawMagnitude) ? rawMagnitude.toFixed(2) : '--';
 
     return (
         <span

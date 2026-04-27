@@ -1,4 +1,4 @@
-import type {ChatMessage, ChatSession, EnsembleVerdict, Ripeness, TrainingAuditEvent, TrainingLane, TrainingRunRequest, TrainingRunResult} from '@banana/ui';
+import type {ChatMessage, ChatSession, EnsembleVerdict, Ripeness, TrainingAuditEvent, TrainingLane, TrainingRunRequest, TrainingRunResult,} from '@banana/ui';
 
 type ErrorPayload = {
   error?: {message?: string;};

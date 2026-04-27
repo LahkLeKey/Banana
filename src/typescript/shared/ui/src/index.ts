@@ -13,4 +13,4 @@ export type {RetryButtonProps} from './components/RetryButton';
 export {RipenessLabel} from './components/RipenessLabel';
 export {tokens} from './tokens';
 export type {Tokens} from './tokens';
-export type {ChatMessage, ChatMessageStatus, ChatRole, ChatSession, EnsembleLabel, EnsembleStatus, EnsembleVerdict, Ripeness,} from './types';
+export type {ChatMessage, ChatMessageStatus, ChatRole, ChatSession, EnsembleLabel, EnsembleStatus, EnsembleVerdict, Ripeness, TrainingAuditEvent, TrainingLane, TrainingRunRequest, TrainingRunResult,} from './types';
