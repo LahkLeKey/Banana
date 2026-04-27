@@ -119,6 +119,7 @@ services:
     environment:
       DISPLAY: ${DISPLAY:-:0}
       BANANA_ELECTRON_RENDERER_URL: http://react-app:5173
+      BANANA_API_BASE_URL: ${BANANA_ELECTRON_API_URL:-http://localhost:8080}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
       - /mnt/wslg:/mnt/wslg
@@ -131,7 +132,7 @@ services:
       context: .
       dockerfile: docker/react.Dockerfile
     environment:
-      VITE_BANANA_API_BASE_URL: http://api:8080
+      VITE_BANANA_API_BASE_URL: ${BANANA_REACT_API_URL:-http://localhost:8080}
     ports:
       - "5173:5173"
     profiles: ["apps", "electron"]
@@ -141,6 +142,8 @@ services:
       context: .
       dockerfile: docker/react-native.Dockerfile
     command: ["bash", "-lc", "bun run web"]
+    environment:
+      EXPO_PUBLIC_BANANA_API_BASE_URL: ${BANANA_MOBILE_API_URL:-http://localhost:8080}
     ports:
       - "19006:19006"
     profiles: ["apps"]

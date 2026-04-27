@@ -39,6 +39,7 @@ else
     "README.md|Auto-README.md"
     "docs/developer-onboarding.md|Auto-Developer-Onboarding.md"
     ".github/skills/banana-build-and-run/entry-points.md|Auto-Build-Run-Test-Entry-Points.md"
+    ".specify/wiki/human-reference/api-parity-governance.md|api-parity-governance.md"
     "data/not-banana/README.md|Auto-Not-Banana-Data.md"
     "data/not-banana/feedback/README.md|Auto-Not-Banana-Feedback-Inbox.md"
   )

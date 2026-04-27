@@ -126,6 +126,8 @@ on:
       - data/not-banana/**
       - '!data/not-banana/model-release-history/**'
       - scripts/train-not-banana-model.py
+      - scripts/training_session_store.py
+      - scripts/validate-training-session-schema.py
       - scripts/validate-not-banana-runtime-contract.py
       - scripts/manage-not-banana-model-image.py
       - scripts/workflow-persist-registry-history-pr.sh
@@ -291,6 +293,11 @@ jobs:
           MODEL_OUTPUT_DIR="artifacts/not-banana-model/${BANANA_RELEASE_ID}"
           python scripts/validate-not-banana-runtime-contract.py \
             --model-dir "$MODEL_OUTPUT_DIR"
+
+      - name: Validate persisted training-session schema (${{ matrix.release_id }})
+        run: |
+          python scripts/validate-training-session-schema.py \
+            data/not-banana/sessions/history.jsonl
 
       - name: Print metrics (${{ matrix.release_id }})
         env:
@@ -564,6 +571,11 @@ jobs:
         run: |
           python scripts/validate-not-banana-runtime-contract.py \
             --model-dir artifacts/not-banana-model
+
+      - name: Validate deterministic persisted session schema
+        run: |
+          python scripts/validate-training-session-schema.py \
+            data/not-banana/sessions/history.jsonl
 
       - name: Stage generated header next to native source
         run: |

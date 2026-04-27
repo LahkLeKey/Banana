@@ -3,19 +3,19 @@
     "compounds": [
         {
             "name": "Frontends: API + React",
-            "configurations": ["API: Bun dev", "React: Vite dev"],
+            "configurations": ["Compose: apps profile"],
             "stopAll": true,
             "presentation": { "group": "frontends", "order": 1 }
         },
         {
             "name": "Frontends: API + Electron",
-            "configurations": ["API: Bun dev", "Electron: smoke"],
+            "configurations": ["Compose: electron-desktop profile"],
             "stopAll": true,
             "presentation": { "group": "frontends", "order": 2 }
         },
         {
             "name": "Frontends: API + React Native (web)",
-            "configurations": ["API: Bun dev", "React Native: Expo web"],
+            "configurations": ["Compose: mobile profile"],
             "stopAll": true,
             "presentation": { "group": "frontends", "order": 3 }
         },
@@ -32,52 +32,43 @@
     ],
     "configurations": [
         {
-            "name": "API: Bun dev",
-            "type": "node",
+            "name": "Compose: runtime profile",
+            "type": "node-terminal",
             "request": "launch",
-            "runtimeExecutable": "bun",
-            "runtimeArgs": ["run", "dev"],
+            "command": "bash -lc cat",
             "cwd": "${workspaceFolder:(Monorepo) Banana}/src/typescript/api",
-            "console": "integratedTerminal",
-            "env": {
-                "BANANA_API_PORT": "8080",
-                "BANANA_NOT_BANANA_MODEL_PATH": ""
-            },
+            "preLaunchTask": "Compose: runtime up + ready",
+            "postDebugTask": "Compose: runtime down",
             "presentation": { "group": "frontends", "order": 10 }
         },
         {
-            "name": "React: Vite dev",
-            "type": "node",
+            "name": "Compose: apps profile",
+            "type": "node-terminal",
             "request": "launch",
-            "runtimeExecutable": "bun",
-            "runtimeArgs": ["run", "dev"],
-            "cwd": "${workspaceFolder:(Monorepo) Banana}/src/typescript/react",
-            "console": "integratedTerminal",
-            "env": {
-                "VITE_BANANA_API_BASE_URL": "http://localhost:8080"
-            },
+            "command": "bash -lc cat",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "preLaunchTask": "Compose: frontend react up + ready",
+            "postDebugTask": "Compose: frontend react down",
             "presentation": { "group": "frontends", "order": 11 }
         },
         {
-            "name": "Electron: smoke",
-            "type": "node",
+            "name": "Compose: electron-desktop profile",
+            "type": "node-terminal",
             "request": "launch",
-            "program": "${workspaceFolder:(Monorepo) Banana}/src/typescript/electron/smoke.js",
-            "cwd": "${workspaceFolder:(Monorepo) Banana}/src/typescript/electron",
-            "console": "integratedTerminal",
+            "command": "bash -lc cat",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "preLaunchTask": "Compose: frontend electron up + ready",
+            "postDebugTask": "Compose: frontend electron down",
             "presentation": { "group": "frontends", "order": 12 }
         },
         {
-            "name": "React Native: Expo web",
-            "type": "node",
+            "name": "Compose: mobile profile",
+            "type": "node-terminal",
             "request": "launch",
-            "runtimeExecutable": "bunx",
-            "runtimeArgs": ["expo", "start", "--web"],
-            "cwd": "${workspaceFolder:(Monorepo) Banana}/src/typescript/react-native",
-            "console": "integratedTerminal",
-            "env": {
-                "EXPO_PUBLIC_BANANA_API_BASE_URL": "http://localhost:8080"
-            },
+            "command": "bash -lc cat",
+            "cwd": "${workspaceFolder:(Monorepo) Banana}",
+            "preLaunchTask": "Compose: frontend mobile up + ready",
+            "postDebugTask": "Compose: frontend mobile down",
             "presentation": { "group": "frontends", "order": 13 }
         },
         {

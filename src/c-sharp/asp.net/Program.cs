@@ -4,6 +4,7 @@ using Banana.Api.Pipeline;
 using Banana.Api.Pipeline.Steps;
 
 var builder = WebApplication.CreateBuilder(args);
+const string FrontendCorsPolicy = "BananaFrontend";
 
 // Spec 007: single typed PipelineContext + single interop seam.
 builder.Services.AddSingleton<INativeBananaClient, NativeBananaClient>();
@@ -19,6 +20,18 @@ builder.Services.AddScoped<EnsembleGatingStep>();
 builder.Services.AddScoped<EnsembleEscalationStep>();
 builder.Services.AddScoped<EnsembleCalibrationStep>();
 builder.Services.AddScoped<PipelineRunner<PipelineContext>>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -29,6 +42,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(FrontendCorsPolicy);
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();

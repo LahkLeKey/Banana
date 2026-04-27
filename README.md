@@ -22,6 +22,34 @@ This repo is a practical playground for one core idea: keep domain behavior in n
 
 > Banana is a prototype for Poly: a polymorphic, multi-platform runtime approach where core behavior starts in C and can be projected into API, desktop, frontend, and mobile delivery channels.
 
+## Compose Run Profiles (Deterministic Local Runtime)
+
+Canonical local runtime orchestration uses `scripts/compose-run-profile.sh`.
+
+Examples:
+
+```bash
+# Primary API/runtime profile
+bash scripts/compose-run-profile.sh --profile runtime --action up
+bash scripts/compose-profile-ready.sh --profile runtime
+
+# Apps profile
+bash scripts/compose-run-profile.sh --profile apps --action up
+bash scripts/compose-run-profile.sh --profile apps --action down
+
+# Electron desktop profile
+bash scripts/compose-run-profile.sh --profile electron-desktop --action up --service electron-desktop
+
+# Mobile Android profile
+bash scripts/compose-run-profile.sh --profile mobile --action up --service android-emulator
+```
+
+Determinism check for repeat runs:
+
+```bash
+bash scripts/validate-compose-run-profiles.sh --profile runtime --attempts 3
+```
+
 ## Coverage 80 One-Pass Triage Checklist
 
 Use this checklist when a merge-gated coverage run fails:

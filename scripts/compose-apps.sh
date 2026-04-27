@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Spec 012 — bring up the apps profile.
 set -euo pipefail
-cd "$(dirname "$0")/.."
-exec docker compose --profile apps up -d "$@"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+exec bash scripts/compose-run-profile.sh --profile apps --action up -- "$@"

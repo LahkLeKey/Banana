@@ -18,6 +18,12 @@ Use this as the default, repeatable local runtime contract for Banana desktop an
 
 Do not introduce parallel runtime launch paths unless explicitly required.
 
+## Canonical Compose Profile Entry Point
+
+- `scripts/compose-run-profile.sh` is the canonical profile start/stop path for supported local run profiles.
+- `scripts/compose-profile-ready.sh` is the canonical readiness gate after profile startup.
+- Existing entrypoint wrappers remain supported but MUST delegate to these canonical profile scripts.
+
 ## Distro Selection Contract
 
 - Auto-select order for Windows-shell launch:
@@ -55,6 +61,12 @@ Inside Ubuntu, these checks are required before desktop launch:
 3. `/var/run/docker.sock` exists.
 
 If preflight fails, return clear integration guidance and fail with exit code `42`.
+
+## Runtime Diagnostic Messaging Contract
+
+- Preflight failures MUST classify missing Docker server/socket as environment contract failures.
+- Desktop and mobile Ubuntu launchers MUST provide actionable remediation when `docker version` fails or `/var/run/docker.sock` is unavailable.
+- Readiness failures MUST identify profile/service and health-check target when available.
 
 ## Troubleshooting Classification
 

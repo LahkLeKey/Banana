@@ -2,6 +2,173 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Compose: runtime up + ready",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up && bash scripts/compose-profile-ready.sh --profile runtime'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: runtime down",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/compose-run-profile.sh",
+        "--profile",
+        "runtime",
+        "--action",
+        "down"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: apps up + ready",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile apps --action up && bash scripts/compose-profile-ready.sh --profile apps'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: frontend react up + ready",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile apps --action up -- --build && bash scripts/compose-profile-ready.sh --profile apps'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: apps down",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/compose-run-profile.sh",
+        "--profile",
+        "apps",
+        "--action",
+        "down"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: frontend react down",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile apps --action down; bash scripts/compose-run-profile.sh --profile runtime --action down'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Validate: frontend config drift",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/validate-frontend-config-drift.sh",
+        "--require-running"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: electron-desktop up + ready",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile electron-desktop --action up && bash scripts/compose-profile-ready.sh --profile electron-desktop'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: frontend electron up + ready",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile electron-desktop --action up -- --build && bash scripts/compose-profile-ready.sh --profile electron-desktop'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: electron-desktop down",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/compose-run-profile.sh",
+        "--profile",
+        "electron-desktop",
+        "--action",
+        "down"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: frontend electron down",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile electron-desktop --action down; bash scripts/compose-run-profile.sh --profile runtime --action down'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: mobile up + ready",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile mobile --action up && bash scripts/compose-profile-ready.sh --profile mobile'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: frontend mobile up + ready",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile mobile --action up -- --build && bash scripts/compose-profile-ready.sh --profile mobile'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: mobile down",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/compose-run-profile.sh",
+        "--profile",
+        "mobile",
+        "--action",
+        "down"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Compose: frontend mobile down",
+      "type": "shell",
+      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile mobile --action down; bash scripts/compose-run-profile.sh --profile runtime --action down'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Train: not-banana (ci profile)",
       "type": "shell",
       "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",

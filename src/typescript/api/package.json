@@ -7,6 +7,8 @@
         "dev": "bun run --hot src/index.ts",
         "start": "bun run src/index.ts",
         "build": "bun build src/index.ts --target=bun --outdir=dist",
+        "parity:inventory": "bash ../../scripts/validate-api-parity-governance.sh --inventory-only",
+        "parity:validate": "bash ../../scripts/validate-api-parity-governance.sh --strict",
         "prisma:generate": "bunx prisma generate --schema prisma/schema.prisma",
         "prisma:migrate:status": "bunx prisma migrate status --schema prisma/schema.prisma",
         "prisma:migrate:dev": "bunx prisma migrate dev --schema prisma/schema.prisma",

@@ -18,6 +18,13 @@ Ubuntu launcher (called by the Windows launcher):
 
 ```bash
 scripts/compose-mobile-emulators-wsl2.sh
+
+Canonical mobile profile commands (inside Ubuntu):
+
+```bash
+bash scripts/compose-run-profile.sh --profile mobile --action up --service android-emulator
+bash scripts/compose-profile-ready.sh --profile mobile --service android-emulator
+```
 ```
 
 ## What The Launcher Does

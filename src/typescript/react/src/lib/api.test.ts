@@ -1,6 +1,6 @@
 import {afterEach, describe, expect, test} from 'bun:test';
 
-import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseUrl, resolvePlatformLabel, sendChatMessage,} from './api';
+import {createChatSession, fetchBananaSummary, fetchEnsembleVerdict, fetchEnsembleVerdictWithEmbedding, resolveApiBaseResolution, resolveApiBaseResolutionError, resolveApiBaseUrl, resolveChatApiBaseUrl, resolveChatBootstrapError, resolvePlatformLabel, sendChatMessage,} from './api';
 
 const originalFetch = globalThis.fetch;
 
@@ -10,17 +10,88 @@ afterEach(() => {
 
 describe('react api client', () => {
   test('resolves API base URL with env first, then bridge', () => {
-    expect(resolveApiBaseUrl('http://vite.example', {
-      apiBaseUrl: 'http://bridge.example',
-      platform: 'linux',
-    })).toBe('http://vite.example');
+    expect(resolveApiBaseUrl(
+               'http://vite.example', {
+                 apiBaseUrl: 'http://bridge.example',
+                 platform: 'linux',
+               },
+               'http://localhost:8080'))
+        .toBe('http://vite.example');
 
-    expect(resolveApiBaseUrl('', {
-      apiBaseUrl: 'http://bridge.example',
-      platform: 'linux',
-    })).toBe('http://bridge.example');
+    expect(resolveApiBaseUrl(
+               '', {
+                 apiBaseUrl: 'http://bridge.example',
+                 platform: 'linux',
+               },
+               'http://localhost:8080'))
+        .toBe('http://bridge.example');
 
-    expect(resolveApiBaseUrl('', undefined)).toBe('');
+    expect(resolveApiBaseUrl('', undefined, 'http://localhost:8080'))
+        .toBe('http://localhost:8080');
+    expect(resolveApiBaseUrl('', undefined, '')).toBe('');
+  });
+
+  test('returns detailed API base resolution source', () => {
+    expect(resolveApiBaseResolution('http://vite.example', undefined, ''))
+        .toEqual({
+          baseUrl: 'http://vite.example',
+          error: null,
+          source: 'vite',
+        });
+
+    expect(resolveApiBaseResolution(
+               '', {
+                 apiBaseUrl: 'http://bridge.example',
+                 platform: 'linux',
+               },
+               ''))
+        .toEqual({
+          baseUrl: 'http://bridge.example',
+          error: null,
+          source: 'electron',
+        });
+
+    expect(resolveApiBaseResolution('', undefined, 'http://localhost:8080'))
+        .toEqual({
+          baseUrl: 'http://localhost:8080',
+          error: null,
+          source: 'localhost-default',
+        });
+
+    expect(resolveApiBaseResolution('', undefined, '').source)
+        .toBe('unresolved');
+  });
+
+  test('resolves chat API base with localhost fastify fallback', () => {
+    expect(resolveChatApiBaseUrl('http://localhost:8080', '', undefined))
+        .toBe('http://localhost:8081');
+    expect(resolveChatApiBaseUrl('http://127.0.0.1:8080', '', undefined))
+        .toBe('http://127.0.0.1:8081');
+    expect(resolveChatApiBaseUrl(
+               'http://localhost:8080', 'http://localhost:9081', undefined))
+        .toBe('http://localhost:9081');
+    expect(resolveChatApiBaseUrl('http://api.example', '', undefined))
+        .toBe('http://api.example');
+  });
+
+  test('reports explicit API base configuration error when unresolved', () => {
+    expect(resolveApiBaseResolutionError(
+               '', {
+                 apiBaseUrl: 'http://bridge.example',
+                 platform: 'linux',
+               },
+               ''))
+        .toBeNull();
+
+    expect(resolveApiBaseResolutionError('http://vite.example', undefined, ''))
+        .toBeNull();
+
+    expect(
+        resolveApiBaseResolutionError('', undefined, 'http://localhost:8080'))
+        .toBeNull();
+
+    expect(resolveApiBaseResolutionError('', undefined, ''))
+        .toContain('Missing API base URL');
   });
 
   test('resolves platform label from bridge', () => {
@@ -30,6 +101,27 @@ describe('react api client', () => {
     })).toBe('electron-win32');
 
     expect(resolvePlatformLabel(undefined)).toBe('web');
+  });
+
+  test('classifies transport bootstrap failures with remediation', () => {
+    expect(resolveChatBootstrapError(new Error('Failed to fetch'))).toEqual({
+      kind: 'transport_unreachable',
+      message:
+          'Chat bootstrap transport failure: the chat runtime endpoint could not be reached.',
+      remediation:
+          'Ensure the runtime profile is healthy and the apps profile is up, then retry chat bootstrap or reload.',
+      retryable: true,
+    });
+  });
+
+  test('classifies request bootstrap failures with remediation', () => {
+    expect(resolveChatBootstrapError(new Error('request failed (404)'))).toEqual({
+      kind: 'request_failed',
+      message: 'Chat bootstrap request failed: request failed (404)',
+      remediation:
+          'Verify chat session routes are available for the configured API base, then retry.',
+      retryable: true,
+    });
   });
 
   test('fetchBananaSummary returns typed payload', async () => {

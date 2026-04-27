@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 usage() {
   cat <<'EOF'
-Usage: compose-ci-write-lane-result.sh --lane <lane> [--status <pass|fail|skip>] [--stage <stage>] [--reason-code <reason>] [--exit-code <code>] [--failing-service <service>] [--profile <profile>] [--started-at <iso-8601>] [--finished-at <iso-8601>] [--diagnostics-bundle-path <relative-path>] [--artifact-root <path>]
+Usage: compose-ci-write-lane-result.sh --lane <lane> [--status <pass|fail|skip>] [--stage <stage>] [--reason-code <reason>] [--exit-code <code>] [--failing-service <service>] [--profile <profile>] [--started-at <iso-8601>] [--finished-at <iso-8601>] [--diagnostics-bundle-path <relative-path>] [--parity-gate-file <path>] [--artifact-root <path>]
 EOF
 }
 
@@ -28,6 +28,7 @@ profile="${BANANA_CI_LANE_PROFILE:-}"
 started_at="${BANANA_CI_LANE_STARTED_AT:-}"
 finished_at="${BANANA_CI_LANE_FINISHED_AT:-}"
 diagnostics_bundle_path="${BANANA_CI_LANE_DIAGNOSTICS_BUNDLE_PATH:-}"
+parity_gate_file="${BANANA_CI_PARITY_GATE_FILE:-}"
 artifact_root="${BANANA_CI_ARTIFACT_ROOT:-.artifacts/compose-ci}"
 schema_version="${BANANA_CI_LANE_SCHEMA_VERSION:-1}"
 
@@ -71,6 +72,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --diagnostics-bundle-path)
       diagnostics_bundle_path="$2"
+      shift 2
+      ;;
+    --parity-gate-file)
+      parity_gate_file="$2"
       shift 2
       ;;
     --artifact-root)
@@ -173,6 +178,40 @@ fi
 
 now_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+parity_gate_json="null"
+if [[ "$lane" == "api-parity" && -n "$parity_gate_file" && -f "$parity_gate_file" ]]; then
+  python_bin=""
+  if command -v python3 >/dev/null 2>&1; then
+    python_bin="python3"
+  elif command -v python >/dev/null 2>&1; then
+    python_bin="python"
+  fi
+
+  if [[ -n "$python_bin" ]]; then
+    parity_gate_json="$($python_bin - "$parity_gate_file" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+with open(path, encoding='utf-8') as handle:
+    payload = json.load(handle)
+
+summary = payload.get('unresolved_summary', {}) if isinstance(payload, dict) else {}
+result = {
+    'decision': payload.get('decision') if isinstance(payload, dict) else None,
+    'unresolved_summary': {
+        'total_findings': int(summary.get('total_findings', 0) or 0),
+        'missing_route': int(summary.get('missing_route', 0) or 0),
+        'status_mismatch': int(summary.get('status_mismatch', 0) or 0),
+        'shape_mismatch': int(summary.get('shape_mismatch', 0) or 0),
+    },
+}
+print(json.dumps(result))
+PY
+    )"
+  fi
+fi
+
 cat > "$result_file" <<EOF
 {
   "schema_version": $schema_version,
@@ -186,6 +225,7 @@ cat > "$result_file" <<EOF
   "started_at": $started_at_json,
   "finished_at": $finished_at_json,
   "diagnostics_bundle_path": $diagnostics_bundle_path_json,
+  "parity_gate": $parity_gate_json,
   "recorded_at_utc": "$(json_escape "$now_utc")"
 }
 EOF

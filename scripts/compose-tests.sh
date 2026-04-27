@@ -20,14 +20,13 @@ remediation_file="$lane_dir/remediation.txt"
 
 rm -f "$remediation_file"
 
-compose_args=(--profile tests up --abort-on-container-exit --exit-code-from "$test_service")
+compose_args=(--abort-on-container-exit --exit-code-from "$test_service")
 if [[ "${BANANA_COMPOSE_TEST_BUILD:-true}" == "true" ]]; then
 	compose_args+=(--build)
 fi
-compose_args+=("$test_service")
 
 exit_code=0
-if docker compose "${compose_args[@]}"; then
+if bash scripts/compose-run-profile.sh --profile tests --action up --service "$test_service" --detach false -- "${compose_args[@]}"; then
 	exit_code=0
 else
 	exit_code=$?

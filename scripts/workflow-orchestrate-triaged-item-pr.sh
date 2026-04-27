@@ -25,6 +25,8 @@ SKIP_NON_REAL_UPDATES="${BANANA_SKIP_DOCS_ONLY_CHANGES:-true}"
 REAL_UPDATE_PATH_PATTERNS="${BANANA_REAL_UPDATE_PATH_PATTERNS:-src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props}"
 PR_OUTPUT_PATH="${BANANA_PR_OUTPUT_PATH:-}"
 REQUIRED_HUMAN_REVIEWER="${BANANA_REQUIRED_HUMAN_REVIEWER:-LahkLeKey}"
+RUN_API_PARITY_CHECK="${BANANA_TRIAGE_RUN_API_PARITY_CHECK:-false}"
+API_PARITY_STRICT="${BANANA_TRIAGE_API_PARITY_STRICT:-false}"
 AGENT_CONTRIBUTOR_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR:-}"
 AGENT_CONTRIBUTOR_LOGIN_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_LOGIN:-}"
 AGENT_CONTRIBUTOR_NAME_OVERRIDE="${BANANA_AGENT_CONTRIBUTOR_NAME:-}"
@@ -408,6 +410,17 @@ WORK_BRANCH="${BRANCH_PREFIX}/${TRIAGE_ID_SLUG}-run-${RUN_ID}-attempt-${RUN_ATTE
 
 echo "Applying triaged code changes..."
 eval "$CHANGE_COMMAND"
+
+if [[ "$RUN_API_PARITY_CHECK" == "true" ]]; then
+  echo "Running API parity governance preflight for triaged change..."
+  parity_args=()
+  if [[ "$API_PARITY_STRICT" == "true" ]]; then
+    parity_args+=(--strict)
+  else
+    parity_args+=(--inventory-only)
+  fi
+  bash scripts/validate-api-parity-governance.sh "${parity_args[@]}"
+fi
 
 collect_workspace_changed_files
 evaluate_real_update_scope "workspace" "${WORKSPACE_CHANGED_FILES[@]}"

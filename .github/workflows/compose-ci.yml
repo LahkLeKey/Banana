@@ -1237,6 +1237,135 @@ PY
           name: typescript-api-tests-job-result
           path: .artifacts/compose-ci/jobs/typescript-api-tests
 
+  api-parity-governance:
+    runs-on: ubuntu-latest
+    env:
+      BANANA_CI_LANE: api-parity
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare API parity lane scripts
+        run: |
+          chmod +x scripts/validate-api-parity-governance.sh
+          chmod +x scripts/compose-ci-write-lane-result.sh
+          chmod +x scripts/compose-ci-write-job-result.sh
+          chmod +x scripts/coverage-denominator-policy.sh
+          chmod +x scripts/coverage-normalize-lane-result.sh
+
+      - name: Run API parity governance gate
+        id: run_api_parity_gate
+        run: |
+          bash scripts/validate-api-parity-governance.sh --strict
+
+      - name: Write API parity lane result
+        if: always()
+        run: |
+          lane_status="fail"
+          if [[ "${{ steps.run_api_parity_gate.outcome }}" == "success" ]]; then
+            lane_status="pass"
+          fi
+
+          bash scripts/compose-ci-write-lane-result.sh \
+            --lane "$BANANA_CI_LANE" \
+            --status "$lane_status" \
+            --stage parity-gate \
+            --reason-code "$( [[ "$lane_status" == "pass" ]] && echo success || echo parity_drift_detected )" \
+            --diagnostics-bundle-path .specify/specs/047-api-parity-governance/artifacts \
+            --parity-gate-file .specify/specs/047-api-parity-governance/artifacts/parity-gate-result.json
+
+      - name: Emit API parity denominator policy snapshot
+        if: always()
+        run: |
+          bash scripts/coverage-denominator-policy.sh \
+            --snapshot-output "$BANANA_COVERAGE_ARTIFACT_ROOT/$BANANA_CI_LANE/denominator-policy.json"
+
+      - name: Normalize API parity lane coverage result
+        if: always()
+        run: |
+          lane_status="fail"
+          failure_class="coverage_contract_violation"
+
+          if [[ "${{ steps.run_api_parity_gate.outcome }}" == "success" ]]; then
+            lane_status="pass"
+            failure_class=""
+          fi
+
+          normalize_args=(
+            --lane-id "$BANANA_CI_LANE"
+            --domain api-parity
+            --layer integration
+            --status "$lane_status"
+            --evidence-bundle-path .specify/specs/047-api-parity-governance/artifacts
+            --exceptions-report .specify/specs/047-api-parity-governance/artifacts/parity-exceptions.json
+            --output "$BANANA_COVERAGE_ARTIFACT_ROOT/$BANANA_CI_LANE/coverage-lane-result.json"
+          )
+
+          if [[ -n "$failure_class" ]]; then
+            normalize_args+=(--failure-class "$failure_class")
+          fi
+
+          bash scripts/coverage-normalize-lane-result.sh "${normalize_args[@]}"
+
+      - name: Write API parity job result record
+        if: always()
+        run: |
+          job_status="pass"
+          stage="parity-gate"
+          reason_code="success"
+          exit_code="0"
+
+          if [[ "${{ steps.run_api_parity_gate.outcome }}" == "failure" ]]; then
+            job_status="fail"
+            stage="parity-gate"
+            reason_code="parity_drift_detected"
+            exit_code="1"
+          fi
+
+          bash scripts/compose-ci-write-job-result.sh \
+            --job api-parity-governance \
+            --status "$job_status" \
+            --stage "$stage" \
+            --reason-code "$reason_code" \
+            --exit-code "$exit_code"
+
+      - name: Add API parity summary
+        if: always()
+        run: |
+          {
+            echo "## API Parity Governance Summary"
+            echo
+            echo "### Gate Result"
+            echo
+            echo '```json'
+            cat .specify/specs/047-api-parity-governance/artifacts/parity-gate-result.json
+            echo '```'
+            echo
+            echo "### Drift Report"
+            echo
+            echo '```json'
+            cat .specify/specs/047-api-parity-governance/artifacts/parity-drift-report.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload API parity artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-parity-governance-artifacts
+          path: |
+            .specify/specs/047-api-parity-governance/artifacts/overlapping-routes.inventory.json
+            .specify/specs/047-api-parity-governance/artifacts/parity-drift-report.json
+            .specify/specs/047-api-parity-governance/artifacts/parity-exceptions.json
+            .specify/specs/047-api-parity-governance/artifacts/parity-gate-result.json
+
+      - name: Upload API parity job result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-parity-governance-job-result
+          path: .artifacts/compose-ci/jobs/api-parity-governance
+
   compose-tests:
     runs-on: ubuntu-latest
     env:
@@ -1882,6 +2011,7 @@ PY
       - dotnet-integration-tests-coverage
       - dotnet-api-coverage-aggregate
       - typescript-api-tests
+      - api-parity-governance
       - compose-tests
       - compose-runtime
       - compose-electron
@@ -1960,6 +2090,20 @@ PY
           name: typescript-api-tests-job-result
           path: .artifacts/aggregate/job-results/typescript-api-tests
 
+      - name: Download API parity governance artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: api-parity-governance-artifacts
+          path: .artifacts/aggregate/api-parity-governance
+
+      - name: Download API parity governance job result artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: api-parity-governance-job-result
+          path: .artifacts/aggregate/job-results/api-parity-governance
+
       - name: Download E2E smoke job result artifact
         continue-on-error: true
         uses: actions/download-artifact@v4
@@ -1981,6 +2125,7 @@ PY
             native-unit
             dotnet-unit
             typescript-api-unit
+            api-parity
             native-integration
             dotnet-integration
             typescript-api-integration
@@ -2012,6 +2157,11 @@ PY
               typescript-api-unit)
                 domain="typescript-api"
                 layer="unit"
+                ;;
+              api-parity)
+                domain="api-parity"
+                layer="integration"
+                failure_class="coverage_contract_violation"
                 ;;
               native-integration)
                 domain="native"

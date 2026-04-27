@@ -58,6 +58,20 @@ Swagger URLs:
 
 ## Docker Compose Orchestration
 
+Canonical profile orchestration:
+
+```bash
+bash scripts/compose-run-profile.sh --profile runtime --action up
+bash scripts/compose-profile-ready.sh --profile runtime
+bash scripts/compose-run-profile.sh --profile runtime --action down
+```
+
+Profile reproducibility validation:
+
+```bash
+bash scripts/validate-compose-run-profiles.sh --profile runtime --attempts 3
+```
+
 Run full apps stack (API + React + React Native web + DB/native-build dependencies):
 
 ```bash
@@ -88,6 +102,24 @@ Run runtime API-only profile:
 bash scripts/compose-runtime.sh
 ```
 
+Frontend config drift diagnostic (checks launch wiring, compose interpolation,
+and running container env for React):
+
+```bash
+bash scripts/validate-frontend-config-drift.sh --require-running
+```
+
+If frontend runtime output still reflects old behavior after code changes,
+relaunch using the VS Code frontend compose tasks that include `--build`
+to force image refresh and avoid stale container source.
+
+One-window interactive baseline for frontend debugging:
+
+1. Start runtime/apps using VS Code compose tasks.
+2. Open the app in the VS Code integrated browser at `http://localhost:5173`.
+3. Validate rendered UI behavior (not only env/compose values) before closing tasks.
+4. Keep diagnostics in the same window (terminal + browser + task output) to reduce drift.
+
 ## One-Click WSL2 Channel Launchers
 
 Desktop channel launcher (Windows shell):
@@ -115,6 +147,20 @@ Important platform notes:
 - Apple iOS Simulator does not run on Ubuntu; the mobile launcher uses an iOS-style web preview fallback.
 
 ## Frontend And Electron
+
+Compose-provided frontend API base contract (host browser resolvable):
+
+- React web (`react-app`): `VITE_BANANA_API_BASE_URL=${BANANA_REACT_API_URL:-http://localhost:8080}`
+- Electron desktop (`electron-desktop` preload): `BANANA_API_BASE_URL=${BANANA_ELECTRON_API_URL:-http://localhost:8080}`
+- React Native web (`react-native-web`): `EXPO_PUBLIC_BANANA_API_BASE_URL=${BANANA_MOBILE_API_URL:-http://localhost:8080}`
+
+Example override before launching compose:
+
+```bash
+export BANANA_REACT_API_URL="http://localhost:8080"
+export BANANA_ELECTRON_API_URL="http://localhost:8080"
+export BANANA_MOBILE_API_URL="http://localhost:8080"
+```
 
 React app (`src/typescript/react`, Bun package manager):
 
