@@ -38,12 +38,12 @@ import {
 import {
     classifyPotentialBlankPage,
     snapshotLocation,
-} from "./lib/blank-page-classification";
+} from "./lib/blankPageClassification";
 import {
     canSubmitEnsemble,
     normalizeEnsembleSample,
     preventNativeSubmitNavigation,
-} from "./lib/ensemble-submit-guardrails";
+} from "./lib/ensembleSubmitGuardrails";
 
 // Slice 030 -- narrow Electron bridge surface for history publish +
 // drain-success signal. No-op outside Electron (web tab) since the
