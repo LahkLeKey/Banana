@@ -9,6 +9,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import { App } from './App';
+import {
+    didLocationChange,
+    getLocationFingerprint,
+} from './lib/__tests__/ensemble-submit-test-helpers';
 
 let originalFetch: typeof fetch;
 
@@ -68,6 +72,17 @@ async function submitEnsemble(text: string) {
     await flush();
 }
 
+async function keyboardSubmitEnsemble(text: string) {
+    const textarea = screen.getByPlaceholderText('Describe a possible banana') as HTMLTextAreaElement;
+    await act(async () => {
+        fireEvent.change(textarea, { target: { value: text } });
+    });
+    await act(async () => {
+        fireEvent.keyDown(textarea, { key: 'Enter', ctrlKey: true });
+    });
+    await flush();
+}
+
 describe('App ensemble verdict surface (slice 023)', () => {
     test('enables chat input after healthy bootstrap', async () => {
         globalThis.fetch = makeFetchMock(defaultBootstrap);
@@ -120,6 +135,50 @@ describe('App ensemble verdict surface (slice 023)', () => {
         await flush();
 
         expect(screen.getByTestId('ensemble-verdict-empty').textContent).toBe('Send a sample to get a verdict.');
+    });
+
+    test('click submit keeps location stable and renders verdict', async () => {
+        globalThis.fetch = makeFetchMock((input) => {
+            const url = String(input);
+            if (url.endsWith('/ml/ensemble/embedding')) {
+                return jsonResponse({
+                    verdict: { label: 'banana', score: 0.95, did_escalate: false, calibration_magnitude: 0.7, status: 'ok' },
+                    embedding: null,
+                });
+            }
+            return defaultBootstrap(input);
+        });
+        await act(async () => { render(<App />); });
+        await flush();
+
+        const before = getLocationFingerprint();
+        await submitEnsemble('click path sample');
+        const after = getLocationFingerprint();
+
+        expect(didLocationChange(before, after)).toBe(false);
+        expect(screen.getByTestId('ensemble-verdict-copy').textContent).toBe('Banana.');
+    });
+
+    test('keyboard submit keeps location stable and renders verdict', async () => {
+        globalThis.fetch = makeFetchMock((input) => {
+            const url = String(input);
+            if (url.endsWith('/ml/ensemble/embedding')) {
+                return jsonResponse({
+                    verdict: { label: 'not_banana', score: 0.95, did_escalate: false, calibration_magnitude: 0.2, status: 'ok' },
+                    embedding: null,
+                });
+            }
+            return defaultBootstrap(input);
+        });
+        await act(async () => { render(<App />); });
+        await flush();
+
+        const before = getLocationFingerprint();
+        await keyboardSubmitEnsemble('keyboard path sample');
+        const after = getLocationFingerprint();
+
+        expect(didLocationChange(before, after)).toBe(false);
+        expect(screen.getByTestId('ensemble-verdict-copy').textContent).toBe('Not a banana.');
     });
 
     test('renders confident banana copy on cheap-path verdict', async () => {
@@ -196,6 +255,30 @@ describe('App ensemble verdict surface (slice 023)', () => {
         expect(screen.getByTestId('ensemble-verdict-copy').textContent).toContain('Not a banana \u2014 needs a closer look.');
     });
 
+    test('preserves baseline verdict and escalation cues under guarded submit', async () => {
+        globalThis.fetch = makeFetchMock((input) => {
+            const url = String(input);
+            if (url.endsWith('/ml/ensemble/embedding')) {
+                return jsonResponse({
+                    verdict: { label: 'banana', score: 0.81, did_escalate: true, calibration_magnitude: 0.62, status: 'ok' },
+                    embedding: [0.31, 0.12, 0.27, 0.81],
+                });
+            }
+            return defaultBootstrap(input);
+        });
+        await act(async () => { render(<App />); });
+        await flush();
+
+        const before = getLocationFingerprint();
+        await submitEnsemble('guarded baseline sample');
+        const after = getLocationFingerprint();
+
+        expect(didLocationChange(before, after)).toBe(false);
+        expect(screen.getByTestId('ensemble-verdict-copy').textContent).toContain('Banana \u2014 needs a closer look.');
+        expect(screen.getByTestId('banana-badge-ensemble')).not.toBeNull();
+        expect(screen.getByTestId('escalation-panel-trigger')).not.toBeNull();
+    });
+
     test('shows retry button after error and reuses last submitted draft', async () => {
         let lastBody: unknown = null;
         let attempts = 0;
@@ -232,6 +315,40 @@ describe('App ensemble verdict surface (slice 023)', () => {
         expect(inner.text).toBe('ambiguous sample');
         expect(screen.getByTestId('ensemble-verdict-copy').textContent).toBe('Banana.');
         expect(screen.queryByTestId('ensemble-retry')).toBeNull();
+    });
+
+    test('retry path remains guarded and keeps location stable', async () => {
+        let attempts = 0;
+        globalThis.fetch = makeFetchMock((input) => {
+            const url = String(input);
+            if (url.endsWith('/ml/ensemble/embedding')) {
+                attempts += 1;
+                if (attempts === 1) {
+                    return jsonResponse({ error: { message: 'banana service down' } }, 503);
+                }
+                return jsonResponse({
+                    verdict: { label: 'not_banana', score: 0.93, did_escalate: false, calibration_magnitude: 0.22, status: 'ok' },
+                    embedding: null,
+                });
+            }
+            return defaultBootstrap(input);
+        });
+        await act(async () => { render(<App />); });
+        await flush();
+
+        const before = getLocationFingerprint();
+        await submitEnsemble('retry guarded sample');
+        expect(screen.getByTestId('ensemble-retry')).not.toBeNull();
+
+        await act(async () => {
+            fireEvent.click(screen.getByTestId('ensemble-retry'));
+        });
+        await flush();
+
+        const after = getLocationFingerprint();
+        expect(didLocationChange(before, after)).toBe(false);
+        expect(attempts).toBe(2);
+        expect(screen.getByTestId('ensemble-verdict-copy').textContent).toBe('Not a banana.');
     });
 
     test('editing the input clears the retry button', async () => {

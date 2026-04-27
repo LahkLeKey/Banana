@@ -43,5 +43,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at `.specify/specs/047-api-parity-governance/plan.md`
+at `.specify/specs/042-frontend-ensemble-blank-page-spike/plan.md`
 <!-- SPECKIT END -->

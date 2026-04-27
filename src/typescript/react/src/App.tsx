@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     BananaBadge,
     ChatMessageBubble,
@@ -35,6 +35,15 @@ import {
     type EnsembleQueuePayload,
     type RecentVerdict,
 } from "./lib/resilience-bootstrap";
+import {
+    classifyPotentialBlankPage,
+    snapshotLocation,
+} from "./lib/blank-page-classification";
+import {
+    canSubmitEnsemble,
+    normalizeEnsembleSample,
+    preventNativeSubmitNavigation,
+} from "./lib/ensemble-submit-guardrails";
 
 // Slice 030 -- narrow Electron bridge surface for history publish +
 // drain-success signal. No-op outside Electron (web tab) since the
@@ -251,15 +260,6 @@ export function App() {
         }
     }
 
-    async function onEnsembleSubmit(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        const value = ensembleInput.trim();
-        if (!apiBaseUrl || value.length === 0) {
-            return;
-        }
-        await runEnsembleVerdict(value);
-    }
-
     const recordVerdict = useCallback(
         async (sample: string, verdict: EnsembleVerdict) => {
             const history = getVerdictHistory();
@@ -290,6 +290,7 @@ export function App() {
             if (!apiBaseUrl || sample.length === 0) {
                 return;
             }
+            const beforeSubmitLocation = snapshotLocation();
             setIsPredictingEnsemble(true);
             setEnsembleError(null);
             setLastSubmittedSample(sample);
@@ -321,11 +322,48 @@ export function App() {
                     }
                 }
             } finally {
+                const submitOutcome = classifyPotentialBlankPage(
+                    beforeSubmitLocation,
+                    snapshotLocation(),
+                );
+                if (submitOutcome === "navigation") {
+                    setEnsembleError(
+                        "Unexpected navigation was detected while predicting. Please retry and report this regression.",
+                    );
+                }
                 setIsPredictingEnsemble(false);
             }
         },
         [apiBaseUrl, recordVerdict],
     );
+
+    const submitEnsemble = useCallback(
+        async (rawInput: string) => {
+            const sample = normalizeEnsembleSample(rawInput);
+            if (!canSubmitEnsemble(apiBaseUrl, sample, isPredictingEnsemble)) {
+                return;
+            }
+            await runEnsembleVerdict(sample);
+        },
+        [apiBaseUrl, isPredictingEnsemble, runEnsembleVerdict],
+    );
+
+    async function onEnsembleSubmit(event: FormEvent<HTMLFormElement>) {
+        preventNativeSubmitNavigation(event);
+        await submitEnsemble(ensembleInput);
+    }
+
+    async function onEnsembleClick(event: MouseEvent<HTMLButtonElement>) {
+        preventNativeSubmitNavigation(event);
+        await submitEnsemble(ensembleInput);
+    }
+
+    async function onEnsembleInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+            preventNativeSubmitNavigation(event);
+            await submitEnsemble(ensembleInput);
+        }
+    }
 
     // Slice 029 -- on mount, hydrate the recent-verdicts surface from
     // persistent storage (e.g., a prior browser-tab session).
@@ -394,7 +432,7 @@ export function App() {
         if (lastSubmittedSample === null) {
             return;
         }
-        void runEnsembleVerdict(lastSubmittedSample);
+        void submitEnsemble(lastSubmittedSample);
     }
 
     return (
@@ -427,18 +465,24 @@ export function App() {
 
             <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <h2 className="text-sm font-semibold text-slate-900">Ensemble verdict</h2>
-                <form className="space-y-2" onSubmit={onEnsembleSubmit}>
+                <form className="space-y-2" onSubmit={onEnsembleSubmit} data-testid="ensemble-form">
                     <textarea
                         className="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                         disabled={chatUnavailable || isPredictingEnsemble}
                         onChange={(event) => onEnsembleInputChange(event.target.value)}
+                        onKeyDown={(event) => {
+                            void onEnsembleInputKeyDown(event);
+                        }}
                         placeholder="Describe a possible banana"
                         value={ensembleInput}
                     />
                     <button
                         className="rounded-md bg-yellow-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
                         disabled={chatUnavailable || isPredictingEnsemble || ensembleInput.trim().length === 0}
-                        type="submit"
+                        onClick={(event) => {
+                            void onEnsembleClick(event);
+                        }}
+                        type="button"
                     >
                         {isPredictingEnsemble ? "Predicting..." : "Predict ensemble"}
                     </button>
