@@ -115,6 +115,25 @@ ctest --preset default
     assert vstp.check_feature(d) == []
 
 
+def test_script_path_validator_matches_without_shell_leader(tmp_path: Path) -> None:
+    spec_md = """\
+## Validation lane
+
+```
+bash scripts/validate-api-parity-governance.sh --strict
+```
+"""
+    tasks_md = "- [ ] T01 Run scripts/validate-api-parity-governance.sh in strict mode during CI parity lane.\n"
+    d = _write_feature(tmp_path, spec_md, tasks_md)
+    assert vstp.check_feature(d) == []
+
+
+def test_feature_047_has_no_validation_task_drift() -> None:
+    feature = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance"
+    assert feature.exists(), "Expected feature 047 to exist"
+    assert vstp.check_feature(feature) == []
+
+
 def test_real_repo_slices_clean(tmp_path: Path) -> None:
     """Smoke: every non-spike slice 010..017 must be clean post-backfill."""
     pytest.importorskip("pathlib")

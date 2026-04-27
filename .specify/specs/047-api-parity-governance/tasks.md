@@ -101,11 +101,11 @@
 
 **Purpose**: Harden documentation, governance visibility, and traceability across all stories.
 
-- [ ] T034 [P] Add parity governance runbook in .specify/wiki/human-reference/api-parity-governance.md
-- [ ] T035 [P] Publish human-reference parity page in .wiki/api-parity-governance.md
-- [ ] T036 Add parity governance wiki sync step to scripts/workflow-sync-wiki.sh
-- [ ] T037 Add parity governance validator coverage to scripts/validate-spec-tasks-parity.py
-- [ ] T038 Execute and record full parity quickstart evidence in .specify/specs/047-api-parity-governance/quickstart.md
+- [x] T034 [P] Add parity governance runbook in .specify/wiki/human-reference/api-parity-governance.md
+- [x] T035 [P] Publish human-reference parity page in .wiki/api-parity-governance.md
+- [x] T036 Add parity governance wiki sync step to scripts/workflow-sync-wiki.sh
+- [x] T037 Add parity governance validator coverage to scripts/validate-spec-tasks-parity.py
+- [x] T038 Execute and record full parity quickstart evidence in .specify/specs/047-api-parity-governance/quickstart.md
 
 ---
 

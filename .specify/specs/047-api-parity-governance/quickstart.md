@@ -71,3 +71,61 @@ bash scripts/compose-run-profile.sh --profile runtime --action down
 
 - Cross-API parity gate returns explicit PASS/FAIL with actionable mismatch details.
 - Any unresolved overlap drift blocks delivery until parity or approved exception is in place.
+
+## Recorded Evidence (2026-04-26)
+
+### Command: inventory refresh
+
+```bash
+bash scripts/validate-api-parity-governance.sh --inventory-only
+```
+
+Observed outcome:
+- command completed successfully
+- overlapping-routes inventory regenerated
+- exception ledger validation passed
+
+### Command: parity gate execution (non-strict)
+
+```bash
+bash scripts/validate-api-parity-governance.sh
+```
+
+Observed outcome:
+- command completed and wrote parity artifacts
+- parity gate decision was FAIL with unresolved findings
+- current drift report unresolved total: 29
+
+### Command: parity gate execution (strict with approved temporary exceptions)
+
+```bash
+bash scripts/validate-api-parity-governance.sh --strict
+```
+
+Observed outcome:
+- command completed successfully when active approved exceptions covered existing drift baseline
+- parity gate decision was PASS
+- strict mode still fails immediately when unresolved findings remain
+
+### Command: parity script regression tests
+
+```bash
+python -m pytest tests/scripts/test_validate_api_parity_governance.py
+```
+
+Observed outcome:
+- 3 tests passed
+
+### Command: parity e2e contract tests
+
+```bash
+dotnet test tests/e2e/Banana.E2eTests.csproj --filter FullyQualifiedName~ApiParity
+```
+
+Observed outcome:
+- 7 tests passed
+
+### Notes
+
+- Strict mode remains fail-closed by design when unresolved parity drift exists.
+- Compose CI now enforces strict parity via the api-parity lane and publishes gate artifacts for triage.
