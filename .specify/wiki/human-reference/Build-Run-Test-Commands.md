@@ -130,6 +130,20 @@ Important platform notes:
 
 ## Frontend And Electron
 
+Compose-provided frontend API base contract (host browser resolvable):
+
+- React web (`react-app`): `VITE_BANANA_API_BASE_URL=${BANANA_REACT_API_URL:-http://localhost:8080}`
+- Electron desktop (`electron-desktop` preload): `BANANA_API_BASE_URL=${BANANA_ELECTRON_API_URL:-http://localhost:8080}`
+- React Native web (`react-native-web`): `EXPO_PUBLIC_BANANA_API_BASE_URL=${BANANA_MOBILE_API_URL:-http://localhost:8080}`
+
+Example override before launching compose:
+
+```bash
+export BANANA_REACT_API_URL="http://localhost:8080"
+export BANANA_ELECTRON_API_URL="http://localhost:8080"
+export BANANA_MOBILE_API_URL="http://localhost:8080"
+```
+
 React app (`src/typescript/react`, Bun package manager):
 
 ```bash
