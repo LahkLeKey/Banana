@@ -28,4 +28,4 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with: { dotnet-version: '8.x' }
       - name: Run unit tests with coverage as mutation proxy
-        run: dotnet test tests/unit/Banana.UnitTests.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=opencover --no-build || dotnet build tests/unit/Banana.UnitTests.csproj && dotnet test tests/unit/Banana.UnitTests.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=opencover
+        run: dotnet test tests/unit/Banana.Api.Tests.Unit.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=opencover --no-build || dotnet build tests/unit/Banana.Api.Tests.Unit.csproj && dotnet test tests/unit/Banana.Api.Tests.Unit.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=opencover

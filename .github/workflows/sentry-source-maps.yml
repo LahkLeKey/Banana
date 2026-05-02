@@ -14,13 +14,17 @@ jobs:
       - name: Install and build React app
         run: cd src/typescript/react && bun install && bun run build
       - name: Upload source maps to Sentry
-        if: ${{ vars.SENTRY_ORG != '' && vars.SENTRY_PROJECT != '' && secrets.SENTRY_AUTH_TOKEN != '' }}
+        if: ${{ vars.SENTRY_ORG != '' && vars.SENTRY_PROJECT != '' }}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         run: |
           cd src/typescript/react
+          if [[ -z "${SENTRY_AUTH_TOKEN:-}" ]]; then
+            echo "SENTRY_AUTH_TOKEN not set; skipping source map upload."
+            exit 0
+          fi
           VERSION="${GITHUB_SHA}"
           bunx @sentry/cli releases new "$VERSION"
           bunx @sentry/cli releases files "$VERSION" upload-sourcemaps dist --rewrite

@@ -25,17 +25,17 @@ jobs:
       - name: Install build deps
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends cmake gcc binutils
+          sudo apt-get install -y --no-install-recommends cmake gcc binutils ninja-build clang
 
       - name: Build native library
         run: |
           cmake --preset default -DCMAKE_BUILD_TYPE=Release
-          cmake --build build/native --target banana_native
+          cmake --build build/cmake-tools --target banana_native
 
       - name: ABI symbol diff
         run: bash scripts/check-native-abi-symbols.sh
 
       - name: Run ABI version test
         run: |
-          cmake --build build/native --target banana_test_abi_version
-          cd build/native && ctest -R banana_test_abi_version --output-on-failure
+          cmake --build build/cmake-tools --target banana_test_abi_version
+          cd build/cmake-tools && ctest -R banana_test_abi_version --output-on-failure

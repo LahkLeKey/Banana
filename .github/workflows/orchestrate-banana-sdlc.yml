@@ -226,14 +226,14 @@ jobs:
       BANANA_SDLC_AUTO_SCAFFOLD_SPECS: ${{ github.event.inputs.auto_debug_ci || 'true' }}
       BANANA_SDLC_CI_IDEA_BUDGET: ${{ github.event.inputs.ci_idea_budget || '3' }}
       BANANA_SDLC_CI_OPEN_ISSUES: ${{ github.event.inputs.open_ci_issues || 'true' }}
-      BANANA_SDLC_CI_ISSUE_LABELS: ${{ github.event.inputs.ci_issue_labels || 'automation,ci,triage,agent:workflow-agent' }}
+      BANANA_SDLC_CI_ISSUE_LABELS: "${{ github.event.inputs.ci_issue_labels || 'automation,ci,triage,agent:workflow-agent' }}"
       BANANA_SDLC_CI_ISSUE_TITLE_PREFIX: ${{ github.event.inputs.ci_issue_title_prefix || 'CI Auto-Debug' }}
       BANANA_SDLC_CI_LOG_EXCERPT_LINES: ${{ github.event.inputs.ci_log_excerpt_lines || '120' }}
       BANANA_SDLC_INCREMENT_PLAN_JSON: ${{ github.event.inputs.incremental_plan_json || '' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'sdlc' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
-      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent' }}
+      BANANA_PR_LABELS: "${{ github.event.inputs.labels || 'automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent' }}"
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_SDLC_SKIP_NO_CHANGES: ${{ github.event.inputs.skip_no_changes || 'true' }}
       BANANA_SDLC_CONTINUE_ON_ERROR: ${{ github.event.inputs.continue_on_error || 'false' }}

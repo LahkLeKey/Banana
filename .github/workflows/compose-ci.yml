@@ -26,7 +26,7 @@ jobs:
         run: |
           bash scripts/check-workflow-runtime-deprecations.sh \
             --workflow .github/workflows/compose-ci.yml \
-            --exceptions .github/workflows/runtime-compatibility-exceptions.yml \
+            --exceptions .github/runtime-compatibility-exceptions.yml \
             --output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.json \
             --text-output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt
 
@@ -133,22 +133,9 @@ jobs:
           measured_percent=""
 
           if [[ -f .artifacts/native-c/coverage-native.xml ]]; then
-            measured_percent="$(python3 - .artifacts/native-c/coverage-native.xml <<'PY'
-import sys
-import xml.etree.ElementTree as ET
+            measured_percent="$(python3 -c 'import sys,xml.etree.ElementTree as ET; root=ET.parse(sys.argv[1]).getroot(); print("{:.2f}".format(float(root.attrib.get("line-rate","0"))*100))' .artifacts/native-c/coverage-native.xml)"
 
-tree = ET.parse(sys.argv[1])
-root = tree.getroot()
-line_rate = float(root.attrib.get("line-rate", "0"))
-print(f"{line_rate * 100:.2f}")
-PY
-)"
-
-            native_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-            )"
+            native_at_or_above_threshold="$(python3 -c 'import sys; print("1" if float(sys.argv[1]) >= 80.0 else "0")' "$measured_percent")"
 
             if [[ "$native_at_or_above_threshold" == "1" ]]; then
               lane_status="pass"
@@ -400,24 +387,12 @@ PY
           measured_percent=""
 
           if [[ -f .artifacts/coverage/unit-report/Summary.txt ]]; then
-            measured_percent="$(python3 - .artifacts/coverage/unit-report/Summary.txt <<'PY'
-import re
-import sys
-
-text = open(sys.argv[1], encoding='utf-8').read()
-matches = re.findall(r'(\d+(?:\.\d+)?)\s*%', text)
-print(matches[0] if matches else "")
-PY
-)"
+            measured_percent="$(python3 -c 'import re,sys; text=open(sys.argv[1],encoding="utf-8").read(); m=re.findall(r"(\d+(?:\.\d+)?)\s*%",text); print(m[0] if m else "")' .artifacts/coverage/unit-report/Summary.txt)"
           fi
 
           dotnet_at_or_above_threshold="0"
           if [[ -n "$measured_percent" ]]; then
-            dotnet_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-            )"
+            dotnet_at_or_above_threshold="$(python3 -c 'import sys; print("1" if float(sys.argv[1]) >= 80.0 else "0")' "$measured_percent")"
           fi
 
           if [[ -n "$measured_percent" && "$dotnet_at_or_above_threshold" == "1" ]]; then
@@ -708,23 +683,11 @@ PY
             lane_status="not-applicable"
             failure_class=""
           elif [[ -f .artifacts/coverage/integration-report/Summary.txt ]]; then
-            measured_percent="$(python3 - .artifacts/coverage/integration-report/Summary.txt <<'PY'
-import re
-import sys
-
-text = open(sys.argv[1], encoding='utf-8').read()
-matches = re.findall(r'(\d+(?:\.\d+)?)\s*%', text)
-print(matches[0] if matches else "")
-PY
-)"
+            measured_percent="$(python3 -c 'import re,sys; text=open(sys.argv[1],encoding="utf-8").read(); m=re.findall(r"(\d+(?:\.\d+)?)\s*%",text); print(m[0] if m else "")' .artifacts/coverage/integration-report/Summary.txt)"
 
             dotnet_integration_at_or_above_threshold="0"
             if [[ -n "$measured_percent" ]]; then
-              dotnet_integration_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-              )"
+              dotnet_integration_at_or_above_threshold="$(python3 -c 'import sys; print("1" if float(sys.argv[1]) >= 80.0 else "0")' "$measured_percent")"
             fi
 
             if [[ -n "$measured_percent" && "$dotnet_integration_at_or_above_threshold" == "1" ]]; then

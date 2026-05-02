@@ -145,7 +145,7 @@ jobs:
       BANANA_PR_TITLE: ${{ github.event.inputs.pr_title || '' }}
       BANANA_PR_BODY: ${{ github.event.inputs.pr_body || '' }}
       BANANA_DRAFT_PR: ${{ github.event.inputs.draft_pr || 'true' }}
-      BANANA_PR_LABELS: ${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent' }}
+      BANANA_PR_LABELS: "${{ github.event.inputs.labels || 'automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent' }}"
       BANANA_PR_REVIEWERS: ${{ github.event.inputs.reviewers || '' }}
       BANANA_SKIP_IF_NO_CHANGES: ${{ github.event.inputs.skip_if_no_changes || 'false' }}
       BANANA_REQUIRE_REAL_UPDATES: ${{ github.event.inputs.require_real_updates || 'true' }}

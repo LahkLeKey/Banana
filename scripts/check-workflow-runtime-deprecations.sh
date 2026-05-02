@@ -11,7 +11,7 @@ EOF
 }
 
 workflow_path=".github/workflows/compose-ci.yml"
-exceptions_path=".github/workflows/runtime-compatibility-exceptions.yml"
+exceptions_path=".github/runtime-compatibility-exceptions.yml"
 output_path=".artifacts/compose-ci/runtime-compatibility/runtime-compatibility.json"
 text_output_path=".artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt"
 
