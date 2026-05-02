@@ -80,7 +80,7 @@ PY
   cat > "$spec_dir/spec.md" <<EOF
 # Feature Specification: CI Auto-Debug Follow-up for ${run_name}
 
-**Feature Branch**: `${spec_slug}`
+**Feature Branch**: \`${spec_slug}\`
 **Created**: $(date +%Y-%m-%d)
 **Status**: Stub (autonomous CI follow-up)
 **Wave**: stabilization
