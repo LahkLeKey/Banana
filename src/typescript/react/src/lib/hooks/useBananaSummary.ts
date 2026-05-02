@@ -9,8 +9,9 @@
  * Embedding`, `createChatSession`, and `sendChatMessage` using the same
  * pattern.
  */
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
-import { type BananaSummaryResponse, fetchBananaSummary } from "./api";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+
+import { type BananaSummaryResponse, fetchBananaSummary } from "../api";
 
 export const bananaSummaryKey = (baseUrl: string) => ["banana", "summary", baseUrl] as const;
 

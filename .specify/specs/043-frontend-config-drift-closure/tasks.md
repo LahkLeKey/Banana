@@ -5,16 +5,16 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Confirm active feature path and planning artifacts in `.specify/specs/043-frontend-config-drift-closure/`
-- [ ] T002 Capture baseline repro (`API base: <unset>`) using canonical `Frontends: API + React` launch flow in `.vscode/launch.json`
+- [x] T001 Confirm active feature path and planning artifacts in `.specify/specs/043-frontend-config-drift-closure/`
+- [x] T002 Capture baseline repro (`API base: <unset>`) using canonical `Frontends: API + React` launch flow in `.vscode/launch.json`
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-- [ ] T003 Define canonical frontend API-base contract and failure semantics in `.specify/wiki/human-reference/Build-Run-Test-Commands.md`
-- [ ] T004 [P] Add a scriptable drift diagnostic entry point at `scripts/validate-frontend-config-drift.sh`
-- [ ] T005 [P] Add VS Code task wrapper(s) for frontend config drift diagnostics in `.vscode/tasks.json`
+- [x] T003 Define canonical frontend API-base contract and failure semantics in `.specify/wiki/human-reference/Build-Run-Test-Commands.md`
+- [x] T004 [P] Add a scriptable drift diagnostic entry point at `scripts/validate-frontend-config-drift.sh`
+- [x] T005 [P] Add VS Code task wrapper(s) for frontend config drift diagnostics in `.vscode/tasks.json`
 
 **Checkpoint**: Frontend drift diagnosis can run before story implementation.
 
@@ -26,10 +26,10 @@
 
 **Independent Test**: Launch `Frontends: API + React` and verify UI shows concrete API base or explicit config error with remediation steps.
 
-- [ ] T006 [US1] Harden API base resolution error semantics in `src/typescript/react/src/lib/api.ts`
-- [ ] T007 [US1] Surface explicit configuration failure UX in `src/typescript/react/src/App.tsx`
-- [ ] T008 [US1] Add/adjust React resolution tests in `src/typescript/react/src/lib/api.test.ts`
-- [ ] T009 [US1] Validate React story end-to-end with canonical compose launch and runtime assertions using `scripts/compose-run-profile.sh` and `scripts/compose-profile-ready.sh`
+- [x] T006 [US1] Harden API base resolution error semantics in `src/typescript/react/src/lib/api.ts`
+- [x] T007 [US1] Surface explicit configuration failure UX in `src/typescript/react/src/App.tsx`
+- [x] T008 [US1] Add/adjust React resolution tests in `src/typescript/react/src/lib/api.test.ts`
+- [x] T009 [US1] Validate React story end-to-end with canonical compose launch and runtime assertions using `scripts/compose-run-profile.sh` and `scripts/compose-profile-ready.sh`
 
 **Checkpoint**: React UI no longer silently degrades to `<unset>` on healthy canonical startup.
 
@@ -41,9 +41,9 @@
 
 **Independent Test**: Run diagnostics command and receive PASS/FAIL per layer (compose interpolation, container env, effective runtime hints) plus recovery commands.
 
-- [ ] T010 [US2] Implement layered diagnostic checks and remediation output in `scripts/validate-frontend-config-drift.sh`
-- [ ] T011 [US2] Wire diagnostic task entry in `.vscode/tasks.json` and document command usage in `.specify/wiki/human-reference/Build-Run-Test-Commands.md`
-- [ ] T012 [US2] Validate diagnostics against healthy runtime and collect sample output behavior via terminal checks
+- [x] T010 [US2] Implement layered diagnostic checks and remediation output in `scripts/validate-frontend-config-drift.sh`
+- [x] T011 [US2] Wire diagnostic task entry in `.vscode/tasks.json` and document command usage in `.specify/wiki/human-reference/Build-Run-Test-Commands.md`
+- [x] T012 [US2] Validate diagnostics against healthy runtime and collect sample output behavior via terminal checks
 
 **Checkpoint**: Developers can isolate drift source without trial-and-error.
 
@@ -55,9 +55,9 @@
 
 **Independent Test**: Contract check fails when any required key is removed/renamed, and passes when all mappings are present.
 
-- [ ] T013 [US3] Add contract validation checks (keys + launch ordering assumptions) in `scripts/validate-frontend-config-drift.sh`
-- [ ] T014 [US3] Ensure compose and launch contract references remain explicit in `docker-compose.yml` and `.vscode/launch.json`
-- [ ] T015 [US3] Validate slice env mappings via compose config and service env checks for React/Electron/React Native
+- [x] T013 [US3] Add contract validation checks (keys + launch ordering assumptions) in `scripts/validate-frontend-config-drift.sh`
+- [x] T014 [US3] Ensure compose and launch contract references remain explicit in `docker-compose.yml` and `.vscode/launch.json`
+- [x] T015 [US3] Validate slice env mappings via compose config and service env checks for React/Electron/React Native
 
 **Checkpoint**: All frontend slices share one explicit, verifiable API-base contract.
 
@@ -65,9 +65,9 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T016 [P] Final docs cleanup for drift diagnostics/runbook in `.specify/wiki/human-reference/Build-Run-Test-Commands.md`
-- [ ] T017 Run relevant validations (`get_errors`, shell syntax checks, targeted compose checks) and summarize outcomes in `.specify/specs/043-frontend-config-drift-closure/tasks.md`
-- [ ] T018 Mark all completed tasks in `.specify/specs/043-frontend-config-drift-closure/tasks.md`
+- [x] T016 [P] Final docs cleanup for drift diagnostics/runbook in `.specify/wiki/human-reference/Build-Run-Test-Commands.md`
+- [x] T017 Run relevant validations (`get_errors`, shell syntax checks, targeted compose checks) and summarize outcomes in `.specify/specs/043-frontend-config-drift-closure/tasks.md`
+- [x] T018 Mark all completed tasks in `.specify/specs/043-frontend-config-drift-closure/tasks.md`
 
 ---
 

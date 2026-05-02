@@ -1,15 +1,17 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 -> 1.2.0
+- Version change: 1.2.0 -> 1.3.0
 - Modified principles:
 	- Added VI. One-Window Interactive Validation
 	- Added VII. Cross-API Feature Parity
+	- Added VIII. Rate-Limit Resilient Automation
 - Added sections: none
 - Removed sections: none
 - Templates requiring updates:
 	- ✅ .specify/templates/plan-template.md (validated, no update required)
 	- ✅ .specify/templates/spec-template.md (validated, no update required)
 	- ✅ .specify/templates/tasks-template.md (validated, no update required)
+	- ✅ .specify/templates/plan-skeleton.md (updated constitution checklist)
 - Follow-up TODOs: none
 -->
 # Banana Spec Kit Constitution
@@ -37,6 +39,9 @@ Frontend and desktop UX changes must be validated in an interactive in-workspace
 ### VII. Cross-API Feature Parity
 When ASP.NET and Fastify expose overlapping capability areas, behavior parity is mandatory. Route availability, status semantics, and response-shape contracts must stay aligned or be explicitly documented as intentional divergence in the active spec before merge.
 
+### VIII. Rate-Limit Resilient Automation
+Workflow gates that depend on GitHub APIs or marketplace action metadata must include a rate-limit resilience path. Required checks must avoid permanent false-negative failure caused solely by transient installation-token exhaustion and must provide deterministic recovery evidence through retries, backoff windows, rerun guidance, or non-blocking fallback classification.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
@@ -55,6 +60,7 @@ When ASP.NET and Fastify expose overlapping capability areas, behavior parity is
 - Run `scripts/workflow-sync-wiki.sh` in the same change when contract surfaces move.
 - For frontend and Electron behavior checks, verify rendered state in the VS Code integrated browser against the active runtime profile before marking tasks done.
 - When a change touches overlapping ASP.NET and Fastify API capability, include parity validation evidence (or intentional-drift rationale) in the active Spec Kit artifacts before task closure.
+- For checks that call GitHub REST/GraphQL or action metadata APIs, include explicit rate-limit handling and a documented rerun path in the active spec artifacts before task closure.
 
 ## Governance
 
@@ -62,4 +68,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.2.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-04-26
+**Version**: 1.3.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-02

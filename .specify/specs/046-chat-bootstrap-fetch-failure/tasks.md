@@ -7,9 +7,9 @@
 
 **Purpose**: Align feature artifacts and validation scaffolding for chat bootstrap failure classification/recovery.
 
-- [ ] T001 Confirm feature scope and runtime-readiness validation baseline in .specify/specs/046-chat-bootstrap-fetch-failure/plan.md
-- [ ] T002 Align bootstrap classification and recovery contract details in .specify/specs/046-chat-bootstrap-fetch-failure/contracts/chat-bootstrap-runtime-contract.md
-- [ ] T003 [P] Add canonical startup-order validation commands in .specify/specs/046-chat-bootstrap-fetch-failure/quickstart.md
+- [x] T001 Confirm feature scope and runtime-readiness validation baseline in .specify/specs/046-chat-bootstrap-fetch-failure/plan.md
+- [x] T002 Align bootstrap classification and recovery contract details in .specify/specs/046-chat-bootstrap-fetch-failure/contracts/chat-bootstrap-runtime-contract.md
+- [x] T003 [P] Add canonical startup-order validation commands in .specify/specs/046-chat-bootstrap-fetch-failure/quickstart.md
 
 ---
 
@@ -19,11 +19,11 @@
 
 **CRITICAL**: No user story work should begin until this phase is complete.
 
-- [ ] T004 Create bootstrap error taxonomy helpers for transport vs configuration failures in src/typescript/react/src/lib/api.ts
-- [ ] T005 [P] Add reusable bootstrap lifecycle state utilities in src/typescript/react/src/lib/resilience-bootstrap.ts
-- [ ] T006 [P] Add bootstrap transport/config remediation copy primitives in src/typescript/react/src/lib/copy.ts
-- [ ] T007 Wire foundational bootstrap status derivation from shared helpers in src/typescript/react/src/App.tsx
-- [ ] T008 Add foundational unit coverage for bootstrap classification and state helpers in src/typescript/react/src/lib/api.test.ts
+- [x] T004 Create bootstrap error taxonomy helpers for transport vs configuration failures in src/typescript/react/src/lib/api.ts
+- [x] T005 [P] Add reusable bootstrap lifecycle state utilities in src/typescript/react/src/lib/resilience-bootstrap.ts
+- [x] T006 [P] Add bootstrap transport/config remediation copy primitives in src/typescript/react/src/lib/copy.ts
+- [x] T007 Wire foundational bootstrap status derivation from shared helpers in src/typescript/react/src/App.tsx
+- [x] T008 Add foundational unit coverage for bootstrap classification and state helpers in src/typescript/react/src/lib/api.test.ts
 
 **Checkpoint**: Foundational bootstrap primitives are complete; user stories can proceed.
 
@@ -35,11 +35,11 @@
 
 **Independent Test**: Bring up runtime then apps in canonical order, load the app, and confirm no fetch-failure banner and usable chat controls.
 
-- [ ] T009 [P] [US1] Add healthy startup bootstrap-render test coverage in src/typescript/react/src/App.test.tsx
-- [ ] T010 [P] [US1] Add createChatSession bootstrap success-path coverage in src/typescript/react/src/lib/api.test.ts
-- [ ] T011 [US1] Implement deterministic bootstrapping-to-ready transition after session creation in src/typescript/react/src/App.tsx
-- [ ] T012 [US1] Gate chat input and send controls on ready-state bootstrap completion in src/typescript/react/src/App.tsx
-- [ ] T013 [US1] Record healthy-path runtime/apps startup verification steps in .specify/specs/046-chat-bootstrap-fetch-failure/quickstart.md
+- [x] T009 [P] [US1] Add healthy startup bootstrap-render test coverage in src/typescript/react/src/App.test.tsx
+- [x] T010 [P] [US1] Add createChatSession bootstrap success-path coverage in src/typescript/react/src/lib/api.test.ts
+- [x] T011 [US1] Implement deterministic bootstrapping-to-ready transition after session creation in src/typescript/react/src/App.tsx
+- [x] T012 [US1] Gate chat input and send controls on ready-state bootstrap completion in src/typescript/react/src/App.tsx
+- [x] T013 [US1] Record healthy-path runtime/apps startup verification steps in .specify/specs/046-chat-bootstrap-fetch-failure/quickstart.md
 
 **Checkpoint**: US1 is independently functional and verifiable as the MVP.
 
@@ -51,12 +51,12 @@
 
 **Independent Test**: Stop runtime while frontend remains up, reload, and confirm transport-classified messaging; restore runtime and confirm error clears on retry/reload.
 
-- [ ] T014 [P] [US2] Add bootstrap transport failure classification tests for fetch/network failures in src/typescript/react/src/lib/api.test.ts
-- [ ] T015 [P] [US2] Add config-resolution vs transport banner rendering tests in src/typescript/react/src/App.test.tsx
-- [ ] T016 [US2] Implement bootstrap fetch transport-error classifier in src/typescript/react/src/lib/api.ts
-- [ ] T017 [US2] Render bootstrap_transport remediation guidance in src/typescript/react/src/App.tsx
-- [ ] T018 [US2] Keep config_resolution messaging isolated from transport-error messaging in src/typescript/react/src/App.tsx
-- [ ] T019 [US2] Update transport remediation copy to reference canonical runtime-before-apps order in src/typescript/react/src/lib/copy.ts
+- [x] T014 [P] [US2] Add bootstrap transport failure classification tests for fetch/network failures in src/typescript/react/src/lib/api.test.ts
+- [x] T015 [P] [US2] Add config-resolution vs transport banner rendering tests in src/typescript/react/src/App.test.tsx
+- [x] T016 [US2] Implement bootstrap fetch transport-error classifier in src/typescript/react/src/lib/api.ts
+- [x] T017 [US2] Render bootstrap_transport remediation guidance in src/typescript/react/src/App.tsx
+- [x] T018 [US2] Keep config_resolution messaging isolated from transport-error messaging in src/typescript/react/src/App.tsx
+- [x] T019 [US2] Update transport remediation copy to reference canonical runtime-before-apps order in src/typescript/react/src/lib/copy.ts
 
 **Checkpoint**: US2 is independently functional with distinct transport/config error handling.
 
@@ -68,11 +68,11 @@
 
 **Independent Test**: Run failure-path and healthy-path readiness diagnostics and verify clear pass/fail signals plus rendered-state evidence guidance.
 
-- [ ] T020 [P] [US3] Add runtime-unavailable and recovery diagnostic scenarios in .specify/specs/046-chat-bootstrap-fetch-failure/quickstart.md
-- [ ] T021 [P] [US3] Expand healthy/failure/recovery evidence expectations in .specify/specs/046-chat-bootstrap-fetch-failure/contracts/chat-bootstrap-runtime-contract.md
-- [ ] T022 [US3] Improve timeout diagnostics and dependency-layer failure output in scripts/compose-profile-ready.sh
-- [ ] T023 [US3] Add runtime-first remediation hints for startup-order mismatch in scripts/compose-run-profile.sh
-- [ ] T024 [US3] Add task-level runtime/apps readiness validation entry in .vscode/tasks.json
+- [x] T020 [P] [US3] Add runtime-unavailable and recovery diagnostic scenarios in .specify/specs/046-chat-bootstrap-fetch-failure/quickstart.md
+- [x] T021 [P] [US3] Expand healthy/failure/recovery evidence expectations in .specify/specs/046-chat-bootstrap-fetch-failure/contracts/chat-bootstrap-runtime-contract.md
+- [x] T022 [US3] Improve timeout diagnostics and dependency-layer failure output in scripts/compose-profile-ready.sh
+- [x] T023 [US3] Add runtime-first remediation hints for startup-order mismatch in scripts/compose-run-profile.sh
+- [x] T024 [US3] Add task-level runtime/apps readiness validation entry in .vscode/tasks.json
 
 **Checkpoint**: US3 diagnostics catch bootstrap dependency regressions deterministically.
 
@@ -82,9 +82,9 @@
 
 **Purpose**: Finalize evidence and closure artifacts spanning all stories.
 
-- [ ] T025 [P] Consolidate one-window integrated-browser validation checklist in .specify/specs/046-chat-bootstrap-fetch-failure/quickstart.md
-- [ ] T026 [P] Update post-implementation constitution and validation notes in .specify/specs/046-chat-bootstrap-fetch-failure/plan.md
-- [ ] T027 Capture final classification/recovery readiness evidence summary in .specify/specs/046-chat-bootstrap-fetch-failure/research.md
+- [x] T025 [P] Consolidate one-window integrated-browser validation checklist in .specify/specs/046-chat-bootstrap-fetch-failure/quickstart.md
+- [x] T026 [P] Update post-implementation constitution and validation notes in .specify/specs/046-chat-bootstrap-fetch-failure/plan.md
+- [x] T027 Capture final classification/recovery readiness evidence summary in .specify/specs/046-chat-bootstrap-fetch-failure/research.md
 
 ---
 

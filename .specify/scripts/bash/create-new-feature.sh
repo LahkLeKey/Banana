@@ -8,6 +8,7 @@ ALLOW_EXISTING=false
 SHORT_NAME=""
 BRANCH_NUMBER=""
 USE_TIMESTAMP=false
+DESCRIPTION=""
 ARGS=()
 i=1
 while [ $i -le $# ]; do
@@ -21,6 +22,14 @@ while [ $i -le $# ]; do
             ;;
         --allow-existing-branch)
             ALLOW_EXISTING=true
+            ;;
+        --description)
+            if [ $((i + 1)) -gt $# ]; then
+                echo 'Error: --description requires a value' >&2
+                exit 1
+            fi
+            i=$((i + 1))
+            DESCRIPTION="${!i}"
             ;;
         --short-name)
             if [ $((i + 1)) -gt $# ]; then
@@ -59,6 +68,7 @@ while [ $i -le $# ]; do
             echo "  --json              Output in JSON format"
             echo "  --dry-run           Compute branch name and paths without creating branches, directories, or files"
             echo "  --allow-existing-branch  Switch to branch if it already exists instead of failing"
+            echo "  --description <text>  Pre-populate spec sections from description (domain-aware)"
             echo "  --short-name <name> Provide a custom short name (2-4 words) for the branch"
             echo "  --number N          Specify branch number manually (overrides auto-detection)"
             echo "  --timestamp         Use timestamp prefix (YYYYMMDD-HHMMSS) instead of sequential numbering"
@@ -375,6 +385,174 @@ if [ "$DRY_RUN" != true ]; then
             echo "Warning: Spec template not found; created empty spec file" >&2
             touch "$SPEC_FILE"
         fi
+    fi
+
+    # Enrich spec.md with description-derived content if --description was provided (spec 104 FR-1/FR-2).
+    if [ -n "$DESCRIPTION" ]; then
+        python - "$SPEC_FILE" "$BRANCH_NAME" "$DESCRIPTION" "$FEATURE_NUM" <<'PY'
+import sys
+import re
+import pathlib
+import datetime
+
+spec_path = pathlib.Path(sys.argv[1])
+branch_name = sys.argv[2]
+description = sys.argv[3]
+feature_num = sys.argv[4]
+today = datetime.date.today().isoformat()
+
+desc_lower = description.lower()
+
+# Domain classifier (FR-2) — keyword-driven, no external deps.
+DOMAIN_MAP = {
+    "native": {
+        "keywords": ["native", "cmake", " c ", ".c ", "banana_", "libbanana", "wrapper", "abi", "ffi"],
+        "wave": "native",
+        "tech": "C, CMake",
+        "deps": "libbanana_native.so, CMake presets",
+        "testing": "CTest, native unit tests under tests/native/",
+    },
+    "api": {
+        "keywords": ["api", "fastify", "asp.net", "dotnet", "endpoint", "controller", "route", "middleware", "swagger"],
+        "wave": "api",
+        "tech": "TypeScript/Bun or C#/.NET 8",
+        "deps": "Fastify, Prisma 7, pg-boss, zod",
+        "testing": "Bun test, dotnet test with coverage",
+    },
+    "frontend": {
+        "keywords": ["react", "electron", "vite", "tailwind", "component", "ui", "frontend", "shadcn", "mobile", "expo"],
+        "wave": "frontend",
+        "tech": "TypeScript, React, Bun, Vite, Tailwind",
+        "deps": "Bun, React, @banana/ui, Tailwind CSS",
+        "testing": "Biome lint, TypeScript typecheck",
+    },
+    "infra": {
+        "keywords": ["docker", "compose", "container", "dockerfile", "nginx", "k8s", "kubernetes", "helm", "ci", "cd"],
+        "wave": "infra",
+        "tech": "Bash, Docker Compose, GitHub Actions YAML",
+        "deps": "Docker Compose, GitHub Actions",
+        "testing": "Compose smoke tests, CI workflow validation",
+    },
+    "workflow": {
+        "keywords": ["workflow", "action", "pipeline", "orchestrat", "automation", "speckit", "spec drain", "sdlc", "script"],
+        "wave": "automation",
+        "tech": "Bash, Python 3, GitHub Actions YAML",
+        "deps": "gh CLI, existing orchestration scripts",
+        "testing": "Bash unit tests, dry-run smoke tests",
+    },
+    "data": {
+        "keywords": ["postgres", "prisma", "migration", "schema", "database", "sql", "corpus", "training", "model"],
+        "wave": "data",
+        "tech": "SQL, Prisma 7, Python 3",
+        "deps": "PostgreSQL, Prisma, Python",
+        "testing": "Migration tests, schema validation",
+    },
+    "security": {
+        "keywords": ["security", "auth", "oauth", "jwt", "csp", "pentest", "sbom", "cve", "threat", "sentry", "rate limit"],
+        "wave": "security",
+        "tech": "Varies by security domain",
+        "deps": "OWASP tooling, GitHub Dependabot",
+        "testing": "Security scanning, policy checks",
+    },
+    "dx": {
+        "keywords": ["devex", "dx", "devcontainer", "codespace", "pre-commit", "hook", "linting", "biome", "stryker"],
+        "wave": "dx",
+        "tech": "Bash, TypeScript, VS Code",
+        "deps": "Biome, pre-commit, VS Code extensions",
+        "testing": "Local validation scripts",
+    },
+}
+
+detected_domain = "workflow"
+for domain, info in DOMAIN_MAP.items():
+    if any(kw in desc_lower for kw in info["keywords"]):
+        detected_domain = domain
+        break
+
+domain_info = DOMAIN_MAP[detected_domain]
+
+# Build a concise In Scope list from description keywords.
+problem_statement = description.strip()
+if not problem_statement.endswith("."):
+    problem_statement += "."
+
+# Read existing content to check if it's a fresh stub.
+content = spec_path.read_text(encoding="utf-8")
+
+# Replace known placeholder patterns.
+replacements = {
+    "[FEATURE NAME]": branch_name.replace("-", " ").title(),
+    "[###-feature-name]": branch_name,
+    "[DATE]": today,
+    "**Status**: Draft": "**Status**: Stub",
+    "**Input**: User description: \"$ARGUMENTS\"": f"**Wave**: {domain_info['wave']}\n**Domain**: {detected_domain}",
+}
+for old, new in replacements.items():
+    content = content.replace(old, new)
+
+# If Problem Statement section is placeholder/empty, inject description.
+content = re.sub(
+    r'(## Problem Statement\s*\n)(<!--.*?-->)(\s*)',
+    lambda m: m.group(1) + f"\n{problem_statement}\n\n",
+    content,
+    flags=re.DOTALL,
+)
+
+spec_path.write_text(content, encoding="utf-8")
+
+# Generate skeleton plan.md if it doesn't exist (FR-3).
+plan_path = spec_path.parent / "plan.md"
+if not plan_path.exists():
+    plan_content = f"""# Implementation Plan: {branch_name.replace("-", " ").title()}
+
+**Branch**: `{branch_name}` | **Date**: {today} | **Spec**: `.specify/specs/{branch_name}/spec.md`
+**Input**: Feature specification from `.specify/specs/{branch_name}/spec.md`
+
+## Summary
+
+{problem_statement}
+
+## Technical Context
+
+**Language/Version**: {domain_info["tech"]}
+**Primary Dependencies**: {domain_info["deps"]}
+**Storage**: File-based artifacts under `artifacts/`
+**Testing**: {domain_info["testing"]}
+**Target Platform**: GitHub Actions + local Git Bash operator path
+**Project Type**: {detected_domain.title()} — {domain_info["wave"]} wave
+**Performance Goals**: Standard CI execution within job time limits
+**Constraints**: Must not bypass existing safety controls or required checks
+**Scale/Scope**: Scoped to spec #{feature_num} deliverables only
+
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+- Existing safety contracts are preserved.
+- No production deployment bypasses are introduced.
+- All changes are auditable by persisted artifacts and PR evidence.
+
+## Project Structure
+
+<!-- Fill in relevant source paths for this spec -->
+
+## Phases
+
+### Phase 1: Setup
+
+<!-- Define setup tasks -->
+
+### Phase 2: Implementation
+
+<!-- Define implementation tasks -->
+
+### Phase 3: Validation
+
+<!-- Define validation tasks -->
+"""
+    plan_path.write_text(plan_content, encoding="utf-8")
+    print(f"[specify] Generated plan.md skeleton for domain: {detected_domain}", file=sys.stderr)
+PY
     fi
 
     # Inform the user how to persist the feature variable in their own shell

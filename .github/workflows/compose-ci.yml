@@ -26,7 +26,7 @@ jobs:
         run: |
           bash scripts/check-workflow-runtime-deprecations.sh \
             --workflow .github/workflows/compose-ci.yml \
-            --exceptions .github/workflows/runtime-compatibility-exceptions.yml \
+            --exceptions .github/runtime-compatibility-exceptions.yml \
             --output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.json \
             --text-output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt
 
@@ -134,22 +134,9 @@ jobs:
           measured_percent=""
 
           if [[ -f .artifacts/native-c/coverage-native.xml ]]; then
-            measured_percent="$(python3 - .artifacts/native-c/coverage-native.xml <<'PY'
-import sys
-import xml.etree.ElementTree as ET
+            measured_percent="$(python3 scripts/ci-extract-xml-coverage.py .artifacts/native-c/coverage-native.xml)"
 
-tree = ET.parse(sys.argv[1])
-root = tree.getroot()
-line_rate = float(root.attrib.get("line-rate", "0"))
-print(f"{line_rate * 100:.2f}")
-PY
-)"
-
-            native_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-            )"
+            native_at_or_above_threshold="$(python3 scripts/ci-check-threshold.py "$measured_percent")"
 
             if [[ "$native_at_or_above_threshold" == "1" ]]; then
               lane_status="pass"
@@ -402,24 +389,12 @@ PY
           measured_percent=""
 
           if [[ -f .artifacts/coverage/unit-report/Summary.txt ]]; then
-            measured_percent="$(python3 - .artifacts/coverage/unit-report/Summary.txt <<'PY'
-import re
-import sys
-
-text = open(sys.argv[1], encoding='utf-8').read()
-matches = re.findall(r'(\d+(?:\.\d+)?)\s*%', text)
-print(matches[0] if matches else "")
-PY
-)"
+            measured_percent="$(python3 scripts/ci-extract-txt-coverage.py .artifacts/coverage/unit-report/Summary.txt)"
           fi
 
           dotnet_at_or_above_threshold="0"
           if [[ -n "$measured_percent" ]]; then
-            dotnet_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-            )"
+            dotnet_at_or_above_threshold="$(python3 scripts/ci-check-threshold.py "$measured_percent")"
           fi
 
           if [[ -n "$measured_percent" && "$dotnet_at_or_above_threshold" == "1" ]]; then
@@ -509,13 +484,11 @@ PY
           mkdir -p .artifacts/coverage/unit-report
 
           if [[ ! -f .artifacts/coverage/unit-report/Summary.txt ]]; then
-            cat > .artifacts/coverage/unit-report/Summary.txt <<'EOF'
-            Unit coverage summary was not produced because an earlier stage failed.
-            EOF
+            printf '%s\n' "Unit coverage summary was not produced because an earlier stage failed." > .artifacts/coverage/unit-report/Summary.txt
           fi
 
           if [[ -z "$(find .artifacts/test-results/unit -type f -print -quit 2>/dev/null)" ]]; then
-            : > .artifacts/test-results/unit/.placeholder
+            : > .artifacts/test-results/unit/placeholder.txt
           fi
 
       - name: Print .NET unit coverage summary in job output
@@ -710,23 +683,11 @@ PY
             lane_status="not-applicable"
             failure_class=""
           elif [[ -f .artifacts/coverage/integration-report/Summary.txt ]]; then
-            measured_percent="$(python3 - .artifacts/coverage/integration-report/Summary.txt <<'PY'
-import re
-import sys
-
-text = open(sys.argv[1], encoding='utf-8').read()
-matches = re.findall(r'(\d+(?:\.\d+)?)\s*%', text)
-print(matches[0] if matches else "")
-PY
-)"
+            measured_percent="$(python3 scripts/ci-extract-txt-coverage.py .artifacts/coverage/integration-report/Summary.txt)"
 
             dotnet_integration_at_or_above_threshold="0"
             if [[ -n "$measured_percent" ]]; then
-              dotnet_integration_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-              )"
+              dotnet_integration_at_or_above_threshold="$(python3 scripts/ci-check-threshold.py "$measured_percent")"
             fi
 
             if [[ -n "$measured_percent" && "$dotnet_integration_at_or_above_threshold" == "1" ]]; then
@@ -763,23 +724,23 @@ PY
           mkdir -p .artifacts/test-results/integration
           mkdir -p .artifacts/coverage/integration-report
 
-          cat > .artifacts/coverage/integration-report/Summary.txt <<'EOF'
-          Integration test project not found at tests/integration/Banana.IntegrationTests.csproj.
-          Coverage generation was skipped for this job.
-          EOF
-
-          cat > .artifacts/coverage/integration-report/integration-line-rate-gate.json <<'EOF'
           {
-            "schema_version": 1,
-            "gate": "integration-line-rate",
-            "passed": true,
-            "skipped": true,
-            "reason": "integration_project_missing"
-          }
-          EOF
+            printf '%s\n' "Integration test project not found at tests/integration/Banana.IntegrationTests.csproj."
+            printf '%s\n' "Coverage generation was skipped for this job."
+          } > .artifacts/coverage/integration-report/Summary.txt
+
+          {
+            printf '%s\n' '{'
+            printf '%s\n' '  "schema_version": 1,'
+            printf '%s\n' '  "gate": "integration-line-rate",'
+            printf '%s\n' '  "passed": true,'
+            printf '%s\n' '  "skipped": true,'
+            printf '%s\n' '  "reason": "integration_project_missing"'
+            printf '%s\n' '}'
+          } > .artifacts/coverage/integration-report/integration-line-rate-gate.json
 
           : > .artifacts/coverage/integration-report/uncovered-lines.txt
-          : > .artifacts/test-results/integration/.placeholder
+          : > .artifacts/test-results/integration/placeholder.txt
 
       - name: Write .NET integration job result record
         if: always()
@@ -855,25 +816,23 @@ PY
           mkdir -p .artifacts/coverage/integration-report
 
           if [[ ! -f .artifacts/coverage/integration-report/Summary.txt ]]; then
-            cat > .artifacts/coverage/integration-report/Summary.txt <<'EOF'
-            Integration coverage summary was not produced because an earlier stage failed.
-            EOF
+            printf '%s\n' "Integration coverage summary was not produced because an earlier stage failed." > .artifacts/coverage/integration-report/Summary.txt
           fi
 
           if [[ ! -f .artifacts/coverage/integration-report/integration-line-rate-gate.json ]]; then
-            cat > .artifacts/coverage/integration-report/integration-line-rate-gate.json <<'EOF'
             {
-              "schema_version": 1,
-              "gate": "integration-line-rate",
-              "passed": false,
-              "skipped": false,
-              "reason": "integration_artifacts_missing"
-            }
-            EOF
+              printf '%s\n' '{'
+              printf '%s\n' '  "schema_version": 1,'
+              printf '%s\n' '  "gate": "integration-line-rate",'
+              printf '%s\n' '  "passed": false,'
+              printf '%s\n' '  "skipped": false,'
+              printf '%s\n' '  "reason": "integration_artifacts_missing"'
+              printf '%s\n' '}'
+            } > .artifacts/coverage/integration-report/integration-line-rate-gate.json
           fi
 
           if [[ -z "$(find .artifacts/test-results/integration -type f -print -quit 2>/dev/null)" ]]; then
-            : > .artifacts/test-results/integration/.placeholder
+            : > .artifacts/test-results/integration/placeholder.txt
           fi
 
           if [[ ! -f .artifacts/coverage/integration-report/uncovered-lines.txt ]]; then
@@ -1045,9 +1004,7 @@ PY
         run: |
           mkdir -p .artifacts/coverage/aggregate-report
           if [[ ! -f .artifacts/coverage/aggregate-report/Summary.txt ]]; then
-            cat > .artifacts/coverage/aggregate-report/Summary.txt <<'EOF'
-            Aggregate coverage summary was not produced because an earlier stage failed.
-            EOF
+            printf '%s\n' "Aggregate coverage summary was not produced because an earlier stage failed." > .artifacts/coverage/aggregate-report/Summary.txt
           fi
 
       - name: Print .NET aggregate API coverage summary in job output

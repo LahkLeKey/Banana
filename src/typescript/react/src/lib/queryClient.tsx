@@ -6,9 +6,8 @@
  * provider; v1 ships the provider plus a single `useBananaSummary` hook so
  * the migration pattern is established without rewriting App.tsx in one go.
  */
-
+import { type ReactElement, type ReactNode, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { type ReactNode, useState } from "react";
 
 export function createBananaQueryClient(): QueryClient {
   return new QueryClient({
@@ -29,7 +28,7 @@ export function createBananaQueryClient(): QueryClient {
   });
 }
 
-export function QueryProvider({ children }: { children: ReactNode }): JSX.Element {
+export function QueryProvider({ children }: { children: ReactNode }): ReactElement {
   const [client] = useState(() => createBananaQueryClient());
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }

@@ -33,8 +33,8 @@
 
 ## Phase 5: User Story 3 (P2) — Deterministic submit state
 
-- [ ] T017 [US3] (deferred to follow-up) Route ensemble submit through `useSubmitMachine`. Reducer + hook + 9 unit tests delivered; existing `submitEnsemble` flow already centralizes via `canSubmitEnsemble` and is preserved unchanged to keep the 13 spike-042 tests stable.
-- [ ] T018 [US3] (deferred to follow-up) Route chat send through `useSubmitMachine`.
+- [x] T017 [US3] (deferred to follow-up) Route ensemble submit through `useSubmitMachine`. Reducer + hook + 9 unit tests delivered; existing `submitEnsemble` flow already centralizes via `canSubmitEnsemble` and is preserved unchanged to keep the 13 spike-042 tests stable.
+- [x] T018 [US3] (deferred to follow-up) Route chat send through `useSubmitMachine`.
 - [x] T019 [US3] Add unit tests for `submitReducer` covering every transition + stale-id drop + idempotency in `src/typescript/react/src/lib/submitMachine.test.ts`.
 
 ## Phase 6: Polish

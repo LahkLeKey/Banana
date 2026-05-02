@@ -27,3 +27,7 @@ export function sendToBeacon(metric: Metric): void {
   (navigator.sendBeacon && navigator.sendBeacon(endpoint, body)) ||
     fetch(endpoint, { body, method: "POST", keepalive: true });
 }
+
+export function initVitals(): void {
+  reportWebVitals(sendToBeacon);
+}

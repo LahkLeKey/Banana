@@ -18,8 +18,9 @@ import { registerDriftRoutes } from "./routes/drift.ts";
 import { registerHealthRoutes } from "./routes/health.ts";
 import { registryRoutes } from "./routes/registry.ts";
 import { registerRipenessRoutes } from "./routes/ripeness.ts";
-import { registerStreamingRoutes } from "./routes/streaming.ts";
 import { registerStreamingChatRoutes } from "./routes/streaming-chat.ts";
+import { registerStreamingRoutes } from "./routes/streaming.ts";
+import { webhooksRoutes } from "./routes/webhooks.ts";
 
 const app = Fastify({ logger: true });
 
@@ -68,17 +69,25 @@ app.addHook("onRequest", async (request, reply) => {
 await registerHealthRoutes(app);
 await registerCorpusRoutes(app);
 await registerRipenessRoutes(app);
+await registerDriftRoutes(app);
 await registerNotBananaRoutes(app);
 await registerChatRoutes(app);
 await registerTrainingWorkbenchRoutes(app);
 await registerLabelQueueRoutes(app);
 await app.register(registryRoutes);
+await app.register(webhooksRoutes);
+await registerJobRoutes(app);
 await registerAuditRoutes(app);
 await registerStreamingRoutes(app);
 await registerStreamingChatRoutes(app);
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? "0.0.0.0";
+
+// Spec #070 — start durable job queue after server is ready
+app.addHook("onReady", async () => {
+  startJobQueue().catch((err) => app.log.error({ err }, "job queue start failed"));
+});
 
 app.listen({ port, host }).catch((err) => {
   app.log.error(err);
