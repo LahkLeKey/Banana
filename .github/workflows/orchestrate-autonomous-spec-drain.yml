@@ -60,6 +60,22 @@ on:
         options:
           - "true"
           - "false"
+      max_failures:
+        description: Max unique failed specs before drain stops (failure budget)
+        required: false
+        default: "5"
+      max_retries:
+        description: Max retries per spec before permanently failing it
+        required: false
+        default: "2"
+      dry_run:
+        description: Simulate drain loop without creating branches or PRs
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 jobs:
   spec-drain:
@@ -78,6 +94,9 @@ jobs:
       BANANA_AUTO_MERGE_METHOD: ${{ github.event.inputs.auto_merge_method || 'squash' }}
       BANANA_SDLC_VALIDATE_AI_CONTRACTS: ${{ github.event.inputs.validate_ai_contracts || 'true' }}
       BANANA_SDLC_ENABLE_WIKI_SYNC: 'false'
+      BANANA_DRAIN_MAX_FAILURES: ${{ github.event.inputs.max_failures || '5' }}
+      BANANA_DRAIN_MAX_RETRIES: ${{ github.event.inputs.max_retries || '2' }}
+      BANANA_DRAIN_DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -93,5 +112,37 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: spec-drain-summary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/sdlc-orchestration/
+          if-no-files-found: warn
+
+  dry-run-smoke:
+    name: Spec-drain dry-run smoke test
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BANANA_SDLC_MODE: spec-drain
+      BANANA_AUTONOMY_STOP: "false"
+      BANANA_DRAIN_DRY_RUN: "true"
+      BANANA_DRAIN_MAX_FAILURES: "99"
+      BANANA_DRAIN_MAX_RETRIES: "1"
+      BANANA_SDLC_AUTO_DEBUG_CI: "false"
+      BANANA_SDLC_AUTO_SCAFFOLD_SPECS: "false"
+      BANANA_SDLC_VALIDATE_AI_CONTRACTS: "false"
+      BANANA_SDLC_ENABLE_WIKI_SYNC: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run spec-drain dry-run smoke test
+        run: |
+          bash scripts/workflow-orchestrate-sdlc.sh
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spec-drain-smoke-${{ github.run_id }}-${{ github.run_attempt }}
           path: artifacts/sdlc-orchestration/
           if-no-files-found: warn

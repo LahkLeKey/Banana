@@ -47,6 +47,46 @@ AUTO_MERGE_METHOD="${BANANA_AUTO_MERGE_METHOD:-squash}"
 
 mkdir -p "$OUTPUT_DIR"
 
+# ---------------------------------------------------------------------------
+# speckit-bootstrap mode (spec 104 FR-6)
+# ---------------------------------------------------------------------------
+if [[ "$SDLC_MODE" == "speckit-bootstrap" ]]; then
+  BOOTSTRAP_TARGET="${BANANA_SPECKIT_BOOTSTRAP_TARGET:-}"
+  if [[ -z "$BOOTSTRAP_TARGET" ]]; then
+    echo "Error: BANANA_SPECKIT_BOOTSTRAP_TARGET must be set for speckit-bootstrap mode." >&2
+    exit 1
+  fi
+
+  SPEC_DIR=".specify/specs/${BOOTSTRAP_TARGET}"
+  SPEC_FILE="${SPEC_DIR}/spec.md"
+
+  if [[ ! -f "$SPEC_FILE" ]]; then
+    echo "Error: spec.md not found at ${SPEC_FILE}. Run specify specify first." >&2
+    exit 1
+  fi
+
+  echo "[speckit:bootstrap] Running quality gate on spec: $BOOTSTRAP_TARGET"
+  if [[ -f "scripts/validate-spec-quality.sh" ]]; then
+    bash scripts/validate-spec-quality.sh --spec "$SPEC_FILE"
+  fi
+
+  echo "[speckit:bootstrap] Running specify plan for: $BOOTSTRAP_TARGET"
+  bash scripts/workflow-ensure-speckit.sh
+  specify plan || true
+
+  echo "[speckit:bootstrap] Running specify tasks for: $BOOTSTRAP_TARGET"
+  specify tasks || true
+
+  echo "[speckit:bootstrap] Bootstrap complete for: $BOOTSTRAP_TARGET"
+  echo "  spec:  ${SPEC_FILE}"
+  echo "  plan:  ${SPEC_DIR}/plan.md"
+  echo "  tasks: ${SPEC_DIR}/tasks.md"
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# spec-drain mode (spec 103)
+# ---------------------------------------------------------------------------
 if [[ "$SDLC_MODE" == "spec-drain" ]]; then
   echo "Running SDLC in spec-drain mode..."
 
@@ -54,81 +94,35 @@ if [[ "$SDLC_MODE" == "spec-drain" ]]; then
 
   if [[ "$AUTONOMY_STOP" == "true" ]]; then
     bash scripts/workflow-spec-drain-state.sh set-stop "$SPEC_DRAIN_STATE_PATH" "kill_switch"
+    bash scripts/workflow-spec-drain-state.sh get-summary "$SPEC_DRAIN_STATE_PATH"
+    exit 0
   fi
 
-  if [[ "$AUTO_DEBUG_CI" == "true" && "$AUTO_SCAFFOLD_SPECS" == "true" && "$AUTONOMY_STOP" != "true" ]]; then
+  if [[ "$AUTO_DEBUG_CI" == "true" && "$AUTO_SCAFFOLD_SPECS" == "true" ]]; then
     export BANANA_SDLC_CI_IDEA_BUDGET="$CI_IDEA_BUDGET"
     export BANANA_SDLC_CI_FOLLOWUP_OUTPUT_PATH="$CI_FOLLOWUP_OUTPUT_PATH"
     bash scripts/workflow-autonomous-ci-followup.sh
   fi
 
-  python - "$SUMMARY_PATH" "$SPEC_DRAIN_STATE_PATH" "$AUTONOMY_STOP" "$CI_FOLLOWUP_OUTPUT_PATH" <<'PY'
-import json
-import pathlib
-import re
-import sys
+  # Delegate to the spec-drain loop (T008-T014).
+  export BANANA_DRAIN_STATE_PATH="$SPEC_DRAIN_STATE_PATH"
+  export BANANA_DRAIN_MAX_FAILURES="${BANANA_DRAIN_MAX_FAILURES:-5}"
+  export BANANA_DRAIN_MAX_RETRIES="${BANANA_DRAIN_MAX_RETRIES:-2}"
+  export BANANA_DRAIN_DRY_RUN="${BANANA_DRAIN_DRY_RUN:-false}"
+  export BANANA_DRAIN_OUTPUT_DIR="${OUTPUT_DIR}/spec-drain"
+  export BANANA_AUTONOMY_STOP="$AUTONOMY_STOP"
 
-summary_path = pathlib.Path(sys.argv[1])
-state_path = pathlib.Path(sys.argv[2])
-autonomy_stop = sys.argv[3].lower() == "true"
-ci_followup_path = pathlib.Path(sys.argv[4])
+  DRAIN_EXIT=0
+  bash scripts/workflow-spec-drain-loop.sh || DRAIN_EXIT=$?
 
-state = json.loads(state_path.read_text(encoding="utf-8"))
-
-spec_dirs = []
-for path in sorted(pathlib.Path(".specify/specs").glob("*")):
-    if not path.is_dir():
-        continue
-    name = path.name
-    if not re.match(r"^[0-9]{3,}-", name):
-        continue
-    if (path / "spec.md").exists():
-        spec_dirs.append(name)
-
-completed = set(state.get("completed_specs", []))
-failed = {str(item.get("spec_id")) for item in state.get("failed_specs", [])}
-runnable = [spec for spec in spec_dirs if spec not in completed and spec not in failed]
-
-stop_reason = state.get("stop_reason")
-ci_followup = None
-if ci_followup_path.exists():
-    try:
-        ci_followup = json.loads(ci_followup_path.read_text(encoding="utf-8"))
-    except Exception:
-        ci_followup = {"status": "failed", "reason": f"unable to parse {ci_followup_path.name}"}
-
-if stop_reason is None:
-    if autonomy_stop:
-      stop_reason = "kill_switch"
-    elif ci_followup is not None and int(ci_followup.get("created_spec_count", 0)) == 0:
-      stop_reason = "ci_runs_out_of_ideas"
-    elif not runnable:
-      stop_reason = "exhausted"
-    else:
-      stop_reason = "runnable_specs_available"
-
-summary = {
-    "mode": "spec-drain",
-    "status": "stopped" if autonomy_stop or stop_reason == "exhausted" else "running",
-    "stop_reason": stop_reason,
-    "spec_discovery": {
-        "total_specs": len(spec_dirs),
-        "runnable_specs": runnable,
-        "completed_specs": sorted(completed),
-        "failed_specs": sorted(failed),
-    },
-    "ci_followup": ci_followup,
-    "state_path": str(state_path),
-}
-
-summary_path.parent.mkdir(parents=True, exist_ok=True)
-summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-print(json.dumps(summary, indent=2))
-PY
-
+  # Capture final summary for the main SDLC summary artifact.
+  bash scripts/workflow-spec-drain-state.sh get-summary "$SPEC_DRAIN_STATE_PATH" \\
+    > "$SUMMARY_PATH" 2>/dev/null || true
   echo "Spec-drain summary written to: ${SUMMARY_PATH}"
-  exit 0
+
+  exit "$DRAIN_EXIT"
 fi
+
 
 if [[ "${BANANA_SDLC_VALIDATE_AI_CONTRACTS:-true}" == "true" ]]; then
   echo "Validating AI customization and wiki-sync contracts..."
