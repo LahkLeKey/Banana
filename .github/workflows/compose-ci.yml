@@ -488,7 +488,7 @@ jobs:
           fi
 
           if [[ -z "$(find .artifacts/test-results/unit -type f -print -quit 2>/dev/null)" ]]; then
-            : > .artifacts/test-results/unit/.placeholder
+            : > .artifacts/test-results/unit/placeholder.txt
           fi
 
       - name: Print .NET unit coverage summary in job output
@@ -733,7 +733,7 @@ jobs:
             > .artifacts/coverage/integration-report/integration-line-rate-gate.json
 
           : > .artifacts/coverage/integration-report/uncovered-lines.txt
-          : > .artifacts/test-results/integration/.placeholder
+          : > .artifacts/test-results/integration/placeholder.txt
 
       - name: Write .NET integration job result record
         if: always()
@@ -817,7 +817,7 @@ jobs:
           fi
 
           if [[ -z "$(find .artifacts/test-results/integration -type f -print -quit 2>/dev/null)" ]]; then
-            : > .artifacts/test-results/integration/.placeholder
+            : > .artifacts/test-results/integration/placeholder.txt
           fi
 
           if [[ ! -f .artifacts/coverage/integration-report/uncovered-lines.txt ]]; then
