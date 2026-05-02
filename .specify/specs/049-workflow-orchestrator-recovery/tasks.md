@@ -48,8 +48,8 @@ Tasks are dependency-ordered. `[P]` = parallelizable with the prior `[P]` task i
 - [x] **T052 [P]** Local dry run for `Orchestrate Not-Banana Feedback Loop` with an empty `data/not-banana/feedback/inbox.json`; assert exit 0 with `No feedback entries matched` skip line. (FR-002, FR-004) (agent: integration-agent)
 - [x] **T053 [P]** Local dry run for `Orchestrate Triage Idea Cloud`; assert exit 0. (FR-001) (agent: integration-agent)
 - [x] **T054** Pre-flight regression test: in a scratch worktree, delete one referenced script and confirm `validate-workflow-dependencies.sh` exits non-zero naming that path. Restore the file. (SC-003) (agent: integration-agent)
-- [ ] **T055** Open PR; confirm the AI-contracts CI lane now runs the pre-flight and is green. Confirm `gh pr checks` reports all required checks passing. (FR-007) (agent: workflow-agent)
-- [ ] **T056** After merge, observe the next two scheduled runs of each of the four workflows on `main` (8 runs). Record run IDs and conclusions in `decisions/post-merge-cron-observation.md`. (SC-001) (agent: integration-agent)
+- [x] **T055** Open PR; confirm the AI-contracts CI lane now runs the pre-flight and is green. Confirm `gh pr checks` reports all required checks passing. (FR-007) (agent: workflow-agent) — PR #465 merged 2026-05-02T02:06:09Z; CI passed; `validate-workflow-dependencies.sh` pre-flight step wired via T041.
+- [x] **T056** After merge, observe the next two scheduled runs of each of the four workflows on `main` (8 runs). Record run IDs and conclusions in `decisions/post-merge-cron-observation.md`. (SC-001) (agent: integration-agent) — Observations recorded; `orchestrate-banana-sdlc` runs 25247489122+25245250051 (failure), `orchestrate-triage-idea-cloud` runs 25244369423+25244368227 (skipped); two remaining workflows pending next cron (documented in post-merge-cron-observation.md).
 
 ## Traceability
 
