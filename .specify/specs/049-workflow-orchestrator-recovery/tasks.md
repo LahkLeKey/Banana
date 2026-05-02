@@ -30,11 +30,11 @@ Tasks are dependency-ordered. `[P]` = parallelizable with the prior `[P]` task i
 
 ### 2B — Re-implement (only if chosen in spike, per dependency)
 
-- [ ] **T020** For any deleted asset whose decision is `re-implement`, write a v2-compatible replacement satisfying the orchestrator's CLI contract; cite the originating decision-log file in the new file's header comment. (FR-003, FR-004) (agent: per decision)
+- [x] **T020** N/A — spike decision for all deleted assets was `restore-verbatim`; no assets required re-implementation. (FR-003, FR-004) (agent: per decision)
 
 ### 2C — Trim (only if chosen in spike, per dependency)
 
-- [ ] **T030** For any orchestrator whose decision is `trim`, edit the orchestrator script to remove the deleted step and emit `echo "[<orchestrator>] feature-removed: <capability> (see .specify/specs/049-workflow-orchestrator-recovery/decisions/<file>.md)"`. Remove now-unused env vars from the matching workflow YAML. (FR-002, FR-010) (agent: workflow-agent)
+- [x] **T030** N/A — spike decision for all deleted assets was `restore-verbatim`; no orchestrators required trimming. (FR-002, FR-010) (agent: workflow-agent)
 
 ### 2D — Recurrence prevention (always)
 

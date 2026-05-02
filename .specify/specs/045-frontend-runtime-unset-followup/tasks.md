@@ -5,16 +5,16 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Confirm active feature pointer targets `.specify/specs/045-frontend-runtime-unset-followup` in `.specify/feature.json`
-- [ ] T002 Capture reproducible baseline screenshot/log evidence of unresolved runtime state from canonical startup flow
+- [x] T001 Confirm active feature pointer targets `.specify/specs/045-frontend-runtime-unset-followup` in `.specify/feature.json`
+- [x] T002 Capture reproducible baseline screenshot/log evidence of unresolved runtime state from canonical startup flow
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-- [ ] T003 Define resolution/error classification expectations in `.specify/specs/045-frontend-runtime-unset-followup/contracts/frontend-runtime-resolution-contract.md`
-- [ ] T004 [P] Align quickstart verification and remediation loop in `.specify/specs/045-frontend-runtime-unset-followup/quickstart.md`
-- [ ] T005 [P] Confirm one-window rendered-validation closure expectations remain documented in `.specify/wiki/human-reference/Build-Run-Test-Commands.md`
+- [x] T003 Define resolution/error classification expectations in `.specify/specs/045-frontend-runtime-unset-followup/contracts/frontend-runtime-resolution-contract.md`
+- [x] T004 [P] Align quickstart verification and remediation loop in `.specify/specs/045-frontend-runtime-unset-followup/quickstart.md`
+- [x] T005 [P] Confirm one-window rendered-validation closure expectations remain documented in `.specify/wiki/human-reference/Build-Run-Test-Commands.md`
 
 **Checkpoint**: Runtime resolution contract and verification loop are explicit before implementation changes.
 
@@ -26,10 +26,10 @@
 
 **Independent Test**: Start runtime/apps via canonical tasks and verify `API base` is concrete in integrated browser.
 
-- [ ] T006 [US1] Harden API-base normalization/resolution behavior in `src/typescript/react/src/lib/api.ts`
-- [ ] T007 [US1] Update runtime state rendering logic in `src/typescript/react/src/App.tsx` to avoid false unresolved display
-- [ ] T008 [US1] Add/update resolver tests in `src/typescript/react/src/lib/api.test.ts`
-- [ ] T009 [US1] Validate canonical startup rendered output through integrated browser and record evidence in `.specify/specs/045-frontend-runtime-unset-followup/tasks.md`
+- [x] T006 [US1] Harden API-base normalization/resolution behavior in `src/typescript/react/src/lib/api.ts`
+- [x] T007 [US1] Update runtime state rendering logic in `src/typescript/react/src/App.tsx` to avoid false unresolved display
+- [x] T008 [US1] Add/update resolver tests in `src/typescript/react/src/lib/api.test.ts`
+- [x] T009 [US1] Validate canonical startup rendered output through integrated browser and record evidence in `.specify/specs/045-frontend-runtime-unset-followup/tasks.md`
 
 **Checkpoint**: UI no longer shows `API base: <unset>` for healthy canonical startup.
 
@@ -41,9 +41,9 @@
 
 **Independent Test**: Compare behavior under valid config and intentionally invalid config; banner appears only in invalid case.
 
-- [ ] T010 [US2] Implement error-type classification between config-resolution and bootstrap/API failures in `src/typescript/react/src/App.tsx`
-- [ ] T011 [US2] Update error-copy pathways in `src/typescript/react/src/lib/api.ts` and/or related copy utilities
-- [ ] T012 [US2] Add scenario coverage for invalid-config vs valid-config states in `src/typescript/react/src/lib/api.test.ts` and UI-adjacent tests
+- [x] T010 [US2] Implement error-type classification between config-resolution and bootstrap/API failures in `src/typescript/react/src/App.tsx`
+- [x] T011 [US2] Update error-copy pathways in `src/typescript/react/src/lib/api.ts` and/or related copy utilities
+- [x] T012 [US2] Add scenario coverage for invalid-config vs valid-config states in `src/typescript/react/src/lib/api.test.ts` and UI-adjacent tests
 
 **Checkpoint**: Error messaging matches real failure mode and remediation trust improves.
 
@@ -55,9 +55,9 @@
 
 **Independent Test**: Reproduce unresolved state, remediate with canonical flow, and verify session/chat readiness.
 
-- [ ] T013 [US3] Ensure bootstrap/session state transitions recover correctly after resolution in `src/typescript/react/src/App.tsx`
-- [ ] T014 [US3] Add regression checks for session-missing dead-end recovery in frontend tests
-- [ ] T015 [US3] Validate remediation loop outcome using compose + integrated browser flow and record evidence
+- [x] T013 [US3] Ensure bootstrap/session state transitions recover correctly after resolution in `src/typescript/react/src/App.tsx`
+- [x] T014 [US3] Add regression checks for session-missing dead-end recovery in frontend tests
+- [x] T015 [US3] Validate remediation loop outcome using compose + integrated browser flow and record evidence
 
 **Checkpoint**: Post-remediation app returns to usable chat flow.
 
@@ -65,9 +65,9 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T016 [P] Run diagnostic validation `scripts/validate-frontend-config-drift.sh --require-running` and capture pass/fail evidence
-- [ ] T017 [P] Update runbook notes in `.specify/wiki/human-reference/Build-Run-Test-Commands.md` if behavior/remediation wording changed
-- [ ] T018 Mark completed tasks and summarize validation outcomes in `.specify/specs/045-frontend-runtime-unset-followup/tasks.md`
+- [x] T016 [P] Run diagnostic validation `scripts/validate-frontend-config-drift.sh --require-running` and capture pass/fail evidence
+- [x] T017 [P] Update runbook notes in `.specify/wiki/human-reference/Build-Run-Test-Commands.md` if behavior/remediation wording changed
+- [x] T018 Mark completed tasks and summarize validation outcomes in `.specify/specs/045-frontend-runtime-unset-followup/tasks.md`
 
 ---
 
