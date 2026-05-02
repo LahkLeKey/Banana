@@ -4,7 +4,7 @@
   "reporters": ["html", "clear-text", "json", "progress"],
   "testRunner": "command",
   "coverageAnalysis": "off",
-  "commandRunner": {"command": "bun test"},
+  "commandRunner": { "command": "bun test" },
   "ignorePatterns": ["node_modules", "prisma/migrations"],
   "mutate": ["src/**/*.ts", "!src/**/*.test.ts"]
 }
