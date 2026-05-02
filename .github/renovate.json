@@ -1,0 +1,80 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "America/Chicago",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "prCreation": "immediate",
+  "rebaseWhen": "behind-base-branch",
+  "packageRules": [
+    {
+      "description": "Group all patch + minor bumps; auto-merge on green CI",
+      "matchUpdateTypes": ["patch", "minor"],
+      "matchCurrentVersion": "!/^0/",
+      "groupName": "non-major dependencies",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Major bumps get a draft PR with release-notes summary",
+      "matchUpdateTypes": ["major"],
+      "draftPR": true,
+      "groupName": "major dependency updates",
+      "automerge": false
+    },
+    {
+      "description": "Group GitHub Actions bumps together",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "automerge": true
+    },
+    {
+      "description": "Group Docker base image bumps",
+      "matchManagers": ["dockerfile"],
+      "groupName": "Docker base images",
+      "automerge": false
+    },
+    {
+      "description": "Group Bun workspace TS packages",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["src/typescript/**/package.json"],
+      "groupName": "TypeScript workspace dependencies"
+    },
+    {
+      "description": "Group NuGet packages",
+      "matchManagers": ["nuget"],
+      "groupName": "NuGet dependencies"
+    },
+    {
+      "description": "Never auto-merge security-sensitive packages",
+      "matchPackageNames": ["jsonwebtoken", "bcrypt", "bcryptjs", "passport"],
+      "automerge": false
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "automerge": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "ignorePaths": [
+    "**/.venv/**",
+    "**/node_modules/**",
+    "artifacts/**",
+    "build/**",
+    "out/**"
+  ],
+  "enabledManagers": [
+    "npm",
+    "nuget",
+    "github-actions",
+    "dockerfile",
+    "docker-compose"
+  ]
+}

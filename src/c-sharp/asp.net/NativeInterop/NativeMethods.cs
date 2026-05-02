@@ -111,4 +111,8 @@ internal static partial class NativeMethods
 
     [LibraryImport(LibraryName, EntryPoint = "banana_free")]
     public static partial void Free(IntPtr pointer);
+
+    /// <summary>Feature 072 — ABI version query.</summary>
+    [LibraryImport(LibraryName, EntryPoint = "banana_native_version")]
+    public static partial int NativeVersion(out int outMajor, out int outMinor);
 }

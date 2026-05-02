@@ -1,0 +1,79 @@
+repos:
+  # ── Whitespace / end-of-file hygiene ──────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '^(artifacts|build|out|\.venv)/'
+      - id: end-of-file-fixer
+        exclude: '^(artifacts|build|out|\.venv)/'
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+        exclude: '^(artifacts|build|out|\.venv)/'
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+        exclude: '^(artifacts|build|out|\.venv)/'
+      - id: check-json
+        exclude: '^(artifacts|build|out|\.venv)/'
+
+  # ── Secret scanning ────────────────────────────────────────────────────────
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        name: "gitleaks: scan for secrets"
+        exclude: '^(artifacts|build|out|\.venv|\.git)/'
+
+  # ── Shell scripts ──────────────────────────────────────────────────────────
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ['--severity=warning', '--external-sources']
+        files: '\.sh$'
+        exclude: '^(artifacts|build|out|\.venv)/'
+
+  # ── Python (training scripts, validators) ─────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.9
+    hooks:
+      - id: ruff
+        args: ['--fix']
+        files: '\.py$'
+        exclude: '^(artifacts|build|out|\.venv)/'
+      - id: ruff-format
+        files: '\.py$'
+        exclude: '^(artifacts|build|out|\.venv)/'
+
+  # ── C / native source ──────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v19.1.7
+    hooks:
+      - id: clang-format
+        args: ['--style=file', '-i']
+        types: [c]
+        files: '^src/native/.*\.(c|h)$'
+
+  # ── TypeScript / JavaScript (Biome) ───────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: biome-check
+        name: "biome: lint + format TypeScript"
+        language: node
+        entry: bunx @biomejs/biome check --write
+        types_or: [ts, tsx, javascript, jsx, json]
+        files: '^src/typescript/'
+        pass_filenames: true
+        additional_dependencies: ['@biomejs/biome@^2.0.0']
+
+  # ── .NET format ────────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: dotnet-format
+        name: "dotnet format: C# style check"
+        language: system
+        entry: dotnet
+        args: ['format', 'src/c-sharp/asp.net/asp.net.sln', '--verify-no-changes', '--severity', 'warn']
+        pass_filenames: false
+        files: '^src/c-sharp/.*\.cs$'

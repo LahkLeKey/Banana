@@ -69,3 +69,14 @@ if(WIN32)
       $<TARGET_FILE:banana_native>
       $<TARGET_FILE_DIR:banana_test_ml_transformer_quant>)
 endif()
+
+# feature 072 — ABI version contract test (no model deps)
+add_executable(banana_test_abi_version test_abi_version.c)
+target_link_libraries(banana_test_abi_version PRIVATE banana_native)
+add_test(NAME banana_test_abi_version COMMAND banana_test_abi_version)
+if(WIN32)
+  add_custom_command(TARGET banana_test_abi_version POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:banana_native>
+      $<TARGET_FILE_DIR:banana_test_abi_version>)
+endif()
