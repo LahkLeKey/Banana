@@ -5,6 +5,13 @@
 # Maintained by: scripts/wiki-scaffold.sh --validate
 
 Home.md
+architecture-index.md
+data-index.md
+getting-started-index.md
+governance-index.md
+operations-index.md
+security-index.md
+Disaster-Recovery-Runbook.md
 getting-started/README.md
 getting-started/first-day-checklist.md
 getting-started/how-a-request-works.md
