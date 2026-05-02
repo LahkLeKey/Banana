@@ -1,8 +1,10 @@
-# How The Database Step Works
+<!-- breadcrumb: Architecture > Database Pipeline Stage -->
 
-> Read the [Wiki Home](Home.md) for more details.
+# Database Pipeline Stage
 
-Related pages: [How A Request Works](How-A-Request-Works.md), [Build, Run, and Test Commands](Build-Run-Test-Commands.md)
+> [Home](../Home.md) › [Architecture](README.md) › Database Pipeline Stage
+
+Related pages: [How A Request Works](../getting-started/how-a-request-works.md), [Build, Run, and Test Commands](../getting-started/build-run-test-commands.md)
 
 This page explains the `DatabaseAccessStep` used by `GET /banana`.
 

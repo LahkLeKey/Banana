@@ -1,8 +1,10 @@
-# Architecture Diagrams
+<!-- breadcrumb: Architecture > Overview -->
 
-> Read the [Wiki Home](Home.md) for more details.
+# Architecture Overview
 
-Related pages: [How A Request Works](How-A-Request-Works.md), [Repository Layout](Repository-Layout.md)
+> [Home](../Home.md) › [Architecture](README.md) › Overview
+
+Related pages: [How A Request Works](../getting-started/how-a-request-works.md), [Repository Layout](../getting-started/repository-layout.md)
 
 This page centralizes the system and request-flow diagrams.
 

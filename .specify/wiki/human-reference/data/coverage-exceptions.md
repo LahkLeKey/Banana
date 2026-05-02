@@ -1,4 +1,8 @@
-# Coverage 80 Exceptions: How To Use This Safely
+<!-- breadcrumb: Data > Coverage Exceptions -->
+
+# Coverage Exceptions
+
+> [Home](../Home.md) › [Data](README.md) › Coverage Exceptions
 
 Coverage exceptions are temporary safety valves, not permanent bypasses.
 
@@ -10,13 +14,13 @@ Coverage exceptions are temporary safety valves, not permanent bypasses.
 
 ## What Must Be Included
 
-- exception_id
-- domain
-- layer
-- owner
-- rationale
-- remediation_plan
-- expires_on
+- `exception_id`
+- `domain`
+- `layer`
+- `owner`
+- `rationale`
+- `remediation_plan`
+- `expires_on`
 
 ## Quick Validation Command
 

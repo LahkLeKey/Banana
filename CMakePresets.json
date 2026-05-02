@@ -16,12 +16,30 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "clang"
             }
+        },
+        {
+            "name": "sanitizers",
+            "displayName": "Banana ASAN+UBSAN",
+            "description": "AddressSanitizer + UndefinedBehaviorSanitizer preset (feature 073). Linux/macOS only.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/sanitizers",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "clang",
+                "BANANA_ENABLE_SANITIZERS": "ON",
+                "CMAKE_C_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer -g",
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
+            }
         }
     ],
     "buildPresets": [
         {
             "name": "default",
             "configurePreset": "default"
+        },
+        {
+            "name": "sanitizers",
+            "configurePreset": "sanitizers"
         }
     ],
     "testPresets": [
@@ -30,6 +48,17 @@
             "configurePreset": "default",
             "output": {
                 "outputOnFailure": true
+            }
+        },
+        {
+            "name": "sanitizers",
+            "configurePreset": "sanitizers",
+            "output": {
+                "outputOnFailure": true
+            },
+            "environment": {
+                "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+                "UBSAN_OPTIONS": "print_stacktrace=1:abort_on_error=1"
             }
         }
     ]
