@@ -1,0 +1,45 @@
+replicaCount: 1
+
+api:
+  image:
+    repository: ghcr.io/lahklekey/banana/banana-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8080
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+  env:
+    BANANA_PG_CONNECTION: ""  # Override with secret
+
+tsApi:
+  image:
+    repository: ghcr.io/lahklekey/banana/banana-ts-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8081
+
+react:
+  image:
+    repository: ghcr.io/lahklekey/banana/banana-react
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 5173
+
+postgresql:
+  enabled: true
+  auth:
+    database: banana
+    username: banana
+    existingSecret: banana-pg-secret
+
+ingress:
+  enabled: false
+  className: nginx
+  host: banana.example.com
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
