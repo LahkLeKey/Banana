@@ -21,6 +21,10 @@ jobs:
         run: |
           python .specify/scripts/validate-ai-contracts.py
 
+      - name: Validate workflow orchestrator dependencies
+        run: |
+          bash scripts/validate-workflow-dependencies.sh
+
       - name: Smoke test spec-driven agent attribution
         run: |
           bash scripts/smoke-test-spec-driven-agents.sh
