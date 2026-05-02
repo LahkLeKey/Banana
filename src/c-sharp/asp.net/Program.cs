@@ -34,9 +34,9 @@ if (!string.IsNullOrWhiteSpace(jwtSecret))
         });
     builder.Services.AddAuthorization(opts =>
     {
-        opts.AddPolicy("AdminOnly",   p => p.RequireClaim("role", "admin"));
-        opts.AddPolicy("OperatorUp",  p => p.RequireClaim("role", "admin", "operator"));
-        opts.AddPolicy("ViewerUp",    p => p.RequireClaim("role", "admin", "operator", "viewer"));
+        opts.AddPolicy("AdminOnly", p => p.RequireClaim("role", "admin"));
+        opts.AddPolicy("OperatorUp", p => p.RequireClaim("role", "admin", "operator"));
+        opts.AddPolicy("ViewerUp", p => p.RequireClaim("role", "admin", "operator", "viewer"));
     });
 }
 

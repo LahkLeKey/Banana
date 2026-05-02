@@ -1,7 +1,7 @@
 # Banana Backlog — 3-Month Sprint Plan (May–July 2026)
 
-**Generated**: 2026-05-01  
-**Backlog scored**: #052–#101 (50 stubs; #053 already shipped)  
+**Generated**: 2026-05-01
+**Backlog scored**: #052–#101 (50 stubs; #053 already shipped)
 **Scoring dimensions**: Value Gain (V), Risk Reduction (R), Dependency Unlock (D), Effort inverse (E). Max = 20.
 
 ---

@@ -1,7 +1,7 @@
 # Specification Quality Checklist: Baseline Rehydration - API Contract Stability
 
-**Purpose**: Validate spec quality for pre-sprint API realignment checks  
-**Created**: 2026-04-25  
+**Purpose**: Validate spec quality for pre-sprint API realignment checks
+**Created**: 2026-04-25
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality

@@ -6,7 +6,6 @@ from __future__ import annotations
 import json
 import re
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -36,24 +35,38 @@ ORCHESTRATION_SCRIPTS_DIR = (
 WORKFLOW_SYNC_WIKI = SCRIPTS_DIR / "workflow-sync-wiki.sh"
 WORKFLOW_ORCHESTRATE_SDLC = WORKFLOWS_DIR / "orchestrate-banana-sdlc.yml"
 WORKFLOW_ORCHESTRATE_TRIAGED = WORKFLOWS_DIR / "orchestrate-triaged-item-pr.yml"
-WORKFLOW_ORCHESTRATE_FEEDBACK = WORKFLOWS_DIR / "orchestrate-not-banana-feedback-loop.yml"
+WORKFLOW_ORCHESTRATE_FEEDBACK = (
+    WORKFLOWS_DIR / "orchestrate-not-banana-feedback-loop.yml"
+)
 WORKFLOW_ORCHESTRATE_TRIAGE_IDEA = WORKFLOWS_DIR / "orchestrate-triage-idea-cloud.yml"
-WORKFLOW_ORCHESTRATE_AUTONOMOUS = WORKFLOWS_DIR / "orchestrate-autonomous-self-training-cycle.yml"
+WORKFLOW_ORCHESTRATE_AUTONOMOUS = (
+    WORKFLOWS_DIR / "orchestrate-autonomous-self-training-cycle.yml"
+)
 WORKFLOW_COPILOT_REVIEW_TRIAGE = WORKFLOWS_DIR / "copilot-review-triage.yml"
 WORKFLOW_REQUIRE_HUMAN_APPROVAL = WORKFLOWS_DIR / "require-human-approval.yml"
 WORKFLOW_AI_CONTRACT_GUARD = WORKFLOWS_DIR / "ai-contract-guard.yml"
 WORKFLOW_TRAIN_NOT_BANANA = WORKFLOWS_DIR / "train-not-banana-model.yml"
-SCRIPT_ORCHESTRATE_TRIAGED = ORCHESTRATION_SCRIPTS_DIR / "workflow-orchestrate-triaged-item-pr.sh"
+SCRIPT_ORCHESTRATE_TRIAGED = (
+    ORCHESTRATION_SCRIPTS_DIR / "workflow-orchestrate-triaged-item-pr.sh"
+)
 SCRIPT_ORCHESTRATE_SDLC = ORCHESTRATION_SCRIPTS_DIR / "workflow-orchestrate-sdlc.sh"
-SCRIPT_ORCHESTRATE_FEEDBACK = ORCHESTRATION_SCRIPTS_DIR / "orchestrate-not-banana-feedback-loop.sh"
-SCRIPT_ORCHESTRATE_TRIAGE_IDEA = ORCHESTRATION_SCRIPTS_DIR / "workflow-triage-idea-cloud.sh"
-SCRIPT_PERSIST_REGISTRY_HISTORY = ORCHESTRATION_SCRIPTS_DIR / "workflow-persist-registry-history-pr.sh"
+SCRIPT_ORCHESTRATE_FEEDBACK = (
+    ORCHESTRATION_SCRIPTS_DIR / "orchestrate-not-banana-feedback-loop.sh"
+)
+SCRIPT_ORCHESTRATE_TRIAGE_IDEA = (
+    ORCHESTRATION_SCRIPTS_DIR / "workflow-triage-idea-cloud.sh"
+)
+SCRIPT_PERSIST_REGISTRY_HISTORY = (
+    ORCHESTRATION_SCRIPTS_DIR / "workflow-persist-registry-history-pr.sh"
+)
 SCRIPT_SPEC_AGENT_SMOKE = ORCHESTRATION_SCRIPTS_DIR / "smoke-test-spec-driven-agents.sh"
 SCRIPT_ENSURE_SPECKIT = ORCHESTRATION_SCRIPTS_DIR / "workflow-ensure-speckit.sh"
 CANONICAL_WIKI_REMOTE_URL = "https://github.com/LahkLeKey/Banana.wiki.git"
 LIVE_WIKI_DIR = ROOT / ".wiki"
 SPECIFY_WIKI_HUMAN_REFERENCE_DIR = ROOT / ".specify" / "wiki" / "human-reference"
-WIKI_SOURCE_DIR = LIVE_WIKI_DIR if LIVE_WIKI_DIR.exists() else SPECIFY_WIKI_HUMAN_REFERENCE_DIR
+WIKI_SOURCE_DIR = (
+    LIVE_WIKI_DIR if LIVE_WIKI_DIR.exists() else SPECIFY_WIKI_HUMAN_REFERENCE_DIR
+)
 WIKI_ALLOWLIST_FILE = ROOT / ".specify" / "wiki" / "human-reference-allowlist.txt"
 
 AGENT_CONTRACT_FRAGMENT = "Feedback Loop And Incremental Branch Contract"
@@ -89,15 +102,28 @@ TERM_GUARD_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(rf"\bcopilot-bypass-{TERM_GUARD_TOKEN}-coded\b", re.IGNORECASE),
         "legacy-label-token",
     ),
-    (re.compile(rf"\b{TERM_GUARD_TOKEN}[- ]coding\b", re.IGNORECASE), "legacy-coding-phrase"),
-    (re.compile(rf"\b{TERM_GUARD_TOKEN}[- ]coded\b", re.IGNORECASE), "legacy-coded-phrase"),
-    (re.compile(rf"\b{TERM_GUARD_TOKEN}bypass\b", re.IGNORECASE), "legacy-bypass-token"),
     (
-        re.compile(rf"##\s+{TERM_GUARD_TITLE_TOKEN}\s+Code\s+Quickstart", re.IGNORECASE),
+        re.compile(rf"\b{TERM_GUARD_TOKEN}[- ]coding\b", re.IGNORECASE),
+        "legacy-coding-phrase",
+    ),
+    (
+        re.compile(rf"\b{TERM_GUARD_TOKEN}[- ]coded\b", re.IGNORECASE),
+        "legacy-coded-phrase",
+    ),
+    (
+        re.compile(rf"\b{TERM_GUARD_TOKEN}bypass\b", re.IGNORECASE),
+        "legacy-bypass-token",
+    ),
+    (
+        re.compile(
+            rf"##\s+{TERM_GUARD_TITLE_TOKEN}\s+Code\s+Quickstart", re.IGNORECASE
+        ),
         "legacy-quickstart-heading",
     ),
     (
-        re.compile(rf"##\s+{TERM_GUARD_TITLE_TOKEN}\s+Coding\s+Guardrails", re.IGNORECASE),
+        re.compile(
+            rf"##\s+{TERM_GUARD_TITLE_TOKEN}\s+Coding\s+Guardrails", re.IGNORECASE
+        ),
         "legacy-guardrails-heading",
     ),
 )
@@ -162,7 +188,7 @@ def parse_frontmatter(path: Path) -> tuple[dict[str, str] | None, str]:
         if ":" not in line:
             continue
         key, value = line.split(":", 1)
-        data[key.strip()] = value.strip().strip('"\'')
+        data[key.strip()] = value.strip().strip("\"'")
 
     return data, body
 
@@ -270,8 +296,7 @@ def parse_wiki_allowlist(path: Path, issues: list[str]) -> set[str]:
     if duplicate_entries:
         unique_duplicates = sorted(set(duplicate_entries))
         issues.append(
-            "WIKI_ALLOWLIST duplicate entries: "
-            + ", ".join(unique_duplicates)
+            "WIKI_ALLOWLIST duplicate entries: " + ", ".join(unique_duplicates)
         )
 
     return entries
@@ -333,7 +358,9 @@ def main() -> int:
         frontmatter, body = parse_frontmatter(prompt_path)
         rel = prompt_path.relative_to(ROOT).as_posix()
         prompt_name = prompt_path.name.removesuffix(".prompt.md")
-        is_speckit_extension_prompt = prompt_name.startswith(SPECKIT_EXTENSION_PROMPT_PREFIX)
+        is_speckit_extension_prompt = prompt_name.startswith(
+            SPECKIT_EXTENSION_PROMPT_PREFIX
+        )
 
         if frontmatter is None:
             issues.append(f"PROMPT missing/invalid frontmatter: {rel}")
@@ -354,7 +381,9 @@ def main() -> int:
 
     iterate_backlog_rel = ITERATE_BACKLOG_PROMPT.relative_to(ROOT).as_posix()
     if not ITERATE_BACKLOG_PROMPT.exists():
-        issues.append(f"PROMPT missing backlog-iteration command contract: {iterate_backlog_rel}")
+        issues.append(
+            f"PROMPT missing backlog-iteration command contract: {iterate_backlog_rel}"
+        )
     else:
         iterate_frontmatter, iterate_body = parse_frontmatter(ITERATE_BACKLOG_PROMPT)
         if iterate_frontmatter is None:
@@ -366,7 +395,9 @@ def main() -> int:
 
     focus_open_prs_rel = FOCUS_OPEN_PRS_PROMPT.relative_to(ROOT).as_posix()
     if not FOCUS_OPEN_PRS_PROMPT.exists():
-        issues.append(f"PROMPT missing open-pr-focus command contract: {focus_open_prs_rel}")
+        issues.append(
+            f"PROMPT missing open-pr-focus command contract: {focus_open_prs_rel}"
+        )
     else:
         focus_frontmatter, focus_body = parse_frontmatter(FOCUS_OPEN_PRS_PROMPT)
         if focus_frontmatter is None:
@@ -380,7 +411,9 @@ def main() -> int:
     for agent_path in sorted(AGENTS_DIR.glob("*.agent.md")):
         frontmatter, body = parse_frontmatter(agent_path)
         rel = agent_path.relative_to(ROOT).as_posix()
-        is_speckit_extension_agent = agent_path.name.startswith(SPECKIT_EXTENSION_AGENT_PREFIX)
+        is_speckit_extension_agent = agent_path.name.startswith(
+            SPECKIT_EXTENSION_AGENT_PREFIX
+        )
 
         if frontmatter is None:
             issues.append(f"AGENT missing/invalid frontmatter: {rel}")
@@ -430,19 +463,28 @@ def main() -> int:
     workflow_sync_text = WORKFLOW_SYNC_WIKI.read_text(encoding="utf-8")
     expected_targets = gather_contract_mappings()
 
-    if "find .github/prompts -maxdepth 1 -type f -name \"*.prompt.md\"" not in workflow_sync_text:
+    if (
+        'find .github/prompts -maxdepth 1 -type f -name "*.prompt.md"'
+        not in workflow_sync_text
+    ):
         issues.append("WIKI_SYNC missing dynamic .github/prompts mapping block")
 
     if "Auto-Prompts/${prompt_name}.md" not in workflow_sync_text:
         issues.append("WIKI_SYNC missing Auto-Prompts target mapping")
 
-    if "find .github/workflows -maxdepth 1 -type f -name \"*.yml\"" not in workflow_sync_text:
+    if (
+        'find .github/workflows -maxdepth 1 -type f -name "*.yml"'
+        not in workflow_sync_text
+    ):
         issues.append("WIKI_SYNC missing dynamic .github/workflows mapping block")
 
     if "Auto-GitHub-Workflows/${workflow_file}.md" not in workflow_sync_text:
         issues.append("WIKI_SYNC missing Auto-GitHub-Workflows target mapping")
 
-    if "find .github/instructions -maxdepth 1 -type f -name \"*.md\"" not in workflow_sync_text:
+    if (
+        'find .github/instructions -maxdepth 1 -type f -name "*.md"'
+        not in workflow_sync_text
+    ):
         issues.append("WIKI_SYNC missing dynamic .github/instructions mapping block")
 
     if "Auto-GitHub-Instructions/${instruction_file}" not in workflow_sync_text:
@@ -483,8 +525,13 @@ def main() -> int:
                 + summarize_path_set(missing_wiki_paths)
             )
 
-    if not SPECIFY_WIKI_HUMAN_REFERENCE_DIR.exists() or not SPECIFY_WIKI_HUMAN_REFERENCE_DIR.is_dir():
-        issues.append("WIKI_MIRROR missing canonical mirror directory: .specify/wiki/human-reference")
+    if (
+        not SPECIFY_WIKI_HUMAN_REFERENCE_DIR.exists()
+        or not SPECIFY_WIKI_HUMAN_REFERENCE_DIR.is_dir()
+    ):
+        issues.append(
+            "WIKI_MIRROR missing canonical mirror directory: .specify/wiki/human-reference"
+        )
     elif wiki_paths:
         canonical_wiki_paths = list_markdown_paths(SPECIFY_WIKI_HUMAN_REFERENCE_DIR)
 
@@ -505,9 +552,13 @@ def main() -> int:
             )
 
     if not SCRIPT_ENSURE_SPECKIT.exists():
-        issues.append("SCRIPT missing Spec Kit preflight helper: scripts/workflow-ensure-speckit.sh")
+        issues.append(
+            "SCRIPT missing Spec Kit preflight helper: scripts/workflow-ensure-speckit.sh"
+        )
     if not SCRIPT_SPEC_AGENT_SMOKE.exists():
-        issues.append("SCRIPT missing spec-driven agent smoke test: scripts/smoke-test-spec-driven-agents.sh")
+        issues.append(
+            "SCRIPT missing spec-driven agent smoke test: scripts/smoke-test-spec-driven-agents.sh"
+        )
     else:
         smoke_text = SCRIPT_SPEC_AGENT_SMOKE.read_text(encoding="utf-8")
         smoke_rel = SCRIPT_SPEC_AGENT_SMOKE.relative_to(ROOT).as_posix()
@@ -534,28 +585,44 @@ def main() -> int:
             issues.append(f"WORKFLOW missing wiki sync step: {workflow_rel}")
 
         if "BANANA_WIKI_REMOTE_URL" not in workflow_text:
-            issues.append(f"WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring: {workflow_rel}")
+            issues.append(
+                f"WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring: {workflow_rel}"
+            )
 
         if CANONICAL_WIKI_REMOTE_URL not in workflow_text:
-            issues.append(f"WORKFLOW missing canonical wiki remote default: {workflow_rel}")
+            issues.append(
+                f"WORKFLOW missing canonical wiki remote default: {workflow_rel}"
+            )
 
         if "speckit-driven" not in workflow_text:
-            issues.append(f"WORKFLOW missing spec-kit provenance label default: {workflow_rel}")
+            issues.append(
+                f"WORKFLOW missing spec-kit provenance label default: {workflow_rel}"
+            )
 
         if "BANANA_REQUIRED_HUMAN_REVIEWER" not in workflow_text:
-            issues.append(f"WORKFLOW missing required human reviewer wiring: {workflow_rel}")
+            issues.append(
+                f"WORKFLOW missing required human reviewer wiring: {workflow_rel}"
+            )
         if workflow_path == WORKFLOW_ORCHESTRATE_TRIAGED:
             if "agent:workflow-agent" not in workflow_text:
-                issues.append(f"WORKFLOW missing workflow-agent label default: {workflow_rel}")
+                issues.append(
+                    f"WORKFLOW missing workflow-agent label default: {workflow_rel}"
+                )
         if workflow_path == WORKFLOW_ORCHESTRATE_FEEDBACK:
             if "agent:banana-classifier-agent" not in workflow_text:
-                issues.append(f"WORKFLOW missing classifier agent label default: {workflow_rel}")
+                issues.append(
+                    f"WORKFLOW missing classifier agent label default: {workflow_rel}"
+                )
             if "github.event_name == 'schedule' && 'true'" not in workflow_text:
-                issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {workflow_rel}")
+                issues.append(
+                    f"WORKFLOW missing schedule-forced wiki strict mode: {workflow_rel}"
+                )
 
     triage_idea_rel = WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
     if not WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.exists():
-        issues.append(f"WORKFLOW missing cloud triage idea orchestration workflow: {triage_idea_rel}")
+        issues.append(
+            f"WORKFLOW missing cloud triage idea orchestration workflow: {triage_idea_rel}"
+        )
     else:
         triage_idea_text = WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.read_text(encoding="utf-8")
         manual_pat_target_texts[triage_idea_rel] = triage_idea_text
@@ -594,29 +661,45 @@ def main() -> int:
         issues.append(f"WORKFLOW missing SDLC orchestration step: {sdlc_workflow_rel}")
 
     if "BANANA_WIKI_REMOTE_URL" not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring: {sdlc_workflow_rel}")
+        issues.append(
+            f"WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring: {sdlc_workflow_rel}"
+        )
 
     if CANONICAL_WIKI_REMOTE_URL not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing canonical wiki remote default: {sdlc_workflow_rel}")
+        issues.append(
+            f"WORKFLOW missing canonical wiki remote default: {sdlc_workflow_rel}"
+        )
 
     if "speckit-driven" not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing spec-kit provenance label default: {sdlc_workflow_rel}")
+        issues.append(
+            f"WORKFLOW missing spec-kit provenance label default: {sdlc_workflow_rel}"
+        )
 
     if "github.event_name == 'schedule' && 'true'" not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing schedule-forced wiki strict mode: {sdlc_workflow_rel}")
+        issues.append(
+            f"WORKFLOW missing schedule-forced wiki strict mode: {sdlc_workflow_rel}"
+        )
 
     if "allow_actions_actor" not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing allow_actions_actor dispatch contract: {sdlc_workflow_rel}")
+        issues.append(
+            f"WORKFLOW missing allow_actions_actor dispatch contract: {sdlc_workflow_rel}"
+        )
 
     if "BANANA_REQUIRED_HUMAN_REVIEWER" not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing required human reviewer wiring: {sdlc_workflow_rel}")
+        issues.append(
+            f"WORKFLOW missing required human reviewer wiring: {sdlc_workflow_rel}"
+        )
 
     if "agent:workflow-agent" not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing workflow-agent PR label default: {sdlc_workflow_rel}")
+        issues.append(
+            f"WORKFLOW missing workflow-agent PR label default: {sdlc_workflow_rel}"
+        )
 
     autonomous_rel = WORKFLOW_ORCHESTRATE_AUTONOMOUS.relative_to(ROOT).as_posix()
     if not WORKFLOW_ORCHESTRATE_AUTONOMOUS.exists():
-        issues.append(f"WORKFLOW missing autonomous self-training cycle workflow: {autonomous_rel}")
+        issues.append(
+            f"WORKFLOW missing autonomous self-training cycle workflow: {autonomous_rel}"
+        )
     else:
         autonomous_text = WORKFLOW_ORCHESTRATE_AUTONOMOUS.read_text(encoding="utf-8")
         manual_pat_target_texts[autonomous_rel] = autonomous_text
@@ -638,7 +721,9 @@ def main() -> int:
 
     copilot_triage_rel = WORKFLOW_COPILOT_REVIEW_TRIAGE.relative_to(ROOT).as_posix()
     if not WORKFLOW_COPILOT_REVIEW_TRIAGE.exists():
-        issues.append(f"WORKFLOW missing Copilot review triage workflow: {copilot_triage_rel}")
+        issues.append(
+            f"WORKFLOW missing Copilot review triage workflow: {copilot_triage_rel}"
+        )
     else:
         copilot_triage_text = WORKFLOW_COPILOT_REVIEW_TRIAGE.read_text(encoding="utf-8")
         copilot_required_fragments = {
@@ -670,9 +755,9 @@ def main() -> int:
     require_human_required_fragments = {
         "workflow_dispatch": "WORKFLOW missing workflow_dispatch trigger",
         "pull_number": "WORKFLOW missing workflow_dispatch pull_number input",
-        "requiredApproverLogin = \"LahkLeKey\"": "WORKFLOW missing required LahkLeKey approver contract",
+        'requiredApproverLogin = "LahkLeKey"': "WORKFLOW missing required LahkLeKey approver contract",
         "current-head approval from ${requiredApproverLogin}": "WORKFLOW missing required-approver failure contract",
-        "endsWith(\"[bot]\")": "WORKFLOW missing bot-authorship detection contract",
+        'endsWith("[bot]")': "WORKFLOW missing bot-authorship detection contract",
     }
 
     for fragment, message in require_human_required_fragments.items():
@@ -690,8 +775,8 @@ def main() -> int:
         "BANANA_AGENT_CONTRIBUTOR_LOGIN": "Triaged PR script missing contributor login override input",
         "resolve_agent_contributor": "Triaged PR script missing automation contributor resolution",
         "contributor:${AGENT_CONTRIBUTOR_SLUG}": "Triaged PR script missing contributor label propagation",
-        "git config user.name \"$AGENT_CONTRIBUTOR_NAME\"": "Triaged PR script missing contributor git author name wiring",
-        "git config user.email \"$AGENT_CONTRIBUTOR_EMAIL\"": "Triaged PR script missing contributor git author email wiring",
+        'git config user.name "$AGENT_CONTRIBUTOR_NAME"': "Triaged PR script missing contributor git author name wiring",
+        'git config user.email "$AGENT_CONTRIBUTOR_EMAIL"': "Triaged PR script missing contributor git author email wiring",
         "--add-assignee": "Triaged PR script missing contributor assignee wiring",
         "Automation contributor:": "Triaged PR script missing contributor metadata in PR body",
         "Automation contributor login:": "Triaged PR script missing contributor login metadata in PR body",
@@ -741,7 +826,9 @@ def main() -> int:
             f"SCRIPT missing registry-history PR orchestration script: {persist_script_rel}"
         )
     else:
-        persist_script_text = SCRIPT_PERSIST_REGISTRY_HISTORY.read_text(encoding="utf-8")
+        persist_script_text = SCRIPT_PERSIST_REGISTRY_HISTORY.read_text(
+            encoding="utf-8"
+        )
         manual_pat_target_texts[persist_script_rel] = persist_script_text
         persist_required_fragments = {
             "BANANA_AGENT_CONTRIBUTOR": "Registry-history PR script missing automation contributor override input",
@@ -749,8 +836,8 @@ def main() -> int:
             "BANANA_AGENT_CONTRIBUTOR_LOGIN": "Registry-history PR script missing contributor login override input",
             "agent:banana-classifier-agent": "Registry-history PR script missing classifier agent label default",
             "contributor:${AGENT_CONTRIBUTOR_SLUG}": "Registry-history PR script missing contributor label propagation",
-            "git config user.name \"$AGENT_CONTRIBUTOR_NAME\"": "Registry-history PR script missing contributor git author name wiring",
-            "git config user.email \"$AGENT_CONTRIBUTOR_EMAIL\"": "Registry-history PR script missing contributor git author email wiring",
+            'git config user.name "$AGENT_CONTRIBUTOR_NAME"': "Registry-history PR script missing contributor git author name wiring",
+            'git config user.email "$AGENT_CONTRIBUTOR_EMAIL"': "Registry-history PR script missing contributor git author email wiring",
             "--add-assignee": "Registry-history PR script missing contributor assignee wiring",
             "Automation contributor:": "Registry-history PR script missing contributor metadata in PR body",
             "Automation contributor login:": "Registry-history PR script missing contributor login metadata in PR body",
@@ -764,7 +851,9 @@ def main() -> int:
 
     train_workflow_rel = WORKFLOW_TRAIN_NOT_BANANA.relative_to(ROOT).as_posix()
     if not WORKFLOW_TRAIN_NOT_BANANA.exists():
-        issues.append(f"WORKFLOW missing not-banana training workflow: {train_workflow_rel}")
+        issues.append(
+            f"WORKFLOW missing not-banana training workflow: {train_workflow_rel}"
+        )
     else:
         train_workflow_text = WORKFLOW_TRAIN_NOT_BANANA.read_text(encoding="utf-8")
         manual_pat_target_texts[train_workflow_rel] = train_workflow_text
@@ -780,7 +869,9 @@ def main() -> int:
 
     ai_contract_guard_rel = WORKFLOW_AI_CONTRACT_GUARD.relative_to(ROOT).as_posix()
     if not WORKFLOW_AI_CONTRACT_GUARD.exists():
-        issues.append(f"WORKFLOW missing AI contract guard workflow: {ai_contract_guard_rel}")
+        issues.append(
+            f"WORKFLOW missing AI contract guard workflow: {ai_contract_guard_rel}"
+        )
     else:
         ai_contract_guard_text = WORKFLOW_AI_CONTRACT_GUARD.read_text(encoding="utf-8")
         ai_contract_guard_required_fragments = {
@@ -812,9 +903,13 @@ def main() -> int:
 
     triage_idea_script_rel = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
     if not SCRIPT_ORCHESTRATE_TRIAGE_IDEA.exists():
-        issues.append(f"SCRIPT missing cloud triage idea orchestration script: {triage_idea_script_rel}")
+        issues.append(
+            f"SCRIPT missing cloud triage idea orchestration script: {triage_idea_script_rel}"
+        )
     else:
-        triage_idea_script_text = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.read_text(encoding="utf-8")
+        triage_idea_script_text = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.read_text(
+            encoding="utf-8"
+        )
         triage_idea_script_required_fragments = {
             "triage-idea": "SCRIPT missing triage-idea label contract",
             "copilot-suggestion": "SCRIPT missing copilot-suggestion label contract",

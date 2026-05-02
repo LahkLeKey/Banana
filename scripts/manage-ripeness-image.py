@@ -15,7 +15,12 @@ from pathlib import Path
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def read_json(path: Path, default: dict | list | None = None):
@@ -56,7 +61,9 @@ def read_channel_image_id(registry_dir: Path, channel: str) -> str:
     return image_id
 
 
-def resolve_image_id(registry_dir: Path, channel: str | None, image_id: str | None) -> str:
+def resolve_image_id(
+    registry_dir: Path, channel: str | None, image_id: str | None
+) -> str:
     if image_id:
         return image_id
     if channel:
@@ -72,7 +79,9 @@ def manifest_payload_for_signing(payload: dict) -> bytes:
 
 def sign_manifest(payload: dict, signing_key: str, key_id: str) -> dict:
     signature = hmac.new(
-        signing_key.encode("utf-8"), manifest_payload_for_signing(payload), hashlib.sha256
+        signing_key.encode("utf-8"),
+        manifest_payload_for_signing(payload),
+        hashlib.sha256,
     ).hexdigest()
     payload["signature"] = {
         "algorithm": "hmac-sha256",
@@ -87,12 +96,16 @@ def verify_signature(payload: dict, signing_key: str) -> bool:
     if not isinstance(signature, dict):
         return False
     expected = hmac.new(
-        signing_key.encode("utf-8"), manifest_payload_for_signing(payload), hashlib.sha256
+        signing_key.encode("utf-8"),
+        manifest_payload_for_signing(payload),
+        hashlib.sha256,
     ).hexdigest()
     return hmac.compare_digest(str(signature.get("value", "")), expected)
 
 
-def update_index(registry_dir: Path, image_id: str, channel: str | None, metrics: dict) -> None:
+def update_index(
+    registry_dir: Path, image_id: str, channel: str | None, metrics: dict
+) -> None:
     index_path = registry_dir / "index.json"
     index = read_json(
         index_path,
@@ -135,7 +148,12 @@ def create_image(args: argparse.Namespace) -> int:
     registry_dir = Path(args.registry_dir)
     ensure_registry(registry_dir)
 
-    required_files = ["metrics.json", "vocabulary.json", "sessions.json", "banana_ripeness_labels.h"]
+    required_files = [
+        "metrics.json",
+        "vocabulary.json",
+        "sessions.json",
+        "banana_ripeness_labels.h",
+    ]
     missing = [name for name in required_files if not (model_dir / name).exists()]
     if missing:
         raise FileNotFoundError(f"Missing required model files: {', '.join(missing)}")
@@ -160,7 +178,9 @@ def create_image(args: argparse.Namespace) -> int:
     parent_image_id = None
     if args.parent_from_channel:
         try:
-            parent_image_id = read_channel_image_id(registry_dir, args.parent_from_channel)
+            parent_image_id = read_channel_image_id(
+                registry_dir, args.parent_from_channel
+            )
         except FileNotFoundError:
             parent_image_id = None
 
@@ -184,7 +204,9 @@ def create_image(args: argparse.Namespace) -> int:
         )
 
     if signing_key:
-        key_id = __import__("os").environ.get(args.key_id_env, "") if args.key_id_env else ""
+        key_id = (
+            __import__("os").environ.get(args.key_id_env, "") if args.key_id_env else ""
+        )
         manifest = sign_manifest(manifest, signing_key, key_id)
 
     write_json(image_dir / "manifest.json", manifest)
@@ -198,7 +220,11 @@ def create_image(args: argparse.Namespace) -> int:
     write_json(channel_file(registry_dir, args.channel), channel_payload)
     update_index(registry_dir, image_id, args.channel, metrics)
 
-    print(json.dumps({"created": True, "image_id": image_id, "channel": args.channel}, indent=2))
+    print(
+        json.dumps(
+            {"created": True, "image_id": image_id, "channel": args.channel}, indent=2
+        )
+    )
     return 0
 
 
@@ -225,7 +251,11 @@ def verify_image(args: argparse.Namespace) -> int:
             mismatches.append(rel_path)
 
     signature_present = isinstance(manifest.get("signature"), dict)
-    signing_key = __import__("os").environ.get(args.signing_key_env, "") if args.signing_key_env else ""
+    signing_key = (
+        __import__("os").environ.get(args.signing_key_env, "")
+        if args.signing_key_env
+        else ""
+    )
     signature_valid = False
     if signature_present and signing_key:
         signature_valid = verify_signature(manifest, signing_key)
@@ -259,7 +289,9 @@ def promote_image(args: argparse.Namespace) -> int:
     signal_score = float(metrics.get("signal_score", 0.0))
 
     if macro_f1 < float(args.min_f1):
-        raise ValueError(f"Promotion blocked: macro_f1={macro_f1:.4f} below min_f1={args.min_f1}.")
+        raise ValueError(
+            f"Promotion blocked: macro_f1={macro_f1:.4f} below min_f1={args.min_f1}."
+        )
 
     if signal_score < float(args.min_signal_score):
         raise ValueError(
@@ -282,7 +314,12 @@ def promote_image(args: argparse.Namespace) -> int:
         "updated_at_utc": utc_now(),
     }
     write_json(channel_file(registry_dir, args.to_channel), pointer)
-    update_index(registry_dir, image_id, args.to_channel, metrics if isinstance(metrics, dict) else {})
+    update_index(
+        registry_dir,
+        image_id,
+        args.to_channel,
+        metrics if isinstance(metrics, dict) else {},
+    )
 
     print(
         json.dumps(
@@ -320,7 +357,9 @@ def status_registry(args: argparse.Namespace) -> int:
     payload = {
         "registry_dir": str(registry_dir),
         "updated_at_utc": index.get("updated_at_utc"),
-        "image_count": len(index.get("images", {})) if isinstance(index.get("images"), dict) else 0,
+        "image_count": len(index.get("images", {}))
+        if isinstance(index.get("images"), dict)
+        else 0,
         "channels": channels,
         "images": index.get("images", {}),
     }
@@ -384,7 +423,9 @@ def snapshot_registry(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Manage ripeness model image registry.")
+    parser = argparse.ArgumentParser(
+        description="Manage ripeness model image registry."
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     create = subparsers.add_parser("create", help="Create a new immutable model image.")
@@ -397,7 +438,9 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--key-id-env", default="BANANA_MODEL_SIGNING_KEY_ID")
     create.set_defaults(func=create_image)
 
-    verify = subparsers.add_parser("verify", help="Verify image integrity and optional signature.")
+    verify = subparsers.add_parser(
+        "verify", help="Verify image integrity and optional signature."
+    )
     verify.add_argument("--registry-dir", required=True)
     verify.add_argument("--channel")
     verify.add_argument("--image-id")
@@ -421,7 +464,9 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("--json", action="store_true")
     status.set_defaults(func=status_registry)
 
-    snapshot = subparsers.add_parser("snapshot", help="Create a registry snapshot archive.")
+    snapshot = subparsers.add_parser(
+        "snapshot", help="Create a registry snapshot archive."
+    )
     snapshot.add_argument("--registry-dir", required=True)
     snapshot.add_argument("--snapshot-dir", required=True)
     snapshot.add_argument("--label")

@@ -1,7 +1,7 @@
 # Specification Quality Checklist: Frontend Runtime Unset Follow-up
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning  
-**Created**: 2026-04-26  
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-04-26
 **Feature**: [.specify/specs/045-frontend-runtime-unset-followup/spec.md](../spec.md)
 
 ## Content Quality

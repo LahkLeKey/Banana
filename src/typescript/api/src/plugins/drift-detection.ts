@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 
 const WINDOW_MAX = 1000;
 
@@ -28,7 +28,7 @@ export function getDriftStats(): {
 }
 
 export function recordDriftSample(text: string, score: number): void {
-  const hash = crypto.createHash('sha256').update(text).digest('hex');
+  const hash = crypto.createHash("sha256").update(text).digest("hex");
   const fingerprint = hash.slice(0, 8);
   if (driftWindow.length >= WINDOW_MAX) {
     driftWindow.shift();
@@ -36,6 +36,8 @@ export function recordDriftSample(text: string, score: number): void {
   driftWindow.push({ fingerprint, score, ts: Date.now() });
 }
 
-export function shouldSample(sampleRate = Number(process.env.BANANA_DRIFT_SAMPLE_RATE ?? '0.1')): boolean {
+export function shouldSample(
+  sampleRate = Number(process.env.BANANA_DRIFT_SAMPLE_RATE ?? "0.1")
+): boolean {
   return Math.random() < sampleRate;
 }

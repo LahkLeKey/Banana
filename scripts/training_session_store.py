@@ -130,14 +130,20 @@ def summarize_replay_drift(
             break
 
     if previous is None:
-        return {"status": "no-matching-corpus", "lane": lane, "history_count": len(history_records)}
+        return {
+            "status": "no-matching-corpus",
+            "lane": lane,
+            "history_count": len(history_records),
+        }
 
     previous_metrics = previous.get("metrics", {})
     deltas: dict[str, float] = {}
     if isinstance(previous_metrics, dict):
         for key, value in current_metrics.items():
             previous_value = previous_metrics.get(key)
-            if isinstance(value, (int, float)) and isinstance(previous_value, (int, float)):
+            if isinstance(value, (int, float)) and isinstance(
+                previous_value, (int, float)
+            ):
                 deltas[key] = round(float(value) - float(previous_value), 6)
 
     return {

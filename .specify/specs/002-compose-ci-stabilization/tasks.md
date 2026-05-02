@@ -1,6 +1,6 @@
 # Tasks: Compose CI Stabilization
 
-**Input**: Design documents from `.specify/specs/002-compose-ci-stabilization/`  
+**Input**: Design documents from `.specify/specs/002-compose-ci-stabilization/`
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/compose-ci-lane-contract.md`
 
 ## Phase 1: Setup (Shared Infrastructure)

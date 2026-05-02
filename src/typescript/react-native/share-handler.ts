@@ -7,17 +7,17 @@
 // stub `getInitialUrl` / `addEventListener` implementation.
 
 export type ShareEvent = {
-  text: string
+  text: string;
 };
 export type ShareListener = (event: ShareEvent) => void;
 
 export type LinkingLike = {
-  getInitialURL: () => Promise<string|null>;
+  getInitialURL: () => Promise<string | null>;
   addEventListener: (
-      type: 'url',
-      handler: (event: {url: string}) => void,
-      ) => {
-    remove: () => void
+    type: "url",
+    handler: (event: { url: string }) => void
+  ) => {
+    remove: () => void;
   };
 };
 
@@ -27,18 +27,18 @@ export type LinkingLike = {
  * and the iOS share-extension `URLScheme` callback) and returns the
  * extracted text payload.
  */
-export function parseShareUrl(url: string|null): ShareEvent|null {
+export function parseShareUrl(url: string | null): ShareEvent | null {
   if (!url) return null;
   try {
     const parsed = new URL(url);
-    const text = parsed.searchParams.get('text');
-    if (text && text.length > 0) return {text};
+    const text = parsed.searchParams.get("text");
+    if (text && text.length > 0) return { text };
   } catch {
     // Fallback: best-effort split for runtimes without URL parsing.
-    const idx = url.indexOf('text=');
+    const idx = url.indexOf("text=");
     if (idx >= 0) {
-      const text = decodeURIComponent(url.slice(idx + 'text='.length));
-      if (text.length > 0) return {text};
+      const text = decodeURIComponent(url.slice(idx + "text=".length));
+      if (text.length > 0) return { text };
     }
   }
   return null;
@@ -49,13 +49,12 @@ export function parseShareUrl(url: string|null): ShareEvent|null {
  * any cold-start payload, then again for each subsequent share intent.
  * Returns an unsubscribe handle.
  */
-export function registerShareListener(
-    linking: LinkingLike, listener: ShareListener): () => void {
+export function registerShareListener(linking: LinkingLike, listener: ShareListener): () => void {
   void linking.getInitialURL().then((url) => {
     const event = parseShareUrl(url);
     if (event) listener(event);
   });
-  const sub = linking.addEventListener('url', ({url}) => {
+  const sub = linking.addEventListener("url", ({ url }) => {
     const event = parseShareUrl(url);
     if (event) listener(event);
   });

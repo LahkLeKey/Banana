@@ -1,7 +1,7 @@
 # Specification Quality Checklist: Chat Bootstrap Fetch Failure Follow-up
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning  
-**Created**: 2026-04-26  
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-04-26
 **Feature**: [.specify/specs/046-chat-bootstrap-fetch-failure/spec.md](../spec.md)
 
 ## Content Quality

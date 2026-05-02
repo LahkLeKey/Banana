@@ -10,7 +10,9 @@ from pathlib import Path
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Extract uncovered lines from Cobertura report.")
+    parser = argparse.ArgumentParser(
+        description="Extract uncovered lines from Cobertura report."
+    )
     parser.add_argument("--report", required=True, help="Path to Cobertura XML report.")
     parser.add_argument("--output-json", required=True, help="Output JSON path.")
     parser.add_argument("--output-text", required=True, help="Output text path.")
@@ -61,9 +63,15 @@ def main() -> int:
     output_text.parent.mkdir(parents=True, exist_ok=True)
 
     output_json.write_text(json.dumps(json_payload, indent=2) + "\n", encoding="utf-8")
-    output_text.write_text("\n".join(text_lines) + ("\n" if text_lines else ""), encoding="utf-8")
+    output_text.write_text(
+        "\n".join(text_lines) + ("\n" if text_lines else ""), encoding="utf-8"
+    )
 
-    print(json.dumps({"files": len(files_payload), "total_uncovered_lines": total}, indent=2))
+    print(
+        json.dumps(
+            {"files": len(files_payload), "total_uncovered_lines": total}, indent=2
+        )
+    )
     return 0
 
 

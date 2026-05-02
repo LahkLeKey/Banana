@@ -9,14 +9,14 @@ Implement a new orchestration mode (`spec-drain`) that executes eligible specs e
 
 ## Technical Context
 
-**Language/Version**: Bash, Python 3.11, GitHub Actions YAML  
-**Primary Dependencies**: gh CLI, existing `.specify/scripts/*` orchestration helpers, `scripts/workflow-orchestrate-sdlc.sh`  
-**Storage**: File-based run state under `artifacts/` and/or `.artifacts/`  
-**Testing**: Existing contract validators plus new orchestration smoke integration lane  
-**Target Platform**: GitHub Actions + local Windows/Git Bash operator path  
-**Project Type**: Workflow automation and orchestration scripts  
-**Performance Goals**: Process next runnable spec within 60 seconds of prior completion in CI context  
-**Constraints**: Must respect required checks and protected-branch policies; no bypass of failing mandatory gates  
+**Language/Version**: Bash, Python 3.11, GitHub Actions YAML
+**Primary Dependencies**: gh CLI, existing `.specify/scripts/*` orchestration helpers, `scripts/workflow-orchestrate-sdlc.sh`
+**Storage**: File-based run state under `artifacts/` and/or `.artifacts/`
+**Testing**: Existing contract validators plus new orchestration smoke integration lane
+**Target Platform**: GitHub Actions + local Windows/Git Bash operator path
+**Project Type**: Workflow automation and orchestration scripts
+**Performance Goals**: Process next runnable spec within 60 seconds of prior completion in CI context
+**Constraints**: Must respect required checks and protected-branch policies; no bypass of failing mandatory gates
 **Scale/Scope**: Full `.specify/specs/*` backlog drain, sequential v1 execution
 
 ## Constitution Check

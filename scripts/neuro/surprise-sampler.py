@@ -69,7 +69,9 @@ def normalize(values: list[float]) -> list[float]:
     return [v / total for v in values]
 
 
-def blend_with_uniform_floor(surprise_norm: list[float], floor: float = 0.7) -> list[float]:
+def blend_with_uniform_floor(
+    surprise_norm: list[float], floor: float = 0.7
+) -> list[float]:
     """``floor * uniform + (1 - floor) * surprise``; default keeps 70% uniform."""
     if not surprise_norm:
         return []
@@ -84,7 +86,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--vocabulary", type=Path, required=True)
     parser.add_argument("--corpus", type=Path, required=True)
     parser.add_argument("--floor", type=float, default=0.7)
-    parser.add_argument("--output", type=Path, default=None, help="Write JSON; default stdout.")
+    parser.add_argument(
+        "--output", type=Path, default=None, help="Write JSON; default stdout."
+    )
     return parser.parse_args(argv)
 
 

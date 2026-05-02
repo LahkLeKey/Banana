@@ -1,6 +1,6 @@
 # CMake Preset Activation Contract
 
-**Feature**: 008-cmake-preset-activation-fix  
+**Feature**: 008-cmake-preset-activation-fix
 **Date**: 2026-04-26
 
 ## Scope

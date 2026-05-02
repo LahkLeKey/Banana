@@ -50,7 +50,7 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
 
 ## Phase 3: US2 — Typed ASP.NET Pipeline Responses (P2)
 
-**Story goal**: All native-backed controller responses return typed objects. No `Ok(new { json })` wrapper remains.  
+**Story goal**: All native-backed controller responses return typed objects. No `Ok(new { json })` wrapper remains.
 **Independent test**: `curl -s -X POST http://localhost:5000/ripeness/predict -H "Content-Type: application/json" -d '{"inputJson":"yellow banana"}' | jq '.label'` returns `"ripe"`, `"unripe"`, or `"overripe"` — not `null`.
 
 - [X] T009 [US2] Add `InputJson` property to `src/c-sharp/asp.net/Pipeline/PipelineContext.cs`: `public string? InputJson { get; set; }` — preserves all existing properties (`Route`, `StartedAt`, `LastStatus`, `Diagnostics`)
@@ -64,7 +64,7 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
 
 ## Phase 4: US3 — Native ML Ripeness Upgrade (P3)
 
-**Story goal**: `banana_core_predict_ripeness` uses `banana_ml_predict_regression_score` instead of keyword counting. Label is always one of `"ripe"`, `"unripe"`, `"overripe"`.  
+**Story goal**: `banana_core_predict_ripeness` uses `banana_ml_predict_regression_score` instead of keyword counting. Label is always one of `"ripe"`, `"unripe"`, `"overripe"`.
 **Independent test**: `ctest --test-dir build/native -R ripeness` — all tests pass; output JSON has `"model":"regression"`.
 
 *Can run in parallel with Phase 3 — different domain, different files.*
@@ -83,7 +83,7 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
 
 ## Phase 5: US1 — Ripeness Prediction End-to-End, React UI (P1)
 
-**Story goal**: A user submits a banana description in the React UI and sees `<RipenessLabel>` rendered with a valid ripeness label.  
+**Story goal**: A user submits a banana description in the React UI and sees `<RipenessLabel>` rendered with a valid ripeness label.
 **Independent test**: Compose `docker compose up react api` → open browser → enter text → confirm `<RipenessLabel>` renders with one of `ripe`, `unripe`, `overripe` and a confidence score.
 
 *Depends on Phase 2 (type fix) and Phase 3 (US2, ASP.NET response shape). Can start once T008 and T013 are green.*
@@ -110,7 +110,7 @@ description: "Task list for Domain Value Delivery — End-to-End Ripeness MVP"
 
 ## Phase 6: US4 — ASP.NET Pipeline Steps (P4)
 
-**Story goal**: `IPipelineStep<PipelineContext>`, `PipelineStepResult`, and `PipelineRunner<T>` exist and are wired into `RipenessController`. At least one real step (input validation) executes on every request.  
+**Story goal**: `IPipelineStep<PipelineContext>`, `PipelineStepResult`, and `PipelineRunner<T>` exist and are wired into `RipenessController`. At least one real step (input validation) executes on every request.
 **Independent test**: Unit test — `PipelineRunner` with a failing step halts before subsequent steps are called.
 
 *Can run in parallel with Phase 5 — different layers, different files.*

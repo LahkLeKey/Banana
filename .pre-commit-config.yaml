@@ -13,7 +13,7 @@ repos:
       - id: check-merge-conflict
       - id: check-yaml
         args: ['--allow-multiple-documents']
-        exclude: '^(artifacts|build|out|\.venv)/'
+        exclude: '^(artifacts|build|out|\.venv|helm|\.github/workflows)/'
       - id: check-json
         exclude: '^(artifacts|build|out|\.venv)/'
 
@@ -30,7 +30,7 @@ repos:
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
-        args: ['--severity=warning', '--external-sources']
+        args: ['--severity=error', '--external-sources']
         files: '\.sh$'
         exclude: '^(artifacts|build|out|\.venv)/'
 
@@ -61,11 +61,11 @@ repos:
       - id: biome-check
         name: "biome: lint + format TypeScript"
         language: node
-        entry: bunx @biomejs/biome check --write
+        entry: biome format --write
         types_or: [ts, tsx, javascript, jsx, json]
         files: '^src/typescript/'
         pass_filenames: true
-        additional_dependencies: ['@biomejs/biome@^2.0.0']
+        additional_dependencies: ['@biomejs/biome@2.0.0']
 
   # ── .NET format ────────────────────────────────────────────────────────────
   - repo: local

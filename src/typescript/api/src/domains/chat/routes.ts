@@ -1,37 +1,47 @@
-import type {FastifyInstance, FastifyReply} from 'fastify';
-import {randomUUID} from 'node:crypto';
-import {z} from 'zod';
+import { randomUUID } from "node:crypto";
+import type { FastifyInstance, FastifyReply } from "fastify";
+import { z } from "zod";
 
-import {loadTrainedModel, scoreText} from '../not-banana/model';
+import { loadTrainedModel, scoreText } from "../not-banana/model";
 
-type ChatRole = 'user'|'assistant'|'system';
-type ChatStatus = 'accepted'|'complete';
+type ChatRole = "user" | "assistant" | "system";
+type ChatStatus = "accepted" | "complete";
 
 type ChatMessage = {
-  id: string; session_id: string; role: ChatRole; content: string;
+  id: string;
+  session_id: string;
+  role: ChatRole;
+  content: string;
   created_at: string;
   status: ChatStatus;
 };
 
 type SessionEcho = {
-  id: string; platform: string; created_at: string; updated_at: string;
+  id: string;
+  platform: string;
+  created_at: string;
+  updated_at: string;
   message_count: number;
 };
 
 type SessionState = {
-  id: string; platform: string; created_at: string; updated_at: string;
+  id: string;
+  platform: string;
+  created_at: string;
+  updated_at: string;
   message_sequence: number;
   messages: ChatMessage[];
-  idempotency:
-      Map<string,
-          {
-            user_message: ChatMessage;
-            assistant_message: ChatMessage
-          }>;
+  idempotency: Map<
+    string,
+    {
+      user_message: ChatMessage;
+      assistant_message: ChatMessage;
+    }
+  >;
 };
 
 const CreateSessionBody = z.object({
-  platform: z.string().trim().min(1).max(64).default('web'),
+  platform: z.string().trim().min(1).max(64).default("web"),
   metadata: z.record(z.string(), z.string()).default({}),
 });
 
@@ -53,7 +63,10 @@ function clamp01(value: number): number {
 }
 
 function bananaSignalScore(content: string): {
-  score: number; matched: string[]; modelSource: string; threshold: number;
+  score: number;
+  matched: string[];
+  modelSource: string;
+  threshold: number;
 } {
   const model = loadTrainedModel();
   const scored = scoreText(content, model);
@@ -79,26 +92,25 @@ function buildAssistantReply(content: string): string {
   const negativeThreshold = clamp01(1 - positiveThreshold);
 
   if (signal.score >= positiveThreshold) {
-    const matched =
-        signal.matched.length > 0 ? signal.matched.join(',') : 'banana';
-    return `banana-forward signal detected (${matched}) with confidence ${
-        signal.score.toFixed(2)} (threshold=${
-        positiveThreshold.toFixed(2)}) [model=${signal.modelSource}]`;
+    const matched = signal.matched.length > 0 ? signal.matched.join(",") : "banana";
+    return `banana-forward signal detected (${matched}) with confidence ${signal.score.toFixed(
+      2
+    )} (threshold=${positiveThreshold.toFixed(2)}) [model=${signal.modelSource}]`;
   }
 
   if (signal.score <= negativeThreshold) {
-    return `not-banana signal is stronger right now (score=${
-        signal.score.toFixed(2)}, threshold=${
-        positiveThreshold.toFixed(
-            2)}); include banana context for a fruit-focused answer [model=${
-        signal.modelSource}]`;
+    return `not-banana signal is stronger right now (score=${signal.score.toFixed(
+      2
+    )}, threshold=${positiveThreshold.toFixed(
+      2
+    )}); include banana context for a fruit-focused answer [model=${signal.modelSource}]`;
   }
 
-  return `mixed signal detected (banana_score=${
-      signal.score.toFixed(2)}, threshold=${
-      positiveThreshold.toFixed(
-          2)}); ask a follow-up for clearer banana context [model=${
-      signal.modelSource}]`;
+  return `mixed signal detected (banana_score=${signal.score.toFixed(
+    2
+  )}, threshold=${positiveThreshold.toFixed(
+    2
+  )}); ask a follow-up for clearer banana context [model=${signal.modelSource}]`;
 }
 
 function toSessionEcho(session: SessionState): SessionEcho {
@@ -116,11 +128,14 @@ function nowIso(): string {
 }
 
 function createMessage(
-    session: SessionState, role: ChatRole, content: string,
-    status: ChatStatus): ChatMessage {
+  session: SessionState,
+  role: ChatRole,
+  content: string,
+  status: ChatStatus
+): ChatMessage {
   session.message_sequence += 1;
   return {
-    id: `${session.id}_m${String(session.message_sequence).padStart(4, '0')}`,
+    id: `${session.id}_m${String(session.message_sequence).padStart(4, "0")}`,
     session_id: session.id,
     role,
     content,
@@ -130,16 +145,21 @@ function createMessage(
 }
 
 function typedError(
-    reply: FastifyReply, statusCode: number, code: string, message: string,
-    retryable = false, issues?: unknown) {
+  reply: FastifyReply,
+  statusCode: number,
+  code: string,
+  message: string,
+  retryable = false,
+  issues?: unknown
+) {
   return reply.status(statusCode).send({
     error: {
       code,
       message,
       retryable,
-      retry_hint: retryable ? 'retry_with_backoff' : 'fix_request_then_retry',
+      retry_hint: retryable ? "retry_with_backoff" : "fix_request_then_retry",
     },
-    ...(issues ? {issues} : {}),
+    ...(issues ? { issues } : {}),
   });
 }
 
@@ -148,12 +168,17 @@ export function __resetChatRouteStateForTests() {
 }
 
 export async function registerChatRoutes(app: FastifyInstance) {
-  app.post('/chat/sessions', async (req, reply) => {
+  app.post("/chat/sessions", async (req, reply) => {
     const parsed = CreateSessionBody.safeParse(req.body ?? {});
     if (!parsed.success) {
       return typedError(
-          reply, 400, 'invalid_argument', 'invalid chat session payload', false,
-          parsed.error.flatten());
+        reply,
+        400,
+        "invalid_argument",
+        "invalid chat session payload",
+        false,
+        parsed.error.flatten()
+      );
     }
 
     const createdAt = nowIso();
@@ -169,9 +194,11 @@ export async function registerChatRoutes(app: FastifyInstance) {
     };
 
     const welcome = createMessage(
-        session, 'assistant',
-        'banana assistant ready; send a message to classify banana context deterministically',
-        'complete');
+      session,
+      "assistant",
+      "banana assistant ready; send a message to classify banana context deterministically",
+      "complete"
+    );
     session.messages.push(welcome);
     session.updated_at = welcome.created_at;
 
@@ -184,18 +211,22 @@ export async function registerChatRoutes(app: FastifyInstance) {
     });
   });
 
-  app.get('/chat/sessions/:sessionId', async (req, reply) => {
+  app.get("/chat/sessions/:sessionId", async (req, reply) => {
     const parsedParams = SessionParams.safeParse(req.params);
     if (!parsedParams.success) {
       return typedError(
-          reply, 400, 'invalid_argument', 'invalid session identifier', false,
-          parsedParams.error.flatten());
+        reply,
+        400,
+        "invalid_argument",
+        "invalid session identifier",
+        false,
+        parsedParams.error.flatten()
+      );
     }
 
     const session = sessions.get(parsedParams.data.sessionId);
     if (!session) {
-      return typedError(
-          reply, 404, 'session_not_found', 'chat session was not found', false);
+      return typedError(reply, 404, "session_not_found", "chat session was not found", false);
     }
 
     return reply.status(200).send({
@@ -204,25 +235,34 @@ export async function registerChatRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post('/chat/sessions/:sessionId/messages', async (req, reply) => {
+  app.post("/chat/sessions/:sessionId/messages", async (req, reply) => {
     const parsedParams = SessionParams.safeParse(req.params);
     if (!parsedParams.success) {
       return typedError(
-          reply, 400, 'invalid_argument', 'invalid session identifier', false,
-          parsedParams.error.flatten());
+        reply,
+        400,
+        "invalid_argument",
+        "invalid session identifier",
+        false,
+        parsedParams.error.flatten()
+      );
     }
 
     const parsedBody = PostMessageBody.safeParse(req.body ?? {});
     if (!parsedBody.success) {
       return typedError(
-          reply, 400, 'invalid_argument', 'invalid chat message payload', false,
-          parsedBody.error.flatten());
+        reply,
+        400,
+        "invalid_argument",
+        "invalid chat message payload",
+        false,
+        parsedBody.error.flatten()
+      );
     }
 
     const session = sessions.get(parsedParams.data.sessionId);
     if (!session) {
-      return typedError(
-          reply, 404, 'session_not_found', 'chat session was not found', false);
+      return typedError(reply, 404, "session_not_found", "chat session was not found", false);
     }
 
     const clientMessageId = parsedBody.data.client_message_id;
@@ -236,11 +276,13 @@ export async function registerChatRoutes(app: FastifyInstance) {
       });
     }
 
-    const userMessage =
-        createMessage(session, 'user', parsedBody.data.content, 'accepted');
+    const userMessage = createMessage(session, "user", parsedBody.data.content, "accepted");
     const assistantMessage = createMessage(
-        session, 'assistant', buildAssistantReply(parsedBody.data.content),
-        'complete');
+      session,
+      "assistant",
+      buildAssistantReply(parsedBody.data.content),
+      "complete"
+    );
 
     session.messages.push(userMessage, assistantMessage);
     session.updated_at = assistantMessage.created_at;

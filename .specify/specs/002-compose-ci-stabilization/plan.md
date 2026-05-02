@@ -9,14 +9,14 @@ Stabilize merge-gated Compose CI behavior by making lane terminal states determi
 
 ## Technical Context
 
-**Language/Version**: GitHub Actions YAML, Bash (GNU/bash on Ubuntu), Docker Compose v2, .NET 8, Bun 1.3.9  
-**Primary Dependencies**: `actions/checkout`, `actions/setup-dotnet`, `oven-sh/setup-bun`, `actions/upload-artifact`, `actions/download-artifact`, Docker Engine + Compose CLI, `curl`  
-**Storage**: Build/test evidence stored in repository `.artifacts/` and GitHub Actions artifacts  
-**Testing**: Workflow-driven lane validation plus script-level checks through compose/e2e shell entry points  
+**Language/Version**: GitHub Actions YAML, Bash (GNU/bash on Ubuntu), Docker Compose v2, .NET 8, Bun 1.3.9
+**Primary Dependencies**: `actions/checkout`, `actions/setup-dotnet`, `oven-sh/setup-bun`, `actions/upload-artifact`, `actions/download-artifact`, Docker Engine + Compose CLI, `curl`
+**Storage**: Build/test evidence stored in repository `.artifacts/` and GitHub Actions artifacts
+**Testing**: Workflow-driven lane validation plus script-level checks through compose/e2e shell entry points
 **Target Platform**: GitHub-hosted `ubuntu-latest` runners (primary) and local Windows + Docker Desktop + Ubuntu WSL2 contract (secondary)
-**Project Type**: CI and runtime orchestration in a multi-language monorepo  
-**Performance Goals**: Deterministic lane terminal state for every baseline rerun; one-pass triage with complete diagnostics; zero missing-path upload failures  
-**Constraints**: Preserve existing compose profiles and runtime contracts; keep Bun package manager and API/native evidence links intact; avoid product behavior changes; satisfy `validate-ai-contracts.py` wiki and terminology guard contracts  
+**Project Type**: CI and runtime orchestration in a multi-language monorepo
+**Performance Goals**: Deterministic lane terminal state for every baseline rerun; one-pass triage with complete diagnostics; zero missing-path upload failures
+**Constraints**: Preserve existing compose profiles and runtime contracts; keep Bun package manager and API/native evidence links intact; avoid product behavior changes; satisfy `validate-ai-contracts.py` wiki and terminology guard contracts
 **Scale/Scope**: One merge-gated workflow plus compose/e2e support scripts and documentation contracts used by maintainers and release owners
 
 ## Constitution Check

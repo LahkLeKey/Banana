@@ -8,20 +8,19 @@
  * - Sets verdict when a "complete" event is received
  * - Cleans up the EventSource on unmount or when text changes
  */
-import {useEffect, useRef, useState} from 'react';
+import { useEffect, useRef, useState } from "react";
 
 const API_BASE =
-  (import.meta.env.VITE_BANANA_API_BASE_URL as string | undefined) ??
-  'http://localhost:8081';
+  (import.meta.env.VITE_BANANA_API_BASE_URL as string | undefined) ?? "http://localhost:8081";
 
 export interface ProgressEvent {
-  type: 'progress';
+  type: "progress";
   step: string;
   pct: number;
 }
 
 export interface CompleteEvent {
-  type: 'complete';
+  type: "complete";
   verdict: VerdictResult;
 }
 
@@ -60,7 +59,7 @@ export function useVerdictStream(text: string | null): {
       try {
         const parsed = JSON.parse(e.data as string) as StreamEvent;
         setEvents((prev) => [...prev, parsed]);
-        if (parsed.type === 'complete') {
+        if (parsed.type === "complete") {
           setVerdict(parsed.verdict);
           setIsStreaming(false);
           es.close();
@@ -81,5 +80,5 @@ export function useVerdictStream(text: string | null): {
     };
   }, [text]);
 
-  return {events, isStreaming, verdict};
+  return { events, isStreaming, verdict };
 }

@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 from pathlib import Path
 
 LO = 0.25
@@ -72,8 +71,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--history", type=Path, default=None)
     parser.add_argument("--window", type=int, default=3)
     parser.add_argument("--k", type=float, default=8.0)
-    parser.add_argument("--accuracies", type=str, default=None,
-                        help="Comma-separated list overriding --history.")
+    parser.add_argument(
+        "--accuracies",
+        type=str,
+        default=None,
+        help="Comma-separated list overriding --history.",
+    )
     return parser.parse_args(argv)
 
 

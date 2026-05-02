@@ -15,14 +15,14 @@ Make Docker Compose the canonical orchestration path for all supported Banana lo
 
 ## Technical Context
 
-**Language/Version**: Bash shell scripts, Docker Compose, YAML workflow/runtime docs  
-**Primary Dependencies**: Docker Desktop, Docker Compose, existing Banana orchestration scripts under scripts/  
-**Storage**: N/A (runtime orchestration contract + docs + script behavior)  
-**Testing**: Scripted runtime contract checks and existing validation lanes (`validate-ai-contracts`, spec parity checks, profile smoke paths)  
-**Target Platform**: Windows host + Docker Desktop + Ubuntu WSL2 primary contract; Linux container runtime paths  
-**Project Type**: Delivery/runtime orchestration and contract documentation  
-**Performance Goals**: Consistent profile readiness outcomes across repeated runs; deterministic startup ordering and health checks  
-**Constraints**: Preserve required runtime contracts (`BANANA_PG_CONNECTION`, `BANANA_NATIVE_PATH`, `VITE_BANANA_API_BASE_URL`) and existing compose profile semantics  
+**Language/Version**: Bash shell scripts, Docker Compose, YAML workflow/runtime docs
+**Primary Dependencies**: Docker Desktop, Docker Compose, existing Banana orchestration scripts under scripts/
+**Storage**: N/A (runtime orchestration contract + docs + script behavior)
+**Testing**: Scripted runtime contract checks and existing validation lanes (`validate-ai-contracts`, spec parity checks, profile smoke paths)
+**Target Platform**: Windows host + Docker Desktop + Ubuntu WSL2 primary contract; Linux container runtime paths
+**Project Type**: Delivery/runtime orchestration and contract documentation
+**Performance Goals**: Consistent profile readiness outcomes across repeated runs; deterministic startup ordering and health checks
+**Constraints**: Preserve required runtime contracts (`BANANA_PG_CONNECTION`, `BANANA_NATIVE_PATH`, `VITE_BANANA_API_BASE_URL`) and existing compose profile semantics
 **Scale/Scope**: All currently supported local run profiles in docker-compose.yml and runtime launch scripts
 
 ### Required Runtime Variable Contracts

@@ -14,21 +14,21 @@ import { create } from "zustand";
 export type ThemeOverride = "system" | "light" | "dark";
 
 export type UiState = {
-    themeOverride: ThemeOverride;
-    setThemeOverride: (override: ThemeOverride) => void;
-    escalationPanelOpen: boolean;
-    setEscalationPanelOpen: (open: boolean) => void;
-    reset: () => void;
+  themeOverride: ThemeOverride;
+  setThemeOverride: (override: ThemeOverride) => void;
+  escalationPanelOpen: boolean;
+  setEscalationPanelOpen: (open: boolean) => void;
+  reset: () => void;
 };
 
 const INITIAL = {
-    themeOverride: "system" as ThemeOverride,
-    escalationPanelOpen: false,
+  themeOverride: "system" as ThemeOverride,
+  escalationPanelOpen: false,
 };
 
 export const useUiStore = create<UiState>((set) => ({
-    ...INITIAL,
-    setThemeOverride: (override) => set({ themeOverride: override }),
-    setEscalationPanelOpen: (open) => set({ escalationPanelOpen: open }),
-    reset: () => set({ ...INITIAL }),
+  ...INITIAL,
+  setThemeOverride: (override) => set({ themeOverride: override }),
+  setEscalationPanelOpen: (open) => set({ escalationPanelOpen: open }),
+  reset: () => set({ ...INITIAL }),
 }));

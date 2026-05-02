@@ -1,7 +1,7 @@
 # US3 Missing Preset Evidence: CMake Preset Activation Fix
 
-**Date**: 2026-04-26  
-**Scenario**: MISSING_PRESET — reference a preset name that does not exist in `CMakePresets.json`.  
+**Date**: 2026-04-26
+**Scenario**: MISSING_PRESET — reference a preset name that does not exist in `CMakePresets.json`.
 **Command**: `cmake --preset nonexistent-preset` (from repo root)
 
 ## Output

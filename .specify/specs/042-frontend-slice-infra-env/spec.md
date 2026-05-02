@@ -1,8 +1,8 @@
 # Feature Specification: Frontend Slice Infra & Env Wiring
 
-**Feature Branch**: `[042-frontend-slice-infra-env]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[042-frontend-slice-infra-env]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "fix the launch profiles so they spin up infra needed for each slice we are interacting with (frontend platform as a slice) the web app launches but I just see API base: <unset>"
 
 ## In Scope *(mandatory)*

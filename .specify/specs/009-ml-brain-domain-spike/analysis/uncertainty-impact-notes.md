@@ -1,6 +1,6 @@
 # Uncertainty Impact Notes: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Source**: confidence-policy.md uncertainty log (U-001, U-002)
 
 ## Summary
@@ -11,8 +11,8 @@ Two uncertainty items affect ranking and scorecard scores. Both are planned-grad
 
 ## U-001: Transformer Not Yet Implemented
 
-**Affected artifact**: model-family-tradeoff-matrix.md  
-**Affected cells**: Transformer — Output Determinism, Calibration Fidelity, Classification Confidence Clarity, Validation Complexity  
+**Affected artifact**: model-family-tradeoff-matrix.md
+**Affected cells**: Transformer — Output Determinism, Calibration Fidelity, Classification Confidence Clarity, Validation Complexity
 **Confidence level**: Medium [M]
 
 ### Impact on Ranking
@@ -29,8 +29,8 @@ Resolved when the Full Brain follow-up implementation slice runs baseline infere
 
 ## U-002: Regression and Binary Runtime Calibration Unmeasured
 
-**Affected artifact**: domain-fit-scorecards.md  
-**Affected cells**: Regression — Calibration Fidelity; Binary — Calibration Fidelity  
+**Affected artifact**: domain-fit-scorecards.md
+**Affected cells**: Regression — Calibration Fidelity; Binary — Calibration Fidelity
 **Confidence level**: Medium [M] for production calibration; High [H] for theoretical family characteristics
 
 ### Impact on Ranking

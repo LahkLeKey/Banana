@@ -42,8 +42,8 @@ public sealed class NativeBananaClient : INativeBananaClient
         }
     }
 
-    public NativeStatusCode ClassifyBananaBinary(string inputJson, out string json)        => CallJson(inputJson, out json, NativeMethods.ClassifyBananaBinary);
-    public NativeStatusCode ClassifyBananaTransformer(string inputJson, out string json)   => CallJson(inputJson, out json, NativeMethods.ClassifyBananaTransformer);
+    public NativeStatusCode ClassifyBananaBinary(string inputJson, out string json) => CallJson(inputJson, out json, NativeMethods.ClassifyBananaBinary);
+    public NativeStatusCode ClassifyBananaTransformer(string inputJson, out string json) => CallJson(inputJson, out json, NativeMethods.ClassifyBananaTransformer);
 
     public NativeStatusCode ClassifyBananaTransformerWithEmbedding(string inputJson, double[] embedding, out string json)
     {
@@ -66,15 +66,15 @@ public sealed class NativeBananaClient : INativeBananaClient
             return NativeStatusCode.NativeUnavailable;
         }
     }
-    public NativeStatusCode ClassifyNotBananaJunk(string inputJson, out string json)       => CallJson(inputJson, out json, NativeMethods.ClassifyNotBananaJunk);
-    public NativeStatusCode PredictBananaRipeness(string inputJson, out string json)       => CallJson(inputJson, out json, NativeMethods.PredictBananaRipeness);
-    public NativeStatusCode CreateBatch(string inputJson, out string json)                 => CallJson(inputJson, out json, NativeMethods.CreateBatch);
-    public NativeStatusCode GetBatchStatus(string batchId, out string json)                => CallJson(batchId, out json, NativeMethods.GetBatchStatus);
-    public NativeStatusCode PredictBatchRipeness(string batchId, out string json)          => CallJson(batchId, out json, NativeMethods.PredictBatchRipeness);
-    public NativeStatusCode CreateHarvestBatch(string inputJson, out string json)          => CallJson(inputJson, out json, NativeMethods.CreateHarvestBatch);
-    public NativeStatusCode GetHarvestBatchStatus(string batchId, out string json)         => CallJson(batchId, out json, NativeMethods.GetHarvestBatchStatus);
-    public NativeStatusCode RegisterTruck(string inputJson, out string json)               => CallJson(inputJson, out json, NativeMethods.RegisterTruck);
-    public NativeStatusCode GetTruckStatus(string truckId, out string json)                => CallJson(truckId, out json, NativeMethods.GetTruckStatus);
+    public NativeStatusCode ClassifyNotBananaJunk(string inputJson, out string json) => CallJson(inputJson, out json, NativeMethods.ClassifyNotBananaJunk);
+    public NativeStatusCode PredictBananaRipeness(string inputJson, out string json) => CallJson(inputJson, out json, NativeMethods.PredictBananaRipeness);
+    public NativeStatusCode CreateBatch(string inputJson, out string json) => CallJson(inputJson, out json, NativeMethods.CreateBatch);
+    public NativeStatusCode GetBatchStatus(string batchId, out string json) => CallJson(batchId, out json, NativeMethods.GetBatchStatus);
+    public NativeStatusCode PredictBatchRipeness(string batchId, out string json) => CallJson(batchId, out json, NativeMethods.PredictBatchRipeness);
+    public NativeStatusCode CreateHarvestBatch(string inputJson, out string json) => CallJson(inputJson, out json, NativeMethods.CreateHarvestBatch);
+    public NativeStatusCode GetHarvestBatchStatus(string batchId, out string json) => CallJson(batchId, out json, NativeMethods.GetHarvestBatchStatus);
+    public NativeStatusCode RegisterTruck(string inputJson, out string json) => CallJson(inputJson, out json, NativeMethods.RegisterTruck);
+    public NativeStatusCode GetTruckStatus(string truckId, out string json) => CallJson(truckId, out json, NativeMethods.GetTruckStatus);
 
     public NativeStatusCode AddBunchToHarvestBatch(string batchId, string inputJson, out string json)
     {

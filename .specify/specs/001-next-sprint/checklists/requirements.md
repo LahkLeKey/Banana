@@ -1,7 +1,7 @@
 # Specification Quality Checklist: Next Sprint Consolidated Scope
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning  
-**Created**: 2026-04-25  
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-04-25
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality

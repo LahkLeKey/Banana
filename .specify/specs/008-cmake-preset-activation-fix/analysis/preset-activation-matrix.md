@@ -1,6 +1,6 @@
 # Preset Activation Matrix: CMake Preset Activation Fix
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Define the expected activation state for each workspace folder context.
 
 ## Activation Matrix

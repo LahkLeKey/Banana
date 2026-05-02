@@ -1,6 +1,6 @@
 # Tasks: Coverage 80 Rehydration for Entire Monorepo
 
-**Input**: Design documents from `.specify/specs/003-coverage-80-rehydration/`  
+**Input**: Design documents from `.specify/specs/003-coverage-80-rehydration/`
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/coverage-lane-contract.md`
 
 ## Phase 1: Setup (Shared Infrastructure)

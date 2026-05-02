@@ -1,4 +1,5 @@
 """Tests for scripts/validate-api-parity-governance.sh."""
+
 from __future__ import annotations
 
 import json
@@ -7,10 +8,38 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "validate-api-parity-governance.sh"
-INVENTORY = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "overlapping-routes.inventory.json"
-DRIFT = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "parity-drift-report.json"
-GATE = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "parity-gate-result.json"
-EXCEPTIONS = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance" / "artifacts" / "parity-exceptions.json"
+INVENTORY = (
+    REPO_ROOT
+    / ".specify"
+    / "specs"
+    / "047-api-parity-governance"
+    / "artifacts"
+    / "overlapping-routes.inventory.json"
+)
+DRIFT = (
+    REPO_ROOT
+    / ".specify"
+    / "specs"
+    / "047-api-parity-governance"
+    / "artifacts"
+    / "parity-drift-report.json"
+)
+GATE = (
+    REPO_ROOT
+    / ".specify"
+    / "specs"
+    / "047-api-parity-governance"
+    / "artifacts"
+    / "parity-gate-result.json"
+)
+EXCEPTIONS = (
+    REPO_ROOT
+    / ".specify"
+    / "specs"
+    / "047-api-parity-governance"
+    / "artifacts"
+    / "parity-exceptions.json"
+)
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -54,9 +83,14 @@ def test_non_strict_mode_writes_drift_report() -> None:
 
 
 def test_strict_mode_fails_when_unresolved_missing_routes_exist() -> None:
-    original_exceptions = EXCEPTIONS.read_text(encoding="utf-8") if EXCEPTIONS.exists() else None
+    original_exceptions = (
+        EXCEPTIONS.read_text(encoding="utf-8") if EXCEPTIONS.exists() else None
+    )
     EXCEPTIONS.write_text(
-        json.dumps({"updated_at_utc": "2026-04-26T00:00:00Z", "exceptions": []}, indent=2) + "\n",
+        json.dumps(
+            {"updated_at_utc": "2026-04-26T00:00:00Z", "exceptions": []}, indent=2
+        )
+        + "\n",
         encoding="utf-8",
     )
 

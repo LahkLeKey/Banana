@@ -9,14 +9,14 @@ Produce a planning-first SPIKE that formalizes Banana ML brain-domain roles (Lef
 
 ## Technical Context
 
-**Language/Version**: Markdown planning artifacts with native C domain contract references  
-**Primary Dependencies**: Existing ML surfaces under `src/native/core/domain/ml/*`, wrappers under `src/native/wrapper/domain/ml/*`, and `banana_ml_models` contracts  
-**Storage**: N/A  
-**Testing**: Planning artifact review gates; native/unit/contract lane mapping definitions for follow-up stories  
-**Target Platform**: Banana monorepo planning workflow (Spec Kit)  
-**Project Type**: Discovery and prioritization SPIKE for ML domain strategy  
-**Performance Goals**: Enable one-session stakeholder selection of domain follow-up slices  
-**Constraints**: No production behavior changes in SPIKE; preserve existing native/wrapper contract boundaries  
+**Language/Version**: Markdown planning artifacts with native C domain contract references
+**Primary Dependencies**: Existing ML surfaces under `src/native/core/domain/ml/*`, wrappers under `src/native/wrapper/domain/ml/*`, and `banana_ml_models` contracts
+**Storage**: N/A
+**Testing**: Planning artifact review gates; native/unit/contract lane mapping definitions for follow-up stories
+**Target Platform**: Banana monorepo planning workflow (Spec Kit)
+**Project Type**: Discovery and prioritization SPIKE for ML domain strategy
+**Performance Goals**: Enable one-session stakeholder selection of domain follow-up slices
+**Constraints**: No production behavior changes in SPIKE; preserve existing native/wrapper contract boundaries
 **Scale/Scope**: Three-domain framing across three model families with execution-ready follow-up recommendations
 
 ## Constitution Check

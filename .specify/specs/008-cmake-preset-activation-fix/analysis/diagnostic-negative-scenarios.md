@@ -1,6 +1,6 @@
 # Diagnostic Negative Scenarios: CMake Preset Activation Fix
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Define the negative scenarios to validate actionable diagnostics output.
 
 ## Scenario 1: Missing Preset (MISSING_PRESET)

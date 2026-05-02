@@ -1,7 +1,7 @@
 # 008 CMake Preset Activation Fix — Execution Tracker
 
-**Date**: 2026-04-26  
-**Feature**: 008-cmake-preset-activation-fix  
+**Date**: 2026-04-26
+**Feature**: 008-cmake-preset-activation-fix
 **Status**: In Progress
 
 ## Problem Statement

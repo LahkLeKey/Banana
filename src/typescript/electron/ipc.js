@@ -13,15 +13,15 @@
 //   raise a native notification.
 
 const IPC_CHANNELS = Object.freeze({
-  classifyClipboard: 'banana:classify-clipboard',
-  verdict: 'banana:verdict',
+  classifyClipboard: "banana:classify-clipboard",
+  verdict: "banana:verdict",
   // Slice 030 -- renderer publishes its VerdictHistory snapshot to the
   // main process so the tray menu can read the latest verdict without
   // owning verdict storage in the main process.
-  historyUpdate: 'banana:history-update',
+  historyUpdate: "banana:history-update",
   // Slice 030 -- renderer signals when a queued-while-offline request
   // drains successfully so main can raise a native notification.
-  drainSuccess: 'banana:drain-success',
+  drainSuccess: "banana:drain-success",
 });
 
 /**
@@ -38,15 +38,15 @@ const IPC_CHANNELS = Object.freeze({
  * @param {() => string} [deps.getApiBaseUrl]
  */
 function setupIpc(deps) {
-  const {ipcMain, clipboard, getMainWindow, classify, onVerdict, getApiBaseUrl} = deps;
+  const { ipcMain, clipboard, getMainWindow, classify, onVerdict, getApiBaseUrl } = deps;
   ipcMain.handle(IPC_CHANNELS.classifyClipboard, async () => {
-    const text = (clipboard.readText() || '').trim();
+    const text = (clipboard.readText() || "").trim();
     if (text.length === 0) {
-      return {error: 'clipboard is empty'};
+      return { error: "clipboard is empty" };
     }
-    const baseUrl = getApiBaseUrl ? getApiBaseUrl() : (process.env.BANANA_API_BASE_URL || '');
+    const baseUrl = getApiBaseUrl ? getApiBaseUrl() : process.env.BANANA_API_BASE_URL || "";
     if (!baseUrl) {
-      return {error: 'BANANA_API_BASE_URL is not set'};
+      return { error: "BANANA_API_BASE_URL is not set" };
     }
     try {
       const verdict = await classify(text, baseUrl);
@@ -55,9 +55,9 @@ function setupIpc(deps) {
         win.webContents.send(IPC_CHANNELS.verdict, verdict);
       }
       if (onVerdict) onVerdict(verdict);
-      return {verdict};
+      return { verdict };
     } catch (err) {
-      return {error: err && err.message ? err.message : String(err)};
+      return { error: err && err.message ? err.message : String(err) };
     }
   });
 }
@@ -68,9 +68,9 @@ function setupIpc(deps) {
  */
 async function defaultClassify(text, baseUrl) {
   const response = await fetch(`${baseUrl}/ml/ensemble/embedding`, {
-    method: 'POST',
-    headers: {'content-type': 'application/json'},
-    body: JSON.stringify({inputJson: JSON.stringify({text})}),
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ inputJson: JSON.stringify({ text }) }),
   });
   if (!response.ok) {
     throw new Error(`request failed (${response.status})`);
@@ -89,10 +89,14 @@ async function defaultClassify(text, baseUrl) {
  * @param {(list: object[]) => void} deps.onHistoryUpdate
  */
 function setupHistoryIpc(deps) {
-  const {ipcMain, onHistoryUpdate} = deps;
+  const { ipcMain, onHistoryUpdate } = deps;
   ipcMain.on(IPC_CHANNELS.historyUpdate, (_event, payload) => {
     if (Array.isArray(payload)) {
-      try { onHistoryUpdate(payload); } catch { /* swallow */ }
+      try {
+        onHistoryUpdate(payload);
+      } catch {
+        /* swallow */
+      }
     }
   });
 }
@@ -107,12 +111,16 @@ function setupHistoryIpc(deps) {
  * @param {(verdict: object) => void} deps.onDrainSuccess
  */
 function setupDrainIpc(deps) {
-  const {ipcMain, onDrainSuccess} = deps;
+  const { ipcMain, onDrainSuccess } = deps;
   ipcMain.on(IPC_CHANNELS.drainSuccess, (_event, payload) => {
-    if (payload && typeof payload === 'object') {
-      try { onDrainSuccess(payload); } catch { /* swallow */ }
+    if (payload && typeof payload === "object") {
+      try {
+        onDrainSuccess(payload);
+      } catch {
+        /* swallow */
+      }
     }
   });
 }
 
-module.exports = {IPC_CHANNELS, setupIpc, defaultClassify, setupHistoryIpc, setupDrainIpc};
+module.exports = { IPC_CHANNELS, setupIpc, defaultClassify, setupHistoryIpc, setupDrainIpc };

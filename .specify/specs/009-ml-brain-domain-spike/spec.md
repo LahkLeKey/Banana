@@ -1,8 +1,8 @@
 # Feature Specification: ML Brain Domain SPIKE
 
-**Feature Branch**: `[009-ml-brain-domain-spike]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[009-ml-brain-domain-spike]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "a spike spec after that for left brain, right brain, full brain ml domains for binary regression and transformer, you will need to decide what is the left and right brain, the transformer is the full brain"
 
 ## In Scope *(mandatory)*

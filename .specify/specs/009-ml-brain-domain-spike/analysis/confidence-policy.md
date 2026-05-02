@@ -1,6 +1,6 @@
 # Confidence and Uncertainty Policy: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Define how confidence, uncertainty, and evidence gaps are handled in all SPIKE analysis artifacts.
 
 ## Policy Statements
@@ -52,7 +52,7 @@ All confidence levels in this SPIKE are planning-grade, not production-measureme
 
 In artifact tables, append `[H]`, `[M]`, or `[L]` after a score where confidence level is explicitly tracked.
 
-Example: `High [H]` — score is high confidence.  
+Example: `High [H]` — score is high confidence.
 Example: `Medium [M]` — score is medium confidence, may be refined by implementation evidence.
 
 ## Uncertainty Log

@@ -1,4 +1,5 @@
 """Tests for scripts/neuro/reward-modulator.py (feature 050 T004)."""
+
 from __future__ import annotations
 
 import importlib.util

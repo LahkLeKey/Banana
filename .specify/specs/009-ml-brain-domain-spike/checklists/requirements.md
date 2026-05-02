@@ -1,7 +1,7 @@
 # Specification Quality Checklist: ML Brain Domain SPIKE
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning  
-**Created**: 2026-04-26  
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-04-26
 **Feature**: [.specify/specs/009-ml-brain-domain-spike/spec.md](../spec.md)
 
 ## Content Quality

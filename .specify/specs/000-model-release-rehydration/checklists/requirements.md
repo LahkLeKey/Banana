@@ -1,7 +1,7 @@
 # Specification Quality Checklist: Baseline Rehydration - Model Release Stability
 
-**Purpose**: Validate spec quality for pre-sprint model-release realignment checks  
-**Created**: 2026-04-25  
+**Purpose**: Validate spec quality for pre-sprint model-release realignment checks
+**Created**: 2026-04-25
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality

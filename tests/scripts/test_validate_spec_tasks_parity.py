@@ -1,4 +1,5 @@
 """Tests for scripts/validate-spec-tasks-parity.py"""
+
 from __future__ import annotations
 
 import importlib.util
@@ -53,7 +54,9 @@ def test_clean_feature_has_no_drift(tmp_path: Path) -> None:
 
 
 def test_drift_detected_when_task_missing(tmp_path: Path) -> None:
-    drifted_tasks = "\n".join(CLEAN_TASKS.splitlines()[:-1])  # drop coverage script line
+    drifted_tasks = "\n".join(
+        CLEAN_TASKS.splitlines()[:-1]
+    )  # drop coverage script line
     d = _write_feature(tmp_path, CLEAN_SPEC, drifted_tasks)
     missing = vstp.check_feature(d)
     assert len(missing) == 1
@@ -85,7 +88,6 @@ def test_inline_backtick_command_in_success_criteria(tmp_path: Path) -> None:
     assert len(vstp.check_feature(d_missing)) == 1
     d_present = _write_feature(tmp_path / "pres", spec_md, tasks_md_present)
     assert vstp.check_feature(d_present) == []
-
 
 
 def test_flags_stripped_for_matching(tmp_path: Path) -> None:
