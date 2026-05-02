@@ -1,0 +1,30 @@
+name: banana-devcontainer
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: sleep infinity
+    environment:
+      BANANA_NATIVE_PATH: /workspace/out/native/linux-x86_64/libbanana_native.so
+      BANANA_JWT_SECRET: dev-only-not-for-production
+      DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
+      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: cinterop
+      POSTGRES_PASSWORD: cinterop
+      POSTGRES_DB: cinterop
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinterop -d cinterop"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

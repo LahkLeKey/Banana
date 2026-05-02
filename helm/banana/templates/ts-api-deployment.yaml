@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "banana.fullname" . }}-ts-api
+  labels:
+    {{- include "banana.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ts-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "banana.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ts-api
+  template:
+    metadata:
+      labels:
+        {{- include "banana.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ts-api
+    spec:
+      containers:
+        - name: ts-api
+          image: "{{ .Values.tsApi.image.repository }}:{{ .Values.tsApi.image.tag }}"
+          imagePullPolicy: {{ .Values.tsApi.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tsApi.port }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "{{ .Values.tsApi.port }}"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: banana-pg-secret
+                  key: databaseUrl
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10

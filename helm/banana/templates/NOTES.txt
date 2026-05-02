@@ -1,0 +1,23 @@
+Banana has been deployed!
+
+API (ASP.NET) is running on port {{ .Values.api.port }} inside the cluster.
+TS API (Fastify) is running on port {{ .Values.tsApi.port }} inside the cluster.
+
+To access the API from outside the cluster, run:
+  kubectl port-forward svc/{{ include "banana.fullname" . }}-api {{ .Values.api.port }}:{{ .Values.api.port }}
+
+To access the TS API from outside the cluster, run:
+  kubectl port-forward svc/{{ include "banana.fullname" . }}-ts-api {{ .Values.tsApi.port }}:{{ .Values.tsApi.port }}
+
+{{- if .Values.ingress.enabled }}
+The application is exposed via Ingress at: http://{{ .Values.ingress.host }}
+{{- else }}
+Ingress is disabled. Enable it in values.yaml to expose the app externally.
+{{- end }}
+
+{{- if .Values.hpa.enabled }}
+HPA is enabled: {{ .Values.hpa.minReplicas }}–{{ .Values.hpa.maxReplicas }} replicas targeting {{ .Values.hpa.targetCPUUtilizationPercentage }}% CPU.
+{{- end }}
+
+Ensure the `banana-pg-secret` Kubernetes Secret exists with keys `connection` and `databaseUrl`
+before pods will become healthy.
