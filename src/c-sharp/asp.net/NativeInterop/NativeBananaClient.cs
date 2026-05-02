@@ -135,4 +135,19 @@ public sealed class NativeBananaClient : INativeBananaClient
         NativeMethods.Free(ptr);
         return str;
     }
+
+    /// <inheritdoc/>
+    public NativeStatusCode GetNativeVersion(out int major, out int minor)
+    {
+        try
+        {
+            return (NativeStatusCode)NativeMethods.NativeVersion(out major, out minor);
+        }
+        catch (Exception ex) when (IsInteropUnavailable(ex))
+        {
+            major = 0;
+            minor = 0;
+            return NativeStatusCode.NativeUnavailable;
+        }
+    }
 }

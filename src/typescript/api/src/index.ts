@@ -10,7 +10,7 @@ import {registerTrainingWorkbenchRoutes} from './domains/training/routes.ts';
 import {registerCorpusRoutes} from './routes/corpus.ts';
 import {registerHealthRoutes} from './routes/health.ts';
 import {registerRipenessRoutes} from './routes/ripeness.ts';
-import {registerAuthRoutes} from './middleware/auth.ts';
+import {registryRoutes} from './routes/registry.ts';
 
 const app = Fastify({logger: true});
 
@@ -43,7 +43,7 @@ await registerRipenessRoutes(app);
 await registerNotBananaRoutes(app);
 await registerChatRoutes(app);
 await registerTrainingWorkbenchRoutes(app);
-await registerAuthRoutes(app);
+await app.register(registryRoutes);
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? '0.0.0.0';
