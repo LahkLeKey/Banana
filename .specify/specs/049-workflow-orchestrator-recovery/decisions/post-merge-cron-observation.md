@@ -1,10 +1,10 @@
 # Decision Log: Post-Merge Cron Observation
 
-**Spec**: [049-workflow-orchestrator-recovery](../spec.md)  
-**Task**: T056 — SC-001, SC-002  
-**PR merged**: #465 — `049-workflow-orchestrator-recovery` → `main`  
-**Merge timestamp**: 2026-05-02T02:06:09Z  
-**Merge commit**: `17bbf263d302a11b0b0d589f544360a58ee062cc`  
+**Spec**: [049-workflow-orchestrator-recovery](../spec.md)
+**Task**: T056 — SC-001, SC-002
+**PR merged**: #465 — `049-workflow-orchestrator-recovery` → `main`
+**Merge timestamp**: 2026-05-02T02:06:09Z
+**Merge commit**: `17bbf263d302a11b0b0d589f544360a58ee062cc`
 **Observed by**: workflow-agent (autonomous drain session 2026-05-02)
 
 ---
