@@ -14,12 +14,14 @@
         "@banana/resilience": "file:../shared/resilience",
         "@banana/ui": "file:../shared/ui",
         "@radix-ui/react-slot": "^1.1.0",
+        "@tanstack/react-query": "^5.59.0",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.0",
         "lucide-react": "^0.439.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "tailwind-merge": "^2.5.0"
+        "tailwind-merge": "^2.5.0",
+        "zustand": "^4.5.5"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^15.0.0",
