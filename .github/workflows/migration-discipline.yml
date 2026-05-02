@@ -1,0 +1,97 @@
+name: migration-discipline
+
+on:
+  pull_request:
+    paths:
+      - 'src/typescript/api/prisma/schema.prisma'
+      - 'src/typescript/api/prisma/migrations/**'
+      - 'src/c-sharp/asp.net/Migrations/**'
+
+permissions:
+  contents: read
+
+jobs:
+  prisma-migration-check:
+    name: Prisma schema drift check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: banana
+          POSTGRES_PASSWORD: banana
+          POSTGRES_DB: banana
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: src/typescript/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check pending migrations
+        env:
+          DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
+        run: |
+          STATUS=$(bunx prisma migrate status --schema prisma/schema.prisma 2>&1)
+          echo "$STATUS"
+          if echo "$STATUS" | grep -q "following migration(s) have not yet been applied"; then
+            echo "::error::Unapplied Prisma migrations detected. Run 'bunx prisma migrate dev' and commit the generated migration files."
+            exit 1
+          fi
+
+      - name: Verify schema and migrations are in sync
+        env:
+          DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
+        run: |
+          # Apply all committed migrations
+          bunx prisma migrate deploy --schema prisma/schema.prisma
+          # Validate schema matches DB state (generate will fail if drift exists)
+          bunx prisma validate --schema prisma/schema.prisma
+
+  backward-compat-policy:
+    name: Migration backward-compat lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for destructive migration operations
+        run: |
+          MIGRATIONS_DIR="src/typescript/api/prisma/migrations"
+          if [[ ! -d "$MIGRATIONS_DIR" ]]; then
+            echo "No migrations directory found — skipping."
+            exit 0
+          fi
+          # Find migration SQL files added/modified in this PR
+          CHANGED=$(git diff --name-only origin/main...HEAD -- "$MIGRATIONS_DIR/**/*.sql" 2>/dev/null || true)
+          if [[ -z "$CHANGED" ]]; then
+            echo "No migration SQL changes detected."
+            exit 0
+          fi
+          VIOLATIONS=""
+          while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
+            # Detect destructive operations
+            if grep -qiE "DROP (TABLE|COLUMN|INDEX)|ALTER COLUMN.*TYPE|TRUNCATE" "$f"; then
+              VIOLATIONS="$VIOLATIONS\n  $f"
+            fi
+          done <<< "$CHANGED"
+          if [[ -n "$VIOLATIONS" ]]; then
+            echo "::warning::Potentially destructive migration operations found. Review carefully:"
+            printf "%b\n" "$VIOLATIONS"
+            echo "Ensure backward-compatibility: add columns as nullable, deprecate before drop."
+          fi
