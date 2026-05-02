@@ -6,8 +6,11 @@ import Fastify from 'fastify';
 
 import {registerChatRoutes} from './domains/chat/routes.ts';
 import {registerNotBananaRoutes} from './domains/not-banana/routes.ts';
+import {registerLabelQueueRoutes} from './domains/training/label-queue.ts';
 import {registerTrainingWorkbenchRoutes} from './domains/training/routes.ts';
+import {registerAbRoutes} from './routes/ab.ts';
 import {registerCorpusRoutes} from './routes/corpus.ts';
+import {registerDriftRoutes} from './routes/drift.ts';
 import {registerHealthRoutes} from './routes/health.ts';
 import {registerRipenessRoutes} from './routes/ripeness.ts';
 import {registryRoutes} from './routes/registry.ts';
@@ -43,7 +46,10 @@ await registerRipenessRoutes(app);
 await registerNotBananaRoutes(app);
 await registerChatRoutes(app);
 await registerTrainingWorkbenchRoutes(app);
+await registerLabelQueueRoutes(app);
 await app.register(registryRoutes);
+await registerDriftRoutes(app);
+await registerAbRoutes(app);
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? '0.0.0.0';

@@ -1,0 +1,39 @@
+name: "Validate Specs 076+077+078+080+097"
+on:
+  push:
+    branches:
+      - sprint3-076-077-078-080-097
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-typescript:
+    name: TypeScript typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install shared UI deps
+        working-directory: src/typescript/shared/ui
+        run: bun install
+      - name: Install API deps
+        working-directory: src/typescript/api
+        run: bun install
+      - name: Typecheck API
+        working-directory: src/typescript/api
+        run: bunx tsc --noEmit
+
+  validate-dotnet:
+    name: .NET build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build ASP.NET API
+        working-directory: src/c-sharp/asp.net
+        run: dotnet build --configuration Release --no-restore || dotnet restore && dotnet build --configuration Release

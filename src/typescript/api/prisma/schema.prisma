@@ -72,3 +72,34 @@ model ActiveModelRelease {
     release   ModelRelease @relation(fields: [releaseId], references: [id])
     updatedAt DateTime    @updatedAt
 }
+
+// === Active Learning Queue (spec 077) ===
+model label_request {
+    id                 String    @id @default(uuid())
+    text               String
+    model              String
+    current_prediction Json?
+    uncertainty        Float?
+    status             String    @default("queued")
+    label              String?
+    labelled_by        String?
+    labelled_at        DateTime?
+    created_at         DateTime  @default(now())
+
+    @@index([status])
+    @@index([model])
+}
+
+// === Training Event Store (spec 097) ===
+model training_event {
+    id         String   @id @default(uuid())
+    event_type String
+    model      String?
+    payload    Json
+    actor      String?
+    created_at DateTime @default(now())
+
+    @@index([event_type])
+    @@index([model])
+    @@index([created_at])
+}
