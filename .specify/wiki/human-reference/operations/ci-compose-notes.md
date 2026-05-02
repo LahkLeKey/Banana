@@ -1,8 +1,10 @@
+<!-- breadcrumb: Operations > CI and Compose Notes -->
+
 # CI and Compose Notes
 
-> Read the [Wiki Home](Home.md) for more details.
+> [Home](../Home.md) › [Operations](README.md) › CI and Compose Notes
 
-Related pages: [Build, Run, and Test Commands](Build-Run-Test-Commands.md)
+Related pages: [Build, Run, and Test Commands](../getting-started/build-run-test-commands.md)
 
 Primary workflow:
 
@@ -11,32 +13,32 @@ Primary workflow:
 ## Workflow Jobs
 
 1. `native-c-tests-coverage`
-	- Starts PostgreSQL service.
-	- Runs `scripts/run-native-c-tests-with-coverage.sh`.
-	- Enforces native 80 percent line-coverage gate.
-	- Uploads `.artifacts/native-c` artifacts.
+        - Starts PostgreSQL service.
+        - Runs `scripts/run-native-c-tests-with-coverage.sh`.
+        - Enforces native 80 percent line-coverage gate.
+        - Uploads `.artifacts/native-c` artifacts.
 
 2. `dotnet-tests-coverage`
-	- Depends on native coverage job.
-	- Builds native library.
-	- Runs unit and integration tests with coverage.
-	- Generates report in `.artifacts/coverage/report`.
-	- Uploads `test-results` and `coverage-report` artifacts.
+        - Depends on native coverage job.
+        - Builds native library.
+        - Runs unit and integration tests with coverage.
+        - Generates report in `.artifacts/coverage/report`.
+        - Uploads `test-results` and `coverage-report` artifacts.
 
 3. `compose-tests`
-	- Runs Docker Compose tests profile using `test-all` container.
+        - Runs Docker Compose tests profile using `test-all` container.
 
 4. `compose-runtime`
-	- Runs runtime profile and validates `http://localhost:8080/health`.
+        - Runs runtime profile and validates `http://localhost:8080/health`.
 
 5. `compose-electron`
-	- Runs electron profile smoke path.
+        - Runs electron profile smoke path.
 
 ## Local-Only Runtime Channels
 
 - Mobile emulator launchers are currently local runtime paths, not CI jobs:
-	- `scripts/launch-container-channels-with-wsl2-mobile.sh`
-	- `scripts/compose-mobile-emulators-wsl2.sh`
+        - `scripts/launch-container-channels-with-wsl2-mobile.sh`
+        - `scripts/compose-mobile-emulators-wsl2.sh`
 - These launchers reuse the compose `apps` profile, then open Android/iOS preview channels through Ubuntu WSL2/WSLg.
 
 ## Compose Profiles In Use

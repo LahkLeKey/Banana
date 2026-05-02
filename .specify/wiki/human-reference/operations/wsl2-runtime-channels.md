@@ -1,33 +1,35 @@
-# WSL2 Mobile Runtime Channels
+<!-- breadcrumb: Operations > WSL2 Runtime Channels -->
 
-> Read the [Wiki Home](Home.md) for more details.
+# WSL2 Runtime Channels
 
-Related pages: [Build, Run, and Test Commands](Build-Run-Test-Commands.md), [CI and Compose Notes](CI-Compose-Notes.md)
+> [Home](../Home.md) › [Operations](README.md) › WSL2 Runtime Channels
 
-This page documents how Banana launches mobile runtime channels on Windows + Ubuntu WSL2.
+Related pages: [Build, Run, and Test Commands](../getting-started/build-run-test-commands.md), [CI and Compose Notes](ci-compose-notes.md)
+
+This page documents how Banana launches mobile and desktop runtime channels on Windows + Ubuntu WSL2.
 
 ## Launch Entry Points
 
-Windows-shell launcher:
+**Desktop channel** (Windows-shell launcher):
+
+```bash
+bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-electron.sh'
+```
+
+**Mobile channel** (Windows-shell launcher):
 
 ```bash
 bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-mobile.sh'
 ```
 
-Ubuntu launcher (called by the Windows launcher):
+Ubuntu launchers (called by the Windows launchers):
 
 ```bash
+scripts/compose-electron-desktop-wsl2.sh
 scripts/compose-mobile-emulators-wsl2.sh
-
-Canonical mobile profile commands (inside Ubuntu):
-
-```bash
-bash scripts/compose-run-profile.sh --profile mobile --action up --service android-emulator
-bash scripts/compose-profile-ready.sh --profile mobile --service android-emulator
-```
 ```
 
-## What The Launcher Does
+## What The Mobile Launcher Does
 
 1. Stops and restarts the compose apps stack via `scripts/compose-apps-down.sh` and `scripts/compose-apps.sh`.
 2. Resolves Ubuntu distro in this order:
@@ -43,6 +45,7 @@ bash scripts/compose-profile-ready.sh --profile mobile --service android-emulato
 
 - Android emulator is supported on Ubuntu WSL2/WSLg when Android SDK tools and at least one AVD are installed.
 - Apple iOS Simulator is macOS + Xcode only. Ubuntu path uses iOS-style web preview fallback.
+- Electron desktop channel renders via WSLg.
 
 ## Required Prerequisites
 
@@ -71,4 +74,7 @@ bash scripts/compose-profile-ready.sh --profile mobile --service android-emulato
 - `No Android AVD was found`:
   - Create an AVD in Android Studio Device Manager or with `avdmanager`.
 - React Native endpoint not reachable:
-  - Check compose app startup and verify `http://localhost:19006`.
+  - Verify compose apps stack is running and `http://localhost:19006` is up.
+- Docker socket not found in Ubuntu:
+  - Enable Docker Desktop WSL integration for your Ubuntu distro.
+  - Exit code 42 means preflight failure — follow the displayed remediation.
