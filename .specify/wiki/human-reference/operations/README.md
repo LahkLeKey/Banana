@@ -12,6 +12,7 @@ Runbooks, CI notes, and runtime channel documentation.
 | [WSL2 Runtime Channels](wsl2-runtime-channels.md) | Mobile and desktop channel launchers |
 | [CI Runtime Compatibility](ci-runtime-compatibility.md) | Node version and Actions runtime guardrails |
 | [Compose CI Stabilization](ci-compose-stabilization.md) | Failure evidence and triage artifacts |
+| [Disaster Recovery](disaster-recovery.md) | RTO/RPO targets, backup schedule, restore procedure |
 
 ## Fast Triage Path
 
