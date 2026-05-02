@@ -1633,10 +1633,10 @@ jobs:
         if: steps.detect_e2e.outputs.exists != 'true'
         run: |
           mkdir -p .artifacts/e2e/test-results
-          cat > .artifacts/e2e/test-results/e2e-smoke.skipped.txt <<'EOF'
-          E2E test project not found at tests/e2e/Banana.E2eTests.csproj.
-          Smoke runtime bootstrap and payload capture still executed.
-          EOF
+          printf '%s\n%s\n' \
+            'E2E test project not found at tests/e2e/Banana.E2eTests.csproj.' \
+            'Smoke runtime bootstrap and payload capture still executed.' \
+            > .artifacts/e2e/test-results/e2e-smoke.skipped.txt
 
       - name: Capture smoke API payloads
         if: always()
