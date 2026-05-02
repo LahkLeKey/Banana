@@ -66,7 +66,7 @@
 
 ## T009 — Validate spec 104 passes quality gate
 
-**Status**: [ ] Not started
+**Status**: ✅ Complete
 **File(s)**: `.specify/specs/104-speckit-bootstrapping-improvement/spec.md`
 **Acceptance**: `bash scripts/validate-spec-quality.sh --spec .specify/specs/104-speckit-bootstrapping-improvement/spec.md` exits 0.
 **Command**:
@@ -78,6 +78,6 @@ bash scripts/validate-spec-quality.sh --spec .specify/specs/104-speckit-bootstra
 
 ## T010 — Smoke test: dry-run with --description
 
-**Status**: [ ] Not started
+**Status**: ✅ Complete
 **File(s)**: `.specify/scripts/bash/create-new-feature.sh`
 **Acceptance**: Running `create-new-feature.sh --dry-run --description "improve api auth flow" "Test feature"` completes without error and outputs a branch name containing the detected domain.

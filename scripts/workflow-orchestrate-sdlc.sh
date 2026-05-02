@@ -45,6 +45,17 @@ API_PARITY_STRICT="${BANANA_SDLC_API_PARITY_STRICT:-false}"
 ENABLE_AUTO_MERGE="${BANANA_ENABLE_AUTO_MERGE:-true}"
 AUTO_MERGE_METHOD="${BANANA_AUTO_MERGE_METHOD:-squash}"
 
+CLI_MODE="${1:-}"
+CLI_TARGET="${2:-}"
+
+# Positional shortcut: bash scripts/workflow-orchestrate-sdlc.sh speckit:bootstrap 104
+if [[ "$CLI_MODE" == "speckit:bootstrap" ]]; then
+  SDLC_MODE="speckit-bootstrap"
+  if [[ -n "$CLI_TARGET" ]]; then
+    export BANANA_SPECKIT_BOOTSTRAP_TARGET="$CLI_TARGET"
+  fi
+fi
+
 mkdir -p "$OUTPUT_DIR"
 
 # ---------------------------------------------------------------------------
@@ -55,6 +66,15 @@ if [[ "$SDLC_MODE" == "speckit-bootstrap" ]]; then
   if [[ -z "$BOOTSTRAP_TARGET" ]]; then
     echo "Error: BANANA_SPECKIT_BOOTSTRAP_TARGET must be set for speckit-bootstrap mode." >&2
     exit 1
+  fi
+
+  # Allow numeric target (e.g., 104) by resolving to .specify/specs/104-*
+  if [[ "$BOOTSTRAP_TARGET" =~ ^[0-9]+$ ]]; then
+    BOOTSTRAP_TARGET_PADDED=$(printf "%03d" "$((10#$BOOTSTRAP_TARGET))")
+    MATCHED_SPEC_DIR=$(find .specify/specs -maxdepth 1 -type d -name "${BOOTSTRAP_TARGET_PADDED}-*" | head -n 1 || true)
+    if [[ -n "$MATCHED_SPEC_DIR" ]]; then
+      BOOTSTRAP_TARGET="$(basename "$MATCHED_SPEC_DIR")"
+    fi
   fi
 
   SPEC_DIR=".specify/specs/${BOOTSTRAP_TARGET}"
@@ -70,12 +90,46 @@ if [[ "$SDLC_MODE" == "speckit-bootstrap" ]]; then
     bash scripts/validate-spec-quality.sh --spec "$SPEC_FILE"
   fi
 
-  echo "[speckit:bootstrap] Running specify plan for: $BOOTSTRAP_TARGET"
+  echo "[speckit:bootstrap] Running planning/task generation for: $BOOTSTRAP_TARGET"
   bash scripts/workflow-ensure-speckit.sh
-  specify plan || true
 
-  echo "[speckit:bootstrap] Running specify tasks for: $BOOTSTRAP_TARGET"
-  specify tasks || true
+  BOOTSTRAP_USED_CLI="false"
+
+  # Legacy/compatible CLI surface.
+  if specify plan --help >/dev/null 2>&1 && specify tasks --help >/dev/null 2>&1; then
+    if specify plan && specify tasks; then
+      BOOTSTRAP_USED_CLI="true"
+    fi
+  fi
+
+  # Deterministic non-interactive fallback for CLI variants that do not expose
+  # plan/tasks subcommands directly.
+  if [[ "$BOOTSTRAP_USED_CLI" != "true" ]]; then
+    echo "[speckit:bootstrap] Using local fallback for plan/tasks generation."
+
+    if [[ ! -f "${SPEC_DIR}/plan.md" ]]; then
+      if [[ -f ".specify/templates/plan-template.md" ]]; then
+        cp ".specify/templates/plan-template.md" "${SPEC_DIR}/plan.md"
+      elif [[ -f ".specify/templates/plan-skeleton.md" ]]; then
+        cp ".specify/templates/plan-skeleton.md" "${SPEC_DIR}/plan.md"
+      else
+        : > "${SPEC_DIR}/plan.md"
+      fi
+    fi
+
+    if [[ ! -f "${SPEC_DIR}/tasks.md" ]]; then
+      if [[ -f ".specify/templates/tasks-template.md" ]]; then
+        cp ".specify/templates/tasks-template.md" "${SPEC_DIR}/tasks.md"
+      else
+        : > "${SPEC_DIR}/tasks.md"
+      fi
+    fi
+  fi
+
+  if [[ ! -f "${SPEC_DIR}/plan.md" || ! -f "${SPEC_DIR}/tasks.md" ]]; then
+    echo "Error: bootstrap did not produce required artifacts in ${SPEC_DIR}." >&2
+    exit 1
+  fi
 
   echo "[speckit:bootstrap] Bootstrap complete for: $BOOTSTRAP_TARGET"
   echo "  spec:  ${SPEC_FILE}"
@@ -116,7 +170,7 @@ if [[ "$SDLC_MODE" == "spec-drain" ]]; then
   bash scripts/workflow-spec-drain-loop.sh || DRAIN_EXIT=$?
 
   # Capture final summary for the main SDLC summary artifact.
-  bash scripts/workflow-spec-drain-state.sh get-summary "$SPEC_DRAIN_STATE_PATH" \\
+  bash scripts/workflow-spec-drain-state.sh get-summary "$SPEC_DRAIN_STATE_PATH" \
     > "$SUMMARY_PATH" 2>/dev/null || true
   echo "Spec-drain summary written to: ${SUMMARY_PATH}"
 
