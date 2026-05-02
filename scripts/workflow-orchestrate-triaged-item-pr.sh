@@ -16,6 +16,8 @@ COMMIT_MESSAGE="${BANANA_COMMIT_MESSAGE:-chore(triage): automated triaged change
 PR_TITLE_OVERRIDE="${BANANA_PR_TITLE:-}"
 PR_BODY_OVERRIDE="${BANANA_PR_BODY:-}"
 DRAFT_PR="${BANANA_DRAFT_PR:-true}"
+ENABLE_AUTO_MERGE="${BANANA_ENABLE_AUTO_MERGE:-false}"
+AUTO_MERGE_METHOD="${BANANA_AUTO_MERGE_METHOD:-squash}"
 PR_LABELS="${BANANA_PR_LABELS:-automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven}"
 PR_REVIEWERS="${BANANA_PR_REVIEWERS:-}"
 LOCAL_DRY_RUN="${BANANA_LOCAL_DRY_RUN:-false}"
@@ -602,6 +604,19 @@ if [[ ${#parsed_reviewers[@]} -gt 0 ]]; then
       echo "::warning::Failed to request reviewer '$reviewer' for PR #$pr_number."
     fi
   done
+fi
+
+if [[ "$ENABLE_AUTO_MERGE" == "true" ]]; then
+  merge_method_flag="--squash"
+  case "$AUTO_MERGE_METHOD" in
+    merge) merge_method_flag="--merge" ;;
+    rebase) merge_method_flag="--rebase" ;;
+    squash|*) merge_method_flag="--squash" ;;
+  esac
+
+  if ! gh pr merge "$pr_number" --auto "$merge_method_flag" >/dev/null 2>&1; then
+    echo "::warning::Failed to enable auto-merge for PR #$pr_number."
+  fi
 fi
 
 echo "Triaged PR ready for review: $pr_url"

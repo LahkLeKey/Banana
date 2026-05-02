@@ -1,0 +1,97 @@
+name: Orchestrate Autonomous Spec Drain
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdlc_id:
+        description: SDLC orchestration identifier for this drain run
+        required: false
+        default: "autonomous-spec-drain"
+      autonomy_stop:
+        description: Emergency stop flag (set true to stop immediately)
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      spec_drain_state_path:
+        description: Optional explicit path for checkpoint state JSON
+        required: false
+        default: ""
+      auto_debug_ci:
+        description: Inspect failed CI runs and scaffold follow-up specs
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      ci_idea_budget:
+        description: Maximum number of CI follow-up specs to scaffold per run
+        required: false
+        default: "3"
+      enable_auto_merge:
+        description: Enable auto-merge for generated PRs
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      auto_merge_method:
+        description: Auto-merge method (squash, merge, rebase)
+        required: false
+        default: "squash"
+        type: choice
+        options:
+          - "squash"
+          - "merge"
+          - "rebase"
+      validate_ai_contracts:
+        description: Validate AI customization and wiki contracts before run
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+jobs:
+  spec-drain:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
+      BANANA_SDLC_ID: ${{ github.event.inputs.sdlc_id || 'autonomous-spec-drain' }}
+      BANANA_SDLC_MODE: spec-drain
+      BANANA_AUTONOMY_STOP: ${{ github.event.inputs.autonomy_stop || 'false' }}
+      BANANA_SDLC_DRAIN_STATE_PATH: ${{ github.event.inputs.spec_drain_state_path || '' }}
+      BANANA_SDLC_AUTO_DEBUG_CI: ${{ github.event.inputs.auto_debug_ci || 'true' }}
+      BANANA_SDLC_AUTO_SCAFFOLD_SPECS: ${{ github.event.inputs.auto_debug_ci || 'true' }}
+      BANANA_SDLC_CI_IDEA_BUDGET: ${{ github.event.inputs.ci_idea_budget || '3' }}
+      BANANA_ENABLE_AUTO_MERGE: ${{ github.event.inputs.enable_auto_merge || 'true' }}
+      BANANA_AUTO_MERGE_METHOD: ${{ github.event.inputs.auto_merge_method || 'squash' }}
+      BANANA_SDLC_VALIDATE_AI_CONTRACTS: ${{ github.event.inputs.validate_ai_contracts || 'true' }}
+      BANANA_SDLC_ENABLE_WIKI_SYNC: 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run autonomous spec-drain mode
+        run: |
+          bash scripts/workflow-orchestrate-sdlc.sh
+
+      - name: Upload orchestration artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spec-drain-summary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/sdlc-orchestration/
+          if-no-files-found: warn
