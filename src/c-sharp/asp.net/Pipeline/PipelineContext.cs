@@ -21,6 +21,12 @@ public sealed class PipelineContext
     /// the ensemble pipeline.
     /// </summary>
     public EnsembleWorkingVerdict? Ensemble { get; set; }
+
+    /// <summary>Spec 080 — A/B variant tag set by AbVariantStep. "A" or "B".</summary>
+    public string? AbVariant { get; set; }
+
+    /// <summary>Spec 078/080 — request correlation ID for sampling and variant assignment.</summary>
+    public string? CorrelationId { get; set; }
 }
 
 /// <summary>
