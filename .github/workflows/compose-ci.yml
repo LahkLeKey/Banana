@@ -26,7 +26,7 @@ jobs:
         run: |
           bash scripts/check-workflow-runtime-deprecations.sh \
             --workflow .github/workflows/compose-ci.yml \
-            --exceptions .github/workflows/runtime-compatibility-exceptions.yml \
+            --exceptions .github/runtime-compatibility-exceptions.yml \
             --output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.json \
             --text-output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt
 
