@@ -4,6 +4,7 @@
 Usage: python3 ci-extract-xml-coverage.py <coverage.xml>
 Prints a float percentage like "87.50" to stdout.
 """
+
 import sys
 import xml.etree.ElementTree as ET
 

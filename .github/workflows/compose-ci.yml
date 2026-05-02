@@ -26,7 +26,7 @@ jobs:
         run: |
           bash scripts/check-workflow-runtime-deprecations.sh \
             --workflow .github/workflows/compose-ci.yml \
-            --exceptions .github/workflows/runtime-compatibility-exceptions.yml \
+            --exceptions .github/runtime-compatibility-exceptions.yml \
             --output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.json \
             --text-output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt
 
@@ -484,9 +484,7 @@ jobs:
           mkdir -p .artifacts/coverage/unit-report
 
           if [[ ! -f .artifacts/coverage/unit-report/Summary.txt ]]; then
-            cat > .artifacts/coverage/unit-report/Summary.txt <<'EOF'
-            Unit coverage summary was not produced because an earlier stage failed.
-            EOF
+            printf '%s\n' "Unit coverage summary was not produced because an earlier stage failed." > .artifacts/coverage/unit-report/Summary.txt
           fi
 
           if [[ -z "$(find .artifacts/test-results/unit -type f -print -quit 2>/dev/null)" ]]; then
@@ -726,20 +724,20 @@ jobs:
           mkdir -p .artifacts/test-results/integration
           mkdir -p .artifacts/coverage/integration-report
 
-          cat > .artifacts/coverage/integration-report/Summary.txt <<'EOF'
-          Integration test project not found at tests/integration/Banana.IntegrationTests.csproj.
-          Coverage generation was skipped for this job.
-          EOF
-
-          cat > .artifacts/coverage/integration-report/integration-line-rate-gate.json <<'EOF'
           {
-            "schema_version": 1,
-            "gate": "integration-line-rate",
-            "passed": true,
-            "skipped": true,
-            "reason": "integration_project_missing"
-          }
-          EOF
+            printf '%s\n' "Integration test project not found at tests/integration/Banana.IntegrationTests.csproj."
+            printf '%s\n' "Coverage generation was skipped for this job."
+          } > .artifacts/coverage/integration-report/Summary.txt
+
+          {
+            printf '%s\n' '{'
+            printf '%s\n' '  "schema_version": 1,'
+            printf '%s\n' '  "gate": "integration-line-rate",'
+            printf '%s\n' '  "passed": true,'
+            printf '%s\n' '  "skipped": true,'
+            printf '%s\n' '  "reason": "integration_project_missing"'
+            printf '%s\n' '}'
+          } > .artifacts/coverage/integration-report/integration-line-rate-gate.json
 
           : > .artifacts/coverage/integration-report/uncovered-lines.txt
           : > .artifacts/test-results/integration/.placeholder
@@ -818,21 +816,19 @@ jobs:
           mkdir -p .artifacts/coverage/integration-report
 
           if [[ ! -f .artifacts/coverage/integration-report/Summary.txt ]]; then
-            cat > .artifacts/coverage/integration-report/Summary.txt <<'EOF'
-            Integration coverage summary was not produced because an earlier stage failed.
-            EOF
+            printf '%s\n' "Integration coverage summary was not produced because an earlier stage failed." > .artifacts/coverage/integration-report/Summary.txt
           fi
 
           if [[ ! -f .artifacts/coverage/integration-report/integration-line-rate-gate.json ]]; then
-            cat > .artifacts/coverage/integration-report/integration-line-rate-gate.json <<'EOF'
             {
-              "schema_version": 1,
-              "gate": "integration-line-rate",
-              "passed": false,
-              "skipped": false,
-              "reason": "integration_artifacts_missing"
-            }
-            EOF
+              printf '%s\n' '{'
+              printf '%s\n' '  "schema_version": 1,'
+              printf '%s\n' '  "gate": "integration-line-rate",'
+              printf '%s\n' '  "passed": false,'
+              printf '%s\n' '  "skipped": false,'
+              printf '%s\n' '  "reason": "integration_artifacts_missing"'
+              printf '%s\n' '}'
+            } > .artifacts/coverage/integration-report/integration-line-rate-gate.json
           fi
 
           if [[ -z "$(find .artifacts/test-results/integration -type f -print -quit 2>/dev/null)" ]]; then
@@ -1008,9 +1004,7 @@ jobs:
         run: |
           mkdir -p .artifacts/coverage/aggregate-report
           if [[ ! -f .artifacts/coverage/aggregate-report/Summary.txt ]]; then
-            cat > .artifacts/coverage/aggregate-report/Summary.txt <<'EOF'
-            Aggregate coverage summary was not produced because an earlier stage failed.
-            EOF
+            printf '%s\n' "Aggregate coverage summary was not produced because an earlier stage failed." > .artifacts/coverage/aggregate-report/Summary.txt
           fi
 
       - name: Print .NET aggregate API coverage summary in job output
