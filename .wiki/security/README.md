@@ -2,16 +2,13 @@
 
 > [Home](../Home.md) › Security
 
-Security posture, threat model, and header policies.
-
+<!-- AUTO-INDEX START -->
 ## Pages In This Section
 
 | Page | Description |
 |------|-------------|
-| [Threat Model](threat-model.md) | STRIDE analysis, data flow, secret inventory, open risks |
-| [CSP and Security Headers](csp-and-headers.md) | Response headers applied by both API layers |
+| [CSP and Security Headers](csp-and-headers.md) | |
+| [Pentest Readiness](pentest-readiness.md) | |
+| [Threat Model — Banana API](threat-model.md) | |
 
-## Key Contacts
-
-- Open risks are tracked in the [Threat Model](threat-model.md#open-risks-tracked).
-- JWT auth is documented in `src/typescript/api/src/middleware/auth.ts` and `Program.cs`.
+<!-- AUTO-INDEX END -->
