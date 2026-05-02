@@ -1,0 +1,102 @@
+name: Orchestrate Neuro Consolidation
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Spec Kit feature 050 (FR-002, FR-007, FR-008, FR-009): sleep-style nightly
+# NREM consolidation pass + weekly REM deep consolidation. Cold-start safe;
+# emits Fisher snapshots under artifacts/training/<model>/consolidation/.
+on:
+  schedule:
+    # Nightly NREM at 06:30 UTC (offset from existing self-training cycle).
+    - cron: "30 6 * * *"
+    # Weekly REM Sundays at 07:30 UTC.
+    - cron: "30 7 * * 0"
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Consolidation phase (nrem nightly / rem weekly)
+        required: false
+        default: "nrem"
+        type: choice
+        options:
+          - nrem
+          - rem
+      open_evidence_pr:
+        description: Open a follow-up PR with refreshed snapshots
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [banana, not-banana, ripeness]
+    concurrency:
+      group: neuro-consolidate-${{ matrix.model }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: AI-contract pre-flight
+        run: |
+          bash scripts/validate-workflow-dependencies.sh
+          python scripts/validate-ai-contracts.py
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Resolve phase
+        id: phase
+        env:
+          BANANA_DISPATCH_PHASE: ${{ github.event.inputs.phase || '' }}
+          BANANA_CRON: ${{ github.event.schedule || '' }}
+        run: |
+          phase="$BANANA_DISPATCH_PHASE"
+          if [[ -z "$phase" ]]; then
+            if [[ "$BANANA_CRON" == "30 7 * * 0" ]]; then
+              phase="rem"
+            else
+              phase="nrem"
+            fi
+          fi
+          echo "phase=$phase" >> "$GITHUB_OUTPUT"
+      - name: Consolidation pass (${{ steps.phase.outputs.phase }})
+        run: |
+          python scripts/neuro/consolidation-pass.py \
+            --model ${{ matrix.model }} \
+            --vocabulary artifacts/training/${{ matrix.model }}/local/vocabulary.json \
+            --replay-buffer artifacts/training/${{ matrix.model }}/replay/buffer.jsonl \
+            --output-root artifacts/training/${{ matrix.model }}/consolidation \
+            --phase ${{ steps.phase.outputs.phase }}
+      - name: Forgetting guard (informational)
+        run: |
+          python scripts/neuro/forgetting-guard.py \
+            --model ${{ matrix.model }} \
+            --metrics artifacts/training/${{ matrix.model }}/local/metrics.json \
+            --max-regression-pp 1.0 || true
+      - name: Upload consolidation snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuro-consolidation-${{ matrix.model }}-${{ steps.phase.outputs.phase }}
+          path: artifacts/training/${{ matrix.model }}/consolidation
+          if-no-files-found: warn
+      - name: Open evidence PR
+        if: ${{ github.event.inputs.open_evidence_pr == 'true' }}
+        env:
+          BANANA_NEURO_MODEL: ${{ matrix.model }}
+          BANANA_NEURO_TRIGGER: consolidation-${{ steps.phase.outputs.phase }}
+          BANANA_PR_LABELS: automation,model-training,speckit-driven,agent:banana-classifier-agent
+        run: |
+          bash scripts/neuro/open-evidence-pr.sh
