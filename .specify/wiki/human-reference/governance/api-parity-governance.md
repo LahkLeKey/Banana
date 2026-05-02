@@ -1,4 +1,8 @@
+<!-- breadcrumb: Governance > API Parity Governance -->
+
 # API Parity Governance
+
+> [Home](../Home.md) › [Governance](README.md) › API Parity Governance
 
 ## What This Covers
 
@@ -15,20 +19,20 @@ A parity run passes only when each overlap route is either:
 - covered by an active approved parity exception.
 
 A parity run fails when unresolved drift remains in any mismatch type:
-- missing_route
-- status_mismatch
-- shape_mismatch
+- `missing_route`
+- `status_mismatch`
+- `shape_mismatch`
 
 ## Core Evidence Artifacts
 
 Parity evidence is written under:
-- .specify/specs/047-api-parity-governance/artifacts
+- `.specify/specs/047-api-parity-governance/artifacts`
 
 Primary files:
-- overlapping-routes.inventory.json
-- parity-drift-report.json
-- parity-exceptions.json
-- parity-gate-result.json
+- `overlapping-routes.inventory.json`
+- `parity-drift-report.json`
+- `parity-exceptions.json`
+- `parity-gate-result.json`
 
 ## Local Validation Commands
 
@@ -52,7 +56,7 @@ bash scripts/validate-api-parity-governance.sh --strict
 
 ## CI Integration Summary
 
-Compose CI includes a dedicated lane named api-parity that:
+Compose CI includes a dedicated lane named `api-parity` that:
 - runs strict parity validation,
 - records lane and job status,
 - publishes parity artifacts for audit/debug,
@@ -61,18 +65,18 @@ Compose CI includes a dedicated lane named api-parity that:
 ## Exception Hygiene
 
 Parity exceptions are temporary and exact-match only. Each exception should include:
-- route_key
-- mismatch_type
-- owner
-- rationale
-- approved_at
-- expires_at
+- `route_key`
+- `mismatch_type`
+- `owner`
+- `rationale`
+- `approved_at`
+- `expires_at`
 
 Expired or malformed exceptions do not suppress failures.
 
 ## Fast Triage Checklist
 
-1. Open parity-gate-result.json and inspect decision plus unresolved_summary.
-2. Open parity-drift-report.json and sort by mismatch_type.
+1. Open `parity-gate-result.json` and inspect decision plus `unresolved_summary`.
+2. Open `parity-drift-report.json` and sort by `mismatch_type`.
 3. Confirm whether any exception is active, valid, and scoped correctly.
 4. Resolve route/status/shape drift or add a time-bounded approved exception.
