@@ -1,7 +1,9 @@
 name: Orchestrate Banana SDLC
 
 permissions:
+  actions: read
   contents: write
+  issues: write
   pull-requests: write
 
 on:

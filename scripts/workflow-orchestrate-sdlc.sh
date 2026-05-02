@@ -108,6 +108,8 @@ if ci_followup_path.exists():
 if stop_reason is None:
     if autonomy_stop:
       stop_reason = "kill_switch"
+    elif ci_followup is not None and ci_followup.get("status") != "ok":
+      stop_reason = "ci_followup_failed"
     elif ci_followup is not None and int(ci_followup.get("created_spec_count", 0)) == 0:
       stop_reason = "ci_runs_out_of_ideas"
     elif not runnable:

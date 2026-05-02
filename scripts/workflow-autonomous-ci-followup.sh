@@ -21,10 +21,12 @@ fi
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 TMP_RUNS_JSON="${BANANA_SDLC_CI_TMP_RUNS_JSON:-$(dirname "$OUTPUT_PATH")/ci-runs-${RANDOM}-${RANDOM}.json}"
 TMP_ISSUES_TSV="${BANANA_SDLC_CI_TMP_ISSUES_TSV:-$(dirname "$OUTPUT_PATH")/ci-issues-${RANDOM}-${RANDOM}.tsv}"
+TMP_FETCH_ERROR="${BANANA_SDLC_CI_TMP_FETCH_ERROR:-$(dirname "$OUTPUT_PATH")/ci-fetch-error-${RANDOM}-${RANDOM}.txt}"
 
 touch "$TMP_ISSUES_TSV"
+rm -f "$TMP_FETCH_ERROR"
 
-BANANA_CI_REPO="$REPO" python - <<'PY' > "$TMP_RUNS_JSON"
+BANANA_CI_REPO="$REPO" BANANA_CI_FETCH_ERROR_PATH="$TMP_FETCH_ERROR" python - <<'PY' > "$TMP_RUNS_JSON"
 import json
 import os
 import subprocess
@@ -40,11 +42,48 @@ cmd = [
 ]
 try:
     raw = subprocess.check_output(cmd, text=True)
-except subprocess.CalledProcessError:
+except subprocess.CalledProcessError as exc:
+  error_path = os.environ.get("BANANA_CI_FETCH_ERROR_PATH", "")
+  if error_path:
+    with open(error_path, "w", encoding="utf-8") as handle:
+      handle.write(f"gh run list failed with exit code {exc.returncode}\n")
+      output = exc.output or ""
+      if output:
+        handle.write(output)
     print("[]")
     sys.exit(0)
 print(raw)
 PY
+
+if [[ -s "$TMP_FETCH_ERROR" ]]; then
+  python - "$OUTPUT_PATH" "$TMP_FETCH_ERROR" <<'PY'
+import json
+import pathlib
+import sys
+
+out = pathlib.Path(sys.argv[1])
+err_path = pathlib.Path(sys.argv[2])
+reason = err_path.read_text(encoding="utf-8").strip()
+
+payload = {
+  "status": "failed",
+  "reason": "gh_run_list_failed",
+  "error": reason,
+  "created_spec_count": 0,
+  "created_specs": [],
+  "linked_issue_count": 0,
+  "created_issue_count": 0,
+  "issues": [],
+}
+out.parent.mkdir(parents=True, exist_ok=True)
+out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+print(json.dumps(payload, indent=2))
+PY
+  rm -f "$TMP_RUNS_JSON"
+  rm -f "$TMP_ISSUES_TSV"
+  rm -f "$TMP_FETCH_ERROR"
+  exit 0
+fi
 
 created_specs=()
 created_count=0
@@ -246,3 +285,4 @@ PY
 
 rm -f "$TMP_RUNS_JSON"
 rm -f "$TMP_ISSUES_TSV"
+rm -f "$TMP_FETCH_ERROR"
