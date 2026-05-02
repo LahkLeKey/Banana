@@ -35,6 +35,26 @@ on:
         description: Maximum number of CI follow-up specs to scaffold per run
         required: false
         default: "3"
+      open_ci_issues:
+        description: Open/link GitHub issues for failed CI runs during autonomous follow-up
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      ci_issue_labels:
+        description: Labels for autonomous CI follow-up issues (comma-separated)
+        required: false
+        default: "automation,ci,triage,agent:workflow-agent"
+      ci_issue_title_prefix:
+        description: Prefix used for autonomous CI follow-up issue titles
+        required: false
+        default: "CI Auto-Debug"
+      ci_log_excerpt_lines:
+        description: Number of trailing failed-log lines to include in issue body
+        required: false
+        default: "120"
       enable_auto_merge:
         description: Enable auto-merge for generated PRs
         required: false
@@ -74,6 +94,10 @@ jobs:
       BANANA_SDLC_AUTO_DEBUG_CI: ${{ github.event.inputs.auto_debug_ci || 'true' }}
       BANANA_SDLC_AUTO_SCAFFOLD_SPECS: ${{ github.event.inputs.auto_debug_ci || 'true' }}
       BANANA_SDLC_CI_IDEA_BUDGET: ${{ github.event.inputs.ci_idea_budget || '3' }}
+      BANANA_SDLC_CI_OPEN_ISSUES: ${{ github.event.inputs.open_ci_issues || 'true' }}
+      BANANA_SDLC_CI_ISSUE_LABELS: ${{ github.event.inputs.ci_issue_labels || 'automation,ci,triage,agent:workflow-agent' }}
+      BANANA_SDLC_CI_ISSUE_TITLE_PREFIX: ${{ github.event.inputs.ci_issue_title_prefix || 'CI Auto-Debug' }}
+      BANANA_SDLC_CI_LOG_EXCERPT_LINES: ${{ github.event.inputs.ci_log_excerpt_lines || '120' }}
       BANANA_ENABLE_AUTO_MERGE: ${{ github.event.inputs.enable_auto_merge || 'true' }}
       BANANA_AUTO_MERGE_METHOD: ${{ github.event.inputs.auto_merge_method || 'squash' }}
       BANANA_SDLC_VALIDATE_AI_CONTRACTS: ${{ github.event.inputs.validate_ai_contracts || 'true' }}

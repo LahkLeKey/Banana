@@ -112,6 +112,26 @@ on:
         description: Maximum number of autonomous CI follow-up specs to scaffold per run
         required: false
         default: "3"
+      open_ci_issues:
+        description: Open/link GitHub issues for failed CI runs during autonomous follow-up
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      ci_issue_labels:
+        description: Labels for autonomous CI follow-up issues (comma-separated)
+        required: false
+        default: "automation,ci,triage,agent:workflow-agent"
+      ci_issue_title_prefix:
+        description: Prefix used for autonomous CI follow-up issue titles
+        required: false
+        default: "CI Auto-Debug"
+      ci_log_excerpt_lines:
+        description: Number of trailing failed-log lines to include in issue body
+        required: false
+        default: "120"
       require_real_updates:
         description: Require each increment to touch source/workflow impact paths before PR creation
         required: false
@@ -203,6 +223,10 @@ jobs:
       BANANA_SDLC_AUTO_DEBUG_CI: ${{ github.event.inputs.auto_debug_ci || 'true' }}
       BANANA_SDLC_AUTO_SCAFFOLD_SPECS: ${{ github.event.inputs.auto_debug_ci || 'true' }}
       BANANA_SDLC_CI_IDEA_BUDGET: ${{ github.event.inputs.ci_idea_budget || '3' }}
+      BANANA_SDLC_CI_OPEN_ISSUES: ${{ github.event.inputs.open_ci_issues || 'true' }}
+      BANANA_SDLC_CI_ISSUE_LABELS: ${{ github.event.inputs.ci_issue_labels || 'automation,ci,triage,agent:workflow-agent' }}
+      BANANA_SDLC_CI_ISSUE_TITLE_PREFIX: ${{ github.event.inputs.ci_issue_title_prefix || 'CI Auto-Debug' }}
+      BANANA_SDLC_CI_LOG_EXCERPT_LINES: ${{ github.event.inputs.ci_log_excerpt_lines || '120' }}
       BANANA_SDLC_INCREMENT_PLAN_JSON: ${{ github.event.inputs.incremental_plan_json || '' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'sdlc' }}
