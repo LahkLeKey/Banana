@@ -12,6 +12,7 @@ import {registerJobRoutes, startJobQueue} from './jobs/jobs.ts';
 import {registerCorpusRoutes} from './routes/corpus.ts';
 import {registerHealthRoutes} from './routes/health.ts';
 import {registerRipenessRoutes} from './routes/ripeness.ts';
+import {registryRoutes} from './routes/registry.ts';
 
 const app = Fastify({logger : true});
 
@@ -61,13 +62,7 @@ await registerRipenessRoutes(app);
 await registerNotBananaRoutes(app);
 await registerChatRoutes(app);
 await registerTrainingWorkbenchRoutes(app);
-await registerJobRoutes(app);
-
-// Start background job queue (non-blocking; safe to omit DATABASE_URL in dev)
-if (process.env.DATABASE_URL)
-{
-    startJobQueue().catch((err) => app.log.error({err}, "job queue failed to start"));
-}
+await app.register(registryRoutes);
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? '0.0.0.0';
