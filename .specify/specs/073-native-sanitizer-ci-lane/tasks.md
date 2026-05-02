@@ -9,4 +9,4 @@
 - [x] **T003 Add sanitizer failure reporting to CI summary**
 - [x] **T004 Document sanitizer lane in docs/native/sanitizer-ci-lane.md**
 
-_All tasks completed � implementation exists in repository._
+_All tasks completed â€” implementation exists in repository._

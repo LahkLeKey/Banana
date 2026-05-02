@@ -27,7 +27,6 @@ operations/ci-compose-notes.md
 operations/wsl2-runtime-channels.md
 operations/ci-runtime-compatibility.md
 operations/ci-compose-stabilization.md
-operations/disaster-recovery.md
 security/README.md
 security/threat-model.md
 security/csp-and-headers.md

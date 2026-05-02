@@ -9,4 +9,4 @@
 - [x] **T003 Add risk register with severity ratings and mitigations**
 - [x] **T004 Review and update .specify/wiki/human-reference/security/threat-model.md**
 
-_All tasks completed � implementation exists in repository._
+_All tasks completed â€” implementation exists in repository._

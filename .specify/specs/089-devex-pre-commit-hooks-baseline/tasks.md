@@ -9,4 +9,4 @@
 - [x] **T003 Wire pre-commit run --all-files into .github/workflows/pre-commit.yml**
 - [x] **T004 Document hook lifecycle in docs/devex/pre-commit-hooks.md**
 
-_All tasks completed � implementation exists in repository._
+_All tasks completed â€” implementation exists in repository._

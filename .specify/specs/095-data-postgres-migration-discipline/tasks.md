@@ -9,4 +9,4 @@
 - [x] **T003 Document migration discipline policy in docs/data/migration-discipline.md**
 - [x] **T004 Update Prisma schema with correct model relations (ModelRelease.activeModelReleases)**
 
-_All tasks completed � implementation exists in repository._
+_All tasks completed â€” implementation exists in repository._

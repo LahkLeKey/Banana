@@ -9,4 +9,4 @@
 - [x] **T003 Wire AuditStore into pipeline steps to record training and classification events**
 - [x] **T004 Protect /operator/audit with OperatorUp authorization policy**
 
-_All tasks completed � implementation exists in repository._
+_All tasks completed â€” implementation exists in repository._

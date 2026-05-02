@@ -9,4 +9,4 @@
 - [x] **T003 Add BANANA_RATE_LIMIT_RPM env var control for per-environment tuning**
 - [x] **T004 Document rate limiting policy in docs/api/rate-limiting.md**
 
-_All tasks completed � implementation exists in repository._
+_All tasks completed â€” implementation exists in repository._

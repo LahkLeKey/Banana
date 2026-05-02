@@ -21,6 +21,14 @@
 - [x] **T020** Verify allowlist contains no orphaned or missing paths relative to current `human-reference/` tree. (agent: technical-writer-agent)
 - [x] **T021** Verify `Home.md` navigation links all resolve to existing files. (agent: technical-writer-agent)
 
+## Acceptance Gate
+
+```bash
+scripts/wiki-scaffold.sh --validate
+scripts/wiki-consume-into-specify.sh
+python scripts/validate-ai-contracts.py
+```
+
 ## Traceability
 
 | Task  | FR                    |

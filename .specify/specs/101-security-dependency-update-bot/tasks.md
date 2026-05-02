@@ -9,4 +9,4 @@
 - [x] **T003 Add grouping rules for related package families (React, testing, etc.)**
 - [x] **T004 Document Renovate configuration in docs/security/dependency-updates.md**
 
-_All tasks completed � implementation exists in repository._
+_All tasks completed â€” implementation exists in repository._

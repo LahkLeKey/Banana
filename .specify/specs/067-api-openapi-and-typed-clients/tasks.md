@@ -9,4 +9,4 @@
 - [x] **T003 Add scripts/generate-openapi-spec.sh exporting swagger.json via dotnet run --urls**
 - [x] **T004 Document OpenAPI endpoint usage in docs/api/openapi.md**
 
-_All tasks completed � implementation exists in repository._
+_All tasks completed â€” implementation exists in repository._
