@@ -63,6 +63,55 @@ on:
         options:
           - "true"
           - "false"
+      sdlc_mode:
+        description: SDLC run mode (`incremental` default or `spec-drain`)
+        required: false
+        default: "incremental"
+        type: choice
+        options:
+          - "incremental"
+          - "spec-drain"
+      autonomy_stop:
+        description: Emergency stop flag for autonomous spec-drain mode
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      spec_drain_state_path:
+        description: Optional explicit path for spec-drain checkpoint state JSON
+        required: false
+        default: ""
+      enable_auto_merge:
+        description: Enable auto-merge for generated PRs
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      auto_merge_method:
+        description: Auto-merge method (squash, merge, rebase)
+        required: false
+        default: "squash"
+        type: choice
+        options:
+          - "squash"
+          - "merge"
+          - "rebase"
+      auto_debug_ci:
+        description: In spec-drain mode, inspect failed CI runs and scaffold follow-up specs
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      ci_idea_budget:
+        description: Maximum number of autonomous CI follow-up specs to scaffold per run
+        required: false
+        default: "3"
       require_real_updates:
         description: Require each increment to touch source/workflow impact paths before PR creation
         required: false
@@ -146,6 +195,14 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
       BANANA_SDLC_ID: ${{ github.event.inputs.sdlc_id || 'banana-sdlc' }}
+      BANANA_SDLC_MODE: ${{ github.event.inputs.sdlc_mode || 'incremental' }}
+      BANANA_AUTONOMY_STOP: ${{ github.event.inputs.autonomy_stop || 'false' }}
+      BANANA_SDLC_DRAIN_STATE_PATH: ${{ github.event.inputs.spec_drain_state_path || '' }}
+      BANANA_ENABLE_AUTO_MERGE: ${{ github.event.inputs.enable_auto_merge || 'true' }}
+      BANANA_AUTO_MERGE_METHOD: ${{ github.event.inputs.auto_merge_method || 'squash' }}
+      BANANA_SDLC_AUTO_DEBUG_CI: ${{ github.event.inputs.auto_debug_ci || 'true' }}
+      BANANA_SDLC_AUTO_SCAFFOLD_SPECS: ${{ github.event.inputs.auto_debug_ci || 'true' }}
+      BANANA_SDLC_CI_IDEA_BUDGET: ${{ github.event.inputs.ci_idea_budget || '3' }}
       BANANA_SDLC_INCREMENT_PLAN_JSON: ${{ github.event.inputs.incremental_plan_json || '' }}
       BANANA_BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
       BANANA_BRANCH_PREFIX: ${{ github.event.inputs.branch_prefix || 'sdlc' }}
