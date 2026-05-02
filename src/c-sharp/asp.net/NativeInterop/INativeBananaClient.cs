@@ -45,4 +45,7 @@ public interface INativeBananaClient
     NativeStatusCode UnloadTruckContainer(string truckId, string containerId, out string json);
     NativeStatusCode RelocateTruck(string truckId, string inputJson, out string json);
     NativeStatusCode GetTruckStatus(string truckId, out string json);
+
+    /// <summary>Feature 072 — returns the ABI major/minor version from the native library.</summary>
+    NativeStatusCode GetNativeVersion(out int major, out int minor);
 }

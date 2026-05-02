@@ -1,0 +1,41 @@
+name: native-abi-check
+
+on:
+  pull_request:
+    paths:
+      - 'src/native/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+      - '.specify/contracts/abi-baseline.txt'
+  push:
+    branches: [main]
+    paths:
+      - 'src/native/**'
+
+permissions:
+  contents: read
+
+jobs:
+  abi-check:
+    name: ABI symbol diff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake gcc binutils
+
+      - name: Build native library
+        run: |
+          cmake --preset default -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/native --target banana_native
+
+      - name: ABI symbol diff
+        run: bash scripts/check-native-abi-symbols.sh
+
+      - name: Run ABI version test
+        run: |
+          cmake --build build/native --target banana_test_abi_version
+          cd build/native && ctest -R banana_test_abi_version --output-on-failure

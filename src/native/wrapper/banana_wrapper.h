@@ -38,12 +38,20 @@ extern "C" {
 #endif
 
 /* Monotonic ABI version. Adding symbols increments minor; breaking changes
- * require a major bump and a parent-spec (005) update. */
+ * require a major bump and a parent-spec (005) update.
+ * Feature 072: banana_native_version() exposes this at runtime so consumers
+ * (C# interop, CI abi-diff script) can assert compatibility. */
 #define BANANA_WRAPPER_ABI_VERSION_MAJOR 2
 /* Minor 1: additive `banana_classify_banana_binary_with_threshold` (slice 011).
  * Minor 2: additive `banana_classify_banana_transformer_ex` (slice 012).
- * Minor 3: additive `banana_classify_banana_transformer_quant_embedding` (slice 016). */
-#define BANANA_WRAPPER_ABI_VERSION_MINOR 3
+ * Minor 3: additive `banana_classify_banana_transformer_quant_embedding` (slice 016).
+ * Minor 4: additive `banana_native_version` (feature 072). */
+#define BANANA_WRAPPER_ABI_VERSION_MINOR 4
+
+/* ABI version query — always succeeds.
+ * out_major and out_minor are CALLER-OWNED and must be non-NULL.
+ * Returns BANANA_OK (0). */
+BANANA_API int banana_native_version(int* out_major, int* out_minor);
 
 /* NativeStatusCode — stable numeric values; mirrored by managed enum.
  * DO NOT renumber. v1 used 0..6; v2 preserves them (FR-001).
