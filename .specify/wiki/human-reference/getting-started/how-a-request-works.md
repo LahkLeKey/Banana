@@ -1,8 +1,10 @@
+<!-- breadcrumb: Getting Started > How A Request Works -->
+
 # How A Request Works
 
-> Read the [Wiki Home](Home.md) for more details.
+> [Home](../Home.md) › [Getting Started](README.md) › How A Request Works
 
-Related pages: [Why We Use A Wrapper](Why-We-Use-A-Wrapper.md), [How The Database Step Works](How-The-Database-Step-Works.md), [Architecture Diagrams](Architecture-Diagrams.md)
+Related pages: [Native Wrapper ABI](../architecture/native-wrapper-abi.md), [Database Pipeline Stage](../architecture/database-pipeline-stage.md), [Architecture Overview](../architecture/overview.md)
 
 This page answers one question:
 
@@ -93,6 +95,6 @@ Both modes share `IDataAccessPipelineClient`, so the rest of the pipeline stays 
 
 ## Read Next
 
-1. [Why-We-Use-A-Wrapper.md](Why-We-Use-A-Wrapper.md)
-2. [How-The-Database-Step-Works.md](How-The-Database-Step-Works.md)
-3. [First-Day-Checklist.md](First-Day-Checklist.md)
+1. [Native Wrapper ABI](../architecture/native-wrapper-abi.md)
+2. [Database Pipeline Stage](../architecture/database-pipeline-stage.md)
+3. [First Day Checklist](first-day-checklist.md)

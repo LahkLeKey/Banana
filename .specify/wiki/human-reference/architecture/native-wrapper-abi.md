@@ -1,10 +1,12 @@
-# Why We Use A Wrapper
+<!-- breadcrumb: Architecture > Native Wrapper ABI -->
 
-> Read the [Wiki Home](Home.md) for more details.
+# Native Wrapper ABI
 
-Related pages: [How A Request Works](How-A-Request-Works.md), [How The Database Step Works](How-The-Database-Step-Works.md)
+> [Home](../Home.md) › [Architecture](README.md) › Native Wrapper ABI
 
-This page explains the wrapper idea in simple terms.
+Related pages: [How A Request Works](../getting-started/how-a-request-works.md), [Database Pipeline Stage](database-pipeline-stage.md)
+
+This page explains the wrapper design in simple terms.
 
 ## Problem
 
@@ -18,7 +20,7 @@ That means:
 
 - managed code talks to wrapper only,
 - wrapper talks to native core domain and native DAL domain internals,
-- core and dal can evolve with lower risk to API and Electron callers.
+- core and DAL can evolve with lower risk to API and Electron callers.
 
 ## Benefits
 
@@ -34,6 +36,14 @@ That means:
 - status code boundary between native and managed callers
 - native string/payload allocation paired with `banana_free`
 - route-level native operations for banana profile, batch lifecycle, logistics, and ripeness
+
+## ABI Versioning
+
+The wrapper exports `banana_native_version(int* out_major, int* out_minor)` to allow callers to assert compatibility at runtime.
+
+Current ABI: major=2, minor=4.
+
+Breaking changes (major bump) require coordination across managed interop, wrapper, and all downstream callers.
 
 ## Rule Of Thumb
 

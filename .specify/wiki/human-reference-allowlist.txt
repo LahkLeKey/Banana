@@ -1,8 +1,9 @@
-Architecture-Diagrams.md
-Auto-README.md
-Build-Run-Test-Commands.md
-CI-Compose-Notes.md
-First-Day-Checklist.md
+# .specify/wiki/human-reference-allowlist.txt
+# Allowlist of wiki pages consumed into .specify/wiki/human-reference/.
+# Paths are relative to the .wiki/ root, using section/page structure.
+# _templates/ and ai-reference/ are excluded.
+# Maintained by: scripts/wiki-scaffold.sh --validate
+
 Home.md
 How-A-Request-Works.md
 How-The-Database-Step-Works.md

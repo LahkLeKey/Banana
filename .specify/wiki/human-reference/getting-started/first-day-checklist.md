@@ -1,8 +1,10 @@
+<!-- breadcrumb: Getting Started > First Day Checklist -->
+
 # First Day Checklist
 
-> Read the [Wiki Home](Home.md) for more details.
+> [Home](../Home.md) › [Getting Started](README.md) › First Day Checklist
 
-Related pages: [Build, Run, and Test Commands](Build-Run-Test-Commands.md), [How A Request Works](How-A-Request-Works.md)
+Related pages: [Build, Run, and Test Commands](build-run-test-commands.md), [How A Request Works](how-a-request-works.md)
 
 Use this page as a practical setup guide.
 
@@ -10,14 +12,13 @@ Use this page as a practical setup guide.
 
 Read these pages in order:
 
-1. [How-A-Request-Works.md](How-A-Request-Works.md)
-2. [How-The-Database-Step-Works.md](How-The-Database-Step-Works.md)
-3. [Architecture-Diagrams.md](Architecture-Diagrams.md)
-4. [Repository-Layout.md](Repository-Layout.md)
-5. [Build-Run-Test-Commands.md](Build-Run-Test-Commands.md)
-6. [WSL2-Mobile-Runtime-Channels.md](WSL2-Mobile-Runtime-Channels.md)
-7. [Why-We-Use-A-Wrapper.md](Why-We-Use-A-Wrapper.md)
-8. [AI-Customization-Map.md](AI-Customization-Map.md)
+1. [How A Request Works](how-a-request-works.md)
+2. [Database Pipeline Stage](../architecture/database-pipeline-stage.md)
+3. [Architecture Overview](../architecture/overview.md)
+4. [Repository Layout](repository-layout.md)
+5. [Build, Run, and Test Commands](build-run-test-commands.md)
+6. [WSL2 Runtime Channels](../operations/wsl2-runtime-channels.md)
+7. [Native Wrapper ABI](../architecture/native-wrapper-abi.md)
 
 ## Step 2: Follow One Request In Code
 
@@ -39,19 +40,19 @@ Goal: see how one /banana request moves through the app.
 1. Build native with VS Code task `Build Native Library` or `scripts/build-native.bat`.
 2. Build API with VS Code task `Build Banana API`.
 3. Run tests:
-	- `dotnet test tests/unit/Banana.UnitTests.csproj -c Release`
-	- `dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release`
-	- `ctest --test-dir build/native -C Release --output-on-failure`
+        - `dotnet test tests/unit/Banana.UnitTests.csproj -c Release`
+        - `dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release`
+        - `ctest --test-dir build/native -C Release --output-on-failure`
 4. Start API locally with `scripts/run-api.sh`.
 5. Open Swagger and call:
-	- `GET /health`
-	- `GET /banana?purchases=10&multiplier=2`
-	- `POST /batches/create`
-	- `POST /ripeness/predict`
+        - `GET /health`
+        - `GET /banana?purchases=10&multiplier=2`
+        - `POST /batches/create`
+        - `POST /ripeness/predict`
 6. Optional runtime channels:
-	- Desktop one-click launcher: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-electron.sh'`
-	- Mobile one-click launcher: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-mobile.sh'`
-	- Note: iOS Simulator is macOS-only; Ubuntu path uses iOS-style web preview fallback.
+        - Desktop one-click launcher: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-electron.sh'`
+        - Mobile one-click launcher: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-mobile.sh'`
+        - Note: iOS Simulator is macOS-only; Ubuntu path uses iOS-style web preview fallback.
 
 ## Step 4: If Something Fails
 
