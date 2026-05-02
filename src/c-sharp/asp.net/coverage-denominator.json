@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "project": "Banana.Api",
-  "generated_at_utc": "2026-05-02T05:53:50Z",
+  "generated_at_utc": "2026-05-02T21:04:10Z",
   "tracked_file_count": 34,
   "tracked_files": [
     "Controllers/AuditController.cs",
