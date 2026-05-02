@@ -2,8 +2,9 @@
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
   "packageManager": "npm",
   "reporters": ["html", "clear-text", "json", "progress"],
-  "testRunner": "bun",
-  "coverageAnalysis": "perTest",
+  "testRunner": "command",
+  "coverageAnalysis": "off",
+  "commandRunner": {"command": "bun test"},
   "ignorePatterns": ["node_modules", "prisma/migrations"],
   "mutate": ["src/**/*.ts", "!src/**/*.test.ts"]
 }
