@@ -40,6 +40,8 @@ type BananaSummaryResponse = {
   banana: number;
 };
 
+export type { BananaSummaryResponse };
+
 type ElectronBridge = {
   apiBaseUrl: string; platform: string;
   chatApiBaseUrl?: string;
