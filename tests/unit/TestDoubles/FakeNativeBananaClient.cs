@@ -205,4 +205,14 @@ public sealed class FakeNativeBananaClient : INativeBananaClient
         json = GetTruckStatusJson;
         return GetTruckStatusCode;
     }
-}
+
+    // Feature 072 — ABI version stub
+    public int FakeVersionMajor { get; set; } = 2;
+    public int FakeVersionMinor { get; set; } = 4;
+    public NativeStatusCode GetNativeVersion(out int major, out int minor)
+    {
+        major = FakeVersionMajor;
+        minor = FakeVersionMinor;
+        return NativeStatusCode.Ok;
+    }
+}}

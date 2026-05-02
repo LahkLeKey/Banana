@@ -154,3 +154,10 @@ int banana_get_truck_status(const char* truck_id, char** out_json) {
 void banana_free(void* pointer) {
     free(pointer);
 }
+
+/* === ABI version query (feature 072) === */
+int banana_native_version(int* out_major, int* out_minor) {
+    *out_major = BANANA_WRAPPER_ABI_VERSION_MAJOR;
+    *out_minor = BANANA_WRAPPER_ABI_VERSION_MINOR;
+    return 0; /* BANANA_OK */
+}
