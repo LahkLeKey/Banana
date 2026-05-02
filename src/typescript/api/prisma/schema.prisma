@@ -49,17 +49,18 @@ model NotBananaClassification {
 // === Model Registry (feature 079) ===
 // Append-only; promotions create a new row, no updates.
 model ModelRelease {
-    id            BigInt   @id @default(autoincrement())
-    modelName     String // banana | not-banana | ripeness
-    version       String // semver string e.g. "1.4.2"
-    artifactPath  String // content-addressed storage key / path
-    artifactHash  String // sha256 hex of the artifact archive
-    manifestJson  String // full release manifest (training params, metrics, etc.)
-    signature     String // minisign / cosign signature over manifestJson
-    promotedBy    String // operator identifier
-    activeFrom    DateTime @default(now())
-    deprecatedAt  DateTime?
-    createdAt     DateTime @default(now())
+    id                  BigInt               @id @default(autoincrement())
+    modelName           String // banana | not-banana | ripeness
+    version             String // semver string e.g. "1.4.2"
+    artifactPath        String // content-addressed storage key / path
+    artifactHash        String // sha256 hex of the artifact archive
+    manifestJson        String // full release manifest (training params, metrics, etc.)
+    signature           String // minisign / cosign signature over manifestJson
+    promotedBy          String // operator identifier
+    activeFrom          DateTime             @default(now())
+    deprecatedAt        DateTime?
+    createdAt           DateTime             @default(now())
+    activeModelReleases ActiveModelRelease[]
 
     @@index([modelName, activeFrom])
     @@index([modelName, deprecatedAt])
@@ -67,10 +68,10 @@ model ModelRelease {
 
 // Tracks the currently active release per model (single-row-per-model view).
 model ActiveModelRelease {
-    modelName String      @id
+    modelName String       @id
     releaseId BigInt
     release   ModelRelease @relation(fields: [releaseId], references: [id])
-    updatedAt DateTime    @updatedAt
+    updatedAt DateTime     @updatedAt
 }
 
 // === Audit Event log (spec #069) ===
