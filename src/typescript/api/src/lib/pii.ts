@@ -29,7 +29,10 @@ export function redactFields<T extends Record<string, unknown>>(
   for (const ann of annotations) {
     const key = ann.field.split(".").pop()!;
     if (key in redacted && typeof redacted[key] === "string") {
-      (redacted as Record<string, unknown>)[key] = redactForLevel(redacted[key] as string, ann.level);
+      (redacted as Record<string, unknown>)[key] = redactForLevel(
+        redacted[key] as string,
+        ann.level
+      );
     }
   }
   return redacted;
