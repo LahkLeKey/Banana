@@ -96,12 +96,12 @@ model BackgroundJob {
 
 // === Outbound Webhooks (spec #071) ===
 model WebhookSubscriber {
-    id             String                   @id @default(uuid())
-    url            String
-    events         String[] // e.g. ["training.completed", "model.promoted"]
-    signingSecret  String // HMAC-SHA256 signing secret (store hashed in prod)
-    active         Boolean                  @default(true)
-    createdAt      DateTime                 @default(now())
+    id               String                   @id @default(uuid())
+    url              String
+    events           String[] // e.g. ["training.completed", "model.promoted"]
+    signingSecret    String // HMAC-SHA256 signing secret (store hashed in prod)
+    active           Boolean                  @default(true)
+    createdAt        DateTime                 @default(now())
     deliveryAttempts WebhookDeliveryAttempt[]
 
     @@index([active])

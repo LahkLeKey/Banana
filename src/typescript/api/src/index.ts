@@ -13,10 +13,10 @@ import {registerJobRoutes, startJobQueue} from './jobs/jobs.ts';
 import {registerCorpusRoutes} from './routes/corpus.ts';
 import {registerDriftRoutes} from './routes/drift.ts';
 import {registerHealthRoutes} from './routes/health.ts';
-import {registerRipenessRoutes} from './routes/ripeness.ts';
 import {registryRoutes} from './routes/registry.ts';
-import {registerStreamingRoutes} from './routes/streaming.ts';
+import {registerRipenessRoutes} from './routes/ripeness.ts';
 import {registerStreamingChatRoutes} from './routes/streaming-chat.ts';
+import {registerStreamingRoutes} from './routes/streaming.ts';
 import {webhooksRoutes} from './routes/webhooks.ts';
 
 const app = Fastify({logger : true});
@@ -87,7 +87,7 @@ const host = process.env.HOST ?? '0.0.0.0';
 
 // Spec #070 — start durable job queue after server is ready
 app.addHook('onReady', async () => {
-    startJobQueue().catch((err) => app.log.error({ err }, 'job queue start failed'));
+    startJobQueue().catch((err) => app.log.error({err}, 'job queue start failed'));
 });
 
 app.listen({port, host}).catch((err) => {
