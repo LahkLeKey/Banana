@@ -2,7 +2,8 @@
  * auth.test.ts — unit tests for JWT middleware (feature 063).
  */
 import { beforeEach, describe, expect, it } from "bun:test";
-import { BananaJwtPayload, requireRole, signToken, verifyToken } from "../middleware/auth.ts";
+import type { BananaJwtPayload } from "../middleware/auth.ts";
+import { requireRole, signToken, verifyToken } from "../middleware/auth.ts";
 
 // Set secret for all tests
 process.env.BANANA_JWT_SECRET = "test-secret-banana-jwt-1234";

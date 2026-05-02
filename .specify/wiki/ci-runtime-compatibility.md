@@ -8,7 +8,7 @@ This page defines runtime-compatibility guardrails for JavaScript-based GitHub A
 
 - compose-ci workflow sets FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true.
 - Runtime compatibility checks run in workflow and emit machine-readable artifacts.
-- Runtime exception registry is tracked in .github/workflows/runtime-compatibility-exceptions.yml.
+- Runtime exception registry is tracked in .github/runtime-compatibility-exceptions.yml.
 
 ## Exception Policy
 

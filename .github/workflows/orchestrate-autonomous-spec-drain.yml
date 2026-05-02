@@ -97,7 +97,7 @@ jobs:
       BANANA_SDLC_AUTO_SCAFFOLD_SPECS: ${{ github.event.inputs.auto_debug_ci || 'true' }}
       BANANA_SDLC_CI_IDEA_BUDGET: ${{ github.event.inputs.ci_idea_budget || '3' }}
       BANANA_SDLC_CI_OPEN_ISSUES: ${{ github.event.inputs.open_ci_issues || 'true' }}
-      BANANA_SDLC_CI_ISSUE_LABELS: ${{ github.event.inputs.ci_issue_labels || 'automation,ci,triage,agent:workflow-agent' }}
+      BANANA_SDLC_CI_ISSUE_LABELS: "${{ github.event.inputs.ci_issue_labels || 'automation,ci,triage,agent:workflow-agent' }}"
       BANANA_SDLC_CI_ISSUE_TITLE_PREFIX: ${{ github.event.inputs.ci_issue_title_prefix || 'CI Auto-Debug' }}
       BANANA_SDLC_CI_LOG_EXCERPT_LINES: ${{ github.event.inputs.ci_log_excerpt_lines || '120' }}
       BANANA_ENABLE_AUTO_MERGE: ${{ github.event.inputs.enable_auto_merge || 'true' }}

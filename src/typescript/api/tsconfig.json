@@ -9,7 +9,9 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
-    "types": ["bun"]
+    "types": ["bun"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "include": ["src/**/*", "prisma.config.ts"]
 }

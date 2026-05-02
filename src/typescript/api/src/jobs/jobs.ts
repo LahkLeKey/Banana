@@ -7,7 +7,7 @@
  * Workers are registered at startup and process jobs asynchronously.
  * Queue is exported for use from route handlers and other domain code.
  */
-import PgBoss from "pg-boss";
+import { PgBoss } from "pg-boss";
 
 const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://banana:banana@localhost:5432/banana";
 
@@ -18,7 +18,7 @@ export async function startJobQueue(): Promise<PgBoss> {
   if (boss) return boss;
   boss = new PgBoss({ connectionString: DATABASE_URL });
 
-  boss.on("error", (err) => console.error("[pg-boss] error", err));
+  boss.on("error", (err: Error) => console.error("[pg-boss] error", err));
 
   await boss.start();
   await registerWorkers(boss);
@@ -55,18 +55,18 @@ async function registerWorkers(b: PgBoss): Promise<void> {
   await b.createQueue(QUEUES.CORPUS_INDEX_REBUILD);
   await b.createQueue(QUEUES.TRAINING_SESSION_KICKOFF);
 
-  b.work(QUEUES.MODEL_WARMUP, { teamSize: 1, teamConcurrency: 1 }, async (job) => {
-    console.info("[jobs] model-warmup", job.data);
+  b.work(QUEUES.MODEL_WARMUP, { localConcurrency: 1 }, async (jobs) => {
+    for (const job of jobs) console.info("[jobs] model-warmup", job.data);
     // TODO: invoke model warmup logic (feature 079 registry integration)
   });
 
-  b.work(QUEUES.CORPUS_INDEX_REBUILD, { teamSize: 1, teamConcurrency: 1 }, async (job) => {
-    console.info("[jobs] corpus-index-rebuild", job.data);
+  b.work(QUEUES.CORPUS_INDEX_REBUILD, { localConcurrency: 1 }, async (jobs) => {
+    for (const job of jobs) console.info("[jobs] corpus-index-rebuild", job.data);
     // TODO: trigger corpus index rebuild
   });
 
-  b.work(QUEUES.TRAINING_SESSION_KICKOFF, { teamSize: 1, teamConcurrency: 1 }, async (job) => {
-    console.info("[jobs] training-session-kickoff", job.data);
+  b.work(QUEUES.TRAINING_SESSION_KICKOFF, { localConcurrency: 1 }, async (jobs) => {
+    for (const job of jobs) console.info("[jobs] training-session-kickoff", job.data);
     // TODO: spawn training session via classifier script
   });
 }
