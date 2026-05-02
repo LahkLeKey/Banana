@@ -1,8 +1,8 @@
 # Feature Specification: Baseline Rehydration - Native Core Stability
 
-**Feature Branch**: `000-native-rehydration`  
-**Created**: 2026-04-25  
-**Status**: Draft  
+**Feature Branch**: `000-native-rehydration`
+**Created**: 2026-04-25
+**Status**: Draft
 **Type**: Rehydration Specification (pre-sprint baseline)
 
 ## Summary

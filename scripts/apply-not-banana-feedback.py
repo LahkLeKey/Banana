@@ -15,7 +15,12 @@ BOT_REVIEWER_SUFFIX = "[bot]"
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def load_json_object(path: Path) -> dict[str, Any]:
@@ -107,7 +112,9 @@ def collect_review_metadata(entry: dict[str, Any]) -> tuple[list[str], str]:
     return reviewers, reviewed_at_utc
 
 
-def add_bool_arg(parser: argparse.ArgumentParser, name: str, default: bool, help_text: str) -> None:
+def add_bool_arg(
+    parser: argparse.ArgumentParser, name: str, default: bool, help_text: str
+) -> None:
     parser.add_argument(
         name,
         default=default,
@@ -117,7 +124,9 @@ def add_bool_arg(parser: argparse.ArgumentParser, name: str, default: bool, help
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Apply not-banana feedback entries into corpus.json")
+    parser = argparse.ArgumentParser(
+        description="Apply not-banana feedback entries into corpus.json"
+    )
     parser.add_argument(
         "--corpus",
         type=Path,
@@ -190,7 +199,9 @@ def main() -> int:
     corpus = load_json_object(args.corpus)
     samples_raw = corpus.get("samples")
     if not isinstance(samples_raw, list) or not samples_raw:
-        raise ValueError(f"Corpus at {args.corpus} must contain a non-empty 'samples' array.")
+        raise ValueError(
+            f"Corpus at {args.corpus} must contain a non-empty 'samples' array."
+        )
 
     existing_keys: set[str] = set()
     for index, sample in enumerate(samples_raw):
@@ -199,13 +210,17 @@ def main() -> int:
         label = sample.get("label")
         payload = sample.get("payload")
         if label not in VALID_LABELS or not isinstance(payload, dict):
-            raise ValueError(f"Corpus sample #{index} must contain valid label and payload object.")
+            raise ValueError(
+                f"Corpus sample #{index} must contain valid label and payload object."
+            )
         existing_keys.add(canonical_sample(str(label), payload))
 
     feedback = load_json_object(args.feedback)
     entries = feedback.get("entries")
     if not isinstance(entries, list):
-        raise ValueError(f"Feedback inbox at {args.feedback} must contain an 'entries' array.")
+        raise ValueError(
+            f"Feedback inbox at {args.feedback} must contain an 'entries' array."
+        )
 
     total_entries = len(entries)
     corpus_count_before = len(samples_raw)
@@ -258,7 +273,9 @@ def main() -> int:
         requires_human_review = bool(args.require_human_review and status == "approved")
         if requires_human_review:
             reviewers, reviewed_at_utc = collect_review_metadata(entry)
-            human_reviewers = [login for login in reviewers if not is_likely_bot_login(login)]
+            human_reviewers = [
+                login for login in reviewers if not is_likely_bot_login(login)
+            ]
 
             review_errors: list[str] = []
             if len(human_reviewers) < args.minimum_human_reviewers:
@@ -268,7 +285,9 @@ def main() -> int:
                 )
 
             if not is_valid_rfc3339_timestamp(reviewed_at_utc):
-                review_errors.append("approved entry requires reviewed_at_utc RFC3339 timestamp")
+                review_errors.append(
+                    "approved entry requires reviewed_at_utc RFC3339 timestamp"
+                )
 
             if review_errors:
                 invalid_count += 1
@@ -335,7 +354,9 @@ def main() -> int:
     args.report.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
     if args.strict and invalid_count > 0:
-        print(f"::error::{invalid_count} invalid feedback entries encountered. See {args.report}.")
+        print(
+            f"::error::{invalid_count} invalid feedback entries encountered. See {args.report}."
+        )
         return 1
 
     if args.dry_run:

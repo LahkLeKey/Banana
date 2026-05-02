@@ -1,6 +1,6 @@
 # Ranking Rationale: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Document how primary family rankings were determined and how ties and conflicts are resolved.
 
 ## Ranking Method
@@ -26,27 +26,27 @@ The family that scores H on the defining dimension wins the tie. If both score t
 
 ### Left Brain: Regression over Binary
 
-**Score tie**: Both Regression and Binary total 14 points.  
-**Tie-break applied**: Calibration Fidelity.  
-- Regression: H (3 points) — directly optimized for calibration.  
-- Binary: M (2 points) — requires post-hoc calibration.  
-**Winner**: Regression.  
+**Score tie**: Both Regression and Binary total 14 points.
+**Tie-break applied**: Calibration Fidelity.
+- Regression: H (3 points) — directly optimized for calibration.
+- Binary: M (2 points) — requires post-hoc calibration.
+**Winner**: Regression.
 **Ruling**: Regression is Primary for Left Brain.
 
 ### Right Brain: Binary over Regression
 
-**Score tie**: Both Binary and Regression total 14 points.  
-**Tie-break applied**: Classification Confidence Clarity.  
-- Binary: H (3 points) — optimized for classification decision thresholds.  
-- Regression: L (1 point) — not designed for categorical output.  
-**Winner**: Binary.  
+**Score tie**: Both Binary and Regression total 14 points.
+**Tie-break applied**: Classification Confidence Clarity.
+- Binary: H (3 points) — optimized for classification decision thresholds.
+- Regression: L (1 point) — not designed for categorical output.
+**Winner**: Binary.
 **Ruling**: Binary is Primary for Right Brain.
 
 ### Full Brain: Transformer (no tie)
 
-**Score**: Transformer totals 11 points; Regression and Binary both total 14.  
-**Note**: Transformer has lower total because high validation complexity and explainability burden reduce its score.  
-**Domain mandate override applied**: Full Brain's mandate requires Contextual Reasoning Depth — the dimension only Transformer achieves at H.  
+**Score**: Transformer totals 11 points; Regression and Binary both total 14.
+**Note**: Transformer has lower total because high validation complexity and explainability burden reduce its score.
+**Domain mandate override applied**: Full Brain's mandate requires Contextual Reasoning Depth — the dimension only Transformer achieves at H.
 **Ruling**: Transformer is Primary for Full Brain. Lower total is accepted because the mandate-defining dimension score overrides aggregate totals for this domain.
 
 ## Conflict Resolution Rule

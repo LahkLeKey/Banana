@@ -1,8 +1,8 @@
 # Readiness Packet: Right Brain Domain
 
-**Domain**: Right Brain  
-**Model Family**: Binary  
-**Date**: 2026-04-26  
+**Domain**: Right Brain
+**Model Family**: Binary
+**Date**: 2026-04-26
 **Confidence**: High [H]
 
 ---

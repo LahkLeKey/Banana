@@ -166,17 +166,21 @@ check_existing_branches() {
     local skip_fetch="${2:-false}"
 
     if [ "$skip_fetch" = true ]; then
-        local highest_remote=$(get_highest_from_remote_refs)
-        local highest_branch=$(get_highest_from_branches)
+        local highest_remote
+        highest_remote=$(get_highest_from_remote_refs)
+        local highest_branch
+        highest_branch=$(get_highest_from_branches)
         if [ "$highest_remote" -gt "$highest_branch" ]; then
             highest_branch=$highest_remote
         fi
     else
         git fetch --all --prune >/dev/null 2>&1 || true
-        local highest_branch=$(get_highest_from_branches)
+        local highest_branch
+        highest_branch=$(get_highest_from_branches)
     fi
 
-    local highest_spec=$(get_highest_from_specs "$specs_dir")
+    local highest_spec
+    highest_spec=$(get_highest_from_specs "$specs_dir")
 
     local max_num=$highest_branch
     if [ "$highest_spec" -gt "$max_num" ]; then
@@ -269,7 +273,8 @@ generate_branch_name() {
 
     local stop_words="^(i|a|an|the|to|for|of|in|on|at|by|with|from|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|should|could|can|may|might|must|shall|this|that|these|those|my|your|our|their|want|need|add|get|set)$"
 
-    local clean_name=$(echo "$description" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/ /g')
+    local clean_name
+    clean_name=$(echo "$description" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/ /g')
 
     local meaningful_words=()
     for word in $clean_name; do
@@ -297,7 +302,8 @@ generate_branch_name() {
         done
         echo "$result"
     else
-        local cleaned=$(clean_branch_name "$description")
+        local cleaned
+        cleaned=$(clean_branch_name "$description")
         echo "$cleaned" | tr '-' '\n' | grep -v '^$' | head -3 | tr '\n' '-' | sed 's/-$//'
     fi
 }

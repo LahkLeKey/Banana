@@ -8,39 +8,49 @@
 // (e.g., bun:test, web preview), we fall back to the in-memory
 // adapter.
 
-import {type AsyncStorageLike, createAsyncStorageAdapter, createInMemoryAdapter, createRequestQueue, createVerdictHistory, DEFAULT_VERDICT_RETRY, type RequestQueue, type StoredVerdict, type VerdictHistory,} from '@banana/resilience';
+import {
+  type AsyncStorageLike,
+  createAsyncStorageAdapter,
+  createInMemoryAdapter,
+  createRequestQueue,
+  createVerdictHistory,
+  DEFAULT_VERDICT_RETRY,
+  type RequestQueue,
+  type StoredVerdict,
+  type VerdictHistory,
+} from "@banana/resilience";
 
 export type EnsembleQueuePayload = {
-  sample: string; submittedAt: number;
+  sample: string;
+  submittedAt: number;
 };
 
 type NetInfoLike = {
-  addEventListener(handler: (state: {isConnected: boolean|null}) => void): () =>
-      void;
+  addEventListener(handler: (state: { isConnected: boolean | null }) => void): () => void;
 };
 
-let queueRef: RequestQueue<EnsembleQueuePayload, void>|null = null;
-let historyRef: VerdictHistory|null = null;
-let netInfoRef: NetInfoLike|null|undefined;  // undefined = not yet probed.
+let queueRef: RequestQueue<EnsembleQueuePayload, void> | null = null;
+let historyRef: VerdictHistory | null = null;
+let netInfoRef: NetInfoLike | null | undefined; // undefined = not yet probed.
 
-function loadAsyncStorage(): AsyncStorageLike|null {
+function loadAsyncStorage(): AsyncStorageLike | null {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('@react-native-async-storage/async-storage') as
-            {default?: AsyncStorageLike} &
-        AsyncStorageLike;
+    const mod = require("@react-native-async-storage/async-storage") as {
+      default?: AsyncStorageLike;
+    } & AsyncStorageLike;
     return mod.default ?? mod;
   } catch {
     return null;
   }
 }
 
-function loadNetInfo(): NetInfoLike|null {
+function loadNetInfo(): NetInfoLike | null {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod =
-        require('@react-native-community/netinfo') as {default?: NetInfoLike} &
-        NetInfoLike;
+    const mod = require("@react-native-community/netinfo") as {
+      default?: NetInfoLike;
+    } & NetInfoLike;
     return mod.default ?? mod;
   } catch {
     return null;
@@ -48,23 +58,25 @@ function loadNetInfo(): NetInfoLike|null {
 }
 
 function ensureSingletons(): {
-  queue: RequestQueue<EnsembleQueuePayload, void>; history: VerdictHistory;
+  queue: RequestQueue<EnsembleQueuePayload, void>;
+  history: VerdictHistory;
 } {
   if (!queueRef || !historyRef) {
     const asyncStorage = loadAsyncStorage();
-    const adapter = asyncStorage ? createAsyncStorageAdapter(asyncStorage) :
-                                   createInMemoryAdapter();
+    const adapter = asyncStorage
+      ? createAsyncStorageAdapter(asyncStorage)
+      : createInMemoryAdapter();
     queueRef = createRequestQueue<EnsembleQueuePayload, void>({
       adapter,
-      namespace: 'rn-ensemble',
+      namespace: "rn-ensemble",
     });
     historyRef = createVerdictHistory({
       adapter,
-      namespace: 'rn-ensemble',
+      namespace: "rn-ensemble",
       maxEntries: 25,
     });
   }
-  return {queue: queueRef, history: historyRef};
+  return { queue: queueRef, history: historyRef };
 }
 
 export function getEnsembleQueue(): RequestQueue<EnsembleQueuePayload, void> {
@@ -83,13 +95,14 @@ export function getVerdictHistory(): VerdictHistory {
 export function onOnline(handler: () => void): () => void {
   if (netInfoRef === undefined) netInfoRef = loadNetInfo();
   if (!netInfoRef) return () => {};
-  let prevConnected: boolean|null = null;
+  let prevConnected: boolean | null = null;
   return netInfoRef.addEventListener((state) => {
     const next = state.isConnected;
     if (prevConnected === false && next === true) {
       try {
         handler();
-      } catch { /* swallow */
+      } catch {
+        /* swallow */
       }
     }
     prevConnected = next;

@@ -1,8 +1,8 @@
 # Feature Specification: Next Sprint Consolidated Scope
 
-**Feature Branch**: `001-next-sprint`  
-**Created**: 2026-04-25  
-**Status**: Draft  
+**Feature Branch**: `001-next-sprint`
+**Created**: 2026-04-25
+**Status**: Draft
 **Input**: User description: "our specs are getting kind of scattered and i removed some of the legacy ones we dont want any more, consolidate existing specs into an 001-next-sprint specification"
 
 ## Summary

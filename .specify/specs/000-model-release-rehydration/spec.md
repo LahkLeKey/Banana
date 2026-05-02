@@ -1,8 +1,8 @@
 # Feature Specification: Baseline Rehydration - Model Release Stability
 
-**Feature Branch**: `000-model-release-rehydration`  
-**Created**: 2026-04-25  
-**Status**: Draft  
+**Feature Branch**: `000-model-release-rehydration`
+**Created**: 2026-04-25
+**Status**: Draft
 **Type**: Rehydration Specification (pre-sprint baseline)
 
 ## Summary

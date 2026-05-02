@@ -15,6 +15,7 @@ Exit codes:
     1  -- drift detected (missing validators reported on stderr)
     2  -- usage / IO error
 """
+
 from __future__ import annotations
 
 import argparse
@@ -100,7 +101,9 @@ def _looks_like_command(text: str) -> bool:
     head = text.split(maxsplit=1)[0]
     if head in COMMAND_LEADERS:
         return True
-    return any(head.startswith(prefix) for prefix in COMMAND_LEADERS if prefix.endswith("/"))
+    return any(
+        head.startswith(prefix) for prefix in COMMAND_LEADERS if prefix.endswith("/")
+    )
 
 
 def _split_chained(line: str) -> list[str]:
@@ -198,9 +201,17 @@ def _is_spike(feature_dir: Path) -> bool:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("feature_dir", nargs="?", help="Path to a feature directory under .specify/specs/")
-    parser.add_argument("--all", action="store_true", help="Check every feature directory")
-    parser.add_argument("--include-spikes", action="store_true", help="Also check -spike directories")
+    parser.add_argument(
+        "feature_dir",
+        nargs="?",
+        help="Path to a feature directory under .specify/specs/",
+    )
+    parser.add_argument(
+        "--all", action="store_true", help="Check every feature directory"
+    )
+    parser.add_argument(
+        "--include-spikes", action="store_true", help="Also check -spike directories"
+    )
     args = parser.parse_args(argv)
 
     if args.all:
@@ -218,7 +229,10 @@ def main(argv: list[str] | None = None) -> int:
         missing = check_feature(target)
         if missing:
             drift_found = True
-            print(f"DRIFT in {target.relative_to(REPO_ROOT) if target.is_relative_to(REPO_ROOT) else target}:", file=sys.stderr)
+            print(
+                f"DRIFT in {target.relative_to(REPO_ROOT) if target.is_relative_to(REPO_ROOT) else target}:",
+                file=sys.stderr,
+            )
             for v in missing:
                 print(f"  - [{v.source_section}] {v.raw}", file=sys.stderr)
         else:

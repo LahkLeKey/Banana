@@ -59,6 +59,12 @@ if(BANANA_ENABLE_DAL)
   endif()
 endif()
 
+option(BANANA_ENABLE_COVERAGE "Enable gcov code coverage instrumentation" OFF)
+if(BANANA_ENABLE_COVERAGE)
+  target_compile_options(banana_native PRIVATE -fprofile-arcs -ftest-coverage)
+  target_link_options(banana_native PRIVATE -fprofile-arcs -ftest-coverage)
+endif()
+
 # Native test binary (driven by spec 014).
 enable_testing()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/native/CMakeLists.txt")

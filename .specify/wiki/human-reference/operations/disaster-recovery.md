@@ -1,7 +1,7 @@
 # Disaster Recovery Runbook
 
-> Owner: Infrastructure  
-> Status: Implemented (spec #083)  
+> Owner: Infrastructure
+> Status: Implemented (spec #083)
 > Last reviewed: 2026-05-01
 
 ---

@@ -15,7 +15,11 @@ from pathlib import Path
 from statistics import mean
 
 from neuro_trace import write_neuro_trace
-from training_session_store import append_training_session_record, load_training_session_history, summarize_replay_drift
+from training_session_store import (
+    append_training_session_record,
+    load_training_session_history,
+    summarize_replay_drift,
+)
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
 PROFILE_DEFAULTS = {
@@ -35,10 +39,16 @@ class Sample:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train ripeness multi-class vocabulary model.")
+    parser = argparse.ArgumentParser(
+        description="Train ripeness multi-class vocabulary model."
+    )
     parser.add_argument("--corpus", required=True, help="Path to corpus JSON file.")
-    parser.add_argument("--output", required=True, help="Output directory for artifacts.")
-    parser.add_argument("--vocab-size", type=int, default=24, help="Maximum number of learned tokens.")
+    parser.add_argument(
+        "--output", required=True, help="Output directory for artifacts."
+    )
+    parser.add_argument(
+        "--vocab-size", type=int, default=24, help="Maximum number of learned tokens."
+    )
     parser.add_argument(
         "--training-profile",
         choices=["ci", "local", "overnight", "auto"],
@@ -57,9 +67,15 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Maximum evaluated sessions. 0 uses profile default.",
     )
-    parser.add_argument("--min-signal-score", type=float, default=0.7, help="Minimum signal score gate.")
-    parser.add_argument("--min-f1", type=float, default=0.7, help="Minimum macro-F1 hold-out gate.")
-    parser.add_argument("--min-token-length", type=int, default=3, help="Minimum token length.")
+    parser.add_argument(
+        "--min-signal-score", type=float, default=0.7, help="Minimum signal score gate."
+    )
+    parser.add_argument(
+        "--min-f1", type=float, default=0.7, help="Minimum macro-F1 hold-out gate."
+    )
+    parser.add_argument(
+        "--min-token-length", type=int, default=3, help="Minimum token length."
+    )
     parser.add_argument(
         "--allow-numeric-tokens",
         action="store_true",
@@ -78,7 +94,9 @@ def normalize_label(label: str) -> str:
     cleaned = label.strip().lower().replace("_", "-")
     if cleaned in LABELS:
         return cleaned
-    raise ValueError(f"Unsupported label '{label}'. Expected one of: {', '.join(LABELS)}.")
+    raise ValueError(
+        f"Unsupported label '{label}'. Expected one of: {', '.join(LABELS)}."
+    )
 
 
 def load_corpus(path: Path) -> tuple[list[Sample], list[str]]:
@@ -114,12 +132,16 @@ def load_corpus(path: Path) -> tuple[list[Sample], list[str]]:
         samples.append(Sample(sample_id=sample_id, text=text, label=label))
 
     if len(samples) < 8:
-        raise ValueError("Corpus must provide at least 8 samples to evaluate hold-out metrics.")
+        raise ValueError(
+            "Corpus must provide at least 8 samples to evaluate hold-out metrics."
+        )
 
     per_label = Counter(sample.label for sample in samples)
     for label in LABELS:
         if per_label[label] < 8:
-            raise ValueError(f"Corpus must provide at least 8 samples for label '{label}'.")
+            raise ValueError(
+                f"Corpus must provide at least 8 samples for label '{label}'."
+            )
 
     return samples, split_ids
 
@@ -162,14 +184,20 @@ def tokenize(text: str, min_token_length: int, allow_numeric_tokens: bool) -> li
     return tokens
 
 
-def split_train_holdout(samples: list[Sample], seed: int, eval_ids: set[str]) -> tuple[list[Sample], list[Sample]]:
+def split_train_holdout(
+    samples: list[Sample], seed: int, eval_ids: set[str]
+) -> tuple[list[Sample], list[Sample]]:
     if eval_ids:
         holdout = [sample for sample in samples if sample.sample_id in eval_ids]
         if not holdout:
-            raise ValueError("splits.eval_ids was provided but no matching sample ids were found.")
+            raise ValueError(
+                "splits.eval_ids was provided but no matching sample ids were found."
+            )
         train = [sample for sample in samples if sample.sample_id not in eval_ids]
         if not train:
-            raise ValueError("splits.eval_ids consumed the full corpus; training set is empty.")
+            raise ValueError(
+                "splits.eval_ids consumed the full corpus; training set is empty."
+            )
         present = {sample.label for sample in holdout}
         for label in LABELS:
             if label not in present:
@@ -200,7 +228,9 @@ def learn_vocabulary(
 ) -> tuple[list[dict], dict[str, dict[str, float]], float]:
     token_label_counts: dict[str, Counter[str]] = {}
     for sample in train_samples:
-        unique_tokens = set(tokenize(sample.text, min_token_length, allow_numeric_tokens))
+        unique_tokens = set(
+            tokenize(sample.text, min_token_length, allow_numeric_tokens)
+        )
         for token in unique_tokens:
             counts = token_label_counts.setdefault(token, Counter())
             counts[sample.label] += 1
@@ -225,7 +255,8 @@ def learn_vocabulary(
                 "signal": round(signal, 6),
                 "weights": weights,
                 "centered_weights": {
-                    label: round(probs[label] - (1.0 / len(LABELS)), 6) for label in LABELS
+                    label: round(probs[label] - (1.0 / len(LABELS)), 6)
+                    for label in LABELS
                 },
                 "counts": {label: int(counts[label]) for label in LABELS},
             }
@@ -264,7 +295,9 @@ def learn_vocabulary(
                 break
 
     weights = {
-        str(item["token"]): {label: float(item["centered_weights"][label]) for label in LABELS}
+        str(item["token"]): {
+            label: float(item["centered_weights"][label]) for label in LABELS
+        }
         for item in selected
     }
     signal_score = mean(float(item["signal"]) for item in selected) if selected else 0.0
@@ -304,7 +337,9 @@ def evaluate(
 ) -> dict[str, object]:
     confusion = {actual: {pred: 0 for pred in LABELS} for actual in LABELS}
     for sample in holdout_samples:
-        predicted, _ = predict_label(sample.text, token_weights, min_token_length, allow_numeric_tokens)
+        predicted, _ = predict_label(
+            sample.text, token_weights, min_token_length, allow_numeric_tokens
+        )
         confusion[sample.label][predicted] += 1
 
     per_label_metrics: dict[str, dict[str, float]] = {}
@@ -359,7 +394,9 @@ static const unsigned long k_banana_ripeness_labels_generated_count =
     path.write_text(header, encoding="utf-8")
 
 
-def stable_run_fingerprint(args: argparse.Namespace, corpus_path: Path, sample_count: int) -> str:
+def stable_run_fingerprint(
+    args: argparse.Namespace, corpus_path: Path, sample_count: int
+) -> str:
     payload = {
         "corpus": str(corpus_path),
         "sample_count": sample_count,
@@ -478,9 +515,15 @@ def main() -> int:
         "sessions": sessions,
     }
 
-    (output_dir / "vocabulary.json").write_text(json.dumps(vocabulary_payload, indent=2) + "\n", encoding="utf-8")
-    (output_dir / "metrics.json").write_text(json.dumps(metrics_payload, indent=2) + "\n", encoding="utf-8")
-    (output_dir / "sessions.json").write_text(json.dumps(sessions_payload, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "vocabulary.json").write_text(
+        json.dumps(vocabulary_payload, indent=2) + "\n", encoding="utf-8"
+    )
+    (output_dir / "metrics.json").write_text(
+        json.dumps(metrics_payload, indent=2) + "\n", encoding="utf-8"
+    )
+    (output_dir / "sessions.json").write_text(
+        json.dumps(sessions_payload, indent=2) + "\n", encoding="utf-8"
+    )
     write_label_header(output_dir / "banana_ripeness_labels.h")
 
     session_write = append_training_session_record(

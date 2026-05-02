@@ -2,9 +2,9 @@
 // Persists last-N verdicts via StorageAdapter; list() returns
 // newest-first. Default cap is 50 (config via options).
 
-import type {StorageAdapter, StoredVerdict, VerdictHistory} from './types';
+import type { StorageAdapter, StoredVerdict, VerdictHistory } from "./types";
 
-const PREFIX = 'banana:history:';
+const PREFIX = "banana:history:";
 
 export type CreateVerdictHistoryOptions = {
   adapter: StorageAdapter;
@@ -12,10 +12,8 @@ export type CreateVerdictHistoryOptions = {
   maxEntries?: number;
 };
 
-export function createVerdictHistory(
-    options: CreateVerdictHistoryOptions,
-    ): VerdictHistory {
-  const ns = options.namespace ?? 'default';
+export function createVerdictHistory(options: CreateVerdictHistoryOptions): VerdictHistory {
+  const ns = options.namespace ?? "default";
   const prefix = `${PREFIX}${ns}:`;
   const cap = options.maxEntries ?? 50;
   const keyOf = (id: string) => `${prefix}${id}`;
@@ -47,7 +45,7 @@ export function createVerdictHistory(
     },
     async list(limit) {
       const all = await readAll();
-      return typeof limit === 'number' ? all.slice(0, limit) : all;
+      return typeof limit === "number" ? all.slice(0, limit) : all;
     },
     async clear() {
       const keys = await options.adapter.keys(prefix);

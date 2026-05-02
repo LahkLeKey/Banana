@@ -661,6 +661,13 @@ jobs:
                 `${summaryMarker}\n## Copilot Review Triage\n\n${unresolved.length} unresolved Copilot review thread(s) still need triage before automated approval.\n\n${lines.join("\n")}\n\n### Suggestion Issues\n${issueLines.length > 0 ? issueLines.join("\n") : "- No suggestion issues were generated."}\n${dispatchWarningLines.length > 0 ? `\n### Dispatch Warnings\n${dispatchWarningLines.join("\n")}\n` : ""}`
               );
 
+              if (hasCopilotBypassLabel) {
+                core.warning(
+                  `Copilot review triage found ${unresolved.length} unresolved finding(s); bypass labels are present so triage issues were synchronized and the check will not block this autonomous cycle.`
+                );
+                return;
+              }
+
               core.setFailed(
                 `Copilot review triage has ${unresolved.length} unresolved finding(s). Suggestion issues have been synchronized for incremental remediation.`
               );

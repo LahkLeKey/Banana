@@ -1,6 +1,6 @@
 # Comparison Dimensions: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Define the normalized shared dimensions used to compare Regression, Binary, and Transformer model families.
 
 ## Dimension Set

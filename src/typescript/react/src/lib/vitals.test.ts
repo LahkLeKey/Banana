@@ -1,7 +1,7 @@
 /**
  * vitals.test.ts — Core Web Vitals reporter (feature 061).
  */
-import { describe, it, expect, beforeEach, mock } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 describe("initVitals", () => {
   beforeEach(() => {

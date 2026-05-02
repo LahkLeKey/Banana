@@ -14,7 +14,12 @@ DEFAULT_MANIFEST = API_ROOT / "coverage-denominator.json"
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def collect_cs_files(api_root: Path) -> list[str]:
@@ -72,9 +77,13 @@ def check_manifest(manifest_path: Path, expected_files: list[str]) -> tuple[bool
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Sync or validate coverage-denominator manifest.")
+    parser = argparse.ArgumentParser(
+        description="Sync or validate coverage-denominator manifest."
+    )
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
-    parser.add_argument("--check", action="store_true", help="Validate manifest instead of writing.")
+    parser.add_argument(
+        "--check", action="store_true", help="Validate manifest instead of writing."
+    )
     parser.add_argument("--quiet", action="store_true", help="Suppress report output.")
     return parser.parse_args()
 
@@ -94,7 +103,16 @@ def main() -> int:
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     if not args.quiet:
-        print(json.dumps({"written": True, "manifest": str(manifest_path), "count": len(expected_files)}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "written": True,
+                    "manifest": str(manifest_path),
+                    "count": len(expected_files),
+                },
+                indent=2,
+            )
+        )
     return 0
 
 

@@ -3,8 +3,7 @@ export type EventWithNavigationGuards = {
   stopPropagation?: () => void;
 };
 
-export function preventNativeSubmitNavigation(
-    event?: EventWithNavigationGuards): void {
+export function preventNativeSubmitNavigation(event?: EventWithNavigationGuards): void {
   event?.preventDefault?.();
   event?.stopPropagation?.();
 }
@@ -14,10 +13,10 @@ export function normalizeEnsembleSample(rawInput: string): string {
 }
 
 export function canSubmitEnsemble(
-    apiBaseUrl: string,
-    sample: string,
-    isPredictingEnsemble: boolean,
-    ): boolean {
+  apiBaseUrl: string,
+  sample: string,
+  isPredictingEnsemble: boolean
+): boolean {
   if (isPredictingEnsemble) {
     return false;
   }

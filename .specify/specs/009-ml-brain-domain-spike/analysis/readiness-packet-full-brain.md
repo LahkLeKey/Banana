@@ -1,8 +1,8 @@
 # Readiness Packet: Full Brain Domain
 
-**Domain**: Full Brain  
-**Model Family**: Transformer  
-**Date**: 2026-04-26  
+**Domain**: Full Brain
+**Model Family**: Transformer
+**Date**: 2026-04-26
 **Confidence**: High [H] (domain assignment); Medium [M] (implementation cost estimates — U-001)
 
 ---

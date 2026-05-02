@@ -1,6 +1,6 @@
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 
-export type AbGroup = 'A' | 'B';
+export type AbGroup = "A" | "B";
 
 interface AbStats {
   count: number;
@@ -13,9 +13,9 @@ const groupStats: Record<AbGroup, AbStats> = {
 };
 
 export function getAbGroup(sessionId: string): AbGroup {
-  const hash = crypto.createHash('sha256').update(sessionId).digest('hex');
+  const hash = crypto.createHash("sha256").update(sessionId).digest("hex");
   const bucket = parseInt(hash.slice(0, 8), 16) % 100;
-  return bucket < 50 ? 'A' : 'B';
+  return bucket < 50 ? "A" : "B";
 }
 
 export function recordAbOutcome(group: AbGroup, score: number): void {

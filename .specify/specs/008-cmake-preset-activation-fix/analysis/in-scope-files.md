@@ -1,6 +1,6 @@
 # In-Scope Files: CMake Preset Activation Fix
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Enumerate configuration surfaces in scope for the 008 bug fix.
 
 ## CMake Project Files

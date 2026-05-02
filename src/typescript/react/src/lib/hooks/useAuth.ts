@@ -6,7 +6,7 @@
  * Persists across page refreshes via sessionStorage (tab-scoped).
  */
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export type BananaRole = "admin" | "operator" | "viewer";
 

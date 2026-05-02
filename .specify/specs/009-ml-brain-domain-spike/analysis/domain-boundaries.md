@@ -1,6 +1,6 @@
 # Domain Boundaries: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Define what belongs exclusively to each brain domain and document edge cases and out-of-domain rules.
 
 ## Left Brain Boundaries

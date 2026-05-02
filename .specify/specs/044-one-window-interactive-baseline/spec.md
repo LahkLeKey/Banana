@@ -1,8 +1,8 @@
 # Feature Specification: One-Window Interactive Baseline
 
-**Feature Branch**: `[044-one-window-interactive-baseline]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[044-one-window-interactive-baseline]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "make the VS Code web view flow a baseline so development stays interactive in one window"
 
 ## In Scope *(mandatory)*

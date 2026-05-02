@@ -3,7 +3,9 @@
 // .specify/specs/022-frontend-resilient-offline-spike/analysis/storage-contract.md
 
 export type RetryPolicy = {
-  maxAttempts: number; backoffMs: number; backoffMultiplier: number;
+  maxAttempts: number;
+  backoffMs: number;
+  backoffMultiplier: number;
   maxBackoffMs: number;
 };
 
@@ -22,40 +24,46 @@ export const DEFAULT_CHAT_RETRY: RetryPolicy = {
 };
 
 export type QueuedJob<TPayload> = {
-  key: string; payload: TPayload; retry: RetryPolicy; enqueuedAt: number;
+  key: string;
+  payload: TPayload;
+  retry: RetryPolicy;
+  enqueuedAt: number;
   attempts?: number;
 };
 
 export interface RequestQueue<TPayload, TResult> {
   enqueue(job: QueuedJob<TPayload>): Promise<void>;
-  drain(handler: (payload: TPayload) => Promise<TResult>):
-      Promise<DrainReport<TResult>>;
+  drain(handler: (payload: TPayload) => Promise<TResult>): Promise<DrainReport<TResult>>;
   peek(): Promise<QueuedJob<TPayload>[]>;
   clear(key?: string): Promise<void>;
 }
 
-export type DrainOutcome<TResult> =|{
-  key: string;
-  status: 'ok';
-  result: TResult
-}
-|{
-  key: string;
-  status: 'failed';
-  error: string
-}
-|{
-  key: string;
-  status: 'retry';
-  nextAttempts: number
-};
+export type DrainOutcome<TResult> =
+  | {
+      key: string;
+      status: "ok";
+      result: TResult;
+    }
+  | {
+      key: string;
+      status: "failed";
+      error: string;
+    }
+  | {
+      key: string;
+      status: "retry";
+      nextAttempts: number;
+    };
 
 export type DrainReport<TResult> = {
   outcomes: DrainOutcome<TResult>[];
 };
 
 export type StoredVerdict = {
-  id: string; capturedAt: number; input: string; verdict: unknown;
+  id: string;
+  capturedAt: number;
+  input: string;
+  verdict: unknown;
   didEscalate: boolean;
 };
 
@@ -66,7 +74,7 @@ export interface VerdictHistory {
 }
 
 export interface StorageAdapter {
-  get(key: string): Promise<string|null>;
+  get(key: string): Promise<string | null>;
   set(key: string, value: string): Promise<void>;
   delete(key: string): Promise<void>;
   keys(prefix: string): Promise<string[]>;

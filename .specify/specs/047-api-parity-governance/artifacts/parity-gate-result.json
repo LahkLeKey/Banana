@@ -1,13 +1,11 @@
 {
-  "evaluated_at_utc": "2026-04-27T01:25:00.573Z",
-  "decision": "FAIL",
+  "evaluated_at_utc": "2026-05-02T07:50:48.299Z",
+  "decision": "PASS",
   "unresolved_summary": {
-    "total_findings": 29,
-    "missing_route": 29,
+    "total_findings": 0,
+    "missing_route": 0,
     "status_mismatch": 0,
     "shape_mismatch": 0
   },
-  "reasons": [
-    "Unresolved parity drift findings remain."
-  ]
+  "reasons": []
 }

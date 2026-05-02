@@ -9,14 +9,14 @@ Resolve the remaining Banana v2 frontend runtime defects where the page still sh
 
 ## Technical Context
 
-**Language/Version**: TypeScript (React frontend), JavaScript (Electron preload contract context), Bash (compose/diagnostic scripts), JSON (VS Code launch/tasks), YAML (Compose)  
-**Primary Dependencies**: Compose profile entry points (`scripts/compose-run-profile.sh`, `scripts/compose-profile-ready.sh`), frontend runtime resolver (`src/typescript/react/src/lib/api.ts`), UI state surfaces (`src/typescript/react/src/App.tsx`), drift diagnostics (`scripts/validate-frontend-config-drift.sh`)  
-**Storage**: N/A  
-**Testing**: Targeted frontend unit tests, compose runtime validation loops, rendered-state verification through VS Code integrated browser  
-**Target Platform**: Windows + Docker Desktop + Ubuntu WSL2 local runtime contract with VS Code integrated browser workflow  
-**Project Type**: Frontend runtime contract hardening and behavior-fix slice in monorepo  
-**Performance Goals**: Canonical startup-to-usable chat state within current local dev loop expectations; diagnostics flow remains under ~2 minutes on warm environment  
-**Constraints**: Preserve existing compose profile architecture and API-base env contract keys; no backend/native business behavior changes  
+**Language/Version**: TypeScript (React frontend), JavaScript (Electron preload contract context), Bash (compose/diagnostic scripts), JSON (VS Code launch/tasks), YAML (Compose)
+**Primary Dependencies**: Compose profile entry points (`scripts/compose-run-profile.sh`, `scripts/compose-profile-ready.sh`), frontend runtime resolver (`src/typescript/react/src/lib/api.ts`), UI state surfaces (`src/typescript/react/src/App.tsx`), drift diagnostics (`scripts/validate-frontend-config-drift.sh`)
+**Storage**: N/A
+**Testing**: Targeted frontend unit tests, compose runtime validation loops, rendered-state verification through VS Code integrated browser
+**Target Platform**: Windows + Docker Desktop + Ubuntu WSL2 local runtime contract with VS Code integrated browser workflow
+**Project Type**: Frontend runtime contract hardening and behavior-fix slice in monorepo
+**Performance Goals**: Canonical startup-to-usable chat state within current local dev loop expectations; diagnostics flow remains under ~2 minutes on warm environment
+**Constraints**: Preserve existing compose profile architecture and API-base env contract keys; no backend/native business behavior changes
 **Scale/Scope**: React runtime resolution + error-state rendering + session bootstrap behavior, with supporting diagnostics and documentation updates
 
 ## Constitution Check

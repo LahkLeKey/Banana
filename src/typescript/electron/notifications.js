@@ -5,33 +5,35 @@
 // smoke harness.
 
 const VERDICT_NOTIFICATION_COPY = Object.freeze({
-  bananaConfident: 'Banana.',
-  bananaEscalated: 'Banana \u2014 needs a closer look.',
-  notBananaConfident: 'Not a banana.',
-  notBananaEscalated: 'Not a banana \u2014 needs a closer look.',
-  unknown: 'Send a sample to get a verdict.',
+  bananaConfident: "Banana.",
+  bananaEscalated: "Banana \u2014 needs a closer look.",
+  notBananaConfident: "Not a banana.",
+  notBananaEscalated: "Not a banana \u2014 needs a closer look.",
+  unknown: "Send a sample to get a verdict.",
 });
 
 function verdictBody(verdict) {
-  if (!verdict || typeof verdict !== 'object') {
+  if (!verdict || typeof verdict !== "object") {
     return VERDICT_NOTIFICATION_COPY.unknown;
   }
-  if (verdict.label === 'banana') {
-    return verdict.did_escalate ? VERDICT_NOTIFICATION_COPY.bananaEscalated
-                                : VERDICT_NOTIFICATION_COPY.bananaConfident;
+  if (verdict.label === "banana") {
+    return verdict.did_escalate
+      ? VERDICT_NOTIFICATION_COPY.bananaEscalated
+      : VERDICT_NOTIFICATION_COPY.bananaConfident;
   }
-  if (verdict.label === 'not_banana') {
-    return verdict.did_escalate ? VERDICT_NOTIFICATION_COPY.notBananaEscalated
-                                : VERDICT_NOTIFICATION_COPY.notBananaConfident;
+  if (verdict.label === "not_banana") {
+    return verdict.did_escalate
+      ? VERDICT_NOTIFICATION_COPY.notBananaEscalated
+      : VERDICT_NOTIFICATION_COPY.notBananaConfident;
   }
   return VERDICT_NOTIFICATION_COPY.unknown;
 }
 
 function verdictTitle(verdict) {
-  if (!verdict || typeof verdict !== 'object') return 'Banana verdict';
-  if (verdict.label === 'banana') return 'Banana verdict';
-  if (verdict.label === 'not_banana') return 'Banana verdict';
-  return 'Banana verdict';
+  if (!verdict || typeof verdict !== "object") return "Banana verdict";
+  if (verdict.label === "banana") return "Banana verdict";
+  if (verdict.label === "not_banana") return "Banana verdict";
+  return "Banana verdict";
 }
 
 /**
@@ -40,7 +42,7 @@ function verdictTitle(verdict) {
  * `{verdict, embedding}` envelope.
  */
 function notifyVerdict(payload) {
-  const {Notification} = require('electron');
+  const { Notification } = require("electron");
   const verdict = payload && payload.verdict ? payload.verdict : payload;
   if (!Notification.isSupported()) {
     return null;
@@ -57,14 +59,14 @@ function notifyVerdict(payload) {
 // queued-while-offline verdict resolves after the channel comes back
 // online. Body re-uses the canonical verdict body so the same
 // baseline strings appear everywhere.
-const DRAIN_NOTIFICATION_TITLE = 'Banana verdict ready';
+const DRAIN_NOTIFICATION_TITLE = "Banana verdict ready";
 
 function drainSuccessBody(verdict) {
   return verdictBody(verdict);
 }
 
 function notifyDrainSuccess(payload) {
-  const {Notification} = require('electron');
+  const { Notification } = require("electron");
   const verdict = payload && payload.verdict ? payload.verdict : payload;
   if (!Notification.isSupported()) {
     return null;
@@ -77,4 +79,11 @@ function notifyDrainSuccess(payload) {
   return notification;
 }
 
-module.exports = {notifyVerdict, notifyDrainSuccess, verdictBody, verdictTitle, drainSuccessBody, VERDICT_NOTIFICATION_COPY};
+module.exports = {
+  notifyVerdict,
+  notifyDrainSuccess,
+  verdictBody,
+  verdictTitle,
+  drainSuccessBody,
+  VERDICT_NOTIFICATION_COPY,
+};

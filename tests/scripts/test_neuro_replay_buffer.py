@@ -1,4 +1,5 @@
 """Tests for scripts/neuro/replay-buffer.py (feature 050 T002)."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -6,7 +7,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "neuro" / "replay-buffer.py"
@@ -19,7 +19,13 @@ _spec.loader.exec_module(mod)
 
 
 def _records(n: int) -> list[dict]:
-    return [{"session_id": f"s{i:04d}", "observed_at_utc": f"2026-04-{(i % 28) + 1:02d}T00:00:00Z"} for i in range(n)]
+    return [
+        {
+            "session_id": f"s{i:04d}",
+            "observed_at_utc": f"2026-04-{(i % 28) + 1:02d}T00:00:00Z",
+        }
+        for i in range(n)
+    ]
 
 
 def test_reservoir_append_under_cap_keeps_all_sorted():
@@ -71,7 +77,9 @@ def test_prune_by_age_drops_old_records():
 
 def test_prune_by_age_zero_keeps_all():
     recs = _records(5)
-    assert mod.prune_by_age(recs, max_age_days=0, now_iso="2026-05-01T00:00:00Z") == recs
+    assert (
+        mod.prune_by_age(recs, max_age_days=0, now_iso="2026-05-01T00:00:00Z") == recs
+    )
 
 
 def test_load_and_write_roundtrip(tmp_path: Path):
@@ -92,7 +100,9 @@ def test_cli_append_then_sample(tmp_path: Path, capsys):
     path = tmp_path / "buf.jsonl"
     payload = tmp_path / "in.json"
     payload.write_text(json.dumps(_records(5)), encoding="utf-8")
-    rc = mod.main(["--buffer", str(path), "--op", "append", "--records-file", str(payload)])
+    rc = mod.main(
+        ["--buffer", str(path), "--op", "append", "--records-file", str(payload)]
+    )
     assert rc == 0
     capsys.readouterr()
     rc = mod.main(["--buffer", str(path), "--op", "sample", "--n", "2", "--seed", "3"])

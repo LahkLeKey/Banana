@@ -1,7 +1,7 @@
 /**
  * useAuth.test.ts — unit tests for useAuth store (feature 063).
  */
-import { describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import { useAuth } from "./useAuth";
 
 // Encode a minimal JWT with given payload (no signature validation needed for client tests)

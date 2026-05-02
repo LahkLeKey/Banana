@@ -1,6 +1,6 @@
 # Implementation Plan: Coverage 80 Rehydration for Entire Monorepo
 
-**Branch**: `feature/003-coverage-80-rehydration` | **Date**: 2026-04-25 | **Spec**: `.specify/specs/003-coverage-80-rehydration/spec.md`  
+**Branch**: `feature/003-coverage-80-rehydration` | **Date**: 2026-04-25 | **Spec**: `.specify/specs/003-coverage-80-rehydration/spec.md`
 **Input**: Feature specification from `.specify/specs/003-coverage-80-rehydration/spec.md`
 
 ## Summary
@@ -9,14 +9,14 @@ Establish a deterministic, merge-gated coverage contract that enforces an 80 per
 
 ## Technical Context
 
-**Language/Version**: GitHub Actions YAML, Bash (GNU/bash on Ubuntu), C/CMake toolchain coverage outputs, .NET 8 test coverage outputs, Bun/TypeScript coverage outputs  
-**Primary Dependencies**: existing merge-gated workflows, Docker Compose runtime channels, coverage output normalizers, `actions/upload-artifact`, `actions/download-artifact`, `curl` preflight checks where required  
-**Storage**: lane-scoped evidence under repository artifact roots and GitHub Actions artifacts  
-**Testing**: merge-gated validation surfaces across unit, integration, and e2e lanes with aggregate contract checks  
-**Target Platform**: GitHub-hosted `ubuntu-latest` runners (primary), local Windows + Docker Desktop + Ubuntu WSL2 contract (secondary)  
-**Project Type**: CI/test-governance and reporting contract across a multi-language monorepo  
-**Performance Goals**: deterministic threshold outcomes; one-pass triage; zero missing coverage evidence for evaluated lanes  
-**Constraints**: preserve existing runtime contracts (`BANANA_PG_CONNECTION`, `BANANA_NATIVE_PATH`, `VITE_BANANA_API_BASE_URL`), preserve existing test tooling, avoid machine-specific paths, keep schema parity between docs and validators  
+**Language/Version**: GitHub Actions YAML, Bash (GNU/bash on Ubuntu), C/CMake toolchain coverage outputs, .NET 8 test coverage outputs, Bun/TypeScript coverage outputs
+**Primary Dependencies**: existing merge-gated workflows, Docker Compose runtime channels, coverage output normalizers, `actions/upload-artifact`, `actions/download-artifact`, `curl` preflight checks where required
+**Storage**: lane-scoped evidence under repository artifact roots and GitHub Actions artifacts
+**Testing**: merge-gated validation surfaces across unit, integration, and e2e lanes with aggregate contract checks
+**Target Platform**: GitHub-hosted `ubuntu-latest` runners (primary), local Windows + Docker Desktop + Ubuntu WSL2 contract (secondary)
+**Project Type**: CI/test-governance and reporting contract across a multi-language monorepo
+**Performance Goals**: deterministic threshold outcomes; one-pass triage; zero missing coverage evidence for evaluated lanes
+**Constraints**: preserve existing runtime contracts (`BANANA_PG_CONNECTION`, `BANANA_NATIVE_PATH`, `VITE_BANANA_API_BASE_URL`), preserve existing test tooling, avoid machine-specific paths, keep schema parity between docs and validators
 **Scale/Scope**: all merge-gated domain-layer tuples in native, API, web, desktop, and mobile runtime surfaces
 
 ## Constitution Check

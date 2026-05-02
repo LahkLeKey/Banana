@@ -18,6 +18,51 @@
             }
         },
         {
+            "name": "linux-x86_64-release",
+            "displayName": "Linux x86_64 Release",
+            "description": "Release build preset for Linux x86_64 CI.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/native/linux-x86_64-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/native/linux-x86_64"
+            }
+        },
+        {
+            "name": "linux-arm64-release",
+            "displayName": "Linux ARM64 Release",
+            "description": "Release build preset for Linux ARM64 cross-compile CI.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/native/linux-arm64-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_C_COMPILER": "aarch64-linux-gnu-gcc",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/native/linux-arm64"
+            }
+        },
+        {
+            "name": "macos-arm64-release",
+            "displayName": "macOS ARM64 Release",
+            "description": "Release build preset for macOS ARM64 CI.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/native/macos-arm64-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/native/macos-arm64"
+            }
+        },
+        {
+            "name": "windows-x86_64-release",
+            "displayName": "Windows x86_64 Release",
+            "description": "Release build preset for Windows x86_64 CI.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/native/windows-x86_64-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/native/windows-x86_64"
+            }
+        },
+        {
             "name": "sanitizers",
             "displayName": "Banana ASAN+UBSAN",
             "description": "AddressSanitizer + UndefinedBehaviorSanitizer preset (feature 073). Linux/macOS only.",
@@ -36,6 +81,22 @@
         {
             "name": "default",
             "configurePreset": "default"
+        },
+        {
+            "name": "linux-x86_64-release",
+            "configurePreset": "linux-x86_64-release"
+        },
+        {
+            "name": "linux-arm64-release",
+            "configurePreset": "linux-arm64-release"
+        },
+        {
+            "name": "macos-arm64-release",
+            "configurePreset": "macos-arm64-release"
+        },
+        {
+            "name": "windows-x86_64-release",
+            "configurePreset": "windows-x86_64-release"
         },
         {
             "name": "sanitizers",

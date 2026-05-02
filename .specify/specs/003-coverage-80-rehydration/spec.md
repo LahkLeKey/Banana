@@ -1,10 +1,10 @@
 # Feature Specification: Coverage 80 Rehydration for Entire Monorepo
 
-**Feature Branch**: `003-coverage-80-rehydration`  
-**Created**: 2026-04-25  
-**Status**: Draft  
-**Type**: Coverage Stabilization Specification  
-**Input**: User description: "Scaffold a robust spec that satisfies unit, integration, and e2e coverage to 80 percent for the entire monorepo."  
+**Feature Branch**: `003-coverage-80-rehydration`
+**Created**: 2026-04-25
+**Status**: Draft
+**Type**: Coverage Stabilization Specification
+**Input**: User description: "Scaffold a robust spec that satisfies unit, integration, and e2e coverage to 80 percent for the entire monorepo."
 **Depends On**: `002-compose-ci-stabilization` (lane contract schema baseline, evidence path-safety, runtime preflight contract)
 
 ## Summary

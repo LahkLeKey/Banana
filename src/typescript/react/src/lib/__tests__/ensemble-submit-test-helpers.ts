@@ -1,6 +1,6 @@
 export function getLocationFingerprint(
-    location: Pick<Location, 'origin'|'pathname'|'search'> =
-        window.location): string {
+  location: Pick<Location, "origin" | "pathname" | "search"> = window.location
+): string {
   return `${location.origin}${location.pathname}${location.search}`;
 }
 

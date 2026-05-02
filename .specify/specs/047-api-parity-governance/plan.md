@@ -9,14 +9,14 @@ Define and enforce a parity governance contract for overlapping ASP.NET (`:8080`
 
 ## Technical Context
 
-**Language/Version**: Markdown planning artifacts, C# (ASP.NET API), TypeScript (Fastify API), YAML/shell workflow surfaces  
-**Primary Dependencies**: ASP.NET controllers and pipeline surfaces, Fastify route modules, existing compose/runtime contract, Spec Kit artifacts  
-**Storage**: File-based governance artifacts in `.specify/specs/047-api-parity-governance` (no new runtime datastore)  
-**Testing**: API parity validation workflow checks, route inventory verification, drift-detection evidence captured in quickstart  
-**Target Platform**: Local and CI delivery pipelines for Banana monorepo (Windows + Docker Desktop + Ubuntu WSL2 runtime contract)  
-**Project Type**: Cross-API governance and validation planning slice  
-**Performance Goals**: Detect and report parity drift during normal validation windows before merge; no additional runtime latency requirement introduced by planning artifacts  
-**Constraints**: Must preserve Layered Interop architecture, must satisfy Constitution VII (Cross-API Feature Parity), must keep intentional divergence explicitly documented and time-bounded  
+**Language/Version**: Markdown planning artifacts, C# (ASP.NET API), TypeScript (Fastify API), YAML/shell workflow surfaces
+**Primary Dependencies**: ASP.NET controllers and pipeline surfaces, Fastify route modules, existing compose/runtime contract, Spec Kit artifacts
+**Storage**: File-based governance artifacts in `.specify/specs/047-api-parity-governance` (no new runtime datastore)
+**Testing**: API parity validation workflow checks, route inventory verification, drift-detection evidence captured in quickstart
+**Target Platform**: Local and CI delivery pipelines for Banana monorepo (Windows + Docker Desktop + Ubuntu WSL2 runtime contract)
+**Project Type**: Cross-API governance and validation planning slice
+**Performance Goals**: Detect and report parity drift during normal validation windows before merge; no additional runtime latency requirement introduced by planning artifacts
+**Constraints**: Must preserve Layered Interop architecture, must satisfy Constitution VII (Cross-API Feature Parity), must keep intentional divergence explicitly documented and time-bounded
 **Scale/Scope**: Overlapping capability areas between ASP.NET controllers and Fastify routes; parity inventory, drift findings, exceptions, and workflow gates
 
 ## Constitution Check

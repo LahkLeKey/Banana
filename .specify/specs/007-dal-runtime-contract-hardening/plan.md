@@ -9,14 +9,14 @@ Harden DAL runtime contract behavior so profile-query paths return explicit, det
 
 ## Technical Context
 
-**Language/Version**: C11 native code, C#/.NET 8 ASP.NET Core, Markdown planning artifacts  
-**Primary Dependencies**: Native DAL (`src/native/core/dal/banana_dal.c`), wrapper status contract (`src/native/wrapper/banana_wrapper.h`), ASP.NET status mapping (`src/c-sharp/asp.net/Pipeline/StatusMapping.cs`)  
-**Storage**: PostgreSQL (runtime-gated via `BANANA_PG_CONNECTION`)  
-**Testing**: Native C tests (`tests/native`), .NET unit tests (`tests/unit`), contract-lane tests (`tests/e2e/Contracts`)  
+**Language/Version**: C11 native code, C#/.NET 8 ASP.NET Core, Markdown planning artifacts
+**Primary Dependencies**: Native DAL (`src/native/core/dal/banana_dal.c`), wrapper status contract (`src/native/wrapper/banana_wrapper.h`), ASP.NET status mapping (`src/c-sharp/asp.net/Pipeline/StatusMapping.cs`)
+**Storage**: PostgreSQL (runtime-gated via `BANANA_PG_CONNECTION`)
+**Testing**: Native C tests (`tests/native`), .NET unit tests (`tests/unit`), contract-lane tests (`tests/e2e/Contracts`)
 **Target Platform**: Windows development environment with native library integration and .NET runtime
-**Project Type**: Monorepo native + managed API contract hardening slice  
-**Performance Goals**: No measurable regression in existing DAL success-path latency while improving failure determinism  
-**Constraints**: Preserve controller -> service -> pipeline -> native interop contract, keep `BANANA_PG_CONNECTION` and `BANANA_NATIVE_PATH` semantics explicit, avoid unrelated status taxonomy expansion  
+**Project Type**: Monorepo native + managed API contract hardening slice
+**Performance Goals**: No measurable regression in existing DAL success-path latency while improving failure determinism
+**Constraints**: Preserve controller -> service -> pipeline -> native interop contract, keep `BANANA_PG_CONNECTION` and `BANANA_NATIVE_PATH` semantics explicit, avoid unrelated status taxonomy expansion
 **Scale/Scope**: One bounded DAL hardening story affecting native DAL outcomes and managed status mapping
 
 ## Constitution Check

@@ -41,7 +41,9 @@ def load_vocabulary(path: Path) -> list[dict]:
 def load_buffer_size(path: Path) -> int:
     if not path.exists():
         return 0
-    return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+    return sum(
+        1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
+    )
 
 
 def compute_fisher(vocabulary: list[dict]) -> dict[str, float]:
@@ -64,12 +66,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--model", required=True, help="Model name, e.g. not-banana.")
     parser.add_argument("--vocabulary", type=Path, required=True)
     parser.add_argument("--replay-buffer", type=Path, default=None)
-    parser.add_argument("--output-root", type=Path, required=True,
-                        help="Root for artifacts/training/<model>/consolidation/<date>/")
+    parser.add_argument(
+        "--output-root",
+        type=Path,
+        required=True,
+        help="Root for artifacts/training/<model>/consolidation/<date>/",
+    )
     parser.add_argument("--phase", choices=["nrem", "rem"], default="nrem")
-    parser.add_argument("--now", default=None, help="Override UTC date (YYYY-MM-DD or ISO).")
-    parser.add_argument("--deterministic-timestamp", action="store_true",
-                        help="Emit the deterministic 1970 timestamp instead of wall clock.")
+    parser.add_argument(
+        "--now", default=None, help="Override UTC date (YYYY-MM-DD or ISO)."
+    )
+    parser.add_argument(
+        "--deterministic-timestamp",
+        action="store_true",
+        help="Emit the deterministic 1970 timestamp instead of wall clock.",
+    )
     return parser.parse_args(argv)
 
 
@@ -116,7 +127,11 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(report_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
 
-    print(json.dumps({"output_dir": str(out_dir), **report_payload}, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {"output_dir": str(out_dir), **report_payload}, indent=2, sort_keys=True
+        )
+    )
     return 0
 
 

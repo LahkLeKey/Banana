@@ -25,7 +25,9 @@ REQUIRED_FIELDS = {
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate persisted training-session JSONL history.")
+    parser = argparse.ArgumentParser(
+        description="Validate persisted training-session JSONL history."
+    )
     parser.add_argument(
         "paths",
         nargs="*",
@@ -53,12 +55,27 @@ def _is_relative_path(value: Any) -> bool:
 
 def validate_record(record: dict[str, Any], path: Path, line_number: int) -> None:
     missing = sorted(REQUIRED_FIELDS - set(record.keys()))
-    expect(not missing, f"{path}:{line_number}: missing required fields: {', '.join(missing)}")
+    expect(
+        not missing,
+        f"{path}:{line_number}: missing required fields: {', '.join(missing)}",
+    )
 
-    expect(record.get("schema_version") == 1, f"{path}:{line_number}: schema_version must equal 1")
-    expect(isinstance(record["thresholds"], dict), f"{path}:{line_number}: thresholds must be an object")
-    expect(isinstance(record["metrics"], dict), f"{path}:{line_number}: metrics must be an object")
-    expect(isinstance(record["artifact_paths"], dict), f"{path}:{line_number}: artifact_paths must be an object")
+    expect(
+        record.get("schema_version") == 1,
+        f"{path}:{line_number}: schema_version must equal 1",
+    )
+    expect(
+        isinstance(record["thresholds"], dict),
+        f"{path}:{line_number}: thresholds must be an object",
+    )
+    expect(
+        isinstance(record["metrics"], dict),
+        f"{path}:{line_number}: metrics must be an object",
+    )
+    expect(
+        isinstance(record["artifact_paths"], dict),
+        f"{path}:{line_number}: artifact_paths must be an object",
+    )
 
     for key in ("output_dir", "vocabulary", "metrics", "sessions", "header"):
         expect(
@@ -70,14 +87,21 @@ def validate_record(record: dict[str, Any], path: Path, line_number: int) -> Non
 def validate_file(path: Path) -> int:
     expect(path.exists(), f"Missing training-session file: {path}")
     count = 0
-    for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_number, raw_line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
         if not raw_line.strip():
             continue
         try:
             record = json.loads(raw_line)
         except json.JSONDecodeError as error:
-            raise ValueError(f"{path}:{line_number}: invalid JSON line ({error})") from error
-        expect(isinstance(record, dict), f"{path}:{line_number}: record must be a JSON object")
+            raise ValueError(
+                f"{path}:{line_number}: invalid JSON line ({error})"
+            ) from error
+        expect(
+            isinstance(record, dict),
+            f"{path}:{line_number}: record must be a JSON object",
+        )
         validate_record(record, path, line_number)
         count += 1
     expect(count > 0, f"{path}: expected at least one training-session record")

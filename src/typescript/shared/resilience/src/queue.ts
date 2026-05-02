@@ -8,10 +8,10 @@
 //   and remain queued unless the policy is exhausted (then dropped
 //   with a `failed` outcome).
 
-import {shouldRetry} from './retry';
-import type {DrainOutcome, DrainReport, QueuedJob, RequestQueue, StorageAdapter} from './types';
+import { shouldRetry } from "./retry";
+import type { DrainOutcome, DrainReport, QueuedJob, RequestQueue, StorageAdapter } from "./types";
 
-const PREFIX = 'banana:queue:';
+const PREFIX = "banana:queue:";
 
 export type CreateRequestQueueOptions = {
   adapter: StorageAdapter;
@@ -22,13 +22,12 @@ export type CreateRequestQueueOptions = {
 };
 
 export function createRequestQueue<TPayload, TResult>(
-    options: CreateRequestQueueOptions,
-    ): RequestQueue<TPayload, TResult> {
-  const ns = options.namespace ?? 'default';
+  options: CreateRequestQueueOptions
+): RequestQueue<TPayload, TResult> {
+  const ns = options.namespace ?? "default";
   const prefix = `${PREFIX}${ns}:`;
 
-  const storageKey = (jobKey: string) =>
-      `${prefix}${encodeURIComponent(jobKey)}`;
+  const storageKey = (jobKey: string) => `${prefix}${encodeURIComponent(jobKey)}`;
 
   async function readAll(): Promise<QueuedJob<TPayload>[]> {
     const keys = await options.adapter.keys(prefix);
@@ -51,8 +50,9 @@ export function createRequestQueue<TPayload, TResult>(
     async enqueue(job) {
       // Dedupe: same key overwrites prior payload.
       await options.adapter.set(
-          storageKey(job.key),
-          JSON.stringify({...job, attempts: job.attempts ?? 0}));
+        storageKey(job.key),
+        JSON.stringify({ ...job, attempts: job.attempts ?? 0 })
+      );
     },
     async peek() {
       return readAll();
@@ -75,26 +75,22 @@ export function createRequestQueue<TPayload, TResult>(
         try {
           const result = await handler(job.payload);
           await options.adapter.delete(storageKey(job.key));
-          outcomes.push({key: job.key, status: 'ok', result});
+          outcomes.push({ key: job.key, status: "ok", result });
         } catch (err) {
           if (shouldRetry(job.retry, attempts)) {
-            await options.adapter.set(
-                storageKey(job.key),
-                JSON.stringify({...job, attempts}),
-            );
-            outcomes.push(
-                {key: job.key, status: 'retry', nextAttempts: attempts});
+            await options.adapter.set(storageKey(job.key), JSON.stringify({ ...job, attempts }));
+            outcomes.push({ key: job.key, status: "retry", nextAttempts: attempts });
           } else {
             await options.adapter.delete(storageKey(job.key));
             outcomes.push({
               key: job.key,
-              status: 'failed',
+              status: "failed",
               error: err instanceof Error ? err.message : String(err),
             });
           }
         }
       }
-      return {outcomes};
+      return { outcomes };
     },
   };
 }

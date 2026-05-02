@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -78,11 +77,16 @@ def run_trainer(
     cmd = [
         sys.executable,
         script,
-        "--corpus", corpus,
-        "--output", output,
-        "--training-profile", training_profile,
-        "--session-mode", session_mode,
-        "--max-sessions", str(max_sessions),
+        "--corpus",
+        corpus,
+        "--output",
+        output,
+        "--training-profile",
+        training_profile,
+        "--session-mode",
+        session_mode,
+        "--max-sessions",
+        str(max_sessions),
     ]
     print(f"[joint] running: {' '.join(cmd)}", flush=True)
     result = subprocess.run(cmd, capture_output=False)
@@ -112,7 +116,9 @@ def main() -> None:
     all_success = True
     for trainer in TRAINERS:
         corpus_path = corpus_dir / trainer["corpus"].split("/", 1)[1]
-        trainer_output = str(Path("artifacts/training") / trainer["output_subdir"] / "local")
+        trainer_output = str(
+            Path("artifacts/training") / trainer["output_subdir"] / "local"
+        )
         result = run_trainer(
             script=trainer["script"],
             corpus=str(corpus_path),
@@ -125,7 +131,10 @@ def main() -> None:
         session_meta["results"].append(result)
         if not result["success"]:
             all_success = False
-            print(f"[joint] WARNING: {trainer['name']} trainer exited with code {result['returncode']}", flush=True)
+            print(
+                f"[joint] WARNING: {trainer['name']} trainer exited with code {result['returncode']}",
+                flush=True,
+            )
 
     session_meta["all_success"] = all_success
     session_meta["completed_at"] = datetime.now(timezone.utc).isoformat()

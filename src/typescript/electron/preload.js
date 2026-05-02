@@ -6,21 +6,25 @@
 // runtime; the real preload path wires it via `contextBridge`.
 
 const IPC_CHANNELS = Object.freeze({
-  classifyClipboard: 'banana:classify-clipboard',
-  verdict: 'banana:verdict',
+  classifyClipboard: "banana:classify-clipboard",
+  verdict: "banana:verdict",
   // Slice 030
-  historyUpdate: 'banana:history-update',
-  drainSuccess: 'banana:drain-success',
+  historyUpdate: "banana:history-update",
+  drainSuccess: "banana:drain-success",
 });
 
 function buildBridge(ipcRenderer, channels) {
   return {
-    apiBaseUrl: process.env.BANANA_API_BASE_URL ?? '',
+    apiBaseUrl: process.env.BANANA_API_BASE_URL ?? "",
     platform: process.platform,
     classifyClipboard: () => ipcRenderer.invoke(channels.classifyClipboard),
     onVerdict: (handler) => {
       const wrapped = (_event, payload) => {
-        try { handler(payload); } catch { /* swallow handler errors */ }
+        try {
+          handler(payload);
+        } catch {
+          /* swallow handler errors */
+        }
       };
       ipcRenderer.on(channels.verdict, wrapped);
       return () => ipcRenderer.removeListener(channels.verdict, wrapped);
@@ -38,8 +42,8 @@ function buildBridge(ipcRenderer, channels) {
 
 if (process.versions && process.versions.electron) {
   // Real Electron runtime path.
-  const {contextBridge, ipcRenderer} = require('electron');
-  contextBridge.exposeInMainWorld('banana', buildBridge(ipcRenderer, IPC_CHANNELS));
+  const { contextBridge, ipcRenderer } = require("electron");
+  contextBridge.exposeInMainWorld("banana", buildBridge(ipcRenderer, IPC_CHANNELS));
 }
 
-module.exports = {IPC_CHANNELS, buildBridge};
+module.exports = { IPC_CHANNELS, buildBridge };

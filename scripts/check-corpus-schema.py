@@ -38,7 +38,10 @@ def validate_sample(sample: Any, index: int, path: Path) -> None:
     expect(isinstance(sample, dict), f"{path}: sample #{index} must be an object")
     for key in ("id", "label", "text"):
         value = sample.get(key)
-        expect(isinstance(value, str) and value.strip(), f"{path}: sample #{index} missing non-empty '{key}'")
+        expect(
+            isinstance(value, str) and value.strip(),
+            f"{path}: sample #{index} missing non-empty '{key}'",
+        )
 
 
 def normalize_text(value: str) -> str:
@@ -55,10 +58,19 @@ def validate_corpus(path: Path) -> None:
     expect(path.exists(), f"missing corpus file: {path}")
     payload = json.loads(path.read_text(encoding="utf-8"))
     expect(isinstance(payload, dict), f"{path}: root must be an object")
-    expect(isinstance(payload.get("schema_version"), int), f"{path}: schema_version must be an int")
-    expect(isinstance(payload.get("description"), str) and payload["description"].strip(), f"{path}: description must be non-empty")
+    expect(
+        isinstance(payload.get("schema_version"), int),
+        f"{path}: schema_version must be an int",
+    )
+    expect(
+        isinstance(payload.get("description"), str) and payload["description"].strip(),
+        f"{path}: description must be non-empty",
+    )
     samples = payload.get("samples")
-    expect(isinstance(samples, list) and samples, f"{path}: samples must be a non-empty array")
+    expect(
+        isinstance(samples, list) and samples,
+        f"{path}: samples must be a non-empty array",
+    )
     normalized_texts: list[tuple[int, str]] = []
     for idx, sample in enumerate(samples, start=1):
         validate_sample(sample, idx, path)

@@ -1,14 +1,14 @@
 # Brain Domain Definitions: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Confidence**: High [H] — fixed by spec FR-001, FR-002, FR-003 and research decision R-01
 
 ---
 
 ## Left Brain Domain
 
-**Label**: Left Brain  
-**Model Family Primary**: Regression  
+**Label**: Left Brain
+**Model Family Primary**: Regression
 **Confidence**: High [H]
 
 ### Purpose
@@ -41,8 +41,8 @@ Rank, score, or estimate an attribute value. The consumer uses the output to set
 
 ## Right Brain Domain
 
-**Label**: Right Brain  
-**Model Family Primary**: Binary  
+**Label**: Right Brain
+**Model Family Primary**: Binary
 **Confidence**: High [H]
 
 ### Purpose
@@ -75,8 +75,8 @@ Decide, classify, or gate. The consumer receives an unambiguous category decisio
 
 ## Full Brain Domain
 
-**Label**: Full Brain  
-**Model Family Primary**: Transformer  
+**Label**: Full Brain
+**Model Family Primary**: Transformer
 **Confidence**: High [H]
 
 ### Purpose

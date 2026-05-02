@@ -9,14 +9,14 @@ Fix chat bootstrap startup failures that currently surface as `Chat bootstrap fa
 
 ## Technical Context
 
-**Language/Version**: TypeScript (React frontend), Bash (compose and readiness scripts), YAML (compose profile contract), Markdown (feature docs/contracts)  
-**Primary Dependencies**: React runtime API client and bootstrap flow, compose profile scripts (`scripts/compose-run-profile.sh`, `scripts/compose-profile-ready.sh`), existing runtime contract (`VITE_BANANA_API_BASE_URL`)  
-**Storage**: N/A  
-**Testing**: React unit/integration validation for bootstrap state handling, compose runtime/apps readiness checks, rendered verification in VS Code integrated browser  
-**Target Platform**: Windows + Docker Desktop + Ubuntu WSL2 local runtime contract with one-window VS Code validation  
-**Project Type**: Frontend runtime/bootstrap reliability slice in monorepo  
-**Performance Goals**: Bootstrap reaches ready state under healthy startup in current local dev loop, with no persistent fetch-failure dead-end  
-**Constraints**: Preserve canonical compose runtime/apps startup order, preserve `VITE_BANANA_API_BASE_URL` contract, avoid backend business logic changes outside availability checks  
+**Language/Version**: TypeScript (React frontend), Bash (compose and readiness scripts), YAML (compose profile contract), Markdown (feature docs/contracts)
+**Primary Dependencies**: React runtime API client and bootstrap flow, compose profile scripts (`scripts/compose-run-profile.sh`, `scripts/compose-profile-ready.sh`), existing runtime contract (`VITE_BANANA_API_BASE_URL`)
+**Storage**: N/A
+**Testing**: React unit/integration validation for bootstrap state handling, compose runtime/apps readiness checks, rendered verification in VS Code integrated browser
+**Target Platform**: Windows + Docker Desktop + Ubuntu WSL2 local runtime contract with one-window VS Code validation
+**Project Type**: Frontend runtime/bootstrap reliability slice in monorepo
+**Performance Goals**: Bootstrap reaches ready state under healthy startup in current local dev loop, with no persistent fetch-failure dead-end
+**Constraints**: Preserve canonical compose runtime/apps startup order, preserve `VITE_BANANA_API_BASE_URL` contract, avoid backend business logic changes outside availability checks
 **Scale/Scope**: React bootstrap/error-state behavior plus supporting diagnostics/contracts for startup failure and recovery path
 
 ## Constitution Check

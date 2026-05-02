@@ -1,6 +1,6 @@
 # Terminology Rules: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Canonical terminology definitions to be applied consistently across all SPIKE artifacts.
 
 ## Canonical Terms

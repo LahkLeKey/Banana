@@ -1,6 +1,6 @@
 # Model Family Mappings: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Confidence**: High [H] — fixed by spec FR-001 through FR-003 and research decision R-01, R-02
 
 ## Primary Mapping Table

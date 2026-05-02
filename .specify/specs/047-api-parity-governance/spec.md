@@ -1,8 +1,8 @@
 # Feature Specification: API Parity Governance
 
-**Feature Branch**: `[047-api-parity-governance]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[047-api-parity-governance]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "We have drift between the two APIs and need feature parity. Define how ASP.NET and Fastify API surfaces stay aligned so frontend/runtime contracts do not break."
 
 ## In Scope *(mandatory)*

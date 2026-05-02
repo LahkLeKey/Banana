@@ -9,14 +9,14 @@ Stabilize CMake preset activation for Banana's multi-root workspace so CMake Too
 
 ## Technical Context
 
-**Language/Version**: C11 (native targets), JSON workspace/settings contracts, CMake Presets v6  
-**Primary Dependencies**: CMake Tools extension behavior, `CMakePresets.json`, `.vscode/settings.json`, `tests/.vscode/settings.json`  
-**Storage**: N/A  
-**Testing**: CMake Tools build/test discovery, `ctest` native lane (`tests/native`)  
-**Target Platform**: Windows developer environment with VS Code multi-root workspace  
-**Project Type**: Infrastructure/runtime contract hardening for native toolchain activation  
-**Performance Goals**: Zero additional configure latency beyond current baseline for successful preset activation  
-**Constraints**: Preserve existing native target contracts, avoid behavior changes in native feature code, preserve multi-root workflow  
+**Language/Version**: C11 (native targets), JSON workspace/settings contracts, CMake Presets v6
+**Primary Dependencies**: CMake Tools extension behavior, `CMakePresets.json`, `.vscode/settings.json`, `tests/.vscode/settings.json`
+**Storage**: N/A
+**Testing**: CMake Tools build/test discovery, `ctest` native lane (`tests/native`)
+**Target Platform**: Windows developer environment with VS Code multi-root workspace
+**Project Type**: Infrastructure/runtime contract hardening for native toolchain activation
+**Performance Goals**: Zero additional configure latency beyond current baseline for successful preset activation
+**Constraints**: Preserve existing native target contracts, avoid behavior changes in native feature code, preserve multi-root workflow
 **Scale/Scope**: Single bounded bug-fix slice scoped to preset activation/discovery and diagnostics
 
 ## Constitution Check

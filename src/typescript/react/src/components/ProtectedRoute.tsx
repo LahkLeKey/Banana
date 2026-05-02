@@ -6,7 +6,7 @@
  */
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth, type BananaRole } from "../lib/hooks/useAuth";
+import { type BananaRole, useAuth } from "../lib/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: ReactNode;

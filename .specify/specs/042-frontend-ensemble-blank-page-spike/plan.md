@@ -9,10 +9,10 @@ Investigate and eliminate the React UX regression where triggering ensemble pred
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x, React 18.x, Bun runtime for workspace tests  
-**Primary Dependencies**: React app runtime in `src/typescript/react`, shared components in `@banana/ui`, frontend API client in `src/typescript/react/src/lib/api.ts`  
-**Storage**: Browser local/session state and in-memory React state; no new datastore in scope  
-**Testing**: Bun unit/component tests (`bun test`) plus focused DOM behavior checks in `src/typescript/react/src/App.test.tsx`  
+**Language/Version**: TypeScript 5.x, React 18.x, Bun runtime for workspace tests
+**Primary Dependencies**: React app runtime in `src/typescript/react`, shared components in `@banana/ui`, frontend API client in `src/typescript/react/src/lib/api.ts`
+**Storage**: Browser local/session state and in-memory React state; no new datastore in scope
+**Testing**: Bun unit/component tests (`bun test`) plus focused DOM behavior checks in `src/typescript/react/src/App.test.tsx`
 **Target Platform**: Web runtime (Vite/Bun) with parity considerations for Electron bridge behavior
 **Project Type**: Frontend web application spike (React)
 **Performance Goals**: No perceptible regression in ensemble submit responsiveness versus current baseline

@@ -1,6 +1,6 @@
 # Success Criteria Evidence: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Source**: spec.md Success Criteria section
 
 ## Success Criteria Cross-Check

@@ -1,7 +1,7 @@
 # Specification Quality Checklist: One-Window Interactive Baseline
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning  
-**Created**: 2026-04-26  
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-04-26
 **Feature**: [.specify/specs/044-one-window-interactive-baseline/spec.md](../spec.md)
 
 ## Content Quality

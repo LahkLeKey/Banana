@@ -7,8 +7,8 @@
 // is exported so the smoke harness can exercise the read/write contract
 // without touching the real filesystem.
 
-const path = require('node:path');
-const fs = require('node:fs');
+const path = require("node:path");
+const fs = require("node:fs");
 
 const DEFAULT_STATE = Object.freeze({
   x: undefined,
@@ -18,11 +18,11 @@ const DEFAULT_STATE = Object.freeze({
 });
 
 function sanitize(state) {
-  if (!state || typeof state !== 'object') return {...DEFAULT_STATE};
-  const out = {...DEFAULT_STATE};
-  for (const key of ['x', 'y', 'width', 'height']) {
+  if (!state || typeof state !== "object") return { ...DEFAULT_STATE };
+  const out = { ...DEFAULT_STATE };
+  for (const key of ["x", "y", "width", "height"]) {
     const value = state[key];
-    if (typeof value === 'number' && Number.isFinite(value)) {
+    if (typeof value === "number" && Number.isFinite(value)) {
       out[key] = value;
     }
   }
@@ -50,16 +50,16 @@ function createWindowStateStore(opts = {}) {
   let resolved = opts.filePath;
   function getFilePath() {
     if (resolved) return resolved;
-    if (typeof opts.getUserDataPath === 'function') {
-      resolved = path.join(opts.getUserDataPath(), 'window-state.json');
+    if (typeof opts.getUserDataPath === "function") {
+      resolved = path.join(opts.getUserDataPath(), "window-state.json");
       return resolved;
     }
-    throw new Error('createWindowStateStore: filePath or getUserDataPath required');
+    throw new Error("createWindowStateStore: filePath or getUserDataPath required");
   }
   return {
     async load() {
       try {
-        const raw = await readFile(getFilePath(), 'utf8');
+        const raw = await readFile(getFilePath(), "utf8");
         return sanitize(JSON.parse(raw));
       } catch {
         return sanitize(null);
@@ -68,8 +68,8 @@ function createWindowStateStore(opts = {}) {
     async save(state) {
       const filePath = getFilePath();
       try {
-        await mkdir(path.dirname(filePath), {recursive: true});
-        await writeFile(filePath, JSON.stringify(sanitize(state)), 'utf8');
+        await mkdir(path.dirname(filePath), { recursive: true });
+        await writeFile(filePath, JSON.stringify(sanitize(state)), "utf8");
         return true;
       } catch {
         return false;
@@ -78,4 +78,4 @@ function createWindowStateStore(opts = {}) {
   };
 }
 
-module.exports = {createWindowStateStore, sanitize, DEFAULT_STATE};
+module.exports = { createWindowStateStore, sanitize, DEFAULT_STATE };

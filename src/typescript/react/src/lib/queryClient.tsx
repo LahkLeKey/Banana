@@ -10,25 +10,25 @@ import { type ReactElement, type ReactNode, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export function createBananaQueryClient(): QueryClient {
-    return new QueryClient({
-        defaultOptions: {
-            queries: {
-                // Server state stays fresh for one minute by default; matches
-                // the cadence the resilience-bootstrap queue uses for retry
-                // bookkeeping. Individual hooks can override.
-                staleTime: 60_000,
-                gcTime: 5 * 60_000,
-                retry: 2,
-                refetchOnWindowFocus: false,
-            },
-            mutations: {
-                retry: 0,
-            },
-        },
-    });
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Server state stays fresh for one minute by default; matches
+        // the cadence the resilience-bootstrap queue uses for retry
+        // bookkeeping. Individual hooks can override.
+        staleTime: 60_000,
+        gcTime: 5 * 60_000,
+        retry: 2,
+        refetchOnWindowFocus: false,
+      },
+      mutations: {
+        retry: 0,
+      },
+    },
+  });
 }
 
 export function QueryProvider({ children }: { children: ReactNode }): ReactElement {
-    const [client] = useState(() => createBananaQueryClient());
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  const [client] = useState(() => createBananaQueryClient());
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }

@@ -1,7 +1,7 @@
 /**
  * router.test.tsx — route tree smoke tests (feature 052).
  */
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
 describe("router", () => {
   it("exports a router object", async () => {

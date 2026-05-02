@@ -146,11 +146,11 @@ fi
 {
   echo "{"
   echo "  \"schema_version\": 1,"
-  echo "  \"lane_name\": \"$(json_escape "$lane")\"," 
-  echo "  \"artifact_name\": \"$(json_escape "$artifact_name")\"," 
-  echo "  \"publication_status\": \"$(json_escape "$publication_status")\"," 
+  echo "  \"lane_name\": \"$(json_escape "$lane")\","
+  echo "  \"artifact_name\": \"$(json_escape "$artifact_name")\","
+  echo "  \"publication_status\": \"$(json_escape "$publication_status")\","
   if [[ -n "$skip_reason" ]]; then
-    echo "  \"skip_reason\": \"$(json_escape "$skip_reason")\"," 
+    echo "  \"skip_reason\": \"$(json_escape "$skip_reason")\","
   else
     echo "  \"skip_reason\": null,"
   fi

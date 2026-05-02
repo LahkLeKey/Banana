@@ -1,8 +1,8 @@
 # Feature Specification: Chat Bootstrap Fetch Failure Follow-up
 
-**Feature Branch**: `[046-chat-bootstrap-fetch-failure]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[046-chat-bootstrap-fetch-failure]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User report: "new error: Chat bootstrap failed: Failed to fetch"
 
 ## In Scope *(mandatory)*

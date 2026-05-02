@@ -150,6 +150,6 @@ jobs:
         env:
           BANANA_NEURO_MODEL: ${{ matrix.model }}
           BANANA_NEURO_TRIGGER: git-event
-          BANANA_PR_LABELS: automation,model-training,speckit-driven,agent:banana-classifier-agent
+          BANANA_PR_LABELS: "automation,model-training,speckit-driven,agent:banana-classifier-agent"
         run: |
           bash scripts/neuro/open-evidence-pr.sh

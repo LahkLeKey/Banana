@@ -1,6 +1,6 @@
 # Vault Integration
 
-> Owner: ASP.NET API domain  
+> Owner: ASP.NET API domain
 > Status: Implemented (spec #082)
 
 This document describes how the Banana ASP.NET API reads secrets from HashiCorp Vault and how to migrate from environment-variable-based secrets.

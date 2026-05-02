@@ -1,7 +1,7 @@
 # US3 Context Mismatch Evidence: CMake Preset Activation Fix
 
-**Date**: 2026-04-26  
-**Scenario**: NON_CMAKE_FOLDER_FOCUS / SOURCE_DIR_MISMATCH — invoke cmake from a subdirectory without `CMakePresets.json`.  
+**Date**: 2026-04-26
+**Scenario**: NON_CMAKE_FOLDER_FOCUS / SOURCE_DIR_MISMATCH — invoke cmake from a subdirectory without `CMakePresets.json`.
 **Command**: `cmake --preset default` (from `src/native/`, which has no `CMakePresets.json`)
 
 ## Output
