@@ -7,12 +7,23 @@ import Fastify from 'fastify';
 import {registerChatRoutes} from './domains/chat/routes.ts';
 import {registerNotBananaRoutes} from './domains/not-banana/routes.ts';
 import {registerTrainingWorkbenchRoutes} from './domains/training/routes.ts';
+import {registerAuditLogPlugin} from './plugins/audit-log.ts';
+import {registerRateLimitPlugin} from './plugins/rate-limit.ts';
+import {registerAuditRoutes} from './routes/audit.ts';
 import {registerCorpusRoutes} from './routes/corpus.ts';
 import {registerHealthRoutes} from './routes/health.ts';
 import {registerRipenessRoutes} from './routes/ripeness.ts';
 import {registryRoutes} from './routes/registry.ts';
+import {registerStreamingRoutes} from './routes/streaming.ts';
+import {registerStreamingChatRoutes} from './routes/streaming-chat.ts';
 
 const app = Fastify({logger: true});
+
+// Spec #068 — rate limiting (must register before routes)
+await registerRateLimitPlugin(app);
+
+// Spec #069 — audit log (hooks onResponse, must register before routes)
+await registerAuditLogPlugin(app);
 
 const ALLOWED_WEB_ORIGINS = new Set([
   'http://localhost:5173',
@@ -44,6 +55,9 @@ await registerNotBananaRoutes(app);
 await registerChatRoutes(app);
 await registerTrainingWorkbenchRoutes(app);
 await app.register(registryRoutes);
+await registerAuditRoutes(app);
+await registerStreamingRoutes(app);
+await registerStreamingChatRoutes(app);
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? '0.0.0.0';
