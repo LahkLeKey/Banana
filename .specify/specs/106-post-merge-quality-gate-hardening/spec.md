@@ -2,7 +2,7 @@
 
 **Feature Branch**: `106-post-merge-quality-gate-hardening`
 **Created**: 2026-05-01
-**Status**: Follow-up stabilization stub
+**Status**: Planned for bulk stabilization execution
 **Wave**: stabilization
 **Domain**: testing / workflow / infra
 **Depends on**: #103, #104, #105
@@ -20,6 +20,7 @@ Recent bulk deliveries merged successfully but left cross-surface compile and co
   - AI contract validator
 - Add path filters and ownership mapping so changed surfaces trigger the right gates.
 - Standardize failure output and remediation hints for fast triage.
+- Add mandatory handling for GitHub API and action bootstrap rate-limit exhaustion (403 installation token paths) so regressions are not conflated with platform throttling.
 
 ## Out of Scope *(mandatory)*
 
@@ -31,8 +32,10 @@ Recent bulk deliveries merged successfully but left cross-surface compile and co
 - Any regression in compile, test, or wiki contract fails the same PR before merge.
 - Gate execution time remains practical for routine PR use.
 - Contributors receive actionable failure context without manual forensics.
+- Rate-limit-induced failures include deterministic recovery behavior (retry window, rerun route, and classification) instead of opaque hard-fail outcomes.
 
 ## Notes for the planner
 
 - Reuse existing scripts where possible.
 - Prefer incremental adoption to avoid workflow churn.
+- Include evidence that required checks can recover cleanly after rate-limit reset without code changes.

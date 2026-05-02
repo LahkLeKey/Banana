@@ -26,6 +26,7 @@
 - [ ] Existing safety contracts are preserved.
 - [ ] No production deployment bypasses are introduced.
 - [ ] All changes are auditable by persisted artifacts and PR evidence.
+- [ ] GitHub/API-dependent automation has an explicit rate-limit resilience path and rerun guidance.
 
 ## Project Structure
 
