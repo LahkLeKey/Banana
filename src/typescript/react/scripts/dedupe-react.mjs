@@ -21,6 +21,27 @@ if (!existsSync(sharedUiNm)) {
   mkdirSync(sharedUiNm, { recursive: true });
 }
 
+// Also symlink scoped @types packages so TypeScript can resolve
+// react/jsx-runtime type declarations from within shared/ui source files.
+const sharedUiTypesNm = join(sharedUiNm, "@types");
+if (!existsSync(sharedUiTypesNm)) {
+  mkdirSync(sharedUiTypesNm, { recursive: true });
+}
+for (const scopedPkg of ["react", "react-dom"]) {
+  const target = join(reactAppRoot, "node_modules", "@types", scopedPkg);
+  const link = join(sharedUiTypesNm, scopedPkg);
+  if (!existsSync(target)) {
+    console.warn(`[dedupe-react] missing target ${target}, skipping @types/${scopedPkg}`);
+    continue;
+  }
+  if (existsSync(link) || lstatSyncSafe(link)) {
+    rmSync(link, { recursive: true, force: true });
+  }
+  const type = process.platform === "win32" ? "junction" : "dir";
+  symlinkSync(target, link, type);
+  console.log(`[dedupe-react] linked @types/${scopedPkg} -> ${target}`);
+}
+
 for (const pkg of ["react", "react-dom"]) {
   const target = join(reactAppRoot, "node_modules", pkg);
   const link = join(sharedUiNm, pkg);
