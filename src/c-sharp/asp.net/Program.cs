@@ -3,8 +3,10 @@ using Banana.Api.Pipeline.Mapping;
 using Banana.Api.Pipeline;
 using Banana.Api.Pipeline.Steps;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 const string FrontendCorsPolicy = "BananaFrontend";
@@ -37,7 +39,6 @@ if (!string.IsNullOrWhiteSpace(jwtSecret))
         opts.AddPolicy("ViewerUp",    p => p.RequireClaim("role", "admin", "operator", "viewer"));
     });
 }
-const string FrontendCorsPolicy = "BananaFrontend";
 
 // Spec 007: single typed PipelineContext + single interop seam.
 builder.Services.AddSingleton<INativeBananaClient, NativeBananaClient>();
@@ -65,6 +66,28 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+// Spec 068 — fixed-window rate limiter (100 req/min global).
+builder.Services.AddRateLimiter(opts =>
+{
+    opts.AddFixedWindowLimiter("global", o =>
+    {
+        o.PermitLimit = 100;
+        o.Window = TimeSpan.FromMinutes(1);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
+    opts.RejectionStatusCode = 429;
+    opts.OnRejected = async (ctx, ct) =>
+    {
+        ctx.HttpContext.Response.StatusCode = 429;
+        await ctx.HttpContext.Response.WriteAsync("Rate limit exceeded", ct);
+    };
+});
+
+// Spec 069 — audit log middleware + store.
+builder.Services.AddSingleton<AuditStore>();
+builder.Services.AddScoped<AuditLogMiddleware>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -77,11 +100,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(FrontendCorsPolicy);
+app.UseRateLimiter();
 if (!string.IsNullOrWhiteSpace(jwtSecret))
 {
     app.UseAuthentication();
     app.UseAuthorization();
 }
+app.UseMiddleware<AuditLogMiddleware>();
 
 // Feature 100 — Security headers (CSP + hardening)
 app.Use(async (context, next) =>

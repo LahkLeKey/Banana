@@ -72,3 +72,19 @@ model ActiveModelRelease {
     release   ModelRelease @relation(fields: [releaseId], references: [id])
     updatedAt DateTime    @updatedAt
 }
+
+// === Audit Event log (spec #069) ===
+model audit_event {
+    id          String   @id @default(uuid())
+    actor       String?
+    action      String
+    resource    String
+    resource_id String?
+    metadata    Json?
+    ip_address  String?
+    created_at  DateTime @default(now())
+
+    @@index([action])
+    @@index([actor])
+    @@index([created_at])
+}

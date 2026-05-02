@@ -24,6 +24,7 @@
         "zod": "^3.23.0"
     },
     "devDependencies": {
+        "@fastify/rate-limit": "^9.0.0",
         "@types/bun": "latest",
         "typescript": "^5.5.0"
     }

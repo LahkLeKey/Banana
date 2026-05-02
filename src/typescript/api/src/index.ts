@@ -13,6 +13,8 @@ import {registerCorpusRoutes} from './routes/corpus.ts';
 import {registerHealthRoutes} from './routes/health.ts';
 import {registerRipenessRoutes} from './routes/ripeness.ts';
 import {registryRoutes} from './routes/registry.ts';
+import {registerStreamingRoutes} from './routes/streaming.ts';
+import {registerStreamingChatRoutes} from './routes/streaming-chat.ts';
 
 const app = Fastify({logger : true});
 
@@ -32,6 +34,12 @@ await app.register(helmet, {
     },
     crossOriginEmbedderPolicy : false, // disabled to allow iframe embeds in Electron
 });
+
+// Spec #068 — rate limiting (must register before routes)
+await registerRateLimitPlugin(app);
+
+// Spec #069 — audit log (hooks onResponse, must register before routes)
+await registerAuditLogPlugin(app);
 
 const ALLOWED_WEB_ORIGINS = new Set([
     'http://localhost:5173',
@@ -63,6 +71,9 @@ await registerNotBananaRoutes(app);
 await registerChatRoutes(app);
 await registerTrainingWorkbenchRoutes(app);
 await app.register(registryRoutes);
+await registerAuditRoutes(app);
+await registerStreamingRoutes(app);
+await registerStreamingChatRoutes(app);
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? '0.0.0.0';
