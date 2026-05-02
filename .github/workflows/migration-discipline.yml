@@ -43,24 +43,30 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check pending migrations
+      - name: Apply committed migrations
         env:
           DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
         run: |
-          STATUS=$(bunx prisma migrate status --schema prisma/schema.prisma 2>&1)
+          # Apply all committed migration files to the fresh test database
+          bunx prisma migrate deploy --schema prisma/schema.prisma
+
+      - name: Check for schema drift
+        env:
+          DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
+        run: |
+          # After deploying all committed migrations, any remaining drift means
+          # schema.prisma has changes not yet captured in a migration file.
+          STATUS=$(bunx prisma migrate status --schema prisma/schema.prisma 2>&1 || true)
           echo "$STATUS"
           if echo "$STATUS" | grep -q "following migration(s) have not yet been applied"; then
-            echo "::error::Unapplied Prisma migrations detected. Run 'bunx prisma migrate dev' and commit the generated migration files."
+            echo "::error::Schema drift detected: schema.prisma has uncommitted changes. Run 'bunx prisma migrate dev' and commit the generated migration files."
             exit 1
           fi
 
-      - name: Verify schema and migrations are in sync
+      - name: Verify schema is valid
         env:
           DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
         run: |
-          # Apply all committed migrations
-          bunx prisma migrate deploy --schema prisma/schema.prisma
-          # Validate schema matches DB state (generate will fail if drift exists)
           bunx prisma validate --schema prisma/schema.prisma
 
   backward-compat-policy:

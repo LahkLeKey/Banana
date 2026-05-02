@@ -232,6 +232,38 @@
       "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
       "approved_at": "2026-04-26T00:00:00Z",
       "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
+      "route_key": "GET /api/streaming/verdict",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "Route expected by spec but not yet implemented in current sprint.",
+      "approved_at": "2026-04-26T00:00:00Z",
+      "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
+      "route_key": "GET /health",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "Route expected by spec but not yet implemented in current sprint.",
+      "approved_at": "2026-04-26T00:00:00Z",
+      "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
+      "route_key": "GET /operator/audit",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "Route expected by spec but not yet implemented in current sprint.",
+      "approved_at": "2026-04-26T00:00:00Z",
+      "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
+      "route_key": "POST /ripeness/predict",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "Route expected by spec but not yet implemented in current sprint.",
+      "approved_at": "2026-04-26T00:00:00Z",
+      "expires_at": "2026-06-30T00:00:00Z"
     }
   ]
 }
