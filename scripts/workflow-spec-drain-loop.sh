@@ -152,12 +152,7 @@ echo "$SUMMARY" > "$SUMMARY_FILE"
 log "Terminal summary written to: $SUMMARY_FILE"
 
 # Determine exit code based on stop reason.
-STOP_REASON=$(echo "$SUMMARY" | python - <<'PY'
-import json, sys
-d = json.load(sys.stdin)
-print(d.get("stop_reason", "unknown"))
-PY
-)
+STOP_REASON=$(python -c "import json,os; d=json.loads(os.environ['_SUMMARY']); print(d.get('stop_reason','unknown'))" _SUMMARY="$SUMMARY")
 
 case "$STOP_REASON" in
   exhausted|kill_switch|dry_run) exit 0 ;;

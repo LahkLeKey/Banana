@@ -85,8 +85,8 @@ const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? "0.0.0.0";
 
 // Spec #070 — start durable job queue after server is ready
-app.addHook('onReady', async () => {
-    startJobQueue().catch((err) => app.log.error({err}, 'job queue start failed'));
+app.addHook("onReady", async () => {
+  startJobQueue().catch((err) => app.log.error({ err }, "job queue start failed"));
 });
 
 app.listen({ port, host }).catch((err) => {
