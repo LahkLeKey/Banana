@@ -83,6 +83,22 @@ if (!string.IsNullOrWhiteSpace(jwtSecret))
     app.UseAuthorization();
 }
 
+// Feature 100 — Security headers (CSP + hardening)
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "DENY";
+    headers["X-XSS-Protection"] = "0"; // modern browsers rely on CSP
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    headers["Content-Security-Policy"] =
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; " +
+        "upgrade-insecure-requests";
+    await next();
+});
+
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 
