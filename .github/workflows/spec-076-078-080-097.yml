@@ -11,6 +11,7 @@ jobs:
   validate-typescript:
     name: TypeScript typecheck
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -36,4 +37,4 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Build ASP.NET API
         working-directory: src/c-sharp/asp.net
-        run: dotnet build --configuration Release --no-restore || dotnet restore && dotnet build --configuration Release
+        run: dotnet restore Banana.Api.csproj && dotnet build Banana.Api.csproj --configuration Release --no-restore

@@ -2,6 +2,7 @@
   "name": "banana",
   "private": true,
   "version": "2.0.0",
+  "packageManager": "bun@1.2.15",
   "devDependencies": {
     "turbo": "^2.0.0"
   }

@@ -4,16 +4,31 @@
 # _templates/ and ai-reference/ are excluded.
 # Maintained by: scripts/wiki-scaffold.sh --validate
 
+architecture/database-pipeline-stage.md
+architecture/domain-model.md
+architecture/native-wrapper-abi.md
+architecture/overview.md
+architecture/README.md
+data/coverage-exceptions.md
+data/migration-discipline.md
+data/README.md
+Disaster-Recovery-Runbook.md
+getting-started/build-run-test-commands.md
+getting-started/first-day-checklist.md
+getting-started/how-a-request-works.md
+getting-started/README.md
+getting-started/repository-layout.md
+governance/api-parity-governance.md
+governance/autonomous-self-training.md
+governance/README.md
 Home.md
-How-A-Request-Works.md
-How-The-Database-Step-Works.md
-Human-Reading-Guide.md
-Repository-Layout.md
-Why-We-Use-A-Wrapper.md
-WSL2-Mobile-Runtime-Channels.md
-ci-compose-stabilization.md
-ci-runtime-compatibility.md
-coverage-80-exceptions.md
-api-parity-governance.md
+operations/ci-compose-notes.md
+operations/ci-compose-stabilization.md
+operations/ci-runtime-compatibility.md
+operations/README.md
+operations/wsl2-runtime-channels.md
+security/csp-and-headers.md
+security/pentest-readiness.md
+security/README.md
+security/threat-model.md
 threat-model.md
-Autonomous-Self-Training.md
