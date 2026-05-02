@@ -14,4 +14,5 @@ ci-compose-stabilization.md
 ci-runtime-compatibility.md
 coverage-80-exceptions.md
 api-parity-governance.md
+threat-model.md
 Autonomous-Self-Training.md
