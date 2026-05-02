@@ -79,12 +79,20 @@ jobs:
             --replay-buffer artifacts/training/${{ matrix.model }}/replay/buffer.jsonl \
             --output-root artifacts/training/${{ matrix.model }}/consolidation \
             --phase ${{ steps.phase.outputs.phase }}
-      - name: Forgetting guard (informational)
+      - name: Forgetting guard
+        env:
+          BANANA_NEURO_MODEL: ${{ matrix.model }}
         run: |
+          anchor="data/${BANANA_NEURO_MODEL}/anchor-metrics.json"
+          enforce_flag=""
+          if [[ -f "$anchor" ]]; then
+            enforce_flag="--enforce"
+          fi
           python scripts/neuro/forgetting-guard.py \
-            --model ${{ matrix.model }} \
-            --metrics artifacts/training/${{ matrix.model }}/local/metrics.json \
-            --max-regression-pp 1.0 || true
+            --model "${BANANA_NEURO_MODEL}" \
+            --metrics "artifacts/training/${BANANA_NEURO_MODEL}/local/metrics.json" \
+            --anchor "$anchor" \
+            --max-regression-pp 1.0 $enforce_flag
       - name: Upload consolidation snapshot
         if: always()
         uses: actions/upload-artifact@v4

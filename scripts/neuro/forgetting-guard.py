@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Anti-forgetting guard (feature 050 T016 — Wave A stub, Wave C completes).
+"""Anti-forgetting guard (feature 050 T016).
 
-Wave A purpose: provide a referenced file so workflow pre-flight passes and
-trainer / consolidation pipelines can call it idempotently. Wave C will add
-anchor-validation comparison logic and enforce the 1.0pp regression bound.
+Compares current ``holdout_accuracy`` against an anchor metrics snapshot and
+fails (exit 2) when regression exceeds ``--max-regression-pp`` percentage
+points. Cold-start safe: when ``--anchor`` is missing or unreadable, the
+check is skipped and the run is treated as informational (exit 0).
 
-Current behavior:
-    - Reads ``--metrics`` JSON if present and prints a status payload.
-    - Always exits 0 (informational) so this stub never blocks CI.
+Wired into both ``orchestrate-neuro-git-event-training.yml`` and
+``orchestrate-neuro-consolidation.yml`` as the final gating step.
 """
 
 from __future__ import annotations
@@ -19,19 +19,19 @@ from pathlib import Path
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Banana neuro forgetting guard (stub).")
+    parser = argparse.ArgumentParser(description="Banana neuro forgetting guard.")
     parser.add_argument("--model", required=True)
     parser.add_argument("--metrics", type=Path, required=True)
     parser.add_argument("--anchor", type=Path, default=None,
-                        help="Anchor metrics for comparison (Wave C).")
+                        help="Anchor metrics for comparison (e.g. data/<model>/anchor-metrics.json).")
     parser.add_argument("--max-regression-pp", type=float, default=1.0)
     parser.add_argument("--enforce", action="store_true",
-                        help="Wave C: when set, exit non-zero on regression.")
+                        help="Exit non-zero on regression beyond --max-regression-pp.")
     return parser.parse_args(argv)
 
 
-def _load_accuracy(path: Path) -> float | None:
-    if not path.exists():
+def _load_accuracy(path: Path | None) -> float | None:
+    if path is None or not path.exists():
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -45,13 +45,27 @@ def _load_accuracy(path: Path) -> float | None:
     return None
 
 
+def evaluate(
+    *,
+    current: float | None,
+    anchor: float | None,
+    max_regression_pp: float,
+) -> tuple[float | None, str]:
+    if current is None or anchor is None:
+        return None, "informational"
+    regression_pp = round((anchor - current) * 100.0, 4)
+    if regression_pp > max_regression_pp:
+        return regression_pp, "regression"
+    return regression_pp, "ok"
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     current = _load_accuracy(args.metrics)
-    anchor = _load_accuracy(args.anchor) if args.anchor else None
-    regression_pp = None
-    if current is not None and anchor is not None:
-        regression_pp = round((anchor - current) * 100.0, 4)
+    anchor = _load_accuracy(args.anchor)
+    regression_pp, status = evaluate(
+        current=current, anchor=anchor, max_regression_pp=args.max_regression_pp
+    )
     payload = {
         "schema_version": 1,
         "model": args.model,
@@ -59,10 +73,11 @@ def main(argv: list[str] | None = None) -> int:
         "anchor_holdout_accuracy": anchor,
         "regression_pp": regression_pp,
         "max_regression_pp": args.max_regression_pp,
-        "status": "informational-stub-wave-a",
+        "status": status,
+        "enforced": bool(args.enforce),
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
-    if args.enforce and regression_pp is not None and regression_pp > args.max_regression_pp:
+    if args.enforce and status == "regression":
         return 2
     return 0
 

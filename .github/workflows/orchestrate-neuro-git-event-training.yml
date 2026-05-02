@@ -125,13 +125,19 @@ jobs:
             --max-sessions 1 \
             --neuro-profile "$BANANA_NEURO_PROFILE"
       - name: Forgetting guard
+        env:
+          BANANA_NEURO_MODEL: ${{ matrix.model }}
         run: |
+          anchor="data/${BANANA_NEURO_MODEL}/anchor-metrics.json"
+          enforce_flag=""
+          if [[ -f "$anchor" ]]; then
+            enforce_flag="--enforce"
+          fi
           python scripts/neuro/forgetting-guard.py \
-            --model ${{ matrix.model }} \
-            --metrics artifacts/training/${{ matrix.model }}/local/metrics.json \
-            --max-regression-pp 1.0 || exit_code=$?
-          # Forgetting guard is informational until Wave C anchors are wired.
-          true
+            --model "${BANANA_NEURO_MODEL}" \
+            --metrics "artifacts/training/${BANANA_NEURO_MODEL}/local/metrics.json" \
+            --anchor "$anchor" \
+            --max-regression-pp 1.0 $enforce_flag
       - name: Upload neuro trace
         if: always()
         uses: actions/upload-artifact@v4
