@@ -1,0 +1,39 @@
+name: Multi-Arch Container Build
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docker/**'
+      - 'src/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: banana-api
+            dockerfile: docker/api.Dockerfile
+          - name: banana-react
+            dockerfile: docker/react.Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.image.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: ghcr.io/lahklekey/banana/${{ matrix.image.name }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

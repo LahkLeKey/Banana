@@ -1,0 +1,28 @@
+name: Wiki Lint
+
+on:
+  pull_request:
+    paths:
+      - '.wiki/**'
+      - '.specify/wiki/**'
+      - 'scripts/wiki-consume-into-specify.sh'
+      - 'scripts/wiki-scaffold.sh'
+      - '.specify/scripts/validate-ai-contracts.py'
+
+jobs:
+  wiki-lint:
+    name: Validate wiki allowlist and human-reference mirror
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate AI contracts (wiki allowlist + mirror)
+        run: python scripts/validate-ai-contracts.py
+
+      - name: Validate wiki-scaffold consistency
+        run: bash scripts/wiki-scaffold.sh --dry-run --validate

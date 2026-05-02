@@ -1,0 +1,43 @@
+name: native-sanitizers
+
+on:
+  pull_request:
+    paths:
+      - 'src/native/**'
+      - 'tests/native/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+  schedule:
+    # Run sanitizer suite nightly on main to catch regressions early
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  asan-ubsan:
+    name: ASAN + UBSAN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build clang llvm
+
+      - name: Configure (sanitizers preset)
+        run: cmake --preset sanitizers
+
+      - name: Build all native targets
+        run: cmake --build build/sanitizers
+
+      - name: Run tests under ASAN+UBSAN
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1:abort_on_error=1
+        run: |
+          cd build/sanitizers
+          ctest --output-on-failure --timeout 60

@@ -27,3 +27,11 @@ Container images and shipped binaries have no SBOM, no provenance attestation, a
 - Run `speckit.specify` against this stub to expand User Scenarios, Functional Requirements, and Success Criteria before `speckit.plan`.
 - Cross-layer dependencies (API or native changes) MUST be enumerated in the plan artifact and parity-governed (feature 047) when applicable.
 - This stub was generated as part of the cross-domain planning batch documented in [`.specify/specs/067-cross-domain-followup-planning/spec.md`](../067-cross-domain-followup-planning/spec.md).
+
+## Status: Implemented
+
+Implemented on branch `sprint3-074-084-086` (May 2026).
+
+- `.github/workflows/sbom-and-signing.yml`: Syft CycloneDX SBOM generation for TS API and ASP.NET API; cosign keyless OIDC image signing on `main`.
+- `scripts/generate-sboms.sh`: local developer SBOM generation script.
+- `.gitignore`: `artifacts/sboms/` added to prevent committing generated SBOM outputs.
