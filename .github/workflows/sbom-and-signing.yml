@@ -1,0 +1,63 @@
+name: SBOM Generation & Image Signing
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write  # required for cosign keyless OIDC
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Syft (SBOM generator)
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate SBOM for TS API
+        run: syft dir:src/typescript/api --output cyclonedx-json=sbom-ts-api.json
+
+      - name: Generate SBOM for ASP.NET API
+        run: syft dir:src/c-sharp/asp.net --output cyclonedx-json=sbom-dotnet-api.json
+
+      - name: Upload SBOMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sboms-${{ github.sha }}
+          path: 'sbom-*.json'
+
+  sign:
+    runs-on: ubuntu-latest
+    needs: sbom
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Build and push image (banana-api)
+        uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          file: docker/api.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: ghcr.io/lahklekey/banana/banana-api:${{ github.sha }}
+
+      - name: Sign image (keyless OIDC)
+        run: |
+          cosign sign --yes ghcr.io/lahklekey/banana/banana-api:${{ github.sha }}
+        env:
+          COSIGN_EXPERIMENTAL: "1"

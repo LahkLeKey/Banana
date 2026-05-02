@@ -1,0 +1,30 @@
+{
+  "name": "Banana Dev Environment",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": { "version": "8" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" },
+    "ghcr.io/devcontainers/features/cmake:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-vscode.cmake-tools",
+        "oven-sh.bun-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "forwardPorts": [5173, 8080, 8081, 5432],
+  "remoteEnv": {
+    "BANANA_NATIVE_PATH": "/workspace/out/native/linux-x86_64/libbanana_native.so",
+    "BANANA_JWT_SECRET": "dev-only-not-for-production"
+  }
+}

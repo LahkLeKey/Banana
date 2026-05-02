@@ -1,0 +1,52 @@
+name: Vault Smoke Test
+
+on:
+  push:
+    paths:
+      - 'scripts/vault-init.sh'
+      - 'docker/vault.Dockerfile'
+      - '.github/workflows/vault-smoke.yml'
+  pull_request:
+    paths:
+      - 'scripts/vault-init.sh'
+      - 'docker/vault.Dockerfile'
+      - '.github/workflows/vault-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  vault-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Vault dev server
+        run: |
+          docker run -d --name vault-smoke \
+            -e VAULT_DEV_ROOT_TOKEN_ID=banana-dev-token \
+            -e VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 \
+            -p 8200:8200 \
+            --cap-add IPC_LOCK \
+            hashicorp/vault:1.16 vault server -dev
+          sleep 5
+
+      - name: Install Vault CLI
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt-get update -q && sudo apt-get install -y vault
+
+      - name: Verify Vault is unsealed and KV is reachable
+        env:
+          VAULT_ADDR: http://127.0.0.1:8200
+          VAULT_TOKEN: banana-dev-token
+          BANANA_PG_CONNECTION: host=localhost port=5432 user=banana dbname=banana
+          BANANA_JWT_SECRET: smoke-test-secret
+        run: |
+          vault status
+          bash scripts/vault-init.sh
+          vault kv get secret/banana/postgres
+          vault kv get secret/banana/jwt
+
+      - name: Stop Vault
+        if: always()
+        run: docker rm -f vault-smoke || true

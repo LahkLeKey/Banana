@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "banana.fullname" . }}-ts-api
+  labels:
+    {{- include "banana.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ts-api
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.tsApi.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "banana.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ts-api
