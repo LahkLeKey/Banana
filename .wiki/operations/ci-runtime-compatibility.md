@@ -22,6 +22,6 @@ Compose CI opts into Node 24 for JavaScript actions to avoid Node 20 deprecation
 
 ## Exception Handling
 
-- Exception file: `.github/workflows/runtime-compatibility-exceptions.yml`
+- Exception file: `.github/runtime-compatibility-exceptions.yml`
 - Keep exceptions empty unless strictly needed.
 - When adding one, include ownership and cleanup date.

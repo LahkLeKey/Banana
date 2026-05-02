@@ -4,7 +4,7 @@ WORKDIR /workspace
 COPY src/typescript/api/package.json src/typescript/api/bun.lockb* ./src/typescript/api/
 COPY src/typescript/api/prisma ./src/typescript/api/prisma
 COPY src/typescript/api/prisma.config.ts ./src/typescript/api/
-RUN cd src/typescript/api && bun install --frozen-lockfile || bun install
+RUN cd src/typescript/api && bun install --frozen-lockfile --production || bun install --production
 COPY src/typescript/api ./src/typescript/api
 ENV NODE_ENV=production
 EXPOSE 8081
