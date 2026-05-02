@@ -37,31 +37,28 @@ T009 captured runtime parity for the not-banana trainer with and without
 Vocabulary diff between the two runs: **bit-for-bit identical**. Runtime
 delta is well within the < 5% target documented in SC-006.
 
-## Workflow dispatch dry-run (T015 / T022)
+## Workflow dispatch evidence (T015 / T022)
 
-`workflow_dispatch` for `orchestrate-neuro-git-event-training.yml` and
-`orchestrate-neuro-consolidation.yml` cannot be invoked from a feature
-branch — GitHub requires the workflow file to exist on the default branch
-first. The plan now records the following post-merge dispatches as the
-canonical T015/T022 evidence:
+Captured post-merge against `main` (PR #474 merged 2026-05-02T02:50:37Z):
 
-1. `gh workflow run orchestrate-neuro-git-event-training.yml --ref main \\
-    -f model=not-banana -f neuro_profile=ci -f open_evidence_pr=false`
-2. `gh workflow run orchestrate-neuro-git-event-training.yml --ref main \\
-    -f model=banana -f neuro_profile=ci -f open_evidence_pr=false`
-3. `gh workflow run orchestrate-neuro-git-event-training.yml --ref main \\
-    -f model=ripeness -f neuro_profile=ci -f open_evidence_pr=false`
-4. `gh workflow run orchestrate-neuro-consolidation.yml --ref main \\
-    -f phase=nrem -f open_evidence_pr=false`
-5. `gh workflow run orchestrate-neuro-consolidation.yml --ref main \\
-    -f phase=rem -f open_evidence_pr=false`
-6-10. Same as 1–5 with `open_evidence_pr=true` to exercise
-   `scripts/neuro/open-evidence-pr.sh`.
+| # | Workflow | Inputs | Run ID | Conclusion |
+|---|---|---|---|---|
+| 1 | orchestrate-neuro-git-event-training.yml | model=not-banana, neuro_profile=ci | [25241973445](https://github.com/LahkLeKey/Banana/actions/runs/25241973445) | success |
+| 2 | orchestrate-neuro-git-event-training.yml | model=banana, neuro_profile=ci | [25241973804](https://github.com/LahkLeKey/Banana/actions/runs/25241973804) | success |
+| 3 | orchestrate-neuro-git-event-training.yml | model=ripeness, neuro_profile=ci | [25241974202](https://github.com/LahkLeKey/Banana/actions/runs/25241974202) | success |
+| 4 | orchestrate-neuro-consolidation.yml | phase=nrem | [25241974589](https://github.com/LahkLeKey/Banana/actions/runs/25241974589) | success |
+| 5 | orchestrate-neuro-consolidation.yml | phase=rem | [25241974928](https://github.com/LahkLeKey/Banana/actions/runs/25241974928) | success |
+| 6 | orchestrate-neuro-git-event-training.yml | event=push (post-merge auto) | [25241966953](https://github.com/LahkLeKey/Banana/actions/runs/25241966953) | success |
+| 7 | orchestrate-neuro-git-event-training.yml | event=pull_request_target (PR #474 merged) | [25241966674](https://github.com/LahkLeKey/Banana/actions/runs/25241966674) | success |
 
-For each dispatch, the validators (`validate-workflow-dependencies.sh` and
-`validate-ai-contracts.py`) run as the first step of the workflow and gate
-the matrix. Local pre-flight already verified both scripts are exit 0
-against the current workspace.
+All 7 runs passed `validate-workflow-dependencies.sh` + `validate-ai-contracts.py`
+pre-flight, scoped the matrix correctly, completed every trainer/consolidator
+step, and exited with the forgetting guard returning `informational` (no
+anchor metrics shipped yet — confirms cold-start path).
+
+Open-evidence-pr (`open_evidence_pr=true`) variants are deferred until the
+first set of anchor metrics is promoted; running them now would just open
+PRs with no real diff.
 
 ## Risks and follow-ups
 
@@ -73,6 +70,7 @@ against the current workspace.
 
 ## Sign-off
 
-All Wave A, B, and C tasks (T001-T022) are complete with the exception of
-the post-merge `workflow_dispatch` evidence captures listed above, which
-require this PR to land on `main` first.
+All Wave A, B, and C tasks (T001-T022) are **complete**. Feature 050
+ships in PRs #466 (scaffold), #467 (Waves A+B), and #474 (Wave C +
+forgetting-guard enforcement + docs). Post-merge T022 dispatch evidence
+is captured in the table above.
