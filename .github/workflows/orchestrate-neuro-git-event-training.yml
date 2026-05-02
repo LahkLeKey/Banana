@@ -1,0 +1,149 @@
+name: Orchestrate Neuro Git-Event Training
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Spec Kit feature 050 (FR-006, FR-008, FR-009, FR-010): retrain models on
+# git events scoped by changed paths or 'train:<model>' labels. Additive to
+# the existing autonomous-self-training cycle; fires only when changes touch
+# a model's corpus or trainer.
+on:
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - data/banana/**
+      - data/not-banana/**
+      - data/ripeness/**
+      - scripts/train-banana-model.py
+      - scripts/train-not-banana-model.py
+      - scripts/train-ripeness-model.py
+      - scripts/neuro/**
+      - scripts/neuro_trace.py
+      - .github/workflows/orchestrate-neuro-git-event-training.yml
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Single model to retrain (banana, not-banana, ripeness, or all)
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - banana
+          - not-banana
+          - ripeness
+      neuro_profile:
+        description: Neuro profile (off, ci, local)
+        required: false
+        default: "ci"
+        type: choice
+        options:
+          - off
+          - ci
+          - local
+      open_evidence_pr:
+        description: Open a follow-up PR with refreshed artifacts
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  BANANA_REQUIRED_HUMAN_REVIEWER: LahkLeKey
+
+jobs:
+  scope:
+    if: >-
+      ${{
+        github.event_name != 'pull_request_target' ||
+        github.event.pull_request.merged == true
+      }}
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.scope.outputs.models }}
+      run: ${{ steps.scope.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: AI-contract pre-flight
+        run: |
+          bash scripts/validate-workflow-dependencies.sh
+          python scripts/validate-ai-contracts.py
+      - name: Scope models from event
+        id: scope
+        env:
+          BANANA_NEURO_EVENT_NAME: ${{ github.event_name }}
+          BANANA_NEURO_DISPATCH_MODEL: ${{ github.event.inputs.model || '' }}
+          BANANA_NEURO_PR_LABELS: >-
+            ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          python scripts/neuro/scope-models-from-event.py >> "$GITHUB_OUTPUT"
+
+  train:
+    needs: scope
+    if: needs.scope.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.scope.outputs.models) }}
+    concurrency:
+      group: neuro-train-${{ matrix.model }}
+      cancel-in-progress: false
+    env:
+      BANANA_NEURO_PROFILE: ${{ github.event.inputs.neuro_profile || 'ci' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Train ${{ matrix.model }} (--neuro-profile ${{ env.BANANA_NEURO_PROFILE }})
+        env:
+          BANANA_NEURO_MODEL: ${{ matrix.model }}
+        run: |
+          mkdir -p "artifacts/training/${BANANA_NEURO_MODEL}/local"
+          trainer="scripts/train-${BANANA_NEURO_MODEL}-model.py"
+          corpus="data/${BANANA_NEURO_MODEL}/corpus.json"
+          output="artifacts/training/${BANANA_NEURO_MODEL}/local"
+          python "$trainer" \
+            --corpus "$corpus" \
+            --output "$output" \
+            --training-profile ci \
+            --session-mode single \
+            --max-sessions 1 \
+            --neuro-profile "$BANANA_NEURO_PROFILE"
+      - name: Forgetting guard
+        run: |
+          python scripts/neuro/forgetting-guard.py \
+            --model ${{ matrix.model }} \
+            --metrics artifacts/training/${{ matrix.model }}/local/metrics.json \
+            --max-regression-pp 1.0 || exit_code=$?
+          # Forgetting guard is informational until Wave C anchors are wired.
+          true
+      - name: Upload neuro trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: neuro-trace-${{ matrix.model }}
+          path: artifacts/training/${{ matrix.model }}/local/neuro-trace.json
+          if-no-files-found: warn
+      - name: Open evidence PR
+        if: ${{ github.event.inputs.open_evidence_pr == 'true' }}
+        env:
+          BANANA_NEURO_MODEL: ${{ matrix.model }}
+          BANANA_NEURO_TRIGGER: git-event
+          BANANA_PR_LABELS: automation,model-training,speckit-driven,agent:banana-classifier-agent
+        run: |
+          bash scripts/neuro/open-evidence-pr.sh

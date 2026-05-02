@@ -15,6 +15,7 @@ from pathlib import Path
 from statistics import mean
 from typing import Iterable
 
+from neuro_trace import write_neuro_trace
 from training_session_store import append_training_session_record, load_training_session_history, summarize_replay_drift
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
@@ -62,6 +63,12 @@ def parse_args() -> argparse.Namespace:
         "--allow-numeric-tokens",
         action="store_true",
         help="Allow numeric-only tokens in learned vocabulary.",
+    )
+    parser.add_argument(
+        "--neuro-profile",
+        choices=["off", "ci", "local"],
+        default="off",
+        help="Feature 050: emit neuro-trace.json sidecar. Default 'off' preserves bit-for-bit outputs.",
     )
     return parser.parse_args()
 
@@ -417,6 +424,21 @@ def main() -> int:
         current_metrics=selected_metrics,
     )
 
+    history_accuracies = [
+        float(record.get("metrics", {}).get("holdout_accuracy", 0.0))
+        for record in history_before
+        if isinstance(record, dict) and isinstance(record.get("metrics"), dict)
+    ]
+    neuro_trace = write_neuro_trace(
+        profile=args.neuro_profile,
+        output_dir=output_dir,
+        model="not-banana",
+        history_accuracies=history_accuracies,
+        selected_metrics=selected_metrics,
+        run_fingerprint=run_fingerprint,
+        deterministic_timestamp=DETERMINISTIC_GENERATED_AT,
+    )
+
     print(
         json.dumps(
             {
@@ -425,6 +447,7 @@ def main() -> int:
                 "run_fingerprint": run_fingerprint,
                 "persisted_session": session_write,
                 "history_drift": drift_summary,
+                "neuro_trace": neuro_trace,
             },
             indent=2,
         )
