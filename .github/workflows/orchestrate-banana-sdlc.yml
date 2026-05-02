@@ -21,44 +21,8 @@ on:
         description: Base branch used for generated incremental pull requests
         required: false
         default: "main"
-      branch_prefix:
-        description: Branch prefix used for generated incremental pull requests
-        required: false
-        default: "sdlc"
-      draft_pr:
-        description: Open generated incremental pull requests as draft
-        required: false
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      labels:
-        description: Labels applied to generated incremental pull requests
-        required: false
-        default: "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent"
-      reviewers:
-        description: Optional reviewer usernames as comma-separated values or [array] syntax
-        required: false
-        default: ""
       allow_actions_actor:
         description: Allow workflow_dispatch runs triggered by github-actions[bot]
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      skip_no_changes:
-        description: Skip PR creation for increments that produce no file changes
-        required: false
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      continue_on_error:
-        description: Continue executing later increments if an earlier increment fails
         required: false
         default: "false"
         type: choice
@@ -73,18 +37,6 @@ on:
         options:
           - "incremental"
           - "spec-drain"
-      autonomy_stop:
-        description: Emergency stop flag for autonomous spec-drain mode
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      spec_drain_state_path:
-        description: Optional explicit path for spec-drain checkpoint state JSON
-        required: false
-        default: ""
       enable_auto_merge:
         description: Enable auto-merge for generated PRs
         required: false
@@ -114,46 +66,6 @@ on:
         description: Maximum number of autonomous CI follow-up specs to scaffold per run
         required: false
         default: "3"
-      open_ci_issues:
-        description: Open/link GitHub issues for failed CI runs during autonomous follow-up
-        required: false
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      ci_issue_labels:
-        description: Labels for autonomous CI follow-up issues (comma-separated)
-        required: false
-        default: "automation,ci,triage,agent:workflow-agent"
-      ci_issue_title_prefix:
-        description: Prefix used for autonomous CI follow-up issue titles
-        required: false
-        default: "CI Auto-Debug"
-      ci_log_excerpt_lines:
-        description: Number of trailing failed-log lines to include in issue body
-        required: false
-        default: "120"
-      require_real_updates:
-        description: Require each increment to touch source/workflow impact paths before PR creation
-        required: false
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      skip_non_real_updates:
-        description: Skip increment PR creation when changed files are docs/non-impact only
-        required: false
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      real_update_path_patterns:
-        description: Comma-separated glob patterns treated as source/workflow impact paths
-        required: false
-        default: "src/**,tests/**,scripts/**,.github/workflows/**,docker/**,docker-compose.yml,CMakeLists.txt,Directory.Build.props"
       sync_wiki:
         description: Run wiki synchronization layer after incremental PR orchestration
         required: false
@@ -162,50 +74,6 @@ on:
         options:
           - "true"
           - "false"
-      validate_ai_contracts:
-        description: Validate .github AI customization and wiki-sync contracts before running increments
-        required: false
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      wiki_dry_run:
-        description: Run wiki synchronization in dry-run mode
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      wiki_push:
-        description: Push wiki commits to remote when wiki sync is not dry-run
-        required: false
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      wiki_strict:
-        description: Fail workflow when wiki repository cannot be cloned or pushed
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
-      wiki_commit_message:
-        description: Commit message used for wiki synchronization commits
-        required: false
-        default: "docs(wiki): sync automated SDLC documentation snapshots"
-      wiki_remote_url:
-        description: Optional explicit wiki git remote URL
-        required: false
-        default: "https://github.com/LahkLeKey/Banana.wiki.git"
-      wiki_sync_mapping:
-        description: Optional newline-delimited source|target mapping for wiki sync
-        required: false
-        default: ""
   schedule:
     - cron: "0 4 * * 1-5"
 
