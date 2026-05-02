@@ -215,4 +215,4 @@ public sealed class FakeNativeBananaClient : INativeBananaClient
         minor = FakeVersionMinor;
         return NativeStatusCode.Ok;
     }
-}}
+}

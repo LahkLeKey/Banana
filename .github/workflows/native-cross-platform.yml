@@ -1,0 +1,67 @@
+name: Native Cross-Platform Build
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/native/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+  pull_request:
+    paths:
+      - 'src/native/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            preset: linux-x86_64-release
+            triple: linux-x86_64
+          - os: ubuntu-latest
+            preset: linux-arm64-release
+            triple: linux-arm64
+            cross: true
+          - os: macos-latest
+            preset: macos-arm64-release
+            triple: macos-arm64
+          - os: windows-latest
+            preset: windows-x86_64-release
+            triple: windows-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cross-compile toolchain (Linux ARM64)
+        if: matrix.cross == true
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Install Ninja (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Install Ninja (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+
+      - name: Install Ninja (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ninja --no-progress -y
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build build/native/${{ matrix.preset }} --config Release
+
+      - name: Install
+        run: cmake --install build/native/${{ matrix.preset }} --config Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: banana-native-${{ matrix.triple }}
+          path: out/native/${{ matrix.triple }}/

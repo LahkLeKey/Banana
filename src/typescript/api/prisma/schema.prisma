@@ -73,33 +73,18 @@ model ActiveModelRelease {
     updatedAt DateTime    @updatedAt
 }
 
-// === Active Learning Queue (spec 077) ===
-model label_request {
-    id                 String    @id @default(uuid())
-    text               String
-    model              String
-    current_prediction Json?
-    uncertainty        Float?
-    status             String    @default("queued")
-    label              String?
-    labelled_by        String?
-    labelled_at        DateTime?
-    created_at         DateTime  @default(now())
+// === Audit Event log (spec #069) ===
+model audit_event {
+    id          String   @id @default(uuid())
+    actor       String?
+    action      String
+    resource    String
+    resource_id String?
+    metadata    Json?
+    ip_address  String?
+    created_at  DateTime @default(now())
 
-    @@index([status])
-    @@index([model])
-}
-
-// === Training Event Store (spec 097) ===
-model training_event {
-    id         String   @id @default(uuid())
-    event_type String
-    model      String?
-    payload    Json
-    actor      String?
-    created_at DateTime @default(now())
-
-    @@index([event_type])
-    @@index([model])
+    @@index([action])
+    @@index([actor])
     @@index([created_at])
 }

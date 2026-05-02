@@ -1,4 +1,10 @@
+<!-- breadcrumb: Operations > Compose CI Stabilization -->
+
 # Compose CI Stabilization
+
+> [Home](../Home.md) › [Operations](README.md) › Compose CI Stabilization
+
+Related pages: [CI and Compose Notes](ci-compose-notes.md), [CI Runtime Compatibility](ci-runtime-compatibility.md)
 
 ## What Changed
 
@@ -13,13 +19,13 @@ Compose CI now writes deterministic failure evidence for both compose lanes and 
 ## Where To Look In A Failed Run
 
 - Compose lane artifacts:
-  - compose-tests-artifacts
-  - compose-runtime-artifacts
-  - compose-electron-artifacts
+  - `compose-tests-artifacts`
+  - `compose-runtime-artifacts`
+  - `compose-electron-artifacts`
 - Non-compose job results:
-  - artifacts under .artifacts/compose-ci/jobs
+  - artifacts under `.artifacts/compose-ci/jobs`
 - Workflow aggregate:
-  - compose-ci-failure-aggregate
+  - `compose-ci-failure-aggregate`
 
 ## Fast Triage Steps
 
