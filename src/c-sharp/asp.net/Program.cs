@@ -2,8 +2,41 @@ using Banana.Api.NativeInterop;
 using Banana.Api.Pipeline.Mapping;
 using Banana.Api.Pipeline;
 using Banana.Api.Pipeline.Steps;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+const string FrontendCorsPolicy = "BananaFrontend";
+
+// Feature 063 — JWT auth (HS256). Secret from BANANA_JWT_SECRET env var.
+// When the env var is absent the server starts without authentication enabled
+// (dev/test convenience). In production this must be set.
+var jwtSecret = builder.Configuration["BANANA_JWT_SECRET"]
+    ?? Environment.GetEnvironmentVariable("BANANA_JWT_SECRET");
+
+if (!string.IsNullOrWhiteSpace(jwtSecret))
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(opts =>
+        {
+            opts.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.FromSeconds(30),
+            };
+        });
+    builder.Services.AddAuthorization(opts =>
+    {
+        opts.AddPolicy("AdminOnly",   p => p.RequireClaim("role", "admin"));
+        opts.AddPolicy("OperatorUp",  p => p.RequireClaim("role", "admin", "operator"));
+        opts.AddPolicy("ViewerUp",    p => p.RequireClaim("role", "admin", "operator", "viewer"));
+    });
+}
 const string FrontendCorsPolicy = "BananaFrontend";
 
 // Spec 007: single typed PipelineContext + single interop seam.
@@ -44,6 +77,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(FrontendCorsPolicy);
+if (!string.IsNullOrWhiteSpace(jwtSecret))
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
