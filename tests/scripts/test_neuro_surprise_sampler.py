@@ -1,4 +1,5 @@
 """Tests for scripts/neuro/surprise-sampler.py (feature 050 T003)."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -43,7 +44,7 @@ def test_rank_ordering_preserved_high_surprise_first():
     weights = {"banana": 1.0, "yellow": 1.0}
     texts = [
         "banana yellow banana yellow",  # confident -> low surprise
-        "neutral pink table",            # boundary -> high surprise
+        "neutral pink table",  # boundary -> high surprise
     ]
     raw = mod.compute_surprise(texts, weights)
     assert raw[1] > raw[0]
@@ -62,18 +63,30 @@ def test_normalize_zero_total_returns_uniform():
 
 def test_build_payload_writes_expected_shape(tmp_path: Path):
     vocab = tmp_path / "vocab.json"
-    vocab.write_text(json.dumps({
-        "vocabulary": [
-            {"token": "banana", "weight": 0.8, "support": 4},
-            {"token": "yellow", "weight": 0.5, "support": 3},
-        ],
-    }), encoding="utf-8")
+    vocab.write_text(
+        json.dumps(
+            {
+                "vocabulary": [
+                    {"token": "banana", "weight": 0.8, "support": 4},
+                    {"token": "yellow", "weight": 0.5, "support": 3},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
     corpus = tmp_path / "corpus.json"
-    corpus.write_text(json.dumps({"samples": [
-        {"text": "banana", "label": "banana"},
-        {"text": "table", "label": "not-banana"},
-        {"text": "yellow banana", "label": "banana"},
-    ]}), encoding="utf-8")
+    corpus.write_text(
+        json.dumps(
+            {
+                "samples": [
+                    {"text": "banana", "label": "banana"},
+                    {"text": "table", "label": "not-banana"},
+                    {"text": "yellow banana", "label": "banana"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
     payload = mod.build_payload(vocab, corpus, floor=0.7)
     assert payload["sample_count"] == 3
     assert len(payload["surprise_weights"]) == 3

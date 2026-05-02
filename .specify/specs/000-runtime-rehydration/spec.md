@@ -1,8 +1,8 @@
 # Feature Specification: Baseline Rehydration - Runtime Channel Stability
 
-**Feature Branch**: `000-runtime-rehydration`  
-**Created**: 2026-04-25  
-**Status**: Draft  
+**Feature Branch**: `000-runtime-rehydration`
+**Created**: 2026-04-25
+**Status**: Draft
 **Type**: Rehydration Specification (pre-sprint baseline)
 
 ## Summary

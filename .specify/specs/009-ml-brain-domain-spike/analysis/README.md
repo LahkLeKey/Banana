@@ -1,7 +1,7 @@
 # SPIKE Analysis Index: ML Brain Domain
 
-**Feature**: 009-ml-brain-domain-spike  
-**Date**: 2026-04-26  
+**Feature**: 009-ml-brain-domain-spike
+**Date**: 2026-04-26
 **Status**: In progress
 
 ## Purpose

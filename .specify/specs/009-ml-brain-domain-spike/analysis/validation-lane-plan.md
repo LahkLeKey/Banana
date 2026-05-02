@@ -1,6 +1,6 @@
 # Validation Lane Plan: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Define lane expectations and contract implications for follow-up implementation slices per domain.
 
 ## Lane Ownership by Domain
@@ -17,8 +17,8 @@
 
 ### Left Brain (Regression) — Native Lane
 
-**Entry point**: `ctest --preset default-test`  
-**New test file**: `tests/native/test_regression_left_brain.c`  
+**Entry point**: `ctest --preset default-test`
+**New test file**: `tests/native/test_regression_left_brain.c`
 **Key assertions**:
 1. Regression output is a float in the defined range (e.g., 0.0–1.0).
 2. Input boundary vectors (all zeros, all max) produce valid outputs.
@@ -30,8 +30,8 @@
 
 ### Right Brain (Binary) — Native Lane
 
-**Entry point**: `ctest --preset default-test`  
-**New test file**: `tests/native/test_binary_right_brain.c`  
+**Entry point**: `ctest --preset default-test`
+**New test file**: `tests/native/test_binary_right_brain.c`
 **Key assertions**:
 1. Binary output is a valid class label from the defined class set.
 2. Class probability is in [0.0, 1.0].
@@ -44,9 +44,9 @@
 
 ### Full Brain (Transformer) — Native Lane (New Pattern Required)
 
-**Entry point**: `ctest --preset default-test`  
-**New test file**: `tests/native/test_transformer_full_brain.c`  
-**New assertion helpers**: Embedding vector assertion helpers (do not reuse scalar assertion helpers).  
+**Entry point**: `ctest --preset default-test`
+**New test file**: `tests/native/test_transformer_full_brain.c`
+**New assertion helpers**: Embedding vector assertion helpers (do not reuse scalar assertion helpers).
 **Key assertions**:
 1. Transformer produces output of expected type (embedding vector or class label depending on configured head).
 2. Attention-weight vector is non-null and sums to 1.0 per head.

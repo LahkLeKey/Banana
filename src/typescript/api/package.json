@@ -1,31 +1,31 @@
 {
-    "name": "@banana/api",
-    "version": "2.0.0",
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "dev": "bun run --hot src/index.ts",
-        "start": "bun run src/index.ts",
-        "build": "bun build src/index.ts --target=bun --outdir=dist",
-        "parity:inventory": "bash ../../scripts/validate-api-parity-governance.sh --inventory-only",
-        "parity:validate": "bash ../../scripts/validate-api-parity-governance.sh --strict",
-        "prisma:generate": "bunx prisma generate --schema prisma/schema.prisma",
-        "prisma:migrate:status": "bunx prisma migrate status --schema prisma/schema.prisma",
-        "prisma:migrate:dev": "bunx prisma migrate dev --schema prisma/schema.prisma",
-        "prisma:migrate:deploy": "bunx prisma migrate deploy --schema prisma/schema.prisma",
-        "test": "bun test"
-    },
-    "dependencies": {
-        "@fastify/helmet": "^13.0.2",
-        "@prisma/client": "^7.0.0",
-        "fastify": "^5.0.0",
-        "jose": "^6.2.3",
-        "prisma": "^7.0.0",
-        "zod": "^3.23.0"
-    },
-    "devDependencies": {
-        "@fastify/rate-limit": "^9.0.0",
-        "@types/bun": "latest",
-        "typescript": "^5.5.0"
-    }
+  "name": "@banana/api",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "build": "bun build src/index.ts --target=bun --outdir=dist",
+    "parity:inventory": "bash ../../scripts/validate-api-parity-governance.sh --inventory-only",
+    "parity:validate": "bash ../../scripts/validate-api-parity-governance.sh --strict",
+    "prisma:generate": "bunx prisma generate --schema prisma/schema.prisma",
+    "prisma:migrate:status": "bunx prisma migrate status --schema prisma/schema.prisma",
+    "prisma:migrate:dev": "bunx prisma migrate dev --schema prisma/schema.prisma",
+    "prisma:migrate:deploy": "bunx prisma migrate deploy --schema prisma/schema.prisma",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@fastify/helmet": "^13.0.2",
+    "@prisma/client": "^7.0.0",
+    "fastify": "^5.0.0",
+    "jose": "^6.2.3",
+    "prisma": "^7.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@fastify/rate-limit": "^9.0.0",
+    "@types/bun": "latest",
+    "typescript": "^5.5.0"
+  }
 }

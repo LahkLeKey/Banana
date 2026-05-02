@@ -14,9 +14,17 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Build deterministic autonomous SDLC plan from native model output."
     )
-    parser.add_argument("--catalog", required=True, help="Path to base increment catalog JSON")
-    parser.add_argument("--model-json", required=True, help="Path to deterministic native model JSON")
-    parser.add_argument("--output", required=True, help="Output path for rendered deterministic plan JSON")
+    parser.add_argument(
+        "--catalog", required=True, help="Path to base increment catalog JSON"
+    )
+    parser.add_argument(
+        "--model-json", required=True, help="Path to deterministic native model JSON"
+    )
+    parser.add_argument(
+        "--output",
+        required=True,
+        help="Output path for rendered deterministic plan JSON",
+    )
     return parser.parse_args()
 
 
@@ -74,7 +82,9 @@ def unique_increment_id(preferred: str, seen: set[str]) -> str:
     return candidate
 
 
-def build_synthetic_increment(agent_slug: str, focus: str, sequence: int, seen_ids: set[str]) -> dict[str, Any]:
+def build_synthetic_increment(
+    agent_slug: str, focus: str, sequence: int, seen_ids: set[str]
+) -> dict[str, Any]:
     increment_id = unique_increment_id(f"pulse-{agent_slug}-{sequence}", seen_ids)
     slug = sanitize_slug(agent_slug.replace("-agent", ""))
     intent = f"Deterministic native model pulse {sequence} for {focus}."
@@ -85,7 +95,7 @@ def build_synthetic_increment(agent_slug: str, focus: str, sequence: int, seen_i
             "python scripts/record-agent-pulse-activity.py "
             f"--agent {agent_slug} "
             f"--increment-id {increment_id} "
-            f"--intent \"{intent}\""
+            f'--intent "{intent}"'
         ),
         "commit_message": f"chore({slug}): deterministic pulse snapshot {sequence}",
         "pr_title": f"triage({slug}): deterministic pulse snapshot {sequence}",
@@ -147,26 +157,39 @@ def main() -> int:
 
         for base_entry in base_entries:
             clone = clone_increment(base_entry, agent_slug)
-            clone["id"] = unique_increment_id(str(clone.get("id", agent_slug)), seen_ids)
+            clone["id"] = unique_increment_id(
+                str(clone.get("id", agent_slug)), seen_ids
+            )
             rendered.append(clone)
 
         base_count = len(base_entries)
         synthetic_start = base_count + 1
         for sequence in range(synthetic_start, snapshots + 1):
-            rendered.append(build_synthetic_increment(agent_slug, focus, sequence, seen_ids))
+            rendered.append(
+                build_synthetic_increment(agent_slug, focus, sequence, seen_ids)
+            )
 
     for leftover_agent, leftover_entries in sorted(increments_by_agent.items()):
-        if any(sanitize_slug(leftover_agent) == sanitize_slug(str(lane.get("agent", ""))) for lane in lanes):
+        if any(
+            sanitize_slug(leftover_agent) == sanitize_slug(str(lane.get("agent", "")))
+            for lane in lanes
+        ):
             continue
 
-        for leftover_entry in sorted(leftover_entries, key=lambda item: str(item.get("id", ""))):
+        for leftover_entry in sorted(
+            leftover_entries, key=lambda item: str(item.get("id", ""))
+        ):
             clone = clone_increment(leftover_entry, leftover_agent)
-            clone["id"] = unique_increment_id(str(clone.get("id", leftover_agent)), seen_ids)
+            clone["id"] = unique_increment_id(
+                str(clone.get("id", leftover_agent)), seen_ids
+            )
             rendered.append(clone)
 
     for entry in unowned_increments:
         clone = dict(entry)
-        clone["id"] = unique_increment_id(str(clone.get("id", "unowned-increment")), seen_ids)
+        clone["id"] = unique_increment_id(
+            str(clone.get("id", "unowned-increment")), seen_ids
+        )
         rendered.append(clone)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

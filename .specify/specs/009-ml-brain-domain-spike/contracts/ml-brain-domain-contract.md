@@ -1,6 +1,6 @@
 # ML Brain Domain Contract
 
-**Feature**: 009-ml-brain-domain-spike  
+**Feature**: 009-ml-brain-domain-spike
 **Date**: 2026-04-26
 
 ## Scope

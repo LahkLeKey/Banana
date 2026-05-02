@@ -1,8 +1,8 @@
 # Feature Specification: CMake Preset Activation Fix
 
-**Feature Branch**: `[008-cmake-preset-activation-fix]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[008-cmake-preset-activation-fix]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "make a follow up spec for fixing this bug"
 
 ## In Scope *(mandatory)*

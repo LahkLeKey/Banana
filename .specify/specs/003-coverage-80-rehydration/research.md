@@ -1,6 +1,6 @@
 # Research: Coverage 80 Rehydration for Entire Monorepo
 
-**Date**: 2026-04-25  
+**Date**: 2026-04-25
 **Spec**: `.specify/specs/003-coverage-80-rehydration/spec.md`
 
 ## Decision 1: Enforce 80 percent by (domain, layer, lane) tuple

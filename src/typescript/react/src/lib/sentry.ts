@@ -5,7 +5,7 @@ export function initSentry(): void {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn) return;
   // Dynamic import so Sentry is tree-shaken when DSN is absent
-  import('@sentry/react').then(({init, browserTracingIntegration}) => {
+  import("@sentry/react").then(({ init, browserTracingIntegration }) => {
     init({
       dsn,
       integrations: [browserTracingIntegration()],

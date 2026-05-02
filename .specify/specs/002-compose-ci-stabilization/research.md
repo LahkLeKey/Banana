@@ -1,6 +1,6 @@
 # Research: Compose CI Stabilization
 
-**Date**: 2026-04-25  
+**Date**: 2026-04-25
 **Spec**: `.specify/specs/002-compose-ci-stabilization/spec.md`
 
 ## Decision 1: Enforce deterministic terminal states per compose lane

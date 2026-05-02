@@ -1,8 +1,8 @@
 # Feature Specification: Compose CI Stabilization
 
-**Feature Branch**: `002-compose-ci-stabilization`  
-**Created**: 2026-04-25  
-**Status**: Draft  
+**Feature Branch**: `002-compose-ci-stabilization`
+**Created**: 2026-04-25
+**Status**: Draft
 **Input**: User description: "Add a new spec to address Compose CI failures observed in the e2e runner contract run, including compose lane failures, coverage lane instability, artifact upload gaps, and Node runtime deprecation warnings."
 
 ## In Scope *(mandatory)*

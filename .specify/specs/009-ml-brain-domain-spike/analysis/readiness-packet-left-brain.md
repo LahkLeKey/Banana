@@ -1,8 +1,8 @@
 # Readiness Packet: Left Brain Domain
 
-**Domain**: Left Brain  
-**Model Family**: Regression  
-**Date**: 2026-04-26  
+**Domain**: Left Brain
+**Model Family**: Regression
+**Date**: 2026-04-26
 **Confidence**: High [H]
 
 ---

@@ -1,8 +1,8 @@
 # Feature Specification: Compose-Orchestrated Run Profiles
 
-**Feature Branch**: `[041-compose-orchestrated-run-profiles]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[041-compose-orchestrated-run-profiles]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "all run profiles should be orchestrated by Docker Compose so dev experience is deterministic and reproducible"
 
 ## In Scope *(mandatory)*

@@ -9,14 +9,14 @@ Institutionalize a one-window frontend validation baseline so developers use the
 
 ## Technical Context
 
-**Language/Version**: Markdown/JSON documentation contracts; Bash task entry points; existing TypeScript/Electron runtime flows remain unchanged  
-**Primary Dependencies**: VS Code integrated browser workflow, Compose profile scripts (`scripts/compose-run-profile.sh`, `scripts/compose-profile-ready.sh`), Spec Kit artifacts under `.specify/`  
-**Storage**: N/A  
-**Testing**: Manual interactive validation loop + existing drift diagnostics (`scripts/validate-frontend-config-drift.sh`) + checklist evidence in spec tasks  
-**Target Platform**: Windows host with Docker Desktop + Ubuntu WSL2 runtime contract and VS Code workspace flow  
-**Project Type**: Process/governance hardening slice across documentation and workflow contracts  
-**Performance Goals**: One-window startup + rendered validation + teardown should remain within current developer loop expectations (typically under 5 minutes on warm environment)  
-**Constraints**: Preserve existing compose profile architecture and Bun-based frontend runtime contracts; avoid unrelated product behavior changes  
+**Language/Version**: Markdown/JSON documentation contracts; Bash task entry points; existing TypeScript/Electron runtime flows remain unchanged
+**Primary Dependencies**: VS Code integrated browser workflow, Compose profile scripts (`scripts/compose-run-profile.sh`, `scripts/compose-profile-ready.sh`), Spec Kit artifacts under `.specify/`
+**Storage**: N/A
+**Testing**: Manual interactive validation loop + existing drift diagnostics (`scripts/validate-frontend-config-drift.sh`) + checklist evidence in spec tasks
+**Target Platform**: Windows host with Docker Desktop + Ubuntu WSL2 runtime contract and VS Code workspace flow
+**Project Type**: Process/governance hardening slice across documentation and workflow contracts
+**Performance Goals**: One-window startup + rendered validation + teardown should remain within current developer loop expectations (typically under 5 minutes on warm environment)
+**Constraints**: Preserve existing compose profile architecture and Bun-based frontend runtime contracts; avoid unrelated product behavior changes
 **Scale/Scope**: Frontend/Electron validation lifecycle across constitution, Copilot guidance, runbook, and Spec Kit task execution conventions
 
 ## Constitution Check

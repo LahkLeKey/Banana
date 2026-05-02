@@ -1,6 +1,6 @@
 # Domain Definition Review Checklist (US1)
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Gate to confirm canonical domain definitions are non-overlapping, complete, and mapping-ready.
 
 ## Checklist

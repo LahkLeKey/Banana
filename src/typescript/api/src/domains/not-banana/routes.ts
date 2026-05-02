@@ -1,7 +1,7 @@
-import type {FastifyInstance} from 'fastify';
-import {z} from 'zod';
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 
-import {loadTrainedModel, scoreText} from './model';
+import { loadTrainedModel, scoreText } from "./model";
 
 const ScoreRequest = z.object({
   text: z.string().min(1),
@@ -9,11 +9,11 @@ const ScoreRequest = z.object({
 });
 
 export async function registerNotBananaRoutes(app: FastifyInstance) {
-  app.post('/not-banana/score', async (req, reply) => {
+  app.post("/not-banana/score", async (req, reply) => {
     const parsed = ScoreRequest.safeParse(req.body);
     if (!parsed.success) {
       return reply.status(400).send({
-        error: 'invalid_argument',
+        error: "invalid_argument",
         issues: parsed.error.flatten(),
       });
     }
@@ -21,18 +21,21 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
     const model = loadTrainedModel();
     const scored = scoreText(parsed.data.text, model);
     const threshold = parsed.data.threshold ?? model.recommended_threshold;
-    const thresholdSource = parsed.data.threshold !== undefined ? 'request' :
-        model.metrics?.min_signal_score !== undefined           ? 'model' :
-                                                                  'default';
+    const thresholdSource =
+      parsed.data.threshold !== undefined
+        ? "request"
+        : model.metrics?.min_signal_score !== undefined
+          ? "model"
+          : "default";
 
     if (scored.token_count === 0 || scored.matched_token_count === 0) {
       return reply.status(400).send({
-        error: 'invalid_argument',
-        message: 'text must contain known banana/not-banana signal tokens',
+        error: "invalid_argument",
+        message: "text must contain known banana/not-banana signal tokens",
       });
     }
 
-    const label = scored.banana_score >= threshold ? 'banana' : 'not_banana';
+    const label = scored.banana_score >= threshold ? "banana" : "not_banana";
 
     return reply.status(200).send({
       label,
@@ -55,7 +58,7 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
     });
   });
 
-  app.get('/not-banana/model', async (_req, reply) => {
+  app.get("/not-banana/model", async (_req, reply) => {
     const model = loadTrainedModel();
     return reply.status(200).send({
       source: model.source,
@@ -66,8 +69,7 @@ export async function registerNotBananaRoutes(app: FastifyInstance) {
       recommended_threshold: model.recommended_threshold,
       metrics: model.metrics,
       banana_token_sample: Array.from(model.banana_tokens).slice(0, 20).sort(),
-      not_banana_token_sample:
-          Array.from(model.not_banana_tokens).slice(0, 20).sort(),
+      not_banana_token_sample: Array.from(model.not_banana_tokens).slice(0, 20).sort(),
     });
   });
 }

@@ -1,7 +1,7 @@
 # Critical Journey Matrix Specification
 
-Parent: #313  
-Epic: #305  
+Parent: #313
+Epic: #305
 Related implementation slices: #371, #372, #344, #373, #367
 
 ## Purpose

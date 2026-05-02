@@ -28,7 +28,9 @@ def load_buffer(path: Path) -> list[dict]:
     if not path.exists():
         return []
     records: list[dict] = []
-    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_no, raw in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
         line = raw.strip()
         if not line:
             continue
@@ -182,7 +184,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.op == "sample":
         sampled = deterministic_sample(existing, args.n, args.seed)
         sys.stdout.write(
-            "\n".join(json.dumps(r, sort_keys=True, separators=(",", ":")) for r in sampled)
+            "\n".join(
+                json.dumps(r, sort_keys=True, separators=(",", ":")) for r in sampled
+            )
         )
         if sampled:
             sys.stdout.write("\n")

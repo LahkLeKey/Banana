@@ -1,8 +1,8 @@
 # Feature Specification: C Upstream Value Reassessment SPIKE
 
-**Feature Branch**: `[006-c-upstream-value-spike]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[006-c-upstream-value-spike]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "reassess more features in C that would deliver value upstream as a SPIKE for a follow up story"
 
 ## In Scope *(mandatory)*

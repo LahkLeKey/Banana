@@ -1,77 +1,78 @@
-import {useCallback, useReducer, useRef} from 'react';
+import { useCallback, useReducer, useRef } from "react";
 
-export type SubmitState<TResult> =|{
-  kind: 'idle';
-  lastResult: TResult|null
-}
-|{
-  kind: 'submitting';
-  requestId: string;
-  lastResult: TResult|null
-}
-|{
-  kind: 'success';
-  result: TResult;
-  lastResult: TResult
-}
-|{
-  kind: 'error';
-  message: string;
-  lastResult: TResult|null
-};
+export type SubmitState<TResult> =
+  | {
+      kind: "idle";
+      lastResult: TResult | null;
+    }
+  | {
+      kind: "submitting";
+      requestId: string;
+      lastResult: TResult | null;
+    }
+  | {
+      kind: "success";
+      result: TResult;
+      lastResult: TResult;
+    }
+  | {
+      kind: "error";
+      message: string;
+      lastResult: TResult | null;
+    };
 
-export type SubmitAction<TResult> =|{
-  type: 'submit';
-  requestId: string
-}
-|{
-  type: 'resolve';
-  requestId: string;
-  result: TResult
-}
-|{
-  type: 'reject';
-  requestId: string;
-  message: string
-}
-|{type: 'reset'};
+export type SubmitAction<TResult> =
+  | {
+      type: "submit";
+      requestId: string;
+    }
+  | {
+      type: "resolve";
+      requestId: string;
+      result: TResult;
+    }
+  | {
+      type: "reject";
+      requestId: string;
+      message: string;
+    }
+  | { type: "reset" };
 
 export function submitReducer<TResult>(
-    state: SubmitState<TResult>,
-    action: SubmitAction<TResult>,
-    ): SubmitState<TResult> {
+  state: SubmitState<TResult>,
+  action: SubmitAction<TResult>
+): SubmitState<TResult> {
   switch (action.type) {
-    case 'submit': {
-      if (state.kind === 'submitting') {
+    case "submit": {
+      if (state.kind === "submitting") {
         // Idempotency guard: ignore additional submits while in flight.
         return state;
       }
-      const lastResult =
-          state.kind === 'success' ? state.result : state.lastResult;
-      return {kind: 'submitting', requestId: action.requestId, lastResult};
+      const lastResult = state.kind === "success" ? state.result : state.lastResult;
+      return { kind: "submitting", requestId: action.requestId, lastResult };
     }
-    case 'resolve': {
-      if (state.kind !== 'submitting' || state.requestId !== action.requestId) {
+    case "resolve": {
+      if (state.kind !== "submitting" || state.requestId !== action.requestId) {
         return state;
       }
       return {
-        kind: 'success',
+        kind: "success",
         result: action.result,
         lastResult: action.result,
       };
     }
-    case 'reject': {
-      if (state.kind !== 'submitting' || state.requestId !== action.requestId) {
+    case "reject": {
+      if (state.kind !== "submitting" || state.requestId !== action.requestId) {
         return state;
       }
       return {
-        kind: 'error',
+        kind: "error",
         message: action.message,
         lastResult: state.lastResult,
       };
     }
-    case 'reset': {
-      return {kind: 'idle', lastResult: null};
+    case "reset": {
+      return { kind: "idle", lastResult: null };
     }
     default: {
       const _exhaustive: never = action;
@@ -81,7 +82,7 @@ export function submitReducer<TResult>(
 }
 
 export function initialSubmitState<TResult>(): SubmitState<TResult> {
-  return {kind: 'idle', lastResult: null};
+  return { kind: "idle", lastResult: null };
 }
 
 let counter = 0;
@@ -99,14 +100,11 @@ export interface UseSubmitMachine<TResult> {
 
 export function useSubmitMachine<TResult>(): UseSubmitMachine<TResult> {
   const [state, dispatch] = useReducer(
-      submitReducer as (
-          s: SubmitState<TResult>,
-          a: SubmitAction<TResult>,
-          ) => SubmitState<TResult>,
-      undefined,
-      initialSubmitState<TResult>,
+    submitReducer as (s: SubmitState<TResult>, a: SubmitAction<TResult>) => SubmitState<TResult>,
+    undefined,
+    initialSubmitState<TResult>
   );
-  const inFlight = useRef<string|null>(null);
+  const inFlight = useRef<string | null>(null);
 
   const submit = useCallback(async (run: () => Promise<TResult>) => {
     if (inFlight.current !== null) {
@@ -115,13 +113,13 @@ export function useSubmitMachine<TResult>(): UseSubmitMachine<TResult> {
     }
     const requestId = mintRequestId();
     inFlight.current = requestId;
-    dispatch({type: 'submit', requestId});
+    dispatch({ type: "submit", requestId });
     try {
       const result = await run();
-      dispatch({type: 'resolve', requestId, result});
+      dispatch({ type: "resolve", requestId, result });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Submit failed';
-      dispatch({type: 'reject', requestId, message});
+      const message = error instanceof Error ? error.message : "Submit failed";
+      dispatch({ type: "reject", requestId, message });
     } finally {
       if (inFlight.current === requestId) {
         inFlight.current = null;
@@ -131,8 +129,8 @@ export function useSubmitMachine<TResult>(): UseSubmitMachine<TResult> {
 
   const reset = useCallback(() => {
     inFlight.current = null;
-    dispatch({type: 'reset'});
+    dispatch({ type: "reset" });
   }, []);
 
-  return {state, submit, reset};
+  return { state, submit, reset };
 }

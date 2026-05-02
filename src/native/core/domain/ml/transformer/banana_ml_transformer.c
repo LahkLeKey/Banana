@@ -1,6 +1,6 @@
 #include "banana_ml_transformer.h"
-#include "domain/ml/shared/banana_ml_shared.h"
 #include "banana_status.h"
+#include "domain/ml/shared/banana_ml_shared.h"
 
 #include <math.h>
 #include <string.h>
@@ -22,9 +22,10 @@ static const double k_attention_magnitudes[BANANA_ML_TRANSFORMER_ATTENTION_DIM] 
     1.65  /* slot 7: not_banana_attention_ratio = 0.95 + 0.70 magnitudes */
 };
 
-static int banana_ml_transformer_classify_impl(const BananaMlFeatureVector* features,
-                                               const BananaMlTransformerOptions* options,
-                                               BananaMlClassificationResult* out_result) {
+static int banana_ml_transformer_classify_impl(const BananaMlFeatureVector *features,
+                                               const BananaMlTransformerOptions *options,
+                                               BananaMlClassificationResult *out_result)
+{
     double banana_context;
     double not_banana_context;
     double attention_delta;
@@ -33,7 +34,8 @@ static int banana_ml_transformer_classify_impl(const BananaMlFeatureVector* feat
     int predicted_is_banana;
     int actual_is_banana;
 
-    if (!features || !out_result) {
+    if (!features || !out_result)
+    {
         return BANANA_INVALID_ARGUMENT;
     }
 
@@ -47,23 +49,18 @@ static int banana_ml_transformer_classify_impl(const BananaMlFeatureVector* feat
      * no thread-locals (FB-R02 / US2 idempotence).
      */
     banana_context =
-        (1.20 * features->banana_signal_ratio) +
-        (0.95 * features->banana_attention_ratio) +
-        (0.55 * features->positive_bigram_ratio) +
-        (0.15 * features->unique_token_ratio) -
-        (0.70 * features->not_banana_attention_ratio) -
-        (0.55 * features->not_banana_signal_ratio);
+        (1.20 * features->banana_signal_ratio) + (0.95 * features->banana_attention_ratio) +
+        (0.55 * features->positive_bigram_ratio) + (0.15 * features->unique_token_ratio) -
+        (0.70 * features->not_banana_attention_ratio) - (0.55 * features->not_banana_signal_ratio);
 
     not_banana_context =
-        (1.20 * features->not_banana_signal_ratio) +
-        (0.95 * features->not_banana_attention_ratio) +
-        (0.55 * features->negative_bigram_ratio) +
-        (0.15 * (1.0 - features->unique_token_ratio)) -
-        (0.70 * features->banana_attention_ratio) -
-        (0.55 * features->banana_signal_ratio);
+        (1.20 * features->not_banana_signal_ratio) + (0.95 * features->not_banana_attention_ratio) +
+        (0.55 * features->negative_bigram_ratio) + (0.15 * (1.0 - features->unique_token_ratio)) -
+        (0.70 * features->banana_attention_ratio) - (0.55 * features->banana_signal_ratio);
 
     attention_delta = banana_context - not_banana_context;
-    banana_probability = banana_ml_sigmoid_approx((attention_delta * 2.4) + BANANA_ML_TRANSFORMER_BIAS);
+    banana_probability =
+        banana_ml_sigmoid_approx((attention_delta * 2.4) + BANANA_ML_TRANSFORMER_BIAS);
     banana_probability = banana_ml_clamp01(banana_probability);
     not_banana_probability = 1.0 - banana_probability;
 
@@ -81,7 +78,8 @@ static int banana_ml_transformer_classify_impl(const BananaMlFeatureVector* feat
     out_result->jaccard = banana_ml_jaccard_for_banana(&out_result->confusion);
 
     /* US3: optional embedding fingerprint output. */
-    if (options && options->out_embedding) {
+    if (options && options->out_embedding)
+    {
         options->out_embedding[0] = banana_context;
         options->out_embedding[1] = not_banana_context;
         options->out_embedding[2] = attention_delta;
@@ -91,27 +89,25 @@ static int banana_ml_transformer_classify_impl(const BananaMlFeatureVector* feat
     /* US4: optional attention-weights logging. Pure normalization of the
      * fixed per-slot magnitudes scaled by the input ratios -- writes nothing
      * (and pays no cost beyond the early branch) when toggle is off. */
-    if (options && options->log_attention_weights && options->out_attention_weights) {
+    if (options && options->log_attention_weights && options->out_attention_weights)
+    {
         double raw[BANANA_ML_TRANSFORMER_ATTENTION_DIM];
         double sum = 0.0;
         size_t i;
-        const double* ratios[BANANA_ML_TRANSFORMER_ATTENTION_DIM] = {
-            &features->banana_signal_ratio,
-            &features->not_banana_signal_ratio,
-            &features->unique_token_ratio,
-            &features->length_ratio,
-            &features->positive_bigram_ratio,
-            &features->negative_bigram_ratio,
-            &features->banana_attention_ratio,
-            &features->not_banana_attention_ratio
-        };
-        for (i = 0; i < BANANA_ML_TRANSFORMER_ATTENTION_DIM; ++i) {
+        const double *ratios[BANANA_ML_TRANSFORMER_ATTENTION_DIM] = {
+            &features->banana_signal_ratio,    &features->not_banana_signal_ratio,
+            &features->unique_token_ratio,     &features->length_ratio,
+            &features->positive_bigram_ratio,  &features->negative_bigram_ratio,
+            &features->banana_attention_ratio, &features->not_banana_attention_ratio};
+        for (i = 0; i < BANANA_ML_TRANSFORMER_ATTENTION_DIM; ++i)
+        {
             /* +1e-6 floor so a fully-zero feature vector still sums to a
              * positive value and produces well-defined normalized weights. */
             raw[i] = (k_attention_magnitudes[i] * (*ratios[i])) + 1e-6;
             sum += raw[i];
         }
-        for (i = 0; i < BANANA_ML_TRANSFORMER_ATTENTION_DIM; ++i) {
+        for (i = 0; i < BANANA_ML_TRANSFORMER_ATTENTION_DIM; ++i)
+        {
             options->out_attention_weights[i] = raw[i] / sum;
         }
     }
@@ -119,39 +115,44 @@ static int banana_ml_transformer_classify_impl(const BananaMlFeatureVector* feat
     return BANANA_OK;
 }
 
-int banana_ml_transformer_classify(const BananaMlFeatureVector* features,
-                                   BananaMlClassificationResult* out_result) {
+int banana_ml_transformer_classify(const BananaMlFeatureVector *features,
+                                   BananaMlClassificationResult *out_result)
+{
     return banana_ml_transformer_classify_impl(features, NULL, out_result);
 }
 
-int banana_ml_transformer_classify_ex(const BananaMlFeatureVector* features,
-                                       const BananaMlTransformerOptions* options,
-                                       BananaMlClassificationResult* out_result) {
+int banana_ml_transformer_classify_ex(const BananaMlFeatureVector *features,
+                                      const BananaMlTransformerOptions *options,
+                                      BananaMlClassificationResult *out_result)
+{
     return banana_ml_transformer_classify_impl(features, options, out_result);
 }
 
-int banana_ml_transformer_embedding_quantize(const double* in,
-                                              size_t dim,
-                                              int8_t* out,
-                                              double* out_scale,
-                                              int8_t* out_zero) {
+int banana_ml_transformer_embedding_quantize(const double *in, size_t dim, int8_t *out,
+                                             double *out_scale, int8_t *out_zero)
+{
     size_t i;
     double max_abs = 0.0;
     double scale;
 
-    if (!in || !out || !out_scale || !out_zero || dim == 0) {
+    if (!in || !out || !out_scale || !out_zero || dim == 0)
+    {
         return BANANA_INVALID_ARGUMENT;
     }
 
-    for (i = 0; i < dim; ++i) {
+    for (i = 0; i < dim; ++i)
+    {
         double v = in[i];
-        if (!isfinite(v)) {
+        if (!isfinite(v))
+        {
             return BANANA_INVALID_ARGUMENT;
         }
-        if (v < 0.0) {
+        if (v < 0.0)
+        {
             v = -v;
         }
-        if (v > max_abs) {
+        if (v > max_abs)
+        {
             max_abs = v;
         }
     }
@@ -159,23 +160,32 @@ int banana_ml_transformer_embedding_quantize(const double* in,
     /* Symmetric int8 quantization: zero-point pinned to 0; scale derived
      * from the max absolute component so the largest magnitude lands at
      * +/- 127. All-zero input -> scale=1.0 to preserve exact reconstruction. */
-    if (max_abs == 0.0) {
+    if (max_abs == 0.0)
+    {
         scale = 1.0;
-    } else {
+    }
+    else
+    {
         scale = max_abs / 127.0;
     }
 
-    for (i = 0; i < dim; ++i) {
+    for (i = 0; i < dim; ++i)
+    {
         double q = in[i] / scale;
         long r;
         /* round-half-away-from-zero so reconstruction error <= scale/2 */
-        if (q >= 0.0) {
+        if (q >= 0.0)
+        {
             r = (long)(q + 0.5);
-        } else {
+        }
+        else
+        {
             r = -(long)(-q + 0.5);
         }
-        if (r > 127) r = 127;
-        if (r < -127) r = -127;
+        if (r > 127)
+            r = 127;
+        if (r < -127)
+            r = -127;
         out[i] = (int8_t)r;
     }
 

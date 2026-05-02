@@ -1,8 +1,8 @@
 # Feature Specification: Frontend Runtime Unset Follow-up
 
-**Feature Branch**: `[045-frontend-runtime-unset-followup]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[045-frontend-runtime-unset-followup]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User report: "frontend improved but still shows API base unset and runtime configuration error in Banana v2"
 
 ## In Scope *(mandatory)*

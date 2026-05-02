@@ -1,6 +1,6 @@
 # Tasks: One-Window Interactive Baseline
 
-**Input**: Design documents from `.specify/specs/044-one-window-interactive-baseline/`  
+**Input**: Design documents from `.specify/specs/044-one-window-interactive-baseline/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md
 
 ## Phase 1: Setup (Shared Infrastructure)

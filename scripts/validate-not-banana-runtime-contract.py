@@ -49,7 +49,9 @@ def load_json(path: Path, label: str, errors: list[str]) -> dict[str, Any] | Non
     return payload
 
 
-def validate_schema_version(payload: dict[str, Any], label: str, errors: list[str]) -> None:
+def validate_schema_version(
+    payload: dict[str, Any], label: str, errors: list[str]
+) -> None:
     version = payload.get("schema_version")
     if version != EXPECTED_SCHEMA_VERSION:
         errors.append(
@@ -57,7 +59,9 @@ def validate_schema_version(payload: dict[str, Any], label: str, errors: list[st
         )
 
 
-def require_dict(payload: dict[str, Any], key: str, label: str, errors: list[str]) -> dict[str, Any] | None:
+def require_dict(
+    payload: dict[str, Any], key: str, label: str, errors: list[str]
+) -> dict[str, Any] | None:
     value = payload.get(key)
     if not isinstance(value, dict):
         errors.append(f"{label}_{key}_missing_or_not_object")
@@ -65,7 +69,9 @@ def require_dict(payload: dict[str, Any], key: str, label: str, errors: list[str
     return value
 
 
-def require_list(payload: dict[str, Any], key: str, label: str, errors: list[str]) -> list[Any] | None:
+def require_list(
+    payload: dict[str, Any], key: str, label: str, errors: list[str]
+) -> list[Any] | None:
     value = payload.get(key)
     if not isinstance(value, list):
         errors.append(f"{label}_{key}_missing_or_not_array")
@@ -73,7 +79,9 @@ def require_list(payload: dict[str, Any], key: str, label: str, errors: list[str
     return value
 
 
-def validate_vocabulary(vocabulary_payload: dict[str, Any], errors: list[str]) -> set[str]:
+def validate_vocabulary(
+    vocabulary_payload: dict[str, Any], errors: list[str]
+) -> set[str]:
     validate_schema_version(vocabulary_payload, "vocabulary", errors)
 
     generated = vocabulary_payload.get("generated_at_utc")
@@ -145,7 +153,13 @@ def validate_metrics(
     if metrics is None:
         return
 
-    for key in ("min_signal_score", "min_f1", "holdout_f1", "holdout_accuracy", "meets_thresholds"):
+    for key in (
+        "min_signal_score",
+        "min_f1",
+        "holdout_f1",
+        "holdout_accuracy",
+        "meets_thresholds",
+    ):
         if key not in metrics:
             errors.append(f"metrics_missing_{key}")
 
@@ -159,7 +173,11 @@ def validate_metrics(
             "training_profile",
             "session_mode",
         ):
-            if key in metrics and key in vocabulary_metrics and metrics[key] != vocabulary_metrics[key]:
+            if (
+                key in metrics
+                and key in vocabulary_metrics
+                and metrics[key] != vocabulary_metrics[key]
+            ):
                 errors.append(f"metrics_mismatch_{key}")
 
 

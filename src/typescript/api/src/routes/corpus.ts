@@ -1,14 +1,14 @@
-import type {FastifyInstance} from 'fastify';
-import {randomUUID} from 'node:crypto';
-import {appendFile, mkdir} from 'node:fs/promises';
-import {dirname} from 'node:path';
-import {z} from 'zod';
+import { randomUUID } from "node:crypto";
+import { appendFile, mkdir } from "node:fs/promises";
+import { dirname } from "node:path";
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 
 // Per spec 008 route-ownership: TypeScript-only surface lives here.
 const FeedbackEntry = z.object({
   text: z.string().min(1),
-  label: z.enum(['banana', 'not-banana']),
-  source: z.string().default('user'),
+  label: z.enum(["banana", "not-banana"]),
+  source: z.string().default("user"),
 });
 
 const FeedbackQuery = z.object({
@@ -16,13 +16,17 @@ const FeedbackQuery = z.object({
 });
 
 type StoredFeedback = {
-  id: string; text: string; label: 'banana' | 'not-banana'; source: string;
+  id: string;
+  text: string;
+  label: "banana" | "not-banana";
+  source: string;
   created_at: string;
-  persistence: 'memory' | 'jsonl-audit';
+  persistence: "memory" | "jsonl-audit";
 };
 
 type PersistenceResult = {
-  mode: 'memory'|'jsonl-audit'; audit_written: boolean;
+  mode: "memory" | "jsonl-audit";
+  audit_written: boolean;
   warning?: string;
 };
 
@@ -30,44 +34,44 @@ const feedbackEntries: StoredFeedback[] = [];
 const MAX_FEEDBACK_ENTRIES = 500;
 
 function getCorpusAuditPath(): string {
-  return process.env.BANANA_CORPUS_AUDIT_PATH ??
-      'artifacts/corpus-feedback.jsonl';
+  return process.env.BANANA_CORPUS_AUDIT_PATH ?? "artifacts/corpus-feedback.jsonl";
 }
 
 async function writeAuditEntry(
-    requestJson: string, responseJson: string): Promise<PersistenceResult> {
-  if (process.env.BANANA_CORPUS_AUDIT_DISABLED === '1') {
+  requestJson: string,
+  responseJson: string
+): Promise<PersistenceResult> {
+  if (process.env.BANANA_CORPUS_AUDIT_DISABLED === "1") {
     return {
-      mode: 'memory',
+      mode: "memory",
       audit_written: false,
-      warning: 'corpus_audit_disabled',
+      warning: "corpus_audit_disabled",
     };
   }
 
   try {
     const auditPath = getCorpusAuditPath();
     const record = JSON.stringify({
-      domain: 'corpus',
-      route: '/corpus/feedback',
+      domain: "corpus",
+      route: "/corpus/feedback",
       statusCode: 202,
       requestJson,
       responseJson,
       createdAt: new Date().toISOString(),
     });
 
-    await mkdir(dirname(auditPath), {recursive: true});
-    await appendFile(auditPath, `${record}\n`, 'utf8');
+    await mkdir(dirname(auditPath), { recursive: true });
+    await appendFile(auditPath, `${record}\n`, "utf8");
 
     return {
-      mode: 'jsonl-audit',
+      mode: "jsonl-audit",
       audit_written: true,
     };
   } catch (error) {
     return {
-      mode: 'memory',
+      mode: "memory",
       audit_written: false,
-      warning: `jsonl_audit_write_failed:${
-          error instanceof Error ? error.message : 'unknown'}`,
+      warning: `jsonl_audit_write_failed:${error instanceof Error ? error.message : "unknown"}`,
     };
   }
 }
@@ -82,11 +86,10 @@ export function __resetCorpusRouteStateForTests() {
 }
 
 export async function registerCorpusRoutes(app: FastifyInstance) {
-  app.post('/corpus/feedback', async (req, reply) => {
+  app.post("/corpus/feedback", async (req, reply) => {
     const parsed = FeedbackEntry.safeParse(req.body);
     if (!parsed.success)
-      return reply.status(400).send(
-          {error: 'invalid_argument', issues: parsed.error.flatten()});
+      return reply.status(400).send({ error: "invalid_argument", issues: parsed.error.flatten() });
 
     const entry: StoredFeedback = {
       id: `feedback_${randomUUID()}`,
@@ -94,7 +97,7 @@ export async function registerCorpusRoutes(app: FastifyInstance) {
       label: parsed.data.label,
       source: parsed.data.source,
       created_at: new Date().toISOString(),
-      persistence: 'memory',
+      persistence: "memory",
     };
 
     const responsePayload = {
@@ -108,7 +111,9 @@ export async function registerCorpusRoutes(app: FastifyInstance) {
     };
 
     const persistence = await writeAuditEntry(
-        JSON.stringify(parsed.data), JSON.stringify(responsePayload));
+      JSON.stringify(parsed.data),
+      JSON.stringify(responsePayload)
+    );
     entry.persistence = persistence.mode;
     rememberFeedback(entry);
 
@@ -118,11 +123,10 @@ export async function registerCorpusRoutes(app: FastifyInstance) {
     });
   });
 
-  app.get('/corpus/feedback', async (req, reply) => {
+  app.get("/corpus/feedback", async (req, reply) => {
     const parsed = FeedbackQuery.safeParse(req.query ?? {});
     if (!parsed.success)
-      return reply.status(400).send(
-          {error: 'invalid_argument', issues: parsed.error.flatten()});
+      return reply.status(400).send({ error: "invalid_argument", issues: parsed.error.flatten() });
 
     const rows = feedbackEntries.slice(-parsed.data.limit).reverse();
     return reply.status(200).send({

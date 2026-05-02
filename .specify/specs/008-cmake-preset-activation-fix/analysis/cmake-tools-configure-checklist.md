@@ -1,6 +1,6 @@
 # CMake Tools Configure Acceptance Checklist (US1)
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Gate to confirm CMake Tools configure activates correctly in supported workspace contexts.
 
 ## Pre-Fix Required Changes

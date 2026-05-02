@@ -1,6 +1,6 @@
 # Tasks: Frontend Runtime Unset Follow-up
 
-**Input**: Design documents from `.specify/specs/045-frontend-runtime-unset-followup/`  
+**Input**: Design documents from `.specify/specs/045-frontend-runtime-unset-followup/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md
 
 ## Phase 1: Setup (Shared Infrastructure)

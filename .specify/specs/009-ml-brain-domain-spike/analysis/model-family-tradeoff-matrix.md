@@ -1,8 +1,8 @@
 # Model Family Tradeoff Matrix: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
-**Dimensions source**: [comparison-dimensions.md](comparison-dimensions.md)  
-**Scoring convention**: H (High), M (Medium), L (Low). Explainability Burden and Validation Complexity are cost dimensions (lower = better).  
+**Date**: 2026-04-26
+**Dimensions source**: [comparison-dimensions.md](comparison-dimensions.md)
+**Scoring convention**: H (High), M (Medium), L (Low). Explainability Burden and Validation Complexity are cost dimensions (lower = better).
 **Confidence annotations**: [H] High, [M] Medium per confidence-policy.md.
 
 ---

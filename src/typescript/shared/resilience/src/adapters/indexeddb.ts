@@ -5,16 +5,15 @@
 // happy-dom polyfill); the caller decides whether that fallback is
 // acceptable for their context.
 
-import type {StorageAdapter} from '../types';
+import type { StorageAdapter } from "../types";
 
-const DB_NAME = 'banana-resilience';
-const STORE = 'kv';
+const DB_NAME = "banana-resilience";
+const STORE = "kv";
 
-type IDBLike = typeof globalThis extends {indexedDB: infer T} ? T : unknown;
+type IDBLike = typeof globalThis extends { indexedDB: infer T } ? T : unknown;
 
-function getIndexedDb(): IDBFactory|null {
-  const candidate =
-      (globalThis as unknown as {indexedDB?: IDBFactory}).indexedDB;
+function getIndexedDb(): IDBFactory | null {
+  const candidate = (globalThis as unknown as { indexedDB?: IDBFactory }).indexedDB;
   return candidate ?? null;
 }
 
@@ -33,8 +32,10 @@ async function openDb(factory: IDBFactory): Promise<IDBDatabase> {
 }
 
 function tx<T>(
-    db: IDBDatabase, mode: IDBTransactionMode,
-    run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+  db: IDBDatabase,
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore) => IDBRequest<T>
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE, mode);
     const store = transaction.objectStore(STORE);
@@ -57,8 +58,7 @@ class InMemoryAdapter implements StorageAdapter {
   }
   async keys(prefix: string) {
     const out: string[] = [];
-    for (const k of this.store.keys())
-      if (k.startsWith(prefix)) out.push(k);
+    for (const k of this.store.keys()) if (k.startsWith(prefix)) out.push(k);
     return out;
   }
 }
@@ -73,7 +73,7 @@ export function createIndexedDbAdapter(): StorageAdapter {
     return new InMemoryAdapter();
   }
   const resolved: IDBFactory = factory;
-  let dbPromise: Promise<IDBDatabase>|null = null;
+  let dbPromise: Promise<IDBDatabase> | null = null;
   function db(): Promise<IDBDatabase> {
     if (!dbPromise) dbPromise = openDb(resolved);
     return dbPromise;
@@ -81,24 +81,22 @@ export function createIndexedDbAdapter(): StorageAdapter {
   return {
     async get(key) {
       const d = await db();
-      const value =
-          await tx<string|undefined>(d, 'readonly', (s) => s.get(key));
+      const value = await tx<string | undefined>(d, "readonly", (s) => s.get(key));
       return value ?? null;
     },
     async set(key, value) {
       const d = await db();
-      await tx<IDBValidKey>(d, 'readwrite', (s) => s.put(value, key));
+      await tx<IDBValidKey>(d, "readwrite", (s) => s.put(value, key));
     },
-    async delete (key) {
+    async delete(key) {
       const d = await db();
-      await tx<undefined>(d, 'readwrite', (s) => s.delete(key));
+      await tx<undefined>(d, "readwrite", (s) => s.delete(key));
     },
     async keys(prefix) {
       const d = await db();
       return new Promise<string[]>((resolve, reject) => {
         const out: string[] = [];
-        const req =
-            d.transaction(STORE, 'readonly').objectStore(STORE).openKeyCursor();
+        const req = d.transaction(STORE, "readonly").objectStore(STORE).openKeyCursor();
         req.onsuccess = () => {
           const cursor = req.result;
           if (!cursor) {
@@ -116,4 +114,4 @@ export function createIndexedDbAdapter(): StorageAdapter {
 }
 
 // Re-export for type-only consumers (avoids unused-warning on IDBLike).
-export type {IDBLike};
+export type { IDBLike };

@@ -1,7 +1,7 @@
 # Specification Quality Checklist: CMake Preset Activation Fix
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning  
-**Created**: 2026-04-26  
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-04-26
 **Feature**: [.specify/specs/008-cmake-preset-activation-fix/spec.md](../spec.md)
 
 ## Content Quality

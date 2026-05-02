@@ -1,4 +1,5 @@
 """Tests for scripts/neuro/scope-models-from-event.py (feature 050 T013)."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -28,7 +29,9 @@ def test_scope_from_paths_multi():
 
 
 def test_scope_from_paths_shared_returns_all():
-    assert mod.scope_from_paths(["scripts/neuro/replay-buffer.py"]) == list(mod.ALL_MODELS)
+    assert mod.scope_from_paths(["scripts/neuro/replay-buffer.py"]) == list(
+        mod.ALL_MODELS
+    )
     assert mod.scope_from_paths(["scripts/neuro_trace.py"]) == list(mod.ALL_MODELS)
 
 
@@ -37,7 +40,9 @@ def test_scope_from_paths_unrelated_returns_empty():
 
 
 def test_scope_from_labels_specific_model():
-    assert mod.scope_from_labels(json.dumps(["train:not-banana", "automation"])) == ["not-banana"]
+    assert mod.scope_from_labels(json.dumps(["train:not-banana", "automation"])) == [
+        "not-banana"
+    ]
 
 
 def test_scope_from_labels_all():

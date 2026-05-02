@@ -50,10 +50,10 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore Banana.Api.csproj
 
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build Banana.Api.csproj --no-restore --configuration Release
 
   aspnet-unit-tests:
     name: "ASP.NET — unit tests"

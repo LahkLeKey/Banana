@@ -16,7 +16,11 @@ from statistics import mean
 from typing import Iterable
 
 from neuro_trace import write_neuro_trace
-from training_session_store import append_training_session_record, load_training_session_history, summarize_replay_drift
+from training_session_store import (
+    append_training_session_record,
+    load_training_session_history,
+    summarize_replay_drift,
+)
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
 PROFILE_DEFAULTS = {
@@ -34,10 +38,16 @@ class Sample:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train banana vs not-banana vocabulary model.")
+    parser = argparse.ArgumentParser(
+        description="Train banana vs not-banana vocabulary model."
+    )
     parser.add_argument("--corpus", required=True, help="Path to corpus JSON file.")
-    parser.add_argument("--output", required=True, help="Output directory for artifacts.")
-    parser.add_argument("--vocab-size", type=int, default=24, help="Maximum number of learned tokens.")
+    parser.add_argument(
+        "--output", required=True, help="Output directory for artifacts."
+    )
+    parser.add_argument(
+        "--vocab-size", type=int, default=24, help="Maximum number of learned tokens."
+    )
     parser.add_argument(
         "--training-profile",
         choices=["ci", "local", "overnight", "auto"],
@@ -56,9 +66,15 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Maximum evaluated sessions. 0 uses profile default.",
     )
-    parser.add_argument("--min-signal-score", type=float, default=0.7, help="Minimum signal score gate.")
-    parser.add_argument("--min-f1", type=float, default=0.7, help="Minimum hold-out F1 gate.")
-    parser.add_argument("--min-token-length", type=int, default=3, help="Minimum token length.")
+    parser.add_argument(
+        "--min-signal-score", type=float, default=0.7, help="Minimum signal score gate."
+    )
+    parser.add_argument(
+        "--min-f1", type=float, default=0.7, help="Minimum hold-out F1 gate."
+    )
+    parser.add_argument(
+        "--min-token-length", type=int, default=3, help="Minimum token length."
+    )
     parser.add_argument(
         "--allow-numeric-tokens",
         action="store_true",
@@ -92,7 +108,9 @@ def load_corpus(path: Path) -> list[Sample]:
     elif isinstance(payload, list):
         raw_samples = payload
     else:
-        raise ValueError("Corpus JSON must be an array or an object with a 'samples' array.")
+        raise ValueError(
+            "Corpus JSON must be an array or an object with a 'samples' array."
+        )
 
     samples: list[Sample] = []
     for index, item in enumerate(raw_samples):
@@ -105,7 +123,9 @@ def load_corpus(path: Path) -> list[Sample]:
         samples.append(Sample(text=text, label=label))
 
     if len(samples) < 6:
-        raise ValueError("Corpus must provide at least 6 samples to evaluate hold-out metrics.")
+        raise ValueError(
+            "Corpus must provide at least 6 samples to evaluate hold-out metrics."
+        )
     return samples
 
 
@@ -147,7 +167,9 @@ def tokenize(text: str, min_token_length: int, allow_numeric_tokens: bool) -> li
     return tokens
 
 
-def split_train_holdout(samples: list[Sample], seed: int) -> tuple[list[Sample], list[Sample]]:
+def split_train_holdout(
+    samples: list[Sample], seed: int
+) -> tuple[list[Sample], list[Sample]]:
     ordered = samples[:]
     random.Random(seed).shuffle(ordered)
     holdout_size = max(1, len(ordered) // 4)
@@ -169,7 +191,9 @@ def learn_vocabulary(
     not_banana_counts: Counter[str] = Counter()
 
     for sample in train_samples:
-        unique_tokens = set(tokenize(sample.text, min_token_length, allow_numeric_tokens))
+        unique_tokens = set(
+            tokenize(sample.text, min_token_length, allow_numeric_tokens)
+        )
         for token in unique_tokens:
             if sample.label == "banana":
                 banana_counts[token] += 1
@@ -197,7 +221,13 @@ def learn_vocabulary(
             }
         )
 
-    scored.sort(key=lambda row: (-abs(float(row["weight"])), -int(row["support"]), str(row["token"])))
+    scored.sort(
+        key=lambda row: (
+            -abs(float(row["weight"])),
+            -int(row["support"]),
+            str(row["token"]),
+        )
+    )
     selected = scored[:vocab_size]
     weights = {str(item["token"]): float(item["weight"]) for item in selected}
     signal_score = mean(abs(value) for value in weights.values()) if weights else 0.0
@@ -231,7 +261,9 @@ def evaluate(
 ) -> dict[str, float]:
     tp = fp = fn = tn = 0
     for sample in holdout_samples:
-        predicted, _ = predict_label(sample.text, weights, min_token_length, allow_numeric_tokens)
+        predicted, _ = predict_label(
+            sample.text, weights, min_token_length, allow_numeric_tokens
+        )
         actual_not = sample.label == "not-banana"
         predicted_not = predicted == "not-banana"
         if predicted_not and actual_not:
@@ -278,7 +310,9 @@ static const unsigned long k_banana_signal_tokens_generated_count =
     path.write_text(header, encoding="utf-8")
 
 
-def stable_run_fingerprint(args: argparse.Namespace, corpus_path: Path, sample_count: int) -> str:
+def stable_run_fingerprint(
+    args: argparse.Namespace, corpus_path: Path, sample_count: int
+) -> str:
     payload = {
         "corpus": str(corpus_path),
         "sample_count": sample_count,
@@ -395,9 +429,15 @@ def main() -> int:
         "sessions": sessions,
     }
 
-    (output_dir / "vocabulary.json").write_text(json.dumps(vocabulary_payload, indent=2) + "\n", encoding="utf-8")
-    (output_dir / "metrics.json").write_text(json.dumps(metrics_payload, indent=2) + "\n", encoding="utf-8")
-    (output_dir / "sessions.json").write_text(json.dumps(sessions_payload, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "vocabulary.json").write_text(
+        json.dumps(vocabulary_payload, indent=2) + "\n", encoding="utf-8"
+    )
+    (output_dir / "metrics.json").write_text(
+        json.dumps(metrics_payload, indent=2) + "\n", encoding="utf-8"
+    )
+    (output_dir / "sessions.json").write_text(
+        json.dumps(sessions_payload, indent=2) + "\n", encoding="utf-8"
+    )
     write_header(output_dir / "banana_signal_tokens.h", selected_tokens)
 
     session_write = append_training_session_record(

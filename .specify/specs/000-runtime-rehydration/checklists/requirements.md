@@ -1,7 +1,7 @@
 # Specification Quality Checklist: Baseline Rehydration - Runtime Channel Stability
 
-**Purpose**: Validate spec quality for pre-sprint runtime realignment checks  
-**Created**: 2026-04-25  
+**Purpose**: Validate spec quality for pre-sprint runtime realignment checks
+**Created**: 2026-04-25
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality

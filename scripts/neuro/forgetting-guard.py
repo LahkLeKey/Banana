@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 
@@ -22,11 +21,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Banana neuro forgetting guard.")
     parser.add_argument("--model", required=True)
     parser.add_argument("--metrics", type=Path, required=True)
-    parser.add_argument("--anchor", type=Path, default=None,
-                        help="Anchor metrics for comparison (e.g. data/<model>/anchor-metrics.json).")
+    parser.add_argument(
+        "--anchor",
+        type=Path,
+        default=None,
+        help="Anchor metrics for comparison (e.g. data/<model>/anchor-metrics.json).",
+    )
     parser.add_argument("--max-regression-pp", type=float, default=1.0)
-    parser.add_argument("--enforce", action="store_true",
-                        help="Exit non-zero on regression beyond --max-regression-pp.")
+    parser.add_argument(
+        "--enforce",
+        action="store_true",
+        help="Exit non-zero on regression beyond --max-regression-pp.",
+    )
     return parser.parse_args(argv)
 
 

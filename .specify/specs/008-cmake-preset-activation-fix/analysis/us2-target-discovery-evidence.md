@@ -1,6 +1,6 @@
 # US2 Target Discovery Evidence: CMake Preset Activation Fix
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Command**: `cmake --build --preset default --target help`
 
 ## Output

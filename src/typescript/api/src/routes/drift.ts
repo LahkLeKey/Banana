@@ -1,10 +1,10 @@
-import type { FastifyInstance } from 'fastify';
-import { getDriftStats } from '../plugins/drift-detection.ts';
+import type { FastifyInstance } from "fastify";
+import { getDriftStats } from "../plugins/drift-detection.ts";
 
 const ALERT_THRESHOLD = 0.2;
 
 export async function registerDriftRoutes(app: FastifyInstance) {
-  app.get('/operator/drift', async (_req, reply) => {
+  app.get("/operator/drift", async (_req, reply) => {
     const stats = getDriftStats();
     const alert =
       stats.psi !== null && stats.psi > ALERT_THRESHOLD

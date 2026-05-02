@@ -1,6 +1,6 @@
 # Matrix Completeness Checklist (US2)
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Gate to confirm the tradeoff matrix covers all families across all normalized dimensions.
 
 ## Checklist

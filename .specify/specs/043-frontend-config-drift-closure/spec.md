@@ -1,8 +1,8 @@
 # Feature Specification: Frontend Config Drift Closure
 
-**Feature Branch**: `[043-frontend-config-drift-closure]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[043-frontend-config-drift-closure]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "add a spec for making the frontend work; we still have some configuration drift and the app still shows API base: <unset>"
 
 ## In Scope *(mandatory)*

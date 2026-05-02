@@ -1,10 +1,10 @@
-import type {Metric} from 'web-vitals';
+import type { Metric } from "web-vitals";
 
 // Reports Core Web Vitals to a configurable beacon endpoint.
 // Uses the web-vitals library (must be installed: bun add web-vitals).
 export function reportWebVitals(onPerfEntry?: (metric: Metric) => void): void {
   if (!onPerfEntry) return;
-  import('web-vitals').then(({onCLS, onFCP, onINP, onLCP, onTTFB}) => {
+  import("web-vitals").then(({ onCLS, onFCP, onINP, onLCP, onTTFB }) => {
     onCLS(onPerfEntry);
     onFCP(onPerfEntry);
     onINP(onPerfEntry);
@@ -25,5 +25,5 @@ export function sendToBeacon(metric: Metric): void {
     navigationType: metric.navigationType,
   });
   (navigator.sendBeacon && navigator.sendBeacon(endpoint, body)) ||
-    fetch(endpoint, {body, method: 'POST', keepalive: true});
+    fetch(endpoint, { body, method: "POST", keepalive: true });
 }

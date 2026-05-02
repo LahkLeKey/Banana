@@ -1,8 +1,8 @@
 # Feature Specification: DAL Runtime Contract Hardening
 
-**Feature Branch**: `[007-dal-runtime-contract-hardening]`  
-**Created**: 2026-04-26  
-**Status**: Draft  
+**Feature Branch**: `[007-dal-runtime-contract-hardening]`
+**Created**: 2026-04-26
+**Status**: Draft
 **Input**: User description: "Implement follow-up story for CAND-003 to harden native DAL runtime contract outcomes across configured, linked, and query-failure states"
 
 ## In Scope *(mandatory)*

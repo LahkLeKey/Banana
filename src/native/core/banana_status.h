@@ -8,12 +8,13 @@
 #include "banana_wrapper.h" /* re-uses the public enum */
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/* Canonical lookup of a remediation hint string for a status code.
- * Returns a static C string; do NOT free. */
-const char* banana_status_remediation(int status);
+    /* Canonical lookup of a remediation hint string for a status code.
+     * Returns a static C string; do NOT free. */
+    const char *banana_status_remediation(int status);
 
 #ifdef __cplusplus
 }

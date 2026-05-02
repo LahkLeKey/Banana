@@ -1,6 +1,6 @@
 # Domain Risk Register: ML Brain Domain SPIKE
 
-**Date**: 2026-04-26  
+**Date**: 2026-04-26
 **Purpose**: Track known risks per brain domain for use in readiness packet planning.
 
 ## Left Brain (Regression) Risks
