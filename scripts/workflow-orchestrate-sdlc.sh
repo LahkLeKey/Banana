@@ -9,6 +9,11 @@ bash scripts/workflow-ensure-speckit.sh
 RUN_ID="${GITHUB_RUN_ID:-local-run}"
 RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-1}"
 SDLC_ID="${BANANA_SDLC_ID:-banana-sdlc}"
+SDLC_MODE="${BANANA_SDLC_MODE:-incremental}"
+AUTONOMY_STOP="${BANANA_AUTONOMY_STOP:-false}"
+AUTO_DEBUG_CI="${BANANA_SDLC_AUTO_DEBUG_CI:-true}"
+AUTO_SCAFFOLD_SPECS="${BANANA_SDLC_AUTO_SCAFFOLD_SPECS:-true}"
+CI_IDEA_BUDGET="${BANANA_SDLC_CI_IDEA_BUDGET:-3}"
 PLAN_JSON="${BANANA_SDLC_INCREMENT_PLAN_JSON:-}"
 PLAN_PATH="${BANANA_SDLC_INCREMENT_PLAN_PATH:-}"
 PLAN_MODEL="${BANANA_SDLC_INCREMENT_PLAN_MODEL:-}"
@@ -33,10 +38,97 @@ WIKI_REMOTE_URL="${BANANA_WIKI_REMOTE_URL:-https://github.com/LahkLeKey/Banana.w
 WIKI_ENFORCE_CANONICAL_REMOTE="${BANANA_ENFORCE_CANONICAL_WIKI_REMOTE:-true}"
 OUTPUT_DIR="${BANANA_SDLC_OUTPUT_DIR:-artifacts/sdlc-orchestration}"
 SUMMARY_PATH="${BANANA_SDLC_SUMMARY_PATH:-${OUTPUT_DIR}/summary-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
+SPEC_DRAIN_STATE_PATH="${BANANA_SDLC_DRAIN_STATE_PATH:-${OUTPUT_DIR}/spec-drain-state-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
+CI_FOLLOWUP_OUTPUT_PATH="${BANANA_SDLC_CI_FOLLOWUP_OUTPUT_PATH:-${OUTPUT_DIR}/ci-followup-${RUN_ID}-attempt-${RUN_ATTEMPT}.json}"
 RUN_API_PARITY_CHECK="${BANANA_SDLC_RUN_API_PARITY_CHECK:-false}"
 API_PARITY_STRICT="${BANANA_SDLC_API_PARITY_STRICT:-false}"
+ENABLE_AUTO_MERGE="${BANANA_ENABLE_AUTO_MERGE:-true}"
+AUTO_MERGE_METHOD="${BANANA_AUTO_MERGE_METHOD:-squash}"
 
 mkdir -p "$OUTPUT_DIR"
+
+if [[ "$SDLC_MODE" == "spec-drain" ]]; then
+  echo "Running SDLC in spec-drain mode..."
+
+  bash scripts/workflow-spec-drain-state.sh init "$SPEC_DRAIN_STATE_PATH" "$RUN_ID" "$RUN_ATTEMPT"
+
+  if [[ "$AUTONOMY_STOP" == "true" ]]; then
+    bash scripts/workflow-spec-drain-state.sh set-stop "$SPEC_DRAIN_STATE_PATH" "kill_switch"
+  fi
+
+  if [[ "$AUTO_DEBUG_CI" == "true" && "$AUTO_SCAFFOLD_SPECS" == "true" && "$AUTONOMY_STOP" != "true" ]]; then
+    export BANANA_SDLC_CI_IDEA_BUDGET="$CI_IDEA_BUDGET"
+    export BANANA_SDLC_CI_FOLLOWUP_OUTPUT_PATH="$CI_FOLLOWUP_OUTPUT_PATH"
+    bash scripts/workflow-autonomous-ci-followup.sh
+  fi
+
+  python - "$SUMMARY_PATH" "$SPEC_DRAIN_STATE_PATH" "$AUTONOMY_STOP" "$CI_FOLLOWUP_OUTPUT_PATH" <<'PY'
+import json
+import pathlib
+import re
+import sys
+
+summary_path = pathlib.Path(sys.argv[1])
+state_path = pathlib.Path(sys.argv[2])
+autonomy_stop = sys.argv[3].lower() == "true"
+ci_followup_path = pathlib.Path(sys.argv[4])
+
+state = json.loads(state_path.read_text(encoding="utf-8"))
+
+spec_dirs = []
+for path in sorted(pathlib.Path(".specify/specs").glob("*")):
+    if not path.is_dir():
+        continue
+    name = path.name
+    if not re.match(r"^[0-9]{3,}-", name):
+        continue
+    if (path / "spec.md").exists():
+        spec_dirs.append(name)
+
+completed = set(state.get("completed_specs", []))
+failed = {str(item.get("spec_id")) for item in state.get("failed_specs", [])}
+runnable = [spec for spec in spec_dirs if spec not in completed and spec not in failed]
+
+stop_reason = state.get("stop_reason")
+ci_followup = None
+if ci_followup_path.exists():
+    try:
+        ci_followup = json.loads(ci_followup_path.read_text(encoding="utf-8"))
+    except Exception:
+        ci_followup = {"status": "failed", "reason": f"unable to parse {ci_followup_path.name}"}
+
+if stop_reason is None:
+    if autonomy_stop:
+      stop_reason = "kill_switch"
+    elif ci_followup is not None and int(ci_followup.get("created_spec_count", 0)) == 0:
+      stop_reason = "ci_runs_out_of_ideas"
+    elif not runnable:
+      stop_reason = "exhausted"
+    else:
+      stop_reason = "runnable_specs_available"
+
+summary = {
+    "mode": "spec-drain",
+    "status": "stopped" if autonomy_stop or stop_reason == "exhausted" else "running",
+    "stop_reason": stop_reason,
+    "spec_discovery": {
+        "total_specs": len(spec_dirs),
+        "runnable_specs": runnable,
+        "completed_specs": sorted(completed),
+        "failed_specs": sorted(failed),
+    },
+    "ci_followup": ci_followup,
+    "state_path": str(state_path),
+}
+
+summary_path.parent.mkdir(parents=True, exist_ok=True)
+summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+print(json.dumps(summary, indent=2))
+PY
+
+  echo "Spec-drain summary written to: ${SUMMARY_PATH}"
+  exit 0
+fi
 
 if [[ "${BANANA_SDLC_VALIDATE_AI_CONTRACTS:-true}" == "true" ]]; then
   echo "Validating AI customization and wiki-sync contracts..."
@@ -237,6 +329,8 @@ while IFS=$'\t' read -r increment_id change_b64 commit_b64 title_b64 body_b64 la
   export BANANA_DRAFT_PR="$draft_pr"
   export BANANA_PR_LABELS="$labels"
   export BANANA_PR_REVIEWERS="$reviewers"
+  export BANANA_ENABLE_AUTO_MERGE="$ENABLE_AUTO_MERGE"
+  export BANANA_AUTO_MERGE_METHOD="$AUTO_MERGE_METHOD"
   export BANANA_SKIP_IF_NO_CHANGES="$SKIP_NO_CHANGES"
   export BANANA_REQUIRE_REAL_UPDATES="$SDLC_REQUIRE_REAL_UPDATES"
   export BANANA_SKIP_DOCS_ONLY_CHANGES="$SDLC_SKIP_NON_REAL_UPDATES"
