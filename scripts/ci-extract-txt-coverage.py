@@ -4,6 +4,7 @@
 Usage: python3 ci-extract-txt-coverage.py <Summary.txt>
 Prints the first percentage value found (e.g. "87.50") or empty string if none.
 """
+
 import re
 import sys
 

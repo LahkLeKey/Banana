@@ -4,6 +4,7 @@
 Usage: python3 ci-check-threshold.py <percent> [<threshold>]
 Prints "1" if percent >= threshold (default 80.0), "0" otherwise.
 """
+
 import sys
 
 percent = float(sys.argv[1])
