@@ -134,22 +134,9 @@ jobs:
           measured_percent=""
 
           if [[ -f .artifacts/native-c/coverage-native.xml ]]; then
-            measured_percent="$(python3 - .artifacts/native-c/coverage-native.xml <<'PY'
-import sys
-import xml.etree.ElementTree as ET
+            measured_percent="$(python3 scripts/ci-extract-xml-coverage.py .artifacts/native-c/coverage-native.xml)"
 
-tree = ET.parse(sys.argv[1])
-root = tree.getroot()
-line_rate = float(root.attrib.get("line-rate", "0"))
-print(f"{line_rate * 100:.2f}")
-PY
-)"
-
-            native_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-            )"
+            native_at_or_above_threshold="$(python3 scripts/ci-check-threshold.py "$measured_percent")"
 
             if [[ "$native_at_or_above_threshold" == "1" ]]; then
               lane_status="pass"
@@ -402,24 +389,12 @@ PY
           measured_percent=""
 
           if [[ -f .artifacts/coverage/unit-report/Summary.txt ]]; then
-            measured_percent="$(python3 - .artifacts/coverage/unit-report/Summary.txt <<'PY'
-import re
-import sys
-
-text = open(sys.argv[1], encoding='utf-8').read()
-matches = re.findall(r'(\d+(?:\.\d+)?)\s*%', text)
-print(matches[0] if matches else "")
-PY
-)"
+            measured_percent="$(python3 scripts/ci-extract-txt-coverage.py .artifacts/coverage/unit-report/Summary.txt)"
           fi
 
           dotnet_at_or_above_threshold="0"
           if [[ -n "$measured_percent" ]]; then
-            dotnet_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-            )"
+            dotnet_at_or_above_threshold="$(python3 scripts/ci-check-threshold.py "$measured_percent")"
           fi
 
           if [[ -n "$measured_percent" && "$dotnet_at_or_above_threshold" == "1" ]]; then
@@ -710,23 +685,11 @@ PY
             lane_status="not-applicable"
             failure_class=""
           elif [[ -f .artifacts/coverage/integration-report/Summary.txt ]]; then
-            measured_percent="$(python3 - .artifacts/coverage/integration-report/Summary.txt <<'PY'
-import re
-import sys
-
-text = open(sys.argv[1], encoding='utf-8').read()
-matches = re.findall(r'(\d+(?:\.\d+)?)\s*%', text)
-print(matches[0] if matches else "")
-PY
-)"
+            measured_percent="$(python3 scripts/ci-extract-txt-coverage.py .artifacts/coverage/integration-report/Summary.txt)"
 
             dotnet_integration_at_or_above_threshold="0"
             if [[ -n "$measured_percent" ]]; then
-              dotnet_integration_at_or_above_threshold="$(python3 - "$measured_percent" <<'PY'
-import sys
-print("1" if float(sys.argv[1]) >= 80.0 else "0")
-PY
-              )"
+              dotnet_integration_at_or_above_threshold="$(python3 scripts/ci-check-threshold.py "$measured_percent")"
             fi
 
             if [[ -n "$measured_percent" && "$dotnet_integration_at_or_above_threshold" == "1" ]]; then
