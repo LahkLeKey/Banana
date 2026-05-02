@@ -33,7 +33,7 @@ jobs:
           cmake --build build/cmake-tools --target banana_native
 
       - name: ABI symbol diff
-        run: bash scripts/check-native-abi-symbols.sh
+        run: bash scripts/check-native-abi-symbols.sh build/cmake-tools/libbanana_native.so
 
       - name: Run ABI version test
         run: |

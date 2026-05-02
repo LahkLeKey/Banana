@@ -42,7 +42,7 @@ describe("ripeness routes", () => {
           headers: { "content-type": "application/json" },
         }
       );
-    }) as FetchType;
+    }) as unknown as FetchType;
 
     const app = await createApp();
 
@@ -69,7 +69,7 @@ describe("ripeness routes", () => {
     const fetchSpy = mock(async () => {
       throw new Error("upstream should not be called");
     });
-    globalThis.fetch = fetchSpy as FetchType;
+    globalThis.fetch = fetchSpy as unknown as FetchType;
 
     const app = await createApp();
 
@@ -100,7 +100,7 @@ describe("ripeness routes", () => {
             headers: { "content-type": "application/json" },
           }
         )
-    ) as FetchType;
+    ) as unknown as FetchType;
 
     const app = await createApp();
 

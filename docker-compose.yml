@@ -102,14 +102,14 @@ services:
       BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
     volumes:
       - native-artifacts:/native:ro
-    command: ["bash", "-lc", "scripts/run-tests-with-coverage.sh"]
+    command: ["bash", "-lc", "bash scripts/run-tests-with-coverage.sh"]
     profiles: ["tests"]
 
   electron-example:
     build:
       context: .
       dockerfile: docker/electron.Dockerfile
-    command: ["bash", "-lc", "cd src/typescript/electron && npm run smoke"]
+    command: ["bash", "-lc", "npm run smoke"]
     profiles: ["electron"]
 
   electron-desktop:

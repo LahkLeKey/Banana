@@ -13,18 +13,21 @@
     "prisma:migrate:status": "bunx prisma migrate status --schema prisma/schema.prisma",
     "prisma:migrate:dev": "bunx prisma migrate dev --schema prisma/schema.prisma",
     "prisma:migrate:deploy": "bunx prisma migrate deploy --schema prisma/schema.prisma",
-    "test": "bun test"
+    "test": "bun test",
+    "postinstall": "bunx prisma generate --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@fastify/helmet": "^13.0.2",
     "@prisma/client": "^7.0.0",
     "fastify": "^5.0.0",
     "jose": "^6.2.3",
+    "pg-boss": "^12.18.2",
     "prisma": "^7.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
     "@fastify/rate-limit": "^9.0.0",
+    "@sentry/node": "^10.51.0",
     "@stryker-mutator/core": "^8.0.0",
     "@types/bun": "latest",
     "typescript": "^5.5.0"

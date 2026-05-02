@@ -59,6 +59,7 @@ model ModelRelease {
     promotedBy    String // operator identifier
     activeFrom    DateTime @default(now())
     deprecatedAt  DateTime?
+    activeIn      ActiveModelRelease[]
     createdAt     DateTime @default(now())
 
     @@index([modelName, activeFrom])
