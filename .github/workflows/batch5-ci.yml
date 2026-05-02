@@ -1,0 +1,36 @@
+name: Batch5 CI
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-pgo.yml'
+      - '.github/workflows/mutation-testing.yml'
+      - '.github/workflows/turbo-ci.yml'
+      - '.github/workflows/sentry-source-maps.yml'
+      - '.github/workflows/web-vitals-budget.yml'
+      - '.github/workflows/synthetic-monitoring.yml'
+      - '.github/workflows/load-testing.yml'
+      - 'src/typescript/api/src/plugins/**'
+      - 'src/typescript/api/src/lib/pii*'
+      - 'src/typescript/react/src/lib/**'
+      - 'tests/synthetic/**'
+      - 'tests/load/**'
+      - 'scripts/run-native-benchmarks.sh'
+      - 'turbo.json'
+      - 'package.json'
+  workflow_dispatch:
+
+jobs:
+  api-pii-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: cd src/typescript/api && bun install
+      - run: cd src/typescript/api && bun test src/lib/pii.test.ts
+
+  config-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JSON syntax for new task graph config
+        run: node -e "JSON.parse(require('fs').readFileSync('turbo.json','utf8')); JSON.parse(require('fs').readFileSync('src/typescript/api/stryker.config.json','utf8'));"

@@ -15,3 +15,4 @@ ci-runtime-compatibility.md
 coverage-80-exceptions.md
 api-parity-governance.md
 Autonomous-Self-Training.md
+security/pentest-readiness.md

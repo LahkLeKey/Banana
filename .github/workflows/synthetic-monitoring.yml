@@ -1,0 +1,20 @@
+name: Synthetic Monitoring
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  synthetic-health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install Playwright browsers
+        run: bunx playwright@latest install --with-deps
+      - name: Run nightly synthetic checks against staging
+        env:
+          SYNTHETIC_BASE_URL: ${{ vars.SYNTHETIC_BASE_URL || 'https://staging.banana.example.com' }}
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://staging-api.banana.example.com' }}
+          TS_API_BASE_URL: ${{ vars.TS_API_BASE_URL || 'https://staging-ts-api.banana.example.com' }}
+        run: bunx playwright@latest test tests/synthetic/specs/health.spec.ts --config=tests/synthetic/playwright.config.ts

@@ -1,0 +1,31 @@
+name: Mutation Testing
+on:
+  push:
+    branches: [main]
+    paths: ['src/typescript/api/src/**', 'src/c-sharp/asp.net/**', 'tests/**']
+  workflow_dispatch:
+
+jobs:
+  stryker-ts:
+    name: Stryker (TypeScript API)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: cd src/typescript/api && bun install
+      - run: cd src/typescript/api && bunx stryker run --reporters json,progress --coverageAnalysis perTest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stryker-report-ts
+          path: src/typescript/api/reports/mutation/
+
+  pit-dotnet:
+    name: PIT (ASP.NET - stub; full PIT requires JVM+Bytebuddy equivalent)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '8.x' }
+      - name: Run unit tests with coverage as mutation proxy
+        run: dotnet test tests/unit/Banana.UnitTests.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=opencover --no-build || dotnet build tests/unit/Banana.UnitTests.csproj && dotnet test tests/unit/Banana.UnitTests.csproj -p:CollectCoverage=true -p:CoverletOutputFormat=opencover

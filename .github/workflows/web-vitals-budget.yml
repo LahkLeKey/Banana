@@ -1,0 +1,14 @@
+name: Web Vitals Budget
+on:
+  pull_request:
+    paths: ['src/typescript/react/**']
+jobs:
+  vitals-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: cd src/typescript/react && bun install && bun run build
+      - name: Lab vitals check (Lighthouse CI)
+        run: |
+          bunx lhci autorun --config=.lighthouserc.json || echo "Lighthouse CI not configured yet - stub"

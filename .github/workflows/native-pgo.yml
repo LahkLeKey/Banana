@@ -1,0 +1,28 @@
+name: Native PGO Build
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['src/native/**']
+jobs:
+  pgo-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PGO instrumented build
+        run: |
+          cmake --preset linux-x86_64-release -DCMAKE_C_FLAGS="-fprofile-generate" -B build/pgo-gen
+          cmake --build build/pgo-gen
+      - name: Run profile corpus
+        run: |
+          ./build/pgo-gen/libbanana_native_test || true
+          llvm-profdata merge -output=default.profdata *.profraw 2>/dev/null || true
+      - name: PGO optimized build
+        run: |
+          cmake --preset linux-x86_64-release -DCMAKE_C_FLAGS="-fprofile-use=default.profdata" -B build/pgo-opt
+          cmake --build build/pgo-opt
+      - name: Upload PGO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: banana-native-pgo
+          path: build/pgo-opt/

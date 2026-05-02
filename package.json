@@ -1,0 +1,8 @@
+{
+  "name": "banana",
+  "private": true,
+  "version": "2.0.0",
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  }
+}
