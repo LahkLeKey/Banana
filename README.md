@@ -14,6 +14,12 @@ Run `bun run screenshots` from `src/typescript/react/` to refresh locally.
 <!-- GALLERY_START -->
 <!-- GALLERY_END -->
 
+## Component Demos
+
+[![Storybook Deploy](https://github.com/LahkLeKey/Banana/actions/workflows/storybook-deploy.yml/badge.svg)](https://github.com/LahkLeKey/Banana/actions/workflows/storybook-deploy.yml)
+
+Browse interactive component stories at: **[https://lahklekey.github.io/Banana/](https://lahklekey.github.io/Banana/)**
+
 ## Learn More
 
 - Wiki hub: [Banana Wiki](https://github.com/LahkLeKey/Banana/wiki)
