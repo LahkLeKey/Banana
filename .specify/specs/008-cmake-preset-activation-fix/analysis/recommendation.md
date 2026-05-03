@@ -1,11 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: CMake preset activation and configuration tooling are fixed and validated across all workspace contexts.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Preset discovery and tooling integration are working.
+- Native build lanes are unblocked.
+- No additional CMake recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all CMake preset items closed.

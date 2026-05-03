@@ -48,51 +48,27 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Frontend F5 launch profiles and developer experience
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+src/typescript/react/
+├── scripts/
+├── vite.config.ts
+├── [build config]
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+src/typescript/electron/
+├── [Electron dev entry points]
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+src/typescript/react-native/
+├── [React Native expo/dev entry points]
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+.vscode/launch.json
+.github/workflows/
+├── [dev-focused CI profiles]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: F5 profiles establish fast-reload and debug entry points for all channels. Dev server orchestration is codified.
 
 ## Complexity Tracking
 

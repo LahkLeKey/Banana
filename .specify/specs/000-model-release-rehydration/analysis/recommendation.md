@@ -1,11 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: Model release pathways and versioning are established and aligned with delivery gates.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Model packaging and release contracts are documented.
+- Training/inference surface coverage is established.
+- No additional model recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all model rehydration items closed.

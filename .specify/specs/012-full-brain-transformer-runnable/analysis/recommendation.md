@@ -1,11 +1,14 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: Full-brain transformer model is runnable and validated for integration with ensemble and ops pipeline.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Transformer training and inference pipelines are established.
+- Validation lanes and performance metrics are collected.
+- Ensemble integration is ready for downstream specs.
+- No additional transformer recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all full-brain items closed.

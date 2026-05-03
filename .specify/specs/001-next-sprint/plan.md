@@ -48,51 +48,31 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Sprint planning and orchestration framework
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+.specify/specs/
+├── NNNN-feature-name/
+│   ├── spec.md
+│   ├── plan.md
+│   ├── tasks.md
+│   └── analysis/
+│       ├── audit.md
+│       ├── recommendation.md
+│       └── deferred-registry.md
+└── [current sprint specs]
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+scripts/
+├── workflow-orchestrate-triaged-item-pr.sh
+├── workflow-orchestrate-sdlc.sh
+└── workflow-sync-wiki.sh
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+.github/workflows/
+└── [SDLC automation workflows]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Sprint framework rehydration focuses on Spec Kit structure and workflow orchestration paths. CI/CD gates and feedback loops are in place.
 
 ## Complexity Tracking
 

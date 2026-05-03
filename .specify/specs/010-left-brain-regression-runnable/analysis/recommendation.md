@@ -1,11 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: Left-brain (regression model) is runnable and validated for integration with model ops pipeline.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Regression model training and inference pipelines are established.
+- Validation lanes and performance metrics are collected.
+- No additional regression recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all left-brain items closed.

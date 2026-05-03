@@ -48,51 +48,30 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Shared UI component library v2
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+src/typescript/shared/ui/src/
+├── components/
+│   ├── Button.tsx
+│   ├── Card.tsx
+│   ├── Input.tsx
+│   ├── Modal.tsx
+│   ├── Tabs.tsx
+│   └── [additional components]
+├── native/
+│   ├── Button.native.tsx
+│   └── [React Native variants]
+└── index.ts
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+src/typescript/shared/ui/.storybook/
+├── [Storybook config]
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+src/typescript/shared/ui/src/components.stories.tsx
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Shared components v2 establishes modern component library with platform-specific variants. Storybook-first documentation and testing.
 
 ## Complexity Tracking
 

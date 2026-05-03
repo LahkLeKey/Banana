@@ -1,11 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: Runtime container and orchestration surfaces are established and baseline deployment is validated.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Compose profiles and container contracts are finalized.
+- Host runtime behavior is documented and tested.
+- No additional runtime recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all runtime rehydration items closed.

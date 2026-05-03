@@ -48,51 +48,39 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Model release pathways and versioning for training/inference surface
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+data/
+├── banana/
+│   ├── corpus.json
+│   ├── index.json
+│   └── sessions/
+├── not-banana/
+│   ├── corpus.json
+│   ├── index.json
+│   └── sessions/
+└── ripeness/
+    ├── corpus.json
+    ├── index.json
+    └── sessions/
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+artifacts/training/
+├── banana/
+│   └── local/
+├── not-banana/
+│   └── local/
+└── ripeness/
+    └── local/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+scripts/
+├── train-banana-model.py
+├── train-not-banana-model.py
+└── train-ripeness-model.py
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Model rehydration focuses on training corpus organization and artifact release paths. Versioning contract established via corpus index and training profile gates.
 
 ## Complexity Tracking
 

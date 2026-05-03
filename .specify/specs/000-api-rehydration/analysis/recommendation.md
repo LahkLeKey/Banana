@@ -1,11 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: API rehydration from prior audit cycles is documented and integration pathways are established.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- API surface has been analyzed and mapped for backward compatibility.
+- Integration points with managed/native layers are defined.
+- No additional API recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all rehydration items closed.

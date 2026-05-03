@@ -48,51 +48,28 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Validation lane parity linting and coverage analysis
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+scripts/
+├── check-banana-api-coverage-denominator.sh
+├── check-dotnet-coverage-threshold.sh
+├── check-corpus-schema.py
+└── validate-spec-tasks-parity.py
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+.github/workflows/
+├── validate-coverage-lanes.yml
+└── validate-spec-parity.yml
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+artifacts/
+└── coverage/
+    ├── [unit lane reports]
+    ├── [integration lane reports]
+    └── [e2e lane reports]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Parity lint spike focuses on cross-lane coverage validation and denominator enforcement. Linting rules are codified and CI-gated.
 
 ## Complexity Tracking
 

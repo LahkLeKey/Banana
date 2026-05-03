@@ -1,11 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: Domain-value framework and delivery lanes are established and linked to feature roadmap.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Value-risk prioritization model is documented.
+- Domain isolation and lane parity are validated.
+- No additional domain-value recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all domain-value items closed.

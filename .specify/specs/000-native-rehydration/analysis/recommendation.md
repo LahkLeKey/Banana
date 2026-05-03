@@ -1,11 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: Native layer contracts and interop interfaces are established and ready for managed integration.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Native boundary conditions and error handling are defined.
+- DAL/wrapper interfaces are mapped and tested.
+- No additional native recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all native rehydration items closed.

@@ -1,11 +1,14 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: Coverage lanes are instrumented and 80% threshold enforcement is validated across integration surface.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Lane normalization and parity enforcement are established.
+- Coverage denominator and exception handling are documented.
+- Baseline thresholds and rehydration paths are validated.
+- No additional coverage recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all coverage items closed.

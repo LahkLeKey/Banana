@@ -48,51 +48,32 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Native C layer integration and interop boundary hardening
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
+src/native/
+├── core/
+│   ├── banana_core.h
+│   ├── banana_batch.c
+│   ├── banana_calc.c
+│   ├── banana_classify.c
+│   ├── banana_ripeness.c
+│   ├── banana_status.c
+│   ├── banana_truck.c
+│   └── banana_status.h
+├── wrapper/
+│   ├── libbanana.c
+│   └── libbanana.h
 └── tests/
+    ├── CMakeLists.txt
+    └── unit/
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+CMakeLists.txt
+CMakePresets.json
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Native rehydration focuses on C layer boundary validation and wrapper interface stability. DAL contracts and error handling paths established.
 
 ## Complexity Tracking
 

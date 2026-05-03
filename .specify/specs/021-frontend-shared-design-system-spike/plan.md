@@ -48,51 +48,27 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Shared design system and component library
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
+src/typescript/shared/ui/
 ├── src/
 │   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
+│   ├── tokens/
+│   ├── native/
+│   └── [shared primitives]
+├── tokens.test.ts
+├── tailwind.config.ts
+└── [component stories]
 
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+src/typescript/react/.storybook/
+├── main.ts
+├── preview.ts
+└── [story configuration]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Shared design system establishes UI token definitions and common component library. Storybook catalog is the source of truth for component contracts.
 
 ## Complexity Tracking
 

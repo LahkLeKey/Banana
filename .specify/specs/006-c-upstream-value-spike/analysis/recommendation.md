@@ -1,11 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: C upstream value and integration patterns are validated and ready for downstream adoption.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- Native/C interop boundary conditions are documented.
+- Performance and reliability metrics are established.
+- No additional upstream recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all upstream spike items closed.

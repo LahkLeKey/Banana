@@ -48,51 +48,28 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: API rehydration focus on ASP.NET backend and managed wrapper
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+src/c-sharp/asp.net/
+├── Controllers/
+│   ├── BananaController.cs
+│   ├── ClassifierController.cs
+│   └── ModelController.cs
+├── NativeInterop/
+│   ├── INativeBananaClient.cs
+│   ├── NativeBananaClient.cs
+│   └── Contracts/
+├── Pipeline/
+│   ├── RequestContext.cs
+│   └── ResponseMapper.cs
+└── Tests/
+    ├── Integration/
+    └── Unit/
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: API surface rehydration targets ASP.NET managed layer integration with native interop boundary. No new endpoints; focus on backward compatibility validation and integration pathways.
 
 ## Complexity Tracking
 

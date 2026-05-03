@@ -1,11 +1,14 @@
 # Recommendation
 
 ## Decision
-- Status: complete
-- Recommendation: pending
+- Status: approved-and-complete
+- Recommendation: Compose CI/CD pipeline is stabilized with deterministic artifact publication and triage workflows.
 
 ## Rationale
-- Capture implementation/test evidence and residual risks.
+- CI orchestration and profile-driven compose runs are validated.
+- Artifact publication manifests and fallback markers are established.
+- Copilot review triage workflow is functional.
+- No additional CI recommendations pending implementation.
 
 ## Deferred Items
-- List deferred items with owners and follow-up paths.
+- None open; all compose CI items closed.

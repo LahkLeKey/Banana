@@ -48,51 +48,33 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Runtime container and orchestration compose profiles
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+docker/
+├── react.Dockerfile
+├── electron.Dockerfile
+├── react-native.Dockerfile
+├── api.Dockerfile
+├── api-fastify.Dockerfile
+├── native-builder.Dockerfile
+└── tests.Dockerfile
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+docker-compose.yml
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+scripts/
+├── compose-run-profile.sh
+├── compose-profile-ready.sh
+├── launch-container-channels-with-wsl2-electron.sh
+└── launch-container-channels-with-wsl2-mobile.sh
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+.github/
+└── workflows/
+    └── [compose CI/CD workflows]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Runtime rehydration focuses on Compose profile definitions and WSL2 orchestration entry points. No new container images; focus on profile activation and readiness validation.
 
 ## Complexity Tracking
 

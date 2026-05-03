@@ -48,51 +48,28 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Frontend classifier UX and component surface
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+src/typescript/react/src/
+├── components/
+│   ├── ClassifierForm.tsx
+│   ├── ClassifierResult.tsx
+│   ├── PredictionOutput.tsx
+│   └── classifier/
+├── pages/
+│   └── ClassifierPage.tsx
+└── [existing React structure]
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+src/typescript/electron/
+├── [Electron classifier channel]
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+src/typescript/react-native/screens/
+├── ClassifyScreen.tsx
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Classifier UX spike focuses on form controls, prediction display, and cross-channel consistency. Channel-specific variants are isolated.
 
 ## Complexity Tracking
 
