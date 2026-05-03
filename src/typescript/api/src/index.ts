@@ -47,7 +47,15 @@ await registerRateLimitPlugin(app);
 // Spec #069 — audit log (hooks onResponse, must register before routes)
 await registerAuditLogPlugin(app);
 
-const ALLOWED_WEB_ORIGINS = new Set(["http://localhost:5173", "http://127.0.0.1:5173"]);
+// Spec #126 — BANANA_CORS_ORIGINS: comma-separated list of allowed origins.
+// Defaults to localhost dev servers when the env var is absent.
+const _corsOriginsEnv = process.env.BANANA_CORS_ORIGINS ?? "http://localhost:5173,http://localhost:3000";
+const ALLOWED_WEB_ORIGINS = new Set(
+  _corsOriginsEnv
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+);
 
 app.addHook("onRequest", async (request, reply) => {
   const origin = (request.headers.origin ?? "").toString();

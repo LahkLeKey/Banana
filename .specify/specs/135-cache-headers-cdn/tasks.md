@@ -7,5 +7,5 @@
 - [x] T002 Validate `vercel.json`: `python3 -c "import json; json.load(open('vercel.json')); print('OK')"`.
 - [ ] T003 Deploy to Vercel preview and confirm with `curl -I <preview-url>/index.html | grep cache-control` that `no-cache` is returned.
 - [ ] T004 Confirm hashed assets still return `Cache-Control: public, max-age=31536000, immutable` with `curl -I <preview-url>/assets/index-*.js`.
-- [ ] T005 Document cache invalidation behavior in `docs/storybook.md` → `docs/deployment.md` (or a new `docs/deployment.md`).
+- [x] T005 Document cache invalidation behavior in `docs/storybook.md` → `docs/deployment.md` (or a new `docs/deployment.md`).
 - [x] T006 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/135-cache-headers-cdn` and confirm `OK`.
