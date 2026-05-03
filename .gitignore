@@ -63,3 +63,6 @@ bash.exe.stackdump
 # SBOM outputs (spec #086)
 artifacts/sboms/
 *.pyc
+
+.vercel
+.env*.local

@@ -1,0 +1,38 @@
+[
+    {
+        "spec_id": "158-deployment-host-inventory-spike",
+        "triage_id": "spec-drain-158-deployment-host-inventory-spike",
+        "change_command": "python scripts/validate-spec-tasks-parity.py .specify/specs/158-deployment-host-inventory-spike",
+        "commit_message": "docs(spec-158): scaffold deployment host inventory spike",
+        "pr_title": "triage(158): scaffold deployment host inventory spike",
+        "pr_body": "Scaffolded follow-up spike spec for deployment host inventory evidence.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    },
+    {
+        "spec_id": "159-vercel-production-promotion-implementation",
+        "triage_id": "spec-drain-159-vercel-production-promotion-implementation",
+        "change_command": "python scripts/validate-spec-tasks-parity.py .specify/specs/159-vercel-production-promotion-implementation",
+        "commit_message": "docs(spec-159): scaffold vercel production promotion implementation",
+        "pr_title": "triage(159): scaffold production promotion implementation spec",
+        "pr_body": "Scaffolded follow-up implementation spec for production promotion and verification.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    },
+    {
+        "spec_id": "160-deployment-readiness-qa-gate",
+        "triage_id": "spec-drain-160-deployment-readiness-qa-gate",
+        "change_command": "python scripts/validate-spec-tasks-parity.py .specify/specs/160-deployment-readiness-qa-gate",
+        "commit_message": "docs(spec-160): scaffold deployment readiness qa gate",
+        "pr_title": "triage(160): scaffold deployment readiness QA gate spec",
+        "pr_body": "Scaffolded follow-up QA spec for deployment readiness evidence enforcement.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    }
+]

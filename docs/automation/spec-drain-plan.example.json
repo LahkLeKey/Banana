@@ -1,0 +1,26 @@
+[
+    {
+        "spec_id": "000-api-rehydration",
+        "triage_id": "spec-drain-000-api-rehydration",
+        "change_command": "bash scripts/workflow-orchestrate-sdlc.sh speckit:bootstrap 000-api-rehydration",
+        "commit_message": "chore(spec-drain): bootstrap 000-api-rehydration",
+        "pr_title": "triage(000-api-rehydration): bootstrap planning artifacts",
+        "pr_body": "Example spec-drain manifest entry. Replace change_command with the real implementation entry point for this spec.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    },
+    {
+        "spec_id": "146-api-health-checks-diagnostic",
+        "triage_id": "spec-drain-146-api-health-checks-diagnostic",
+        "change_command": "bash scripts/your-existing-entrypoint.sh --spec 146-api-health-checks-diagnostic",
+        "commit_message": "chore(spec-drain): implement 146-api-health-checks-diagnostic",
+        "pr_title": "triage(146-api-health-checks-diagnostic): automated implementation",
+        "pr_body": "Example spec-drain manifest entry showing the minimum contract for real execution.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    }
+]

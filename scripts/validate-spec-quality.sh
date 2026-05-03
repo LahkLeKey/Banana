@@ -82,7 +82,7 @@ for heading, message in required_sections:
 
 # --- In Scope must have at least one bullet ---
 in_scope_match = re.search(
-    r"## In Scope.*?\n(.*?)(?=\n##|\Z)", content, re.DOTALL | re.IGNORECASE
+    r"## In Scope.*?\n(.*?)(?=\n##\s|\Z)", content, re.DOTALL | re.IGNORECASE
 )
 if in_scope_match:
     in_scope_body = in_scope_match.group(1)
@@ -92,7 +92,7 @@ if in_scope_match:
 
 # --- Out of Scope must have at least one bullet ---
 out_scope_match = re.search(
-    r"## Out of Scope.*?\n(.*?)(?=\n##|\Z)", content, re.DOTALL | re.IGNORECASE
+    r"## Out of Scope.*?\n(.*?)(?=\n##\s|\Z)", content, re.DOTALL | re.IGNORECASE
 )
 if out_scope_match:
     out_scope_body = out_scope_match.group(1)
@@ -102,7 +102,7 @@ if out_scope_match:
 
 # --- Success Criteria must not be empty ---
 sc_match = re.search(
-    r"## Success Criteria.*?\n(.*?)(?=\n##|\Z)", content, re.DOTALL | re.IGNORECASE
+    r"## Success Criteria.*?\n(.*?)(?=\n##\s|\Z)", content, re.DOTALL | re.IGNORECASE
 )
 if sc_match:
     sc_body = sc_match.group(1).strip()

@@ -1,19 +1,19 @@
-# Spec-Drain Bulk Execution: Ready State Report
+# Spec-Drain Bulk Execution: Execution Contract Report
 
 **Date**: 2026-05-02  
-**Status**: ✅ ALL 162 SPECS READY FOR BULK DRAINAGE
+**Status**: ⚠️ QUALITY-GATE READY, REAL EXECUTION POLICY-BLOCKED UNTIL PLAN MANIFEST EXISTS
 
 ## Executive Summary
 
-The autonomous spec-drain automation system is fully operational with all 162 specifications passing quality validation and infrastructure readiness checks. The system is prepared to execute 154 specs immediately with graceful handling of 3 infrastructure-blocked specs and 5 research-phase specs.
+The autonomous spec-drain automation system now has correct quality-gate behavior and correct blocker filtering, but real execution is not self-sufficient. All currently discovered specs pass the quality gate, and the loop can identify runnable specs correctly, but non-dry-run execution requires `BANANA_DRAIN_PLAN_PATH` with a per-spec `change_command` manifest. Without that plan, the loop stops with `policy_blocked` at the first runnable spec.
 
 ## Spec Classification
 
-### Category 1: Executable (Immediate Processing) — 154 Specs
+### Category 1: Executable (Plan-Eligible) — 154 Specs
 **Status**: Ready for implementation  
 **Quality Gate**: ✅ PASS (all required sections present)  
 **Infrastructure**: Not required  
-**Processing**: Immediate execution when selected by drainage loop
+**Processing**: Selectable by drainage loop; requires manifest entry for real execution
 
 **Examples**:
 - Specs 0-50: API/Model/Native/Runtime rehydration + foundational spikes (15 specs)
@@ -144,7 +144,10 @@ Drainage timeline:
 └─ Phase 3 (week 3+):              5 specs (decisions made)
 ```
 
-## Ready to Execute
+## Execution Contract
+
+### Dry-Run Works
+The loop can safely validate discovery, quality gates, and blocker filtering in dry-run mode.
 
 ### To Start Bulk Drainage (DRY-RUN):
 ```bash
@@ -159,13 +162,31 @@ BANANA_DRAIN_DRY_RUN="true" \
 bash scripts/workflow-spec-drain-loop.sh
 ```
 
-### To Start Bulk Drainage (REAL):
+### Real Execution Requires a Plan Manifest:
 ```bash
 BANANA_DRAIN_STATE_PATH="artifacts/sdlc-orchestration/spec-drain-state-bulk.json" \
+BANANA_DRAIN_PLAN_PATH="docs/automation/spec-drain-plan.example.json" \
 BANANA_DRAIN_MAX_FAILURES=5 \
 BANANA_DRAIN_MAX_RETRIES=2 \
 BANANA_DRAIN_DRY_RUN="false" \
 bash scripts/workflow-spec-drain-loop.sh
+```
+
+Minimum manifest entry shape:
+
+```json
+{
+   "spec_id": "000-api-rehydration",
+   "change_command": "bash scripts/some-existing-entrypoint.sh --spec 000-api-rehydration"
+}
+```
+
+Current verified real-mode behavior without a manifest:
+
+```json
+{
+   "stop_reason": "policy_blocked"
+}
 ```
 
 ## Related Documentation
@@ -178,10 +199,10 @@ bash scripts/workflow-spec-drain-loop.sh
 ## Sign-Off
 
 ✅ All 162 specifications are quality-validated  
-✅ Spec-drain automation is fully operational  
+✅ Spec-drain automation now enforces its execution contract explicitly  
 ✅ Infrastructure blocker handling is implemented  
-✅ 154 specs ready for immediate execution  
+✅ 154 specs are selectable for execution once a manifest exists  
 ✅ 3 specs deferred until prerequisites available  
 ✅ 5 specs deferred until research phase decisions made
 
-**Status**: READY FOR BULK DRAINAGE EXECUTION
+**Status**: DRY-RUN READY; REAL EXECUTION BLOCKED UNTIL MANIFEST PROVIDED

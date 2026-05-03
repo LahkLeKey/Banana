@@ -17,6 +17,13 @@
 
 Configuration is authoritative in `vercel.json` at the repository root.
 
+Operational references:
+
+- Domain redirects: `docs/domain-management.md`
+- Deploy hooks: `docs/runbooks/deploy-hooks.md`
+- Log inspection: `docs/runbooks/logs.md`
+- Edge middleware scaffold: `middleware.ts`
+
 ### Cache invalidation strategy (spec 135)
 
 Vercel CDN serves all `dist/` assets. The strategy relies on two layers:

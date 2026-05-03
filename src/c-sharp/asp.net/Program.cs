@@ -62,10 +62,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(FrontendCorsPolicy, policy =>
     {
+        var allowedOrigins = new List<string>
+        {
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "https://banana.engineer",
+            "https://www.banana.engineer",
+        };
+        // Allow additional origins via env var (comma-separated) for preview deployments.
+        var extra = Environment.GetEnvironmentVariable("BANANA_CORS_ORIGINS");
+        if (!string.IsNullOrWhiteSpace(extra))
+            allowedOrigins.AddRange(extra.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
         policy
-            .WithOrigins(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173")
+            .WithOrigins(allowedOrigins.ToArray())
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

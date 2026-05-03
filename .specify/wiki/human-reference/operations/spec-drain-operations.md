@@ -20,6 +20,62 @@ bash scripts/workflow-spec-drain-state.sh get-summary \
 ls -la artifacts/orchestration/spec-drain/*/*/result.json
 ```
 
+Real execution requires an explicit per-spec execution manifest. Dry-run mode validates discovery and quality gates without it, but non-dry-run execution stops with `policy_blocked` unless `BANANA_DRAIN_PLAN_PATH` points to a JSON file that provides a `change_command` for each runnable spec.
+
+```bash
+# Preview drain selection only
+BANANA_DRAIN_DRY_RUN=true \
+bash scripts/workflow-spec-drain-loop.sh
+
+# Real execution requires a plan manifest
+BANANA_DRAIN_PLAN_PATH=docs/automation/spec-drain-plan.example.json \
+BANANA_DRAIN_DRY_RUN=false \
+bash scripts/workflow-spec-drain-loop.sh
+```
+
+### Compute-Efficient Scan Pattern
+
+Prefer checkpoint resume and compact summaries before launching another full scan:
+
+```bash
+# Resume from existing checkpoint first
+BANANA_DRAIN_STATE_PATH=artifacts/sdlc-orchestration/spec-drain-state-all.json \
+BANANA_DRAIN_DRY_RUN=true \
+bash scripts/workflow-spec-drain-loop.sh
+
+# Read compact summary for planning instead of re-scanning
+jq '{status, stop_reason, completed_count, failed_count}' \
+  artifacts/orchestration/spec-drain-all/local-run/drain-summary.json
+```
+
+Run a full fresh scan only when spec inventory shape changed or checkpoint state is missing/corrupt.
+
+### Close With Deferred Ledger
+
+When the scan reaches exhaustion but blocked/research specs remain, publish an accounted summary instead of re-running full scan loops:
+
+```bash
+python - <<'PY'
+import json
+from pathlib import Path
+
+state = json.loads(Path('artifacts/sdlc-orchestration/spec-drain-state-all-accounted.json').read_text())
+all_specs = [x.name for x in Path('.specify/specs').iterdir() if x.is_dir() and (x/'spec.md').exists() and (x/'tasks.md').exists()]
+completed = set(state.get('completed_specs', []))
+deferred = {f.get('spec_id') for f in state.get('failed_specs', [])}
+
+print(json.dumps({
+  'completed_count': len(completed),
+  'deferred_count': len(deferred),
+  'accounted_total': len(completed) + len(deferred),
+  'all_specs_with_tasks': len(all_specs),
+  'unaccounted_count': len(set(all_specs) - completed - deferred)
+}, indent=2))
+PY
+```
+
+Expected end-state: `unaccounted_count` is `0`.
+
 ## Infrastructure Blocker States
 
 The drainage process classifies specs into executable and deferred categories:
@@ -105,6 +161,7 @@ Or set in GitHub Actions environment to halt in-flight runs.
 Drainage **automatically resumes** from saved state. To explicitly resume:
 
 ```bash
+BANANA_DRAIN_PLAN_PATH=path/to/spec-drain-plan.json \
 bash scripts/workflow-spec-drain-loop.sh
 ```
 
@@ -141,7 +198,7 @@ The loop reads the state file and continues from the last processed spec.
 
 **Action**: Update environment variable and resume drainage:
 ```bash
-BANANA_DRAIN_INFRASTRUCTURE_READY=true \
+BANANA_DRAIN_PLAN_PATH=path/to/spec-drain-plan.json \
 bash scripts/workflow-spec-drain-loop.sh
 ```
 
@@ -154,6 +211,28 @@ bash scripts/workflow-spec-drain-loop.sh
 **Action**: Final drainage cycle completes all remaining specs.
 
 ## Troubleshooting
+
+### Drainage Stops with "policy_blocked"
+
+The loop reached a runnable spec in real mode, but no execution plan was provided for it.
+
+```bash
+jq . artifacts/orchestration/spec-drain/local-run/drain-summary.json
+```
+
+Expected signal:
+
+```json
+{
+  "stop_reason": "policy_blocked"
+}
+```
+
+Remediation:
+
+1. Provide `BANANA_DRAIN_PLAN_PATH`.
+2. Ensure the JSON includes an entry for each runnable spec.
+3. Ensure each entry contains at least `spec_id` and `change_command`.
 
 ### Spec Stuck as Failed
 

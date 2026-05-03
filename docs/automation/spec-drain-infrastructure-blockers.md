@@ -7,6 +7,12 @@
 
 The spec-drain automation (`scripts/workflow-spec-drain-loop.sh`) processes specifications sequentially while gracefully handling infrastructure-dependent specs. This document explains how blockers are classified and processed without halting the drainage loop.
 
+Selection and execution are separate contracts:
+
+- Selection decides which specs are runnable from spec metadata.
+- Real execution requires `BANANA_DRAIN_PLAN_PATH` to resolve a per-spec `change_command`.
+- If no plan file or matching plan entry exists, the loop stops with `policy_blocked` instead of opening no-op PRs.
+
 ## Spec Classification
 
 All specs are classified into three categories by the drain automation:
@@ -14,7 +20,7 @@ All specs are classified into three categories by the drain automation:
 ### 1. Ready for Implementation (Executable)
 - **Status**: `**Status**: Ready for implementation` in spec.md
 - **Blockers**: No `[INFRASTRUCTURE]` marker in spec.md
-- **Processing**: Executed immediately when selected
+- **Processing**: Eligible for execution when selected; real execution also requires a plan entry with `change_command`
 - **Examples**: Specs 141, 142, 143, 145, 146, 147, 149
 
 **Characteristics**:
@@ -195,6 +201,7 @@ BANANA_DRAIN_STATE_PATH=artifacts/spec-drain-state.json
 BANANA_DRAIN_MAX_FAILURES=5                              # Stop after N unique failures
 BANANA_DRAIN_MAX_RETRIES=2                               # Retry failed spec N times
 BANANA_DRAIN_DRY_RUN=true                                # Simulate without changes
+BANANA_DRAIN_PLAN_PATH=path/to/spec-drain-plan.json      # Required for real execution
 
 # Infrastructure readiness (future use)
 BANANA_DRAIN_INFRASTRUCTURE_READY=true                   # Process infrastructure specs
@@ -213,6 +220,21 @@ jq . artifacts/spec-drain-state.json
 
 # Get summary
 bash scripts/workflow-spec-drain-state.sh get-summary artifacts/spec-drain-state.json
+```
+
+### Provide an Execution Plan
+```bash
+BANANA_DRAIN_PLAN_PATH=docs/automation/spec-drain-plan.example.json \
+bash scripts/workflow-spec-drain-loop.sh
+```
+
+Plan entry shape:
+
+```json
+{
+  "spec_id": "146-api-health-checks-diagnostic",
+  "change_command": "bash scripts/some-existing-entrypoint.sh --spec 146-api-health-checks-diagnostic"
+}
 ```
 
 ### Manually Skip a Blocked Spec
@@ -240,6 +262,6 @@ bash scripts/workflow-spec-drain-state.sh init \
 
 ## Next Steps
 
-1. **Short-term**: Run `workflow-orchestrate-sdlc.sh` to execute specs 141-150 (no infrastructure blockers)
+1. **Short-term**: Create a spec-drain plan manifest that maps each runnable spec to an existing implementation entry point
 2. **Medium-term**: After 7+ days production traffic, re-run drainage to complete specs 144, 148, 150
 3. **Long-term**: Review specs 151-155 for infrastructure decisions, update status markers, and trigger final drainage phase

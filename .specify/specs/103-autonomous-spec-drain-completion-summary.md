@@ -2,11 +2,15 @@
 
 **Date**: 2026-05-02  
 **Session**: Specification to Automation Implementation  
-**Status**: ✅ Complete and Ready for Execution
+**Status**: ✅ Complete for discovery/filtering; real execution requires explicit plan manifest
 
 ## Objective
 
 Ensure that the autonomous spec-drain system (Spec 103 implementation) correctly processes the newly scaffolded infrastructure-dependent specs (141-155) without requiring manual infrastructure setup or blocking downstream spec execution.
+
+## Current Constraint
+
+The drain loop can now discover runnable specs, enforce quality gates, skip infrastructure-blocked work, and stop cleanly. Real implementation is intentionally policy-gated: each runnable spec must be mapped to a concrete `change_command` through `BANANA_DRAIN_PLAN_PATH`. Without that manifest, the loop stops with `policy_blocked` at the first runnable spec instead of opening no-op PRs.
 
 ## What Was Accomplished
 
@@ -130,7 +134,7 @@ The loop in `workflow-spec-drain-loop.sh` now:
 1. **Initializes state checkpoint** (idempotent, preserves on re-run)
 2. **Gets next runnable spec** (skips blocked specs)
 3. **Validates spec quality** (gates with `validate-spec-quality.sh`)
-4. **Executes or dry-runs** (delegates to triaged-item PR orchestration)
+4. **Executes or dry-runs** (delegates to triaged-item PR orchestration only when a plan entry exists)
 5. **Emits evidence JSON** (per-spec result metadata)
 6. **Checks failure budget** (max unique failures before stopping)
 7. **Continues or stops** (based on blockers, budget, or exhaustion)
@@ -140,6 +144,10 @@ The loop in `workflow-spec-drain-loop.sh` now:
 - ✅ Skips blocked specs (no failure counted)
 - ✅ Completes successfully (when all executable specs done)
 - ✅ Can resume later (state checkpoint preserved)
+
+Additional behavior now enforced:
+- ✅ Stops with `policy_blocked` if real execution is attempted without a plan manifest
+- ✅ Avoids fake success/no-op PR attempts for specs without implementation commands
 
 ## Integration Points
 

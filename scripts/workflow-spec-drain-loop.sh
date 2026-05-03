@@ -23,11 +23,77 @@ DRY_RUN="${BANANA_DRAIN_DRY_RUN:-false}"
 AUTONOMY_STOP="${BANANA_AUTONOMY_STOP:-false}"
 OUTPUT_DIR="${BANANA_DRAIN_OUTPUT_DIR:-artifacts/orchestration/spec-drain}"
 RUN_ID="${GITHUB_RUN_ID:-local-run}"
+PLAN_PATH="${BANANA_DRAIN_PLAN_PATH:-}"
 
 mkdir -p "$OUTPUT_DIR"
 
 log() { echo "[spec-drain] $*"; }
 log_err() { echo "[spec-drain][ERROR] $*" >&2; }
+
+load_spec_plan() {
+  local plan_path="$1"
+  local spec_id="$2"
+
+  python - "$plan_path" "$spec_id" <<'PY'
+import json
+import os
+import pathlib
+import shlex
+import sys
+
+plan_path = pathlib.Path(sys.argv[1])
+spec_id = sys.argv[2]
+
+if not plan_path.exists():
+  raise SystemExit(f"plan file not found: {plan_path}")
+
+payload = json.loads(plan_path.read_text(encoding="utf-8"))
+if isinstance(payload, dict):
+  entries = payload.get("specs", payload.get("entries", payload.get("increments", [])))
+elif isinstance(payload, list):
+  entries = payload
+else:
+  raise SystemExit("spec-drain plan must be a JSON object or array")
+
+if not isinstance(entries, list):
+  raise SystemExit("spec-drain plan entries must be a JSON array")
+
+entry = None
+for candidate in entries:
+  if not isinstance(candidate, dict):
+    continue
+  candidate_id = str(candidate.get("spec_id", candidate.get("id", ""))).strip()
+  if candidate_id == spec_id:
+    entry = candidate
+    break
+
+if entry is None:
+  raise SystemExit(f"spec '{spec_id}' missing from spec-drain plan")
+
+change_command = str(entry.get("change_command", "")).strip()
+if not change_command:
+  raise SystemExit(f"spec '{spec_id}' missing required change_command")
+
+defaults = {
+  "BANANA_TRIAGE_CHANGE_COMMAND": change_command,
+  "BANANA_TRIAGE_ID": str(entry.get("triage_id", spec_id)).strip() or spec_id,
+  "BANANA_COMMIT_MESSAGE": str(entry.get("commit_message", f"chore(spec-drain): implement {spec_id}")).strip(),
+  "BANANA_PR_TITLE": str(entry.get("pr_title", f"triage({spec_id}): automated changes requiring human approval")).strip(),
+  "BANANA_PR_BODY": str(entry.get("pr_body", f"Automated spec-drain implementation for {spec_id}.")).strip(),
+  "BANANA_PR_LABELS": str(entry.get("labels", os.environ.get("BANANA_PR_LABELS", "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven"))).strip(),
+  "BANANA_PR_REVIEWERS": str(entry.get("reviewers", os.environ.get("BANANA_PR_REVIEWERS", ""))).strip(),
+  "BANANA_DRAFT_PR": str(entry.get("draft_pr", os.environ.get("BANANA_DRAFT_PR", "true"))).strip(),
+  "BANANA_BASE_BRANCH": str(entry.get("base_branch", os.environ.get("BANANA_BASE_BRANCH", "main"))).strip(),
+  "BANANA_BRANCH_PREFIX": str(entry.get("branch_prefix", os.environ.get("BANANA_BRANCH_PREFIX", "triage"))).strip(),
+  "BANANA_SKIP_IF_NO_CHANGES": str(entry.get("skip_if_no_changes", os.environ.get("BANANA_SKIP_IF_NO_CHANGES", "false"))).strip(),
+  "BANANA_REQUIRE_REAL_UPDATES": str(entry.get("require_real_updates", os.environ.get("BANANA_REQUIRE_REAL_UPDATES", "true"))).strip(),
+  "BANANA_SKIP_DOCS_ONLY_CHANGES": str(entry.get("skip_docs_only_changes", os.environ.get("BANANA_SKIP_DOCS_ONLY_CHANGES", "true"))).strip(),
+}
+
+for key, value in defaults.items():
+  print(f"export {key}={shlex.quote(value)}")
+PY
+}
 
 # --- Kill switch ---
 if [[ "$AUTONOMY_STOP" == "true" ]]; then
@@ -112,8 +178,30 @@ PY
   else
     log "Implementing spec: $NEXT_SPEC"
 
+    if [[ -z "$PLAN_PATH" ]]; then
+      SPEC_STATUS="policy_blocked"
+      SPEC_REASON="missing_spec_drain_plan"
+      log_err "Real execution requires BANANA_DRAIN_PLAN_PATH with per-spec change_command entries."
+      bash scripts/workflow-spec-drain-state.sh set-stop "$STATE_PATH" "policy_blocked"
+      bash scripts/workflow-spec-drain-state.sh write-evidence "$STATE_PATH" "$NEXT_SPEC" \
+        "$EVIDENCE_PATH" "$SPEC_STATUS" "$SPEC_REASON"
+      break
+    fi
+
+    PLAN_EXPORTS=""
+    if ! PLAN_EXPORTS="$(load_spec_plan "$PLAN_PATH" "$NEXT_SPEC")"; then
+      SPEC_STATUS="policy_blocked"
+      SPEC_REASON="invalid_or_missing_plan_entry"
+      log_err "Unable to resolve execution plan for $NEXT_SPEC from $PLAN_PATH"
+      bash scripts/workflow-spec-drain-state.sh set-stop "$STATE_PATH" "policy_blocked"
+      bash scripts/workflow-spec-drain-state.sh write-evidence "$STATE_PATH" "$NEXT_SPEC" \
+        "$EVIDENCE_PATH" "$SPEC_STATUS" "$SPEC_REASON"
+      break
+    fi
+
+    eval "$PLAN_EXPORTS"
+
     # Delegate to the triaged-item PR orchestration flow (T009).
-    export BANANA_SPEC_TARGET="$NEXT_SPEC"
     export BANANA_SDLC_OUTPUT_DIR="$SPEC_OUTPUT_DIR"
     export BANANA_SDLC_SUMMARY_PATH="${SPEC_OUTPUT_DIR}/sdlc-summary.json"
 
@@ -152,7 +240,16 @@ echo "$SUMMARY" > "$SUMMARY_FILE"
 log "Terminal summary written to: $SUMMARY_FILE"
 
 # Determine exit code based on stop reason.
-STOP_REASON=$(python -c "import json,os; d=json.loads(os.environ['_SUMMARY']); print(d.get('stop_reason','unknown'))" _SUMMARY="$SUMMARY")
+STOP_REASON=$(python - "$SUMMARY_FILE" <<'PY'
+import json
+import pathlib
+import sys
+
+summary_path = pathlib.Path(sys.argv[1])
+payload = json.loads(summary_path.read_text(encoding="utf-8"))
+print(payload.get("stop_reason", "unknown"))
+PY
+)
 
 case "$STOP_REASON" in
   exhausted|kill_switch|dry_run) exit 0 ;;

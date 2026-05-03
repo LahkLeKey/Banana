@@ -1,14 +1,22 @@
 <!--
 Sync Impact Report
-- Version change: 1.4.0 -> 1.5.0
+- Version change: 1.8.0 -> 1.9.0
 - Modified principles:
 	- Added X. Observable Infrastructure as Code
 	- Added XI. Spec-Driven Infrastructure Discovery
 	- Added XII. Infrastructure Blockers Explicit
 	- Added XIII. Performance Budgets as Code
 	- Added XIV. Health Checks and Diagnostics
+- Added XV. Deployment Readiness as Code
+- Added XVI. Memory-First Bootstrapping Efficiency
+- Added XVII. Feedback-Loop Promotion
 - Added platform constraints: health checks, performance budgets, CLI scriptability, metrics/logs
+- Expanded platform constraints: production deploy proof, host inventory proof, capacity guardrails
+- Expanded platform constraints: persistent spec-drain state and reusable inventory snapshots
 - Added workflow guidance: infrastructure-dependent specs, runbook documentation, performance budget justification
+- Added workflow guidance: deployment evidence artifact requirements for Vercel/Fly state
+- Added workflow guidance: checkpoint-first scan discipline to avoid repeated full rescans
+- Added workflow guidance: deferred-ledger closure when remaining specs are blocked/research-only
 - Templates requiring updates: none (all existing templates remain compatible)
 - Follow-up TODOs:
 	- Add performance budget template to .specify/templates/
@@ -64,6 +72,27 @@ Frontend and API performance targets must be codified (e.g., in `bundlebudget.js
 ### XIV. Health Checks and Diagnostics
 Every deployable component (frontend, API, infrastructure service) must expose health-check and diagnostic endpoints (or equivalent monitoring surface) for automated health probing in CI/CD workflows and production. Minimum surface: `/health` (lightweight, fast) and `/diagnostics` (detailed system info, resource usage, latency metrics). Health check failures must be actionable — i.e., include specific reason (database offline, memory threshold exceeded, etc.) to guide rapid incident response.
 
+### XV. Deployment Readiness as Code
+Deployment setup is not considered complete until it is both configured and actively serving a production deployment. For Banana this means:
+- Vercel domain configuration must be paired with at least one successful production deployment (a configured domain with "No Deployment" is incomplete).
+- Host inventory and capacity state (Vercel projects/deployments/domains and Fly apps/machine limits) must be captured via CLI and written to repository artifacts.
+- Deployment requirements must be represented in scripts/runbooks, not only dashboard screenshots.
+- Any blocked deployment state must include explicit remediation steps and an owner in the active spec artifacts.
+
+### XVI. Memory-First Bootstrapping Efficiency
+Spec-drain and infrastructure scanning workflows must prioritize persistent state reuse over repeated full computation. For Banana this means:
+- Full scans must write reusable checkpoint/state artifacts before reruns are attempted.
+- Reruns should resume from checkpoint and delta inputs whenever possible, not restart full discovery by default.
+- Inventory snapshots used for gating and planning must be machine-readable and retained under repository artifacts.
+- Constitution and runbook updates should codify newly observed scan bottlenecks as reusable bootstrap guidance.
+
+### XVII. Feedback-Loop Promotion
+Operational and delivery signals must be promoted into explicit, scored follow-up slices so improvement work is continuous and auditable. For Banana this means:
+- Each completed drain cycle should emit promotion candidates derived from failures, deferred blockers, and observed UX/runtime gaps.
+- Promotion candidates must include value, risk, and dependency-unlock scoring plus a clear owner.
+- Promoted items should become explicit Spec Kit slices (spec/tasks) rather than remaining implicit notes.
+- Promotion artifacts must be machine-readable and linked to the originating checkpoint evidence.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
@@ -78,6 +107,12 @@ Every deployable component (frontend, API, infrastructure service) must expose h
 - Performance budgets must be enforced in CI; default thresholds: JS bundle < 150 KB gzip, LCP < 2500ms, CLS < 0.1.
 - All infrastructure configuration (redirects, deploy hooks, SSL certs) must be scriptable via CLI tools and documented in runbooks.
 - Metrics and logs must be queryable via CLI (`vercel logs`, `vercel metrics`, PostgreSQL `pg_stat_statements`) for operational debugging.
+- Vercel production domains are valid only when a production deployment exists and is reachable.
+- Deployment inventory must include CLI evidence for `vercel projects ls`, `vercel ls <project>`, and `vercel domains ls`.
+- Fly.io capacity guardrails must be tracked from CLI outputs (`fly apps list`, machine limits/current usage) before provisioning new runtime surfaces.
+- Host-level blocked states (for example, domain configured but no production deploy) must be treated as delivery blockers until remediated or explicitly deferred.
+- Spec-drain automation must persist and reuse checkpoint state files (for example under `artifacts/sdlc-orchestration/`) instead of requiring full rescans per run.
+- Bootstrap inventory snapshots must remain machine-readable under `artifacts/orchestration/` so follow-up scans can operate incrementally.
 
 ## Workflow and Review
 
@@ -94,6 +129,13 @@ Every deployable component (frontend, API, infrastructure service) must expose h
 - For specs that expose new CLI commands or infrastructure patterns, document the corresponding runbook in `docs/runbooks/` in the same delivery slice.
 - Health check and diagnostic endpoints must be tested in both local (`npm run dev`) and CI contexts before task closure.
 - Performance budget changes must include explicit justification (e.g., "LCP threshold increased to 3s: mobile network analysis shows 2.5s target breaks on 4G/3G"). Budget increases require team approval via code review; decreases are always welcome.
+- Deployment-related specs must emit a machine-readable host-inventory artifact in the same slice (for example under `artifacts/orchestration/deployment-inventory/`).
+- Vercel onboarding/repair work must include proof of both configuration and active production deployment, plus remediation steps when deployment status is error or missing.
+- Multi-host deployment decisions (Vercel + Fly/Railway) must include explicit capacity and suspension-state checks before adding new machines/apps.
+- Before running repository-wide scan loops, operators must attempt checkpoint resume first and document why a full rescan is required if resume is not used.
+- Scan loops that complete should publish a compact summary artifact that can be consumed by later planning and constitution updates.
+- When no runnable specs remain, operators should emit a deferred-ledger summary that accounts for blocked/research specs without forcing a full recomputation loop.
+- After checkpoint accounting, operators should emit a promotion ledger capturing high-value follow-up slices and route those items into new specs.
 
 ## Governance
 
@@ -101,4 +143,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.5.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-02
+**Version**: 1.9.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-02

@@ -220,7 +220,7 @@ PY
 import json
 import pathlib
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 
 spec_id = sys.argv[1]
 result_path = sys.argv[2]
@@ -231,7 +231,7 @@ evidence = {
     "spec_id": spec_id,
     "status": status,
     "reason": reason,
-    "timestamp": datetime.utcnow().isoformat() + "Z"
+    "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z")
 }
 
 result_file = pathlib.Path(result_path)

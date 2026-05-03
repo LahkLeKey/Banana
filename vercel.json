@@ -5,7 +5,7 @@
     "installCommand": "echo 'install handled by buildCommand'",
     "rewrites": [
         {
-            "source": "/(.*)",
+            "source": "/((?!_vercel/|assets/|.*\\..*).*)",
             "destination": "/index.html"
         }
     ],

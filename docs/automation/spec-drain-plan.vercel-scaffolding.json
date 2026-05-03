@@ -1,0 +1,50 @@
+[
+    {
+        "spec_id": "141-vercel-redirects-www-domain",
+        "triage_id": "spec-drain-141-vercel-redirects-www-domain",
+        "change_command": "bash scripts/scaffold-vercel-spec.sh 141-vercel-redirects-www-domain && python scripts/validate-spec-tasks-parity.py .specify/specs/141-vercel-redirects-www-domain",
+        "commit_message": "docs(vercel): scaffold redirect management runbook",
+        "pr_title": "triage(141-vercel-redirects-www-domain): scaffold redirect documentation",
+        "pr_body": "Automated Vercel scaffolding for domain redirect operations.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    },
+    {
+        "spec_id": "142-vercel-deploy-hooks",
+        "triage_id": "spec-drain-142-vercel-deploy-hooks",
+        "change_command": "bash scripts/scaffold-vercel-spec.sh 142-vercel-deploy-hooks && python scripts/validate-spec-tasks-parity.py .specify/specs/142-vercel-deploy-hooks",
+        "commit_message": "docs(vercel): scaffold deploy hook runbook",
+        "pr_title": "triage(142-vercel-deploy-hooks): scaffold deploy hook documentation",
+        "pr_body": "Automated Vercel scaffolding for deploy hook operations.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    },
+    {
+        "spec_id": "143-vercel-logs-inspection",
+        "triage_id": "spec-drain-143-vercel-logs-inspection",
+        "change_command": "bash scripts/scaffold-vercel-spec.sh 143-vercel-logs-inspection && python scripts/validate-spec-tasks-parity.py .specify/specs/143-vercel-logs-inspection",
+        "commit_message": "docs(vercel): scaffold logging runbook",
+        "pr_title": "triage(143-vercel-logs-inspection): scaffold logging documentation",
+        "pr_body": "Automated Vercel scaffolding for log inspection operations.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    },
+    {
+        "spec_id": "145-vercel-edge-middleware",
+        "triage_id": "spec-drain-145-vercel-edge-middleware",
+        "change_command": "bash scripts/scaffold-vercel-spec.sh 145-vercel-edge-middleware && python scripts/validate-spec-tasks-parity.py .specify/specs/145-vercel-edge-middleware",
+        "commit_message": "feat(vercel): scaffold edge middleware example",
+        "pr_title": "triage(145-vercel-edge-middleware): scaffold middleware example",
+        "pr_body": "Automated Vercel scaffolding for edge middleware routing.",
+        "labels": "automation,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,agent:workflow-agent",
+        "draft_pr": true,
+        "base_branch": "main",
+        "branch_prefix": "triage"
+    }
+]
