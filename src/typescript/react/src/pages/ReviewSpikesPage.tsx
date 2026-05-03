@@ -11,10 +11,10 @@ type Spike = {
 };
 
 const STATUS_STYLES: Record<SpikeStatus, string> = {
-    defined:     "border-border text-muted-foreground",
+    defined: "border-border text-muted-foreground",
     "in-progress": "border-yellow-500 text-yellow-600 dark:text-yellow-400",
-    complete:    "border-green-500 text-green-600 dark:text-green-400",
-    new:         "border-blue-500 text-blue-600 dark:text-blue-400",
+    complete: "border-green-500 text-green-600 dark:text-green-400",
+    new: "border-blue-500 text-blue-600 dark:text-blue-400",
 };
 
 const SUITE_SPIKES: Spike[] = [
