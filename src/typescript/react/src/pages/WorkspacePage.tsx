@@ -13,6 +13,16 @@ const modules = [
         href: "/functions",
     },
     {
+        title: "API Docs",
+        description: "Interactive Swagger/OpenAPI console for Banana API endpoint testing.",
+        href: "/api-docs",
+    },
+    {
+        title: "Data Science Lab",
+        description: "Embedded Jupyter notebook tooling and in-browser Python runtime for production DS workflows.",
+        href: "/data-science",
+    },
+    {
         title: "BananaAI",
         description: "Unified assistant combining custom models — Banana Classifier, Ripeness, Not-Banana Detector.",
         href: "/banana-ai",

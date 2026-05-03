@@ -9,7 +9,7 @@ namespace Banana.Api.Pipeline.Results;
 ///
 /// JSON shape (FIELD-LOCKED for slice 016 quantization downstream):
 ///   {
-///     "verdict": <slice 014 EnsembleVerdictResult shape>,
+///     "verdict": EnsembleVerdictResult,
 ///     "embedding": [d0, d1, d2, d3] | null
 ///   }
 ///

@@ -48,6 +48,8 @@ export function WorkspaceShell() {
                         <NavItem to="/workspace" label="Home" />
                         <NavItem to="/knowledge" label="Knowledge" />
                         <NavItem to="/functions" label="Functions" />
+                        <NavItem to="/api-docs" label="API Docs" />
+                        <NavItem to="/data-science" label="Data Science" />
                         <NavItem to="/banana-ai" label="BananaAI" />
                         <NavItem to="/review-spikes" label="Review Spikes" />
                     </Section>

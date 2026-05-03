@@ -19,9 +19,7 @@ public sealed class RipenessController(
     };
 
     /// <summary>Request body for ripeness prediction.</summary>
-    public sealed record RipenessRequest(
-        /// <summary>Banana sample serialised as a JSON string.</summary>
-        string InputJson);
+    public sealed record RipenessRequest(string InputJson);
 
     /// <summary>
     /// Predicts the ripeness stage of a banana sample using the native ripeness model.

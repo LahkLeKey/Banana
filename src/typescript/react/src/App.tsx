@@ -148,10 +148,10 @@ export function App() {
     const bridge =
       typeof window !== "undefined"
         ? (
-            window as unknown as {
-              banana?: { onVerdict?: (h: (payload: unknown) => void) => () => void };
-            }
-          ).banana
+          window as unknown as {
+            banana?: { onVerdict?: (h: (payload: unknown) => void) => () => void };
+          }
+        ).banana
         : undefined;
     if (!bridge?.onVerdict) return;
     const off = bridge.onVerdict((payload: unknown) => {
@@ -573,7 +573,7 @@ export function App() {
               <span>
                 confidence{" "}
                 {typeof ripenessResult.confidence === "number" &&
-                Number.isFinite(ripenessResult.confidence)
+                  Number.isFinite(ripenessResult.confidence)
                   ? ripenessResult.confidence.toFixed(4)
                   : "--"}
               </span>
