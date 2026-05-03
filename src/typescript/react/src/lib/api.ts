@@ -1,6 +1,6 @@
 import type {
-    ChatMessage, ChatSession, EnsembleVerdict, Ripeness, TrainingAuditEvent, TrainingLane,
-    TrainingRunRequest, TrainingRunResult,} from "@banana/ui";
+    ChatMessage, ChatSession, EnsembleVerdict, TrainingAuditEvent, TrainingLane,
+    RipenessResult, TrainingRunRequest, TrainingRunResult,} from "@banana/ui";
 
 type ErrorPayload = {
     error?: {message?: string};
@@ -15,9 +15,7 @@ export type SendMessageResponse = {
     assistant_message : ChatMessage;
 };
 
-export type RipenessResponse = {
-    label: Ripeness; confidence : number;
-};
+export type RipenessResponse = RipenessResult;
 
 export type TrainingRunResponse = {
     run: TrainingRunResult;
@@ -303,12 +301,13 @@ export async function sendChatMessage(
                                             });
 }
 
-export async function predictRipeness(baseUrl: string, inputJson: string): Promise<RipenessResponse>
+export async function predictRipeness(baseUrl: string,
+                                      input: {sample: string}): Promise<RipenessResult>
 {
-    return requestJson<RipenessResponse>(baseUrl, "/ripeness/predict", {
+    return requestJson<RipenessResult>(baseUrl, "/ripeness/predict", {
         method : "POST",
         headers : {"content-type" : "application/json"},
-        body : JSON.stringify({inputJson}),
+        body : JSON.stringify(input),
     });
 }
 

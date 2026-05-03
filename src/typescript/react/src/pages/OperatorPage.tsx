@@ -10,6 +10,8 @@ import { createChatSession, sendChatMessage, resolveApiBaseUrl, resolveChatApiBa
 type Message = { role: "user" | "assistant"; content: string };
 
 export function OperatorPage() {
+  const [telemetryConfig, setTelemetryConfig] = useState<{ sample_rate: number; unit: string } | null>(null);
+  const [telemetryError, setTelemetryError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -30,6 +32,26 @@ export function OperatorPage() {
       }
     }
     bootstrap();
+  }, []);
+
+  useEffect(() => {
+    async function loadTelemetryConfig() {
+      try {
+        const base = resolveApiBaseUrl();
+        const response = await fetch(`${base}/operator/telemetry/config`);
+        if (!response.ok) {
+          throw new Error(`telemetry config returned ${response.status}`);
+        }
+        const data = (await response.json()) as { sample_rate: number; unit: string };
+        setTelemetryConfig(data);
+        setTelemetryError(null);
+      } catch (e) {
+        setTelemetryConfig(null);
+        setTelemetryError(e instanceof Error ? e.message : String(e));
+      }
+    }
+
+    loadTelemetryConfig();
   }, []);
 
   useEffect(() => {
@@ -64,6 +86,24 @@ export function OperatorPage() {
         <CardHeader>
           <CardTitle>Operator</CardTitle>
         </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Telemetry Sampling</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm">
+          {telemetryConfig ? (
+            <p>
+              {telemetryConfig.sample_rate}
+              {telemetryConfig.unit === "percent" ? "%" : ""}
+            </p>
+          ) : telemetryError ? (
+            <p className="text-muted-foreground">Unable to load telemetry config: {telemetryError}</p>
+          ) : (
+            <p className="text-muted-foreground">Loading telemetry config…</p>
+          )}
+        </CardContent>
       </Card>
 
       {error && (

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Textarea } from "../components/ui/textarea";
 import { Button } from "../components/ui/button";
 import { fetchEnsembleVerdictWithEmbedding, predictRipeness, resolveApiBaseUrl } from "../lib/api";
-import type { RipenessResponse } from "../lib/api";
+import type { RipenessResult } from "@banana/ui";
 
 const modelLanes = [
     { name: "Banana Classifier", role: "Primary classification and ensemble verdict" },
@@ -37,7 +37,7 @@ export function BananaAIPage() {
     const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [ripenessData, setRipenessData] = useState<RipenessResponse | null>(null);
+    const [ripenessData, setRipenessData] = useState<RipenessResult | null>(null);
     const [ripenessLoading, setRipenessLoading] = useState(false);
     const [ripenessError, setRipenessError] = useState<string | null>(null);
 
@@ -73,7 +73,7 @@ export function BananaAIPage() {
         setRipenessError(null);
         try {
             const base = resolveApiBaseUrl();
-            const data = await predictRipeness(base, JSON.stringify({ sample: query.trim() }));
+            const data = await predictRipeness(base, { sample: query.trim() });
             setRipenessData(data);
         } catch (e) {
             setRipenessError(e instanceof Error ? e.message : String(e));
