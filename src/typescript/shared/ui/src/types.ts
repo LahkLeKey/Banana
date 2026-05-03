@@ -58,7 +58,12 @@ export type TrainingRunResult = {
   started_at: string;
   finished_at: string;
   output_dir: string;
-  metrics: Record<string, unknown>;
+  metrics?: {
+    accuracy?: number;
+    f1?: number;
+    centroid_embedding?: number[];
+    [key: string]: unknown;
+  };
   run_fingerprint?: string;
   persisted_session?: Record<string, unknown>;
   history_drift?: Record<string, unknown>;
@@ -68,6 +73,10 @@ export type TrainingRunResult = {
   notes?: string;
   error?: string;
 };
+
+export type RipenessResult = { label: Ripeness; confidence: number };
+export type PromotionAuditEntry = { run_id: string; promoted_at: string; lane: TrainingLane };
+export type EmbeddingDriftSummary = { lane: TrainingLane; drift: number | null };
 
 export type TrainingAuditEvent = {
   id: string;

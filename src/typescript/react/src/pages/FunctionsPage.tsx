@@ -1,39 +1,41 @@
 import { useState } from "react";
+import type { PromotionAuditEntry } from "@banana/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { fetchTrainingWorkbenchHistory, predictRipeness, promoteTrainingWorkbenchRun, resolveApiBaseUrl, runTrainingWorkbench } from "../lib/api";
 
 type FnStatus = "ready" | "blocked" | "running" | "done" | "error";
 type FnGroup = { group: string; fns: FnDef[] };
-type FnDef = { name: string; owner: string; status: FnStatus; action?: () => Promise<string>; confirm?: string };
+type FnActionResult = { output: string; promotion?: PromotionAuditEntry };
+type FnDef = { name: string; owner: string; status: FnStatus; action?: () => Promise<FnActionResult>; confirm?: string };
 
-async function pingHealth(): Promise<string> {
+async function pingHealth(): Promise<FnActionResult> {
     const base = resolveApiBaseUrl();
     const res = await fetch(`${base}/health`);
     if (!res.ok) throw new Error(`health check returned ${res.status}`);
     const data = await res.json() as { status?: string };
-    return `health: ${data.status ?? "ok"}`;
+    return { output: `health: ${data.status ?? "ok"}` };
 }
 
-async function fetchBananaSummaryFn(): Promise<string> {
+async function fetchBananaSummaryFn(): Promise<FnActionResult> {
     const base = resolveApiBaseUrl();
     const res = await fetch(`${base}/banana?purchases=3&multiplier=2`);
     if (!res.ok) throw new Error(`banana summary returned ${res.status}`);
     const data = await res.json() as Record<string, unknown>;
-    return JSON.stringify(data, null, 2);
+    return { output: JSON.stringify(data, null, 2) };
 }
 
-async function fetchTrainingHistoryFn(): Promise<string> {
+async function fetchTrainingHistoryFn(): Promise<FnActionResult> {
     const base = resolveApiBaseUrl();
     const data = await fetchTrainingWorkbenchHistory(base);
     const rows = data.rows ?? [];
-    if (rows.length === 0) return "No training runs found.";
-    return rows.slice(0, 5).map((r) =>
+    if (rows.length === 0) return { output: "No training runs found." };
+    return { output: rows.slice(0, 5).map((r) =>
         `[${r.lane}] ${r.status} — ${r.run_id.slice(-8)} @ ${r.finished_at ? new Date(r.finished_at).toLocaleString() : "running"}`
-    ).join("\n");
+    ).join("\n") };
 }
 
-async function runLeftBrainCiFn(): Promise<string> {
+async function runLeftBrainCiFn(): Promise<FnActionResult> {
     const base = resolveApiBaseUrl();
     const data = await runTrainingWorkbench(base, {
         lane: "left-brain",
@@ -43,25 +45,31 @@ async function runLeftBrainCiFn(): Promise<string> {
         operator_id: "suite-ui",
         notes: "Triggered from Function Catalog",
     });
-    return `run_id: ${data.run.run_id}\nstatus: ${data.run.status}\nlane: ${data.run.lane}`;
+    return { output: `run_id: ${data.run.run_id}\nstatus: ${data.run.status}\nlane: ${data.run.lane}` };
 }
 
-async function runRipenessSmokeFn(): Promise<string> {
+async function runRipenessSmokeFn(): Promise<FnActionResult> {
     const base = resolveApiBaseUrl();
-    const probe = JSON.stringify({ sample: "yellow banana, slightly soft, brown spots at tip" });
-    const data = await predictRipeness(base, probe);
-    return JSON.stringify(data, null, 2);
+    const data = await predictRipeness(base, {sample : "yellow banana, slightly soft, brown spots at tip"});
+    return { output: JSON.stringify(data, null, 2) };
 }
 
 // Spike 170: promotion governance — fetches latest passed run and promotes to candidate
-async function promoteLatestCandidateFn(): Promise<string> {
+async function promoteLatestCandidateFn(): Promise<FnActionResult> {
     const base = resolveApiBaseUrl();
     const history = await fetchTrainingWorkbenchHistory(base);
     const passed = (history.rows ?? []).find((r) => r.status === "passed");
-    if (!passed) return "No passed runs available to promote.";
+    if (!passed) return { output: "No passed runs available to promote." };
     const result = await promoteTrainingWorkbenchRun(base, passed.run_id, "candidate", "suite-ui", "Promoted via Function Catalog governance gate");
     const p = result.promoted;
-    return `run_id: ${p.run_id}\ntarget: ${p.target}\nthreshold_passed: ${p.threshold_passed}`;
+    return {
+        output : `run_id: ${p.run_id}\ntarget: ${p.target}\nthreshold_passed: ${p.threshold_passed}`,
+        promotion : {
+            run_id : p.run_id,
+            promoted_at : new Date().toISOString(),
+            lane : passed.lane,
+        },
+    };
 }
 const CATALOG: FnGroup[] = [
     {
@@ -106,6 +114,7 @@ const STATUS_LABEL: Record<FnStatus, string> = {
 export function FunctionsPage() {
     const [states, setStates] = useState<Record<string, FnStatus>>({});
     const [outputs, setOutputs] = useState<Record<string, string>>({});
+    const [promotionAudit, setPromotionAudit] = useState<PromotionAuditEntry[]>([]);
 
     async function run(fn: FnDef) {
         if (!fn.action) return;
@@ -114,8 +123,12 @@ export function FunctionsPage() {
         setOutputs((o) => ({ ...o, [fn.name]: "" }));
         setStates((s) => ({ ...s, [fn.name]: "running" }));
         try {
-            const out = await fn.action();
-            setOutputs((o) => ({ ...o, [fn.name]: out }));
+            const result = await fn.action();
+            setOutputs((o) => ({ ...o, [fn.name]: result.output }));
+            if (result.promotion)
+            {
+                setPromotionAudit((prev) => [result.promotion, ...prev]);
+            }
             setStates((s) => ({ ...s, [fn.name]: "done" }));
         } catch (e) {
             setOutputs((o) => ({ ...o, [fn.name]: e instanceof Error ? e.message : String(e) }));
@@ -175,6 +188,26 @@ export function FunctionsPage() {
                     </div>
                 </div>
             ))}
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">Promotion Audit</CardTitle>
+                    <CardDescription>Recent successful promotion actions from this session.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                    {promotionAudit.length === 0 ? (
+                        <p className="text-muted-foreground">No promotions recorded yet.</p>
+                    ) : (
+                        promotionAudit.map((entry) => (
+                            <div key={`${entry.run_id}-${entry.promoted_at}`} className="rounded border p-2">
+                                <p><span className="text-muted-foreground">run</span> {entry.run_id}</p>
+                                <p><span className="text-muted-foreground">lane</span> {entry.lane}</p>
+                                <p><span className="text-muted-foreground">at</span> {entry.promoted_at}</p>
+                            </div>
+                        ))
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }
