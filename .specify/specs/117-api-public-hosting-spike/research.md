@@ -22,7 +22,27 @@ A minimal proxy was prototyped by reviewing the `@vercel/node` adapter requireme
   Cold-start latency unacceptable for `/classify` latency SLA.
 - **Verdict**: ❌ Not recommended for the Fastify API.
 
-### Option B: Railway (Recommended)
+### Option B: Railway (Recommended) — spec 117 T002
+
+**Evaluation method**: Desk research against Railway public documentation and pricing page.
+
+**Provisioning time**: First push to `git push railway main` (or Railway CLI `railway up`)
+typically provisions and starts a container in 2–5 minutes. The Dockerfile at
+`docker/api-fastify.Dockerfile` is auto-detected via `railway.json` at repo root.
+
+**Start command**: `bun run src/index.ts` (from `package.json` `start` script).
+The API binds to `process.env.PORT` (Railway injects this automatically) or defaults to 8081.
+
+**Free-tier limits** (Railway Starter plan):
+- $5 USD free credit per month (covers ~500 CPU-hours or ~40 GB memory-hours)
+- 512 MB RAM per service; 1 vCPU shared
+- 100 GB egress bandwidth included
+- Built-in managed PostgreSQL: 1 GB storage on free tier
+- Services sleep after 30 days of inactivity if $0 spend (starter plan)
+
+**Connection string**: Railway injects `DATABASE_URL` (standard Prisma env var);
+map to `BANANA_PG_CONNECTION` by setting `BANANA_PG_CONNECTION=${{Postgres.DATABASE_URL}}`
+in Railway's service variables using Railway reference syntax.
 
 - **Pro**: Native Docker deploy; persistent process (no cold start); built-in PostgreSQL
   provisioning; environment variable UI; free tier suitable for v1 launch.
@@ -31,7 +51,27 @@ A minimal proxy was prototyped by reviewing the `@vercel/node` adapter requireme
 - **Prisma**: `prisma migrate deploy` runs at container startup via `package.json` `start` script.
 - **Verdict**: ✅ Recommended for v1.
 
-### Option C: Fly.io
+### Option C: Fly.io — spec 117 T003
+
+**Evaluation method**: Desk research against Fly.io public documentation.
+
+**Provisioning**: `fly launch` from `src/typescript/api` detects Node/Bun and generates a
+`fly.toml`. The existing `docker/api-fastify.Dockerfile` can be referenced via
+`[build] dockerfile = "../../docker/api-fastify.Dockerfile"`. Fastify starts on the port
+injected by `$PORT` (Fly.io sets this; matches our `process.env.PORT ?? 8081` default).
+
+**Regional latency from US East coast**: Fly.io EWR (Newark, NJ) or IAD (Ashburn, VA)
+regions are available; typical add-latency over direct Railway US West is ~15–30 ms for
+East-coast users, improving if an East-coast region is selected.
+
+**Free-tier limits** (Fly.io Hobby):
+- 3 shared-cpu-1x 256 MB VMs free (one suitable for the API)
+- 3 GB persistent volume storage free
+- 160 GB outbound bandwidth free/month
+- Fly Postgres: 1 GB storage, 256 MB RAM on free tier
+
+**Configuration**: A `fly.toml` would be needed alongside `railway.json`; dual-config
+maintenance adds overhead. Not recommended for v1 but documented here as fallback.
 
 - **Pro**: Global Anycast; persistent processes; Fly Postgres bundled.
 - **Con**: More complex CLI and config (`fly.toml`); steeper learning curve vs. Railway.

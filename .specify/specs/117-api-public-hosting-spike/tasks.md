@@ -6,8 +6,8 @@
 ## Phase 1: Option Evaluation
 
 - [x] T001 Evaluate Vercel Serverless Functions: create a minimal `api/` directory in `src/typescript/react` that proxies to Fastify, confirm cold-start behavior, and note size limits.
-- [ ] T002 Evaluate Railway: create a free Railway project, deploy `src/typescript/api` with `bun run start`, and record provisioning time and free-tier limits.
-- [ ] T003 Evaluate Fly.io: `fly launch` from `src/typescript/api`, confirm Fastify starts on the exposed port, and note regional latency from the US East coast.
+- [x] T002 Evaluate Railway: create a free Railway project, deploy `src/typescript/api` with `bun run start`, and record provisioning time and free-tier limits.
+- [x] T003 Evaluate Fly.io: `fly launch` from `src/typescript/api`, confirm Fastify starts on the exposed port, and note regional latency from the US East coast.
 - [x] T004 Compare options on: cold starts, `BANANA_PG_CONNECTION` injection, managed PostgreSQL availability, free-tier cost, and CORS flexibility.
 
 ## Phase 2: CORS Validation

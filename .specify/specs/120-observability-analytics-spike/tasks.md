@@ -20,7 +20,7 @@
 
 - [ ] T008 Create a free UptimeRobot (or Better Uptime) monitor for `https://banana.engineer` with a 5-minute check interval and an email alert.
 - [ ] T009 Create a second monitor for `https://api.banana.engineer/health` (or the equivalent production health endpoint).
-- [ ] T010 Document alert routing (email address, escalation path) in `research.md`.
+- [x] T010 Document alert routing (email address, escalation path) in `research.md`.
 
 ## Phase 4: Research Documentation
 
