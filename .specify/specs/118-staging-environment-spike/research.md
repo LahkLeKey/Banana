@@ -24,13 +24,39 @@
 - Staging DB: Railway managed PostgreSQL (second service in Railway project), seeded with test fixtures.
 - No cross-tier DB access. Each Railway service has its own `DATABASE_URL`.
 
-## Secrets Governance
+## Secrets Governance (spec 118 T007)
 
+- **Credential owner**: Engineering lead (GitHub org owner + Vercel team admin + Railway admin).
+- **Rotation cadence**: Quarterly — automated reminder via `.github/workflows/secrets-rotation-reminder.yml`.
+  Full procedure in `docs/secrets-rotation.md`.
 - All secrets live in Vercel Dashboard (frontend) or Railway Dashboard (API).
 - GitHub Actions secrets required: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`,
   `VITE_BANANA_API_BASE_URL` (Production-tier value used in build gate), `SENTRY_AUTH_TOKEN`.
-- Rotation cadence: quarterly per `docs/secrets-rotation.md`.
 - No secrets in `.env.local` committed to repo.
+
+## Production Secret Isolation from Preview Builds (spec 118 T008)
+
+GitHub Actions uses [deployment environments](https://docs.github.com/en/actions/deployment/targeting-different-environments):
+- The `deploy-production` job in `vercel-deploy.yml` scoped to `environment: production`.
+- The `deploy-preview` job is NOT scoped to the production environment; it only receives
+  `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` — no `VITE_BANANA_API_BASE_URL`
+  (production value) or `SENTRY_AUTH_TOKEN`.
+- Preview builds use the Vercel Preview-tier env var value (staging API URL), not production.
+- Railway production credentials (`BANANA_PG_CONNECTION`) are not present in any GitHub
+  Actions job; they live exclusively in Railway's service environment.
+- Build logs are scoped to the job environment; production secrets never appear in preview job logs.
+
+## API-Side Environment Isolation (spec 118 T005)
+
+Railway manages two separate services in one project:
+
+| Service | `DATABASE_URL` | `BANANA_CORS_ORIGINS` |
+|---|---|---|
+| `banana-api-production` | Railway production PostgreSQL | `https://banana.engineer,https://www.banana.engineer` |
+| `banana-api-staging` | Railway staging PostgreSQL | `https://*.vercel.app` |
+
+No cross-tier DB access. `BANANA_PG_CONNECTION` is injected per-service; the app reads
+`DATABASE_URL` at runtime with no code-level environment branching needed.
 
 ## Open Questions for Specs 129–132
 

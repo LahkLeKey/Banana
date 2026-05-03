@@ -7,7 +7,7 @@
 
 - [x] T001 Run `python3 -c "import json; json.load(open('vercel.json')); print('OK')"` and confirm `vercel.json` is valid JSON.
 - [x] T002 Run `cd src/typescript/react && bun run build` and confirm exit 0, capturing build time and bundle sizes.
-- [ ] T003 Install Vercel CLI (`bun add -g vercel`) and run `vercel --version` to confirm availability.
+- [x] T003 Install Vercel CLI (`bun add -g vercel`) and run `vercel --version` to confirm availability.
 
 ## Phase 2: Vercel Project Wiring
 
@@ -25,5 +25,5 @@
 ## Phase 4: Research Documentation
 
 - [x] T011 Write `research.md` in `.specify/specs/116-vercel-react-deploy-spike/` with: go/no-go verdict, build command confirmed, preview URL, domain wiring status, and open questions for specs 121–124.
-- [ ] T012 Update `.specify/specs/121-vercel-build-config/spec.md` status to "Ready for implementation" if go.
+- [x] T012 Update `.specify/specs/121-vercel-build-config/spec.md` status to "Ready for implementation" if go.
 - [x] T013 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/116-vercel-react-deploy-spike` and confirm `OK`.

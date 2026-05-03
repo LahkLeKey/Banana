@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feature/121-vercel-build-config`
 **Created**: 2026-05-02
-**Status**: Draft (pending spike 116 go verdict)
+**Status**: Ready for implementation
 **Input**: Scaffolded from spike `116-vercel-react-deploy-spike`
 
 ## In Scope

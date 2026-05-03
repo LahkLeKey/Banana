@@ -5,14 +5,14 @@
 
 ## Phase 1: Option Evaluation
 
-- [ ] T001 Evaluate Vercel Serverless Functions: create a minimal `api/` directory in `src/typescript/react` that proxies to Fastify, confirm cold-start behavior, and note size limits.
+- [x] T001 Evaluate Vercel Serverless Functions: create a minimal `api/` directory in `src/typescript/react` that proxies to Fastify, confirm cold-start behavior, and note size limits.
 - [ ] T002 Evaluate Railway: create a free Railway project, deploy `src/typescript/api` with `bun run start`, and record provisioning time and free-tier limits.
 - [ ] T003 Evaluate Fly.io: `fly launch` from `src/typescript/api`, confirm Fastify starts on the exposed port, and note regional latency from the US East coast.
-- [ ] T004 Compare options on: cold starts, `BANANA_PG_CONNECTION` injection, managed PostgreSQL availability, free-tier cost, and CORS flexibility.
+- [x] T004 Compare options on: cold starts, `BANANA_PG_CONNECTION` injection, managed PostgreSQL availability, free-tier cost, and CORS flexibility.
 
 ## Phase 2: CORS Validation
 
-- [ ] T005 Add `https://banana.engineer` and `https://www.banana.engineer` as allowed CORS origins in `src/typescript/api/src/index.ts` (or the Fastify CORS plugin config) in a test branch.
+- [x] T005 Add `https://banana.engineer` and `https://www.banana.engineer` as allowed CORS origins in `src/typescript/api/src/index.ts` (or the Fastify CORS plugin config) in a test branch.
 - [ ] T006 Confirm a cross-origin `fetch` from the preview Vercel URL to the test API deployment is not blocked by the browser (use DevTools Network tab).
 
 ## Phase 3: Database Path
@@ -23,5 +23,5 @@
 ## Phase 4: Research Documentation
 
 - [x] T009 Write `research.md` in `.specify/specs/117-api-public-hosting-spike/` with: recommended host, CORS config, database provisioning steps, and open questions for specs 125–128.
-- [ ] T010 Update `.specify/specs/125-api-production-host/spec.md` status to "Ready for implementation" if go.
+- [x] T010 Update `.specify/specs/125-api-production-host/spec.md` status to "Ready for implementation" if go.
 - [x] T011 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/117-api-public-hosting-spike` and confirm `OK`.

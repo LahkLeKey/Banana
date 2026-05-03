@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feature/129-vercel-preview-deploys`
 **Created**: 2026-05-02
-**Status**: Draft (pending spike 118 go verdict)
+**Status**: Ready for implementation
 **Input**: Scaffolded from spike `118-staging-environment-spike`
 
 ## In Scope

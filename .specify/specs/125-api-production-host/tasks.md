@@ -3,7 +3,7 @@
 **Input**: Spec at `.specify/specs/125-api-production-host/spec.md`
 **Prerequisites**: Spike 117 complete with recommended host identified
 
-- [ ] T001 Create any required host-specific config file (`fly.toml`, `railway.json`, or Vercel `api/` directory) based on spike 117 recommendation.
+- [x] T001 Create any required host-specific config file (`fly.toml`, `railway.json`, or Vercel `api/` directory) based on spike 117 recommendation.
 - [ ] T002 Set `BANANA_PG_CONNECTION` as a runtime secret on the chosen host.
 - [ ] T003 Deploy the API and confirm `GET /health` returns HTTP 200 from the public URL.
 - [ ] T004 Confirm the API URL is stable (not ephemeral) and matches the value set for `VITE_BANANA_API_BASE_URL` in Vercel production.

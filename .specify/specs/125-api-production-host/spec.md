@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feature/125-api-production-host`
 **Created**: 2026-05-02
-**Status**: Draft (pending spike 117 go verdict)
+**Status**: Ready for implementation
 **Input**: Scaffolded from spike `117-api-public-hosting-spike`
 
 ## In Scope
