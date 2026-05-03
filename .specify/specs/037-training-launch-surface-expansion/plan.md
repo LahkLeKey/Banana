@@ -48,51 +48,32 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Training launch surface expansion and dashboard
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+scripts/
+├── train-banana-model.py
+├── train-not-banana-model.py
+└── train-ripeness-model.py
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+src/typescript/react/src/pages/
+├── TrainingPage.tsx
+└── components/
+    ├── TrainingLauncher.tsx
+    ├── TrainingStatus.tsx
+    └── TrainingLogs.tsx
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+.github/workflows/
+└── orchestrate-autonomous-self-training-cycle.yml
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+artifacts/training/
+├── banana/
+├── not-banana/
+└── ripeness/
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Training surface expansion establishes unified launch dashboard and autonomous training orchestration. CI profiles and training gates are codified.
 
 ## Complexity Tracking
 

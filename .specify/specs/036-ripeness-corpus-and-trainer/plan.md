@@ -48,51 +48,27 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Ripeness classification corpus and model trainer
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+data/ripeness/
+├── corpus.json
+├── index.json
+├── images/
+├── sessions/
+└── channels/
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+scripts/
+├── train-ripeness-model.py
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+artifacts/training/ripeness/
+└── local/
+    ├── [model weights]
+    └── [training logs]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Ripeness corpus establishes ripeness level classification training dataset. Corpus schema and version control are aligned with banana/not-banana patterns.
 
 ## Complexity Tracking
 

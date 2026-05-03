@@ -48,51 +48,30 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Training launch profiles and model execution
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+scripts/
+├── train-banana-model.py
+├── train-not-banana-model.py
+├── train-ripeness-model.py
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+data/
+├── banana/
+├── not-banana/
+└── ripeness/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+artifacts/training/
+├── banana/local/
+├── not-banana/local/
+└── ripeness/local/
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+.venv/
+└── [Python training environment]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Training profiles establish launch gates for model-specific training jobs. Corpus and output artifact paths are parameterized.
 
 ## Complexity Tracking
 

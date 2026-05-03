@@ -48,51 +48,29 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Frontend robustness testing and error boundary framework
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+src/typescript/react/src/
+├── components/
+│   ├── ErrorBoundary.tsx
+│   ├── OfflineIndicator.tsx
+│   └── RetryContainer.tsx
+├── hooks/
+│   ├── useErrorHandler.ts
+│   └── useNetworkStatus.ts
+└── utils/
+    └── error-recovery.ts
 
 tests/
-├── contract/
-├── integration/
+├── e2e/
+│   └── robustness.spec.ts
 └── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+    └── error-handling.spec.ts
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Frontend robustness establishes error boundaries and offline state management. Retry logic and user feedback patterns are standardized.
 
 ## Complexity Tracking
 

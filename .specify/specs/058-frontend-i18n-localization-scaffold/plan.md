@@ -48,51 +48,28 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Frontend i18n and localization infrastructure
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+src/typescript/shared/ui/src/
+├── i18n/
+│   ├── index.ts
+│   └── locales/
+│       ├── en.json
+│       ├── es.json
+│       └── [other locales]
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+src/typescript/react/src/
+├── i18n.config.ts
+└── hooks/
+    └── useTranslation.ts
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+src/typescript/react-native/
+└── [Native i18n integration]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: i18n infrastructure establishes translation management and locale selection. String extraction and fallback patterns are standardized.
 
 ## Complexity Tracking
 

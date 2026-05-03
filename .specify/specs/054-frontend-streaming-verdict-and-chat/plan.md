@@ -48,51 +48,30 @@
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+**Structure**: Frontend streaming verdict results and chat interface
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+src/typescript/react/src/
+├── components/
+│   ├── VerdictStream.tsx
+│   ├── ChatInterface.tsx
+│   ├── MessageList.tsx
+│   └── InputBox.tsx
+├── hooks/
+│   ├── useStreamingResult.ts
+│   └── useChatStream.ts
+└── services/
+    └── streamClient.ts
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+src/typescript/electron/
+└── [Electron streaming integration]
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+src/typescript/react-native/
+└── [Mobile streaming UI]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Streaming verdict interface establishes real-time result delivery and chat UX. WebSocket integration and fallback polling are supported.
 
 ## Complexity Tracking
 
