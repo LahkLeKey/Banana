@@ -1,91 +1,105 @@
 # Banana
 
-Pass the Banana from native C into API, desktop, web, and mobile channels.
+A multi-language monorepo with a native C core projected into API, web, desktop, and mobile channels — and a live AI workspace at **[banana.engineer](https://banana.engineer)**.
 
-> This repo is a practical playground for one core idea: keep domain behavior in native C, then project it cleanly into multiple runtimes without rewriting business logic per app.
+> Core idea: keep domain behavior in native C, project it cleanly into multiple runtimes without rewriting business logic per app. BananaAI composes the custom classification models into a unified assistant experience.
 
-<img width="1114" height="1799" alt="image" src="https://github.com/user-attachments/assets/d7083e98-551a-48f1-8125-2f2af567ae83" />
+## Live Deployments
 
-## UI Gallery
+| Surface | URL | Stack |
+|---------|-----|-------|
+| Web workspace | **[banana.engineer](https://banana.engineer)** | React + Vite → Vercel |
+| REST API | **[banana-api.fly.dev](https://banana-api.fly.dev)** | ASP.NET 8 + native C → Fly.io |
 
-Automated screenshots captured by the Playwright suite on every push to `main`.
-Run `bun run screenshots` from `src/typescript/react/` to refresh locally.
+## Web Suite (banana.engineer)
 
-<!-- GALLERY_START -->
-<!-- GALLERY_END -->
+The React SPA is a Confluence-style workspace with the following pages:
 
-## Component Demos
+| Page | Path | What it does |
+|------|------|-------------|
+| Workspace | `/workspace` | Project home — overview and quick links |
+| Knowledge | `/knowledge` | Architecture notes and domain reference |
+| Functions | `/functions` | Runnable platform functions (health, banana summary) |
+| BananaAI | `/banana-ai` | Unified assistant — live ensemble classification |
+| Review Spikes | `/review-spikes` | Scoped research slices (161-165) |
+| Classify | `/classify` | Banana image classifier |
+| Operator | `/operator` | Operational runbook assistant |
 
-[![Storybook Deploy](https://github.com/LahkLeKey/Banana/actions/workflows/storybook-deploy.yml/badge.svg)](https://github.com/LahkLeKey/Banana/actions/workflows/storybook-deploy.yml)
+**BananaAI** routes queries through `POST /ml/ensemble/embedding` and returns a live label, score, escalation flag, and embedding fingerprint from the custom models.
 
-Browse interactive component stories at: **[https://lahklekey.github.io/Banana/](https://lahklekey.github.io/Banana/)**
+## Architecture
 
-## Learn More
+```
+native C (src/native/)
+    └── ASP.NET API (src/c-sharp/asp.net/)  →  banana-api.fly.dev
+    └── Fastify API (src/typescript/api/)   →  local / compose runtime
+React SPA (src/typescript/react/)           →  banana.engineer (Vercel)
+Electron  (src/typescript/electron/)        →  desktop channel
+Mobile    (src/typescript/react-native/)    →  iOS / Android
+```
 
-- Wiki hub: [Banana Wiki](https://github.com/LahkLeKey/Banana/wiki)
-- Onboarding and architecture: `docs/developer-onboarding.md`
-- Build/test command index: `.wiki/Build-Run-Test-Commands.md`
+Canonical execution path: `controller → service → pipeline → native interop`
 
-> Banana is a prototype for Poly: a polymorphic, multi-platform runtime approach where core behavior starts in C and can be projected into API, desktop, frontend, and mobile delivery channels.
+## Required Environment Variables
 
-## Compose Run Profiles (Deterministic Local Runtime)
+| Variable | Where | Purpose |
+|----------|-------|---------|
+| `VITE_BANANA_API_BASE_URL` | Vercel / local React | API base URL for the SPA |
+| `BANANA_NATIVE_PATH` | API host | Path to `libbanana_native.so` |
+| `BANANA_PG_CONNECTION` | API host | PostgreSQL connection string |
+| `BANANA_JWT_SECRET` | API host | JWT signing secret (≥ 32 bytes) |
 
-Canonical local runtime orchestration uses `scripts/compose-run-profile.sh`.
+## Local Development
 
-Examples:
+### Run the full compose stack
 
 ```bash
-# Primary API/runtime profile
+# Runtime (native + ASP.NET)
 bash scripts/compose-run-profile.sh --profile runtime --action up
 bash scripts/compose-profile-ready.sh --profile runtime
 
-# Apps profile
+# Apps (Fastify API + React)
 bash scripts/compose-run-profile.sh --profile apps --action up
-bash scripts/compose-run-profile.sh --profile apps --action down
 
-# Electron desktop profile
-bash scripts/compose-run-profile.sh --profile electron-desktop --action up --service electron-desktop
+# Electron desktop
+bash scripts/compose-run-profile.sh --profile electron-desktop --action up
 
-# Mobile Android profile
-bash scripts/compose-run-profile.sh --profile mobile --action up --service android-emulator
+# Mobile Android
+bash scripts/compose-run-profile.sh --profile mobile --action up
 ```
 
-Determinism check for repeat runs:
+### React (standalone)
 
 ```bash
-bash scripts/validate-compose-run-profiles.sh --profile runtime --attempts 3
+cd src/typescript/react
+VITE_BANANA_API_BASE_URL=http://localhost:8080 bun run dev
 ```
 
-## Coverage 80 One-Pass Triage Checklist
+## Deployment
 
-Use this checklist when a merge-gated coverage run fails:
-
-1. Open the coverage aggregate artifact and identify failing tuples first.
-2. Inspect each lane summary for status, failure class, measured percent, threshold percent, and deficit percent.
-3. Confirm denominator policy snapshot version matches all evaluated lanes.
-4. Confirm evidence bundle paths are workspace-relative and present in artifacts.
-5. Verify whether active exceptions are listed and whether any exception has expired.
-6. For integration tuple failures, confirm `BANANA_PG_CONNECTION` and `BANANA_NATIVE_PATH` contracts were satisfied.
-
-## Spec Kit Workflow Wrapper
-
-Use the parser-driven helper to run and inspect Spec Kit workflow state from one place:
+### React → Vercel
 
 ```bash
-bash scripts/workflow-specify.sh doctor
+vercel deploy --prod --force
 ```
 
-Useful commands:
+`VITE_BANANA_API_BASE_URL` must be set in Vercel project settings before building.
+
+### ASP.NET API → Fly.io
 
 ```bash
-bash scripts/workflow-specify.sh status
-bash scripts/workflow-specify.sh paths
-bash scripts/workflow-specify.sh run-full "Realign scope for native test coverage"
-bash scripts/workflow-specify.sh run-workflow "Add API traceability gate" speckit copilot
+flyctl deploy --app banana-api --dockerfile docker/fly.Dockerfile
 ```
 
-Notes:
+## Component Library
 
-- The script auto-adds `C:/Users/Zephr/.local/bin` to `PATH` when available so `specify` can be discovered in Git Bash after `uv tool install`.
-- `run-full` defaults to workflow `drift-realignment` and integration `copilot`.
-- Override defaults with `BANANA_SPECIFY_WORKFLOW_ID` and `BANANA_SPECIFY_INTEGRATION`.
+[![Storybook Deploy](https://github.com/LahkLeKey/Banana/actions/workflows/storybook-deploy.yml/badge.svg)](https://github.com/LahkLeKey/Banana/actions/workflows/storybook-deploy.yml)
+
+Interactive component stories: **[lahklekey.github.io/Banana](https://lahklekey.github.io/Banana/)**
+
+## Further Reading
+
+- Architecture and onboarding: `docs/developer-onboarding.md`
+- Deployment runbook: `docs/deployment.md`
+- Wiki: [Banana Wiki](https://github.com/LahkLeKey/Banana/wiki)
+- Spec drain state: `artifacts/sdlc-orchestration/`

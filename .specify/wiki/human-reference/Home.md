@@ -2,10 +2,20 @@
 
 > This wiki is the fastest way to get productive in Banana without breaking runtime contracts.
 
+## Live Right Now
+
+| Surface | URL |
+|---------|-----|
+| Web workspace | **[banana.engineer](https://banana.engineer)** |
+| REST API | **[banana-api.fly.dev](https://banana-api.fly.dev)** |
+
+The React SPA (banana.engineer) is a Confluence-style workspace with pages: Workspace, Knowledge, Functions, BananaAI, Review Spikes, Classify, and Operator.
+**BananaAI** routes queries through the live ensemble classification models.
+
 ## About This Space
 
 Banana is a multi-language monorepo with a native C core, ASP.NET API, Fastify API, and React/Electron/Mobile frontends.
-The canonical execution path is `controller → service → pipeline → native interop`.
+Canonical execution path: controller -> service -> pipeline -> native interop.
 
 ---
 
@@ -26,24 +36,22 @@ System diagrams, native wrapper design, database pipeline, and domain model.
 - [Domain Model](architecture/domain-model.md)
 
 ### [Operations](operations/README.md)
-CI runbooks, compose profiles, WSL2 runtime channels, and triage guides.
+Deployments, CI runbooks, compose profiles, WSL2 runtime channels, and triage guides.
+- [Deployment Runbook](operations/deployment.md)
 - [CI and Compose Notes](operations/ci-compose-notes.md)
 - [WSL2 Runtime Channels](operations/wsl2-runtime-channels.md)
 - [CI Runtime Compatibility](operations/ci-runtime-compatibility.md)
 - [Compose CI Stabilization](operations/ci-compose-stabilization.md)
 
 ### [Security](security/README.md)
-Threat model, STRIDE analysis, secret inventory, and security headers.
 - [Threat Model](security/threat-model.md)
 - [CSP and Security Headers](security/csp-and-headers.md)
 
 ### [Data](data/README.md)
-Migration discipline, coverage exceptions, and data contracts.
 - [Migration Discipline](data/migration-discipline.md)
 - [Coverage Exceptions](data/coverage-exceptions.md)
 
 ### [Governance](governance/README.md)
-API parity rules, autonomous self-training contracts, and policy documents.
 - [API Parity Governance](governance/api-parity-governance.md)
 - [Autonomous Self-Training](governance/autonomous-self-training.md)
 
@@ -53,9 +61,12 @@ API parity rules, autonomous self-training contracts, and policy documents.
 
 | I want to... | Go to... |
 |-------------|----------|
+| Open the live workspace | [banana.engineer](https://banana.engineer) |
+| Hit the live API | [banana-api.fly.dev](https://banana-api.fly.dev) |
 | Get set up on day one | [First Day Checklist](getting-started/first-day-checklist.md) |
 | Understand request execution | [How A Request Works](getting-started/how-a-request-works.md) |
 | Find a command | [Build, Run, and Test Commands](getting-started/build-run-test-commands.md) |
+| Deploy React or API | [Deployment Runbook](operations/deployment.md) |
 | Debug a CI failure | [CI and Compose Notes](operations/ci-compose-notes.md) |
 | Understand the native boundary | [Native Wrapper ABI](architecture/native-wrapper-abi.md) |
 | Check security posture | [Threat Model](security/threat-model.md) |
@@ -63,22 +74,20 @@ API parity rules, autonomous self-training contracts, and policy documents.
 
 ---
 
-## Runtime Contracts You Should Not Drift
+## Runtime Contracts
 
-- `BANANA_NATIVE_PATH` — native library path for API and integration tests
-- `BANANA_PG_CONNECTION` — PostgreSQL-backed native/integration flows
-- `VITE_BANANA_API_BASE_URL` — React frontend API base URL
-- `BANANA_JWT_SECRET` — JWT signing secret (>=32 bytes random)
+- VITE_BANANA_API_BASE_URL  -- React frontend API base URL (Vercel project settings)
+- BANANA_NATIVE_PATH        -- native library path for API and integration tests
+- BANANA_PG_CONNECTION      -- PostgreSQL connection string
+- BANANA_JWT_SECRET         -- JWT signing secret (>=32 bytes)
 
 ---
 
 ## Prompt-Friendly Project Map
 
-Use these boundaries when asking an agent to make changes:
-
-- native core domain: `src/native/core/domain`
-- native DAL: `src/native/core/dal`
-- wrapper ABI + adapters: `src/native/wrapper`
-- ASP.NET API pipeline: `src/c-sharp/asp.net`
-- frontend/electron/mobile: `src/typescript`
-- runtime and delivery automation: `docker`, `scripts`, `.github/workflows`
+- native core: src/native/
+- ASP.NET API: src/c-sharp/asp.net/
+- TypeScript (React/Electron/Mobile/Fastify): src/typescript/
+- runtime delivery: docker/, scripts/, .github/workflows/
+- live frontend: Vercel -> banana.engineer
+- live API: Fly.io -> banana-api.fly.dev

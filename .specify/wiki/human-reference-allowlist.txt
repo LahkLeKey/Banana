@@ -23,6 +23,7 @@ architecture/native-wrapper-abi.md
 architecture/database-pipeline-stage.md
 architecture/domain-model.md
 operations/README.md
+operations/deployment.md
 operations/ci-compose-notes.md
 operations/wsl2-runtime-channels.md
 operations/ci-runtime-compatibility.md
