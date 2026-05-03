@@ -1,5 +1,8 @@
 name: Storybook Deploy
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   push:
     branches:
@@ -22,6 +25,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  pages-status:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Detect GitHub Pages availability
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.repos.getPages({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+              core.setOutput('enabled', 'true');
+              core.notice('GitHub Pages is enabled for this repository.');
+            } catch (error) {
+              if (error.status === 404) {
+                core.setOutput('enabled', 'false');
+                core.warning('GitHub Pages is not enabled for this repository. Storybook deploy will be skipped.');
+              } else {
+                throw error;
+              }
+            }
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -60,8 +89,8 @@ jobs:
           retention-days: 7
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.pages-status.outputs.enabled == 'true'
+    needs: [pages-status, build]
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -73,6 +102,16 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  deploy-skipped-pages-disabled:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.pages-status.outputs.enabled != 'true'
+    needs: pages-status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain skipped deployment
+        run: |
+          echo "GitHub Pages is not enabled for this repository."
+          echo "Enable it at: https://github.com/${{ github.repository }}/settings/pages"
 
   comment-pr-preview:
     if: github.event_name == 'pull_request'
