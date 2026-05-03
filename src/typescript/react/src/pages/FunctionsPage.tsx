@@ -155,6 +155,15 @@ export function FunctionsPage() {
             };
         }
 
+        // Current production ASP.NET host does not expose workbench routes.
+        // Skip probing to avoid noisy 404s in browser diagnostics.
+        if (base.includes("api.banana.engineer")) {
+            setWorkbenchAvailable(false);
+            return () => {
+                active = false;
+            };
+        }
+
         (async () => {
             try {
                 const res = await fetch(`${base}/training/workbench/history`);
