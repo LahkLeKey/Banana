@@ -2,13 +2,13 @@
     "info": {
         "_postman_id": "banana-api-v1",
         "name": "Banana API",
-        "description": "Banana classification, ripeness prediction, ML ensemble, chat, harvest, truck, workbench training, audit, and streaming endpoints.\n\nBase URL: `{{baseUrl}}` — set this variable to your target environment, e.g. `https://banana-api.fly.dev` or `http://localhost:5000`.\n\nFor JWT-protected routes set the `token` collection variable to a valid Bearer token.",
+        "description": "Banana classification, ripeness prediction, ML ensemble, chat, harvest, truck, workbench training, audit, and streaming endpoints.\n\nBase URL: `{{baseUrl}}` — set this variable to your target environment, e.g. `https://api.banana.engineer` or `http://localhost:5000`.\n\nFor JWT-protected routes set the `token` collection variable to a valid Bearer token.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
         {
             "key": "baseUrl",
-            "value": "https://banana-api.fly.dev",
+            "value": "https://api.banana.engineer",
             "type": "string"
         },
         {

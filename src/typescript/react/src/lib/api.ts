@@ -1,6 +1,6 @@
 import type {
-    ChatMessage, ChatSession, EnsembleVerdict, TrainingAuditEvent, TrainingLane,
-    RipenessResult, TrainingRunRequest, TrainingRunResult,} from "@banana/ui";
+    ChatMessage, ChatSession, EnsembleVerdict, RipenessResult, TrainingAuditEvent, TrainingLane,
+    TrainingRunRequest, TrainingRunResult,} from "@banana/ui";
 
 type ErrorPayload = {
     error?: {message?: string};
@@ -88,7 +88,7 @@ function resolveLocalhostDefaultApiBaseUrl(): string
 
     if (host === "banana.engineer" || host === "www.banana.engineer")
     {
-        return "https://banana-api.fly.dev";
+        return "https://api.banana.engineer";
     }
 
     return "";
