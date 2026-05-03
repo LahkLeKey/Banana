@@ -2,6 +2,7 @@ name: Storybook Deploy
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  STORYBOOK_CUSTOM_DOMAIN: storybook.banana.engineer
 
 on:
   push:
@@ -74,6 +75,10 @@ jobs:
           CI: "true"
           VITE_BANANA_API_BASE_URL: https://api.banana.engineer
         run: bun run build-storybook
+
+      - name: Add custom domain CNAME
+        if: env.STORYBOOK_CUSTOM_DOMAIN != ''
+        run: echo "${{ env.STORYBOOK_CUSTOM_DOMAIN }}" > src/typescript/react/storybook-static/CNAME
 
       - name: Upload Storybook artifact
         uses: actions/upload-pages-artifact@v3
