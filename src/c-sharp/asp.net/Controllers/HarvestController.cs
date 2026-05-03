@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Banana.Api.Controllers;
 
+/// <summary>Harvest batch endpoints — create batches, add bunches, and poll status.</summary>
 [ApiController]
 [Route("harvest")]
 public sealed class HarvestController(INativeBananaClient native, PipelineContext ctx) : ControllerBase
@@ -31,6 +32,9 @@ public sealed class HarvestController(INativeBananaClient native, PipelineContex
         public int BunchCount { get; init; }
     }
 
+    /// <summary>Creates a new harvest batch.</summary>
+    /// <param name="req">Harvest batch input JSON.</param>
+    /// <response code="200"><see cref="HarvestBatchResult"/> with batch ID, status, and bunch count.</response>
     [HttpPost("create")]
     public IActionResult Create([FromBody] InputJsonRequest req)
     {
@@ -48,6 +52,11 @@ public sealed class HarvestController(INativeBananaClient native, PipelineContex
             : Ok(result);
     }
 
+    /// <summary>Appends a bunch to an existing harvest batch.</summary>
+    /// <param name="batchId">Target harvest batch identifier.</param>
+    /// <param name="req">Bunch input JSON.</param>
+    /// <response code="200">Updated <see cref="HarvestBatchResult"/>.</response>
+    /// <response code="404">Batch not found.</response>
     [HttpPost("{batchId}/bunches")]
     public IActionResult AddBunch([FromRoute] string batchId, [FromBody] InputJsonRequest req)
     {
@@ -65,6 +74,10 @@ public sealed class HarvestController(INativeBananaClient native, PipelineContex
             : Ok(result);
     }
 
+    /// <summary>Returns the status of a harvest batch.</summary>
+    /// <param name="batchId">Harvest batch identifier.</param>
+    /// <response code="200">Current <see cref="HarvestBatchResult"/>.</response>
+    /// <response code="404">Batch not found.</response>
     [HttpGet("{batchId}/status")]
     public IActionResult Status([FromRoute] string batchId)
     {

@@ -103,16 +103,63 @@ builder.Services.AddScoped<AuditLogMiddleware>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Banana API",
+        Version = "v1",
+        Description = "Banana classification, ripeness prediction, ML ensemble, chat, harvest, truck, and workbench training API.",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact { Name = "Banana Team", Url = new Uri("https://banana.engineer") },
+    });
+
+    // Resolve duplicate nested-type schema ID collisions (e.g. TruckController+InputJsonRequest
+    // vs HarvestController+InputJsonRequest both mapping to "$InputJsonRequest").
+    c.CustomSchemaIds(type => type.FullName ?? type.Name);
+
+    // Include XML docs generated from triple-slash comments
+    var xmlFile = "Banana.Api.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        c.IncludeXmlComments(xmlPath);
+
+    // JWT bearer security scheme
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+    });
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+// CORS must be applied before Swagger middleware so the spec endpoint
+// returns Access-Control-Allow-* headers to cross-origin consumers (e.g. banana.engineer).
 app.UseCors(FrontendCorsPolicy);
+// Expose Swagger in all environments so staging/production can introspect the spec
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Banana API v1");
+    c.RoutePrefix = "swagger";
+});
 app.UseRateLimiter();
 if (!string.IsNullOrWhiteSpace(jwtSecret))
 {
@@ -137,6 +184,16 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "banana-api",
+    status = "ok",
+    endpoints = new
+    {
+        health = "/health",
+        swagger = "/swagger",
+    }
+}));
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 

@@ -31,7 +31,7 @@ The React SPA is a Confluence-style workspace with the following pages:
 
 ```
 native C (src/native/)
-    └── ASP.NET API (src/c-sharp/asp.net/)  →  banana-api.fly.dev
+    └── ASP.NET API (src/c-sharp/asp.net/)  →  api.banana.engineer
     └── Fastify API (src/typescript/api/)   →  local / compose runtime
 React SPA (src/typescript/react/)           →  banana.engineer (Vercel)
 Electron  (src/typescript/electron/)        →  desktop channel

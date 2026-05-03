@@ -1,5 +1,5 @@
 import type {
-    ChatMessage, ChatSession, EnsembleVerdict, Ripeness, TrainingAuditEvent, TrainingLane,
+    ChatMessage, ChatSession, EnsembleVerdict, RipenessResult, TrainingAuditEvent, TrainingLane,
     TrainingRunRequest, TrainingRunResult,} from "@banana/ui";
 
 type ErrorPayload = {
@@ -15,9 +15,7 @@ export type SendMessageResponse = {
     assistant_message : ChatMessage;
 };
 
-export type RipenessResponse = {
-    label: Ripeness; confidence : number;
-};
+export type RipenessResponse = RipenessResult;
 
 export type TrainingRunResponse = {
     run: TrainingRunResult;
@@ -90,7 +88,7 @@ function resolveLocalhostDefaultApiBaseUrl(): string
 
     if (host === "banana.engineer" || host === "www.banana.engineer")
     {
-        return "https://banana-api.fly.dev";
+        return "https://api.banana.engineer";
     }
 
     return "";
@@ -303,12 +301,13 @@ export async function sendChatMessage(
                                             });
 }
 
-export async function predictRipeness(baseUrl: string, inputJson: string): Promise<RipenessResponse>
+export async function predictRipeness(baseUrl: string,
+                                      input: {sample: string}): Promise<RipenessResult>
 {
-    return requestJson<RipenessResponse>(baseUrl, "/ripeness/predict", {
+    return requestJson<RipenessResult>(baseUrl, "/ripeness/predict", {
         method : "POST",
         headers : {"content-type" : "application/json"},
-        body : JSON.stringify({inputJson}),
+        body : JSON.stringify(input),
     });
 }
 

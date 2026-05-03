@@ -44,6 +44,8 @@ When workflow behavior, automation contracts, prompts, skills, or runbooks chang
 ### VI. One-Window Interactive Validation
 Frontend and desktop UX changes must be validated in an interactive in-workspace surface before task closure. For Banana this means using the VS Code integrated browser/web view flow (with compose-backed runtime services) so implementation, diagnostics, and rendered behavior are reviewed in one window.
 
+For **web portal work** (React, Electron, any page/component that renders in a browser), the VS Code Simple Browser must be opened at the relevant local or Vercel preview URL **at the start of work**, not only at task closure. The workflow is: open Simple Browser → make changes → hot-reload confirms the change → validate → close task. For Vercel-deployed portals (`banana.engineer`, preview URLs) the browser tab should also be opened to confirm the production or preview deployment renders correctly before marking any deploy-related task done.
+
 ### VII. Cross-API Feature Parity
 When ASP.NET and Fastify expose overlapping capability areas, behavior parity is mandatory. Route availability, status semantics, and response-shape contracts must stay aligned or be explicitly documented as intentional divergence in the active spec before merge.
 
@@ -121,7 +123,7 @@ Operational and delivery signals must be promoted into explicit, scored follow-u
 - Keep automation pull requests on provenance labels including `speckit-driven` and required-check workflows.
 - Run `scripts/validate-ai-contracts.py` whenever AI workflow contracts (prompts, agents, skills, instructions, workflows, wiki mapping) are touched.
 - Run `scripts/workflow-sync-wiki.sh` in the same change when contract surfaces move.
-- For frontend and Electron behavior checks, verify rendered state in the VS Code integrated browser against the active runtime profile before marking tasks done.
+- For frontend and Electron behavior checks, open the VS Code Simple Browser at the relevant local or Vercel preview URL **before starting work** on any web portal change (React page, component, layout, navigation). Keep it open for hot-reload feedback during implementation and verify rendered state against the active runtime profile before marking tasks done.
 - When a change touches overlapping ASP.NET and Fastify API capability, include parity validation evidence (or intentional-drift rationale) in the active Spec Kit artifacts before task closure.
 - For checks that call GitHub REST/GraphQL or action metadata APIs, include explicit rate-limit handling and a documented rerun path in the active spec artifacts before task closure.
 - For changes that touch the Vercel deployment manifest (`vercel.json`), the Vite build config, or `VITE_BANANA_API_BASE_URL` wiring, validate a clean `bun run build` and confirm the production environment contract before task closure.
@@ -143,4 +145,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.9.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-02
+**Version**: 1.9.1 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-03

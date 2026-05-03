@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Banana.Api.Controllers;
 
+/// <summary>Machine-learning classification and ensemble inference endpoints.</summary>
 [ApiController]
 [Route("ml")]
 public sealed class BananaMlController(
@@ -14,8 +15,13 @@ public sealed class BananaMlController(
     PipelineContext ctx,
     PipelineRunner<PipelineContext> runner) : ControllerBase
 {
+    /// <summary>Request body carrying raw feature JSON produced by the native pipeline.</summary>
     public sealed record MlRequest(string InputJson);
 
+    /// <summary>Runs the native regression model and returns a continuous banana score.</summary>
+    /// <param name="req">Feature input JSON.</param>
+    /// <response code="200">JSON with <c>score</c> (double).</response>
+    /// <response code="400">Input validation failed.</response>
     [HttpPost("regression")]
     public IActionResult Regression([FromBody] MlRequest req)
     {
@@ -27,6 +33,9 @@ public sealed class BananaMlController(
             : StatusMapping.ToActionResult(rc);
     }
 
+    /// <summary>Runs the native binary classifier and returns a labelled banana/not-banana result.</summary>
+    /// <param name="req">Feature input JSON.</param>
+    /// <response code="200"><see cref="BinaryClassificationResult"/> with label and score.</response>
     [HttpPost("binary")]
     public IActionResult Binary([FromBody] MlRequest req)
     {
@@ -47,6 +56,9 @@ public sealed class BananaMlController(
         return Ok(result);
     }
 
+    /// <summary>Runs the Full Brain transformer model and returns a 4-class banana classification.</summary>
+    /// <param name="req">Feature input JSON.</param>
+    /// <response code="200"><see cref="TransformerClassificationResult"/> with label, score, and embedding.</response>
     [HttpPost("transformer")]
     public IActionResult Transformer([FromBody] MlRequest req)
     {

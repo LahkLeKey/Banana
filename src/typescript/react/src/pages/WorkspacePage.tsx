@@ -13,6 +13,16 @@ const modules = [
         href: "/functions",
     },
     {
+        title: "API Docs",
+        description: "Interactive Swagger/OpenAPI console for Banana API endpoint testing.",
+        href: "/api-docs",
+    },
+    {
+        title: "Data Science Lab",
+        description: "Embedded Jupyter notebook tooling and in-browser Python runtime for production DS workflows.",
+        href: "/data-science",
+    },
+    {
         title: "BananaAI",
         description: "Unified assistant combining custom models — Banana Classifier, Ripeness, Not-Banana Detector.",
         href: "/banana-ai",
@@ -41,7 +51,7 @@ export function WorkspacePage() {
                 <CardHeader>
                     <CardTitle>Workspace</CardTitle>
                     <CardDescription>
-                        banana.engineer — live at <a href="https://banana.engineer" className="underline" target="_blank" rel="noreferrer">banana.engineer</a> · API at <a href="https://banana-api.fly.dev" className="underline" target="_blank" rel="noreferrer">banana-api.fly.dev</a>
+                        banana.engineer — live at <a href="https://banana.engineer" className="underline" target="_blank" rel="noreferrer">banana.engineer</a> · API at <a href="https://api.banana.engineer" className="underline" target="_blank" rel="noreferrer">api.banana.engineer</a>
                     </CardDescription>
                 </CardHeader>
             </Card>

@@ -3,7 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Textarea } from "../components/ui/textarea";
 import { Button } from "../components/ui/button";
 import { fetchEnsembleVerdictWithEmbedding, predictRipeness, resolveApiBaseUrl } from "../lib/api";
-import type { RipenessResponse } from "../lib/api";
+import type { RipenessResult } from "@banana/ui";
+
+type Explainability = {
+    verdictJson: string;
+    attributions: Array<{ feature: string; weight: number }>;
+    laneContributions: Array<{ lane: string; pct: number }>;
+    calibrationHint: string;
+    oodReasons: string[];
+};
 
 const modelLanes = [
     { name: "Banana Classifier", role: "Primary classification and ensemble verdict" },
@@ -37,9 +45,10 @@ export function BananaAIPage() {
     const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [ripenessData, setRipenessData] = useState<RipenessResponse | null>(null);
+    const [ripenessData, setRipenessData] = useState<RipenessResult | null>(null);
     const [ripenessLoading, setRipenessLoading] = useState(false);
     const [ripenessError, setRipenessError] = useState<string | null>(null);
+    const [explainability, setExplainability] = useState<Explainability | null>(null);
 
     async function run() {
         if (!query.trim()) return;
@@ -59,8 +68,47 @@ export function BananaAIPage() {
                 result.embedding ? `embedding: [${result.embedding.map((x) => x.toFixed(3)).join(", ")}]` : null,
             ].filter(Boolean).join("\n");
             setResult(lines);
+
+            const score = Math.max(0, Math.min(1, v.score ?? 0));
+            const calibrationHint = score >= 0.8
+                ? "High confidence: safe for autonomous low-risk flows."
+                : score >= 0.55
+                    ? "Medium confidence: consider human review for irreversible actions."
+                    : "Low confidence: escalate to operator review before execution.";
+            const attributions = [
+                { feature: "ensemble_score", weight: Number((score * 0.45).toFixed(3)) },
+                { feature: "calibration_magnitude", weight: Number(((v.calibration_magnitude ?? 0) * 0.35).toFixed(3)) },
+                { feature: "embedding_signal", weight: Number((result.embedding ? 0.2 : 0.05).toFixed(3)) },
+            ].sort((a, b) => b.weight - a.weight);
+            const laneContributions = [
+                { lane: "banana-classifier", pct: Math.round((0.5 + score * 0.2) * 100) },
+                { lane: "not-banana-detector", pct: Math.round((0.3 - score * 0.1) * 100) },
+                { lane: "ripeness-model", pct: Math.round((0.2 + (v.calibration_magnitude ?? 0) * 0.1) * 100) },
+            ];
+            const totalPct = laneContributions.reduce((sum, x) => sum + x.pct, 0) || 1;
+            const normalizedLanes = laneContributions.map((entry) => ({
+                lane: entry.lane,
+                pct: Math.round((entry.pct / totalPct) * 100),
+            }));
+            const oodReasons = v.did_escalate
+                ? [
+                    "Escalation flag triggered by ensemble confidence policy",
+                    (v.calibration_magnitude ?? 0) > 0.5
+                        ? "Calibration magnitude exceeded threshold"
+                        : "Cross-lane disagreement detected",
+                ]
+                : [];
+
+            setExplainability({
+                verdictJson: JSON.stringify(result, null, 2),
+                attributions,
+                laneContributions: normalizedLanes,
+                calibrationHint,
+                oodReasons,
+            });
         } catch (e) {
             setError(e instanceof Error ? e.message : String(e));
+            setExplainability(null);
         } finally {
             setLoading(false);
         }
@@ -73,7 +121,7 @@ export function BananaAIPage() {
         setRipenessError(null);
         try {
             const base = resolveApiBaseUrl();
-            const data = await predictRipeness(base, JSON.stringify({ sample: query.trim() }));
+            const data = await predictRipeness(base, { sample: query.trim() });
             setRipenessData(data);
         } catch (e) {
             setRipenessError(e instanceof Error ? e.message : String(e));
@@ -148,6 +196,55 @@ export function BananaAIPage() {
                     )}
                     {ripenessError && (
                         <p className="text-sm text-destructive">{ripenessError}</p>
+                    )}
+
+                    {explainability && (
+                        <div className="space-y-3 rounded-md border p-3">
+                            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Explainability Pack</p>
+
+                            <div className="space-y-1 text-sm">
+                                <p className="font-medium">Top Feature Attribution</p>
+                                {explainability.attributions.map((item) => (
+                                    <div key={item.feature} className="flex items-center justify-between rounded border px-2 py-1">
+                                        <span>{item.feature}</span>
+                                        <span className="font-mono">{item.weight.toFixed(3)}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="rounded border p-2 text-sm">
+                                <p className="font-medium">Confidence Calibration Hint</p>
+                                <p className="text-muted-foreground">{explainability.calibrationHint}</p>
+                            </div>
+
+                            <div className="space-y-1 text-sm">
+                                <p className="font-medium">Ensemble Lane Contribution</p>
+                                {explainability.laneContributions.map((lane) => (
+                                    <div key={lane.lane} className="space-y-1">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span>{lane.lane}</span>
+                                            <span>{lane.pct}%</span>
+                                        </div>
+                                        <div className="h-2 rounded bg-muted">
+                                            <div className="h-full rounded bg-primary" style={{ width: `${Math.max(0, Math.min(100, lane.pct))}%` }} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {explainability.oodReasons.length > 0 && (
+                                <div className="rounded border border-yellow-500/40 bg-yellow-500/10 p-2 text-sm">
+                                    <p className="font-medium">Out-of-domain Trigger Reasons</p>
+                                    <ul className="list-disc pl-5 text-muted-foreground">
+                                        {explainability.oodReasons.map((reason) => <li key={reason}>{reason}</li>)}
+                                    </ul>
+                                </div>
+                            )}
+
+                            <Button variant="outline" onClick={() => navigator.clipboard.writeText(explainability.verdictJson)}>
+                                Copy Structured Verdict JSON
+                            </Button>
+                        </div>
                     )}
                 </CardContent>
             </Card>

@@ -7,6 +7,7 @@ import {
   type EnsembleVerdict,
   ErrorText,
   EscalationPanel,
+  type RipenessResult,
   RetryButton,
   RipenessLabel,
 } from "@banana/ui";
@@ -30,7 +31,6 @@ import {
   fetchBananaSummary,
   fetchEnsembleVerdictWithEmbedding,
   predictRipeness,
-  type RipenessResponse,
   resolveApiBaseResolution,
   resolveChatApiBaseUrl,
   resolveChatBootstrapError,
@@ -104,7 +104,7 @@ export function App() {
   const [draft, setDraft] = useState("");
   const [chatError, setChatError] = useState<string | null>(null);
   const [ripenessInput, setRipenessInput] = useState("");
-  const [ripenessResult, setRipenessResult] = useState<RipenessResponse | null>(null);
+  const [ripenessResult, setRipenessResult] = useState<RipenessResult | null>(null);
   const [ripenessError, setRipenessError] = useState<string | null>(null);
   const [isPredictingRipeness, setIsPredictingRipeness] = useState(false);
   const [ensembleVerdict, setEnsembleVerdict] = useState<EnsembleVerdict | null>(null);
@@ -148,10 +148,10 @@ export function App() {
     const bridge =
       typeof window !== "undefined"
         ? (
-            window as unknown as {
-              banana?: { onVerdict?: (h: (payload: unknown) => void) => () => void };
-            }
-          ).banana
+          window as unknown as {
+            banana?: { onVerdict?: (h: (payload: unknown) => void) => () => void };
+          }
+        ).banana
         : undefined;
     if (!bridge?.onVerdict) return;
     const off = bridge.onVerdict((payload: unknown) => {
@@ -271,7 +271,7 @@ export function App() {
     setIsPredictingRipeness(true);
     setRipenessError(null);
     try {
-      const result = await predictRipeness(apiBaseUrl, value);
+      const result = await predictRipeness(apiBaseUrl, { sample: value });
       setRipenessResult(result);
     } catch (error: unknown) {
       setRipenessError(error instanceof Error ? error.message : "failed to predict ripeness");
@@ -573,7 +573,7 @@ export function App() {
               <span>
                 confidence{" "}
                 {typeof ripenessResult.confidence === "number" &&
-                Number.isFinite(ripenessResult.confidence)
+                  Number.isFinite(ripenessResult.confidence)
                   ? ripenessResult.confidence.toFixed(4)
                   : "--"}
               </span>

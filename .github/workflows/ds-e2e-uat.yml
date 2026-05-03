@@ -1,0 +1,90 @@
+name: DS Pyodide E2E (UAT)
+
+# Treats banana.engineer production as the UAT environment.
+# Runs real in-browser Pyodide execution tests on every PR and after every
+# merge to main (post-deploy verification).
+#
+# Gates: this job must pass before a PR can be merged. Add "DS Pyodide E2E (UAT)"
+# to the branch protection required status checks in repo settings.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/typescript/react/src/**"
+      - "src/typescript/react/public/notebooks/**"
+      - "tests/e2e/playwright/specs/ds-pyodide-execution.spec.ts"
+      - "tests/e2e/playwright/ds-pyodide.config.ts"
+      - ".github/workflows/ds-e2e-uat.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/typescript/react/src/**"
+      - "src/typescript/react/public/notebooks/**"
+      - "tests/e2e/playwright/specs/ds-pyodide-execution.spec.ts"
+      - "tests/e2e/playwright/ds-pyodide.config.ts"
+      - ".github/workflows/ds-e2e-uat.yml"
+  # Allow manual trigger for ad-hoc prod smoke checks
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Override target URL (default: https://banana.engineer)"
+        required: false
+        default: "https://banana.engineer"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  ds-e2e-uat:
+    name: DS Pyodide E2E (UAT)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Node.js (required for Playwright browser install)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install shared UI dependencies
+        run: bun install --cwd src/typescript/shared/ui
+
+      - name: Install React app dependencies
+        run: bun install --cwd src/typescript/react
+
+      - name: Install Playwright Chromium browser + system deps
+        working-directory: src/typescript/react
+        run: bunx playwright install chromium --with-deps
+
+      - name: Run DS Pyodide E2E suite against production
+        working-directory: src/typescript/react
+        run: bun run test:ds-e2e
+        env:
+          CI: "true"
+          # On PR/push: always hit production (prod = UAT).
+          # workflow_dispatch allows override for debugging.
+          PLAYWRIGHT_BASE_URL: ${{ github.event.inputs.base_url || 'https://banana.engineer' }}
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ds-pyodide-playwright-report
+          path: src/typescript/react/playwright-report/ds-pyodide/
+          retention-days: 7
+
+      - name: Upload Playwright traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ds-pyodide-test-results
+          path: src/typescript/react/test-results/ds-pyodide/
+          retention-days: 7
