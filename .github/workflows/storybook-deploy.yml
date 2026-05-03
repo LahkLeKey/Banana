@@ -4,11 +4,17 @@ on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/storybook-deploy.yml"
+      - "src/typescript/react/**"
+      - "src/typescript/shared/ui/**"
   pull_request:
     branches:
       - main
     paths:
       - "src/typescript/react/**"
+      - "src/typescript/shared/ui/**"
+      - ".github/workflows/storybook-deploy.yml"
 
 # Allow only one concurrent deploy, skipping runs queued between the run in-progress and latest queued.
 concurrency:
@@ -25,12 +31,19 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install shared UI dependencies
+        working-directory: src/typescript/shared/ui
+        run: bun install
+
       - name: Install dependencies
         working-directory: src/typescript/react
         run: bun install
 
       - name: Build Storybook
         working-directory: src/typescript/react
+        env:
+          CI: "true"
+          VITE_BANANA_API_BASE_URL: https://api.banana.engineer
         run: bun run build-storybook
 
       - name: Upload Storybook artifact
