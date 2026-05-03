@@ -9,7 +9,7 @@ A multi-language monorepo with a native C core projected into API, web, desktop,
 | Surface | URL | Stack |
 |---------|-----|-------|
 | Web workspace | **[banana.engineer](https://banana.engineer)** | React + Vite → Vercel |
-| REST API | **[banana-api.fly.dev](https://banana-api.fly.dev)** | ASP.NET 8 + native C → Fly.io |
+| REST API | **[api.banana.engineer](https://api.banana.engineer)** | ASP.NET 8 + native C → Fly.io |
 
 ## Web Suite (banana.engineer)
 
