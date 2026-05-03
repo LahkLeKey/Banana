@@ -7,6 +7,14 @@
 **Domain**: devex / infra
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 New contributors must follow a long onboarding doc to get the toolchain working (Bun, .NET 9, CMake, native libs, Postgres). A devcontainer collapses this to one click.

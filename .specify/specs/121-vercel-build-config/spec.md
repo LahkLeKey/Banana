@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Scaffolded from spike `116-vercel-react-deploy-spike`
+## Problem Statement
+
+Feature Specification: Vercel Build Config (121) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

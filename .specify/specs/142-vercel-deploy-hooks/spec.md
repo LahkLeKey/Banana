@@ -5,6 +5,10 @@
 **Status**: Ready for implementation
 **Input**: Vercel CLI feature discovery; aligns with spec 122 CI workflow
 **Prerequisites**: Spec 123 (banana.engineer domain live); spec 122 (CI workflows active)
+## Problem Statement
+
+Feature Specification: Vercel Deploy Hooks for CI Integration (142) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

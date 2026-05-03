@@ -7,6 +7,14 @@
 **Domain**: react / electron / api
 **Depends on**: #054
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 No production telemetry; every regression is reported by humans. Web Vitals are unmeasured.

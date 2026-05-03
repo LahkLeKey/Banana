@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **Input**: User report: "frontend improved but still shows API base unset and runtime configuration error in Banana v2"
+## Problem Statement
+
+Feature Specification: Frontend Runtime Unset Follow-up aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

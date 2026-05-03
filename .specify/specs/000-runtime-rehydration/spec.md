@@ -4,6 +4,10 @@
 **Created**: 2026-04-25
 **Status**: Draft
 **Type**: Rehydration Specification (pre-sprint baseline)
+## Problem Statement
+
+Feature Specification: Baseline Rehydration - Runtime Channel Stability aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## Summary
 

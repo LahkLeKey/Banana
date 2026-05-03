@@ -1,3 +1,13 @@
+## Problem Statement
+
+## In Scope
+
+- Feature implementation and integration
+- Testing and validation of new behavior
+- Documentation of feature usage and design decisions
+
+Feature Specification: Ripeness Corpus + Trainer aims to improve system capability and user experience by implementing the feature described in the specification.
+
 # Feature Specification: Ripeness Corpus + Trainer
 
 **Feature Branch**: `[036-ripeness-corpus-and-trainer]`

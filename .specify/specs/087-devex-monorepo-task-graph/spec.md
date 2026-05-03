@@ -7,6 +7,14 @@
 **Domain**: devex / infra
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Cross-workspace builds re-run unchanged work. There is no incremental task graph spanning Bun workspaces, dotnet projects, and CMake targets.

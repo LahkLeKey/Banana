@@ -7,6 +7,14 @@
 **Domain**: api
 **Depends on**: #070
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 External systems cannot subscribe to Banana events (verdict produced, model promoted, training failed). Today every integration is a polling client.

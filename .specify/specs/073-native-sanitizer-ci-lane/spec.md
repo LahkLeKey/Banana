@@ -7,6 +7,14 @@
 **Domain**: native
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Native tests run with default flags. Memory leaks, undefined behavior, and use-after-free are not caught until production telemetry sees them (and there is no production telemetry yet either).

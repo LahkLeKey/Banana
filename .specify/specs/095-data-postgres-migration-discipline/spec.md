@@ -7,6 +7,14 @@
 **Domain**: api / data
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Prisma migrations and EF Core migrations evolve independently against the same database. There is no canonical schema source and no backward-compat policy.

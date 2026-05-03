@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Draft (pending spike 116 go verdict)
 **Input**: Scaffolded from spike `116-vercel-react-deploy-spike`. Domain `banana.engineer` is purchased and nameserver propagation is pending.
+## Problem Statement
+
+Feature Specification: banana.engineer Domain Config (123) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

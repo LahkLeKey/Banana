@@ -6,6 +6,10 @@
 **Input**: Vercel CLI `rollback` and `redeploy` commands; incident response
 **Prerequisites**: Spec 122 (successful deployments); incident response planning
 **Blockers**: [INFRASTRUCTURE] Requires multiple active deployments to test rollback
+## Problem Statement
+
+Feature Specification: Vercel Deployment Rollback and Recovery (153) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

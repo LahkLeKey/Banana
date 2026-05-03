@@ -7,6 +7,14 @@
 **Domain**: react-native
 **Depends on**: #053, #057
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 React-Native ships only Capture/History/Verdict screens with no offline cache, no share-target polish, no biometric auth, and no push notifications.

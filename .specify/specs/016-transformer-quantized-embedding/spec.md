@@ -8,6 +8,14 @@ payload) is serializing the 4-component transformer embedding to a
 cross-process consumer.
 **SPIKE source**: [../013-ml-brain-composition-spike/analysis/followup-C-quantized-embedding.md](../013-ml-brain-composition-spike/analysis/followup-C-quantized-embedding.md)
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## In Scope
 
 - Additive int8-quantized variant of the Full Brain transformer's 4-dim
@@ -26,6 +34,10 @@ cross-process consumer.
 - ASP.NET / React consumption (separate downstream slice).
 
 ## User Scenarios
+## Problem Statement
+
+Feature Specification: Transformer Quantized Embedding (U-001) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ### US1 -- Quantized embedding emitted (P1)
 Native export returns a 4-element int8 vector + scale + zero-point that

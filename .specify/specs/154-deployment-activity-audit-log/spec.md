@@ -6,6 +6,10 @@
 **Input**: Vercel CLI `activity` command; compliance and debugging
 **Prerequisites**: Spec 122 (deployments active); Vercel project history
 **Blockers**: [INFRASTRUCTURE] Requires live deployment history to query
+## Problem Statement
+
+Feature Specification: Deployment Activity Audit Log (154) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

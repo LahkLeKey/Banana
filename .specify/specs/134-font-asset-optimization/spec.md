@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Draft (pending spike 119 go verdict)
 **Input**: Scaffolded from spike `119-performance-cdn-spike`
+## Problem Statement
+
+Feature Specification: Font and Asset Loading Optimization (134) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

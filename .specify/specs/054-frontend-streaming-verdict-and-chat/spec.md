@@ -7,6 +7,14 @@
 **Domain**: react / api
 **Depends on**: #053
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Verdict and chat both block on a full HTTP roundtrip; users see a long spinner. The neuro layer (feature 050) emits trace events that have nowhere to surface.

@@ -26,6 +26,10 @@
 - Any ASP.NET, native, or training pipeline changes.
 
 ## User Scenarios & Testing *(mandatory)*
+## Problem Statement
+
+Feature Specification: Storybook Integration Spike aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ### User Story 1 - Confirm Bun + Vite + React 19 + shadcn compatibility (Priority: P1)
 

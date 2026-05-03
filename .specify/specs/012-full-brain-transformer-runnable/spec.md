@@ -5,6 +5,10 @@
 **Status**: Draft
 **Source**: 009-ml-brain-domain-spike, [readiness-packet-full-brain.md](../009-ml-brain-domain-spike/analysis/readiness-packet-full-brain.md)
 **Input**: User description: "drive Full Brain transformer scaffold into runnable C code with input format contract, embedding assertion test pattern, and attention-map logging"
+## Problem Statement
+
+Feature Specification: Full Brain Transformer Runnable C Code aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

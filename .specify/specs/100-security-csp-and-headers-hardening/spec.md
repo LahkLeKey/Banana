@@ -7,6 +7,14 @@
 **Domain**: frontend / api
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Frontend currently ships without strict Content-Security-Policy. APIs do not set HSTS / X-Frame-Options / Referrer-Policy uniformly.

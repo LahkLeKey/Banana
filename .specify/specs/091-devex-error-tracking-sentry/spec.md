@@ -7,6 +7,14 @@
 **Domain**: devex / observability
 **Depends on**: #061
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Runtime errors in React, Electron, both APIs, and the React-Native client surface only as logs. There is no aggregated, deduplicated error inbox.

@@ -7,6 +7,14 @@
 **Domain**: api
 **Depends on**: #063
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Neither API surface has rate limiting. A noisy client or a runaway training-trigger can saturate the pipeline. Once auth ships (feature 063) per-principal limits become the natural primitive.

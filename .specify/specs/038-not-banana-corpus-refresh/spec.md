@@ -5,6 +5,16 @@
 **Status**: Draft -- ready to implement
 **Type**: SLICE (implementation)
 **Source**: user request to replace legacy generated not-banana corpus quality.
+## Problem Statement
+
+## In Scope
+
+- Feature implementation and integration
+- Testing and validation of new behavior
+- Documentation of feature usage and design decisions
+
+Feature Specification: Not-Banana Corpus Refresh aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## Goal
 

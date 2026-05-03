@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Draft (pending spike 118 go verdict)
 **Input**: Scaffolded from spike `118-staging-environment-spike`
+## Problem Statement
+
+Feature Specification: Staging API Environment (130) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

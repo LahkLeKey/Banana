@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **Input**: User description: "add a spec for making the frontend work; we still have some configuration drift and the app still shows API base: <unset>"
+## Problem Statement
+
+Feature Specification: Frontend Config Drift Closure aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

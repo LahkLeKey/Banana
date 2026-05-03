@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Spike — research and go/no-go only
 **Input**: With `banana.engineer` as production, define a three-tier environment contract (local / preview / production) covering env vars, API URLs, and database isolation.
+## Problem Statement
+
+Feature Specification: Staging Environment Spike (118) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

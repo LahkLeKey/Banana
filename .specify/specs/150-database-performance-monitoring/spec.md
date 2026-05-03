@@ -6,6 +6,10 @@
 **Input**: PostgreSQL connection (spec 125); monitor query performance
 **Prerequisites**: Spec 125 (PostgreSQL via Railway); live database connection
 **Blockers**: [INFRASTRUCTURE] Requires live PostgreSQL instance with production query patterns
+## Problem Statement
+
+Feature Specification: Database Performance Monitoring (150) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

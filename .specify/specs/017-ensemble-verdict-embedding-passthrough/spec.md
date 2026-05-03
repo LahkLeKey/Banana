@@ -31,6 +31,10 @@ managed ASP.NET surface as an opt-in cross-process consumer.
 - Quantization (that is slice 016, which this slice unlocks).
 
 ## User Scenarios
+## Problem Statement
+
+Feature Specification: Ensemble Verdict Embedding Passthrough aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ### US1 -- Passthrough on escalation (P1)
 When the cascade escalates to the Full Brain, the response carries the

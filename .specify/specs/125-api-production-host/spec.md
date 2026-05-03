@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Scaffolded from spike `117-api-public-hosting-spike`
+## Problem Statement
+
+Feature Specification: API Production Host (125) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

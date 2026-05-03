@@ -7,6 +7,14 @@
 **Domain**: training
 **Depends on**: #050, #079
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Banana, not-banana, and ripeness train independently. Shared signals (image features, surprise weights, replay items) are duplicated and inconsistent. The neuro layer (feature 050) explicitly deferred this.

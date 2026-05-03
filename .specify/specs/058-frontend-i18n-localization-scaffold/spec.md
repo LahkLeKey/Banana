@@ -7,6 +7,14 @@
 **Domain**: shared/ui / react
 **Depends on**: #053
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 All copy is hardcoded English in `src/typescript/react/src/lib/copy.ts`. No locale negotiation, no message-format support, no RTL.

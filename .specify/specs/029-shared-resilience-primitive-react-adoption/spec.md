@@ -4,6 +4,16 @@
 **Created**: 2026-04-26
 **Status**: GATED. Foundational for slices 030 + 031.
 **Source**: [../022-frontend-resilient-offline-spike/analysis/followup-readiness-shared.md](../022-frontend-resilient-offline-spike/analysis/followup-readiness-shared.md)
+## Problem Statement
+
+## In Scope
+
+- Feature implementation and integration
+- Testing and validation of new behavior
+- Documentation of feature usage and design decisions
+
+Feature Specification: Shared Resilience Primitive + React Adoption aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## Goal
 

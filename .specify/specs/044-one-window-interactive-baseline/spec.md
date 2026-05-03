@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **Input**: User description: "make the VS Code web view flow a baseline so development stays interactive in one window"
+## Problem Statement
+
+Feature Specification: One-Window Interactive Baseline aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

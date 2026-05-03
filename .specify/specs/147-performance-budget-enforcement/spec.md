@@ -5,6 +5,10 @@
 **Status**: Ready for implementation
 **Input**: Bundle size analysis (spec 119) + Lighthouse CI (spec 136); codify budgets
 **Prerequisites**: Spec 119 (bundle analysis complete); spec 136 (Lighthouse CI integrated)
+## Problem Statement
+
+Feature Specification: Performance Budget Enforcement (147) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

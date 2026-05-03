@@ -7,6 +7,14 @@
 **Domain**: shared/ui
 **Depends on**: #056
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Theming is 'default Tailwind'. The token pipeline emits values but the UI never consumes a non-default theme; dark mode does not exist.

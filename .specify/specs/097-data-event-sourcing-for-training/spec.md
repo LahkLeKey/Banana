@@ -7,6 +7,14 @@
 **Domain**: data / training
 **Depends on**: #070, #079
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 The training lifecycle (corpus add -> trigger -> evidence PR -> promotion) is reconstructable only by reading scattered logs. An event-sourced view enables replay + debugging + compliance.

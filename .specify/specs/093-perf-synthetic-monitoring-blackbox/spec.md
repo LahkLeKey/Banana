@@ -7,6 +7,14 @@
 **Domain**: infra / observability
 **Depends on**: #063
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Production health is judged by absence of error reports. A canary that exercises the verdict pipeline end-to-end every minute would catch regressions earlier.

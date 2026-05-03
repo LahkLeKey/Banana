@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **Input**: User description: "we still have a state management bug for a blank page, lets just migrate our frontend to shadcn so we have a good baseline, make a new spec"
+## Problem Statement
+
+Feature Specification: Frontend shadcn Baseline Migration aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

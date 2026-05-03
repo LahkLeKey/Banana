@@ -7,6 +7,14 @@
 **Domain**: infra
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Banana ships compose-only. Production-grade deployment requires k8s manifests with proper liveness/readiness, autoscaling, and resource limits.

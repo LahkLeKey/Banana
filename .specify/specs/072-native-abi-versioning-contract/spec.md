@@ -7,6 +7,14 @@
 **Domain**: native / api-interop
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 The native wrapper exports symbols that the C# interop and downstream consumers depend on, but there is no semver discipline or compatibility CI. A silent ABI break would only surface at runtime.

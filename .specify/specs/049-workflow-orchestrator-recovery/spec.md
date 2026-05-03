@@ -4,6 +4,10 @@
 **Created**: 2026-05-01
 **Status**: Draft
 **Input**: User description: "Recover four failing scheduled orchestration workflows (Autonomous Self-Training Cycle, Banana SDLC, Not-Banana Feedback Loop, plus shared dependencies) by spiking what each workflow is supposed to do, then planning an implementation stage and a QA stage."
+## Problem Statement
+
+Feature Specification: Workflow Orchestrator Recovery aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

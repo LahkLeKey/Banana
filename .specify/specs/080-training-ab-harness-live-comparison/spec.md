@@ -7,6 +7,14 @@
 **Domain**: api / training
 **Depends on**: #079, #061
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 There is no way to ship two trained variants and compare them on real traffic. Promotion decisions are made on holdout accuracy alone.

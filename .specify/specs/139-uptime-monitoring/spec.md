@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Draft (pending spike 120 go verdict)
 **Input**: Scaffolded from spike `120-observability-analytics-spike`
+## Problem Statement
+
+Feature Specification: Uptime Monitoring (139) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

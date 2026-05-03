@@ -6,6 +6,10 @@
 **Input**: Vercel CLI `certs` command; custom domain SSL
 **Prerequisites**: Spec 123 (custom domain live on Vercel); SSL provisioning
 **Blockers**: [INFRASTRUCTURE] Requires live custom domain; SSL certificate history
+## Problem Statement
+
+Feature Specification: SSL Certificate Management (155) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

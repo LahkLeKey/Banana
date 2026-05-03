@@ -27,6 +27,10 @@
 - Any ASP.NET, native, or training pipeline changes.
 
 ## User Scenarios & Testing *(mandatory)*
+## Problem Statement
+
+Feature Specification: Storybook Baseline aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ### User Story 1 - Developer browses components in isolation (Priority: P1)
 

@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **SPIKE source**: [../013-ml-brain-composition-spike/analysis/followup-A-aspnet-ensemble.md](../013-ml-brain-composition-spike/analysis/followup-A-aspnet-ensemble.md)
+## Problem Statement
+
+Feature Specification: ASP.NET Ensemble Pipeline (Gated Cascade) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

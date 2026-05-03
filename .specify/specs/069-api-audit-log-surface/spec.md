@@ -7,6 +7,14 @@
 **Domain**: api
 **Depends on**: #063
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Training triggers, model promotions, and operator actions are not auditable. Compliance and incident response need an immutable trail.

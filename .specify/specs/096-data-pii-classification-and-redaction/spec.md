@@ -7,6 +7,14 @@
 **Domain**: api / data
 **Depends on**: #069
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 There is no inventory of which columns hold PII, no field-level encryption, and the audit log (069) cannot redact safely without one.

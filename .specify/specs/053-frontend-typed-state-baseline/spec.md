@@ -7,6 +7,14 @@
 **Domain**: react
 **Depends on**: none (pure-frontend; can ship from current main)
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 All async state is local React + ad-hoc fetch. There is no cache, no background refresh, no optimistic UI, and no shared client store. Every new feature reinvents these patterns.

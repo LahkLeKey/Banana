@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **Input**: User description: "all run profiles should be orchestrated by Docker Compose so dev experience is deterministic and reproducible"
+## Problem Statement
+
+Feature Specification: Compose-Orchestrated Run Profiles aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

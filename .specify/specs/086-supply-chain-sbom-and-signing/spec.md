@@ -7,6 +7,14 @@
 **Domain**: infra / workflow
 **Depends on**: #084
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Container images and shipped binaries have no SBOM, no provenance attestation, and no signature. Downstream consumers cannot verify what they ran.

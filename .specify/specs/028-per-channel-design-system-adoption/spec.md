@@ -4,6 +4,16 @@
 **Created**: 2026-04-26
 **Status**: GATED. Hard prerequisite: slices 026 + 027.
 **Source**: [../021-frontend-shared-design-system-spike/analysis/followup-readiness-channel-adoption.md](../021-frontend-shared-design-system-spike/analysis/followup-readiness-channel-adoption.md)
+## Problem Statement
+
+## In Scope
+
+- Feature implementation and integration
+- Testing and validation of new behavior
+- Documentation of feature usage and design decisions
+
+Feature Specification: Per-Channel Design System Adoption aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## Goal
 

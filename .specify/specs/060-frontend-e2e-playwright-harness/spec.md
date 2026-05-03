@@ -7,6 +7,14 @@
 **Domain**: react / electron / qa
 **Depends on**: #052
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 There is no e2e lane today; regressions in the routing, streaming, or auth flows would only be caught in production.

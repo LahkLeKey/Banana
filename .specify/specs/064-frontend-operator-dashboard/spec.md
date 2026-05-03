@@ -7,6 +7,14 @@
 **Domain**: react / api
 **Depends on**: #063, #061
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Backend ships a deep training + governance surface (features 047, 049, 050) that has no human window. Operators read JSON in artifact directories.

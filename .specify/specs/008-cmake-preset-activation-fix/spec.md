@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **Input**: User description: "make a follow up spec for fixing this bug"
+## Problem Statement
+
+Feature Specification: CMake Preset Activation Fix aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

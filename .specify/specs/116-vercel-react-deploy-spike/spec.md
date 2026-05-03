@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Spike — research and go/no-go only
 **Input**: Domain `banana.engineer` purchased; Vercel account logged in. Determine the minimum viable config to deploy `src/typescript/react` from this monorepo to Vercel and bind it to `banana.engineer`.
+## Problem Statement
+
+Feature Specification: Vercel React Deploy Spike (116) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

@@ -7,6 +7,14 @@
 **Domain**: workflow
 **Depends on**: #052, #061
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 There is no enforced bundle size or Lighthouse budget; routing + streaming additions could regress LCP without anyone noticing.

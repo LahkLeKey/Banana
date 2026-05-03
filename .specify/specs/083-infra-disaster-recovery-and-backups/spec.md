@@ -7,6 +7,14 @@
 **Domain**: infra
 **Depends on**: #079
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Postgres backups + model artifact archives are manual. There is no documented RPO/RTO and no restore drill.

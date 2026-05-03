@@ -7,6 +7,14 @@
 **Domain**: shared/ui
 **Depends on**: none (pure-frontend; can ship from current main)
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Five shared components have no docs and no visual regression harness; the design token pipeline has no consuming surface to validate against.

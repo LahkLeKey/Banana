@@ -7,6 +7,14 @@
 **Domain**: infra / api
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Secrets live in env files and per-developer machines. There is no rotation, no audit, no centralized policy.

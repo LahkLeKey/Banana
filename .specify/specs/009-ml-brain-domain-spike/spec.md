@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **Input**: User description: "a spike spec after that for left brain, right brain, full brain ml domains for binary regression and transformer, you will need to decide what is the left and right brain, the transformer is the full brain"
+## Problem Statement
+
+Feature Specification: ML Brain Domain SPIKE aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Draft (pending spike 117 go verdict)
 **Input**: Scaffolded from spike `117-api-public-hosting-spike`
+## Problem Statement
+
+Feature Specification: API Subdomain DNS (127) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

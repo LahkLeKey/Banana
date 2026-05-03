@@ -4,6 +4,10 @@
 **Created**: 2026-04-26
 **Status**: Draft
 **Input**: Follow-up to `.specify/specs/004-domain-value-delivery` to close remaining delivery gaps and harden production contracts.
+## Problem Statement
+
+Feature Specification: Domain Value Delivery Follow-Up (Phase 2) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

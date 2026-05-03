@@ -23,6 +23,10 @@
 - Self-hosted or non-GitHub Pages deployments.
 
 ## User Scenarios & Testing *(mandatory)*
+## Problem Statement
+
+Feature Specification: Storybook Demos CI (GitHub Pages) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ### User Story 1 - Public demo link in README (Priority: P1)
 

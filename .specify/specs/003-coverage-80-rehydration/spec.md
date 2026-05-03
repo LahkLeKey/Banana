@@ -6,6 +6,10 @@
 **Type**: Coverage Stabilization Specification
 **Input**: User description: "Scaffold a robust spec that satisfies unit, integration, and e2e coverage to 80 percent for the entire monorepo."
 **Depends On**: `002-compose-ci-stabilization` (lane contract schema baseline, evidence path-safety, runtime preflight contract)
+## Problem Statement
+
+Feature Specification: Coverage 80 Rehydration for Entire Monorepo aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## Summary
 

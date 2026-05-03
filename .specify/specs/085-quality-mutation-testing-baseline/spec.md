@@ -7,6 +7,14 @@
 **Domain**: tests
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Coverage is high (feature 003 rehydration) but coverage doesn't measure assertion strength. A test can execute a line and assert nothing meaningful.

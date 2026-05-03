@@ -5,6 +5,10 @@
 **Status**: Draft
 **Source**: 009-ml-brain-domain-spike, [readiness-packet-right-brain.md](../009-ml-brain-domain-spike/analysis/readiness-packet-right-brain.md)
 **Input**: User description: "drive Right Brain binary classifier scaffold into runnable C code with operating-point evidence and negative-sample coverage"
+## Problem Statement
+
+Feature Specification: Right Brain Binary Runnable C Code aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

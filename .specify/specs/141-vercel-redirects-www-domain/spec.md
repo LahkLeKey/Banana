@@ -5,6 +5,10 @@
 **Status**: Ready for implementation
 **Input**: Derived from spike 116; www redirect requirement in spec 123
 **Prerequisites**: Spec 123 (banana.engineer domain live on Vercel)
+## Problem Statement
+
+Feature Specification: Vercel Redirects — www Domain Handling (141) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope
 

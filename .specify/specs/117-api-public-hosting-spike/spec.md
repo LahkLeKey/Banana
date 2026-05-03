@@ -4,6 +4,10 @@
 **Created**: 2026-05-02
 **Status**: Spike — research and go/no-go only
 **Input**: React app will be deployed to `banana.engineer`. Determine the optimal hosting strategy for the Fastify TypeScript API (`src/typescript/api`) so it is reachable from the production frontend.
+## Problem Statement
+
+Feature Specification: API Public Hosting Spike (117) aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ## In Scope *(mandatory)*
 

@@ -28,6 +28,10 @@
 - Model retraining or corpus feedback triggers.
 
 ## User Scenarios & Testing *(mandatory)*
+## Problem Statement
+
+Feature Specification: Domain Value Delivery — End-to-End Ripeness MVP aims to improve system capability and user experience by implementing the feature described in the specification.
+
 
 ### User Story 1 — Ripeness Prediction End-to-End (Priority: P1)
 

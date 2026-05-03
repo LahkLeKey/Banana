@@ -7,6 +7,14 @@
 **Domain**: native / infra
 **Depends on**: #072
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Native binaries only ship for linux/x86_64. Apple Silicon developers and any future arm64 server target are blind.

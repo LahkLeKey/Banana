@@ -7,6 +7,14 @@
 **Domain**: api / react / electron
 **Depends on**: none
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 Both API surfaces (Fastify+Prisma TS and ASP.NET) hand-roll request/response types, and clients duplicate them. There is no machine-checkable contract beyond the parity governance (feature 047) which compares semantics, not schemas.

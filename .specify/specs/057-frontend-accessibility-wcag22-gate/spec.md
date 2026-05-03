@@ -7,6 +7,14 @@
 **Domain**: shared/ui / react
 **Depends on**: #056
 
+## Success Criteria
+
+- Feature is implemented according to the In Scope section
+- All tasks in tasks.md are completed and verified
+- Code changes are tested and pass CI/CD gates
+- Documentation is updated to reflect new behavior
+
+
 ## Problem Statement
 
 There is no a11y CI lane. Shipping an operator dashboard or any expanded surface without an enforceable contract guarantees regressions.
