@@ -30,9 +30,11 @@ async function fetchTrainingHistoryFn(): Promise<FnActionResult> {
     const data = await fetchTrainingWorkbenchHistory(base);
     const rows = data.rows ?? [];
     if (rows.length === 0) return { output: "No training runs found." };
-    return { output: rows.slice(0, 5).map((r) =>
-        `[${r.lane}] ${r.status} — ${r.run_id.slice(-8)} @ ${r.finished_at ? new Date(r.finished_at).toLocaleString() : "running"}`
-    ).join("\n") };
+    return {
+        output: rows.slice(0, 5).map((r) =>
+            `[${r.lane}] ${r.status} — ${r.run_id.slice(-8)} @ ${r.finished_at ? new Date(r.finished_at).toLocaleString() : "running"}`
+        ).join("\n")
+    };
 }
 
 async function runLeftBrainCiFn(): Promise<FnActionResult> {
@@ -50,7 +52,7 @@ async function runLeftBrainCiFn(): Promise<FnActionResult> {
 
 async function runRipenessSmokeFn(): Promise<FnActionResult> {
     const base = resolveApiBaseUrl();
-    const data = await predictRipeness(base, {sample : "yellow banana, slightly soft, brown spots at tip"});
+    const data = await predictRipeness(base, { sample: "yellow banana, slightly soft, brown spots at tip" });
     return { output: JSON.stringify(data, null, 2) };
 }
 
@@ -63,11 +65,11 @@ async function promoteLatestCandidateFn(): Promise<FnActionResult> {
     const result = await promoteTrainingWorkbenchRun(base, passed.run_id, "candidate", "suite-ui", "Promoted via Function Catalog governance gate");
     const p = result.promoted;
     return {
-        output : `run_id: ${p.run_id}\ntarget: ${p.target}\nthreshold_passed: ${p.threshold_passed}`,
-        promotion : {
-            run_id : p.run_id,
-            promoted_at : new Date().toISOString(),
-            lane : passed.lane,
+        output: `run_id: ${p.run_id}\ntarget: ${p.target}\nthreshold_passed: ${p.threshold_passed}`,
+        promotion: {
+            run_id: p.run_id,
+            promoted_at: new Date().toISOString(),
+            lane: passed.lane,
         },
     };
 }
@@ -125,9 +127,9 @@ export function FunctionsPage() {
         try {
             const result = await fn.action();
             setOutputs((o) => ({ ...o, [fn.name]: result.output }));
-            if (result.promotion)
-            {
-                setPromotionAudit((prev) => [result.promotion, ...prev]);
+            const promotion = result.promotion;
+            if (promotion) {
+                setPromotionAudit((prev) => [promotion, ...prev]);
             }
             setStates((s) => ({ ...s, [fn.name]: "done" }));
         } catch (e) {
