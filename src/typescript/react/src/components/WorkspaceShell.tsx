@@ -36,9 +36,9 @@ export function WorkspaceShell() {
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
                     <div>
                         <p className="text-xs uppercase tracking-widest text-muted-foreground">Banana Suite</p>
-                        <h1 className="text-lg font-semibold">Function Workspace</h1>
+                        <h1 className="text-lg font-semibold">Banana Workspace</h1>
                     </div>
-                    <p className="text-xs text-muted-foreground">Confluence-style knowledge + tools shell</p>
+                    <p className="text-xs text-muted-foreground">Model ops · knowledge · operator tools</p>
                 </div>
             </header>
 

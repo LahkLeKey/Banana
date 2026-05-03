@@ -71,7 +71,22 @@ export function BananaAIPage() {
                         {loading ? "Running..." : "Run BananaAI"}
                     </Button>
                     {result && (
-                        <pre className="rounded-md bg-muted p-3 text-xs whitespace-pre-wrap">{result}</pre>
+                        <div className="grid gap-2 text-sm">
+                            {result.split("\n").map((line) => {
+                                const [key, ...rest] = line.split(": ");
+                                const val = rest.join(": ");
+                                const isEmbedding = key === "embedding";
+                                return (
+                                    <div key={key} className="flex items-start justify-between rounded-md border px-3 py-2">
+                                        <span className="font-medium text-muted-foreground">{key}</span>
+                                        {isEmbedding
+                                            ? <span className="text-xs text-muted-foreground/60 truncate max-w-[60%]">{val}</span>
+                                            : <span className="font-mono">{val}</span>
+                                        }
+                                    </div>
+                                );
+                            })}
+                        </div>
                     )}
                     {error && (
                         <p className="text-sm text-destructive">{error}</p>
