@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PromotionAuditEntry } from "@banana/ui";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -7,7 +7,14 @@ import { fetchTrainingWorkbenchHistory, predictRipeness, promoteTrainingWorkbenc
 type FnStatus = "ready" | "blocked" | "running" | "done" | "error";
 type FnGroup = { group: string; fns: FnDef[] };
 type FnActionResult = { output: string; promotion?: PromotionAuditEntry };
-type FnDef = { name: string; owner: string; status: FnStatus; action?: () => Promise<FnActionResult>; confirm?: string };
+type FnDef = {
+    name: string;
+    owner: string;
+    status: FnStatus;
+    action?: () => Promise<FnActionResult>;
+    confirm?: string;
+    requiresWorkbench?: boolean;
+};
 
 async function pingHealth(): Promise<FnActionResult> {
     const base = resolveApiBaseUrl();
@@ -84,15 +91,34 @@ const CATALOG: FnGroup[] = [
     {
         group: "Model Ops",
         fns: [
-            { name: "Fetch Training History", owner: "Data Science", status: "ready", action: fetchTrainingHistoryFn },
-            { name: "Run Left-Brain CI Workbench", owner: "Data Science", status: "ready", action: runLeftBrainCiFn },
-            { name: "Run Ripeness Smoke", owner: "Data Science", status: "ready", action: runRipenessSmokeFn },
+            {
+                name: "Fetch Training History",
+                owner: "Data Science",
+                status: "ready",
+                action: fetchTrainingHistoryFn,
+                requiresWorkbench: true,
+            },
+            {
+                name: "Run Left-Brain CI Workbench",
+                owner: "Data Science",
+                status: "ready",
+                action: runLeftBrainCiFn,
+                requiresWorkbench: true,
+            },
+            {
+                name: "Run Ripeness Smoke",
+                owner: "Data Science",
+                status: "ready",
+                action: runRipenessSmokeFn,
+                requiresWorkbench: true,
+            },
             {
                 name: "Promote Latest to Candidate",
                 owner: "Data Science",
                 status: "ready",
                 action: promoteLatestCandidateFn,
                 confirm: "This will promote the latest passed training run to candidate. threshold_passed must be true. Proceed?",
+                requiresWorkbench: true,
             },
         ],
     },
@@ -117,9 +143,44 @@ export function FunctionsPage() {
     const [states, setStates] = useState<Record<string, FnStatus>>({});
     const [outputs, setOutputs] = useState<Record<string, string>>({});
     const [promotionAudit, setPromotionAudit] = useState<PromotionAuditEntry[]>([]);
+    const [workbenchAvailable, setWorkbenchAvailable] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        let active = true;
+        const base = resolveApiBaseUrl();
+        if (!base) {
+            setWorkbenchAvailable(false);
+            return () => {
+                active = false;
+            };
+        }
+
+        (async () => {
+            try {
+                const res = await fetch(`${base}/training/workbench/history`);
+                if (!active) return;
+                setWorkbenchAvailable(res.status !== 404);
+            } catch {
+                if (!active) return;
+                setWorkbenchAvailable(false);
+            }
+        })();
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     async function run(fn: FnDef) {
         if (!fn.action) return;
+        if (fn.requiresWorkbench && workbenchAvailable === false) {
+            setOutputs((o) => ({
+                ...o,
+                [fn.name]: "This deployment does not expose /training/workbench endpoints yet.",
+            }));
+            setStates((s) => ({ ...s, [fn.name]: "blocked" }));
+            return;
+        }
         // Spike 170: confirmation gate for governance-protected actions
         if (fn.confirm && !window.confirm(fn.confirm)) return;
         setOutputs((o) => ({ ...o, [fn.name]: "" }));
@@ -154,7 +215,10 @@ export function FunctionsPage() {
                     <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground px-1">{group}</p>
                     <div className="grid gap-3">
                         {fns.map((fn) => {
-                            const effectiveStatus: FnStatus = states[fn.name] ?? fn.status;
+                            const blockedByCapability = fn.requiresWorkbench && workbenchAvailable === false;
+                            const effectiveStatus: FnStatus = blockedByCapability
+                                ? "blocked"
+                                : (states[fn.name] ?? fn.status);
                             const output = outputs[fn.name];
                             return (
                                 <Card key={fn.name}>
