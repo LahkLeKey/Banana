@@ -4,6 +4,7 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Derived from spike 116; www redirect requirement in spec 123
+**Prerequisites**: Spec 123 (banana.engineer domain live on Vercel)
 
 ## In Scope
 

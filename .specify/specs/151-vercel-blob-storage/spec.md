@@ -4,6 +4,8 @@
 **Created**: 2026-05-02
 **Status**: Ready for research
 **Input**: Vercel CLI `blob` command discovery; explore serverless storage
+**Prerequisites**: Vercel Blob documentation; cost analysis
+**Blockers**: [INFRASTRUCTURE] Requires live Vercel project; decision on artifact storage strategy
 
 ## In Scope
 

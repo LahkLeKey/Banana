@@ -4,6 +4,8 @@
 **Created**: 2026-05-02
 **Status**: Ready for research
 **Input**: Vercel CLI `rollback` and `redeploy` commands; incident response
+**Prerequisites**: Spec 122 (successful deployments); incident response planning
+**Blockers**: [INFRASTRUCTURE] Requires multiple active deployments to test rollback
 
 ## In Scope
 

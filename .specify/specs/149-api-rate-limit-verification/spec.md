@@ -4,6 +4,7 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Rate limiting middleware (spec 114); verify limits in test suite
+**Prerequisites**: Spec 114 (rate limit middleware deployed); test infrastructure
 
 ## In Scope
 

@@ -4,6 +4,8 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Sentry integration (spec 120); expand error tracking
+**Prerequisites**: Spec 120 (Sentry configured); production traffic data
+**Blockers**: [INFRASTRUCTURE] Requires Sentry account access and production error history
 
 ## In Scope
 

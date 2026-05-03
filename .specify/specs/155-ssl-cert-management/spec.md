@@ -4,6 +4,8 @@
 **Created**: 2026-05-02
 **Status**: Ready for research
 **Input**: Vercel CLI `certs` command; custom domain SSL
+**Prerequisites**: Spec 123 (custom domain live on Vercel); SSL provisioning
+**Blockers**: [INFRASTRUCTURE] Requires live custom domain; SSL certificate history
 
 ## In Scope
 

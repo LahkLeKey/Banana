@@ -4,6 +4,7 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Vercel CLI feature discovery; advanced routing needs for future features
+**Prerequisites**: Spec 121 (vercel.json created); live Vercel project
 
 ## In Scope
 

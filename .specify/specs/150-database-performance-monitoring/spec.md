@@ -4,6 +4,8 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: PostgreSQL connection (spec 125); monitor query performance
+**Prerequisites**: Spec 125 (PostgreSQL via Railway); live database connection
+**Blockers**: [INFRASTRUCTURE] Requires live PostgreSQL instance with production query patterns
 
 ## In Scope
 

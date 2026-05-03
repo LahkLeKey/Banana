@@ -4,6 +4,7 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Vercel CLI feature discovery; aligns with spec 122 CI workflow
+**Prerequisites**: Spec 123 (banana.engineer domain live); spec 122 (CI workflows active)
 
 ## In Scope
 

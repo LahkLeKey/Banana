@@ -4,6 +4,7 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Vercel CLI feature discovery; debugging deployment issues
+**Prerequisites**: Spec 122 (at least one successful deployment); Vercel project live
 
 ## In Scope
 

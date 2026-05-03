@@ -4,6 +4,8 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Vercel CLI feature discovery; aligns with spec 140 CWV reporting
+**Prerequisites**: Spec 140 (CWV dashboard active); 7+ days production traffic
+**Blockers**: [INFRASTRUCTURE] Requires live Vercel project with traffic history
 
 ## In Scope
 

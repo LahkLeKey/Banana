@@ -4,6 +4,7 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Railway spec 125 included healthcheck /health; extend with diagnostic endpoints
+**Prerequisites**: Spec 128 (API deployed on Railway); spec 125 (railway.json configured)
 
 ## In Scope
 

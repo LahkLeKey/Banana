@@ -4,6 +4,8 @@
 **Created**: 2026-05-02
 **Status**: Ready for research
 **Input**: Vercel CLI `cron` command discovery; aligns with spec 120 observability
+**Prerequisites**: Spec 128 (API deployed); vercel.json configuration
+**Blockers**: [INFRASTRUCTURE] Requires live Vercel project; decision on cron job scheduling strategy
 
 ## In Scope
 

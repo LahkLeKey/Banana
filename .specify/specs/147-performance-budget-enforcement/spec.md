@@ -4,6 +4,7 @@
 **Created**: 2026-05-02
 **Status**: Ready for implementation
 **Input**: Bundle size analysis (spec 119) + Lighthouse CI (spec 136); codify budgets
+**Prerequisites**: Spec 119 (bundle analysis complete); spec 136 (Lighthouse CI integrated)
 
 ## In Scope
 

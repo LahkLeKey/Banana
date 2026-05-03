@@ -4,6 +4,8 @@
 **Created**: 2026-05-02
 **Status**: Ready for research
 **Input**: Vercel CLI `activity` command; compliance and debugging
+**Prerequisites**: Spec 122 (deployments active); Vercel project history
+**Blockers**: [INFRASTRUCTURE] Requires live deployment history to query
 
 ## In Scope
 
