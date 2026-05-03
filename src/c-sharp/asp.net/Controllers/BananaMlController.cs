@@ -16,9 +16,7 @@ public sealed class BananaMlController(
     PipelineRunner<PipelineContext> runner) : ControllerBase
 {
     /// <summary>Request body carrying raw feature JSON produced by the native pipeline.</summary>
-    public sealed record MlRequest(
-        /// <summary>Feature payload serialised as a JSON string.</summary>
-        string InputJson);
+    public sealed record MlRequest(string InputJson);
 
     /// <summary>Runs the native regression model and returns a continuous banana score.</summary>
     /// <param name="req">Feature input JSON.</param>

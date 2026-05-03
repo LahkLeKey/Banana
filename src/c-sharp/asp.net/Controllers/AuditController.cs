@@ -6,7 +6,7 @@ namespace Banana.Api.Controllers;
 
 /// <summary>
 /// Operator-gated audit event read endpoint (spec #069).
-/// GET /operator/audit?limit=50&cursor=
+/// GET /operator/audit?limit=50&amp;cursor=
 /// </summary>
 [ApiController]
 [Route("operator")]

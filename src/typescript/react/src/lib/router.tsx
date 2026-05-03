@@ -7,9 +7,11 @@
 import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, useRouteError } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { ApiDocsPage } from "../pages/ApiDocsPage";
 import { WorkspaceShell } from "../components/WorkspaceShell";
 import { BananaAIPage } from "../pages/BananaAIPage";
 import { ClassifyPage } from "../pages/ClassifyPage";
+import { DataSciencePage } from "../pages/DataSciencePage";
 import { FunctionsPage } from "../pages/FunctionsPage";
 import { KnowledgePage } from "../pages/KnowledgePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
@@ -61,6 +63,8 @@ export const router = createBrowserRouter([
           { path: "workspace", element: <WorkspacePage /> },
           { path: "knowledge", element: <KnowledgePage /> },
           { path: "functions", element: <FunctionsPage /> },
+          { path: "api-docs", element: <ApiDocsPage /> },
+          { path: "data-science", element: <DataSciencePage /> },
           { path: "banana-ai", element: <BananaAIPage /> },
           { path: "review-spikes", element: <ReviewSpikesPage /> },
           { path: "classify", element: <ClassifyPage /> },
