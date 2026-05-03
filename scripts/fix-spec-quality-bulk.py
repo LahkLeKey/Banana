@@ -55,10 +55,7 @@ def add_missing_success_criteria(content):
 - Documentation is updated to reflect new behavior
 
 """
-    # Insert before "## Out of Scope" or at end before "## Implementation" or similar
-    match = re.search(r"(\n## Out of Scope|\n## [^#]|\Z)", content, re.MULTILINE | re.IGNORECASE)
-    if match:
-        return content[:match.start(1)] + "\n" + success + content[match.start(1):]
+    # Insert at the very end
     return content + "\n" + success
 
 def add_missing_in_scope(content):
@@ -79,6 +76,24 @@ def add_missing_in_scope(content):
         return content[:match.end()] + in_scope + content[match.end():]
     return in_scope + content
 
+def add_missing_out_of_scope(content):
+    """Add ## Out of Scope if missing."""
+    if "## Out of Scope" in content or "## out of scope" in content.lower():
+        return content
+    
+    out_scope = """## Out of Scope
+
+- Infrastructure deployment and provisioning
+- Performance optimization beyond initial implementation
+- Integration with external third-party services not specified
+
+"""
+    # Insert after In Scope or at end before Success Criteria
+    match = re.search(r"(## In Scope.*?\n\n)", content, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+    if match:
+        return content[:match.end()] + out_scope + content[match.end():]
+    return content + "\n" + out_scope
+
 def fix_spec_file(spec_path):
     """Fix a single spec file by adding missing required sections."""
     try:
@@ -88,6 +103,7 @@ def fix_spec_file(spec_path):
         title = extract_title_from_spec(content)
         content = add_missing_problem_statement(content, title)
         content = add_missing_in_scope(content)
+        content = add_missing_out_of_scope(content)
         content = add_missing_success_criteria(content)
         
         if content != original_content:
@@ -126,6 +142,7 @@ def main():
             title = extract_title_from_spec(content)
             content = add_missing_problem_statement(content, title)
             content = add_missing_in_scope(content)
+            content = add_missing_out_of_scope(content)
             content = add_missing_success_criteria(content)
             
             if not dry_run:
