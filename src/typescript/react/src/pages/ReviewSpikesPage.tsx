@@ -93,6 +93,44 @@ const DS_SPIKES: Spike[] = [
     },
 ];
 
+const ENHANCEMENT_SPIKES: Spike[] = [
+    {
+        id: "171",
+        title: "Operator Command Center UX",
+        focus: "Enhancements: (1) pinned recent sessions, (2) message search + filter, (3) token usage meter, (4) retry failed turn button, (5) quick command chips for common operator actions.",
+        status: "new",
+        outcome: "Operator page becomes a high-throughput command center with faster session recovery and less manual typing.",
+    },
+    {
+        id: "172",
+        title: "Knowledge Reliability Upgrade",
+        focus: "Enhancements: (1) lane health badges, (2) history sparkline per lane, (3) drill-in run details drawer, (4) stale-data warning banner, (5) copy-export of visible metrics.",
+        status: "new",
+        outcome: "Knowledge view shifts from static dashboard to reliable analysis workspace with quick diagnostics.",
+    },
+    {
+        id: "173",
+        title: "Functions Automation Safety Layer",
+        focus: "Enhancements: (1) capability discovery endpoint check, (2) per-action preflight validation, (3) dry-run mode toggle, (4) structured error panel with remediation, (5) execution history persisted in local storage.",
+        status: "new",
+        outcome: "Function runs become safer and self-explanatory, reducing failed attempts and operator confusion.",
+    },
+    {
+        id: "174",
+        title: "BananaAI Explainability Pack",
+        focus: "Enhancements: (1) top feature attribution list, (2) confidence calibration hint, (3) ensemble lane contribution chart, (4) out-of-domain trigger reasons, (5) one-click copy of structured verdict JSON.",
+        status: "new",
+        outcome: "BananaAI responses are transparent and auditable for both DS and operator users.",
+    },
+    {
+        id: "175",
+        title: "Release & Rollback Control Plane",
+        focus: "Enhancements: (1) release checklist card, (2) canary health gate, (3) rollback playbook action, (4) environment drift summary, (5) post-release verification matrix.",
+        status: "new",
+        outcome: "Delivery flow becomes predictable with explicit gates before promotion and faster rollback confidence.",
+    },
+];
+
 function SpikeCard({ spike }: { spike: Spike }) {
     return (
         <Card>
@@ -121,7 +159,7 @@ export function ReviewSpikesPage() {
                 <CardHeader>
                     <CardTitle>Review Spikes</CardTitle>
                     <CardDescription>
-                        Scoped research slices. Suite architecture (161–165) and data science scale-up (166–170).
+                        Scoped research slices. Suite architecture (161–165), data science scale-up (166–170), and enhancement program (171–175).
                     </CardDescription>
                 </CardHeader>
             </Card>
@@ -137,6 +175,13 @@ export function ReviewSpikesPage() {
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground px-1">Data Science Scale-Up</p>
                 <div className="grid gap-3">
                     {DS_SPIKES.map((s) => <SpikeCard key={s.id} spike={s} />)}
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground px-1">Enhancement Program</p>
+                <div className="grid gap-3">
+                    {ENHANCEMENT_SPIKES.map((s) => <SpikeCard key={s.id} spike={s} />)}
                 </div>
             </div>
         </div>
