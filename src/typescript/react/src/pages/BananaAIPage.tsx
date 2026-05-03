@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
 import { Button } from "../components/ui/button";
-import { fetchEnsembleVerdictWithEmbedding, resolveApiBaseUrl } from "../lib/api";
+import { fetchEnsembleVerdictWithEmbedding, predictRipeness, resolveApiBaseUrl } from "../lib/api";
+import type { RipenessResponse } from "../lib/api";
 
 const modelLanes = [
     { name: "Banana Classifier", role: "Primary classification and ensemble verdict" },
@@ -11,11 +12,34 @@ const modelLanes = [
     { name: "Operator Reasoning", role: "Runbook-aware operational guidance" },
 ];
 
+function RipenessBar({ score }: { score: number }) {
+    const pct = Math.min(100, Math.round(score * 100));
+    const color = score < 0.33 ? "bg-green-500" : score < 0.66 ? "bg-yellow-500" : "bg-red-500";
+    const label = score < 0.33 ? "unripe" : score < 0.66 ? "ripe" : "overripe";
+    return (
+        <div className="space-y-1">
+            <div className="flex justify-between text-xs text-muted-foreground">
+                <span>ripeness score</span>
+                <span className="font-mono">{score.toFixed(3)} — {label}</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground/50">
+                <span>0 unripe</span><span>0.5 ripe</span><span>1 overripe</span>
+            </div>
+        </div>
+    );
+}
+
 export function BananaAIPage() {
     const [query, setQuery] = useState("");
     const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [ripenessData, setRipenessData] = useState<RipenessResponse | null>(null);
+    const [ripenessLoading, setRipenessLoading] = useState(false);
+    const [ripenessError, setRipenessError] = useState<string | null>(null);
 
     async function run() {
         if (!query.trim()) return;
@@ -39,6 +63,22 @@ export function BananaAIPage() {
             setError(e instanceof Error ? e.message : String(e));
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function runRipeness() {
+        if (!query.trim()) return;
+        setRipenessLoading(true);
+        setRipenessData(null);
+        setRipenessError(null);
+        try {
+            const base = resolveApiBaseUrl();
+            const data = await predictRipeness(base, JSON.stringify({ sample: query.trim() }));
+            setRipenessData(data);
+        } catch (e) {
+            setRipenessError(e instanceof Error ? e.message : String(e));
+        } finally {
+            setRipenessLoading(false);
         }
     }
 
@@ -67,9 +107,14 @@ export function BananaAIPage() {
                         placeholder="Ask about classification, ripeness, model drift, or describe an item..."
                         rows={4}
                     />
-                    <Button onClick={run} disabled={loading || !query.trim()}>
-                        {loading ? "Running..." : "Run BananaAI"}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button onClick={run} disabled={loading || !query.trim()}>
+                            {loading ? "Running..." : "Run Ensemble"}
+                        </Button>
+                        <Button variant="outline" onClick={runRipeness} disabled={ripenessLoading || !query.trim()}>
+                            {ripenessLoading ? "Running..." : "Run Ripeness"}
+                        </Button>
+                    </div>
                     {result && (
                         <div className="grid gap-2 text-sm">
                             {result.split("\n").map((line) => {
@@ -90,6 +135,19 @@ export function BananaAIPage() {
                     )}
                     {error && (
                         <p className="text-sm text-destructive">{error}</p>
+                    )}
+
+                    {/* Spike 168: ripeness histogram */}
+                    {ripenessData != null && (
+                        <div className="rounded-md border p-3 space-y-2">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                                Ripeness Pipeline — <span className="normal-case">{ripenessData.label}</span>
+                            </p>
+                            <RipenessBar score={ripenessData.confidence} />
+                        </div>
+                    )}
+                    {ripenessError && (
+                        <p className="text-sm text-destructive">{ripenessError}</p>
                     )}
                 </CardContent>
             </Card>

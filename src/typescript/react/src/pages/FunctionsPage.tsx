@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { fetchTrainingWorkbenchHistory, predictRipeness, resolveApiBaseUrl, runTrainingWorkbench } from "../lib/api";
+import { fetchTrainingWorkbenchHistory, predictRipeness, promoteTrainingWorkbenchRun, resolveApiBaseUrl, runTrainingWorkbench } from "../lib/api";
 
 type FnStatus = "ready" | "blocked" | "running" | "done" | "error";
 type FnGroup = { group: string; fns: FnDef[] };
-type FnDef = { name: string; owner: string; status: FnStatus; action?: () => Promise<string> };
+type FnDef = { name: string; owner: string; status: FnStatus; action?: () => Promise<string>; confirm?: string };
 
 async function pingHealth(): Promise<string> {
     const base = resolveApiBaseUrl();
@@ -53,6 +53,16 @@ async function runRipenessSmokeFn(): Promise<string> {
     return JSON.stringify(data, null, 2);
 }
 
+// Spike 170: promotion governance — fetches latest passed run and promotes to candidate
+async function promoteLatestCandidateFn(): Promise<string> {
+    const base = resolveApiBaseUrl();
+    const history = await fetchTrainingWorkbenchHistory(base);
+    const passed = (history.rows ?? []).find((r) => r.status === "passed");
+    if (!passed) return "No passed runs available to promote.";
+    const result = await promoteTrainingWorkbenchRun(base, passed.run_id, "candidate", "suite-ui", "Promoted via Function Catalog governance gate");
+    const p = result.promoted;
+    return `run_id: ${p.run_id}\ntarget: ${p.target}\nthreshold_passed: ${p.threshold_passed}`;
+}
 const CATALOG: FnGroup[] = [
     {
         group: "Platform Health",
@@ -67,6 +77,13 @@ const CATALOG: FnGroup[] = [
             { name: "Fetch Training History", owner: "Data Science", status: "ready", action: fetchTrainingHistoryFn },
             { name: "Run Left-Brain CI Workbench", owner: "Data Science", status: "ready", action: runLeftBrainCiFn },
             { name: "Run Ripeness Smoke", owner: "Data Science", status: "ready", action: runRipenessSmokeFn },
+            {
+                name: "Promote Latest to Candidate",
+                owner: "Data Science",
+                status: "ready",
+                action: promoteLatestCandidateFn,
+                confirm: "This will promote the latest passed training run to candidate. threshold_passed must be true. Proceed?",
+            },
         ],
     },
     {
@@ -92,6 +109,8 @@ export function FunctionsPage() {
 
     async function run(fn: FnDef) {
         if (!fn.action) return;
+        // Spike 170: confirmation gate for governance-protected actions
+        if (fn.confirm && !window.confirm(fn.confirm)) return;
         setOutputs((o) => ({ ...o, [fn.name]: "" }));
         setStates((s) => ({ ...s, [fn.name]: "running" }));
         try {
