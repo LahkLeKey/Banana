@@ -5,6 +5,7 @@ using System.Text.Json;
 
 namespace Banana.Api.Controllers;
 
+/// <summary>Banana ripeness prediction endpoint.</summary>
 [ApiController]
 [Route("ripeness")]
 public sealed class RipenessController(
@@ -17,8 +18,19 @@ public sealed class RipenessController(
         PropertyNameCaseInsensitive = true,
     };
 
-    public sealed record RipenessRequest(string InputJson);
+    /// <summary>Request body for ripeness prediction.</summary>
+    public sealed record RipenessRequest(
+        /// <summary>Banana sample serialised as a JSON string.</summary>
+        string InputJson);
 
+    /// <summary>
+    /// Predicts the ripeness stage of a banana sample using the native ripeness model.
+    /// Runs the full ensemble pipeline before invoking the ripeness predictor.
+    /// </summary>
+    /// <param name="req">Ripeness input JSON.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <response code="200"><c>{ label, confidence }</c> — ripeness label and confidence score 0–1.</response>
+    /// <response code="400">Pipeline or input validation failed.</response>
     [HttpPost("predict")]
     public async Task<IActionResult> Predict([FromBody] RipenessRequest req, CancellationToken ct)
     {

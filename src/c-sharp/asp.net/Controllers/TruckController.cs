@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Banana.Api.Controllers;
 
+/// <summary>Banana truck registration and container lifecycle endpoints.</summary>
 [ApiController]
 [Route("trucks")]
 public sealed class TruckController(INativeBananaClient native, PipelineContext ctx) : ControllerBase
@@ -34,6 +35,9 @@ public sealed class TruckController(INativeBananaClient native, PipelineContext 
         public int ContainerCount { get; init; }
     }
 
+    /// <summary>Registers a new truck and returns its ID and initial status.</summary>
+    /// <param name="req">Truck registration JSON.</param>
+    /// <response code="200"><see cref="TruckResult"/> with truck_id, status, location, and container_count.</response>
     [HttpPost("register")]
     public IActionResult Register([FromBody] InputJsonRequest req)
     {
@@ -51,6 +55,10 @@ public sealed class TruckController(INativeBananaClient native, PipelineContext 
             : Ok(result);
     }
 
+    /// <summary>Loads a container onto a truck.</summary>
+    /// <param name="truckId">Target truck identifier.</param>
+    /// <param name="req">Container load JSON.</param>
+    /// <response code="200">Updated <see cref="TruckResult"/>.</response>
     [HttpPost("{truckId}/containers/load")]
     public IActionResult Load([FromRoute] string truckId, [FromBody] InputJsonRequest req)
     {
@@ -68,6 +76,10 @@ public sealed class TruckController(INativeBananaClient native, PipelineContext 
             : Ok(result);
     }
 
+    /// <summary>Unloads a specific container from a truck.</summary>
+    /// <param name="truckId">Truck identifier.</param>
+    /// <param name="containerId">Container identifier to unload.</param>
+    /// <response code="200">Updated <see cref="TruckResult"/>.</response>
     [HttpPost("{truckId}/containers/{containerId}/unload")]
     public IActionResult Unload([FromRoute] string truckId, [FromRoute] string containerId)
     {
