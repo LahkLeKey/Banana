@@ -1,55 +1,58 @@
 /**
  * router.tsx — application route tree (feature 052).
  *
- * All routes are code-split via React.lazy + Suspense. The root "/" redirects
- * to "/classify" so existing deep-links keep working.
+ * Pages are loaded eagerly to avoid stale dynamic chunk URLs causing
+ * client-side route failures after production deploys.
  */
-import { lazy, Suspense } from "react";
-import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
+import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, useRouteError } from "react-router-dom";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { WorkspaceShell } from "../components/WorkspaceShell";
-
-const ClassifyPage = lazy(() =>
-  import("../pages/ClassifyPage").then((m) => ({ default: m.ClassifyPage }))
-);
-const OperatorPage = lazy(() =>
-  import("../pages/OperatorPage").then((m) => ({ default: m.OperatorPage }))
-);
-const NotFoundPage = lazy(() =>
-  import("../pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage }))
-);
-const WorkspacePage = lazy(() =>
-  import("../pages/WorkspacePage").then((m) => ({ default: m.WorkspacePage }))
-);
-const KnowledgePage = lazy(() =>
-  import("../pages/KnowledgePage").then((m) => ({ default: m.KnowledgePage }))
-);
-const FunctionsPage = lazy(() =>
-  import("../pages/FunctionsPage").then((m) => ({ default: m.FunctionsPage }))
-);
-const BananaAIPage = lazy(() =>
-  import("../pages/BananaAIPage").then((m) => ({ default: m.BananaAIPage }))
-);
-const ReviewSpikesPage = lazy(() =>
-  import("../pages/ReviewSpikesPage").then((m) => ({ default: m.ReviewSpikesPage }))
-);
+import { BananaAIPage } from "../pages/BananaAIPage";
+import { ClassifyPage } from "../pages/ClassifyPage";
+import { FunctionsPage } from "../pages/FunctionsPage";
+import { KnowledgePage } from "../pages/KnowledgePage";
+import { NotFoundPage } from "../pages/NotFoundPage";
+import { OperatorPage } from "../pages/OperatorPage";
+import { ReviewSpikesPage } from "../pages/ReviewSpikesPage";
+import { WorkspacePage } from "../pages/WorkspacePage";
 
 function PageShell() {
+  return <Outlet />;
+}
+
+function RouteErrorBoundary() {
+  const error = useRouteError();
+  const message = isRouteErrorResponse(error)
+    ? `${error.status} ${error.statusText}`
+    : error instanceof Error
+      ? error.message
+      : "An unexpected route error occurred.";
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
-          Loading…
-        </div>
-      }
-    >
-      <Outlet />
-    </Suspense>
+    <main className="mx-auto max-w-3xl p-6" data-testid="route-error-boundary">
+      <Card>
+        <CardHeader>
+          <CardTitle>Page load interrupted</CardTitle>
+          <CardDescription>
+            A stale app chunk or transient network failure prevented this route from loading.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground" data-testid="route-error-boundary-message">
+            {message}
+          </p>
+          <Button onClick={() => window.location.reload()}>Reload app</Button>
+        </CardContent>
+      </Card>
+    </main>
   );
 }
 
 export const router = createBrowserRouter([
   {
     element: <PageShell />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         element: <WorkspaceShell />,
