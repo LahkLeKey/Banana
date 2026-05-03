@@ -11,6 +11,9 @@ A multi-language monorepo with a native C core projected into API, web, desktop,
 | Web workspace | **[banana.engineer](https://banana.engineer)** | React + Vite → Vercel |
 | REST API | **[api.banana.engineer](https://api.banana.engineer)** | ASP.NET 8 + native C → Fly.io |
 
+<img width="1007" height="1154" alt="image" src="https://github.com/user-attachments/assets/d2b7c6fa-9540-4c66-9b81-fc5b09294f29" />
+
+
 ## Web Suite (banana.engineer)
 
 The React SPA is a Confluence-style workspace with the following pages:
