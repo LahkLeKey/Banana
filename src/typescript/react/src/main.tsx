@@ -14,13 +14,13 @@ initSentry();
 initVitals();
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <QueryProvider>
-        <RouterProvider router={router} />
-      </QueryProvider>
-    </ErrorBoundary>
-    <Analytics />
-    <SpeedInsights />
-  </StrictMode>
+    <StrictMode>
+        <ErrorBoundary>
+            <QueryProvider>
+                <RouterProvider router={router} />
+            </QueryProvider>
+        </ErrorBoundary>
+        <Analytics />
+        <SpeedInsights />
+    </StrictMode>
 );

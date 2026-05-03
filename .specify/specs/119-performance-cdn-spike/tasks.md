@@ -21,6 +21,6 @@
 
 ## Phase 4: Research Documentation
 
-- [ ] T008 Write completed `research.md` with: baseline Lighthouse scores, top optimization opportunities ranked by effort vs impact, recommended bundle-split config, and open questions for specs 133–136.
+- [x] T008 Write completed `research.md` with: baseline Lighthouse scores, top optimization opportunities ranked by effort vs impact, recommended bundle-split config, and open questions for specs 133–136.
 - [ ] T009 Update `.specify/specs/133-vite-bundle-split/spec.md` status to "Ready for implementation" if the split delivers > 20% initial-JS reduction.
-- [ ] T010 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/119-performance-cdn-spike` and confirm `OK`.
+- [x] T010 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/119-performance-cdn-spike` and confirm `OK`.

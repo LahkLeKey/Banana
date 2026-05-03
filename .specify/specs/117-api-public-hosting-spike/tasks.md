@@ -22,6 +22,6 @@
 
 ## Phase 4: Research Documentation
 
-- [ ] T009 Write `research.md` in `.specify/specs/117-api-public-hosting-spike/` with: recommended host, CORS config, database provisioning steps, and open questions for specs 125–128.
+- [x] T009 Write `research.md` in `.specify/specs/117-api-public-hosting-spike/` with: recommended host, CORS config, database provisioning steps, and open questions for specs 125–128.
 - [ ] T010 Update `.specify/specs/125-api-production-host/spec.md` status to "Ready for implementation" if go.
-- [ ] T011 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/117-api-public-hosting-spike` and confirm `OK`.
+- [x] T011 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/117-api-public-hosting-spike` and confirm `OK`.

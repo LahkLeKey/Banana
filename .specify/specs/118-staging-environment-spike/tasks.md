@@ -22,6 +22,6 @@
 
 ## Phase 4: Research Documentation
 
-- [ ] T009 Write completed `research.md` with: three-tier model diagram (ASCII), env var matrix, database isolation strategy, and open questions for specs 129–132.
+- [x] T009 Write completed `research.md` with: three-tier model diagram (ASCII), env var matrix, database isolation strategy, and open questions for specs 129–132.
 - [ ] T010 Update `.specify/specs/129-vercel-preview-deploys/spec.md` status to "Ready for implementation" if go.
-- [ ] T011 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/118-staging-environment-spike` and confirm `OK`.
+- [x] T011 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/118-staging-environment-spike` and confirm `OK`.
