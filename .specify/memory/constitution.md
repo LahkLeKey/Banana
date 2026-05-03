@@ -42,6 +42,9 @@ When ASP.NET and Fastify expose overlapping capability areas, behavior parity is
 ### VIII. Rate-Limit Resilient Automation
 Workflow gates that depend on GitHub APIs or marketplace action metadata must include a rate-limit resilience path. Required checks must avoid permanent false-negative failure caused solely by transient installation-token exhaustion and must provide deterministic recovery evidence through retries, backoff windows, rerun guidance, or non-blocking fallback classification.
 
+### IX. Public Delivery Surface Contract
+The canonical public delivery surface for Banana is **banana.engineer** served via Vercel. The React app (`src/typescript/react`) is the primary deployable artifact; its build output (`bun run build` → `dist/`) must remain Vercel-compatible at all times. Environment contracts must support three tiers — local (`.env.local`), preview (per-branch Vercel preview), and production (`banana.engineer`) — each bound by explicit `VITE_BANANA_API_BASE_URL` and backing API configuration. API backends exposed to `banana.engineer` must enforce CORS for that origin. No change may break the Vercel build or degrade the production site without an explicit rollback plan in the active spec.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
@@ -50,6 +53,8 @@ Workflow gates that depend on GitHub APIs or marketplace action metadata must in
 - Preserve feature parity expectations across ASP.NET (`:8080`) and Fastify (`:8081`) for overlapping route contracts used by frontend/runtime channels.
 - Preserve Bun as package manager for TypeScript React/Electron/mobile domains.
 - Keep runtime-channel behavior aligned with the Windows + Docker Desktop + Ubuntu WSL2 contract.
+- Treat `banana.engineer` as the production hostname; keep `VITE_BANANA_API_BASE_URL` pointing to the production API and never hardcode localhost in production builds.
+- Preserve Vercel as the frontend hosting platform; `vercel.json` at the repository root is the authoritative deployment manifest.
 
 ## Workflow and Review
 
@@ -61,6 +66,7 @@ Workflow gates that depend on GitHub APIs or marketplace action metadata must in
 - For frontend and Electron behavior checks, verify rendered state in the VS Code integrated browser against the active runtime profile before marking tasks done.
 - When a change touches overlapping ASP.NET and Fastify API capability, include parity validation evidence (or intentional-drift rationale) in the active Spec Kit artifacts before task closure.
 - For checks that call GitHub REST/GraphQL or action metadata APIs, include explicit rate-limit handling and a documented rerun path in the active spec artifacts before task closure.
+- For changes that touch the Vercel deployment manifest (`vercel.json`), the Vite build config, or `VITE_BANANA_API_BASE_URL` wiring, validate a clean `bun run build` and confirm the production environment contract before task closure.
 
 ## Governance
 
@@ -68,4 +74,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.3.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-02
+**Version**: 1.4.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-02
