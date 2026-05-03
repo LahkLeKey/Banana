@@ -20,6 +20,14 @@ public sealed class StreamingController : ControllerBase
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
+    /// <summary>
+    /// Streams a banana verdict as Server-Sent Events (SSE).
+    /// Emits progress events then a final <c>complete</c> event with the verdict.
+    /// </summary>
+    /// <param name="text">Input text to classify.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <response code="200">SSE stream of <c>progress</c> and <c>complete</c> events.</response>
+    /// <response code="400">Missing <c>text</c> query parameter.</response>
     [HttpGet("verdict")]
     public async Task Verdict([FromQuery] string? text, CancellationToken ct)
     {

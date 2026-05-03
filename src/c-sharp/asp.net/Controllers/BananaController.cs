@@ -4,10 +4,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Banana.Api.Controllers;
 
+/// <summary>Core banana calculation endpoint.</summary>
 [ApiController]
 [Route("[controller]")]
 public sealed class BananaController(INativeBananaClient native, PipelineContext ctx) : ControllerBase
 {
+    /// <summary>Calculates banana total with purchase bonus breakdown.</summary>
+    /// <param name="purchases">Number of banana purchases.</param>
+    /// <param name="multiplier">Score multiplier (default 1).</param>
+    /// <response code="200">JSON with <c>banana</c>, <c>baseAmount</c>, and <c>bonus</c>.</response>
     [HttpGet("/banana")]
     public IActionResult Get([FromQuery] int purchases = 0, [FromQuery] int multiplier = 1)
     {

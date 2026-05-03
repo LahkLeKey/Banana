@@ -3,12 +3,20 @@ using System.Collections.Concurrent;
 
 namespace Banana.Api.Controllers;
 
+/// <summary>
+/// In-process chat session endpoints. Sessions are ephemeral per API instance.
+/// Supports platform-tagged sessions, idempotent message delivery, and a
+/// keyword-based banana signal reply model.
+/// </summary>
 [ApiController]
 public sealed class ChatController : ControllerBase
 {
     // In-process session store (ephemeral per instance)
     private static readonly ConcurrentDictionary<string, ChatSession> Sessions = new();
 
+    /// <summary>Creates a new chat session and returns a welcome message.</summary>
+    /// <param name="body">Optional platform tag and metadata map.</param>
+    /// <response code="201">New session with <c>welcome_message</c>.</response>
     [HttpPost("/chat/sessions")]
     public IActionResult CreateSession([FromBody] CreateSessionRequest? body)
     {
@@ -38,6 +46,10 @@ public sealed class ChatController : ControllerBase
         });
     }
 
+    /// <summary>Returns the session metadata and all messages for a given session.</summary>
+    /// <param name="sessionId">Session identifier returned by <c>POST /chat/sessions</c>.</param>
+    /// <response code="200">Session echo + full message list.</response>
+    /// <response code="404">Session not found.</response>
     [HttpGet("/chat/sessions/{sessionId}")]
     public IActionResult GetSession(string sessionId)
     {
@@ -47,6 +59,13 @@ public sealed class ChatController : ControllerBase
         return Ok(new { session = session.ToEcho(), messages = session.Messages });
     }
 
+    /// <summary>Appends a user message and returns the deterministic banana-signal reply.</summary>
+    /// <param name="sessionId">Session identifier.</param>
+    /// <param name="body">Message content and optional idempotency key.</param>
+    /// <response code="201">User message + assistant reply pair.</response>
+    /// <response code="200">Duplicate message — returns cached reply.</response>
+    /// <response code="400">Missing or empty content.</response>
+    /// <response code="404">Session not found.</response>
     [HttpPost("/chat/sessions/{sessionId}/messages")]
     public IActionResult PostMessage(string sessionId, [FromBody] PostMessageRequest? body)
     {

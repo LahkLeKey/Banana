@@ -5,6 +5,9 @@
     <UserSecretsId>banana-api-v2</UserSecretsId>
     <NoWarn>$(NoWarn);CA1707;CA1848</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin/$(Configuration)/$(TargetFramework)/Banana.Api.xml</DocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

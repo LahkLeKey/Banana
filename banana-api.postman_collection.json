@@ -1,0 +1,697 @@
+{
+    "info": {
+        "_postman_id": "banana-api-v1",
+        "name": "Banana API",
+        "description": "Banana classification, ripeness prediction, ML ensemble, chat, harvest, truck, workbench training, audit, and streaming endpoints.\n\nBase URL: `{{baseUrl}}` — set this variable to your target environment, e.g. `https://banana-api.fly.dev` or `http://localhost:5000`.\n\nFor JWT-protected routes set the `token` collection variable to a valid Bearer token.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "https://banana-api.fly.dev",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "item": [
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "GET /health",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Liveness probe. Returns `{\"status\":\"ok\"}`."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Banana",
+            "item": [
+                {
+                    "name": "GET /banana",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/banana?purchases=5&multiplier=2",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "banana"
+                            ],
+                            "query": [
+                                {
+                                    "key": "purchases",
+                                    "value": "5",
+                                    "description": "Number of banana purchases"
+                                },
+                                {
+                                    "key": "multiplier",
+                                    "value": "2",
+                                    "description": "Score multiplier (default 1)"
+                                }
+                            ]
+                        },
+                        "description": "Calculates banana total with purchase bonus breakdown."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ML",
+            "item": [
+                {
+                    "name": "POST /ml/regression",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"sample\\\":\\\"yellow curved fruit with a sweet smell\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ml/regression",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ml",
+                                "regression"
+                            ]
+                        },
+                        "description": "Runs the native regression model. Returns `{score: double}`."
+                    }
+                },
+                {
+                    "name": "POST /ml/binary",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"sample\\\":\\\"yellow curved fruit with a sweet smell\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ml/binary",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ml",
+                                "binary"
+                            ]
+                        },
+                        "description": "Binary banana/not-banana classification. Returns label and score."
+                    }
+                },
+                {
+                    "name": "POST /ml/transformer",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"sample\\\":\\\"yellow curved fruit with a sweet smell\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ml/transformer",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ml",
+                                "transformer"
+                            ]
+                        },
+                        "description": "Full Brain transformer classification. Returns 4-class label, score, and embedding."
+                    }
+                },
+                {
+                    "name": "POST /ml/ensemble",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"sample\\\":\\\"yellow curved fruit with a sweet smell\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ml/ensemble",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ml",
+                                "ensemble"
+                            ]
+                        },
+                        "description": "Gated cascade ensemble (input validation → gating → escalation → calibration). Returns composite EnsembleVerdictResult."
+                    }
+                },
+                {
+                    "name": "POST /ml/ensemble/embedding",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"sample\\\":\\\"yellow curved fruit with a sweet smell\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ml/ensemble/embedding",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ml",
+                                "ensemble",
+                                "embedding"
+                            ]
+                        },
+                        "description": "Same as /ml/ensemble but also returns the 4-dim transformer embedding fingerprint when the cascade escalated."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Ripeness",
+            "item": [
+                {
+                    "name": "POST /ripeness/predict",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"sample\\\":\\\"yellow curved fruit with a sweet smell\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/ripeness/predict",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "ripeness",
+                                "predict"
+                            ]
+                        },
+                        "description": "Predicts banana ripeness stage. Returns `{label, confidence}` where confidence is 0–1."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Not-Banana",
+            "item": [
+                {
+                    "name": "POST /not-banana/junk",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"sample\\\":\\\"an old shoe left in the rain\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/not-banana/junk",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "not-banana",
+                                "junk"
+                            ]
+                        },
+                        "description": "Classifies input as not-banana junk. Returns label and confidence."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Chat",
+            "item": [
+                {
+                    "name": "POST /chat/sessions",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"platform\": \"web\",\n  \"metadata\": {}\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/chat/sessions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "chat",
+                                "sessions"
+                            ]
+                        },
+                        "description": "Creates a new chat session. Returns session metadata and a welcome message."
+                    }
+                },
+                {
+                    "name": "GET /chat/sessions/:sessionId",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/chat/sessions/:sessionId",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "chat",
+                                "sessions",
+                                ":sessionId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "sessionId",
+                                    "value": "chat_example123"
+                                }
+                            ]
+                        },
+                        "description": "Returns session metadata and full message history."
+                    }
+                },
+                {
+                    "name": "POST /chat/sessions/:sessionId/messages",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Is this a banana?\",\n  \"clientMessageId\": \"msg_001\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/chat/sessions/:sessionId/messages",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "chat",
+                                "sessions",
+                                ":sessionId",
+                                "messages"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "sessionId",
+                                    "value": "chat_example123"
+                                }
+                            ]
+                        },
+                        "description": "Appends a user message and returns the deterministic banana-signal reply. Supports idempotent delivery via clientMessageId."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Batches",
+            "item": [
+                {
+                    "name": "POST /batches/create",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"items\\\":[{\\\"sample\\\":\\\"banana\\\"}]}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/batches/create",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "batches",
+                                "create"
+                            ]
+                        },
+                        "description": "Creates a new banana batch."
+                    }
+                },
+                {
+                    "name": "GET /batches/:id/status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/batches/:id/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "batches",
+                                ":id",
+                                "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "batch_example"
+                                }
+                            ]
+                        },
+                        "description": "Returns the current status of a batch."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Harvest",
+            "item": [
+                {
+                    "name": "POST /harvest/create",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"field\\\":\\\"north-grove\\\",\\\"season\\\":\\\"spring\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/harvest/create",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "harvest",
+                                "create"
+                            ]
+                        },
+                        "description": "Creates a new harvest batch."
+                    }
+                },
+                {
+                    "name": "POST /harvest/:batchId/bunches",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"weight_kg\\\":12.5,\\\"ripeness_estimate\\\":\\\"green\\\"}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/harvest/:batchId/bunches",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "harvest",
+                                ":batchId",
+                                "bunches"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "batchId",
+                                    "value": "harvest_example"
+                                }
+                            ]
+                        },
+                        "description": "Appends a bunch to an existing harvest batch."
+                    }
+                },
+                {
+                    "name": "GET /harvest/:batchId/status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/harvest/:batchId/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "harvest",
+                                ":batchId",
+                                "status"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "batchId",
+                                    "value": "harvest_example"
+                                }
+                            ]
+                        },
+                        "description": "Returns the status of a harvest batch."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Trucks",
+            "item": [
+                {
+                    "name": "POST /trucks/register",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"license\\\":\\\"BNNA-001\\\",\\\"capacity\\\":20}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/trucks/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "trucks",
+                                "register"
+                            ]
+                        },
+                        "description": "Registers a new truck."
+                    }
+                },
+                {
+                    "name": "POST /trucks/:truckId/containers/load",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"inputJson\": \"{\\\"container_id\\\":\\\"C001\\\",\\\"weight_kg\\\":500}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/trucks/:truckId/containers/load",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "trucks",
+                                ":truckId",
+                                "containers",
+                                "load"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "truckId",
+                                    "value": "truck_example"
+                                }
+                            ]
+                        },
+                        "description": "Loads a container onto a truck."
+                    }
+                },
+                {
+                    "name": "POST /trucks/:truckId/containers/:containerId/unload",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/trucks/:truckId/containers/:containerId/unload",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "trucks",
+                                ":truckId",
+                                "containers",
+                                ":containerId",
+                                "unload"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "truckId",
+                                    "value": "truck_example"
+                                },
+                                {
+                                    "key": "containerId",
+                                    "value": "C001"
+                                }
+                            ]
+                        },
+                        "description": "Unloads a specific container from a truck."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Streaming",
+            "item": [
+                {
+                    "name": "GET /api/streaming/verdict",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/streaming/verdict?text=yellow+curved+fruit",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "streaming",
+                                "verdict"
+                            ],
+                            "query": [
+                                {
+                                    "key": "text",
+                                    "value": "yellow curved fruit",
+                                    "description": "Text to classify"
+                                }
+                            ]
+                        },
+                        "description": "Server-Sent Events (SSE) streaming verdict. Emits progress steps then a final complete event. Set `Accept: text/event-stream` for native SSE clients."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Audit (Operator)",
+            "item": [
+                {
+                    "name": "GET /operator/audit",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/operator/audit?limit=50&cursor=0",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "operator",
+                                "audit"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50",
+                                    "description": "Max events (1–200)"
+                                },
+                                {
+                                    "key": "cursor",
+                                    "value": "0",
+                                    "description": "Zero-based offset"
+                                }
+                            ]
+                        },
+                        "description": "Returns a paginated page of audit events. Requires OperatorUp JWT role."
+                    }
+                }
+            ]
+        }
+    ]
+}
