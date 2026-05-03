@@ -12,20 +12,17 @@
 ## Technical Context
 
 <!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5.3 / React Native 0.73+
+**Primary Dependencies**: React Native, Expo, React Navigation, Camera library
+**Storage**: Device local filesystem; cloud sync via API
+**Testing**: Detox for E2E mobile testing
+**Target Platform**: iOS 15+, Android 8+
+**Project Type**: Mobile application with camera integration
+**Performance Goals**: 30fps capture preview, <500ms photo process
+**Constraints**: Battery efficient, permissions-respecting, offline-fallback
+**Scale/Scope**: Single-purpose capture app; share to cloud; local queue management
 
 ## Constitution Check
 

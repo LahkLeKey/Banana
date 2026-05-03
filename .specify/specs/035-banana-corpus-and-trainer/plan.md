@@ -12,20 +12,17 @@
 ## Technical Context
 
 <!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: Python 3.11+
+**Primary Dependencies**: PyTorch, NumPy, Pandas, PIL
+**Storage**: PostgreSQL for index metadata; S3/local filesystem for image files
+**Testing**: pytest for data validation and loader tests
+**Target Platform**: Linux training server; macOS/Windows local dev
+**Project Type**: ML training dataset + trainer CLI
+**Performance Goals**: Load 1M images in <5min; train 1M samples in <2hrs
+**Constraints**: Deterministic splits, reproducible augmentations, versioned corpus
+**Scale/Scope**: 100k+ banana images; 70/20/10 train/val/test split
 
 ## Constitution Check
 
