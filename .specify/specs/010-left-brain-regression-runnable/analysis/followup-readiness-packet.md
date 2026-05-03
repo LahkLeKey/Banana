@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 010-left-brain-regression-runnable
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

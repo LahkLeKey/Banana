@@ -1,10 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: approved-for-implementation
+- Status: approved-and-complete
 
 ## Rationale
-- Status: pending
+- Status: complete
+- Wave 3 specialized-surface boundary work was delivered and release-validated.
+- No additional implementation recommendation remains for this wave.
 
 ## Deferred Items
-- Status: pending
+- Status: complete
+- No wave-specific deferred items remain open.

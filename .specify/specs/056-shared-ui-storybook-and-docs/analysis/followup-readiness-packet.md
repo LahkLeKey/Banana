@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 056-shared-ui-storybook-and-docs
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 046-chat-bootstrap-fetch-failure
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

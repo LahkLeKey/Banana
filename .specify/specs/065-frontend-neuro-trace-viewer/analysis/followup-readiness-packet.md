@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 065-frontend-neuro-trace-viewer
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

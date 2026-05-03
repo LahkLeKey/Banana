@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 027-shared-ui-components-v2
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

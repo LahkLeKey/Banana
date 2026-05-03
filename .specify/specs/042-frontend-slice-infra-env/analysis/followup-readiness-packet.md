@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 042-frontend-slice-infra-env
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

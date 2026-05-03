@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 049-workflow-orchestrator-recovery
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

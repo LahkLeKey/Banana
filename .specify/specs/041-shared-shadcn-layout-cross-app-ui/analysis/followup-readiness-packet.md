@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 041-shared-shadcn-layout-cross-app-ui
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

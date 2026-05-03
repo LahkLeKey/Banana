@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 141-vercel-redirects-www-domain
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

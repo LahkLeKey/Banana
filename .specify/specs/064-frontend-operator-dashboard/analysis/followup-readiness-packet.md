@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 064-frontend-operator-dashboard
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

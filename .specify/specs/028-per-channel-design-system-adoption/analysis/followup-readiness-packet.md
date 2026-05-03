@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 028-per-channel-design-system-adoption
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

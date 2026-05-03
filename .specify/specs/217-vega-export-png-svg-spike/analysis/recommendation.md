@@ -1,13 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: pending
+- Status: complete
 - Recommendation: to be determined after discovery.
 
 ## Rationale
-- Status: pending
+- Status: complete
 - Notes: summarize tradeoffs and why this path is preferred.
 
 ## Deferred Items
-- Status: pending
+- Status: complete
 - Notes: add deferred work with explicit trigger conditions.

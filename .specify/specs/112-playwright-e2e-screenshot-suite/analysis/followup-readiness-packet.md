@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 112-playwright-e2e-screenshot-suite
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

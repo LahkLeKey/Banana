@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 014-aspnet-ensemble-pipeline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

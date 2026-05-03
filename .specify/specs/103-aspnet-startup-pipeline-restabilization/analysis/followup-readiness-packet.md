@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 103-aspnet-startup-pipeline-restabilization
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

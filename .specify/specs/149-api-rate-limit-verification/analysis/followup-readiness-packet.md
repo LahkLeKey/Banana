@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 149-api-rate-limit-verification
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

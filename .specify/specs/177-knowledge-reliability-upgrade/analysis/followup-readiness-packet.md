@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 177-knowledge-reliability-upgrade
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

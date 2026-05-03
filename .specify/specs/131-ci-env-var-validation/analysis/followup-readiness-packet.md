@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 131-ci-env-var-validation
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

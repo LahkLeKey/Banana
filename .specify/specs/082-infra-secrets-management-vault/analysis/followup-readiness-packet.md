@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 082-infra-secrets-management-vault
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

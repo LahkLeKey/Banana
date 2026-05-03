@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 054-frontend-streaming-verdict-and-chat
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

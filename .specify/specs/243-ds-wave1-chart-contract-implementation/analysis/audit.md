@@ -1,22 +1,20 @@
 # Audit
 
 ## Scope Alignment
-- Status: in-progress
+- Status: complete
 - Notes:
-	- Implemented Plotly-first rich output handling in the replacement Data Science page, including full figure normalization, large-trace downsampling, and explicit notice outputs for unsupported or malformed marker payloads.
-	- Upgraded notebook import/export compatibility so chart-rich cells persist both Banana metadata and standard notebook output fallbacks.
-	- Updated notebook scaffolds to emit BANANA_PLOTLY markers for the primary visualization path while retaining BANANA_TABLE support.
+  - Wave 1 chart-contract behavior shipped in production as part of the replacement Data Science page release.
+  - Plotly-first chart rendering, normalization, and chart-notice handling are now live release behavior.
 
 ## Risks and Constraints
-- Status: in-progress
+- Status: resolved
 - Notes:
-	- The production DS page is still the older UI, so runtime checks there validate the production API target and marker behavior but not the replacement layout/interaction model.
-	- Local interactive preview remains blocked by the Windows console allocation limit when trying to host the built React app from Git Bash.
-	- Release confidence for Wave 1 remains gated on serving the replacement UI for browser verification.
+  - Earlier environment constraints were resolved through production deployment and release validation.
+  - Ongoing confidence is now enforced by release-level CI gates.
 
 ## Evidence
-- Status: in-progress
+- Status: complete
 - Evidence:
-	- Code updates: src/typescript/react/src/pages/DataSciencePage.tsx
-	- Validation: bun run build (with VITE_BANANA_API_BASE_URL set) completed successfully after Wave 1 chart-contract changes.
-	- Browser/API evidence: notebook execution against the production API rendered both chart and table artifacts from live swagger-derived data on the deployed DS route, confirming the chosen production API test target remains valid.
+  - Implementation surface: src/typescript/react/src/pages/DataSciencePage.tsx
+  - Release validation reference: .specify/specs/246-ds-prod-release-execution/analysis/audit.md
+  - Runtime gate reference: .github/workflows/ds-e2e-uat.yml

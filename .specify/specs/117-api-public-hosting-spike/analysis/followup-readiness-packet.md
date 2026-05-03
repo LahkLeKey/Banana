@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 117-api-public-hosting-spike
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

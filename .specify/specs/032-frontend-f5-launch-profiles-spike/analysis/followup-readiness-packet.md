@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 032-frontend-f5-launch-profiles-spike
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

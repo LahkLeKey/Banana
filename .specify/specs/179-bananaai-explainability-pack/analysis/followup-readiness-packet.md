@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 179-bananaai-explainability-pack
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

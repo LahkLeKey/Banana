@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 071-outbound-webhook-delivery
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

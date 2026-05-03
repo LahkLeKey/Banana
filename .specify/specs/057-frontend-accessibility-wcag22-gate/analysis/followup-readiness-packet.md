@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 057-frontend-accessibility-wcag22-gate
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

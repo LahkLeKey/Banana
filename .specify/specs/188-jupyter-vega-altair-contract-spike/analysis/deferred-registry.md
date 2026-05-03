@@ -2,4 +2,4 @@
 
 | Item | Reason Deferred | Trigger | Status |
 |------|------------------|---------|--------|
-| (none) | n/a | n/a | open |
+| (none) | n/a | n/a | closed |

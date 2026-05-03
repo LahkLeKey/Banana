@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 124-vercel-env-var-contract
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

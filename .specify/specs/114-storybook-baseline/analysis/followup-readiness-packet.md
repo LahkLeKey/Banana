@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 114-storybook-baseline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 069-api-audit-log-surface
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

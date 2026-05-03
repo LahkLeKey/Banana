@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 091-devex-error-tracking-sentry
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

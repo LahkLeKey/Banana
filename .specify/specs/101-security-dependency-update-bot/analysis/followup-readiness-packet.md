@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 101-security-dependency-update-bot
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

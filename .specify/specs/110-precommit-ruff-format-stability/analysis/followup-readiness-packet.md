@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 110-precommit-ruff-format-stability
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

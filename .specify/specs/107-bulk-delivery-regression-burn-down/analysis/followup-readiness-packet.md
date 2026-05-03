@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 107-bulk-delivery-regression-burn-down
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

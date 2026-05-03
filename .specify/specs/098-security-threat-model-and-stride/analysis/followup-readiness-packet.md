@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 098-security-threat-model-and-stride
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

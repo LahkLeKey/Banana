@@ -3,11 +3,14 @@
 ## Next Implementation Slice
 - Slice id: 245
 - Slice name: DS Wave 3 Specialized Surface Implementation
+- Status: completed
 
 ## Bounded Scope
-- In scope: explicit specialized-surface boundaries for geospatial, network, 3D, and low-level canvas notebook markers in the replacement Data Science page and shipped notebook fixtures.
-- Out of scope: production promotion, rollout, rollback, and release-governance work from wave 246.
+- In scope: historical handoff from wave 2 runtime-option contracts to wave 3 specialized-surface boundaries.
+- Out of scope: new implementation work; this packet remains as completed handoff evidence.
 
 ## Validation Lane
-- Required checks: TypeScript validation for src/typescript/react, integrated-browser verification of the replacement UI once it can be served, and notebook fixture review for representative specialized markers.
-- Evidence paths: .specify/specs/244-ds-wave2-runtime-options-implementation/analysis/audit.md, src/typescript/react/src/pages/DataSciencePage.tsx, src/typescript/react/public/notebooks/07-visualization-workbench.ipynb
+- Required checks: completed and superseded by release-level validation.
+- Evidence paths:
+	- .specify/specs/244-ds-wave2-runtime-options-implementation/analysis/audit.md
+	- .specify/specs/246-ds-prod-release-execution/analysis/audit.md

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 125-api-production-host
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

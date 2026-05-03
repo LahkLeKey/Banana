@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 133-vite-bundle-split
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

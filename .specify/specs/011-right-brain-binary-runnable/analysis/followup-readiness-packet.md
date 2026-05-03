@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 011-right-brain-binary-runnable
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

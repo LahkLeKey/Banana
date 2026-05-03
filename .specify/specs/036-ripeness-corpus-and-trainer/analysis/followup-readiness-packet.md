@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 036-ripeness-corpus-and-trainer
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

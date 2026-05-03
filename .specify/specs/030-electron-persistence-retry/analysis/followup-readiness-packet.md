@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 030-electron-persistence-retry
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

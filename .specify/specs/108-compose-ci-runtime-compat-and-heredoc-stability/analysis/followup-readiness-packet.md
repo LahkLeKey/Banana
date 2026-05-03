@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 108-compose-ci-runtime-compat-and-heredoc-stability
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

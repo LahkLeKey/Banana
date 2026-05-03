@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 048-frontend-shadcn-baseline-migration
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

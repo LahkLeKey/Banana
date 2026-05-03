@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 103-autonomous-spec-drain-mode
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

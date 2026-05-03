@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 104-speckit-bootstrapping-improvement
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

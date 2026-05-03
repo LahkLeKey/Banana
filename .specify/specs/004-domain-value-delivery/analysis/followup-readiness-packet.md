@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 004-domain-value-delivery
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

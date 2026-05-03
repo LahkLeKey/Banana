@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 106-post-merge-quality-gate-hardening
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

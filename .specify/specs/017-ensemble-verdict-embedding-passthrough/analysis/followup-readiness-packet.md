@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 017-ensemble-verdict-embedding-passthrough
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

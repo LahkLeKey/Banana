@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 040-human-left-right-brain-training-workbench
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

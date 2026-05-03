@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 013-ml-brain-composition-spike
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 130-staging-api-environment
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

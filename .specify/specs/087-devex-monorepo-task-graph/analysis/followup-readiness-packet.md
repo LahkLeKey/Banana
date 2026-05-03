@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 087-devex-monorepo-task-graph
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

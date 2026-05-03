@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 068-api-rate-limiting-and-abuse-protection
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

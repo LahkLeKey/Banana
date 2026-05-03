@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 090-devex-feature-flag-platform
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

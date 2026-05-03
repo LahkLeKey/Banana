@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 185-ds-viz-renderer-plotly-upgrade
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

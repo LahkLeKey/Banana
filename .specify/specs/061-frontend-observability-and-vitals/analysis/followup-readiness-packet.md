@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 061-frontend-observability-and-vitals
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

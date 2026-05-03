@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 182-jupyterlite-runtime-reliability
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 045-frontend-runtime-unset-followup
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

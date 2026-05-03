@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 076-training-cross-model-joint-pipeline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

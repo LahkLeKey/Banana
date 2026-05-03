@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 096-data-pii-classification-and-redaction
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

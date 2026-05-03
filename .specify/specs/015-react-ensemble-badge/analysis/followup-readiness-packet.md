@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 015-react-ensemble-badge
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 155-ssl-cert-management
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

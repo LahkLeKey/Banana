@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 088-devex-devcontainer-and-codespaces
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

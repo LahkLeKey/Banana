@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 008-cmake-preset-activation-fix
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

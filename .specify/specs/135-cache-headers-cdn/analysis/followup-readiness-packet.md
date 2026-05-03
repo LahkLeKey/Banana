@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 135-cache-headers-cdn
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

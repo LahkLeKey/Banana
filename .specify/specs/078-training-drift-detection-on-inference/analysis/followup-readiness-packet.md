@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 078-training-drift-detection-on-inference
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

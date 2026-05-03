@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 026-shared-ui-tokens-theme-primitives
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

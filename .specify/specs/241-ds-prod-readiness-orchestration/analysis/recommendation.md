@@ -1,10 +1,10 @@
 # Recommendation
 
 ## Decision
-- Status: pending
+- Status: complete
 
 ## Rationale
-- Status: pending
+- Status: complete
 
 ## Deferred Items
-- Status: pending
+- Status: complete

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 058-frontend-i18n-localization-scaffold
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

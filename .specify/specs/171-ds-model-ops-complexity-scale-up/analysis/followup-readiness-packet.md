@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 171-ds-model-ops-complexity-scale-up
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

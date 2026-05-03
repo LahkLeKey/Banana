@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 029-shared-resilience-primitive-react-adoption
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

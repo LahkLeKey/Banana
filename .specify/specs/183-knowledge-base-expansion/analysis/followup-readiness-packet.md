@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 183-knowledge-base-expansion
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

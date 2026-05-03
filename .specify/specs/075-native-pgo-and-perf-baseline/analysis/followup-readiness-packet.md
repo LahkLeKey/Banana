@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 075-native-pgo-and-perf-baseline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

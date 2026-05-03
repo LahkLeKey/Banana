@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 074-native-cross-platform-build-matrix
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

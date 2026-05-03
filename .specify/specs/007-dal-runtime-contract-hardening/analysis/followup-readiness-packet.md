@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 007-dal-runtime-contract-hardening
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

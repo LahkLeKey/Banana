@@ -1,10 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: approved-for-implementation
+- Status: approved-and-complete
 
 ## Rationale
-- Status: pending
+- Status: complete
+- Wave 1 chart-contract work was delivered and is covered by release-level verification.
+- No additional recommendation work remains for this wave.
 
 ## Deferred Items
-- Status: pending
+- Status: complete
+- No wave-specific deferred items remain open.

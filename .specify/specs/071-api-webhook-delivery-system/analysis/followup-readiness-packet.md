@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 071-api-webhook-delivery-system
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 165-feedback-loop-promotion-spike
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

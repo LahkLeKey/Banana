@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 089-devex-pre-commit-hooks-baseline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 083-infra-disaster-recovery-and-backups
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

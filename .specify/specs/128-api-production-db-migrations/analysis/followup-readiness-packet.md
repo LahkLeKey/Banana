@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 128-api-production-db-migrations
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

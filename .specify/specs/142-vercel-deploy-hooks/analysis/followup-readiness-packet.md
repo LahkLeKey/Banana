@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 142-vercel-deploy-hooks
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

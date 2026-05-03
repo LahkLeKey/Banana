@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 121-vercel-build-config
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

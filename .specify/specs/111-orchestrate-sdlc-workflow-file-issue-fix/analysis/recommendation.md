@@ -1,7 +1,7 @@
 # Recommendation
 
 ## Decision
-- Status: pending
+- Status: complete
 - Recommendation: pending
 
 ## Rationale

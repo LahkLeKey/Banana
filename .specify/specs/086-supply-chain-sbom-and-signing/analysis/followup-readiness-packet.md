@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 086-supply-chain-sbom-and-signing
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 097-data-event-sourcing-for-training
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

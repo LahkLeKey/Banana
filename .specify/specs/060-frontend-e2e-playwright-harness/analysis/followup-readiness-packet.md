@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 060-frontend-e2e-playwright-harness
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

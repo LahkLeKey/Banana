@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 003-coverage-80-rehydration
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

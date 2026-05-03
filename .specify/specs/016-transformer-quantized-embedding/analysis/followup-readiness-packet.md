@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 016-transformer-quantized-embedding
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

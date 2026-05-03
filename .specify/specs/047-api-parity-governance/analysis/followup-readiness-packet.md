@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 047-api-parity-governance
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

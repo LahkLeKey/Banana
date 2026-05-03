@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 094-perf-load-testing-baseline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

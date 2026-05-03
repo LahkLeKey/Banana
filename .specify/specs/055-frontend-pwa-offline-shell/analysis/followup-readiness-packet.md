@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 055-frontend-pwa-offline-shell
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 080-training-ab-harness-live-comparison
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

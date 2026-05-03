@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 050-neuro-self-training-enhancements
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

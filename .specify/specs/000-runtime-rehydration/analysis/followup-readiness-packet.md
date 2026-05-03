@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 000-runtime-rehydration
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

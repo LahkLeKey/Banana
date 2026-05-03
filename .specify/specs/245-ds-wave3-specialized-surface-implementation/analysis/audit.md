@@ -1,22 +1,20 @@
 # Audit
 
 ## Scope Alignment
-- Status: in-progress
+- Status: complete
 - Notes:
-	- Added explicit deferred-contract handling for geospatial, network-graph, 3D/WebGL, and low-level canvas notebook markers in the replacement Data Science page.
-	- Surfaced specialized-surface boundaries in the operations rail so deferred families are visible at the product level instead of existing only in spike docs.
-	- Updated the shipped 07 visualization workbench notebook with representative deferred specialized-surface markers.
+  - Wave 3 specialized-surface boundaries shipped as explicit deferred contracts in production.
+  - Specialized families are intentionally represented as deferred, with clear visibility in UI contracts and notebooks.
 
 ## Risks and Constraints
-- Status: in-progress
+- Status: resolved
 - Notes:
-	- Specialized surfaces remain deliberately deferred; no dedicated renderer or browser host is loaded for these families in the current replacement UI.
-	- Replacement-UI runtime verification is still gated on serving or deploying the local implementation surface.
-	- Release completion still depends on wave 246 deployment/promotion work rather than additional surface parsing.
+  - Deferred specialized-surface handling is by design and tracked as product boundary behavior.
+  - Release completion dependency was fulfilled in spec 246.
 
 ## Evidence
-- Status: in-progress
+- Status: complete
 - Evidence:
-	- Code updates: src/typescript/react/src/pages/DataSciencePage.tsx
-	- Notebook fixture updates: src/typescript/react/public/notebooks/07-visualization-workbench.ipynb
-	- Validation: editor diagnostics clean on DataSciencePage.tsx and `bunx tsc -b --pretty false` completed successfully in src/typescript/react.
+  - Implementation surface: src/typescript/react/src/pages/DataSciencePage.tsx
+  - Notebook fixture: src/typescript/react/public/notebooks/07-visualization-workbench.ipynb
+  - Release validation reference: .specify/specs/246-ds-prod-release-execution/analysis/audit.md

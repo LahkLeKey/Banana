@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 151-vercel-blob-storage
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

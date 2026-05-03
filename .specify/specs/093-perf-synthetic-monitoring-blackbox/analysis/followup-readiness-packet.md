@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 093-perf-synthetic-monitoring-blackbox
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

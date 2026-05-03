@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 095-data-postgres-migration-discipline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 146-api-health-checks-diagnostic
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

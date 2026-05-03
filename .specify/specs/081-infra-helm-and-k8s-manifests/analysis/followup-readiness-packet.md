@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 081-infra-helm-and-k8s-manifests
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

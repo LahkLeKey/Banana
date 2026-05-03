@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 019-validation-lane-parity-lint
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

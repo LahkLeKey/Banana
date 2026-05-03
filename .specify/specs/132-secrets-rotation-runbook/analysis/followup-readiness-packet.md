@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 132-secrets-rotation-runbook
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

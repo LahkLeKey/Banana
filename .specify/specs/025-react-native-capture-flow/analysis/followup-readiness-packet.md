@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 025-react-native-capture-flow
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

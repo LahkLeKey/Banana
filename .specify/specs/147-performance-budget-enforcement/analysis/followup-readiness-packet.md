@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 147-performance-budget-enforcement
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

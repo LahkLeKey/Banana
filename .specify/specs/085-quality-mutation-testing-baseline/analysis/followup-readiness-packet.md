@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 085-quality-mutation-testing-baseline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

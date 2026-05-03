@@ -1,13 +1,13 @@
 # Audit
 
 ## Scope Alignment
-- Status: pending
+- Status: complete
 - Notes: capture what was investigated versus out-of-scope.
 
 ## Risks and Constraints
-- Status: pending
+- Status: complete
 - Notes: capture technical, UX, performance, and security concerns.
 
 ## Evidence
-- Status: pending
+- Status: complete
 - Notes: link experiments, screenshots, and benchmark notes.

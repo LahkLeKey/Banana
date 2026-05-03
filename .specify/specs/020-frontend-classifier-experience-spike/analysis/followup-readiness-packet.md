@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 020-frontend-classifier-experience-spike
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

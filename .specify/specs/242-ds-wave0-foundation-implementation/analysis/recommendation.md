@@ -1,10 +1,13 @@
 # Recommendation
 
 ## Decision
-- Status: approved-for-implementation
+- Status: approved-and-complete
 
 ## Rationale
-- Status: pending
+- Status: complete
+- Wave 0 foundational changes were delivered and validated as part of the production release.
+- No additional implementation action is required for this wave-specific recommendation.
 
 ## Deferred Items
-- Status: pending
+- Status: complete
+- No wave-specific deferred items remain open.

@@ -1,7 +1,7 @@
 # Recommendation
 
 ## Decision
-- Status: approved-for-implementation
+- Status: approved-and-complete
 
 ## Rationale
 - Status: complete

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 038-not-banana-corpus-refresh
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

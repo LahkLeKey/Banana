@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 034-model-suite-curation-spike
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

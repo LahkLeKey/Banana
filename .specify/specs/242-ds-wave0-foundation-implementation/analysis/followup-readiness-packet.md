@@ -3,11 +3,14 @@
 ## Next Implementation Slice
 - Slice id: 243
 - Slice name: DS Wave 1 Chart Contract Implementation
+- Status: completed
 
 ## Bounded Scope
-- In scope: Plotly-first chart contract work, chart payload normalization, rich chart fallback notices, notebook 07 chart scaffold upgrades, and chart-host rendering lifecycle hardening.
-- Out of scope: runtime-option families from spikes 221-236, specialized surfaces from spikes 237-240, and release promotion of the replacement UI.
+- In scope: historical handoff from foundational contracts to chart-contract work.
+- Out of scope: new work; this packet is retained as completed wave handoff evidence.
 
 ## Validation Lane
-- Required checks: bun build validation for src/typescript/react plus integrated-browser verification once the replacement UI can be served locally or deployed.
-- Evidence paths: .specify/specs/242-ds-wave0-foundation-implementation/analysis/audit.md, src/typescript/react/src/pages/DataSciencePage.tsx
+- Required checks: completed and superseded by release-level validation.
+- Evidence paths:
+	- .specify/specs/242-ds-wave0-foundation-implementation/analysis/audit.md
+	- .specify/specs/246-ds-prod-release-execution/analysis/audit.md

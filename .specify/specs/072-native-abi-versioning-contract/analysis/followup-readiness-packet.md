@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 072-native-abi-versioning-contract
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

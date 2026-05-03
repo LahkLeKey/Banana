@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 021-frontend-shared-design-system-spike
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

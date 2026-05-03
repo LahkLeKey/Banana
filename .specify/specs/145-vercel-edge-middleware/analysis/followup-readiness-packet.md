@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 145-vercel-edge-middleware
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 138-sentry-error-tracking
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

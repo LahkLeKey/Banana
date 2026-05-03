@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 105-wiki-contract-mirror-restabilization
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.

@@ -2,7 +2,7 @@
 
 ## Summary
 - Spec: 044-one-window-interactive-baseline
-- Status: pending
+- Status: complete
 
 ## Validation
 - Add command outputs and runtime verification evidence.
