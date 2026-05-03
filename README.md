@@ -6,6 +6,14 @@ Pass the Banana from native C into API, desktop, web, and mobile channels.
 
 <img width="1114" height="1799" alt="image" src="https://github.com/user-attachments/assets/d7083e98-551a-48f1-8125-2f2af567ae83" />
 
+## UI Gallery
+
+Automated screenshots captured by the Playwright suite on every push to `main`.
+Run `bun run screenshots` from `src/typescript/react/` to refresh locally.
+
+<!-- GALLERY_START -->
+<!-- GALLERY_END -->
+
 ## Learn More
 
 - Wiki hub: [Banana Wiki](https://github.com/LahkLeKey/Banana/wiki)

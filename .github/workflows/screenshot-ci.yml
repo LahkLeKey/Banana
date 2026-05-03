@@ -1,0 +1,101 @@
+name: Screenshot Suite
+
+# Runs only on push to main. Captures UI screenshots via Playwright,
+# commits the PNGs to docs/screenshots/, then updates the README gallery.
+# Non-main pushes and PRs skip this workflow intentionally.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PLAYWRIGHT_BASE_URL: "http://localhost:5173"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  screenshot-suite:
+    name: Playwright Screenshot Suite
+    runs-on: ubuntu-latest
+    # Skip bot commits (avoid recursive screenshot-update → screenshot loop)
+    if: github.actor != 'github-actions[bot]'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Node.js (for Playwright browsers)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install React dependencies
+        working-directory: src/typescript/react
+        run: bun install
+
+      - name: Install Playwright + browsers
+        working-directory: src/typescript/react
+        run: |
+          bunx playwright install chromium --with-deps
+
+      - name: Start Vite dev server (background)
+        working-directory: src/typescript/react
+        run: |
+          bun run dev &
+          echo "Waiting for Vite to be ready..."
+          timeout 60 bash -c 'until curl -sf http://localhost:5173 > /dev/null 2>&1; do sleep 1; done'
+          echo "Vite is ready."
+
+      - name: Ensure docs/screenshots directory exists
+        run: mkdir -p docs/screenshots
+
+      - name: Run Playwright screenshot suite
+        working-directory: src/typescript/react
+        run: bun run screenshots
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
+          CI: "true"
+
+      - name: Update README gallery
+        run: bash scripts/update-readme-screenshots.sh
+
+      - name: Commit screenshots + gallery update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage screenshots and README
+          git add docs/screenshots/*.png docs/screenshots/.gitkeep README.md || true
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: update UI screenshots and README gallery [skip ci]"
+            git push
+          fi
+
+      - name: Upload screenshot artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: docs/screenshots/
+          if-no-files-found: warn
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/e2e/playwright/playwright-report/
+          if-no-files-found: ignore
