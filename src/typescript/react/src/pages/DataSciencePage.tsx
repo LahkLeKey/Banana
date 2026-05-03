@@ -306,6 +306,7 @@ json.dumps({"stdout": _stdout.getvalue(), "traceback": _tb})
                                 type="button"
                                 onClick={() => setShowLibrary((v) => !v)}
                                 className="rounded border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
+                                data-testid="notebook-catalog-toggle"
                             >
                                 {showLibrary ? "Close Catalog" : "Notebook Catalog"}
                             </button>
