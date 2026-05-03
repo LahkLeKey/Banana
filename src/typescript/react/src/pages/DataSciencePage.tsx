@@ -4,10 +4,12 @@ import { buildEndpointBootstrapCells, extractEndpointOperations, type EndpointOp
 import { NOTEBOOK_LIBRARY, PYODIDE_INDEX, PYODIDE_SCRIPT, RUNTIME_CONTRACTS, STORAGE_KEY, starterCells } from "../lib/dsConstants";
 import { fromNotebookJson, parseRichOutput, toNotebookJson, withNotebookDefaults } from "../lib/dsNotebook";
 import type { EndpointCatalogState, NotebookCell, NotebookLibraryEntry, PyodideInstance, RuntimeState } from "../lib/dsTypes";
+import { AddCellRow } from "../components/ds/AddCellRow";
 import { AdvancedTools } from "../components/ds/AdvancedTools";
 import { CellEditor } from "../components/ds/CellEditor";
 import { CellStack } from "../components/ds/CellStack";
 import { NotebookCatalog } from "../components/ds/NotebookCatalog";
+import { NotebookReportView } from "../components/ds/NotebookReportView";
 import { NotebookToolbar } from "../components/ds/NotebookToolbar";
 import { OperationsRail } from "../components/ds/OperationsRail";
 
@@ -23,6 +25,7 @@ export function DataSciencePage() {
     const [showLibrary, setShowLibrary] = useState(false);
     const [showAdvancedTools, setShowAdvancedTools] = useState(false);
     const [showCellStack, setShowCellStack] = useState(false);
+    const [reportMode, setReportMode] = useState(false);
     const [activeNotebookLabel, setActiveNotebookLabel] = useState("Starter Notebook");
     const [activeCellId, setActiveCellId] = useState<number | null>(starterCells[0]?.id ?? null);
     const [pyodide, setPyodide] = useState<PyodideInstance | null>(null);
@@ -50,14 +53,16 @@ export function DataSciencePage() {
     }, [activeCellId, cells]);
 
     const nextId = useMemo(() => cells.reduce((max, c) => Math.max(max, c.id), 0) + 1, [cells]);
-    const activeCell = useMemo(() => cells.find((c) => c.id === activeCellId) ?? null, [activeCellId, cells]);
-    const activeCellIndex = useMemo(() => cells.findIndex((c) => c.id === activeCellId), [activeCellId, cells]);
     const executedCount = useMemo(() => cells.filter((c) => c.execCount != null).length, [cells]);
     const filteredOperations = useMemo(() => {
         const q = endpointFilter.trim().toLowerCase();
         if (!q) return endpointOperations;
         return endpointOperations.filter((op) => `${op.method} ${op.path} ${op.summary}`.toLowerCase().includes(q));
     }, [endpointFilter, endpointOperations]);
+
+    function flattenNotebookText(value: string) {
+        return value.replace(/[\r\n\t]+/g, " ").replace(/\s{2,}/g, " ").trim();
+    }
 
     // -------------------------------------------------------------------------
     // Cell management
@@ -80,6 +85,36 @@ export function DataSciencePage() {
     }
 
     function removeCell(id: number) { setCells((prev) => prev.filter((c) => c.id !== id)); }
+
+    function moveCell(id: number, direction: "up" | "down") {
+        setCells((prev) => {
+            const idx = prev.findIndex((c) => c.id === id);
+            if (idx < 0) return prev;
+            const next = direction === "up" ? idx - 1 : idx + 1;
+            if (next < 0 || next >= prev.length) return prev;
+            const arr = [...prev];
+            [arr[idx], arr[next]] = [arr[next], arr[idx]];
+            return arr;
+        });
+    }
+
+    function duplicateCell(id: number) {
+        setCells((prev) => {
+            const idx = prev.findIndex((c) => c.id === id);
+            if (idx < 0) return prev;
+            const src = prev[idx];
+            const newCell = { ...src, id: Date.now(), execCount: undefined, output: undefined, error: undefined, richOutput: undefined, running: false };
+            const arr = [...prev];
+            arr.splice(idx + 1, 0, newCell);
+            return arr;
+        });
+    }
+
+    function clearOutputs() {
+        setCells((prev) => prev.map((c) => ({ ...c, output: undefined, error: undefined, richOutput: undefined, execCount: undefined, running: false })));
+        execCounterRef.current = 0;
+        setRuntimeMessage("Outputs cleared.");
+    }
 
     // -------------------------------------------------------------------------
     // Notebook persistence
@@ -152,8 +187,9 @@ export function DataSciencePage() {
         const base = resolveApiBaseUrl().replace(/\/$/, "");
         const hasBody = ["POST", "PUT", "PATCH"].includes(op.method);
         const id = Date.now();
+        const safeSummary = flattenNotebookText(op.summary);
         const lines = [
-            `# ${op.method} ${op.path} - ${op.summary}`,
+            `# ${op.method} ${op.path} - ${safeSummary}`,
             "import json",
             "from js import XMLHttpRequest",
             `API_BASE = '${base}'`,
@@ -317,6 +353,22 @@ json.dumps({"stdout": _stdout.getvalue(), "traceback": _tb})
                             >
                                 {showCellStack ? "Close Cell Stack" : "Cell Stack"}
                             </button>
+                            <button
+                                type="button"
+                                onClick={() => setReportMode((v) => !v)}
+                                className={`rounded border px-2 py-1 text-[11px] font-semibold transition-colors ${reportMode ? "border-indigo-300 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+                                title="Toggle report mode — collapses editors and shows outputs inline"
+                            >
+                                {reportMode ? "✕ Report" : "Report"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={clearOutputs}
+                                className="rounded border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                title="Clear all cell outputs"
+                            >
+                                Clear Outputs
+                            </button>
                         </div>
                     </div>
 
@@ -350,44 +402,39 @@ json.dumps({"stdout": _stdout.getvalue(), "traceback": _tb})
                             />
                         )}
 
-                        <div className="space-y-3">
-                            {/* Jupyter-style cell stack */}
-                            {showCellStack && (
-                                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                                    <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-                                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                                            Cell Stack
-                                        </p>
-                                        <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">
-                                            {cells.length}
-                                        </span>
+                        {reportMode ? (
+                            <NotebookReportView cells={cells} />
+                        ) : (
+                            <div className="space-y-2">
+                                {cells.length === 0 ? (
+                                    <div className="flex min-h-[280px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white text-sm text-slate-400">
+                                        Add a cell below to start.
                                     </div>
-                                    <div className="max-h-36 overflow-y-auto">
-                                        <CellStack
-                                            cells={cells}
-                                            activeCellId={activeCellId}
-                                            onSelectCell={setActiveCellId}
+                                ) : (
+                                    cells.map((cell, index) => (
+                                        <CellEditor
+                                            key={cell.id}
+                                            cell={cell}
+                                            cellIndex={index}
+                                            isActive={cell.id === activeCellId}
+                                            onActivate={() => setActiveCellId(cell.id)}
+                                            onUpdateSource={(source) => updateCell(cell.id, { source })}
+                                            onRun={() => void runCell(cell)}
+                                            onDelete={() => removeCell(cell.id)}
+                                            onTogglePreview={() => updateCell(cell.id, { previewMode: !(cell.previewMode ?? true) })}
+                                            onMoveUp={index > 0 ? () => moveCell(cell.id, "up") : undefined}
+                                            onMoveDown={index < cells.length - 1 ? () => moveCell(cell.id, "down") : undefined}
+                                            onDuplicate={() => duplicateCell(cell.id)}
                                         />
-                                    </div>
-                                </div>
-                            )}
+                                    ))
+                                )}
 
-                            {/* Active cell editor */}
-                            {activeCell ? (
-                                <CellEditor
-                                    cell={activeCell}
-                                    cellIndex={activeCellIndex}
-                                    onUpdateSource={(source) => updateCell(activeCell.id, { source })}
-                                    onRun={() => void runCell(activeCell)}
-                                    onDelete={() => removeCell(activeCell.id)}
-                                    onTogglePreview={() => updateCell(activeCell.id, { previewMode: !(activeCell.previewMode ?? true) })}
+                                <AddCellRow
+                                    onAddPython={() => addCell("python")}
+                                    onAddMarkdown={() => addCell("markdown")}
                                 />
-                            ) : (
-                                <div className="flex min-h-[280px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white text-sm text-slate-400">
-                                    Select a cell or add one to start editing.
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </main>
                 </section>
 

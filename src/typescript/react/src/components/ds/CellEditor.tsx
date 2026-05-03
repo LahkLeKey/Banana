@@ -7,19 +7,28 @@ import { CellOutput } from "./CellOutput";
 type CellEditorProps = {
     cell: NotebookCell;
     cellIndex: number;
+    isActive?: boolean;
+    onActivate?: () => void;
     onUpdateSource: (source: string) => void;
     onRun: () => void;
     onDelete: () => void;
     onTogglePreview: () => void;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
+    onDuplicate?: () => void;
 };
 
-export function CellEditor({ cell, cellIndex, onUpdateSource, onRun, onDelete, onTogglePreview }: CellEditorProps) {
+export function CellEditor({ cell, cellIndex, isActive = true, onActivate, onUpdateSource, onRun, onDelete, onTogglePreview, onMoveUp, onMoveDown, onDuplicate }: CellEditorProps) {
     const lineCount = cell.source.split("\n").length;
     const isMarkdown = cell.kind === "markdown";
     const showPreview = isMarkdown && (cell.previewMode ?? true);
 
     return (
-        <div className="overflow-hidden rounded-lg border border-blue-300 bg-white shadow-sm">
+        <div
+            className={`overflow-hidden rounded-lg border bg-white transition-shadow ${isActive ? "border-blue-300 shadow-sm" : "border-slate-200 opacity-80"}`}
+            onClick={!isActive ? onActivate : undefined}
+            style={!isActive ? { cursor: "pointer" } : undefined}
+        >
             {/* Cell header bar */}
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-3 py-2">
                 <div className="flex items-center gap-2.5">
@@ -36,10 +45,43 @@ export function CellEditor({ cell, cellIndex, onUpdateSource, onRun, onDelete, o
                     )}
                 </div>
                 <div className="flex items-center gap-1">
+                    {onMoveUp && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+                            className="h-7 px-2 text-xs text-slate-400 hover:text-slate-700"
+                            title="Move cell up"
+                        >
+                            ↑
+                        </Button>
+                    )}
+                    {onMoveDown && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+                            className="h-7 px-2 text-xs text-slate-400 hover:text-slate-700"
+                            title="Move cell down"
+                        >
+                            ↓
+                        </Button>
+                    )}
+                    {onDuplicate && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+                            className="h-7 px-2 text-xs text-slate-400 hover:text-slate-700"
+                            title="Duplicate cell"
+                        >
+                            ⎘
+                        </Button>
+                    )}
                     {!isMarkdown && (
                         <Button
                             size="sm"
-                            onClick={onRun}
+                            onClick={(e) => { e.stopPropagation(); onRun(); }}
                             disabled={!!cell.running}
                             className="h-7 px-3 text-xs"
                             data-testid="cell-run-btn"
@@ -51,7 +93,7 @@ export function CellEditor({ cell, cellIndex, onUpdateSource, onRun, onDelete, o
                         <Button
                             size="sm"
                             variant="outline"
-                            onClick={onTogglePreview}
+                            onClick={(e) => { e.stopPropagation(); onTogglePreview(); }}
                             className="h-7 px-3 text-xs"
                         >
                             {showPreview ? "Edit" : "Preview"}
@@ -60,7 +102,7 @@ export function CellEditor({ cell, cellIndex, onUpdateSource, onRun, onDelete, o
                     <Button
                         size="sm"
                         variant="ghost"
-                        onClick={onDelete}
+                        onClick={(e) => { e.stopPropagation(); onDelete(); }}
                         className="h-7 px-2 text-xs text-slate-400 hover:text-destructive"
                     >
                         ✕

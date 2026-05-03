@@ -10,6 +10,17 @@ export type DataScienceSpike = {
     id: string; title : string; focus : string;
 };
 
+function flattenNotebookText(value: string): string
+{
+    return value.replace(/[\r\n\t]+/g, " ").replace(/\s{2,}/g, " ").trim();
+}
+
+function encodeNotebookJson(value: unknown): string
+{
+    const json = JSON.stringify(value);
+    return btoa(unescape(encodeURIComponent(json)));
+}
+
 type OpenApiDocument = {
     paths?: Record<string, Record<string,
                                   {
@@ -215,25 +226,26 @@ export function buildEndpointBootstrapCells(operations: EndpointOperation[],
                                             apiBaseUrl: string): BootstrapCell[]
 {
     const safeBase = apiBaseUrl.replace(/\/$/, "");
-
-    const endpointLines =
-        operations.map((op) => `- ${op.method} ${op.path} (${op.group}) - ${op.summary}`);
-    const endpointCatalogLiteral = JSON.stringify(
-        operations.map((op) => ({
-                           method : op.method,
-                           path : op.path,
-                           group : op.group,
-                           summary : op.summary,
-                       })),
-        null,
-        2,
+    const notebookOperations = operations.map(
+        (op) => ({
+            method : op.method,
+            path : op.path,
+            group : flattenNotebookText(op.group),
+            summary : flattenNotebookText(op.summary),
+        }),
     );
 
+    const endpointLines = notebookOperations.map(
+        (op) => `- ${op.method} ${op.path} (${op.group}) - ${op.summary}`,
+    );
+    const endpointCatalogLiteral = encodeNotebookJson(notebookOperations);
+
     const safeGetCandidates =
-        operations
+        notebookOperations
             .filter((op) => op.method === "GET" && !op.path.includes("{") && op.path.length < 64)
             .slice(0, 8)
             .map((op) => ({method : op.method, path : op.path, summary : op.summary}));
+    const safeGetLiteral = encodeNotebookJson(safeGetCandidates);
 
     return [
         {
@@ -255,10 +267,12 @@ export function buildEndpointBootstrapCells(operations: EndpointOperation[],
             kind : "python",
             source : [
                 "import json",
+                "import base64",
                 "from js import XMLHttpRequest",
                 "",
                 `API_BASE = \"${safeBase}\"`,
-                `endpoint_catalog = json.loads('''${endpointCatalogLiteral}''')`,
+                `endpoint_catalog = json.loads(base64.b64decode('${
+                    endpointCatalogLiteral}').decode('utf-8'))`,
                 "print('endpoint_count:', len(endpoint_catalog))",
             ].join("\n"),
         },
@@ -309,7 +323,7 @@ export function buildEndpointBootstrapCells(operations: EndpointOperation[],
             kind : "python",
             source : [
                 "# Safe endpoint smoke calls (GET routes without path params)",
-                `safe_gets = json.loads('''${JSON.stringify(safeGetCandidates, null, 2)}''')`,
+                `safe_gets = json.loads(base64.b64decode('${safeGetLiteral}').decode('utf-8'))`,
                 "for op in safe_gets:",
                 "    result = call_endpoint(op['method'], op['path'])",
                 "    print(op['method'], op['path'], '->', result['status'])",
