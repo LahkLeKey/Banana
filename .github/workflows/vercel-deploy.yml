@@ -1,0 +1,102 @@
+name: Vercel Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-gate:
+    name: Build Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.9"
+
+      - name: Validate required environment variables
+        env:
+          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
+        run: |
+          required_vars=(VITE_BANANA_API_BASE_URL)
+          for var in "${required_vars[@]}"; do
+            if [[ -z "${!var}" ]]; then
+              echo "ERROR: Required env var '$var' is not set."
+              exit 1
+            fi
+          done
+          echo "All required env vars present."
+
+      - name: Install shared UI deps
+        run: bun install --cwd src/typescript/shared/ui
+
+      - name: Install React app deps
+        run: bun install --cwd src/typescript/react
+
+      - name: Build React app
+        env:
+          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: bun run build --cwd src/typescript/react
+
+  deploy-production:
+    name: Deploy to Vercel (Production)
+    runs-on: ubuntu-latest
+    needs: build-gate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.9"
+
+      - name: Install Vercel CLI
+        run: bun add -g vercel@latest
+
+      - name: Deploy to Vercel Production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel deploy --prod --token "$VERCEL_TOKEN"
+
+  deploy-preview:
+    name: Deploy to Vercel (Preview)
+    runs-on: ubuntu-latest
+    needs: build-gate
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.9"
+
+      - name: Install Vercel CLI
+        run: bun add -g vercel@latest
+
+      - name: Deploy to Vercel Preview
+        id: preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          PREVIEW_URL=$(vercel deploy --token "$VERCEL_TOKEN" 2>&1 | tail -1)
+          echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🍌 **Vercel Preview**: ${{ steps.preview.outputs.preview_url }}`
+            })

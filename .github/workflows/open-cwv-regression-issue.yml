@@ -1,0 +1,38 @@
+name: Open CWV Regression Issue
+
+on:
+  workflow_dispatch:
+    inputs:
+      metric:
+        description: "Metric that regressed (e.g. LCP)"
+        required: true
+        default: "LCP"
+      value:
+        description: "Observed P75 value (e.g. 3.8s)"
+        required: true
+
+jobs:
+  open-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create regression issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Perf regression: ${{ github.event.inputs.metric }} P75 = ${{ github.event.inputs.value }}`,
+              body: [
+                "## CWV Regression Alert",
+                "",
+                `**Metric**: ${{ github.event.inputs.metric }}`,
+                `**P75 Value**: ${{ github.event.inputs.value }}`,
+                "",
+                "### Next steps",
+                "1. Review [Vercel Speed Insights](https://vercel.com/dashboard) for the affected metric.",
+                "2. Follow the [Performance Review Runbook](docs/runbooks/performance-review.md).",
+                "3. Identify the deploy that introduced the regression using Vercel deployment history.",
+              ].join("\n"),
+              labels: ["performance"]
+            });
