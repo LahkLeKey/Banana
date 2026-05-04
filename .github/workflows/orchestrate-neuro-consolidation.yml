@@ -48,11 +48,6 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
-      - name: Debug wiki dir
-        run: |
-          echo "=== .wiki exists: $(test -d .wiki && echo YES || echo NO) ==="
-          ls .wiki/ 2>/dev/null | head -20 || echo "(empty or missing)"
-          ls .wiki/operations/ 2>/dev/null || echo "(no .wiki/operations)"
       - name: AI-contract pre-flight
         run: |
           bash scripts/validate-workflow-dependencies.sh
