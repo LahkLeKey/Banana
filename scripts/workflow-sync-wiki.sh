@@ -69,6 +69,21 @@ else
       mapping_entries+=("${instruction_path}|Auto-GitHub-Instructions/${instruction_file}")
     done < <(find .github/instructions -maxdepth 1 -type f -name "*.md" | sort)
   fi
+
+  # Sync all allowlisted human-reference wiki pages to the GitHub wiki
+  # using their canonical relative paths (e.g. operations/deployment.md).
+  if [[ -f ".specify/wiki/human-reference-allowlist.txt" && -d ".specify/wiki/human-reference" ]]; then
+    while IFS= read -r raw_line; do
+      line="${raw_line//$'\r'/}"
+      line="$(echo "$line" | xargs)"
+      [[ -z "$line" || "$line" == \#* ]] && continue
+      src_rel="${line#.wiki/}"
+      src_path=".specify/wiki/human-reference/${src_rel}"
+      if [[ -f "$src_path" ]]; then
+        mapping_entries+=("${src_path}|${src_rel}")
+      fi
+    done < ".specify/wiki/human-reference-allowlist.txt"
+  fi
 fi
 
 if [[ -z "$WIKI_REMOTE_URL" ]]; then
