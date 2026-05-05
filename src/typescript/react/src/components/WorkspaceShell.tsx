@@ -1,11 +1,18 @@
 import { type ReactNode } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import { trackEvent } from "../lib/analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 function NavItem({ to, label }: { to: string; label: string }) {
     return (
         <NavLink
             to={to}
+            onClick={() => {
+                trackEvent("banana_nav_click", {
+                    to,
+                    label,
+                });
+            }}
             className={({ isActive }) =>
                 [
                     "rounded-md px-3 py-2 text-sm transition-colors",

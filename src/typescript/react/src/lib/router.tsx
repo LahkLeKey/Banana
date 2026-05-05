@@ -4,9 +4,21 @@
  * Pages are loaded eagerly to avoid stale dynamic chunk URLs causing
  * client-side route failures after production deploys.
  */
-import { createBrowserRouter, isRouteErrorResponse, Navigate, Outlet, useRouteError } from "react-router-dom";
+import {
+  createBrowserRouter,
+  isRouteErrorResponse,
+  Navigate,
+  Outlet,
+  useLocation,
+  useNavigationType,
+  useRouteError,
+} from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { isAnalyticsEnabled, trackPageView } from "./analytics";
 import { ApiDocsPage } from "../pages/ApiDocsPage";
 import { WorkspaceShell } from "../components/WorkspaceShell";
 import { BananaAIPage } from "../pages/BananaAIPage";
@@ -20,7 +32,20 @@ import { ReviewSpikesPage } from "../pages/ReviewSpikesPage";
 import { WorkspacePage } from "../pages/WorkspacePage";
 
 function PageShell() {
-  return <Outlet />;
+  const location = useLocation();
+  const navigationType = useNavigationType();
+
+  useEffect(() => {
+    trackPageView(location.pathname, navigationType);
+  }, [location.pathname, navigationType]);
+
+  return (
+    <>
+      <Outlet />
+      {isAnalyticsEnabled() ? <Analytics /> : null}
+      {isAnalyticsEnabled() ? <SpeedInsights /> : null}
+    </>
+  );
 }
 
 function RouteErrorBoundary() {
