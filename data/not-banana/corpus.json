@@ -145,6 +145,162 @@
             "label": "not-banana",
             "text": "stainless water bottle clipped to hiking pack",
             "source": "curated-v1"
+        },
+        {
+            "id": "not-013",
+            "label": "not-banana",
+            "text": "bicycle pedal-driven two-wheel vehicle aliases bike, pushbike",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q11442",
+                "query": "bicycle",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-014",
+            "label": "not-banana",
+            "text": "road bicycle racing bicycle racing sport aliases bicycle road cycling, bicycle road race",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q3609",
+                "query": "bicycle",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-015",
+            "label": "not-banana",
+            "text": "computer keyboard device comprising an arrangement of buttons or keys used to input text in computers aliases keyboard, keyboard (computer)",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q250",
+                "query": "keyboard",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-016",
+            "label": "not-banana",
+            "text": "musical keyboard musical instrument component aliases keyboard, music keyboard",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q901207",
+                "query": "keyboard",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-017",
+            "label": "not-banana",
+            "text": "weather radar radar used to locate and monitor meteorological conditions aliases weather surveillance radar, WSR",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q863343",
+                "query": "weather radar",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-018",
+            "label": "not-banana",
+            "text": "airborne weather radar radar class aliases weather radar, airborne",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q107011601",
+                "query": "weather radar",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "banana-013",
+            "label": "banana",
+            "text": "Musa acuminata cultivation in tropical plantation row",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-014",
+            "label": "banana",
+            "text": "Cavendish bunch graded and loaded onto refrigerated pallet",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-015",
+            "label": "banana",
+            "text": "yellow elongated tropical fruit harvested at peak ripeness",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "not-019",
+            "label": "not-banana",
+            "text": "potato chips in crinkle bag from the vending machine",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-020",
+            "label": "not-banana",
+            "text": "sourdough bread from artisan bakery wrapped in paper",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-021",
+            "label": "not-banana",
+            "text": "raised garden bed built from pressure-treated cedar planks",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-022",
+            "label": "not-banana",
+            "text": "trail mix snack bar from outdoor gear supply store",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-023",
+            "label": "not-banana",
+            "text": "sweet potato fries with rosemary from the oven tray",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-024",
+            "label": "not-banana",
+            "text": "sweet corn on the cob grilled at the summer barbecue",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "banana-016",
+            "label": "banana",
+            "text": "Musa paradisiaca planted along tropical irrigation channel",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-017",
+            "label": "banana",
+            "text": "Gros Michel bunch in cold storage awaiting export grading",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-018",
+            "label": "banana",
+            "text": "elongated yellow tropical fruit packed for long-haul freight",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-019",
+            "label": "banana",
+            "text": "green plantain peeled and sliced thin for frying",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-020",
+            "label": "banana",
+            "text": "plantain variety cultivated in humid tropical lowlands",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-021",
+            "label": "banana",
+            "text": "sweet ripe banana blended into tropical smoothie bowl",
+            "source": "hard-positive-v1"
         }
     ]
 }
