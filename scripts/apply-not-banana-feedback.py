@@ -30,7 +30,7 @@ def load_json_object(path: Path) -> dict[str, Any]:
     return data
 
 
-def write_json(path: Path, payload: dict[str, Any]) -> None:
+def write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=4) + "\n", encoding="utf-8")
 
@@ -42,6 +42,19 @@ def canonical_sample(label: str, payload: dict[str, Any]) -> str:
         separators=(",", ":"),
         ensure_ascii=False,
     )
+
+
+def normalize_label(label: Any) -> str | None:
+    normalized = str(label).strip().lower().replace("_", "-")
+    if normalized == "banana":
+        return "BANANA"
+    if normalized in {"not-banana", "not banana", "notbanana"}:
+        return "NOT_BANANA"
+    return None
+
+
+def label_for_legacy_text(label: str) -> str:
+    return "banana" if label == "BANANA" else "not-banana"
 
 
 def parse_status_filter(raw: str) -> set[str]:
@@ -204,22 +217,43 @@ def main() -> int:
         )
 
     existing_keys: set[str] = set()
+    corpus_sample_format = "payload"
     for index, sample in enumerate(samples_raw):
         if not isinstance(sample, dict):
             raise ValueError(f"Corpus sample #{index} must be an object.")
-        label = sample.get("label")
+        normalized_label = normalize_label(sample.get("label"))
         payload = sample.get("payload")
-        if label not in VALID_LABELS or not isinstance(payload, dict):
-            raise ValueError(
-                f"Corpus sample #{index} must contain valid label and payload object."
-            )
-        existing_keys.add(canonical_sample(str(label), payload))
+        if normalized_label and isinstance(payload, dict):
+            existing_keys.add(canonical_sample(normalized_label, payload))
+            continue
 
-    feedback = load_json_object(args.feedback)
-    entries = feedback.get("entries")
-    if not isinstance(entries, list):
+        text = sample.get("text")
+        if normalized_label and isinstance(text, str) and text.strip():
+            corpus_sample_format = "legacy_text"
+            existing_keys.add(
+                canonical_sample(normalized_label, {"text": text.strip()})
+            )
+            continue
+
         raise ValueError(
-            f"Feedback inbox at {args.feedback} must contain an 'entries' array."
+            f"Corpus sample #{index} must contain either (label + payload object) or (label + text)."
+        )
+
+    feedback_payload = json.loads(args.feedback.read_text(encoding="utf-8"))
+    feedback_is_object = isinstance(feedback_payload, dict)
+    if feedback_is_object:
+        feedback = feedback_payload
+        entries = feedback.get("entries")
+        if not isinstance(entries, list):
+            raise ValueError(
+                f"Feedback inbox at {args.feedback} must contain an 'entries' array."
+            )
+    elif isinstance(feedback_payload, list):
+        feedback = {"entries": feedback_payload}
+        entries = feedback_payload
+    else:
+        raise ValueError(
+            f"Feedback inbox at {args.feedback} must be either an object with 'entries' or a JSON array."
         )
 
     total_entries = len(entries)
@@ -249,10 +283,14 @@ def main() -> int:
 
         processed_count += 1
         feedback_id = str(entry.get("id", f"entry-{index}"))
-        label = entry.get("label")
+        normalized_label = normalize_label(entry.get("label"))
         payload = entry.get("payload")
+        if not isinstance(payload, dict):
+            text = entry.get("text")
+            if isinstance(text, str) and text.strip():
+                payload = {"text": text.strip()}
 
-        if label not in VALID_LABELS or not isinstance(payload, dict):
+        if normalized_label is None or not isinstance(payload, dict):
             invalid_count += 1
             invalid_entries.append(
                 {
@@ -308,14 +346,36 @@ def main() -> int:
                     consumed_updates += 1
                 continue
 
-        sample_key = canonical_sample(str(label), payload)
+        sample_key = canonical_sample(normalized_label, payload)
         result = "duplicate" if sample_key in existing_keys else "added"
 
         if result == "added":
-            added_count += 1
             if not args.dry_run:
-                samples_raw.append({"label": str(label), "payload": payload})
-                existing_keys.add(sample_key)
+                if corpus_sample_format == "legacy_text":
+                    text_value = payload.get("text")
+                    if not isinstance(text_value, str) or not text_value.strip():
+                        invalid_count += 1
+                        invalid_entries.append(
+                            {
+                                "id": feedback_id,
+                                "index": index,
+                                "reason": "legacy text corpus requires payload.text string",
+                                "category": "schema",
+                            }
+                        )
+                        continue
+                    samples_raw.append(
+                        {
+                            "id": feedback_id,
+                            "label": label_for_legacy_text(normalized_label),
+                            "text": text_value.strip(),
+                            "source": "feedback-loop",
+                        }
+                    )
+                else:
+                    samples_raw.append({"label": normalized_label, "payload": payload})
+            added_count += 1
+            existing_keys.add(sample_key)
         else:
             duplicate_count += 1
 
@@ -374,7 +434,10 @@ def main() -> int:
         files_written += 1
 
     if args.consume and consumed_updates > 0:
-        write_json(args.feedback, feedback)
+        if feedback_is_object:
+            write_json(args.feedback, feedback)
+        else:
+            write_json(args.feedback, entries)
         files_written += 1
 
     if files_written == 0:

@@ -10,6 +10,8 @@
 | [CI and Compose Notes](ci-compose-notes.md) | |
 | [Compose CI Stabilization](ci-compose-stabilization.md) | |
 | [CI Runtime Compatibility](ci-runtime-compatibility.md) | |
+| [Deployment Runbook](deployment.md) | |
+| [Spec-Drain Operations Runbook](spec-drain-operations.md) | |
 | [WSL2 Runtime Channels](wsl2-runtime-channels.md) | |
 
 <!-- AUTO-INDEX END -->

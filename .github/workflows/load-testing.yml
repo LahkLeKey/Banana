@@ -9,7 +9,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: grafana/setup-k6-action@v1
+      - name: Resolve load-test endpoint
+        id: endpoint
+        env:
+          LOAD_TEST_BASE_URL: ${{ vars.LOAD_TEST_BASE_URL || vars.API_BASE_URL || '' }}
+        run: |
+          value="${LOAD_TEST_BASE_URL}"
+          if [[ -z "$value" ]]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "base_url=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$value" =~ ^https?://localhost ]] || [[ "$value" =~ ^https?://127\.0\.0\.1 ]]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "base_url=$value" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          echo "base_url=$value" >> "$GITHUB_OUTPUT"
+      - name: Skip when load-test endpoint is not configured
+        if: ${{ steps.endpoint.outputs.should_run != 'true' }}
+        run: |
+          echo "::warning::Skipping k6 load test: set repository variable LOAD_TEST_BASE_URL (or API_BASE_URL) to a reachable non-localhost endpoint."
       - name: Run k6 load test
+        if: ${{ steps.endpoint.outputs.should_run == 'true' }}
         run: k6 run tests/load/k6-verdict.js
         env:
-          BASE_URL: ${{ vars.LOAD_TEST_BASE_URL || 'http://localhost:8080' }}
+          BASE_URL: ${{ steps.endpoint.outputs.base_url }}

@@ -20,7 +20,38 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -y postgresql-client
 
+      - name: Validate backup configuration
+        id: backup-config
+        env:
+          BANANA_PG_CONNECTION: ${{ secrets.BANANA_PG_CONNECTION }}
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.BACKUP_AWS_REGION }}
+        run: |
+          missing=()
+          for key in BANANA_PG_CONNECTION BACKUP_S3_BUCKET BACKUP_S3_ENDPOINT AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_DEFAULT_REGION; do
+            if [[ -z "${!key:-}" ]]; then
+              missing+=("$key")
+            fi
+          done
+
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            printf 'missing=%s\n' "${missing[*]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "missing=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip backup when secrets are missing
+        if: ${{ steps.backup-config.outputs.configured != 'true' }}
+        run: |
+          echo "::warning::Skipping backup; missing required secrets: ${{ steps.backup-config.outputs.missing }}"
+
       - name: Run backup
+        if: ${{ steps.backup-config.outputs.configured == 'true' }}
         env:
           BANANA_PG_CONNECTION: ${{ secrets.BANANA_PG_CONNECTION }}
           BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}

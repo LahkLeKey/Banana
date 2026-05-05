@@ -258,6 +258,38 @@
       "expires_at": "2026-06-30T00:00:00Z"
     },
     {
+      "route_key": "GET /",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "Root ASP.NET endpoint is intentionally absent from Fastify during staged parity rollout.",
+      "approved_at": "2026-05-04T00:00:00Z",
+      "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
+      "route_key": "GET /chat/sessions/{sessionId}",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "Controller route token style uses braces while Fastify parity exceptions still include colon-token variant.",
+      "approved_at": "2026-05-04T00:00:00Z",
+      "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
+      "route_key": "GET /operator/telemetry/config",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "Telemetry config endpoint is pending Fastify parity implementation.",
+      "approved_at": "2026-05-04T00:00:00Z",
+      "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
+      "route_key": "POST /chat/sessions/{sessionId}/messages",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "Controller route token style uses braces while Fastify parity exceptions still include colon-token variant.",
+      "approved_at": "2026-05-04T00:00:00Z",
+      "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
       "route_key": "POST /ripeness/predict",
       "mismatch_type": "missing_route",
       "owner": "banana-platform",
