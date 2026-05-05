@@ -21,6 +21,14 @@ on:
         description: "Which suite to run: banana, ripeness, or all"
         required: false
         default: "all"
+      apply:
+        description: "Apply feedback entries into corpus after suites"
+        required: false
+        default: "true"
+      auto_train:
+        description: "Run model training after apply"
+        required: false
+        default: "true"
 
 permissions:
   contents: read
@@ -48,8 +56,8 @@ jobs:
 
       - name: TypeScript type-check (reinforcement helpers)
         run: |
-          bun run --cwd src/typescript/react \
-            exec tsc --noEmit --project tsconfig.json
+          cd src/typescript/react
+          bunx tsc --noEmit --project ../../../tests/e2e/playwright/tsconfig.json
 
   run-suites:
     name: Reinforcement suites (${{ github.event.inputs.suite || 'all' }})
@@ -69,15 +77,31 @@ jobs:
         run: bun install --cwd src/typescript/react
 
       - name: Install Playwright browsers
-        run: bun run --cwd src/typescript/react exec playwright install --with-deps chromium
+        run: |
+          cd src/typescript/react
+          bunx playwright install --with-deps chromium
 
       - name: Run reinforcement training suites
         env:
           BANANA_TRAINING_MODE: ${{ github.event.inputs.mode || 'mock' }}
         run: |
-          bash scripts/run-playwright-training-suites.sh \
-            --mode "${{ github.event.inputs.mode || 'mock' }}" \
+          APPLY_INPUT="${{ github.event.inputs.apply || 'true' }}"
+          AUTO_TRAIN_INPUT="${{ github.event.inputs.auto_train || 'true' }}"
+
+          args=(
+            --mode "${{ github.event.inputs.mode || 'mock' }}"
             --suite "${{ github.event.inputs.suite || 'all' }}"
+          )
+
+          if [[ "${APPLY_INPUT}" != "true" ]]; then
+            args+=(--no-apply)
+          fi
+
+          if [[ "${AUTO_TRAIN_INPUT}" != "true" ]]; then
+            args+=(--no-auto-train)
+          fi
+
+          bash scripts/run-playwright-training-suites.sh "${args[@]}"
 
       - name: Upload session summary
         if: always()

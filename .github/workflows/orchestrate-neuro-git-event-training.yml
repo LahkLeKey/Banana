@@ -21,9 +21,19 @@ on:
       - data/banana/**
       - data/not-banana/**
       - data/ripeness/**
+      - data/banana/ontology-foundation.json
+      - data/banana/generalization-benchmark.json
+      - data/banana/explanation-rubric.json
+      - data/banana/explanation-prompts.json
+      - data/not-banana/hard-negatives.json
       - scripts/train-banana-model.py
       - scripts/train-not-banana-model.py
       - scripts/train-ripeness-model.py
+      - scripts/check-corpus-schema.py
+      - scripts/score-banana-generalization-benchmark.py
+      - scripts/score-banana-explanations.py
+      - scripts/score-contrastive-negatives.py
+      - scripts/build-contrastive-replay-pack.py
       - scripts/neuro/**
       - scripts/neuro_trace.py
       - .github/workflows/orchestrate-neuro-git-event-training.yml
@@ -138,6 +148,28 @@ jobs:
             --metrics "artifacts/training/${BANANA_NEURO_MODEL}/local/metrics.json" \
             --anchor "$anchor" \
             --max-regression-pp 1.0 $enforce_flag
+      - name: Ontology + benchmark + explanation gates (banana)
+        if: matrix.model == 'banana'
+        run: |
+          python scripts/check-corpus-schema.py data/banana/corpus.json
+          python scripts/score-banana-generalization-benchmark.py \
+            --benchmark data/banana/generalization-benchmark.json \
+            --vocabulary artifacts/training/banana/local/vocabulary.json \
+            --report artifacts/training/banana/local/generalization-benchmark.json \
+            --strict
+          python scripts/score-banana-explanations.py \
+            --rubric data/banana/explanation-rubric.json \
+            --prompts data/banana/explanation-prompts.json \
+            --report artifacts/training/banana/local/explanation-quality.json \
+            --strict
+      - name: Contrastive hard-negative gate (not-banana)
+        if: matrix.model == 'not-banana'
+        run: |
+          python scripts/score-contrastive-negatives.py \
+            --dataset data/not-banana/hard-negatives.json \
+            --vocabulary artifacts/training/not-banana/local/vocabulary.json \
+            --report artifacts/training/not-banana/local/contrastive-negatives.json \
+            --strict
       - name: Suspicion guard
         env:
           BANANA_NEURO_MODEL: ${{ matrix.model }}
@@ -151,6 +183,17 @@ jobs:
           name: neuro-trace-${{ matrix.model }}
           path: artifacts/training/${{ matrix.model }}/local/neuro-trace.json
           if-no-files-found: warn
+      - name: Upload model quality artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-quality-${{ matrix.model }}
+          path: |
+            artifacts/training/${{ matrix.model }}/local/generalization-benchmark.json
+            artifacts/training/${{ matrix.model }}/local/explanation-quality.json
+            artifacts/training/${{ matrix.model }}/local/contrastive-negatives.json
+            artifacts/training/${{ matrix.model }}/local/concept-coverage-summary.json
+          if-no-files-found: ignore
       - name: Open evidence PR
         if: ${{ github.event.inputs.open_evidence_pr == 'true' }}
         env:

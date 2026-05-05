@@ -1,0 +1,51 @@
+{
+    "schema_version": 1,
+    "required_facts": [
+        {
+            "id": "fruit",
+            "required_terms": [
+                "fruit"
+            ]
+        },
+        {
+            "id": "plant",
+            "required_terms": [
+                "plant",
+                "tree",
+                "musa"
+            ]
+        },
+        {
+            "id": "yellow-ripe",
+            "required_terms": [
+                "yellow",
+                "ripe"
+            ]
+        },
+        {
+            "id": "peel",
+            "required_terms": [
+                "peel"
+            ]
+        },
+        {
+            "id": "edible-sweet",
+            "required_terms": [
+                "edible",
+                "sweet",
+                "eat"
+            ]
+        },
+        {
+            "id": "potassium",
+            "required_terms": [
+                "potassium",
+                "nutrient",
+                "nutrition"
+            ]
+        }
+    ],
+    "min_words": 12,
+    "max_words": 80,
+    "strict_required_facts": 6
+}

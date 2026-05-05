@@ -7,6 +7,7 @@ import argparse
 import difflib
 import json
 import re
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +45,29 @@ def validate_sample(sample: Any, index: int, path: Path) -> None:
         )
 
 
+def load_banana_ontology(path: Path) -> tuple[set[str], int]:
+    ontology_path = path.parent / "ontology-foundation.json"
+    expect(
+        ontology_path.exists(),
+        f"{path}: missing ontology file required for banana corpus ({ontology_path})",
+    )
+    payload = json.loads(ontology_path.read_text(encoding="utf-8"))
+    concepts = payload.get("concepts", [])
+    expect(
+        isinstance(concepts, list) and concepts,
+        f"{ontology_path}: concepts must be a non-empty list",
+    )
+    concept_ids: set[str] = set()
+    for row in concepts:
+        expect(isinstance(row, dict), f"{ontology_path}: concept rows must be objects")
+        concept_id = str(row.get("id", "")).strip()
+        expect(concept_id, f"{ontology_path}: concept id must be non-empty")
+        concept_ids.add(concept_id)
+    min_samples = int(payload.get("min_samples_per_concept", 1))
+    expect(min_samples >= 1, f"{ontology_path}: min_samples_per_concept must be >= 1")
+    return concept_ids, min_samples
+
+
 def normalize_text(value: str) -> str:
     lowered = value.strip().lower()
     collapsed = NORMALIZE_SPACE_RE.sub(" ", lowered)
@@ -72,9 +96,36 @@ def validate_corpus(path: Path) -> None:
         f"{path}: samples must be a non-empty array",
     )
     normalized_texts: list[tuple[int, str]] = []
+    banana_concept_ids: set[str] = set()
+    min_samples_per_concept = 1
+    concept_counts: Counter[str] = Counter()
+    requires_banana_ontology = path.parts[-2:] == ("banana", "corpus.json")
+    if requires_banana_ontology:
+        banana_concept_ids, min_samples_per_concept = load_banana_ontology(path)
+
     for idx, sample in enumerate(samples, start=1):
         validate_sample(sample, idx, path)
         normalized_texts.append((idx, normalize_text(str(sample.get("text", "")))))
+
+        if not requires_banana_ontology:
+            continue
+
+        label = str(sample.get("label", "")).strip().lower().replace("_", "-")
+        if label != "banana":
+            continue
+
+        concepts = sample.get("concepts")
+        expect(
+            isinstance(concepts, list) and concepts,
+            f"{path}: banana sample #{idx} must include non-empty 'concepts' list",
+        )
+        for concept in concepts:
+            concept_id = str(concept).strip()
+            expect(
+                concept_id in banana_concept_ids,
+                f"{path}: banana sample #{idx} references unknown concept '{concept_id}'",
+            )
+            concept_counts[concept_id] += 1
 
     seen: dict[str, int] = {}
     for idx, normalized in normalized_texts:
@@ -94,6 +145,15 @@ def validate_corpus(path: Path) -> None:
                 raise ValueError(
                     f"{path}: near-duplicate sample text detected between samples "
                     f"#{left_number} and #{right_number} (similarity={similarity:.3f})"
+                )
+
+    if requires_banana_ontology:
+        for concept_id in sorted(banana_concept_ids):
+            count = int(concept_counts.get(concept_id, 0))
+            if count < min_samples_per_concept:
+                raise ValueError(
+                    f"{path}: concept '{concept_id}' has {count} samples; "
+                    f"requires >= {min_samples_per_concept}"
                 )
 
 

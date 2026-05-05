@@ -1,260 +1,381 @@
 {
-    "schema_version": 1,
-    "description": "Seed corpus for banana-positive classifier training.",
-    "samples": [
-        {
-            "id": "banana-001",
-            "label": "banana",
-            "text": "fresh banana bunch from the market",
-            "source": "seed"
-        },
-        {
-            "id": "banana-002",
-            "label": "banana",
-            "text": "ripe yellow banana smoothie",
-            "source": "seed"
-        },
-        {
-            "id": "banana-003",
-            "label": "banana",
-            "text": "banana peel compost for garden",
-            "source": "seed"
-        },
-        {
-            "id": "banana-004",
-            "label": "banana",
-            "text": "banana bread recipe with walnuts",
-            "source": "seed"
-        },
-        {
-            "id": "banana-005",
-            "label": "banana",
-            "text": "green banana chips lightly salted",
-            "source": "seed"
-        },
-        {
-            "id": "banana-006",
-            "label": "banana",
-            "text": "single banana on kitchen counter",
-            "source": "seed"
-        },
-        {
-            "id": "banana-007",
-            "label": "banana",
-            "text": "banana crate delivered at dawn",
-            "source": "seed"
-        },
-        {
-            "id": "banana-008",
-            "label": "banana",
-            "text": "sweet banana slices over oatmeal",
-            "source": "seed"
-        },
-        {
-            "id": "banana-009",
-            "label": "banana",
-            "text": "banana stand near the station",
-            "source": "seed"
-        },
-        {
-            "id": "banana-010",
-            "label": "banana",
-            "text": "overripe banana ready for baking",
-            "source": "seed"
-        },
-        {
-            "id": "banana-011",
-            "label": "banana",
-            "text": "banana puree for toddler snack",
-            "source": "seed"
-        },
-        {
-            "id": "banana-012",
-            "label": "banana",
-            "text": "banana harvest report from farm",
-            "source": "seed"
-        },
-        {
-            "id": "not-banana-001",
-            "label": "not-banana",
-            "text": "red bicycle parked outside",
-            "source": "seed"
-        },
-        {
-            "id": "not-banana-002",
-            "label": "not-banana",
-            "text": "stainless steel water bottle",
-            "source": "seed"
-        },
-        {
-            "id": "not-banana-003",
-            "label": "not-banana",
-            "text": "weather radar over coastal city",
-            "source": "seed"
-        },
-        {
-            "id": "not-banana-004",
-            "label": "not-banana",
-            "text": "ceramic coffee mug on desk",
-            "source": "seed"
-        },
-        {
-            "id": "not-banana-005",
-            "label": "not-banana",
-            "text": "blue denim jacket in closet",
-            "source": "seed"
-        },
-        {
-            "id": "not-banana-006",
-            "label": "not-banana",
-            "text": "wireless keyboard firmware update",
-            "source": "seed"
-        },
-        {
-            "id": "banana-013",
-            "label": "banana",
-            "text": "banana elongated, edible fruit produced by several kinds of large herbaceous flowering plants in the genus Musa aliases bananas, banana fruit",
-            "source": "wikidata-auto-v1",
-            "metadata": {
-                "entity_id": "Q503",
-                "query": "banana fruit",
-                "harvested_at_utc": "2026-05-05T01:20:12Z"
-            }
-        },
-        {
-            "id": "banana-014",
-            "label": "banana",
-            "text": "banana plantation Facility where bananas are grown",
-            "source": "wikidata-auto-v1",
-            "metadata": {
-                "entity_id": "Q4853865",
-                "query": "banana plantation",
-                "harvested_at_utc": "2026-05-05T01:20:12Z"
-            }
-        },
-        {
-            "id": "banana-015",
-            "label": "banana",
-            "text": "cooking banana banana cultivars commonly used in cooking aliases green banana, plantains",
-            "source": "wikidata-auto-v1",
-            "metadata": {
-                "entity_id": "Q165449",
-                "query": "cooking banana",
-                "harvested_at_utc": "2026-05-05T01:20:12Z"
-            }
-        },
-        {
-            "id": "banana-016",
-            "label": "banana",
-            "text": "plantain banana-like vegetable, less sweet aliases cooking banana",
-            "source": "wikidata-auto-v1",
-            "metadata": {
-                "entity_id": "Q123458126",
-                "query": "cooking banana",
-                "harvested_at_utc": "2026-05-05T01:20:12Z"
-            }
-        },
-        {
-            "id": "banana-017",
-            "label": "banana",
-            "text": "Musa acuminata bunch ripening in humid tropical greenhouse",
-            "source": "hard-positive-v1"
-        },
-        {
-            "id": "banana-018",
-            "label": "banana",
-            "text": "Cavendish tropical fruit loaded onto refrigerated export pallet",
-            "source": "hard-positive-v1"
-        },
-        {
-            "id": "banana-019",
-            "label": "banana",
-            "text": "yellow elongated tropical fruit harvested at peak ripeness",
-            "source": "hard-positive-v1"
-        },
-        {
-            "id": "banana-020",
-            "label": "banana",
-            "text": "plantain sliced and fried golden in hot oil",
-            "source": "hard-positive-v1"
-        },
-        {
-            "id": "not-banana-007",
-            "label": "not-banana",
-            "text": "sourdough bread from the artisan bakery on market day",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "not-banana-008",
-            "label": "not-banana",
-            "text": "sweet chili dipping sauce for grilled skewer appetizer",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "not-banana-009",
-            "label": "not-banana",
-            "text": "potato chips sealed in foil bag for pantry storage",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "not-banana-010",
-            "label": "not-banana",
-            "text": "wooden shipping crate stacked at warehouse loading dock",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "not-banana-011",
-            "label": "not-banana",
-            "text": "flower bunch wrapped in cellophane for birthday delivery",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "not-banana-012",
-            "label": "not-banana",
-            "text": "engine components are sourced from certified auto supplier",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "not-banana-013",
-            "label": "not-banana",
-            "text": "sweet potato fries with rosemary from the oven tray",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "not-banana-014",
-            "label": "not-banana",
-            "text": "sweet corn on the cob grilled at the summer barbecue",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "not-banana-015",
-            "label": "not-banana",
-            "text": "sweet cream butter for homemade biscuit dough",
-            "source": "hard-negative-v1"
-        },
-        {
-            "id": "banana-021",
-            "label": "banana",
-            "text": "Musa paradisiaca planted along tropical irrigation channel",
-            "source": "hard-positive-v1"
-        },
-        {
-            "id": "banana-022",
-            "label": "banana",
-            "text": "Gros Michel bunch in cold storage awaiting export grading",
-            "source": "hard-positive-v1"
-        },
-        {
-            "id": "banana-023",
-            "label": "banana",
-            "text": "green plantain peeled and sliced thin for frying",
-            "source": "hard-positive-v1"
-        },
-        {
-            "id": "banana-024",
-            "label": "banana",
-            "text": "Gros Michel cultivar overtaken by Panama disease in plantations",
-            "source": "hard-positive-v1"
-        }
-    ]
+  "schema_version": 1,
+  "description": "Seed corpus for banana-positive classifier training.",
+  "samples": [
+    {
+      "id": "banana-001",
+      "label": "banana",
+      "text": "fresh banana bunch from the market",
+      "source": "seed",
+      "concepts": [
+        "fruit-identity"
+      ]
+    },
+    {
+      "id": "banana-002",
+      "label": "banana",
+      "text": "ripe yellow banana smoothie",
+      "source": "seed",
+      "concepts": [
+        "edible-sweet",
+        "fruit-identity",
+        "nutrition-potassium",
+        "ripe-yellow"
+      ]
+    },
+    {
+      "id": "banana-003",
+      "label": "banana",
+      "text": "banana peel compost for garden",
+      "source": "seed",
+      "concepts": [
+        "fruit-identity",
+        "peel-structure"
+      ]
+    },
+    {
+      "id": "banana-004",
+      "label": "banana",
+      "text": "banana bread recipe with walnuts",
+      "source": "seed",
+      "concepts": [
+        "edible-sweet",
+        "fruit-identity",
+        "nutrition-potassium"
+      ]
+    },
+    {
+      "id": "banana-005",
+      "label": "banana",
+      "text": "green banana chips lightly salted",
+      "source": "seed",
+      "concepts": [
+        "edible-sweet",
+        "fruit-identity",
+        "nutrition-potassium",
+        "ripe-yellow"
+      ]
+    },
+    {
+      "id": "banana-006",
+      "label": "banana",
+      "text": "single banana on kitchen counter",
+      "source": "seed",
+      "concepts": [
+        "fruit-identity"
+      ]
+    },
+    {
+      "id": "banana-007",
+      "label": "banana",
+      "text": "banana crate delivered at dawn",
+      "source": "seed",
+      "concepts": [
+        "fruit-identity"
+      ]
+    },
+    {
+      "id": "banana-008",
+      "label": "banana",
+      "text": "sweet banana slices over oatmeal",
+      "source": "seed",
+      "concepts": [
+        "edible-sweet",
+        "fruit-identity",
+        "nutrition-potassium"
+      ]
+    },
+    {
+      "id": "banana-009",
+      "label": "banana",
+      "text": "banana stand near the station",
+      "source": "seed",
+      "concepts": [
+        "fruit-identity"
+      ]
+    },
+    {
+      "id": "banana-010",
+      "label": "banana",
+      "text": "overripe banana ready for baking",
+      "source": "seed",
+      "concepts": [
+        "edible-sweet",
+        "fruit-identity",
+        "ripe-yellow"
+      ]
+    },
+    {
+      "id": "banana-011",
+      "label": "banana",
+      "text": "banana puree for toddler snack",
+      "source": "seed",
+      "concepts": [
+        "edible-sweet",
+        "fruit-identity"
+      ]
+    },
+    {
+      "id": "banana-012",
+      "label": "banana",
+      "text": "banana harvest report from farm",
+      "source": "seed",
+      "concepts": [
+        "fruit-identity",
+        "plant-growth"
+      ]
+    },
+    {
+      "id": "not-banana-001",
+      "label": "not-banana",
+      "text": "red bicycle parked outside",
+      "source": "seed"
+    },
+    {
+      "id": "not-banana-002",
+      "label": "not-banana",
+      "text": "stainless steel water bottle",
+      "source": "seed"
+    },
+    {
+      "id": "not-banana-003",
+      "label": "not-banana",
+      "text": "weather radar over coastal city",
+      "source": "seed"
+    },
+    {
+      "id": "not-banana-004",
+      "label": "not-banana",
+      "text": "ceramic coffee mug on desk",
+      "source": "seed"
+    },
+    {
+      "id": "not-banana-005",
+      "label": "not-banana",
+      "text": "blue denim jacket in closet",
+      "source": "seed"
+    },
+    {
+      "id": "not-banana-006",
+      "label": "not-banana",
+      "text": "wireless keyboard firmware update",
+      "source": "seed"
+    },
+    {
+      "id": "banana-013",
+      "label": "banana",
+      "text": "banana elongated, edible fruit produced by several kinds of large herbaceous flowering plants in the genus Musa aliases bananas, banana fruit",
+      "source": "wikidata-auto-v1",
+      "metadata": {
+        "entity_id": "Q503",
+        "query": "banana fruit",
+        "harvested_at_utc": "2026-05-05T01:20:12Z"
+      },
+      "concepts": [
+        "edible-sweet",
+        "fruit-identity",
+        "plant-growth"
+      ]
+    },
+    {
+      "id": "banana-014",
+      "label": "banana",
+      "text": "banana plantation Facility where bananas are grown",
+      "source": "wikidata-auto-v1",
+      "metadata": {
+        "entity_id": "Q4853865",
+        "query": "banana plantation",
+        "harvested_at_utc": "2026-05-05T01:20:12Z"
+      },
+      "concepts": [
+        "fruit-identity",
+        "plant-growth"
+      ]
+    },
+    {
+      "id": "banana-015",
+      "label": "banana",
+      "text": "cooking banana banana cultivars commonly used in cooking aliases green banana, plantains",
+      "source": "wikidata-auto-v1",
+      "metadata": {
+        "entity_id": "Q165449",
+        "query": "cooking banana",
+        "harvested_at_utc": "2026-05-05T01:20:12Z"
+      },
+      "concepts": [
+        "fruit-identity",
+        "plant-growth",
+        "ripe-yellow"
+      ]
+    },
+    {
+      "id": "banana-016",
+      "label": "banana",
+      "text": "plantain banana-like vegetable, less sweet aliases cooking banana",
+      "source": "wikidata-auto-v1",
+      "metadata": {
+        "entity_id": "Q123458126",
+        "query": "cooking banana",
+        "harvested_at_utc": "2026-05-05T01:20:12Z"
+      },
+      "concepts": [
+        "edible-sweet",
+        "fruit-identity",
+        "plant-growth"
+      ]
+    },
+    {
+      "id": "banana-017",
+      "label": "banana",
+      "text": "Musa acuminata bunch ripening in humid tropical greenhouse",
+      "source": "hard-positive-v1",
+      "concepts": [
+        "fruit-identity",
+        "plant-growth",
+        "ripe-yellow"
+      ]
+    },
+    {
+      "id": "banana-018",
+      "label": "banana",
+      "text": "Cavendish tropical fruit loaded onto refrigerated export pallet",
+      "source": "hard-positive-v1",
+      "concepts": [
+        "fruit-identity"
+      ]
+    },
+    {
+      "id": "banana-019",
+      "label": "banana",
+      "text": "yellow elongated tropical fruit harvested at peak ripeness",
+      "source": "hard-positive-v1",
+      "concepts": [
+        "fruit-identity",
+        "plant-growth",
+        "ripe-yellow"
+      ]
+    },
+    {
+      "id": "banana-020",
+      "label": "banana",
+      "text": "plantain sliced and fried golden in hot oil",
+      "source": "hard-positive-v1",
+      "concepts": [
+        "fruit-identity",
+        "plant-growth"
+      ]
+    },
+    {
+      "id": "not-banana-007",
+      "label": "not-banana",
+      "text": "sourdough bread from the artisan bakery on market day",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "not-banana-008",
+      "label": "not-banana",
+      "text": "sweet chili dipping sauce for grilled skewer appetizer",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "not-banana-009",
+      "label": "not-banana",
+      "text": "potato chips sealed in foil bag for pantry storage",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "not-banana-010",
+      "label": "not-banana",
+      "text": "wooden shipping crate stacked at warehouse loading dock",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "not-banana-011",
+      "label": "not-banana",
+      "text": "flower bunch wrapped in cellophane for birthday delivery",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "not-banana-012",
+      "label": "not-banana",
+      "text": "engine components are sourced from certified auto supplier",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "not-banana-013",
+      "label": "not-banana",
+      "text": "sweet potato fries with rosemary from the oven tray",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "not-banana-014",
+      "label": "not-banana",
+      "text": "sweet corn on the cob grilled at the summer barbecue",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "not-banana-015",
+      "label": "not-banana",
+      "text": "sweet cream butter for homemade biscuit dough",
+      "source": "hard-negative-v1"
+    },
+    {
+      "id": "banana-021",
+      "label": "banana",
+      "text": "Musa paradisiaca planted along tropical irrigation channel",
+      "source": "hard-positive-v1",
+      "concepts": [
+        "fruit-identity",
+        "plant-growth"
+      ]
+    },
+    {
+      "id": "banana-022",
+      "label": "banana",
+      "text": "Gros Michel bunch in cold storage awaiting export grading",
+      "source": "hard-positive-v1",
+      "concepts": [
+        "fruit-identity"
+      ]
+    },
+    {
+      "id": "banana-023",
+      "label": "banana",
+      "text": "green plantain peeled and sliced thin for frying",
+      "source": "hard-positive-v1",
+      "concepts": [
+        "fruit-identity",
+        "peel-structure",
+        "plant-growth",
+        "ripe-yellow"
+      ]
+    },
+    {
+      "id": "banana-024",
+      "label": "banana",
+      "text": "Gros Michel cultivar overtaken by Panama disease in plantations",
+      "source": "hard-positive-v1",
+      "concepts": [
+        "plant-growth"
+      ]
+    },
+    {
+      "id": "curr-ripe-yellow-0001",
+      "label": "banana",
+      "text": "A ripe banana usually has a yellow peel and sweeter taste.",
+      "source": "autonomous-curriculum-v1",
+      "concepts": [
+        "ripe-yellow"
+      ]
+    },
+    {
+      "id": "curr-ripe-yellow-0002",
+      "label": "banana",
+      "text": "Banana peel color changes from green to yellow as it ripens.",
+      "source": "autonomous-curriculum-v1",
+      "concepts": [
+        "ripe-yellow"
+      ]
+    }
+  ]
 }

@@ -1,1 +1,226 @@
-[]
+[
+    {
+        "id": "pw-banana-pw-1777981837561-000",
+        "label": "BANANA",
+        "payload": {
+            "text": "yellow curved fruit with sweet tropical flavor"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:43Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-001",
+        "label": "BANANA",
+        "payload": {
+            "text": "ripe banana with brown spots and soft texture"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:44Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-002",
+        "label": "BANANA",
+        "payload": {
+            "text": "bunch of bananas hanging from a tree in the tropics"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:45Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-003",
+        "label": "BANANA",
+        "payload": {
+            "text": "mushy overripe banana perfect for banana bread"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:46Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-004",
+        "label": "BANANA",
+        "payload": {
+            "text": "green unripe banana with firm starchy flesh"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:47Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-005",
+        "label": "NOT_BANANA",
+        "payload": {
+            "text": "ripe red apple with a crisp sweet bite"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "NOT_BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:48Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-006",
+        "label": "NOT_BANANA",
+        "payload": {
+            "text": "juicy orange with thick peel and citrus scent"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "NOT_BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:49Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-007",
+        "label": "NOT_BANANA",
+        "payload": {
+            "text": "bunch of grapes freshly picked from the vine"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "NOT_BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:50Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-008",
+        "label": "NOT_BANANA",
+        "payload": {
+            "text": "tropical mango with fibrous golden flesh"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "NOT_BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:50Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-009",
+        "label": "NOT_BANANA",
+        "payload": {
+            "text": "pineapple with spiky crown and sweet acidic juice"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "NOT_BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:51Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-010",
+        "label": "BANANA",
+        "payload": {
+            "text": "plantain used for cooking \u2014 similar shape to a banana"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:52Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-011",
+        "label": "NOT_BANANA",
+        "payload": {
+            "text": "banana flavored candy \u2014 artificial yellow taste"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "NOT_BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:53Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-012",
+        "label": "BANANA",
+        "payload": {
+            "text": "dried banana chips with caramelized coating"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:54Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    },
+    {
+        "id": "pw-banana-pw-1777981837561-013",
+        "label": "NOT_BANANA",
+        "payload": {
+            "text": "banana split dessert with ice cream and chocolate sauce"
+        },
+        "status": "applied",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981837561",
+        "predicted_label": "NOT_BANANA",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:55Z",
+        "apply_result": "added",
+        "applied_at_utc": "2026-05-05T11:51:06Z"
+    }
+]

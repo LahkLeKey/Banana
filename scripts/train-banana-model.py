@@ -129,6 +129,59 @@ def load_corpus(path: Path) -> list[Sample]:
     return samples
 
 
+def compute_concept_coverage(path: Path) -> dict[str, object]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    samples = payload.get("samples", [])
+    ontology_path = path.parent / "ontology-foundation.json"
+    if not ontology_path.exists():
+        return {
+            "ontology_path": str(ontology_path),
+            "present": False,
+            "counts": {},
+            "min_samples_per_concept": 0,
+            "meets_threshold": True,
+            "missing_concepts": [],
+        }
+
+    ontology_payload = json.loads(ontology_path.read_text(encoding="utf-8"))
+    concepts = ontology_payload.get("concepts", [])
+    concept_ids = [
+        str(row.get("id", "")).strip()
+        for row in concepts
+        if isinstance(row, dict) and str(row.get("id", "")).strip()
+    ]
+    min_samples = int(ontology_payload.get("min_samples_per_concept", 1))
+    counts: dict[str, int] = {concept_id: 0 for concept_id in concept_ids}
+
+    for sample in samples:
+        if not isinstance(sample, dict):
+            continue
+        label = str(sample.get("label", "")).strip().lower().replace("_", "-")
+        if label != "banana":
+            continue
+        concept_tags = sample.get("concepts", [])
+        if not isinstance(concept_tags, list):
+            continue
+        for concept in concept_tags:
+            concept_id = str(concept).strip()
+            if concept_id in counts:
+                counts[concept_id] += 1
+
+    missing = [
+        concept_id
+        for concept_id, count in counts.items()
+        if int(count) < int(min_samples)
+    ]
+    return {
+        "ontology_path": str(ontology_path),
+        "present": True,
+        "counts": counts,
+        "min_samples_per_concept": min_samples,
+        "meets_threshold": len(missing) == 0,
+        "missing_concepts": missing,
+    }
+
+
 def resolve_profile(profile: str) -> str:
     if profile != "auto":
         return profile
@@ -382,6 +435,7 @@ def main() -> int:
     )
 
     selected_metrics = dict(selected["metrics"])
+    concept_coverage_summary = compute_concept_coverage(corpus_path)
     selected_metrics.update(
         {
             "signal_score": round(float(selected["signal_score"]), 6),
@@ -395,6 +449,7 @@ def main() -> int:
             "session_mode": args.session_mode,
             "evaluated_sessions": sessions_to_run,
             "selected_session": int(selected["session_index"]),
+            "concept_coverage_summary": concept_coverage_summary,
         }
     )
 
@@ -423,6 +478,13 @@ def main() -> int:
         "metrics": selected_metrics,
     }
 
+    concept_coverage_payload = {
+        "schema_version": 1,
+        "generated_at_utc": DETERMINISTIC_GENERATED_AT,
+        "run_fingerprint": run_fingerprint,
+        **concept_coverage_summary,
+    }
+
     sessions_payload = {
         "schema_version": 1,
         "generated_at_utc": DETERMINISTIC_GENERATED_AT,
@@ -438,6 +500,9 @@ def main() -> int:
     )
     (output_dir / "sessions.json").write_text(
         json.dumps(sessions_payload, indent=2) + "\n", encoding="utf-8"
+    )
+    (output_dir / "concept-coverage-summary.json").write_text(
+        json.dumps(concept_coverage_payload, indent=2) + "\n", encoding="utf-8"
     )
     write_header(output_dir / "banana_signal_tokens.h", selected_tokens)
 

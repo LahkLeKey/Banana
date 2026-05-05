@@ -81,6 +81,11 @@ def parse_args() -> argparse.Namespace:
         help="Allow numeric-only tokens in learned vocabulary.",
     )
     parser.add_argument(
+        "--replay-pack",
+        default="",
+        help="Optional replay pack JSON path to merge additional samples before training.",
+    )
+    parser.add_argument(
         "--neuro-profile",
         choices=["off", "ci", "local"],
         default="off",
@@ -127,6 +132,28 @@ def load_corpus(path: Path) -> list[Sample]:
             "Corpus must provide at least 6 samples to evaluate hold-out metrics."
         )
     return samples
+
+
+def load_replay_pack(path: Path) -> list[Sample]:
+    if not path.exists():
+        raise FileNotFoundError(f"Replay pack not found: {path}")
+
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    entries = payload.get("entries", []) if isinstance(payload, dict) else []
+    if not isinstance(entries, list):
+        raise ValueError(f"Replay pack {path} must contain an 'entries' array")
+
+    replay_samples: list[Sample] = []
+    for index, item in enumerate(entries, start=1):
+        if not isinstance(item, dict):
+            continue
+        text = str(item.get("text", "")).strip()
+        if not text:
+            continue
+        label = normalize_label(str(item.get("label", "")))
+        replay_samples.append(Sample(text=text, label=label))
+
+    return replay_samples
 
 
 def resolve_profile(profile: str) -> str:
@@ -337,6 +364,12 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     samples = load_corpus(corpus_path)
+    replay_count = 0
+    if str(args.replay_pack).strip():
+        replay_pack_path = Path(str(args.replay_pack))
+        replay_samples = load_replay_pack(replay_pack_path)
+        replay_count = len(replay_samples)
+        samples = samples + replay_samples
 
     profile = resolve_profile(args.training_profile)
     sessions_to_run = resolve_sessions(profile, args.session_mode, args.max_sessions)
@@ -395,6 +428,7 @@ def main() -> int:
             "session_mode": args.session_mode,
             "evaluated_sessions": sessions_to_run,
             "selected_session": int(selected["session_index"]),
+            "replay_pack_count": replay_count,
         }
     )
 
