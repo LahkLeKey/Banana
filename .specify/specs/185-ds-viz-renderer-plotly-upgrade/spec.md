@@ -38,3 +38,11 @@ The notebook runner executes Python via Pyodide correctly but renders charts as 
 - SC-003: Markdown cells show rendered HTML in preview mode; double-click returns to edit.
 - SC-004: Each executed cell shows an execution count `[1]`, `[2]`, etc.
 - SC-005: Notebook 07 cells all produce visible charts/tables on Run All.
+
+## Assumptions
+
+- Plotly.js is loaded from CDN (`cdn.plot.ly`) on first chart render; no new npm dependencies are added.
+- The React app already bundles Pyodide; this feature adds only a lazy CDN script tag for Plotly.
+- `BANANA_VIZ::` compat shim is preserved so older notebooks continue to produce output.
+- Markdown→HTML transform is inline (no external parsing library); basic syntax (headers, bold, code, bullets) is sufficient for notebook prose.
+- Notebook 07 is the canonical validation surface; other notebooks are not in scope for cell rewrites.
