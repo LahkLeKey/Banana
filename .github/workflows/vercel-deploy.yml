@@ -41,7 +41,7 @@ jobs:
           VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: bun run build --cwd src/typescript/react
+        run: bun --cwd src/typescript/react run build
 
   deploy-production:
     name: Deploy to Vercel (Production)

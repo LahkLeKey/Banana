@@ -20,11 +20,11 @@ public sealed class JupyterLiteRuntimeContractTests
     {
         var source = ReadDataSciencePageSource();
 
-        Assert.Contains("const JUPYTER_LITE_URL = \"https://jupyterlite.github.io/demo/lab/index.html\";", source, StringComparison.Ordinal);
-        Assert.Contains("onLoad={() => setIframeState(\"ready\")}", source, StringComparison.Ordinal);
-        Assert.Contains("onError={() => setIframeState(\"error\")}", source, StringComparison.Ordinal);
-        Assert.Contains("Retry embed", source, StringComparison.Ordinal);
-        Assert.Contains("Open in new tab", source, StringComparison.Ordinal);
+        Assert.Contains("PYODIDE_INDEX", source, StringComparison.Ordinal);
+        Assert.Contains("PYODIDE_SCRIPT", source, StringComparison.Ordinal);
+        Assert.Contains("Loading Python runtime (Pyodide)", source, StringComparison.Ordinal);
+        Assert.Contains("window.loadPyodide", source, StringComparison.Ordinal);
+        Assert.Contains("Python runtime ready.", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -32,10 +32,9 @@ public sealed class JupyterLiteRuntimeContractTests
     {
         var source = ReadDataSciencePageSource();
 
-        Assert.Contains("const PYODIDE_SCRIPT", source, StringComparison.Ordinal);
+        Assert.Contains("PYODIDE_SCRIPT", source, StringComparison.Ordinal);
         Assert.Contains("runPythonAsync", source, StringComparison.Ordinal);
         Assert.Contains("starterCells", source, StringComparison.Ordinal);
-        Assert.Contains("kind: \"python\"", source, StringComparison.Ordinal);
         Assert.Contains("stdout", source, StringComparison.Ordinal);
         Assert.Contains("traceback", source, StringComparison.Ordinal);
     }

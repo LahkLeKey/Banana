@@ -33,7 +33,18 @@ jobs:
       - name: Install clang-format
         run: sudo apt-get install -y clang-format-19
 
-      - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
+      - name: Install pre-commit
+        run: python -m pip install pre-commit
+
+      - name: Run pre-commit on PR diff
+        if: github.event_name == 'pull_request'
+        run: |
+          pre-commit run --show-diff-on-failure --color=always \
+            --from-ref "${{ github.event.pull_request.base.sha }}" \
+            --to-ref "${{ github.event.pull_request.head.sha }}"
+
+      - name: Run pre-commit on all files
+        if: github.event_name != 'pull_request'
+        run: pre-commit run --show-diff-on-failure --color=always --all-files
         env:
           SKIP: dotnet-format
