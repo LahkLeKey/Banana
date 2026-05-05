@@ -175,7 +175,8 @@ jobs:
           BANANA_NEURO_MODEL: ${{ matrix.model }}
         run: |
           python scripts/check-training-metrics-suspicion.py \
-            --artifacts-root artifacts/training
+            --artifacts-root artifacts/training \
+            --lanes "${BANANA_NEURO_MODEL}"
       - name: Upload neuro trace
         if: always()
         uses: actions/upload-artifact@v4

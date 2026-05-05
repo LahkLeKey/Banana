@@ -94,6 +94,17 @@ def main() -> int:
     challenge_payload = json.loads(challenge_path.read_text(encoding="utf-8"))
     prompts: list[dict] = challenge_payload["prompts"]
 
+    if not prompts:
+        print(
+            "[FAIL] challenge-set.json contains zero prompts; cannot compute recall.",
+            file=sys.stderr,
+        )
+        print(
+            "  Add at least one labeled prompt per ripeness label before scoring.",
+            file=sys.stderr,
+        )
+        return 1
+
     correct_by_label: Counter[str] = Counter()
     total_by_label: Counter[str] = Counter()
     misses: list[dict] = []

@@ -85,8 +85,23 @@ jobs:
         env:
           BANANA_TRAINING_MODE: ${{ github.event.inputs.mode || 'mock' }}
         run: |
-          APPLY_INPUT="${{ github.event.inputs.apply || 'true' }}"
-          AUTO_TRAIN_INPUT="${{ github.event.inputs.auto_train || 'true' }}"
+          EVENT_NAME="${{ github.event_name }}"
+          APPLY_INPUT="${{ github.event.inputs.apply }}"
+          AUTO_TRAIN_INPUT="${{ github.event.inputs.auto_train }}"
+
+          # Push runs are dry by default; workflow_dispatch can opt into mutation.
+          if [[ "${EVENT_NAME}" != "workflow_dispatch" ]]; then
+            APPLY_INPUT="false"
+            AUTO_TRAIN_INPUT="false"
+          fi
+
+          if [[ -z "${APPLY_INPUT}" ]]; then
+            APPLY_INPUT="true"
+          fi
+
+          if [[ -z "${AUTO_TRAIN_INPUT}" ]]; then
+            AUTO_TRAIN_INPUT="true"
+          fi
 
           args=(
             --mode "${{ github.event.inputs.mode || 'mock' }}"

@@ -9,6 +9,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import math
 import json
 import sys
 from collections import Counter
@@ -77,7 +78,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     boundary_ratio = boundary_count / len(eval_ids) if eval_ids else 0.0
     if boundary_ratio < MIN_BOUNDARY_RATIO:
-        needed = int(MIN_BOUNDARY_RATIO * len(eval_ids)) - boundary_count + 1
+        required = math.ceil(MIN_BOUNDARY_RATIO * len(eval_ids))
+        needed = max(0, required - boundary_count)
         failures.append(
             f"boundary_ratio {boundary_ratio:.2f} < {MIN_BOUNDARY_RATIO}. "
             f"At least {needed} more eval samples need source containing 'boundary'."

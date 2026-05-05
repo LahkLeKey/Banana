@@ -44,6 +44,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Comma-separated lane names where perfect accuracy is intentionally "
              "allowed (env: BANANA_ALLOW_PERFECT_LANES).",
     )
+    parser.add_argument(
+        "--lanes",
+        default=",".join(LANE_DEFAULTS.keys()),
+        help="Comma-separated lane names to validate (default: banana,not-banana,ripeness).",
+    )
     return parser.parse_args(argv)
 
 
@@ -57,15 +62,6 @@ def build_lanes(artifacts_root: Path) -> dict:
     return lanes
 
 
-LANES = {
-    lane: {
-        "path": REPO_ROOT / "artifacts" / "training" / lane / "local" / "metrics.json",
-        **defaults,
-    }
-    for lane, defaults in LANE_DEFAULTS.items()
-}
-
-
 def _is_diagonal_only(confusion: dict) -> bool:
     """Return True if every off-diagonal cell in the confusion matrix is zero."""
     for actual, pred_counts in confusion.items():
@@ -73,13 +69,6 @@ def _is_diagonal_only(confusion: dict) -> bool:
             if actual != predicted and count > 0:
                 return False
     return True
-
-
-def _max_diagonal_cell(confusion: dict) -> int:
-    return max(
-        (v for row in confusion.values() for k, v in row.items() if k == list(row.keys())[0]),
-        default=0,
-    )
 
 
 def _diagonal_support(confusion: dict) -> list[int]:
@@ -149,7 +138,20 @@ def main(argv: list[str] | None = None) -> int:
     allow_perfect: set[str] = {
         lane.strip() for lane in args.allow_perfect_lanes.split(",") if lane.strip()
     }
-    lanes = build_lanes(artifacts_root)
+    requested_lanes = [lane.strip() for lane in args.lanes.split(",") if lane.strip()]
+
+    unknown_lanes = [lane for lane in requested_lanes if lane not in LANE_DEFAULTS]
+    if unknown_lanes:
+        print(
+            "[FAIL] Unknown lane(s): "
+            f"{', '.join(unknown_lanes)}. "
+            f"Valid lanes: {', '.join(LANE_DEFAULTS.keys())}.",
+            file=sys.stderr,
+        )
+        return 1
+
+    all_lanes = build_lanes(artifacts_root)
+    lanes = {lane_name: all_lanes[lane_name] for lane_name in requested_lanes}
 
     all_flags: list[str] = []
 
