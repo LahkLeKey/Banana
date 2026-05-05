@@ -20,18 +20,8 @@ spec.loader.exec_module(scn)
 def test_contrastive_precision_pass(tmp_path: Path) -> None:
     dataset = {
         "samples": [
-            {
-                "id": "hn1",
-                "text": "banana flavored candy",
-                "category": "boundary",
-                "expected_label": "not-banana",
-            },
-            {
-                "id": "hn2",
-                "text": "metal keyboard",
-                "category": "technology",
-                "expected_label": "not-banana",
-            },
+            {"id": "hn1", "text": "banana flavored candy", "category": "boundary", "expected_label": "not-banana"},
+            {"id": "hn2", "text": "metal keyboard", "category": "technology", "expected_label": "not-banana"},
         ]
     }
     vocab = {
@@ -71,12 +61,7 @@ def test_contrastive_precision_pass(tmp_path: Path) -> None:
 def test_contrastive_precision_fail(tmp_path: Path) -> None:
     dataset = {
         "samples": [
-            {
-                "id": "hn1",
-                "text": "banana candy",
-                "category": "boundary",
-                "expected_label": "not-banana",
-            }
+            {"id": "hn1", "text": "banana candy", "category": "boundary", "expected_label": "not-banana"}
         ]
     }
     vocab = {"vocabulary": [{"token": "banana", "weight": 1.0}]}
