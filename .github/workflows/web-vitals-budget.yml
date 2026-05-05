@@ -9,6 +9,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: cd src/typescript/react && bun install && bun run build
+        env:
+          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL || 'https://api.example.com' }}
       - name: Lab vitals check (Lighthouse CI)
         run: |
           bunx lhci autorun --config=.lighthouserc.json || echo "Lighthouse CI not configured yet - stub"
