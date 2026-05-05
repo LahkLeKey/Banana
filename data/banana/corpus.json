@@ -109,6 +109,50 @@
             "label": "not-banana",
             "text": "wireless keyboard firmware update",
             "source": "seed"
+        },
+        {
+            "id": "banana-013",
+            "label": "banana",
+            "text": "banana elongated, edible fruit produced by several kinds of large herbaceous flowering plants in the genus Musa aliases bananas, banana fruit",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q503",
+                "query": "banana fruit",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "banana-014",
+            "label": "banana",
+            "text": "banana plantation Facility where bananas are grown",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q4853865",
+                "query": "banana plantation",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "banana-015",
+            "label": "banana",
+            "text": "cooking banana banana cultivars commonly used in cooking aliases green banana, plantains",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q165449",
+                "query": "cooking banana",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "banana-016",
+            "label": "banana",
+            "text": "plantain banana-like vegetable, less sweet aliases cooking banana",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q123458126",
+                "query": "cooking banana",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
         }
     ]
 }

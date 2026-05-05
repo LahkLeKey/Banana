@@ -145,6 +145,72 @@
             "label": "not-banana",
             "text": "stainless water bottle clipped to hiking pack",
             "source": "curated-v1"
+        },
+        {
+            "id": "not-013",
+            "label": "not-banana",
+            "text": "bicycle pedal-driven two-wheel vehicle aliases bike, pushbike",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q11442",
+                "query": "bicycle",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-014",
+            "label": "not-banana",
+            "text": "road bicycle racing bicycle racing sport aliases bicycle road cycling, bicycle road race",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q3609",
+                "query": "bicycle",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-015",
+            "label": "not-banana",
+            "text": "computer keyboard device comprising an arrangement of buttons or keys used to input text in computers aliases keyboard, keyboard (computer)",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q250",
+                "query": "keyboard",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-016",
+            "label": "not-banana",
+            "text": "musical keyboard musical instrument component aliases keyboard, music keyboard",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q901207",
+                "query": "keyboard",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-017",
+            "label": "not-banana",
+            "text": "weather radar radar used to locate and monitor meteorological conditions aliases weather surveillance radar, WSR",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q863343",
+                "query": "weather radar",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
+        },
+        {
+            "id": "not-018",
+            "label": "not-banana",
+            "text": "airborne weather radar radar class aliases weather radar, airborne",
+            "source": "wikidata-auto-v1",
+            "metadata": {
+                "entity_id": "Q107011601",
+                "query": "weather radar",
+                "harvested_at_utc": "2026-05-05T01:20:12Z"
+            }
         }
     ]
 }
