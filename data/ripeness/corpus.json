@@ -10,9 +10,17 @@
     "splits": {
         "eval_ids": [
             "unripe-008",
+            "unripe-009",
+            "unripe-010",
             "ripe-008",
+            "ripe-009",
+            "ripe-010",
             "overripe-008",
-            "spoiled-008"
+            "overripe-009",
+            "overripe-010",
+            "spoiled-008",
+            "spoiled-009",
+            "spoiled-010"
         ]
     },
     "samples": [
@@ -65,6 +73,12 @@
             "source": "seed"
         },
         {
+            "id": "unripe-009",
+            "label": "unripe",
+            "text": "yellow-green peel with firm center and slight starch bite",
+            "source": "hard-boundary-v1"
+        },
+        {
             "id": "ripe-001",
             "label": "ripe",
             "text": "banana peel is yellow and sweet",
@@ -109,8 +123,14 @@
         {
             "id": "ripe-008",
             "label": "ripe",
-            "text": "yellow peel sweet aroma ready to eat",
+            "text": "golden creamy banana easy to eat with clean smooth flavor",
             "source": "seed"
+        },
+        {
+            "id": "ripe-009",
+            "label": "ripe",
+            "text": "mostly yellow peel with faint green tip and balanced sweetness",
+            "source": "hard-boundary-v1"
         },
         {
             "id": "overripe-001",
@@ -157,8 +177,14 @@
         {
             "id": "overripe-008",
             "label": "overripe",
-            "text": "very soft brown spotted banana for baking",
+            "text": "brown freckled skin banana best for bread baking very soft",
             "source": "seed"
+        },
+        {
+            "id": "overripe-009",
+            "label": "overripe",
+            "text": "deep yellow fruit with dense brown freckled spots and very soft flesh",
+            "source": "hard-boundary-v1"
         },
         {
             "id": "spoiled-001",
@@ -206,6 +232,84 @@
             "id": "spoiled-008",
             "label": "spoiled",
             "text": "rotten sour moldy banana with foul odor",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-009",
+            "label": "spoiled",
+            "text": "banana leaking liquid with mold threads and vinegar-like odor",
+            "source": "hard-boundary-v1"
+        },
+        {
+            "id": "unripe-010",
+            "label": "unripe",
+            "text": "slightly yellow peel still firm and starchy with no detectable aroma",
+            "source": "hard-boundary-v2"
+        },
+        {
+            "id": "unripe-011",
+            "label": "unripe",
+            "text": "angular shape bright green stem and waxy surface coating",
+            "source": "seed"
+        },
+        {
+            "id": "unripe-012",
+            "label": "unripe",
+            "text": "peel shows faint yellow streaks but interior still dense and starchy",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-010",
+            "label": "ripe",
+            "text": "fully golden peel easy to eat with creamy interior and clean sweet fragrance",
+            "source": "hard-boundary-v2"
+        },
+        {
+            "id": "ripe-011",
+            "label": "ripe",
+            "text": "smooth creamy interior and clean sweetness ready for eating",
+            "source": "seed"
+        },
+        {
+            "id": "ripe-012",
+            "label": "ripe",
+            "text": "golden color throughout with slight give when pressed and sweet smell",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-010",
+            "label": "overripe",
+            "text": "brown freckled skin with very soft interior and dense mushy flesh throughout",
+            "source": "hard-boundary-v2"
+        },
+        {
+            "id": "overripe-011",
+            "label": "overripe",
+            "text": "skin covered in brown freckles and fruit feels dense and very soft when pressed",
+            "source": "seed"
+        },
+        {
+            "id": "overripe-012",
+            "label": "overripe",
+            "text": "heavy brown freckled patches with dense soft pulp and sweet fermented note",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-010",
+            "label": "spoiled",
+            "text": "black peel with liquid seeping out and strong acidic mold smell",
+            "source": "hard-boundary-v2"
+        },
+        {
+            "id": "spoiled-011",
+            "label": "spoiled",
+            "text": "completely blackened banana with runny pulp and sharp fermented note",
+            "source": "seed"
+        },
+        {
+            "id": "spoiled-012",
+            "label": "spoiled",
+            "text": "ruptured skin leaking dark liquid with white mold patches and rotten odor",
             "source": "seed"
         }
     ]

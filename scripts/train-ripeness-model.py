@@ -485,6 +485,22 @@ def main() -> int:
         }
     )
 
+    # FR-247-04 — eval summary fields
+    confusion_matrix = selected_metrics.get("confusion_matrix", {})
+    holdout_per_label = {
+        label: int(sum(confusion_matrix.get(label, {}).values())) for label in LABELS
+    }
+    raw_payload = json.loads(corpus_path.read_text(encoding="utf-8"))
+    id_to_source = {
+        str(s.get("id", "")): str(s.get("source", ""))
+        for s in raw_payload.get("samples", [])
+    }
+    has_boundary_ids = any(
+        "boundary" in id_to_source.get(eid, "").lower() for eid in eval_ids
+    )
+    selected_metrics["holdout_per_label"] = holdout_per_label
+    selected_metrics["has_boundary_ids"] = has_boundary_ids
+
     run_fingerprint = stable_run_fingerprint(args, corpus_path, len(samples))
 
     vocabulary_payload = {
