@@ -287,3 +287,75 @@ The autonomous spec-drain system is now **fully functional** and **ready to proc
 - 📊 **Reports** progress and evidence for all executed specs
 
 This aligns perfectly with the constitution's governance principles and enables the team to systematically drain all specifications through implementation while respecting infrastructure dependencies and operational constraints.
+
+## Harness Principles (BananaAI)
+
+Harness engineering is a first-class system concern. Model quality sets capability bounds, but harness quality determines realized performance, reliability, and safety in production.
+
+### Design Principles
+
+1. **Tool-first execution, model-second narration**
+   - Prefer verifiable tool calls (tests, validators, state checks) before accepting model claims.
+   - Treat tool outputs as source of truth for pass/fail decisions.
+
+2. **Checkpointed continuity for long-running work**
+   - Persist execution state at each meaningful boundary (spec, stage, lane).
+   - Ensure resumability after interrupts, context resets, or workflow retries.
+
+3. **Narrow-context retrieval over prompt bloat**
+   - Provide only task-relevant evidence and state slices to reduce token waste.
+   - Keep canonical state external to prompts (artifacts, manifests, ledgers).
+
+4. **Policy-gated execution by default**
+   - Require explicit plan manifests for real execution actions.
+   - Fail closed (`policy_blocked`) when intent is underspecified.
+
+5. **Safety and governance at the harness layer**
+   - Enforce guardrails (validation, approval constraints, branch/workflow controls) as executable checks.
+   - Keep guardrails independently updatable without model retraining.
+
+6. **Evidence-first observability**
+   - Emit per-step structured evidence artifacts with reasons, outcomes, and deltas.
+   - Make every automation decision auditable post-run.
+
+### Common Anti-Patterns
+
+1. **Prompt-only orchestration**
+   - Relying on instructions without stateful verification causes drift and non-reproducible outcomes.
+
+2. **No-op success reporting**
+   - Marking tasks complete without executable change commands creates false confidence.
+
+3. **Global context stuffing**
+   - Injecting excessive history into each step increases cost and error rate.
+
+4. **Unbounded autonomous retries**
+   - Missing failure budgets and stop conditions can amplify bad trajectories.
+
+5. **Coupling safety only to model behavior**
+   - Safety that depends on prompt compliance alone is brittle under distribution shift.
+
+6. **Hidden state transitions**
+   - State changes without evidence files block triage and regression analysis.
+
+### KPI Framework
+
+Track harness quality with measurable operational signals:
+
+| KPI | Definition | Target Direction | Why It Matters |
+|-----|------------|------------------|----------------|
+| Task success rate | Completed tasks / attempted tasks (after validation gates) | Up | Measures realized capability, not raw model output quality |
+| Resume effectiveness | Resumed runs completed / resumed runs started | Up | Validates checkpoint quality for long-horizon execution |
+| Fallback rate | Runs that hit fallback paths / total runs | Down | Indicates harness-data-tool alignment quality |
+| Token per successful task | Prompt+completion tokens / validated successful tasks | Down | Captures harness efficiency and context discipline |
+| Verification catch rate | Invalid candidate actions caught by harness checks / invalid candidate actions | Up | Measures guardrail and validator effectiveness |
+| Mean time to recovery | Median time from failed run to successful rerun | Down | Reflects diagnosability and operational resilience |
+| Safety block precision | Correctly blocked unsafe/non-compliant actions / total blocked actions | Up | Prevents both unsafe execution and false-positive friction |
+| Evidence completeness | Steps with required evidence artifacts / total executed steps | Up | Ensures auditability and root-cause traceability |
+
+### Adoption Guidance
+
+1. Wire KPI emission into existing evidence artifacts before adding new dashboards.
+2. Gate promotions on validated success + low fallback rate, not on raw task count.
+3. Review anti-patterns in postmortems and convert each recurring issue into a harness check.
+4. Treat harness regressions as release blockers when safety, continuity, or evidence guarantees are violated.

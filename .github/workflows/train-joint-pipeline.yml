@@ -1,10 +1,19 @@
-name: Joint Training Pipeline
+name: BananaAI Harness Training
 on:
   workflow_dispatch:
     inputs:
       training_profile:
-        description: "Training profile (ci or local)"
+        description: "Training profile (ci, local, overnight, auto)"
         default: ci
+        required: true
+      session_mode:
+        description: "Session mode (single or incremental)"
+        default: single
+        required: true
+      max_sessions:
+        description: "Maximum sessions per model lane"
+        default: "1"
+        required: true
 jobs:
   joint-train:
     runs-on: ubuntu-latest
@@ -12,6 +21,44 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.12"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.31"
       - run: pip install -r requirements.txt || true
-      - run: python scripts/train-joint-pipeline.py --training-profile ${{ inputs.training_profile }} --max-sessions 1
+      - name: Install TypeScript API dependencies
+        run: |
+          cd src/typescript/api
+          bun install --frozen-lockfile
+      - name: Train BananaAI harness
+        run: |
+          python scripts/train-joint-pipeline.py \
+            --training-profile "${{ inputs.training_profile }}" \
+            --session-mode "${{ inputs.session_mode }}" \
+            --max-sessions "${{ inputs.max_sessions }}" \
+            --promote-not-banana-runtime \
+            --sync-native-header
+
+      - name: Smoke validate BananaAI harness outputs
+        run: |
+          python scripts/smoke-banana-ai-harness.py
+
+      - name: Smoke validate not-banana API endpoint source
+        run: |
+          bash scripts/smoke-not-banana-api-trained-artifact.sh "$PWD"
+
+      - name: Upload BananaAI harness artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: banana-ai-harness-artifacts
+          path: |
+            artifacts/training/joint/session-*.json
+            artifacts/training/not-banana/local
+            artifacts/training/banana/local
+            artifacts/training/ripeness/local
+            artifacts/not-banana-model
+            artifacts/not-banana-model-readiness-check
+            artifacts/training/joint/not-banana-api-smoke.log
+            artifacts/training/joint/not-banana-model-response.json
+          if-no-files-found: warn

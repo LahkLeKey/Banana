@@ -289,6 +289,42 @@
       "problemMatcher": []
     },
     {
+      "label": "Train: BananaAI harness (ci profile)",
+      "type": "shell",
+      "command": "bash -lc '/c/Github/Banana/.venv/Scripts/python.exe scripts/train-joint-pipeline.py --training-profile ci --session-mode single --max-sessions 1 --promote-not-banana-runtime --sync-native-header'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Train: BananaAI harness (local incremental)",
+      "type": "shell",
+      "command": "bash -lc '/c/Github/Banana/.venv/Scripts/python.exe scripts/train-joint-pipeline.py --training-profile local --session-mode incremental --max-sessions 6 --promote-not-banana-runtime --sync-native-header'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Validate: BananaAI harness smoke",
+      "type": "shell",
+      "command": "bash -lc '/c/Github/Banana/.venv/Scripts/python.exe scripts/smoke-banana-ai-harness.py'",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Validate: not-banana API trained-artifact smoke",
+      "type": "shell",
+      "command": "bash scripts/smoke-not-banana-api-trained-artifact.sh .",
+      "options": {
+        "cwd": "${workspaceFolder:(Monorepo) Banana}"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Train: all (ci profile)",
       "dependsOrder": "sequence",
       "dependsOn": [
