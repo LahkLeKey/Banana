@@ -28,6 +28,11 @@ const modules = [
         href: "/banana-ai",
     },
     {
+        title: "Quiz QA",
+        description: "Benchmark and non-regression quiz checks with human grading over historical model answers.",
+        href: "/quiz-qa",
+    },
+    {
         title: "Operator",
         description: "Live chat interface backed by the banana classification model.",
         href: "/operator",

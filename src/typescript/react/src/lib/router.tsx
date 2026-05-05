@@ -28,6 +28,7 @@ import { FunctionsPage } from "../pages/FunctionsPage";
 import { KnowledgePage } from "../pages/KnowledgePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { OperatorPage } from "../pages/OperatorPage";
+import { QuizQaPage } from "../pages/QuizQaPage";
 import { ReviewSpikesPage } from "../pages/ReviewSpikesPage";
 import { WorkspacePage } from "../pages/WorkspacePage";
 
@@ -91,6 +92,7 @@ export const router = createBrowserRouter([
           { path: "api-docs", element: <ApiDocsPage /> },
           { path: "data-science", element: <DataSciencePage /> },
           { path: "banana-ai", element: <BananaAIPage /> },
+          { path: "quiz-qa", element: <QuizQaPage /> },
           { path: "review-spikes", element: <ReviewSpikesPage /> },
           { path: "classify", element: <ClassifyPage /> },
           { path: "operator", element: <OperatorPage /> },

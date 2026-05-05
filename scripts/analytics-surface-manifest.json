@@ -1,0 +1,23 @@
+{
+    "criticalWorkflows": [
+        {
+            "name": "workspace-navigation",
+            "requiredRoutes": [
+                "/workspace",
+                "/knowledge",
+                "/functions",
+                "/api-docs",
+                "/data-science",
+                "/banana-ai",
+                "/quiz-qa",
+                "/review-spikes",
+                "/classify",
+                "/operator"
+            ],
+            "requiredEvents": [
+                "banana_page_view",
+                "banana_nav_click"
+            ]
+        }
+    ]
+}

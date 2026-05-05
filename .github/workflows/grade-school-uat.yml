@@ -1,0 +1,410 @@
+name: Grade School UAT
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/typescript/react/src/pages/BananaAIPage.tsx"
+      - "src/typescript/react/src/pages/QuizQaPage.tsx"
+      - "src/typescript/react/grade-school-uat.config.ts"
+      - "tests/e2e/playwright/specs/grade-school-quiz-qa.spec.ts"
+      - "scripts/quiz-model-benchmark-gate.ts"
+      - "scripts/quiz-benchmark-trend-gate.ts"
+      - "src/typescript/react/package.json"
+      - ".github/workflows/grade-school-uat.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/typescript/react/src/pages/BananaAIPage.tsx"
+      - "src/typescript/react/src/pages/QuizQaPage.tsx"
+      - "src/typescript/react/grade-school-uat.config.ts"
+      - "tests/e2e/playwright/specs/grade-school-quiz-qa.spec.ts"
+      - "scripts/quiz-model-benchmark-gate.ts"
+      - "scripts/quiz-benchmark-trend-gate.ts"
+      - "src/typescript/react/package.json"
+      - ".github/workflows/grade-school-uat.yml"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Override target URL (default: https://banana.engineer)"
+        required: false
+        default: "https://banana.engineer"
+      gate_mode:
+        description: "Gate behavior: enforce fails the job, observe records warnings only"
+        required: false
+        default: "enforce"
+        type: choice
+        options:
+          - enforce
+          - observe
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  grade-school-uat:
+    name: Grade School UAT + Gate Evaluator
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GRADE_SCHOOL_GATE_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.gate_mode || 'enforce' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Node.js (Playwright dependency)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install shared UI dependencies
+        run: bun install --cwd src/typescript/shared/ui
+
+      - name: Install React app dependencies
+        run: bun install --cwd src/typescript/react
+
+      - name: Install Playwright Chromium browser + system deps
+        working-directory: src/typescript/react
+        run: bunx playwright install chromium --with-deps
+
+      - name: Run grade-school UAT suites against production URL (readonly)
+        id: run_grade_school_uat
+        continue-on-error: true
+        working-directory: src/typescript/react
+        run: bun run test:grade-school-uat
+        env:
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: ${{ github.event.inputs.base_url || 'https://banana.engineer' }}
+
+      - name: Run quiz model benchmark gate (readonly production API)
+        id: run_quiz_benchmark_gate
+        continue-on-error: true
+        shell: bash
+        run: |
+          target_url="${{ github.event.inputs.base_url || 'https://banana.engineer' }}"
+          api_base="${target_url/https:\/\/banana.engineer/https:\/\/api.banana.engineer}"
+          bun scripts/quiz-model-benchmark-gate.ts \
+            --base-url "${api_base}" \
+            --out-dir ".artifacts/grade-school-gate" \
+            --benchmark-target "0.80" \
+            --regression-floor "0.65"
+
+      - name: Resolve latest main quiz benchmark artifact URL
+        id: resolve_previous_quiz_artifact
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const currentRunId = Number(process.env.GITHUB_RUN_ID || "0");
+
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: "grade-school-uat.yml",
+              branch: "main",
+              status: "success",
+              per_page: 30,
+            });
+
+            let artifactUrl = "";
+            let sourceRunId = "";
+
+            for (const run of runs.data.workflow_runs) {
+              if (run.id === currentRunId) {
+                continue;
+              }
+
+              const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+                owner,
+                repo,
+                run_id: run.id,
+                per_page: 100,
+              });
+
+              const match = artifacts.data.artifacts.find((artifact) =>
+                artifact.name === "quiz-benchmark-gate-report" && !artifact.expired
+              );
+
+              if (match) {
+                artifactUrl = match.archive_download_url;
+                sourceRunId = String(run.id);
+                break;
+              }
+            }
+
+            core.setOutput("artifact_url", artifactUrl);
+            core.setOutput("source_run_id", sourceRunId);
+
+      - name: Download previous main quiz benchmark artifact
+        if: always() && steps.resolve_previous_quiz_artifact.outputs.artifact_url != ''
+        shell: bash
+        run: |
+          mkdir -p .artifacts/previous-quiz-benchmark
+          curl -sSL \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            "${{ steps.resolve_previous_quiz_artifact.outputs.artifact_url }}" \
+            -o .artifacts/previous-quiz-benchmark/artifact.zip
+          unzip -o .artifacts/previous-quiz-benchmark/artifact.zip -d .artifacts/previous-quiz-benchmark
+
+      - name: Run quiz benchmark trend gate
+        id: run_quiz_trend_gate
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          previous_report=".artifacts/previous-quiz-benchmark/quiz-benchmark-gate-report.json"
+          args=(
+            "--current-report" ".artifacts/grade-school-gate/quiz-benchmark-gate-report.json"
+            "--out-dir" ".artifacts/grade-school-gate"
+            "--benchmark-target" "0.80"
+            "--regression-floor" "0.65"
+          )
+
+          if [[ -f "$previous_report" ]]; then
+            args+=("--previous-report" "$previous_report")
+          fi
+
+          bun scripts/quiz-benchmark-trend-gate.ts "${args[@]}"
+
+      - name: Build grade-school gate report artifact
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p .artifacts/grade-school-gate
+          outcome="${{ steps.run_grade_school_uat.outcome }}"
+          quiz_outcome="${{ steps.run_quiz_benchmark_gate.outcome }}"
+          trend_outcome="${{ steps.run_quiz_trend_gate.outcome }}"
+          target_url="${{ github.event.inputs.base_url || 'https://banana.engineer' }}"
+          gate_mode="${GRADE_SCHOOL_GATE_MODE}"
+          timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          if [[ "$outcome" == "success" && "$quiz_outcome" == "success" && "$trend_outcome" == "success" ]]; then
+            gate_status="pass"
+            gate_decision="allow"
+          elif [[ "$gate_mode" == "observe" ]]; then
+            gate_status="warn"
+            gate_decision="allow-with-warning"
+          else
+            gate_status="fail"
+            gate_decision="block"
+          fi
+
+          cat > .artifacts/grade-school-gate/grade-school-gate-report.md <<EOF
+          # Grade-School Release Gate Report
+
+          - generated_at_utc: ${timestamp}
+          - target_url: ${target_url}
+          - gate_mode: ${gate_mode}
+          - suites:
+            - grade-school-quiz-qa.spec.ts
+          - gate_status: ${gate_status}
+          - gate_decision: ${gate_decision}
+          - uat_step_outcome: ${outcome}
+          - quiz_benchmark_step_outcome: ${quiz_outcome}
+          - quiz_trend_step_outcome: ${trend_outcome}
+          - previous_main_artifact_run_id: ${{ steps.resolve_previous_quiz_artifact.outputs.source_run_id || 'n/a' }}
+
+          ## Threshold Inputs
+
+          - Quiz QA UI suite must pass.
+          - Quiz benchmark suite must pass and remain above the non-regression floor.
+          - Quiz trend gate must not regress versus previous successful main benchmark while below target.
+          - Enforce mode: failures block the gate.
+          - Observe mode: failures warn but do not block.
+          EOF
+
+          printf '{"generated_at_utc":"%s","target_url":"%s","gate_mode":"%s","gate_status":"%s","gate_decision":"%s","uat_step_outcome":"%s","quiz_benchmark_step_outcome":"%s","quiz_trend_step_outcome":"%s","previous_main_artifact_run_id":"%s"}\n' "$timestamp" "$target_url" "$gate_mode" "$gate_status" "$gate_decision" "$outcome" "$quiz_outcome" "$trend_outcome" "${{ steps.resolve_previous_quiz_artifact.outputs.source_run_id || 'n/a' }}" > .artifacts/grade-school-gate/grade-school-gate-report.json
+
+      - name: Publish gate summary
+        if: always()
+        shell: bash
+        run: |
+          outcome="${{ steps.run_grade_school_uat.outcome }}"
+          quiz_outcome="${{ steps.run_quiz_benchmark_gate.outcome }}"
+          trend_outcome="${{ steps.run_quiz_trend_gate.outcome }}"
+          if [[ "$outcome" == "success" && "$quiz_outcome" == "success" && "$trend_outcome" == "success" ]]; then
+            gate_status="pass"
+          elif [[ "${GRADE_SCHOOL_GATE_MODE}" == "observe" ]]; then
+            gate_status="warn"
+          else
+            gate_status="fail"
+          fi
+
+          {
+            echo "## Grade-School Gate Summary"
+            echo ""
+            echo "- target_url: ${{ github.event.inputs.base_url || 'https://banana.engineer' }}"
+            echo "- gate_mode: ${GRADE_SCHOOL_GATE_MODE}"
+            echo "- uat_outcome: ${outcome}"
+            echo "- quiz_benchmark_outcome: ${quiz_outcome}"
+            echo "- quiz_trend_outcome: ${trend_outcome}"
+            echo "- previous_main_artifact_run_id: ${{ steps.resolve_previous_quiz_artifact.outputs.source_run_id || 'n/a' }}"
+            echo "- gate_status: ${gate_status}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upsert PR gate summary comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          UAT_OUTCOME: ${{ steps.run_grade_school_uat.outcome }}
+          QUIZ_BENCHMARK_OUTCOME: ${{ steps.run_quiz_benchmark_gate.outcome }}
+          QUIZ_TREND_OUTCOME: ${{ steps.run_quiz_trend_gate.outcome }}
+          PREVIOUS_MAIN_ARTIFACT_RUN_ID: ${{ steps.resolve_previous_quiz_artifact.outputs.source_run_id || 'n/a' }}
+          TARGET_URL: ${{ github.event.inputs.base_url || 'https://banana.engineer' }}
+          GATE_MODE: ${{ env.GRADE_SCHOOL_GATE_MODE }}
+        with:
+          script: |
+            const marker = "<!-- grade-school-gate-comment -->";
+            const uatOutcome = process.env.UAT_OUTCOME ?? "unknown";
+            const quizBenchmarkOutcome = process.env.QUIZ_BENCHMARK_OUTCOME ?? "unknown";
+            const quizTrendOutcome = process.env.QUIZ_TREND_OUTCOME ?? "unknown";
+            const previousMainArtifactRunId = process.env.PREVIOUS_MAIN_ARTIFACT_RUN_ID ?? "n/a";
+            const gateMode = process.env.GATE_MODE ?? "enforce";
+            const targetUrl = process.env.TARGET_URL ?? "https://banana.engineer";
+
+            let gateStatus = "fail";
+            if (
+              uatOutcome === "success" &&
+              quizBenchmarkOutcome === "success" &&
+              quizTrendOutcome === "success"
+            ) {
+              gateStatus = "pass";
+            } else if (gateMode === "observe") {
+              gateStatus = "warn";
+            }
+
+            const icon = gateStatus === "pass" ? "✅" : gateStatus === "warn" ? "⚠️" : "❌";
+            const body = `${marker}
+            ## Grade-School Gate Summary
+
+            ${icon} status: **${gateStatus}**
+
+            - target_url: ${targetUrl}
+            - gate_mode: ${gateMode}
+            - uat_outcome: ${uatOutcome}
+            - quiz_benchmark_outcome: ${quizBenchmarkOutcome}
+            - quiz_trend_outcome: ${quizTrendOutcome}
+            - previous_main_artifact_run_id: ${previousMainArtifactRunId}
+            - suites: grade-school-quiz-qa.spec.ts
+            - artifact: \`grade-school-gate-report\` (workflow artifacts)
+            - artifact: \`quiz-benchmark-gate-report\` (workflow artifacts)
+            - artifact: \`quiz-benchmark-trend-gate-report\` (workflow artifacts)
+            `;
+
+            const issue_number = context.payload.pull_request.number;
+            const {owner, repo} = context.repo;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) =>
+              typeof comment.body === "string" && comment.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Upload grade-school gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grade-school-gate-report
+          path: .artifacts/grade-school-gate/
+          retention-days: 14
+
+      - name: Upload quiz benchmark gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quiz-benchmark-gate-report
+          path: |
+            .artifacts/grade-school-gate/quiz-benchmark-gate-report.json
+            .artifacts/grade-school-gate/quiz-benchmark-gate-report.md
+          retention-days: 14
+
+      - name: Upload quiz benchmark trend gate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quiz-benchmark-trend-gate-report
+          path: |
+            .artifacts/grade-school-gate/quiz-benchmark-trend-gate-report.json
+            .artifacts/grade-school-gate/quiz-benchmark-trend-gate-report.md
+          retention-days: 14
+
+      - name: Upload Playwright report on failure
+        if: steps.run_grade_school_uat.outcome != 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: grade-school-uat-playwright-report
+          path: src/typescript/react/playwright-report/grade-school-uat/
+          retention-days: 7
+
+      - name: Upload Playwright traces on failure
+        if: steps.run_grade_school_uat.outcome != 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: grade-school-uat-test-results
+          path: src/typescript/react/test-results/grade-school-uat/
+          retention-days: 7
+
+      - name: Enforce grade-school release gate
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${GRADE_SCHOOL_GATE_MODE}" == "observe" ]]; then
+            if [[ "${{ steps.run_grade_school_uat.outcome }}" != "success" ]]; then
+              echo "Grade-school release gate observe mode: UAT suites failed but gate is non-blocking."
+            fi
+            if [[ "${{ steps.run_quiz_benchmark_gate.outcome }}" != "success" ]]; then
+              echo "Grade-school release gate observe mode: quiz benchmark gate failed but remains non-blocking."
+            fi
+            if [[ "${{ steps.run_quiz_trend_gate.outcome }}" != "success" ]]; then
+              echo "Grade-school release gate observe mode: quiz trend gate failed but remains non-blocking."
+            fi
+            exit 0
+          fi
+
+          if [[ "${{ steps.run_grade_school_uat.outcome }}" != "success" ]]; then
+            echo "Grade-school release gate failed: one or more readonly production UAT suites failed."
+            exit 1
+          fi
+
+          if [[ "${{ steps.run_quiz_benchmark_gate.outcome }}" != "success" ]]; then
+            echo "Grade-school release gate failed: quiz benchmark is below regression floor."
+            exit 1
+          fi
+
+          if [[ "${{ steps.run_quiz_trend_gate.outcome }}" != "success" ]]; then
+            echo "Grade-school release gate failed: quiz benchmark regressed versus previous main run while below target."
+            exit 1
+          fi

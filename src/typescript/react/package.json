@@ -11,6 +11,7 @@
         "postinstall": "node scripts/dedupe-react.mjs",
         "screenshots": "bunx playwright test --config ../../tests/e2e/playwright/playwright.config.ts --project=screenshots",
         "test:ds-e2e": "NODE_PATH=./node_modules bunx playwright test --config ds-pyodide.config.ts",
+        "test:grade-school-uat": "NODE_PATH=./node_modules bunx playwright test --config grade-school-uat.config.ts",
         "storybook": "storybook dev --port 6006",
         "build-storybook": "storybook build --output-dir storybook-static"
     },
