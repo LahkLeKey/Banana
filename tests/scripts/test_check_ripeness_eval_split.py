@@ -60,13 +60,12 @@ def _passing_corpus(tmp_path: Path) -> Path:
     return _make_corpus(tmp_path, eval_ids, samples)
 
 
-def test_passing_corpus_exits_zero(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_passing_corpus_exits_zero(tmp_path: Path) -> None:
     p = _passing_corpus(tmp_path)
-    monkeypatch.setattr(cres, "CORPUS_PATH", p)
-    assert cres.main() == 0
+    assert cres.main(["--corpus", str(p)]) == 0
 
 
-def test_too_few_eval_ids_exits_one(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_too_few_eval_ids_exits_one(tmp_path: Path) -> None:
     """Only 8 eval_ids — below MIN_EVAL_IDS=12."""
     samples = []
     eval_ids = []
@@ -78,11 +77,10 @@ def test_too_few_eval_ids_exits_one(tmp_path: Path, monkeypatch: pytest.MonkeyPa
             if i <= 2:
                 eval_ids.append(sid)  # only 2 per label = 8 total
     p = _make_corpus(tmp_path, eval_ids, samples)
-    monkeypatch.setattr(cres, "CORPUS_PATH", p)
-    assert cres.main() == 1
+    assert cres.main(["--corpus", str(p)]) == 1
 
 
-def test_missing_label_in_eval_exits_one(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_missing_label_in_eval_exits_one(tmp_path: Path) -> None:
     """overripe has zero eval entries — violates per-label >= 3."""
     samples = []
     eval_ids = []
@@ -94,11 +92,10 @@ def test_missing_label_in_eval_exits_one(tmp_path: Path, monkeypatch: pytest.Mon
             if label != "overripe" and i <= 3:
                 eval_ids.append(sid)
     p = _make_corpus(tmp_path, eval_ids, samples)
-    monkeypatch.setattr(cres, "CORPUS_PATH", p)
-    assert cres.main() == 1
+    assert cres.main(["--corpus", str(p)]) == 1
 
 
-def test_low_boundary_ratio_exits_one(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_low_boundary_ratio_exits_one(tmp_path: Path) -> None:
     """All eval_ids are seed samples — boundary_ratio = 0 < 0.5."""
     samples = []
     eval_ids = []
@@ -110,10 +107,8 @@ def test_low_boundary_ratio_exits_one(tmp_path: Path, monkeypatch: pytest.Monkey
             if i <= 3:
                 eval_ids.append(sid)  # 3 per label = 12 total, but all seed
     p = _make_corpus(tmp_path, eval_ids, samples)
-    monkeypatch.setattr(cres, "CORPUS_PATH", p)
-    assert cres.main() == 1
+    assert cres.main(["--corpus", str(p)]) == 1
 
 
-def test_missing_corpus_exits_one(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cres, "CORPUS_PATH", tmp_path / "nonexistent.json")
-    assert cres.main() == 1
+def test_missing_corpus_exits_one(tmp_path: Path) -> None:
+    assert cres.main(["--corpus", str(tmp_path / "nonexistent.json")]) == 1

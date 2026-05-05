@@ -8,6 +8,7 @@ Exit codes:
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from collections import Counter
@@ -23,12 +24,26 @@ MIN_BOUNDARY_RATIO = 0.5
 LABELS = ["unripe", "ripe", "overripe", "spoiled"]
 
 
-def main() -> int:
-    if not CORPUS_PATH.exists():
-        print(f"[FAIL] Corpus not found: {CORPUS_PATH}", file=sys.stderr)
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Validate ripeness corpus eval split size, balance, and boundary ratio."
+    )
+    parser.add_argument(
+        "--corpus",
+        default=str(CORPUS_PATH),
+        help="Path to ripeness corpus JSON (default: data/ripeness/corpus.json).",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    corpus_path = Path(args.corpus)
+    if not corpus_path.exists():
+        print(f"[FAIL] Corpus not found: {corpus_path}", file=sys.stderr)
         return 1
 
-    payload = json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
+    payload = json.loads(corpus_path.read_text(encoding="utf-8"))
     samples = {s["id"]: s for s in payload.get("samples", [])}
     eval_ids: list[str] = payload.get("splits", {}).get("eval_ids", [])
 

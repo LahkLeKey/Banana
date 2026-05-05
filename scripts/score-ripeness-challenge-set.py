@@ -12,6 +12,7 @@ Exit codes:
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -25,6 +26,23 @@ CHALLENGE_PATH = REPO_ROOT / "data" / "ripeness" / "challenge-set.json"
 TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
 MIN_TOKEN_LENGTH = 3
 PASS_RECALL_THRESHOLD = 0.5  # at least half of challenge prompts per label must be correct
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Score the ripeness challenge set against a trained vocabulary."
+    )
+    parser.add_argument(
+        "--model",
+        default=str(VOCAB_PATH.parent),
+        help="Directory containing vocabulary.json (default: artifacts/training/ripeness/local).",
+    )
+    parser.add_argument(
+        "--challenge",
+        default=str(CHALLENGE_PATH),
+        help="Path to challenge-set.json (default: data/ripeness/challenge-set.json).",
+    )
+    return parser.parse_args()
 
 
 def tokenize(text: str) -> list[str]:
@@ -49,18 +67,22 @@ def predict(text: str, weights: dict[str, dict[str, float]], labels: list[str]) 
 
 
 def main() -> int:
-    if not VOCAB_PATH.exists():
-        print(f"[FAIL] vocabulary.json not found: {VOCAB_PATH}", file=sys.stderr)
+    args = parse_args()
+    vocab_path = Path(args.model) / "vocabulary.json"
+    challenge_path = Path(args.challenge)
+
+    if not vocab_path.exists():
+        print(f"[FAIL] vocabulary.json not found: {vocab_path}", file=sys.stderr)
         print("  Run: python scripts/train-ripeness-model.py --corpus data/ripeness/corpus.json "
               "--output artifacts/training/ripeness/local --training-profile ci --session-mode single --max-sessions 1",
               file=sys.stderr)
         return 1
 
-    if not CHALLENGE_PATH.exists():
-        print(f"[FAIL] challenge-set.json not found: {CHALLENGE_PATH}", file=sys.stderr)
+    if not challenge_path.exists():
+        print(f"[FAIL] challenge-set.json not found: {challenge_path}", file=sys.stderr)
         return 1
 
-    vocab_payload = json.loads(VOCAB_PATH.read_text(encoding="utf-8"))
+    vocab_payload = json.loads(vocab_path.read_text(encoding="utf-8"))
     labels: list[str] = vocab_payload["labels"]
     vocab_entries: list[dict] = vocab_payload["vocabulary"]
 
@@ -69,7 +91,7 @@ def main() -> int:
         entry["token"]: entry["centered_weights"] for entry in vocab_entries
     }
 
-    challenge_payload = json.loads(CHALLENGE_PATH.read_text(encoding="utf-8"))
+    challenge_payload = json.loads(challenge_path.read_text(encoding="utf-8"))
     prompts: list[dict] = challenge_payload["prompts"]
 
     correct_by_label: Counter[str] = Counter()

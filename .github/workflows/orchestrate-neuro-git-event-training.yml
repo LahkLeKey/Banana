@@ -138,6 +138,12 @@ jobs:
             --metrics "artifacts/training/${BANANA_NEURO_MODEL}/local/metrics.json" \
             --anchor "$anchor" \
             --max-regression-pp 1.0 $enforce_flag
+      - name: Suspicion guard
+        env:
+          BANANA_NEURO_MODEL: ${{ matrix.model }}
+        run: |
+          python scripts/check-training-metrics-suspicion.py \
+            --artifacts-root artifacts/training
       - name: Upload neuro trace
         if: always()
         uses: actions/upload-artifact@v4

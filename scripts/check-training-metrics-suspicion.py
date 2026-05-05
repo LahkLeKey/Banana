@@ -13,28 +13,56 @@ Exit codes:
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
+LANE_DEFAULTS = {
+    "banana": {"type": "binary", "min_honest_holdout": 8},
+    "not-banana": {"type": "binary", "min_honest_holdout": 8},
+    "ripeness": {"type": "multiclass", "min_honest_holdout": 12},
+}
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Cross-lane suspicion guard for training metrics."
+    )
+    parser.add_argument(
+        "--artifacts-root",
+        default=str(REPO_ROOT / "artifacts" / "training"),
+        help="Root directory containing per-lane training artifacts "
+             "(default: artifacts/training).",
+    )
+    parser.add_argument(
+        "--allow-perfect-lanes",
+        default=os.environ.get("BANANA_ALLOW_PERFECT_LANES", ""),
+        help="Comma-separated lane names where perfect accuracy is intentionally "
+             "allowed (env: BANANA_ALLOW_PERFECT_LANES).",
+    )
+    return parser.parse_args(argv)
+
+
+def build_lanes(artifacts_root: Path) -> dict:
+    lanes = {}
+    for lane_name, defaults in LANE_DEFAULTS.items():
+        lanes[lane_name] = {
+            "path": artifacts_root / lane_name / "local" / "metrics.json",
+            **defaults,
+        }
+    return lanes
+
+
 LANES = {
-    "banana": {
-        "path": REPO_ROOT / "artifacts" / "training" / "banana" / "local" / "metrics.json",
-        "type": "binary",
-        "min_honest_holdout": 8,
-    },
-    "not-banana": {
-        "path": REPO_ROOT / "artifacts" / "training" / "not-banana" / "local" / "metrics.json",
-        "type": "binary",
-        "min_honest_holdout": 8,
-    },
-    "ripeness": {
-        "path": REPO_ROOT / "artifacts" / "training" / "ripeness" / "local" / "metrics.json",
-        "type": "multiclass",
-        "min_honest_holdout": 12,
-    },
+    lane: {
+        "path": REPO_ROOT / "artifacts" / "training" / lane / "local" / "metrics.json",
+        **defaults,
+    }
+    for lane, defaults in LANE_DEFAULTS.items()
 }
 
 
@@ -61,7 +89,7 @@ def _diagonal_support(confusion: dict) -> list[int]:
     return supports
 
 
-def check_lane(lane_name: str, lane_cfg: dict) -> list[str]:
+def check_lane(lane_name: str, lane_cfg: dict, skip_perfect: bool = False) -> list[str]:
     flags: list[str] = []
     metrics_path: Path = lane_cfg["path"]
     lane_type: str = lane_cfg["type"]
@@ -92,7 +120,7 @@ def check_lane(lane_name: str, lane_cfg: dict) -> list[str]:
         holdout_size = int(holdout_size)
 
     # Rule 1: perfect accuracy with tiny holdout
-    if accuracy >= 1.0 and holdout_size < min_holdout:
+    if not skip_perfect and accuracy >= 1.0 and holdout_size < min_holdout:
         flags.append(
             f"[{lane_name}] SUSPICIOUS: holdout_accuracy=1.0 but holdout_size={holdout_size} "
             f"< minimum honest holdout {min_holdout} for {lane_type} lane. "
@@ -115,11 +143,18 @@ def check_lane(lane_name: str, lane_cfg: dict) -> list[str]:
     return flags
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    artifacts_root = Path(args.artifacts_root)
+    allow_perfect: set[str] = {
+        lane.strip() for lane in args.allow_perfect_lanes.split(",") if lane.strip()
+    }
+    lanes = build_lanes(artifacts_root)
+
     all_flags: list[str] = []
 
-    for lane_name, lane_cfg in LANES.items():
-        lane_flags = check_lane(lane_name, lane_cfg)
+    for lane_name, lane_cfg in lanes.items():
+        lane_flags = check_lane(lane_name, lane_cfg, skip_perfect=(lane_name in allow_perfect))
         all_flags.extend(lane_flags)
 
     if all_flags:
