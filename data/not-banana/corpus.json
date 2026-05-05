@@ -283,6 +283,24 @@
             "label": "banana",
             "text": "elongated yellow tropical fruit packed for long-haul freight",
             "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-019",
+            "label": "banana",
+            "text": "green plantain peeled and sliced thin for frying",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-020",
+            "label": "banana",
+            "text": "plantain variety cultivated in humid tropical lowlands",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-021",
+            "label": "banana",
+            "text": "sweet ripe banana blended into tropical smoothie bowl",
+            "source": "hard-positive-v1"
         }
     ]
 }
