@@ -153,6 +153,108 @@
                 "query": "cooking banana",
                 "harvested_at_utc": "2026-05-05T01:20:12Z"
             }
+        },
+        {
+            "id": "banana-017",
+            "label": "banana",
+            "text": "Musa acuminata bunch ripening in humid tropical greenhouse",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-018",
+            "label": "banana",
+            "text": "Cavendish tropical fruit loaded onto refrigerated export pallet",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-019",
+            "label": "banana",
+            "text": "yellow elongated tropical fruit harvested at peak ripeness",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-020",
+            "label": "banana",
+            "text": "plantain sliced and fried golden in hot oil",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "not-banana-007",
+            "label": "not-banana",
+            "text": "sourdough bread from the artisan bakery on market day",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-banana-008",
+            "label": "not-banana",
+            "text": "sweet chili dipping sauce for grilled skewer appetizer",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-banana-009",
+            "label": "not-banana",
+            "text": "potato chips sealed in foil bag for pantry storage",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-banana-010",
+            "label": "not-banana",
+            "text": "wooden shipping crate stacked at warehouse loading dock",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-banana-011",
+            "label": "not-banana",
+            "text": "flower bunch wrapped in cellophane for birthday delivery",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-banana-012",
+            "label": "not-banana",
+            "text": "engine components are sourced from certified auto supplier",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-banana-013",
+            "label": "not-banana",
+            "text": "sweet potato fries with rosemary from the oven tray",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-banana-014",
+            "label": "not-banana",
+            "text": "sweet corn on the cob grilled at the summer barbecue",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "not-banana-015",
+            "label": "not-banana",
+            "text": "sweet cream butter for homemade biscuit dough",
+            "source": "hard-negative-v1"
+        },
+        {
+            "id": "banana-021",
+            "label": "banana",
+            "text": "Musa paradisiaca planted along tropical irrigation channel",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-022",
+            "label": "banana",
+            "text": "Gros Michel bunch in cold storage awaiting export grading",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-023",
+            "label": "banana",
+            "text": "green plantain peeled and sliced thin for frying",
+            "source": "hard-positive-v1"
+        },
+        {
+            "id": "banana-024",
+            "label": "banana",
+            "text": "Gros Michel cultivar overtaken by Panama disease in plantations",
+            "source": "hard-positive-v1"
         }
     ]
 }
