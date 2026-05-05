@@ -8,5 +8,5 @@
 - [x] T003 Import and render `<SpeedInsights />` from `@vercel/speed-insights/react` in `src/typescript/react/src/main.tsx`.
 - [x] T004 Run `bunx tsc --noEmit --cwd src/typescript/react` and confirm no type errors.
 - [x] T005 Run `bun run build --cwd src/typescript/react` and confirm exit 0.
-- [ ] T006 Deploy to Vercel and confirm page-view events appear in the Vercel Analytics dashboard within 5 minutes.
+- [x] T006 Deploy to Vercel and confirm page-view events appear in the Vercel Analytics dashboard within 5 minutes.
 - [x] T007 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/137-vercel-analytics` and confirm `OK`.

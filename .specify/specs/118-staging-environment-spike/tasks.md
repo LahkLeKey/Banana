@@ -6,14 +6,14 @@
 ## Phase 1: Environment Model Definition
 
 - [x] T001 Document the three tiers in `research.md`: local (`.env.local`), preview (per-PR Vercel URL), production (`banana.engineer`), with each tier's `VITE_BANANA_API_BASE_URL` value.
-- [ ] T002 In the Vercel dashboard, set `VITE_BANANA_API_BASE_URL` separately for Development, Preview, and Production environments and confirm the correct value is injected per tier using `vercel env pull`.
-- [ ] T003 Confirm that a Preview deployment does NOT inherit the Production `VITE_BANANA_API_BASE_URL` value by inspecting the deployed `index.html` source.
+- [x] T002 In the Vercel dashboard, set `VITE_BANANA_API_BASE_URL` separately for Development, Preview, and Production environments and confirm the correct value is injected per tier using `vercel env pull`.
+- [x] T003 Confirm that a Preview deployment does NOT inherit the Production `VITE_BANANA_API_BASE_URL` value by inspecting the deployed `index.html` source.
 
 ## Phase 2: Database Isolation
 
-- [ ] T004 Provision a staging PostgreSQL instance (Neon branch or Railway staging environment) separate from production.
+- [x] T004 Provision a staging PostgreSQL instance (Neon branch or Railway staging environment) separate from production.
 - [x] T005 Confirm `BANANA_PG_CONNECTION` is set per Vercel environment tier (only applicable if the API is also on Vercel; otherwise document the API-side isolation strategy).
-- [ ] T006 Run `bunx prisma migrate deploy` against the staging DB and confirm schema parity with production.
+- [x] T006 Run `bunx prisma migrate deploy` against the staging DB and confirm schema parity with production.
 
 ## Phase 3: Secrets Governance
 

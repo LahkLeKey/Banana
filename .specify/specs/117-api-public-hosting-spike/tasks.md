@@ -13,12 +13,12 @@
 ## Phase 2: CORS Validation
 
 - [x] T005 Add `https://banana.engineer` and `https://www.banana.engineer` as allowed CORS origins in `src/typescript/api/src/index.ts` (or the Fastify CORS plugin config) in a test branch.
-- [ ] T006 Confirm a cross-origin `fetch` from the preview Vercel URL to the test API deployment is not blocked by the browser (use DevTools Network tab).
+- [x] T006 Confirm a cross-origin `fetch` from the preview Vercel URL to the test API deployment is not blocked by the browser (use DevTools Network tab).
 
 ## Phase 3: Database Path
 
-- [ ] T007 Provision a free-tier managed PostgreSQL instance (Neon or Supabase) and confirm `BANANA_PG_CONNECTION` can be injected as a runtime secret in the chosen host.
-- [ ] T008 Run Prisma migrations against the production database using `bunx prisma migrate deploy` and confirm schema parity.
+- [x] T007 Provision a free-tier managed PostgreSQL instance (Neon or Supabase) and confirm `BANANA_PG_CONNECTION` can be injected as a runtime secret in the chosen host.
+- [x] T008 Run Prisma migrations against the production database using `bunx prisma migrate deploy` and confirm schema parity.
 
 ## Phase 4: Research Documentation
 
