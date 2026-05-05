@@ -4,15 +4,15 @@
 
 ## Phase 1: Discovery
 
-- [ ] T001 Inventory Plotly output forms used by Jupyter and notebook-style workflows.
-- [ ] T002 Define the candidate Banana Plotly figure contract, including layout, data, and metadata needs.
+- [x] T001 Inventory Plotly output forms used by Jupyter and notebook-style workflows.
+- [x] T002 Define the candidate Banana Plotly figure contract, including layout, data, and metadata needs.
 
 ## Phase 2: Recommendation
 
-- [ ] T003 Document the React embedding lifecycle, including load, update, resize, and cleanup behavior.
-- [ ] T004 Evaluate bundle, performance, and theming implications for Plotly as Banana's primary interactive chart stack.
+- [x] T003 Document the React embedding lifecycle, including load, update, resize, and cleanup behavior.
+- [x] T004 Evaluate bundle, performance, and theming implications for Plotly as Banana's primary interactive chart stack.
 
 ## Phase 3: Validation
 
-- [ ] T005 Capture adoption rules for when notebook outputs should prefer Plotly over simpler rendering paths.
-- [ ] T006 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/187-jupyter-plotly-react-embedding-spike` and confirm `OK`.
+- [x] T005 Capture adoption rules for when notebook outputs should prefer Plotly over simpler rendering paths.
+- [x] T006 Run `python scripts/validate-spec-tasks-parity.py .specify/specs/187-jupyter-plotly-react-embedding-spike` and confirm `OK`.

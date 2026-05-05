@@ -1,0 +1,170 @@
+[
+    {
+        "id": "pw-ripeness-pw-1777981855425-000",
+        "label": "unripe",
+        "payload": {
+            "text": "bright green banana with firm starchy flesh and no sweetness"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "unripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:56Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-001",
+        "label": "unripe",
+        "payload": {
+            "text": "hard green fruit with chalky texture and astringent taste"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "unripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:57Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-002",
+        "label": "unripe",
+        "payload": {
+            "text": "solid green peel banana picked before ripeness fully develops"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "unripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:58Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-003",
+        "label": "ripe",
+        "payload": {
+            "text": "golden yellow banana with sweet aroma and soft creamy flesh"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "ripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:58Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-004",
+        "label": "ripe",
+        "payload": {
+            "text": "fully yellow peel with tender flesh and natural sweetness"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "ripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:50:59Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-005",
+        "label": "ripe",
+        "payload": {
+            "text": "mostly yellow with faint green tip and balanced sweetness"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "ripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:51:00Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-006",
+        "label": "overripe",
+        "payload": {
+            "text": "yellow banana covered in dark brown spots with very soft flesh"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "overripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:51:01Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-007",
+        "label": "overripe",
+        "payload": {
+            "text": "deeply freckled banana with mushy texture ideal for baking"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "overripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:51:02Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-008",
+        "label": "overripe",
+        "payload": {
+            "text": "deep yellow fruit with dense brown freckles and soft flesh"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "overripe",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:51:02Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-009",
+        "label": "spoiled",
+        "payload": {
+            "text": "blackened banana with fermented smell and completely collapsed structure"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "spoiled",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:51:03Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-010",
+        "label": "spoiled",
+        "payload": {
+            "text": "entirely black peel with liquid seeping from splits and foul odor"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "spoiled",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:51:04Z"
+    },
+    {
+        "id": "pw-ripeness-pw-1777981855425-011",
+        "label": "spoiled",
+        "payload": {
+            "text": "mostly black banana with sour fermented aroma still attached to bunch"
+        },
+        "status": "pending-positive",
+        "source": "playwright-reinforcement",
+        "session_id": "pw-1777981855425",
+        "predicted_label": "spoiled",
+        "disagreement": false,
+        "reviewed_by": [],
+        "created_at_utc": "2026-05-05T11:51:05Z"
+    }
+]

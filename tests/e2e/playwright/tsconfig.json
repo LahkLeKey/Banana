@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
+    "noEmit": true,
+    "baseUrl": ".",
+    "types": ["node"],
+    "typeRoots": [
+      "../../../src/typescript/react/node_modules/@types"
+    ],
+    "paths": {
+      "@playwright/test": ["../../../src/typescript/react/node_modules/@playwright/test"]
+    }
+  },
+  "include": [
+    "specs/**/*.ts",
+    "helpers/**/*.ts"
+  ]
+}

@@ -485,6 +485,59 @@ def main() -> int:
         }
     )
 
+    # FR-247-04 — eval summary fields
+    confusion_matrix = selected_metrics.get("confusion_matrix", {})
+    holdout_per_label = {
+        label: int(sum(confusion_matrix.get(label, {}).values())) for label in LABELS
+    }
+    raw_payload = json.loads(corpus_path.read_text(encoding="utf-8"))
+    id_to_source = {
+        str(s.get("id", "")): str(s.get("source", ""))
+        for s in raw_payload.get("samples", [])
+    }
+    has_boundary_ids = any(
+        "boundary" in id_to_source.get(eid, "").lower() for eid in eval_ids
+    )
+    selected_metrics["holdout_per_label"] = holdout_per_label
+    selected_metrics["has_boundary_ids"] = has_boundary_ids
+
+    # FR-248-05 — challenge-set summary alongside holdout metrics
+    challenge_path = corpus_path.parent / "challenge-set.json"
+    if challenge_path.exists():
+        token_weights_for_challenge = {
+            str(item["token"]): {
+                label: float(item["centered_weights"][label]) for label in LABELS
+            }
+            for item in list(selected["vocabulary"])
+        }
+        challenge_payload = json.loads(challenge_path.read_text(encoding="utf-8"))
+        ch_prompts = challenge_payload.get("prompts", [])
+        ch_correct: dict[str, int] = {label: 0 for label in LABELS}
+        ch_total: dict[str, int] = {label: 0 for label in LABELS}
+        for prompt in ch_prompts:
+            expected = str(prompt.get("label", ""))
+            text = str(prompt.get("text", ""))
+            predicted, _ = predict_label(
+                text, token_weights_for_challenge, args.min_token_length, args.allow_numeric_tokens
+            )
+            ch_total[expected] = ch_total.get(expected, 0) + 1
+            if predicted == expected:
+                ch_correct[expected] = ch_correct.get(expected, 0) + 1
+        ch_all = sum(ch_total.values())
+        ch_right = sum(ch_correct.values())
+        selected_metrics["challenge_set_summary"] = {
+            "total": ch_all,
+            "correct": ch_right,
+            "accuracy": round(ch_right / ch_all, 6) if ch_all else 0.0,
+            "per_label_recall": {
+                label: round(ch_correct.get(label, 0) / ch_total[label], 6)
+                if ch_total.get(label, 0) > 0 else 0.0
+                for label in LABELS
+            },
+        }
+    else:
+        selected_metrics["challenge_set_summary"] = None
+
     run_fingerprint = stable_run_fingerprint(args, corpus_path, len(samples))
 
     vocabulary_payload = {

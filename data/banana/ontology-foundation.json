@@ -1,0 +1,64 @@
+{
+    "schema_version": 1,
+    "description": "Canonical 5th-grade banana foundation ontology lanes.",
+    "min_samples_per_concept": 2,
+    "concepts": [
+        {
+            "id": "fruit-identity",
+            "title": "Banana is a fruit",
+            "keywords": [
+                "fruit",
+                "banana"
+            ]
+        },
+        {
+            "id": "plant-growth",
+            "title": "Banana grows on large herbaceous plants",
+            "keywords": [
+                "plant",
+                "tree",
+                "herbaceous",
+                "musa",
+                "plantation",
+                "farm"
+            ]
+        },
+        {
+            "id": "ripe-yellow",
+            "title": "Banana is yellow when ripe",
+            "keywords": [
+                "yellow",
+                "ripe",
+                "ripeness"
+            ]
+        },
+        {
+            "id": "edible-sweet",
+            "title": "Banana is edible and sweet",
+            "keywords": [
+                "edible",
+                "eat",
+                "sweet",
+                "smoothie",
+                "snack"
+            ]
+        },
+        {
+            "id": "peel-structure",
+            "title": "Banana has a peel",
+            "keywords": [
+                "peel",
+                "skin"
+            ]
+        },
+        {
+            "id": "nutrition-potassium",
+            "title": "Banana contains nutrients like potassium",
+            "keywords": [
+                "potassium",
+                "nutrient",
+                "nutrition"
+            ]
+        }
+    ]
+}

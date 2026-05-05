@@ -5,8 +5,8 @@
 
 ## Phase 1: Baseline Measurement
 
-- [ ] T001 Run Lighthouse (mobile, simulated throttling) against the Vercel preview URL and record LCP, CLS, INP, TTFB, and Total Blocking Time in `research.md`.
-- [ ] T002 Run `curl -I <preview-url>/assets/index-*.js` and confirm `Cache-Control: public, max-age=31536000, immutable` is returned.
+- [x] T001 Run Lighthouse (mobile, simulated throttling) against the Vercel preview URL and record LCP, CLS, INP, TTFB, and Total Blocking Time in `research.md`.
+- [x] T002 Run `curl -I <preview-url>/assets/index-*.js` and confirm `Cache-Control: public, max-age=31536000, immutable` is returned.
 - [x] T003 Inspect the `dist/` bundle using `bunx vite-bundle-visualizer` (or `rollup-plugin-visualizer`) and identify the top-5 largest chunks by gzip size.
 
 ## Phase 2: Code-Split Evaluation

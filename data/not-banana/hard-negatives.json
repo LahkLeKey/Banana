@@ -1,0 +1,42 @@
+{
+    "schema_version": 1,
+    "description": "Contrastive hard negatives for banana boundary hardening.",
+    "samples": [
+        {
+            "id": "hn-001",
+            "text": "banana flavored candy made from artificial flavor",
+            "category": "flavored-product",
+            "expected_label": "not-banana"
+        },
+        {
+            "id": "hn-002",
+            "text": "banana shampoo bottle with tropical scent",
+            "category": "non-food-product",
+            "expected_label": "not-banana"
+        },
+        {
+            "id": "hn-003",
+            "text": "yellow crescent moon over the city skyline",
+            "category": "shape-color-confounder",
+            "expected_label": "not-banana"
+        },
+        {
+            "id": "hn-004",
+            "text": "plantain flour package for gluten-free baking",
+            "category": "plantain-derivative",
+            "expected_label": "not-banana"
+        },
+        {
+            "id": "hn-005",
+            "text": "fruit sticker sheet with cartoon banana icons",
+            "category": "symbolic-reference",
+            "expected_label": "not-banana"
+        },
+        {
+            "id": "hn-006",
+            "text": "banana split dessert with ice cream and sauce",
+            "category": "mixed-dessert",
+            "expected_label": "not-banana"
+        }
+    ]
+}

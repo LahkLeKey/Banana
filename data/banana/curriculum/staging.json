@@ -1,0 +1,39 @@
+{
+    "schema_version": 1,
+    "description": "Staged autonomous curriculum candidates for banana lane.",
+    "max_auto_accept_per_run": 10,
+    "entries": [
+        {
+            "id": "curr-ripe-yellow-0001",
+            "label": "banana",
+            "text": "A ripe banana usually has a yellow peel and sweeter taste.",
+            "concepts": [
+                "ripe-yellow"
+            ],
+            "status": "accepted",
+            "source": "autonomous-curriculum-v1",
+            "provenance": {
+                "gap_priority_score": 0.83333,
+                "generated_at_utc": "2026-05-05T12:07:06Z",
+                "lineage_id": "gap-ripe-yellow"
+            },
+            "accepted_at_utc": "2026-05-05T12:07:06Z"
+        },
+        {
+            "id": "curr-ripe-yellow-0002",
+            "label": "banana",
+            "text": "Banana peel color changes from green to yellow as it ripens.",
+            "concepts": [
+                "ripe-yellow"
+            ],
+            "status": "accepted",
+            "source": "autonomous-curriculum-v1",
+            "provenance": {
+                "gap_priority_score": 0.83333,
+                "generated_at_utc": "2026-05-05T12:07:06Z",
+                "lineage_id": "gap-ripe-yellow"
+            },
+            "accepted_at_utc": "2026-05-05T12:07:06Z"
+        }
+    ]
+}

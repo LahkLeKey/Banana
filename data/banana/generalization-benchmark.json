@@ -1,0 +1,118 @@
+{
+    "schema_version": 1,
+    "description": "Banana concept generalization benchmark across context families.",
+    "samples": [
+        {
+            "id": "g-001",
+            "text": "banana is a fruit with soft edible flesh",
+            "expected_label": "banana",
+            "concept": "fruit-identity",
+            "context_family": "definition"
+        },
+        {
+            "id": "g-002",
+            "text": "a banana grows on a large herbaceous musa plant",
+            "expected_label": "banana",
+            "concept": "plant-growth",
+            "context_family": "biology"
+        },
+        {
+            "id": "g-003",
+            "text": "when ripe the banana peel turns bright yellow",
+            "expected_label": "banana",
+            "concept": "ripe-yellow",
+            "context_family": "ripeness"
+        },
+        {
+            "id": "g-004",
+            "text": "banana peel is removed before eating the fruit",
+            "expected_label": "banana",
+            "concept": "peel-structure",
+            "context_family": "usage"
+        },
+        {
+            "id": "g-005",
+            "text": "banana is a sweet edible fruit often eaten as a snack",
+            "expected_label": "banana",
+            "concept": "edible-sweet",
+            "context_family": "nutrition"
+        },
+        {
+            "id": "g-006",
+            "text": "banana provides potassium and other nutrients",
+            "expected_label": "banana",
+            "concept": "nutrition-potassium",
+            "context_family": "health"
+        },
+        {
+            "id": "g-007",
+            "text": "plantain is closely related to banana and can be fried",
+            "expected_label": "banana",
+            "concept": "plant-growth",
+            "context_family": "culinary"
+        },
+        {
+            "id": "g-008",
+            "text": "musa acuminata bunches are harvested for banana export",
+            "expected_label": "banana",
+            "concept": "plant-growth",
+            "context_family": "agriculture"
+        },
+        {
+            "id": "g-009",
+            "text": "stainless water bottle clipped to backpack",
+            "expected_label": "not-banana",
+            "concept": "fruit-identity",
+            "context_family": "distractor"
+        },
+        {
+            "id": "g-010",
+            "text": "mechanical keyboard firmware update release",
+            "expected_label": "not-banana",
+            "concept": "fruit-identity",
+            "context_family": "technology"
+        },
+        {
+            "id": "g-011",
+            "text": "potato chips in a foil bag from vending machine",
+            "expected_label": "not-banana",
+            "concept": "edible-sweet",
+            "context_family": "food-confounder"
+        },
+        {
+            "id": "g-012",
+            "text": "road bicycle tire pressure check before commute",
+            "expected_label": "not-banana",
+            "concept": "fruit-identity",
+            "context_family": "transport"
+        },
+        {
+            "id": "g-013",
+            "text": "yellow raincoat hanging by the front door",
+            "expected_label": "not-banana",
+            "concept": "ripe-yellow",
+            "context_family": "color-confounder"
+        },
+        {
+            "id": "g-014",
+            "text": "banana flavored candy made with artificial flavoring",
+            "expected_label": "not-banana",
+            "concept": "fruit-identity",
+            "context_family": "boundary"
+        },
+        {
+            "id": "g-015",
+            "text": "the student says banana is a fruit rich in potassium",
+            "expected_label": "banana",
+            "concept": "nutrition-potassium",
+            "context_family": "classroom"
+        },
+        {
+            "id": "g-016",
+            "text": "ripe yellow banana slices on oatmeal bowl",
+            "expected_label": "banana",
+            "concept": "ripe-yellow",
+            "context_family": "breakfast"
+        }
+    ]
+}

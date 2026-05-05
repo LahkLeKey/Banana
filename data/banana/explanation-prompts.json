@@ -1,0 +1,20 @@
+{
+    "schema_version": 1,
+    "items": [
+        {
+            "id": "exp-001",
+            "prompt": "Explain a banana to a 5th-grade student in one short paragraph.",
+            "candidate_explanation": "A banana is a sweet edible fruit that grows on a large plant called Musa. It has a peel you remove before you eat it. When it is ripe, it usually looks yellow. Bananas are known for nutrients like potassium that help your body."
+        },
+        {
+            "id": "exp-002",
+            "prompt": "Give a simple classroom definition of banana.",
+            "candidate_explanation": "A banana is a fruit from a big tropical plant. People peel it and eat the soft sweet inside. Ripe bananas are often yellow, and they provide nutrients including potassium."
+        },
+        {
+            "id": "exp-003",
+            "prompt": "Describe what a banana is and why people eat it.",
+            "candidate_explanation": "A banana is an edible fruit that grows on a large herb-like plant. It has a peel, turns yellow when ripe, tastes sweet, and contains nutrients such as potassium."
+        }
+    ]
+}

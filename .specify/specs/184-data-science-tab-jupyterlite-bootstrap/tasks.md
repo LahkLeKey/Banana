@@ -19,4 +19,4 @@
 
 - [x] T010 Run frontend type-check.
 - [x] T011 Run JupyterLite Data Science contract tests.
-- [ ] T012 Verify production behavior in browser.
+- [x] T012 Verify production behavior in browser.

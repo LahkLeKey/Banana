@@ -1,0 +1,132 @@
+{
+    "schema_version": 1,
+    "description": "Challenge set for ripeness boundary recall scoring. Each prompt targets token-overlap ambiguity between adjacent ripeness stages.",
+    "labels": [
+        "unripe",
+        "ripe",
+        "overripe",
+        "spoiled"
+    ],
+    "prompts": [
+        {
+            "id": "cs-unripe-001",
+            "label": "unripe",
+            "text": "firm green banana not ready to eat"
+        },
+        {
+            "id": "cs-unripe-002",
+            "label": "unripe",
+            "text": "bright green peel with starchy dense interior"
+        },
+        {
+            "id": "cs-unripe-003",
+            "label": "unripe",
+            "text": "hard texture and chalky taste no sweetness"
+        },
+        {
+            "id": "cs-unripe-004",
+            "label": "unripe",
+            "text": "yellow-green skin still firm with no aroma"
+        },
+        {
+            "id": "cs-unripe-005",
+            "label": "unripe",
+            "text": "slightly yellow but interior dense and starchy bite"
+        },
+        {
+            "id": "cs-unripe-006",
+            "label": "unripe",
+            "text": "green stem with waxy firm peel not yet ripened"
+        },
+        {
+            "id": "cs-ripe-001",
+            "label": "ripe",
+            "text": "yellow peel sweet aroma and soft flesh"
+        },
+        {
+            "id": "cs-ripe-002",
+            "label": "ripe",
+            "text": "golden banana easy to peel creamy inside"
+        },
+        {
+            "id": "cs-ripe-003",
+            "label": "ripe",
+            "text": "mostly yellow with faint green tip balanced sweetness"
+        },
+        {
+            "id": "cs-ripe-004",
+            "label": "ripe",
+            "text": "full yellow color gentle fragrance ready to eat"
+        },
+        {
+            "id": "cs-ripe-005",
+            "label": "ripe",
+            "text": "smooth texture sweet smell and clean flavor"
+        },
+        {
+            "id": "cs-ripe-006",
+            "label": "ripe",
+            "text": "golden skin slight give when pressed fruity smell"
+        },
+        {
+            "id": "cs-overripe-001",
+            "label": "overripe",
+            "text": "soft brown spotted banana for baking bread"
+        },
+        {
+            "id": "cs-overripe-002",
+            "label": "overripe",
+            "text": "deep yellow fruit with dense brown freckles and soft flesh"
+        },
+        {
+            "id": "cs-overripe-003",
+            "label": "overripe",
+            "text": "brown freckled skin mushy interior very soft when pressed"
+        },
+        {
+            "id": "cs-overripe-004",
+            "label": "overripe",
+            "text": "skin covered in brown freckles dense soft pulp fermented note"
+        },
+        {
+            "id": "cs-overripe-005",
+            "label": "overripe",
+            "text": "heavy brown mottled patches collapsing texture syrupy sweetness"
+        },
+        {
+            "id": "cs-overripe-006",
+            "label": "overripe",
+            "text": "very soft brown freckled banana with dense overripe flesh"
+        },
+        {
+            "id": "cs-spoiled-001",
+            "label": "spoiled",
+            "text": "black peel with leaking liquid and mold growth"
+        },
+        {
+            "id": "cs-spoiled-002",
+            "label": "spoiled",
+            "text": "rotten sour smell visible mold patches decay"
+        },
+        {
+            "id": "cs-spoiled-003",
+            "label": "spoiled",
+            "text": "banana leaking pulp with vinegar-like foul odor"
+        },
+        {
+            "id": "cs-spoiled-004",
+            "label": "spoiled",
+            "text": "completely black skin runny slimy texture inedible"
+        },
+        {
+            "id": "cs-spoiled-005",
+            "label": "spoiled",
+            "text": "white mold spots with putrid rotten smell from bin"
+        },
+        {
+            "id": "cs-spoiled-006",
+            "label": "spoiled",
+            "text": "ruptured black banana with acidic mold odor and dark liquid"
+        }
+    ]
+}

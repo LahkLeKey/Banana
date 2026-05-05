@@ -11,16 +11,16 @@
 
 ## Phase 2: Vercel Project Wiring
 
-- [ ] T004 Run `vercel link` in the repo root to associate the repository with a Vercel project (or create one named `banana`).
-- [ ] T005 Run `vercel env add VITE_BANANA_API_BASE_URL` for each environment tier (Development, Preview, Production) and document the values used.
-- [ ] T006 Run `vercel deploy --prebuilt` or `vercel deploy` from the repo root and capture the preview URL.
-- [ ] T007 Open the preview URL in a browser and confirm the React app loads, the title is correct, and deep-link routes (`/classify`) do not 404.
+- [x] T004 Run `vercel link` in the repo root to associate the repository with a Vercel project (or create one named `banana`).
+- [x] T005 Run `vercel env add VITE_BANANA_API_BASE_URL` for each environment tier (Development, Preview, Production) and document the values used.
+- [x] T006 Run `vercel deploy --prebuilt` or `vercel deploy` from the repo root and capture the preview URL.
+- [x] T007 Open the preview URL in a browser and confirm the React app loads, the title is correct, and deep-link routes (`/classify`) do not 404.
 
 ## Phase 3: Domain and SPA Rewrite
 
-- [ ] T008 Add `banana.engineer` as a production domain in the Vercel project dashboard and note the required DNS records (A or CNAME).
-- [ ] T009 Confirm that the `rewrites` in `vercel.json` (`/* → /index.html`) resolve SPA 404s by navigating directly to a deep path on the preview URL.
-- [ ] T010 Confirm `Cache-Control: immutable` is returned for a hashed asset (e.g., `dist/assets/index-*.js`) using `curl -I`.
+- [x] T008 Add `banana.engineer` as a production domain in the Vercel project dashboard and note the required DNS records (A or CNAME).
+- [x] T009 Confirm that the `rewrites` in `vercel.json` (`/* → /index.html`) resolve SPA 404s by navigating directly to a deep path on the preview URL.
+- [x] T010 Confirm `Cache-Control: immutable` is returned for a hashed asset (e.g., `dist/assets/index-*.js`) using `curl -I`.
 
 ## Phase 4: Research Documentation
 

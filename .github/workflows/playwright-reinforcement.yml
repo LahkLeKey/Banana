@@ -1,0 +1,137 @@
+name: Playwright Reinforcement Training Suites
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/banana/corpus.json"
+      - "data/not-banana/corpus.json"
+      - "data/ripeness/corpus.json"
+      - "tests/e2e/playwright/specs/*-reinforcement.spec.ts"
+      - "tests/e2e/playwright/helpers/training-feedback.ts"
+      - "scripts/run-playwright-training-suites.sh"
+      - ".github/workflows/playwright-reinforcement.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Training mode: mock (default) or live"
+        required: false
+        default: "mock"
+      suite:
+        description: "Which suite to run: banana, ripeness, or all"
+        required: false
+        default: "all"
+      apply:
+        description: "Apply feedback entries into corpus after suites"
+        required: false
+        default: "true"
+      auto_train:
+        description: "Run model training after apply"
+        required: false
+        default: "true"
+
+permissions:
+  contents: read
+  actions: write
+
+env:
+  PLAYWRIGHT_BASE_URL: "http://localhost:5173"
+
+jobs:
+  build-react:
+    name: Build React app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install shared UI deps
+        run: bun install --cwd src/typescript/shared/ui
+
+      - name: Install React app deps
+        run: bun install --cwd src/typescript/react
+
+      - name: TypeScript type-check (reinforcement helpers)
+        run: |
+          cd src/typescript/react
+          bunx tsc --noEmit --project ../../../tests/e2e/playwright/tsconfig.json
+
+  run-suites:
+    name: Reinforcement suites (${{ github.event.inputs.suite || 'all' }})
+    needs: build-react
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install shared UI deps
+        run: bun install --cwd src/typescript/shared/ui
+
+      - name: Install React app deps
+        run: bun install --cwd src/typescript/react
+
+      - name: Install Playwright browsers
+        run: |
+          cd src/typescript/react
+          bunx playwright install --with-deps chromium
+
+      - name: Run reinforcement training suites
+        env:
+          BANANA_TRAINING_MODE: ${{ github.event.inputs.mode || 'mock' }}
+        run: |
+          EVENT_NAME="${{ github.event_name }}"
+          APPLY_INPUT="${{ github.event.inputs.apply }}"
+          AUTO_TRAIN_INPUT="${{ github.event.inputs.auto_train }}"
+
+          # Push runs are dry by default; workflow_dispatch can opt into mutation.
+          if [[ "${EVENT_NAME}" != "workflow_dispatch" ]]; then
+            APPLY_INPUT="false"
+            AUTO_TRAIN_INPUT="false"
+          fi
+
+          if [[ -z "${APPLY_INPUT}" ]]; then
+            APPLY_INPUT="true"
+          fi
+
+          if [[ -z "${AUTO_TRAIN_INPUT}" ]]; then
+            AUTO_TRAIN_INPUT="true"
+          fi
+
+          args=(
+            --mode "${{ github.event.inputs.mode || 'mock' }}"
+            --suite "${{ github.event.inputs.suite || 'all' }}"
+          )
+
+          if [[ "${APPLY_INPUT}" != "true" ]]; then
+            args+=(--no-apply)
+          fi
+
+          if [[ "${AUTO_TRAIN_INPUT}" != "true" ]]; then
+            args+=(--no-auto-train)
+          fi
+
+          bash scripts/run-playwright-training-suites.sh "${args[@]}"
+
+      - name: Upload session summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-training-${{ github.run_id }}
+          path: artifacts/playwright-training/
+          retention-days: 30
+
+      - name: Upload feedback inboxes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feedback-inboxes-${{ github.run_id }}
+          path: |
+            data/not-banana/feedback/inbox.json
+            data/ripeness/feedback/inbox.json
+          retention-days: 14
