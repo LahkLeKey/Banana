@@ -8,16 +8,23 @@ using Xunit;
 
 namespace Banana.Api.Tests.Unit;
 
-public sealed class TelemetryControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class TelemetryControllerTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
 {
     private readonly WebApplicationFactory<Program> _factory;
+    private readonly string? _priorBananaPgConnection;
 
     public TelemetryControllerTests(WebApplicationFactory<Program> factory)
     {
+        _priorBananaPgConnection = Environment.GetEnvironmentVariable("BANANA_PG_CONNECTION");
         _factory = factory.WithWebHostBuilder(_ =>
         {
             Environment.SetEnvironmentVariable("BANANA_PG_CONNECTION", null);
         });
+    }
+
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("BANANA_PG_CONNECTION", _priorBananaPgConnection);
     }
 
     [Fact]

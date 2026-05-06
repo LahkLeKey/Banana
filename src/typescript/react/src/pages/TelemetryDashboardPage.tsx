@@ -48,6 +48,7 @@ type HydrationState = {
 export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: boolean }) {
     const snapshot = useTelemetrySnapshot();
     const [remoteEvents, setRemoteEvents] = useState<TelemetryEvent[] | null>(null);
+  const [remoteUpdatedAt, setRemoteUpdatedAt] = useState<number | null>(null);
     const [hydration, setHydration] = useState<HydrationState>({
         status: "idle",
         message: "Waiting for API telemetry probe.",
@@ -68,11 +69,13 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
         }
 
         let cancelled = false;
+        let inFlight = false;
 
         const hydrateFromApi = async () => {
-            if (cancelled) {
+          if (cancelled || inFlight) {
                 return;
             }
+          inFlight = true;
 
             setHydration({
                 status: "loading",
@@ -92,7 +95,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                     variant: event.variant,
                     layer: event.layer,
                     details: event.details,
-                });
+                  }).catch(() => {
+                    // Best-effort client telemetry ingest; dashboard still renders local/remote snapshots.
+                  });
             };
 
             emitTelemetry({
@@ -205,6 +210,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                     details: event.details,
                 }));
                 setRemoteEvents(hydratedEvents);
+                  setRemoteUpdatedAt(Date.now());
             }
 
             const successCount = [rootResult, healthResult, configResult].filter((r) => r.status === "fulfilled").length;
@@ -219,6 +225,8 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                     message: "API telemetry probe failed for all checks. Inspect runtime/API health and base URL.",
                 });
             }
+
+                inFlight = false;
         };
 
         void hydrateFromApi();
@@ -233,6 +241,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
     }, [autoHydrate]);
 
     const telemetryEvents = remoteEvents && remoteEvents.length > 0 ? remoteEvents : snapshot.events;
+    const usingRemoteEvents = !!remoteEvents && remoteEvents.length > 0;
     const runtimeEvents = telemetryEvents.filter((event) => event.source === "runtime");
     const apiEvents = telemetryEvents.filter((event) => event.source === "api");
     const frontendEvents = telemetryEvents.filter((event) => event.source === "frontend");
@@ -300,6 +309,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
         core: nativeEvents.filter((event) => event.layer === "core").length,
         dal: nativeEvents.filter((event) => event.layer === "dal").length,
     };
+    const lastUpdatedMs = usingRemoteEvents ? (remoteUpdatedAt ?? snapshot.updatedAt) : snapshot.updatedAt;
 
     return (
         <div className="space-y-6" data-testid="telemetry-dashboard-page">
@@ -443,7 +453,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
             </Card>
 
             <p className="text-xs text-muted-foreground" data-testid="telemetry-last-updated">
-                Last updated: {new Date(snapshot.updatedAt).toISOString()}
+                Last updated: {new Date(lastUpdatedMs).toISOString()}
             </p>
         </div>
     );

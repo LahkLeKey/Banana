@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Npgsql;
+using Microsoft.Extensions.Logging;
 
 namespace Banana.Api.Telemetry;
 
@@ -15,16 +16,20 @@ public sealed record TelemetryEventRecord(
     string? Layer,
     Dictionary<string, object?>? Details);
 
-public sealed class TelemetryEventStore
+public sealed class TelemetryEventStore : IDisposable
 {
     private const int MaxInMemoryEvents = 5000;
 
     private readonly string? _connectionString;
+    private readonly ILogger<TelemetryEventStore> _logger;
     private readonly List<TelemetryEventRecord> _memory = [];
     private readonly object _memoryGate = new();
+    private readonly SemaphoreSlim _schemaInitGate = new(1, 1);
+    private volatile bool _schemaReady;
 
-    public TelemetryEventStore(IConfiguration configuration)
+    public TelemetryEventStore(IConfiguration configuration, ILogger<TelemetryEventStore> logger)
     {
+        _logger = logger;
         _connectionString = configuration["BANANA_PG_CONNECTION"]
             ?? Environment.GetEnvironmentVariable("BANANA_PG_CONNECTION")
             ?? configuration.GetConnectionString("BananaPg");
@@ -70,8 +75,9 @@ values
             await cmd.ExecuteNonQueryAsync(cancellationToken);
             return "postgres";
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Falling back to memory telemetry store for append.");
             AppendToMemory(record);
             return "memory";
         }
@@ -133,8 +139,9 @@ limit @limit;
 
             return (rows, "postgres");
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Falling back to memory telemetry store for read.");
             return (ReadFromMemory(limit, source), "memory");
         }
     }
@@ -170,6 +177,19 @@ limit @limit;
 
     private async Task EnsureSchemaAsync(CancellationToken cancellationToken)
     {
+        if (_schemaReady)
+        {
+            return;
+        }
+
+        await _schemaInitGate.WaitAsync(cancellationToken);
+        try
+        {
+            if (_schemaReady)
+            {
+                return;
+            }
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
 
@@ -197,5 +217,16 @@ create index if not exists idx_operator_telemetry_events_source
 ";
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
+            _schemaReady = true;
+        }
+        finally
+        {
+            _schemaInitGate.Release();
+        }
+    }
+
+    public void Dispose()
+    {
+        _schemaInitGate.Dispose();
     }
 }

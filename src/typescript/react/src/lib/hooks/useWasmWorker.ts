@@ -96,10 +96,6 @@ export function useWasmWorker(fn: WasmFn | null, payload: unknown) {
           recordWasmWorkerTelemetry(msg);
           return;
         }
-  if (msg.type === "telemetry") {
-    recordWasmWorkerTelemetry(msg);
-    return;
-  }
         if (msg.id !== pendingIdRef.current) return; // stale response
 
         switch (msg.type) {
