@@ -5,8 +5,4 @@
  */
 
 export type WasmFn =
-  | 'calculate_banana'
-  | 'calculate_banana_breakdown'
-  | 'regression'
-  | 'binary'
-  | 'ripeness';
+    |'calculate_banana'|'calculate_banana_breakdown'|'regression'|'binary'|'ripeness';
