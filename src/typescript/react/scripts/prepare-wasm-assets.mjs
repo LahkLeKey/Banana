@@ -45,7 +45,7 @@ function main() {
   }
 
   console.log(
-    `[prepare-wasm-assets] copied ${files.length} artifact(s) from ${wasmSourceDir} to ${wasmPublicDir}`,
+    `[prepare-wasm-assets] copied ${files.length} artifact(s) from ${wasmSourceDir} to ${wasmPublicDir}`
   );
 }
 
