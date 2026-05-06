@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 const modules = [
     {
         title: "Knowledge Space",
-        description: "Confluence-style documentation space for domain narratives, ADRs, and runbooks.",
+        description: "Structured documentation space for domain narratives, ADRs, and runbooks.",
         href: "/knowledge",
     },
     {
@@ -44,7 +44,7 @@ const modules = [
     },
     {
         title: "Review Spikes",
-        description: "Scoped research slices: suite IA, Confluence workbench, Functions, BananaAI, and feedback-loop promotion.",
+        description: "Scoped research slices: suite IA, knowledge workbench, Functions, BananaAI, and feedback-loop promotion.",
         href: "/review-spikes",
     },
 ];
