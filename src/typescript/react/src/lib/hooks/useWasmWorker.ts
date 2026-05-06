@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useReducer, useRef } from "react";
 
+import { recordWasmWorkerTelemetry } from "../telemetryStore";
 import type { WasmFn } from "../wasmWorkerTypes";
 
 // ── State machine (spec 259 T006) ─────────────────────────────────────────────
@@ -91,7 +92,14 @@ export function useWasmWorker(fn: WasmFn | null, payload: unknown) {
           id?: string;
           [k: string]: unknown;
         };
-        if (msg.type === "telemetry") return; // handled separately
+        if (msg.type === "telemetry") {
+          recordWasmWorkerTelemetry(msg);
+          return;
+        }
+  if (msg.type === "telemetry") {
+    recordWasmWorkerTelemetry(msg);
+    return;
+  }
         if (msg.id !== pendingIdRef.current) return; // stale response
 
         switch (msg.type) {
