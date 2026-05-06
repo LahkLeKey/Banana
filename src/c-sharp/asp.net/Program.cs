@@ -2,6 +2,7 @@ using Banana.Api.NativeInterop;
 using Banana.Api.Pipeline.Mapping;
 using Banana.Api.Pipeline;
 using Banana.Api.Pipeline.Steps;
+using Banana.Api.Telemetry;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -100,6 +101,7 @@ builder.Services.AddRateLimiter(opts =>
 // Spec 069 — audit log middleware + store.
 builder.Services.AddSingleton<AuditStore>();
 builder.Services.AddScoped<AuditLogMiddleware>();
+builder.Services.AddSingleton<TelemetryEventStore>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
