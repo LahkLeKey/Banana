@@ -43,27 +43,27 @@ const SOURCE_STYLES: Record<
   runtime: {
     label: "Runtime",
     bar: "bg-cyan-500",
-    chip: "border-cyan-300 bg-cyan-50 text-cyan-700 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200",
+    chip: "border-cyan-300 bg-cyan-50 text-cyan-700",
   },
   api: {
     label: "API",
     bar: "bg-violet-500",
-    chip: "border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200",
+    chip: "border-violet-300 bg-violet-50 text-violet-700",
   },
   frontend: {
     label: "Frontend",
     bar: "bg-emerald-500",
-    chip: "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200",
+    chip: "border-emerald-300 bg-emerald-50 text-emerald-700",
   },
   "wasm-worker": {
     label: "WASM",
     bar: "bg-amber-500",
-    chip: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200",
+    chip: "border-amber-300 bg-amber-50 text-amber-700",
   },
   native: {
     label: "Native",
     bar: "bg-fuchsia-500",
-    chip: "border-fuchsia-300 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/40 dark:text-fuchsia-200",
+    chip: "border-fuchsia-300 bg-fuchsia-50 text-fuchsia-700",
   },
 };
 
@@ -164,11 +164,10 @@ function buildBuckets(events: TelemetryEvent[], range: RangePreset, now: number)
 function ReadinessBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
-      className={`rounded-full border px-2 py-1 text-xs font-medium ${
-        ok
-          ? "border-green-500 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/30 dark:text-green-300"
-          : "border-red-400 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/30 dark:text-red-300"
-      }`}
+      className={`rounded-full border px-2 py-1 text-xs font-medium ${ok
+          ? "border-green-500 bg-green-50 text-green-700"
+          : "border-red-400 bg-red-50 text-red-700"
+        }`}
     >
       {label}
     </span>
@@ -650,7 +649,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
 
   return (
     <div className="space-y-6" data-testid="telemetry-dashboard-page">
-      <Card className="overflow-hidden border-slate-200 bg-gradient-to-br from-white via-sky-50 to-teal-50 shadow-sm dark:border-slate-700 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <Card className="overflow-hidden border-slate-200 bg-gradient-to-br from-white via-sky-50 to-teal-50 shadow-sm">
         <CardHeader className="gap-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -660,16 +659,16 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                 native layers.
               </CardDescription>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
+            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm">
               Window: {formatRangeLabel(rangePreset)}
             </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <label className="space-y-1 text-xs">
-              <span className="font-medium text-slate-600 dark:text-slate-300">Source</span>
+              <span className="font-medium text-slate-600">Source</span>
               <select
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
                 value={sourceFilter}
                 onChange={(event) =>
                   setSourceFilter(event.target.value as TelemetryEvent["source"] | "all")
@@ -685,9 +684,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
             </label>
 
             <label className="space-y-1 text-xs">
-              <span className="font-medium text-slate-600 dark:text-slate-300">Status</span>
+              <span className="font-medium text-slate-600">Status</span>
               <select
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value as EventStatusFilter)}
               >
@@ -699,9 +698,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
             </label>
 
             <label className="space-y-1 text-xs">
-              <span className="font-medium text-slate-600 dark:text-slate-300">Window</span>
+              <span className="font-medium text-slate-600">Window</span>
               <select
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
                 value={rangePreset}
                 onChange={(event) => setRangePreset(event.target.value as RangePreset)}
               >
@@ -713,9 +712,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
             </label>
 
             <label className="space-y-1 text-xs">
-              <span className="font-medium text-slate-600 dark:text-slate-300">Find event</span>
+              <span className="font-medium text-slate-600">Find event</span>
               <input
-                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-950"
+                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm placeholder:text-slate-400"
                 value={eventQuery}
                 onChange={(event) => setEventQuery(event.target.value)}
                 placeholder="wasm.worker.call..."
@@ -724,27 +723,27 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-lg border border-cyan-300/60 bg-cyan-50/80 p-3 dark:border-cyan-900/70 dark:bg-cyan-950/30">
-              <p className="text-xs text-cyan-800 dark:text-cyan-200">Visible Events</p>
-              <p className="text-2xl font-semibold text-cyan-950 dark:text-cyan-50">
+            <div className="rounded-lg border border-cyan-300/60 bg-cyan-50/80 p-3">
+              <p className="text-xs text-cyan-800">Visible Events</p>
+              <p className="text-2xl font-semibold text-cyan-950">
                 {filteredEvents.length}
               </p>
             </div>
-            <div className="rounded-lg border border-rose-300/60 bg-rose-50/80 p-3 dark:border-rose-900/70 dark:bg-rose-950/30">
-              <p className="text-xs text-rose-800 dark:text-rose-200">Error Rate</p>
-              <p className="text-2xl font-semibold text-rose-900 dark:text-rose-100">
+            <div className="rounded-lg border border-rose-300/60 bg-rose-50/80 p-3">
+              <p className="text-xs text-rose-800">Error Rate</p>
+              <p className="text-2xl font-semibold text-rose-900">
                 {formatPct(filteredErrorRate)}
               </p>
             </div>
-            <div className="rounded-lg border border-indigo-300/60 bg-indigo-50/80 p-3 dark:border-indigo-900/70 dark:bg-indigo-950/30">
-              <p className="text-xs text-indigo-800 dark:text-indigo-200">P95 Duration</p>
-              <p className="text-2xl font-semibold text-indigo-950 dark:text-indigo-50">
+            <div className="rounded-lg border border-indigo-300/60 bg-indigo-50/80 p-3">
+              <p className="text-xs text-indigo-800">P95 Duration</p>
+              <p className="text-2xl font-semibold text-indigo-950">
                 {Math.round(filteredP95)} ms
               </p>
             </div>
-            <div className="rounded-lg border border-emerald-300/60 bg-emerald-50/80 p-3 dark:border-emerald-900/70 dark:bg-emerald-950/30">
-              <p className="text-xs text-emerald-800 dark:text-emerald-200">Active Signals</p>
-              <p className="text-2xl font-semibold text-emerald-950 dark:text-emerald-50">
+            <div className="rounded-lg border border-emerald-300/60 bg-emerald-50/80 p-3">
+              <p className="text-xs text-emerald-800">Active Signals</p>
+              <p className="text-2xl font-semibold text-emerald-950">
                 {activeSignals}
               </p>
             </div>
@@ -774,8 +773,8 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                     key={source}
                     type="button"
                     className={`rounded-full border px-2 py-1 text-[11px] transition ${selected
-                        ? styles.chip
-                        : "border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                      ? styles.chip
+                      : "border-slate-300 text-slate-500"
                       }`}
                     onClick={() => {
                       setVisibleTimelineSources((current) => ({
@@ -808,7 +807,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                       className="group relative flex h-full flex-1 items-end"
                     >
                       <div
-                        className="w-full rounded-t bg-slate-300/60 transition-colors dark:bg-slate-700/70"
+                        className="w-full rounded-t bg-slate-300/60 transition-colors"
                         style={{ height: `${totalHeight}px` }}
                       />
                       <div className="absolute bottom-0 flex w-full items-end gap-px px-[1px]">
@@ -869,7 +868,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                     <span className="font-medium">{source}</span>
                     <span>{count}</span>
                   </div>
-                  <div className="h-2 rounded bg-slate-100 dark:bg-slate-800">
+                  <div className="h-2 rounded bg-slate-100">
                     <div
                       className={`h-2 rounded ${SOURCE_STYLES[source].bar}`}
                       style={{ width: `${width}%` }}
@@ -981,14 +980,14 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                 {latestEvents.map((event, index) => (
                   <div
                     key={`${event.event}-${event.timestamp}-${index}`}
-                    className="rounded border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
+                    className="rounded border border-slate-200 bg-white p-2 shadow-sm"
                   >
                     <div className="flex items-center justify-between gap-2 text-[11px]">
                       <span className="font-mono">{event.event}</span>
                       <span
                         className={`rounded-full px-2 py-0.5 ${event.status === "error"
-                            ? "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200"
-                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+                          ? "bg-rose-100 text-rose-700"
+                          : "bg-emerald-100 text-emerald-700"
                           }`}
                       >
                         {event.status}
@@ -1067,25 +1066,25 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
         <CardContent>
           <div className="space-y-4">
             <div className="grid gap-3 md:grid-cols-4">
-              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="text-xs text-muted-foreground">Init Success</p>
                 <p className="text-lg font-semibold" data-testid="wasm-init-success-rate">
                   {formatPct(initSuccessRate)}
                 </p>
               </div>
-              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="text-xs text-muted-foreground">Fallback Rate</p>
                 <p className="text-lg font-semibold" data-testid="wasm-fallback-rate">
                   {formatPct(fallbackRate)}
                 </p>
               </div>
-              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="text-xs text-muted-foreground">Timeout Rate</p>
                 <p className="text-lg font-semibold" data-testid="wasm-timeout-rate">
                   {formatPct(timeoutRate)}
                 </p>
               </div>
-              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="text-xs text-muted-foreground">P95 Call Duration</p>
                 <p className="text-lg font-semibold" data-testid="wasm-p95-duration">
                   {Math.round(wasmP95)} ms
@@ -1094,19 +1093,19 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
             </div>
 
             <div className="grid gap-3 md:grid-cols-3" data-testid="wasm-latency-percentiles">
-              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="text-xs text-muted-foreground">WASM p50</p>
                 <p className="text-base font-semibold">
                   {Math.round(wasmLatencyPercentiles.p50)} ms
                 </p>
               </div>
-              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="text-xs text-muted-foreground">WASM p95</p>
                 <p className="text-base font-semibold">
                   {Math.round(wasmLatencyPercentiles.p95)} ms
                 </p>
               </div>
-              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="text-xs text-muted-foreground">WASM p99</p>
                 <p className="text-base font-semibold">
                   {Math.round(wasmLatencyPercentiles.p99)} ms
@@ -1144,33 +1143,33 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
           ) : (
             <div className="space-y-3">
               <div className="grid gap-3 md:grid-cols-3">
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40" data-testid="native-wrapper-count">
+                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm" data-testid="native-wrapper-count">
                   <p className="text-xs text-muted-foreground">Wrapper Events</p>
                   <p className="text-lg font-semibold">{nativeLayerBreakdown.wrapper}</p>
                 </div>
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40" data-testid="native-core-count">
+                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm" data-testid="native-core-count">
                   <p className="text-xs text-muted-foreground">Core Events</p>
                   <p className="text-lg font-semibold">{nativeLayerBreakdown.core}</p>
                 </div>
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40" data-testid="native-dal-count">
+                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm" data-testid="native-dal-count">
                   <p className="text-xs text-muted-foreground">DAL Events</p>
                   <p className="text-lg font-semibold">{nativeLayerBreakdown.dal}</p>
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-3" data-testid="native-latency-percentiles">
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                   <p className="text-xs text-muted-foreground">Native p50</p>
                   <p className="text-base font-semibold">
                     {Math.round(nativeLatencyPercentiles.p50)} ms
                   </p>
                 </div>
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                   <p className="text-xs text-muted-foreground">Native p95</p>
                   <p className="text-base font-semibold">
                     {Math.round(nativeLatencyPercentiles.p95)} ms
                   </p>
                 </div>
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm">
                   <p className="text-xs text-muted-foreground">Native p99</p>
                   <p className="text-base font-semibold">
                     {Math.round(nativeLatencyPercentiles.p99)} ms
