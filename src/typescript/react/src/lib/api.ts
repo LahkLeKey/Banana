@@ -40,6 +40,34 @@ type BananaSummaryResponse = {
 
 export type {BananaSummaryResponse};
 
+export type TelemetryConfigResponse = {
+    sample_rate: number; unit : string;
+};
+
+export type ApiHealthResponse = {
+    status: string;
+};
+
+export type ApiRootResponse = {
+    service?: string;
+    status?: string;
+    endpoints?: {health?: string; swagger?: string;};
+};
+
+export type TelemetryApiEvent = {
+    source: string; event : string; timestamp : number; status : string;
+    durationMs?: number;
+    code?: number;
+    channel?: string;
+    variant?: string;
+    layer?: string;
+    details?: Record<string, string|number|boolean|null>;
+};
+
+export type TelemetryEventsResponse = {
+    count: number; backend : "postgres" | "memory"; events : TelemetryApiEvent[];
+};
+
 type ElectronBridge = {
     apiBaseUrl: string; platform : string;
     chatApiBaseUrl?: string;
@@ -270,6 +298,55 @@ async function requestJson<T>(baseUrl: string, path: string, init?: RequestInit)
 export async function fetchBananaSummary(baseUrl: string): Promise<BananaSummaryResponse>
 {
     return requestJson<BananaSummaryResponse>(baseUrl, "/banana?purchases=3&multiplier=2");
+}
+
+export async function fetchTelemetryConfig(baseUrl: string): Promise<TelemetryConfigResponse>
+{
+    return requestJson<TelemetryConfigResponse>(baseUrl, "/operator/telemetry/config");
+}
+
+export async function fetchApiHealth(baseUrl: string): Promise<ApiHealthResponse>
+{
+    return requestJson<ApiHealthResponse>(baseUrl, "/health");
+}
+
+export async function fetchApiRoot(baseUrl: string): Promise<ApiRootResponse>
+{
+    return requestJson<ApiRootResponse>(baseUrl, "/");
+}
+
+export async function ingestTelemetryEvent(baseUrl: string, event: TelemetryApiEvent): Promise<void>
+{
+    await requestJson(baseUrl, "/operator/telemetry/events", {
+        method : "POST",
+        headers : {"content-type" : "application/json"},
+        body : JSON.stringify({
+            source : event.source,
+            event : event.event,
+            timestamp : event.timestamp,
+            status : event.status,
+            durationMs : event.durationMs,
+            code : event.code,
+            channel : event.channel,
+            variant : event.variant,
+            layer : event.layer,
+            details : event.details ?? null,
+        }),
+    });
+}
+
+export async function fetchTelemetryEvents(baseUrl: string, limit = 300,
+                                           source?: string): Promise<TelemetryEventsResponse>
+{
+    const clampedLimit = Math.max(1, Math.min(1000, Math.trunc(limit)));
+    const params = new URLSearchParams({limit : String(clampedLimit)});
+    if (source && source.trim().length > 0)
+    {
+        params.set("source", source.trim());
+    }
+
+    return requestJson<TelemetryEventsResponse>(baseUrl,
+                                                `/operator/telemetry/events?${params.toString()}`);
 }
 
 export async function createChatSession(baseUrl: string, platform: string,
