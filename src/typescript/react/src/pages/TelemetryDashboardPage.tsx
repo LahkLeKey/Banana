@@ -165,8 +165,8 @@ function ReadinessBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
       className={`rounded-full border px-2 py-1 text-xs font-medium ${ok
-          ? "border-green-500 bg-green-50 text-green-700"
-          : "border-red-400 bg-red-50 text-red-700"
+        ? "border-green-500 bg-green-50 text-green-700"
+        : "border-red-400 bg-red-50 text-red-700"
         }`}
     >
       {label}
@@ -1220,9 +1220,8 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                     {topEventSignatures.map((signal) => (
                       <tr
                         key={signal.eventName}
-                        className={`cursor-pointer border-b last:border-b-0 ${
-                          selectedSignal === signal.eventName ? "bg-sky-50" : ""
-                        }`}
+                        className={`cursor-pointer border-b last:border-b-0 ${selectedSignal === signal.eventName ? "bg-sky-50" : ""
+                          }`}
                         onClick={() => {
                           setSelectedSignal(signal.eventName);
                           setEventQuery(signal.eventName);
