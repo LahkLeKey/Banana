@@ -179,6 +179,183 @@ type HydrationState = {
   message: string;
 };
 
+function buildDemoTelemetryEvents(now: number): TelemetryEvent[] {
+  const minute = 60 * 1000;
+  return [
+    {
+      source: "frontend",
+      event: "telemetry.dashboard.session.started",
+      timestamp: now - 58 * minute,
+      status: "info",
+      details: { route: "/telemetry", session: "demo-seed" },
+    },
+    {
+      source: "runtime",
+      event: "runtime.service.root.ok",
+      timestamp: now - 56 * minute,
+      status: "ok",
+      durationMs: 32,
+      details: { service: "banana-api", status: "healthy" },
+    },
+    {
+      source: "api",
+      event: "api.health.check.ok",
+      timestamp: now - 55 * minute,
+      status: "ok",
+      durationMs: 48,
+      details: { status: "healthy" },
+    },
+    {
+      source: "api",
+      event: "api.telemetry.config.loaded",
+      timestamp: now - 54 * minute,
+      status: "ok",
+      durationMs: 65,
+      details: { sample_rate: 1, unit: "ms" },
+    },
+    {
+      source: "wasm-worker",
+      event: "wasm.worker.init.ready",
+      timestamp: now - 49 * minute,
+      status: "ok",
+      durationMs: 212,
+      variant: "simd",
+      details: { runtime: "webworker", region: "local" },
+    },
+    {
+      source: "wasm-worker",
+      event: "wasm.worker.call.started",
+      timestamp: now - 45 * minute,
+      status: "info",
+      durationMs: 6,
+      variant: "simd",
+      details: { id: "demo-call-1", model: "banana-classifier" },
+    },
+    {
+      source: "wasm-worker",
+      event: "wasm.worker.call.completed",
+      timestamp: now - 44 * minute,
+      status: "ok",
+      durationMs: 88,
+      variant: "simd",
+      details: { id: "demo-call-1", score: 0.93 },
+    },
+    {
+      source: "native",
+      event: "native.wrapper.call.completed",
+      timestamp: now - 40 * minute,
+      status: "ok",
+      durationMs: 17,
+      layer: "wrapper",
+      details: { id: "native-1", channel: "inference" },
+    },
+    {
+      source: "native",
+      event: "native.core.eval.completed",
+      timestamp: now - 39 * minute,
+      status: "ok",
+      durationMs: 11,
+      layer: "core",
+      details: { id: "native-1", stage: "score" },
+    },
+    {
+      source: "native",
+      event: "native.dal.fetch.completed",
+      timestamp: now - 38 * minute,
+      status: "ok",
+      durationMs: 21,
+      layer: "dal",
+      details: { id: "native-1", rows: 3 },
+    },
+    {
+      source: "wasm-worker",
+      event: "wasm.worker.call.started",
+      timestamp: now - 34 * minute,
+      status: "info",
+      durationMs: 4,
+      variant: "simd",
+      details: { id: "demo-call-2", model: "banana-classifier" },
+    },
+    {
+      source: "wasm-worker",
+      event: "wasm.worker.call.error",
+      timestamp: now - 33 * minute,
+      status: "error",
+      durationMs: 615,
+      code: 1001,
+      variant: "simd",
+      details: { id: "demo-call-2", reason: "wasm_timeout", message: "execution_timeout" },
+    },
+    {
+      source: "wasm-worker",
+      event: "wasm.worker.fallback.triggered",
+      timestamp: now - 32 * minute,
+      status: "info",
+      durationMs: 12,
+      variant: "simd",
+      details: { id: "demo-call-2", fallback: "native" },
+    },
+    {
+      source: "native",
+      event: "native.wrapper.call.completed",
+      timestamp: now - 31 * minute,
+      status: "ok",
+      durationMs: 26,
+      layer: "wrapper",
+      details: { id: "native-fallback-2", from: "wasm_timeout" },
+    },
+    {
+      source: "native",
+      event: "native.core.eval.completed",
+      timestamp: now - 30 * minute,
+      status: "ok",
+      durationMs: 14,
+      layer: "core",
+      details: { id: "native-fallback-2", stage: "score" },
+    },
+    {
+      source: "api",
+      event: "api.inference.request.completed",
+      timestamp: now - 24 * minute,
+      status: "ok",
+      durationMs: 171,
+      details: { endpoint: "/api/v1/classify", status: 200 },
+    },
+    {
+      source: "runtime",
+      event: "runtime.model.cache.hit",
+      timestamp: now - 19 * minute,
+      status: "ok",
+      durationMs: 9,
+      details: { model: "banana", key: "banana-v2" },
+    },
+    {
+      source: "frontend",
+      event: "telemetry.dashboard.filters.updated",
+      timestamp: now - 13 * minute,
+      status: "info",
+      details: { source: "all", status: "all", window: "60m" },
+    },
+    {
+      source: "api",
+      event: "api.health.check.ok",
+      timestamp: now - 9 * minute,
+      status: "ok",
+      durationMs: 43,
+      details: { status: "healthy" },
+    },
+    {
+      source: "wasm-worker",
+      event: "wasm.worker.call.completed",
+      timestamp: now - 5 * minute,
+      status: "ok",
+      durationMs: 74,
+      variant: "simd",
+      details: { id: "demo-call-3", score: 0.88 },
+    },
+  ];
+}
+
 export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: boolean }) {
   const snapshot = useTelemetrySnapshot();
   const [remoteEvents, setRemoteEvents] = useState<TelemetryEvent[] | null>(null);
@@ -187,6 +364,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
   const [sourceFilter, setSourceFilter] = useState<TelemetryEvent["source"] | "all">("all");
   const [statusFilter, setStatusFilter] = useState<EventStatusFilter>("all");
   const [eventQuery, setEventQuery] = useState("");
+  const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
   const [visibleTimelineSources, setVisibleTimelineSources] = useState<
     Record<TelemetryEvent["source"], boolean>
   >({
@@ -405,14 +583,29 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
     };
   }, [autoHydrate]);
 
+  const now = Date.now();
   const telemetryEvents = remoteEvents && remoteEvents.length > 0 ? remoteEvents : snapshot.events;
   const usingRemoteEvents = !!remoteEvents && remoteEvents.length > 0;
-  const now = Date.now();
+  const demoEvents = useMemo(() => buildDemoTelemetryEvents(now), [now]);
+  const usingDemoEvents = autoHydrate && telemetryEvents.length < 12;
+  const displayEvents = useMemo(() => {
+    if (!usingDemoEvents) {
+      return telemetryEvents;
+    }
+
+    const existing = new Set(
+      telemetryEvents.map((event) => `${event.source}|${event.event}|${event.timestamp}`)
+    );
+    const seeded = demoEvents.filter(
+      (event) => !existing.has(`${event.source}|${event.event}|${event.timestamp}`)
+    );
+    return [...telemetryEvents, ...seeded];
+  }, [usingDemoEvents, telemetryEvents, demoEvents]);
   const rangeStart = now - RANGE_PRESETS[rangePreset];
 
   const filteredEvents = useMemo(() => {
     const query = eventQuery.trim().toLowerCase();
-    return telemetryEvents.filter((event) => {
+    return displayEvents.filter((event) => {
       if (event.timestamp < rangeStart || event.timestamp > now) {
         return false;
       }
@@ -432,7 +625,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
       const detailsText = JSON.stringify(event.details ?? {}).toLowerCase();
       return event.event.toLowerCase().includes(query) || detailsText.includes(query);
     });
-  }, [telemetryEvents, sourceFilter, statusFilter, eventQuery, rangeStart, now]);
+  }, [displayEvents, sourceFilter, statusFilter, eventQuery, rangeStart, now]);
 
   const sourceBreakdown = useMemo(() => {
     const counts: Record<TelemetryEvent["source"], number> = {
@@ -495,11 +688,11 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
       .slice(0, 8);
   }, [filteredEvents]);
 
-  const runtimeEvents = telemetryEvents.filter((event) => event.source === "runtime");
-  const apiEvents = telemetryEvents.filter((event) => event.source === "api");
-  const frontendEvents = telemetryEvents.filter((event) => event.source === "frontend");
-  const wasmEvents = telemetryEvents.filter((event) => event.source === "wasm-worker");
-  const nativeEvents = telemetryEvents.filter((event) => event.source === "native");
+  const runtimeEvents = displayEvents.filter((event) => event.source === "runtime");
+  const apiEvents = displayEvents.filter((event) => event.source === "api");
+  const frontendEvents = displayEvents.filter((event) => event.source === "frontend");
+  const wasmEvents = displayEvents.filter((event) => event.source === "wasm-worker");
+  const nativeEvents = displayEvents.filter((event) => event.source === "native");
 
   const wasmCallStarts = wasmEvents.filter((event) => event.event === "wasm.worker.call.started");
   const wasmAttemptIds = new Set(
@@ -643,13 +836,44 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
       .slice(0, 12);
   }, [filteredEvents]);
 
+  const selectedSignalEvents = useMemo(() => {
+    if (!selectedSignal) {
+      return [];
+    }
+
+    return filteredEvents
+      .filter((event) => event.event === selectedSignal)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 8);
+  }, [filteredEvents, selectedSignal]);
+
+  const selectedSignalSourceCounts = useMemo(() => {
+    const counts: Record<TelemetryEvent["source"], number> = {
+      runtime: 0,
+      api: 0,
+      frontend: 0,
+      "wasm-worker": 0,
+      native: 0,
+    };
+
+    for (const event of selectedSignalEvents) {
+      counts[event.source] += 1;
+    }
+
+    return counts;
+  }, [selectedSignalEvents]);
+
+  const slowEventCount = filteredEvents.filter(
+    (event) => typeof event.durationMs === "number" && event.durationMs > 250
+  ).length;
+
   const lastUpdatedMs = usingRemoteEvents
     ? (remoteUpdatedAt ?? snapshot.updatedAt)
     : snapshot.updatedAt;
 
   return (
     <div className="space-y-6" data-testid="telemetry-dashboard-page">
-      <Card className="overflow-hidden border-slate-200 bg-gradient-to-br from-white via-sky-50 to-teal-50 shadow-sm">
+      <Card className="overflow-hidden border-slate-200 bg-gradient-to-br from-white via-slate-50 to-sky-100 shadow-sm">
         <CardHeader className="gap-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -752,6 +976,44 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
           <p className="text-xs text-muted-foreground" data-testid="telemetry-api-hydration-status">
             API feed: {hydration.message}
           </p>
+          {usingDemoEvents ? (
+            <p className="text-xs text-amber-700" data-testid="telemetry-demo-seed-notice">
+              Demo mode active: sparse live feed detected, seeded telemetry events are layered in
+              for drill-down exploration.
+            </p>
+          ) : null}
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700"
+              onClick={() => setStatusFilter("error")}
+            >
+              Focus Errors ({filteredErrorCount})
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700"
+              onClick={() => setEventQuery("call")}
+            >
+              Calls Only
+            </button>
+            <button
+              type="button"
+              className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700"
+              onClick={() => {
+                setStatusFilter("all");
+                setSourceFilter("all");
+                setEventQuery("");
+                setSelectedSignal(null);
+              }}
+            >
+              Reset Filters
+            </button>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
+              Slow events &gt; 250ms: {slowEventCount}
+            </span>
+          </div>
         </CardHeader>
       </Card>
 
@@ -863,7 +1125,12 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                 Math.min(100, percent(count, Math.max(1, filteredEvents.length)))
               );
               return (
-                <div key={source} className="space-y-1">
+                <button
+                  key={source}
+                  type="button"
+                  className="w-full space-y-1 text-left"
+                  onClick={() => setSourceFilter(source)}
+                >
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-medium">{source}</span>
                     <span>{count}</span>
@@ -874,7 +1141,7 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                       style={{ width: `${width}%` }}
                     />
                   </div>
-                </div>
+                </button>
               );
             })}
           </CardContent>
@@ -951,7 +1218,16 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                   </thead>
                   <tbody>
                     {topEventSignatures.map((signal) => (
-                      <tr key={signal.eventName} className="border-b last:border-b-0">
+                      <tr
+                        key={signal.eventName}
+                        className={`cursor-pointer border-b last:border-b-0 ${
+                          selectedSignal === signal.eventName ? "bg-sky-50" : ""
+                        }`}
+                        onClick={() => {
+                          setSelectedSignal(signal.eventName);
+                          setEventQuery(signal.eventName);
+                        }}
+                      >
                         <td className="py-2 pr-2 font-mono text-[11px]">{signal.eventName}</td>
                         <td className="py-2 pr-2">{signal.count}</td>
                         <td className="py-2 pr-2">{signal.errors}</td>
@@ -1007,6 +1283,79 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
           </CardContent>
         </Card>
       </div>
+
+      <Card data-testid="telemetry-signal-drilldown">
+        <CardHeader>
+          <CardTitle className="text-base">Signal Drilldown</CardTitle>
+          <CardDescription>
+            Click any signal in the Top Signals table to inspect recent occurrences and source
+            distribution.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!selectedSignal ? (
+            <p className="text-sm text-muted-foreground">
+              No signal selected yet. Choose a row from Top Signals to populate this panel.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded border border-slate-200 bg-white p-3">
+                <p className="text-xs text-slate-500">Selected Signal</p>
+                <p className="font-mono text-sm text-slate-800">{selectedSignal}</p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-5">
+                {DASHBOARD_SOURCES.map((source) => (
+                  <div key={source} className="rounded border border-slate-200 bg-white p-3">
+                    <p className="text-xs text-slate-500">{SOURCE_STYLES[source].label}</p>
+                    <p className="text-lg font-semibold text-slate-800">
+                      {selectedSignalSourceCounts[source]}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {selectedSignalEvents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  The selected signal is outside the current filter scope.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b text-muted-foreground">
+                        <th className="py-2 pr-2 font-medium">Time</th>
+                        <th className="py-2 pr-2 font-medium">Source</th>
+                        <th className="py-2 pr-2 font-medium">Status</th>
+                        <th className="py-2 pr-2 font-medium">Duration</th>
+                        <th className="py-2 font-medium">Details</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedSignalEvents.map((event) => (
+                        <tr
+                          key={`${event.source}-${event.timestamp}-${event.event}`}
+                          className="border-b last:border-b-0"
+                        >
+                          <td className="py-2 pr-2">{new Date(event.timestamp).toLocaleTimeString()}</td>
+                          <td className="py-2 pr-2">{event.source}</td>
+                          <td className="py-2 pr-2">{event.status}</td>
+                          <td className="py-2 pr-2">
+                            {typeof event.durationMs === "number"
+                              ? `${Math.round(event.durationMs)} ms`
+                              : "-"}
+                          </td>
+                          <td className="max-w-[360px] truncate py-2" title={JSON.stringify(event.details ?? {})}>
+                            {JSON.stringify(event.details ?? {})}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
