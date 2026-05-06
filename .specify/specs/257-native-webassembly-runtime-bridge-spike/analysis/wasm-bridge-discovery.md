@@ -245,6 +245,19 @@ export async function getWasmModule(): Promise<BananaWasmModule | null> {
 
 **Loading strategy**: lazy — the WASM module is not loaded until the first function call is attempted. The `QuizQaPage` and calculation-heavy routes trigger first load.
 
+### Deployment Hosting Decision (Vercel + Fly)
+
+- Browser workers are client-side assets. They are bundled by Vite and downloaded by the browser, so they are compatible with Vercel static hosting and do not require a separate worker host.
+- Fly.io remains the server/API runtime (`fly.toml` app `banana-api`) and is the fallback path when WASM init fails or is unavailable.
+- The current deployment contract requires publishing Emscripten outputs into the React static asset path at deploy time.
+
+### Deployment Contract Requirements
+
+1. Build WASM artifacts during CI/deploy via `bash scripts/build-wasm.sh --simd`.
+2. Copy emitted files (`banana-wasm.js/.wasm`, `banana-wasm-simd.js/.wasm`, manifest files) into the React static output input path (`src/typescript/react/public/wasm/`) before `vite build`.
+3. Ensure static hosting serves `/wasm/*` with file-extension pass-through (no SPA rewrite over `.js`/`.wasm` artifact requests).
+4. If `/wasm/*` artifacts are missing in production, runtime must continue to fall back to API (Fly-hosted) without uncaught exceptions.
+
 ### Desktop (Electron — Secondary)
 
 - The same `.wasm` and `.js` artifacts are bundled inside the Electron app's `resources/` directory.

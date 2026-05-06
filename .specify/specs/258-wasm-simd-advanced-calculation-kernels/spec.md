@@ -29,6 +29,7 @@ A generic WASM bridge alone will not deliver expected performance gains unless h
 - React web compatibility remains the required first gate before desktop/mobile expansion.
 - Scalar kernel baselines remain available for all candidate families to validate correctness and fallback behavior.
 - Benchmark workloads can be reproduced deterministically in CI and local development.
+- SIMD and scalar WASM artifacts can be published together under static `/wasm/*` hosting for web delivery, with API fallback remaining available when client capability checks fail.
 
 ## Success Criteria
 

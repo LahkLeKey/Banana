@@ -29,6 +29,7 @@ Even faster kernels can degrade user experience if execution blocks the UI threa
 - React web compatibility remains the first required gate prior to desktop/mobile expansion.
 - Existing frontend telemetry pathways can be extended to capture WASM worker lifecycle events.
 - UX surfaces can render deterministic degraded-mode states when worker startup or WASM init fails.
+- React web worker bundles and WASM assets are served as static client artifacts (Vercel-compatible), while degraded-mode API fallback targets Fly-hosted backend endpoints.
 
 ## Success Criteria
 
@@ -39,7 +40,7 @@ Even faster kernels can degrade user experience if execution blocks the UI threa
 
 ## Functional Requirements
 
-- FR-001: The spike must define a typed worker protocol for WASM calculation requests and responses.
+- FR-001: The spike must define a typed worker protocol for WASM calculation requests and responses in client-side browser workers, independent of backend worker hosting.
 - FR-002: The spike must define timeout, cancellation, and retry policy for long-running calculations.
 - FR-003: The spike must define frontend telemetry signals for success, latency, failure, and fallback.
 - FR-004: The spike must define UX behavior and copy for normal and degraded execution states.

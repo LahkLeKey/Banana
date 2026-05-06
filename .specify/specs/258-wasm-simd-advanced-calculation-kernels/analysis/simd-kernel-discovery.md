@@ -284,6 +284,12 @@ If the ratio falls below the threshold, ship the scalar WASM path only — no SI
 
 ## T008 — React-First Promotion Gate Per Kernel Family
 
+### Deployment Note (Vercel + Fly)
+
+- SIMD and scalar kernels are both browser-side WASM assets and are served as static files; Vercel can host both variants directly.
+- Fly.io is not a worker host in this architecture; it remains the API fallback runtime when client-side WASM cannot initialize.
+- Promotion evidence must include that both SIMD and scalar artifact pairs are deployed and reachable under `/wasm/` in the web deployment target.
+
 ### Gate Structure
 
 Extends spec 257 T006 gate with SIMD-specific checks per kernel:

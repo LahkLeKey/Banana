@@ -55,6 +55,12 @@ Sourced from `src/typescript/react/src` and spec 257/258 context.
 
 ## T003 — Typed Worker Message Protocol
 
+### Hosting Clarification (Vercel + Fly)
+
+- `bananaWasmWorker.ts` is a frontend Web Worker and executes in the end-user browser thread model, not on a server worker platform.
+- Vercel deployment is compatible with this model because the worker bundle and WASM modules are static client assets.
+- Fly.io is used for backend API hosting/fallback responses only, not for running browser worker code.
+
 ### Message Types
 
 ```typescript
@@ -222,6 +228,13 @@ Each PR that promotes a worker-backed feature must include:
 ---
 
 ## T008 — React-First Worker Compatibility Gate
+
+### Deployment Preconditions
+
+1. Worker bundle emitted by Vite is included in the Vercel deploy output.
+2. `/wasm/banana-wasm.js`, `/wasm/banana-wasm.wasm`, and SIMD counterparts are published as static assets.
+3. SPA rewrites do not override `.js`/`.wasm` file requests.
+4. Fallback API base URL points to the deployed API host (Fly or equivalent) so degraded mode remains functional.
 
 ### Gate Steps (must all pass before desktop/mobile promotion)
 
