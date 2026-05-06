@@ -22,7 +22,7 @@
 
 ## Phase 4 -- Verification and Close-out
 
-- [x] T010 [FR-248-01] Retrain and verify holdout + challenge-set thresholds.
+- [x] T010 [FR-248-01] Retrain via `python scripts/train-ripeness-model.py --corpus data/ripeness/corpus.json --output artifacts/training/ripeness/local --training-profile ci --session-mode single --max-sessions 1` and verify holdout + challenge-set thresholds.
 - [x] T011 [FR-248-05] Run `python scripts/validate-ai-contracts.py`.
 - [x] T012 [FR-248-05] Run `bash .specify/scripts/bash/validate-spec-boundaries.sh --spec .specify/specs/248-ripeness-boundary-corpus-expansion/spec.md`.
 - [x] T013 [FR-248-05] Mark tasks complete and capture before/after evidence in spec analysis notes.

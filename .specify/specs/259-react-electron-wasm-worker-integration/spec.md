@@ -1,6 +1,6 @@
 # Feature Specification: React, Desktop, and Mobile WASM Worker Integration Spike (259)
 
-**Feature Branch**: `259-react-desktop-mobile-wasm-worker-integration`
+**Feature Branch**: `259-react-electron-wasm-worker-integration`
 **Created**: 2026-05-05
 **Status**: Proposed
 **Input**: Define integration patterns for running WASM advanced calculations in React web workers and desktop/mobile worker-equivalent channels to reduce UI-thread contention and improve responsiveness.

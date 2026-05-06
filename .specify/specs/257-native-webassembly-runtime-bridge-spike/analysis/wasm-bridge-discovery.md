@@ -219,7 +219,7 @@ const WASM_STATUS_MESSAGES: Record<number, string> = {
 
 const WASM_INIT_TIMEOUT_MS = 5_000;
 
-let modulePromise: Promise<BananaWasmModule> | null = null;
+let modulePromise: Promise<BananaWasmModule | null> | null = null;
 
 export async function getWasmModule(): Promise<BananaWasmModule | null> {
   if (modulePromise) return modulePromise;

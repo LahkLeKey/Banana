@@ -107,10 +107,10 @@ const worker = new Worker(
 | Timeout | Value | Action |
 |---|---|---|
 | WASM module init | 5 000 ms (from spec 257) | Emit `{ type: 'fallback', reason: 'wasm_init_failed' }` |
-| Per-call execution | 10 000 ms | Emit `{ type: 'error', code: 8, message: 'execution_timeout' }`, then `worker.terminate()` and recreate worker |
+| Per-call execution | 10 000 ms | Emit `{ type: 'error', code: 1001, message: 'execution_timeout' }` using a WASM-only error-code namespace, then recreate worker if needed |
 | Worker recreation backoff | 1st failure: immediate; 2nd: 500 ms; 3rd+: 2 000 ms | Prevents tight restart loop |
 
-Add `BANANA_WASM_EXECUTION_TIMEOUT = 8` to `BananaStatusCode` extension for WASM-only codes (do not modify native ABI).
+Define timeout under a separate `WasmErrorCode` namespace (for example `WASM_EXECUTION_TIMEOUT = 1001`) so values cannot be confused with native status codes.
 
 ### Cancellation State Transitions
 

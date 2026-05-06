@@ -124,6 +124,7 @@ RUNTIME_METHODS='["UTF8ToString","stringToUTF8","lengthBytesUTF8","setValue","ge
 COMMON_FLAGS=(
   -O3
   -s MODULARIZE=1
+  -s EXPORT_ES6=1
   -s NO_EXIT_RUNTIME=1
   -s ALLOW_MEMORY_GROWTH=1
   -s "INITIAL_MEMORY=8mb"

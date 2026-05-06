@@ -21,7 +21,7 @@
 
 ## Phase 4 -- Verification and Close-out
 
-- [x] T009 [FR-247-01] Retrain ripeness (`ci`, `single`) and record non-trivial confusion matrix evidence.
+- [x] T009 [FR-247-01] Retrain ripeness (`ci`, `single`) via `python scripts/train-ripeness-model.py --corpus data/ripeness/corpus.json --output artifacts/training/ripeness/local --training-profile ci --session-mode single --max-sessions 1` and record non-trivial confusion matrix evidence.
 - [x] T010 [FR-247-05] Run `python scripts/validate-ai-contracts.py`.
 - [x] T011 [FR-247-05] Run `bash .specify/scripts/bash/validate-spec-boundaries.sh --spec .specify/specs/247-ripeness-holdout-realism-sweep/spec.md`.
 - [x] T012 [FR-247-05] Update README/analysis notes and mark tasks complete.

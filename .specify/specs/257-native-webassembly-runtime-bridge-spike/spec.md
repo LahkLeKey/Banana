@@ -43,6 +43,6 @@ Advanced calculations currently rely on managed/runtime implementations that are
 - FR-001: The spike must define the canonical toolchain and build contract for producing WASM from native C modules.
 - FR-002: The spike must define a stable host-to-WASM ABI with explicit memory ownership and status codes.
 - FR-003: The spike must define artifact packaging/versioning and publish path contracts for React web, desktop, and mobile consumption, including static `/wasm/*` hosting behavior.
-- FR-006: The spike must define a React-first compatibility gate that blocks rollout when web integration fails, even if desktop/mobile prototypes pass.
 - FR-004: The spike must define benchmark methodology and minimum evidence needed before rollout.
 - FR-005: The spike must define fallback behavior when WASM initialization fails or exceeds timeout budget.
+- FR-006: The spike must define a React-first compatibility gate that blocks rollout when web integration fails, even if desktop/mobile prototypes pass.

@@ -1,4 +1,4 @@
-# Tasks: React, Desktop, and Mobile WASM Worker Integration Spike (259)
+# Tasks: React, Electron, and Mobile WASM Worker Integration Spike (259)
 
 **Input**: Spec at `.specify/specs/259-react-electron-wasm-worker-integration/spec.md`
 
