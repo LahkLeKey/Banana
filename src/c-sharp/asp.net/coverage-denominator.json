@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "project": "Banana.Api",
-  "generated_at_utc": "2026-05-05T18:00:37Z",
+  "generated_at_utc": "2026-05-06T06:21:53Z",
   "tracked_file_count": 37,
   "tracked_files": [
     "Controllers/AuditController.cs",
@@ -15,7 +15,6 @@
     "Controllers/StreamingController.cs",
     "Controllers/TelemetryController.cs",
     "Controllers/TruckController.cs",
-    "Telemetry/TelemetryEventStore.cs",
     "NativeInterop/INativeBananaClient.cs",
     "NativeInterop/NativeBananaClient.cs",
     "NativeInterop/NativeMethods.cs",
@@ -40,6 +39,7 @@
     "Pipeline/Steps/EnsembleEscalationStep.cs",
     "Pipeline/Steps/EnsembleGatingStep.cs",
     "Pipeline/Steps/InputValidationStep.cs",
-    "Program.cs"
+    "Program.cs",
+    "Telemetry/TelemetryEventStore.cs"
   ]
 }
