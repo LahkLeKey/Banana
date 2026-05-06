@@ -89,11 +89,11 @@ async function addAndRunPythonCell(
     await ensureCatalogOpen(page);
     await page.locator("[data-testid='add-python-cell']").click();
 
-    const editor = page.locator("[data-testid='cell-code-editor']");
+    const editor = page.locator("[data-testid='cell-code-editor']").first();
     await expect(editor).toBeVisible({timeout : 5_000});
     await editor.fill(source);
 
-    await page.locator("[data-testid='cell-run-btn']").click();
+    await page.locator("[data-testid='cell-run-btn']").first().click();
 
     await page.waitForFunction(
         () => !document.body.innerText.includes("Running\u2026"),
@@ -214,18 +214,19 @@ test.describe("DS page — Pyodide in-browser execution", () => {
         // Second cell: read it — globals() is shared across runCell invocations
         await ensureCatalogOpen(page);
         await page.locator("[data-testid='add-python-cell']").click();
-        const editor = page.locator("[data-testid='cell-code-editor']");
+        const editor = page.locator("[data-testid='cell-code-editor']").first();
         await expect(editor).toBeVisible({timeout : 5_000});
         await editor.fill("print(shared_value)");
-        await page.locator("[data-testid='cell-run-btn']").click();
+        await page.locator("[data-testid='cell-run-btn']").first().click();
         await page.waitForFunction(
             () => !document.body.innerText.includes("Running\u2026"),
             {timeout : CELL_RUN_TIMEOUT},
         );
 
-        await expect(page.locator("pre.whitespace-pre-wrap").first()).toContainText(
-            "cross_cell_works",
-            {timeout : CELL_RUN_TIMEOUT},
-        );
+        await expect(page.locator("pre.whitespace-pre-wrap").first())
+            .toContainText(
+                "cross_cell_works",
+                {timeout : CELL_RUN_TIMEOUT},
+            );
     });
 });
