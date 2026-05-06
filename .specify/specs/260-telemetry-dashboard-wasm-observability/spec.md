@@ -3,11 +3,11 @@
 **Feature Branch**: `260-telemetry-dashboard-wasm-observability`
 **Created**: 2026-05-05
 **Status**: Proposed
-**Input**: Replace the Review Spikes tab with a Telemetry dashboard that supports observability drill-down directly in the website and verifies that WASM workers perform correctly in production.
+**Input**: Replace the Review Spikes tab with a Telemetry dashboard that supports observability drill-down directly in the website, verifies WASM workers in production, and exposes native-level telemetry for core runtime paths.
 
 ## Problem Statement
 
-The existing Review Spikes surface is not optimized for operational triage. We need an in-product Telemetry dashboard that lets operators inspect key observability components without leaving the website, while also proving that production WASM workers (from specs 257-259) are healthy, fast, and safely falling back when needed.
+The existing Review Spikes surface is not optimized for operational triage. We need an in-product Telemetry dashboard that lets operators inspect key observability components without leaving the website, while also proving that production WASM workers (from specs 257-259) are healthy, fast, and safely falling back when needed. We also need drill-down telemetry that reaches native execution layers so operators can trace failures and latency across frontend, managed API pipeline, wrapper interop, and native core/DAL paths.
 
 ## In Scope
 
@@ -16,6 +16,7 @@ The existing Review Spikes surface is not optimized for operational triage. We n
 - Define production-facing WASM worker telemetry contract (init, execution, timeout, cancellation, fallback, variant usage).
 - Define production validation gates and evidence expectations for WASM worker performance and reliability.
 - Define degraded-mode UX and alert states when worker metrics indicate instability.
+- Define native-level telemetry drill-down contracts spanning API pipeline, interop wrapper, native core, and DAL-backed native operations.
 
 ## Out of Scope
 
@@ -64,12 +65,26 @@ As a release owner, I can validate a defined set of worker SLO/SLA-like threshol
 
 1. **Given** a release candidate is live on production, **When** the owner opens telemetry thresholds, **Then** pass/fail badges are shown for worker init success, fallback ratio, and timeout ratio.
 
+### User Story 4 - Trace Incidents Down To Native Layer (Priority: P1)
+
+As an operator, I can trace a degraded result from website signal through API/interop into native layer telemetry so I can identify whether regressions originate in frontend execution, wrapper bindings, native core logic, or native DAL/database paths.
+
+**Why this priority**: Native-level blind spots make production incidents expensive to triage and block confident rollback/promotion decisions.
+
+**Independent Test**: Trigger a known degraded path and verify the dashboard can drill from high-level symptom to native-layer telemetry attributes and status distribution.
+
+**Acceptance Scenarios**:
+
+1. **Given** a production request shows elevated latency, **When** the operator opens telemetry drill-down, **Then** native-wrapper and native-core timing/status breakdowns are visible.
+2. **Given** DAL/native database flows are exercised, **When** an error spike occurs, **Then** operators can see error-code and lane distribution attributable to native-layer paths.
+
 ### Edge Cases
 
 - Dashboard receives partial telemetry (some components missing) and must still render available sections with clear "data unavailable" states.
 - Worker telemetry ingestion lags behind real-time traffic and must display freshness timestamp/staleness warning.
 - Burst traffic causes transient timeout spikes; dashboard must separate sustained incidents from short-lived spikes.
 - Browser environments without SIMD must not be treated as errors when scalar fallback remains healthy.
+- Native telemetry payloads may be partially unavailable for older runtime revisions; dashboard must mark missing native fields explicitly without failing the entire view.
 
 ## Requirements
 
@@ -83,6 +98,8 @@ As a release owner, I can validate a defined set of worker SLO/SLA-like threshol
 - **FR-006**: The dashboard MUST define thresholded readiness indicators for WASM worker health and clearly flag pass/fail status.
 - **FR-007**: The feature MUST preserve safe degraded behavior by showing fallback status and reason categories without requiring backend log access.
 - **FR-008**: The feature MUST define validation evidence required to claim WASM workers are performing as expected in production.
+- **FR-009**: The dashboard MUST provide native-level drill-down metrics and status distributions for core runtime paths (wrapper interop, native core, and native DAL where applicable).
+- **FR-010**: The telemetry model MUST support cross-layer correlation so a single operator investigation can connect website events to API/interop/native traces.
 
 ### Key Entities
 
@@ -90,6 +107,8 @@ As a release owner, I can validate a defined set of worker SLO/SLA-like threshol
 - **WasmWorkerHealthSnapshot**: Aggregated metrics for a selected interval (init success, p95 init latency, p95 execution latency, timeout/fallback/error rates, variant mix).
 - **WasmWorkerEventSample**: Individual telemetry event sample with timestamp, operation, duration, status/reason code, variant, and channel metadata.
 - **ReadinessThresholdResult**: Computed pass/fail evaluation against configured production thresholds for release decisions.
+- **NativeHealthSnapshot**: Aggregated native-layer metrics for selected interval including latency percentiles, status/error distribution, and lane/channel attribution.
+- **CrossLayerTraceReference**: Correlation identifiers and linkage metadata that connect frontend telemetry events to API pipeline and native-layer execution records.
 
 ## Success Criteria
 
@@ -99,6 +118,7 @@ As a release owner, I can validate a defined set of worker SLO/SLA-like threshol
 - **SC-002**: Operators can reach WASM worker drill-down in at most 2 interactions from the dashboard landing state.
 - **SC-003**: Dashboard presents production WASM worker health metrics for the selected window with data freshness under 5 minutes (or explicit stale warning).
 - **SC-004**: Release owner can determine pass/fail for defined worker readiness thresholds in under 3 minutes without external tooling.
+- **SC-005**: At least 90% of production WASM-relevant incident investigations can be traced from dashboard symptom to native-layer status/latency evidence without leaving the website.
 
 ## Assumptions
 
@@ -106,3 +126,4 @@ As a release owner, I can validate a defined set of worker SLO/SLA-like threshol
 - Website deployment remains Vercel-hosted with API fallback/telemetry backends reachable through existing production contracts.
 - Production validation uses real production traffic windows, not synthetic-only evidence.
 - Mobile/native app telemetry surfaces are out of scope unless routed through the website dashboard contract.
+- Native observability rollout may ship in phased depth by lane, but banana/not-banana/ripeness critical paths are included in initial release scope.

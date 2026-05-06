@@ -5,12 +5,12 @@
 
 ## Summary
 
-Replace the Review Spikes tab with a Telemetry dashboard that supports drill-down observability on the website and validates production WASM worker performance, reliability, and fallback behavior.
+Replace the Review Spikes tab with a Telemetry dashboard that supports drill-down observability on the website, validates production WASM worker performance/reliability/fallback behavior, and enables native-level incident traceability.
 
 ## Technical Context
 
 **Language/Version**: TypeScript, React, Bun
-**Primary Dependencies**: React app telemetry plumbing, worker lifecycle events, existing observability providers
+**Primary Dependencies**: React app telemetry plumbing, worker lifecycle events, API/interop/native telemetry feeds, existing observability providers
 **Storage**: File-based artifacts under `artifacts/`
 **Testing**: Playwright E2E, frontend type/lint checks, production telemetry verification snapshots
 **Target Platform**: GitHub Actions + local Git Bash operator path
@@ -42,12 +42,14 @@ Replace the Review Spikes tab with a Telemetry dashboard that supports drill-dow
 ### Phase 2: Implementation
 
 - Implement Telemetry dashboard entry replacing Review Spikes.
-- Implement drill-down sections for runtime/API/frontend/WASM worker observability.
+- Implement drill-down sections for runtime/API/frontend/WASM worker/native observability.
 - Add WASM worker health cards, trends, and threshold pass/fail indicators.
+- Add native-level health cards and cross-layer correlation drill-down fields.
 - Add UX states for missing/stale telemetry data.
 
 ### Phase 3: Validation
 
 - Validate navigation replacement and dashboard rendering in web UI.
 - Validate WASM metrics and threshold logic with production-like telemetry samples.
+- Validate native-layer drill-down and cross-layer correlation behavior with representative incident data.
 - Capture production verification evidence that workers are performing as expected.

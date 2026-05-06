@@ -29,7 +29,7 @@ import { KnowledgePage } from "../pages/KnowledgePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { OperatorPage } from "../pages/OperatorPage";
 import { QuizQaPage } from "../pages/QuizQaPage";
-import { ReviewSpikesPage } from "../pages/ReviewSpikesPage";
+import { TelemetryDashboardPage } from "../pages/TelemetryDashboardPage";
 import { WorkspacePage } from "../pages/WorkspacePage";
 
 function PageShell() {
@@ -93,7 +93,8 @@ export const router = createBrowserRouter([
           { path: "data-science", element: <DataSciencePage /> },
           { path: "banana-ai", element: <BananaAIPage /> },
           { path: "quiz-qa", element: <QuizQaPage /> },
-          { path: "review-spikes", element: <ReviewSpikesPage /> },
+          { path: "telemetry", element: <TelemetryDashboardPage /> },
+          { path: "review-spikes", element: <Navigate to="/telemetry" replace /> },
           { path: "classify", element: <ClassifyPage /> },
           { path: "operator", element: <OperatorPage /> },
         ],
