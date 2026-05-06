@@ -312,7 +312,7 @@ json.dumps({"stdout": _stdout.getvalue(), "traceback": _tb})
     }
 
     // -------------------------------------------------------------------------
-    // Layout — Grafana/Jupyter light theme, component-driven
+    // Layout — light-first notebook theme, component-driven
     // -------------------------------------------------------------------------
     return (
         <div className="space-y-3">

@@ -27,7 +27,7 @@ const SUITE_SPIKES: Spike[] = [
     },
     {
         id: "162",
-        title: "Shadcn Confluence Workbench",
+        title: "Knowledge Workbench",
         focus: "Validate article layout patterns, activity stream, and collaborative editing affordances.",
         status: "complete",
         outcome: "Knowledge workspace finalized with reliability surfaces, run drill-in workflows, and export-ready diagnostics.",

@@ -30,6 +30,9 @@ jobs:
           done
           echo "All required env vars present."
 
+      - name: Dashboard copy policy check
+        run: bash scripts/check-dashboard-copy-policy.sh
+
       - name: Install shared UI deps
         run: bun install --cwd src/typescript/shared/ui
 
