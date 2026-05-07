@@ -1,4 +1,35 @@
 #!/usr/bin/env bun
+/**
+ * scan-web-analytics-surfaces.ts — Spec 256
+ *
+ * Scans the React route tree and interaction surfaces for analytics
+ * instrumentation coverage and emits deterministic JSON + Markdown reports.
+ *
+ * Usage:
+ *   bun scripts/scan-web-analytics-surfaces.ts [options]
+ *
+ * Options:
+ *   --manifest <path>            Coverage manifest (default: scripts/analytics-surface-manifest.json)
+ *   --out-dir <path>             Output directory   (default: artifacts/analytics)
+ *   --router-file <path>         React router source (default: src/typescript/react/src/lib/router.tsx)
+ *   --analytics-file <path>      Analytics helper   (default: src/typescript/react/src/lib/analytics.ts)
+ *   --workspace-shell-file <path> WorkspaceShell   (default: src/typescript/react/src/components/WorkspaceShell.tsx)
+ *   --strict                     Exit 1 when coverage thresholds are not met
+ *   --min-route-coverage <0-1>   Minimum required route coverage ratio (default: 1)
+ *   --min-event-coverage <0-1>   Minimum required event coverage ratio  (default: 1)
+ *
+ * Outputs:
+ *   <out-dir>/coverage.json — machine-readable coverage report
+ *   <out-dir>/coverage.md  — human-readable summary
+ *
+ * Remediation:
+ *   Missing routes:  All routes in the React router receive page-view coverage
+ *                    automatically via PageShell → trackPageView. Add the route
+ *                    to the manifest's requiredRoutes if intentional.
+ *   Missing events:  Add a trackEvent("event_name", ...) call to the relevant
+ *                    component and ensure the event name is in @banana/react
+ *                    analytics.ts or WorkspaceShell.tsx for discovery.
+ */
 
 import {mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {join, resolve} from "node:path";

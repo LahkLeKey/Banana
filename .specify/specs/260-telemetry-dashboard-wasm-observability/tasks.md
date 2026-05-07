@@ -20,7 +20,7 @@
 
 - [x] T009 Add/extend Playwright UAT scenario that verifies Review Spikes is replaced by Telemetry dashboard and that WASM drill-down is reachable and populated. [FR-001] [FR-002] [FR-003]
 - [x] T010 Add/extend Playwright UAT scenario that verifies native observability drill-down exposes wrapper/core/DAL status/latency fields (or explicit unavailable state) without UI failure. [FR-009] [FR-010]
-- [ ] T011 Capture production-verification evidence that WASM workers are performing as expected and thresholds are evaluable from the website dashboard. [FR-008]
+- [x] T011 Capture production-verification evidence that WASM workers are performing as expected and thresholds are evaluable from the website dashboard. [FR-008]
 
 ## Phase 4: Spec Validation
 

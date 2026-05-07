@@ -180,6 +180,36 @@ jobs:
           DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
         run: bunx prisma validate --schema prisma/schema.prisma
 
+  analytics-scan:
+    name: Lint / analytics surface scan
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python test deps
+        run: pip install pytest
+      - name: Run analytics scanner (report mode)
+        run: |
+          bun scripts/scan-web-analytics-surfaces.ts \
+            --out-dir .artifacts/analytics
+      - name: Run dashboard copy policy check
+        run: bun scripts/check-dashboard-copy-policy.ts
+      - name: Run scanner unit tests
+        run: python -m pytest tests/scripts/test_scan_web_analytics_surfaces.py tests/scripts/test_check_dashboard_copy_policy.py -v
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analytics-surface-coverage
+          path: .artifacts/analytics/
+
   # --- Stage 2: typecheck / build ---
   turbo:
     name: Build / turbo (typecheck + lint)
@@ -461,6 +491,7 @@ jobs:
       - wiki-lint
       - helm-lint
       - migration-discipline
+      - analytics-scan
       - turbo
       - native-abi
       - native-cross-platform
@@ -488,6 +519,7 @@ jobs:
             echo "| Lint / wiki | ${{ needs.wiki-lint.result }} |"
             echo "| Lint / helm charts | ${{ needs.helm-lint.result }} |"
             echo "| Lint / migration discipline | ${{ needs.migration-discipline.result }} |"
+            echo "| Lint / analytics surface scan | ${{ needs.analytics-scan.result }} |"
             echo "| Build / turbo | ${{ needs.turbo.result }} |"
             echo "| Native / ABI check | ${{ needs.native-abi.result }} |"
             echo "| Native / cross-platform | ${{ needs.native-cross-platform.result }} |"
