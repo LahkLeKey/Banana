@@ -5,22 +5,7 @@ env:
   STORYBOOK_CUSTOM_DOMAIN: storybook.banana.engineer
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/storybook-deploy.yml"
-      - "src/typescript/react/**"
-      - "src/typescript/shared/ui/**"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "src/typescript/react/**"
-      - "src/typescript/shared/ui/**"
-      - ".github/workflows/storybook-deploy.yml"
-
-# Allow only one concurrent deploy, skipping runs queued between the run in-progress and latest queued.
+  workflow_call: {}
 concurrency:
   group: "pages-${{ github.ref }}"
   cancel-in-progress: false

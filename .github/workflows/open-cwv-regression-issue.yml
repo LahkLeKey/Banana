@@ -1,16 +1,7 @@
 name: Open CWV Regression Issue
 
 on:
-  workflow_dispatch:
-    inputs:
-      metric:
-        description: "Metric that regressed (e.g. LCP)"
-        required: true
-        default: "LCP"
-      value:
-        description: "Observed P75 value (e.g. 3.8s)"
-        required: true
-
+  workflow_call: {}
 jobs:
   open-issue:
     runs-on: ubuntu-latest

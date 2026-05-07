@@ -1,18 +1,7 @@
 name: Vault Smoke Test
 
 on:
-  push:
-    paths:
-      - 'scripts/vault-init.sh'
-      - 'docker/vault.Dockerfile'
-      - '.github/workflows/vault-smoke.yml'
-  pull_request:
-    paths:
-      - 'scripts/vault-init.sh'
-      - 'docker/vault.Dockerfile'
-      - '.github/workflows/vault-smoke.yml'
-  workflow_dispatch:
-
+  workflow_call: {}
 jobs:
   vault-smoke:
     runs-on: ubuntu-latest

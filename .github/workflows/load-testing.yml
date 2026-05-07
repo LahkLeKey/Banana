@@ -1,8 +1,6 @@
 name: Load Testing (k6)
 on:
-  schedule:
-    - cron: '0 3 * * *'
-  workflow_dispatch:
+  workflow_call: {}
 jobs:
   k6-verdict:
     runs-on: ubuntu-latest

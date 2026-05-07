@@ -1,9 +1,7 @@
 name: Compose CI
 
 on:
-  push:
-  workflow_dispatch:
-
+  workflow_call: {}
 env:
   BANANA_CI_ARTIFACT_ROOT: .artifacts/compose-ci
   BANANA_CI_LANE_SCHEMA_VERSION: "1"

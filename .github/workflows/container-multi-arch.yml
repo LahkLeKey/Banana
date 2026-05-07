@@ -1,12 +1,6 @@
 name: Multi-Arch Container Build
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'docker/**'
-      - 'src/**'
-  workflow_dispatch:
-
+  workflow_call: {}
 jobs:
   build:
     runs-on: ubuntu-latest

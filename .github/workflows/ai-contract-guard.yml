@@ -1,10 +1,7 @@
 name: AI Contract Guard
 
 on:
-  pull_request:
-  push:
-  workflow_dispatch:
-
+  workflow_call: {}
 jobs:
   validate-ai-contracts:
     runs-on: ubuntu-latest

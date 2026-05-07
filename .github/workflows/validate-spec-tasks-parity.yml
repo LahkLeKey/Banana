@@ -1,20 +1,7 @@
 name: validate-spec-tasks-parity
 
 on:
-  pull_request:
-    paths:
-      - ".specify/specs/**"
-      - "scripts/validate-spec-tasks-parity.py"
-      - "scripts/validate-spec-tasks-parity.sh"
-      - "tests/scripts/test_validate_spec_tasks_parity.py"
-      - ".github/workflows/validate-spec-tasks-parity.yml"
-  push:
-    branches:
-      - main
-    paths:
-      - ".specify/specs/**"
-      - "scripts/validate-spec-tasks-parity.py"
-
+  workflow_call: {}
 jobs:
   parity:
     name: spec.md <-> tasks.md parity

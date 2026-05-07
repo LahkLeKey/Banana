@@ -1,0 +1,79 @@
+name: Scheduled
+
+# Single orchestrator for all scheduled / cron jobs. One nightly run with
+# all jobs as a tree instead of 10+ separate scheduled workflows.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # 06:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: "Comma-separated job names to run (default: all)"
+        required: false
+        default: "all"
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+concurrency:
+  group: scheduled-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  backup-dr:
+    name: Scheduled / backup + DR drill
+    uses: ./.github/workflows/backup-dr.yml
+    secrets: inherit
+
+  secrets-rotation:
+    name: Scheduled / secrets rotation reminder
+    uses: ./.github/workflows/secrets-rotation-reminder.yml
+    secrets: inherit
+
+  synthetic-monitoring:
+    name: Scheduled / synthetic monitoring
+    uses: ./.github/workflows/synthetic-monitoring.yml
+    secrets: inherit
+
+  load-testing:
+    name: Scheduled / load testing
+    uses: ./.github/workflows/load-testing.yml
+    secrets: inherit
+
+  vault-smoke:
+    name: Scheduled / vault smoke
+    uses: ./.github/workflows/vault-smoke.yml
+    secrets: inherit
+
+  ds-e2e-uat:
+    name: Scheduled / DS E2E UAT
+    uses: ./.github/workflows/ds-e2e-uat.yml
+    secrets: inherit
+
+  grade-school-uat:
+    name: Scheduled / grade-school UAT
+    uses: ./.github/workflows/grade-school-uat.yml
+    secrets: inherit
+
+  playwright-reinforcement:
+    name: Scheduled / Playwright reinforcement
+    uses: ./.github/workflows/playwright-reinforcement.yml
+    secrets: inherit
+
+  cwv-regression-issue:
+    name: Scheduled / CWV regression issue
+    uses: ./.github/workflows/open-cwv-regression-issue.yml
+    secrets: inherit
+
+  mutation-testing:
+    name: Scheduled / mutation testing
+    uses: ./.github/workflows/mutation-testing.yml
+    secrets: inherit
+
+  native-pgo:
+    name: Scheduled / native PGO
+    uses: ./.github/workflows/native-pgo.yml
+    secrets: inherit

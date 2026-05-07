@@ -1,9 +1,6 @@
 name: Native PGO Build
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['src/native/**']
+  workflow_call: {}
 jobs:
   pgo-build:
     runs-on: ubuntu-latest

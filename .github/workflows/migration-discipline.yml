@@ -1,12 +1,7 @@
 name: migration-discipline
 
 on:
-  pull_request:
-    paths:
-      - 'src/typescript/api/prisma/schema.prisma'
-      - 'src/typescript/api/prisma/migrations/**'
-      - 'src/c-sharp/asp.net/Migrations/**'
-
+  workflow_call: {}
 permissions:
   contents: read
 

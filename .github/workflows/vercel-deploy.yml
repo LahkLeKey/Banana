@@ -1,11 +1,7 @@
 name: Vercel Deploy
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
+  workflow_call: {}
 jobs:
   build-gate:
     name: Build Gate

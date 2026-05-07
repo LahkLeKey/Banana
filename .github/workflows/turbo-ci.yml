@@ -1,5 +1,6 @@
 name: Turbo CI
-on: [push, pull_request]
+on:
+  workflow_call: {}
 jobs:
   turbo:
     runs-on: ubuntu-latest
