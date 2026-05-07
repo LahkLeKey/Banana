@@ -1,3 +1,7 @@
 {
-    "feature_directory": ".specify/specs/001-game-engine-architecture"
+    "feature_directory": ".specify/specs/001-game-engine-architecture",
+    "last_completed": ".specify/specs/001-game-engine-architecture",
+    "drained_at_utc": "2026-05-07T00:00:00Z",
+    "next_candidate": ".specify/specs/003-coverage-80-rehydration",
+    "note": "Backlog drained 2026-05-07. All 265 specs have 0 open tasks. See artifacts/orchestration/promotion-ledger-2026-05-07.json for next-feature recommendations. Human approval required before starting new spec per Principle XVIII."
 }

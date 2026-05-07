@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-05-07T05:31:27Z",
+  "source_ledger": "artifacts/orchestration/deferred-ledger-2026-05-07.json",
+  "scoring": {
+    "value_weight": 1.0,
+    "risk_reduction_weight": 1.0,
+    "dependency_unlock_weight": 1.0,
+    "scale": "1-5 per dimension, higher is better"
+  },
+  "promotion_candidates": [
+    {
+      "rank": 1,
+      "spec_id_candidate": "003-coverage-80-rehydration",
+      "title": "Coverage 80 Rehydration for Entire Monorepo",
+      "status": "draft",
+      "value": 5,
+      "risk_reduction": 5,
+      "dependency_unlock": 4,
+      "score": 14,
+      "rationale": "Raises and enforces 80% coverage across all layers; highest quality-gate leverage and unblocks downstream release confidence.",
+      "recommendation": "Create tasks.md and begin implementation. Spec + plan already exist.",
+      "blockers": []
+    },
+    {
+      "rank": 2,
+      "spec_id_candidate": "004-domain-value-delivery",
+      "title": "Domain Value Delivery",
+      "status": "draft",
+      "value": 5,
+      "risk_reduction": 3,
+      "dependency_unlock": 4,
+      "score": 12,
+      "rationale": "Fixes controller JSON double-encoding across ripeness, banana-ml, and not-banana routes; high API contract quality improvement.",
+      "recommendation": "Spec + plan + checklist exist. Create tasks.md and implement.",
+      "blockers": []
+    },
+    {
+      "rank": 3,
+      "spec_id_candidate": "002-phase1-npc-wildlife-controller",
+      "title": "Phase 1 NPC Wildlife Controller",
+      "status": "draft",
+      "value": 4,
+      "risk_reduction": 2,
+      "dependency_unlock": 3,
+      "score": 9,
+      "rationale": "Advances game-engine roadmap with first NPC controller implementation in C native layer.",
+      "recommendation": "Spec + plan exist. Verify tasks.md completeness then begin.",
+      "blockers": []
+    },
+    {
+      "rank": 4,
+      "spec_id_candidate": "001-next-sprint",
+      "title": "Next Sprint Consolidated Scope",
+      "status": "draft",
+      "value": 3,
+      "risk_reduction": 2,
+      "dependency_unlock": 5,
+      "score": 10,
+      "rationale": "Consolidated scope for all active platform regeneration goals; enables systematic cross-layer sprint planning.",
+      "recommendation": "Review spec for any unaddressed scope items; create tasks.md if gaps remain.",
+      "blockers": []
+    }
+  ],
+  "top_recommendation": "003-coverage-80-rehydration",
+  "note": "Human approval required before starting any new spec implementation per Principle XVIII."
+}

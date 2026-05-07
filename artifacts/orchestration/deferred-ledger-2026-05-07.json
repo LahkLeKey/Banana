@@ -1,0 +1,1605 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-05-07T05:31:08Z",
+  "summary": {
+    "total_specs": 265,
+    "specs_with_tasks": 264,
+    "specs_without_tasks": 1,
+    "total_open_tasks": 0,
+    "total_completed_tasks": 2356,
+    "drained": true
+  },
+  "completed_specs": [
+    {
+      "spec_id": "000-api-rehydration",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "000-model-release-rehydration",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "000-native-rehydration",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "000-runtime-rehydration",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "001-game-engine-architecture",
+      "spec_status": "complete",
+      "open_tasks": 0,
+      "completed_tasks": 20
+    },
+    {
+      "spec_id": "001-next-sprint",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "002-compose-ci-stabilization",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 49
+    },
+    {
+      "spec_id": "002-phase1-npc-wildlife-controller",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 85
+    },
+    {
+      "spec_id": "003-coverage-80-rehydration",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 56
+    },
+    {
+      "spec_id": "004-domain-value-delivery",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 3
+    },
+    {
+      "spec_id": "005-domain-value-delivery-followup",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 3
+    },
+    {
+      "spec_id": "006-c-upstream-value-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "007-dal-runtime-contract-hardening",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "008-cmake-preset-activation-fix",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 25
+    },
+    {
+      "spec_id": "009-ml-brain-domain-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 27
+    },
+    {
+      "spec_id": "010-left-brain-regression-runnable",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 25
+    },
+    {
+      "spec_id": "011-right-brain-binary-runnable",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 25
+    },
+    {
+      "spec_id": "012-full-brain-transformer-runnable",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 30
+    },
+    {
+      "spec_id": "013-ml-brain-composition-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 9
+    },
+    {
+      "spec_id": "014-aspnet-ensemble-pipeline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 26
+    },
+    {
+      "spec_id": "015-react-ensemble-badge",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 20
+    },
+    {
+      "spec_id": "016-transformer-quantized-embedding",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 18
+    },
+    {
+      "spec_id": "017-ensemble-verdict-embedding-passthrough",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 15
+    },
+    {
+      "spec_id": "018-validation-lane-enforcement-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 8
+    },
+    {
+      "spec_id": "019-validation-lane-parity-lint",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 14
+    },
+    {
+      "spec_id": "020-frontend-classifier-experience-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "021-frontend-shared-design-system-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "022-frontend-resilient-offline-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 13
+    },
+    {
+      "spec_id": "023-react-verdict-ux-polish",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 14
+    },
+    {
+      "spec_id": "024-electron-customer-verdict-surface",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "025-react-native-capture-flow",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "026-shared-ui-tokens-theme-primitives",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "027-shared-ui-components-v2",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 18
+    },
+    {
+      "spec_id": "028-per-channel-design-system-adoption",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 14
+    },
+    {
+      "spec_id": "029-shared-resilience-primitive-react-adoption",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 17
+    },
+    {
+      "spec_id": "030-electron-persistence-retry",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "031-react-native-persistence-retry",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "032-frontend-f5-launch-profiles-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 9
+    },
+    {
+      "spec_id": "033-training-launch-profiles-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 8
+    },
+    {
+      "spec_id": "034-model-suite-curation-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 10
+    },
+    {
+      "spec_id": "035-banana-corpus-and-trainer",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 13
+    },
+    {
+      "spec_id": "036-ripeness-corpus-and-trainer",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "037-training-launch-surface-expansion",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 10
+    },
+    {
+      "spec_id": "038-not-banana-corpus-refresh",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 13
+    },
+    {
+      "spec_id": "039-ci-training-session-persistence",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 20
+    },
+    {
+      "spec_id": "040-human-left-right-brain-training-workbench",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 21
+    },
+    {
+      "spec_id": "041-compose-orchestrated-run-profiles",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 28
+    },
+    {
+      "spec_id": "041-shared-shadcn-layout-cross-app-ui",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "042-frontend-ensemble-blank-page-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 24
+    },
+    {
+      "spec_id": "042-frontend-slice-infra-env",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "043-frontend-config-drift-closure",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 18
+    },
+    {
+      "spec_id": "044-one-window-interactive-baseline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 17
+    },
+    {
+      "spec_id": "045-frontend-runtime-unset-followup",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 18
+    },
+    {
+      "spec_id": "046-chat-bootstrap-fetch-failure",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 27
+    },
+    {
+      "spec_id": "047-api-parity-governance",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 38
+    },
+    {
+      "spec_id": "048-frontend-shadcn-baseline-migration",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 22
+    },
+    {
+      "spec_id": "049-workflow-orchestrator-recovery",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 24
+    },
+    {
+      "spec_id": "050-neuro-self-training-enhancements",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "051-frontend-robustness-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "052-frontend-routing-architecture",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "053-frontend-typed-state-baseline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "054-frontend-streaming-verdict-and-chat",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "055-frontend-pwa-offline-shell",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "056-shared-ui-storybook-and-docs",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "057-frontend-accessibility-wcag22-gate",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "058-frontend-i18n-localization-scaffold",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "059-frontend-theming-and-dark-mode",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "060-frontend-e2e-playwright-harness",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "061-frontend-observability-and-vitals",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "062-frontend-performance-budget-gate",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "063-frontend-auth-and-roles",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "064-frontend-operator-dashboard",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "065-frontend-neuro-trace-viewer",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "066-mobile-parity-sprint",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "067-api-openapi-and-typed-clients",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "068-api-rate-limiting-and-abuse-protection",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "069-api-audit-log-surface",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "070-api-background-jobs-runner",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 8
+    },
+    {
+      "spec_id": "070-background-job-runner",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 8
+    },
+    {
+      "spec_id": "071-api-webhook-delivery-system",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "071-outbound-webhook-delivery",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "072-native-abi-versioning-contract",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "073-native-sanitizer-ci-lane",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "074-native-cross-platform-build-matrix",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "075-native-pgo-and-perf-baseline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "076-training-cross-model-joint-pipeline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "077-training-active-learning-loop",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "078-training-drift-detection-on-inference",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "079-training-model-registry-signed-releases",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 10
+    },
+    {
+      "spec_id": "080-training-ab-harness-live-comparison",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "081-infra-helm-and-k8s-manifests",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "082-infra-secrets-management-vault",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "083-infra-disaster-recovery-and-backups",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "084-infra-multi-arch-container-images",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "085-quality-mutation-testing-baseline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "086-supply-chain-sbom-and-signing",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "087-devex-monorepo-task-graph",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "088-devex-devcontainer-and-codespaces",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "089-devex-pre-commit-hooks-baseline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "090-devex-feature-flag-platform",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "091-devex-error-tracking-sentry",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "092-perf-rum-and-core-web-vitals",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "093-perf-synthetic-monitoring-blackbox",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "094-perf-load-testing-baseline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "095-data-postgres-migration-discipline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "096-data-pii-classification-and-redaction",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "097-data-event-sourcing-for-training",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "098-security-threat-model-and-stride",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "099-security-third-party-pentest-readiness",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "100-security-csp-and-headers-hardening",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "101-security-dependency-update-bot",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 4
+    },
+    {
+      "spec_id": "102-wiki-refactor-confluence-style",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 9
+    },
+    {
+      "spec_id": "103-aspnet-startup-pipeline-restabilization",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 10
+    },
+    {
+      "spec_id": "103-autonomous-spec-drain-mode",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 24
+    },
+    {
+      "spec_id": "104-react-build-contract-reconciliation",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "104-speckit-bootstrapping-improvement",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "105-wiki-contract-mirror-restabilization",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "106-post-merge-quality-gate-hardening",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "107-bulk-delivery-regression-burn-down",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "108-compose-ci-runtime-compat-and-heredoc-stability",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "109-mutation-testing-stryker-package-manager-fix",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "110-precommit-ruff-format-stability",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "111-orchestrate-sdlc-workflow-file-issue-fix",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    },
+    {
+      "spec_id": "112-playwright-e2e-screenshot-suite",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 20
+    },
+    {
+      "spec_id": "113-storybook-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 22
+    },
+    {
+      "spec_id": "114-storybook-baseline",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 15
+    },
+    {
+      "spec_id": "115-storybook-demos-ci",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 10
+    },
+    {
+      "spec_id": "116-vercel-react-deploy-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 13
+    },
+    {
+      "spec_id": "117-api-public-hosting-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "118-staging-environment-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "119-performance-cdn-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 10
+    },
+    {
+      "spec_id": "120-observability-analytics-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 13
+    },
+    {
+      "spec_id": "121-vercel-build-config",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "122-vercel-ci-deploy-workflow",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "123-banana-engineer-domain-config",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "124-vercel-env-var-contract",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "125-api-production-host",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "126-api-cors-production",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "127-api-subdomain-dns",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "128-api-production-db-migrations",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "129-vercel-preview-deploys",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "130-staging-api-environment",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "131-ci-env-var-validation",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "132-secrets-rotation-runbook",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "133-vite-bundle-split",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "134-font-asset-optimization",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "135-cache-headers-cdn",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "136-lighthouse-ci-gate",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "137-vercel-analytics",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "138-sentry-error-tracking",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 8
+    },
+    {
+      "spec_id": "139-uptime-monitoring",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "140-cwv-reporting-dashboard",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "141-vercel-redirects-www-domain",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "142-vercel-deploy-hooks",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "143-vercel-logs-inspection",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "144-vercel-metrics-observability",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "145-vercel-edge-middleware",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "146-api-health-checks-diagnostic",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "147-performance-budget-enforcement",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "148-error-rate-monitoring",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "149-api-rate-limit-verification",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "150-database-performance-monitoring",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "151-vercel-blob-storage",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "152-vercel-cron-background-tasks",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "153-vercel-rollback-deployment",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "154-deployment-activity-audit-log",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "155-ssl-cert-management",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "156-ci-auto-debug-vercel-deploy",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 34
+    },
+    {
+      "spec_id": "157-ci-auto-debug-screenshot-suite",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 34
+    },
+    {
+      "spec_id": "158-deployment-host-inventory-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "159-vercel-production-promotion-implementation",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "160-deployment-readiness-qa-gate",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 5
+    },
+    {
+      "spec_id": "161-suite-information-architecture-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "162-shadcn-confluence-workbench-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "163-function-webapp-capability-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "164-bananaai-rovo-replacement-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "165-feedback-loop-promotion-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "171-ds-model-ops-complexity-scale-up",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "176-operator-command-center-ux",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "177-knowledge-reliability-upgrade",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "178-functions-automation-safety-layer",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "179-bananaai-explainability-pack",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "180-release-rollback-control-plane",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "181-swagger-runtime-hardening",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 9
+    },
+    {
+      "spec_id": "182-jupyterlite-runtime-reliability",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 9
+    },
+    {
+      "spec_id": "183-knowledge-base-expansion",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "184-data-science-tab-jupyterlite-bootstrap",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "185-ds-viz-renderer-plotly-upgrade",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 8
+    },
+    {
+      "spec_id": "186-jupyter-static-viz-baseline-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "187-jupyter-plotly-react-embedding-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "188-jupyter-vega-altair-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "189-jupyter-widget-interop-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "190-jupyter-specialized-viz-surface-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "191-matplotlib-png-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "192-seaborn-stat-chart-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "193-static-svg-vs-png-export-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "194-rich-output-sizing-and-layout-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "195-report-mode-readability-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "196-output-persistence-ipynb-attachment-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "197-thumbnail-preview-generation-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "198-static-theme-and-branding-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "199-print-export-pdf-friendly-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "200-error-fallback-output-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "201-plotly-figure-schema-normalization-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "202-plotly-react-component-embedding-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "203-plotly-large-dataset-performance-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "204-plotly-theme-token-bridge-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "205-plotly-crossfilter-state-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "206-plotly-animation-timeline-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "207-plotly-image-export-and-snapshot-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "208-plotly-subplots-and-linked-views-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "209-plotly-notebook-authoring-ux-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "210-plotly-security-sanitization-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "211-altair-json-emission-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "212-vega-lite-react-renderer-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "213-vega-theme-token-bridge-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "214-vega-interaction-selection-bridge-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "215-vega-transform-offload-boundary-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "216-vega-large-spec-persistence-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "217-vega-export-png-svg-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "218-vega-multi-view-dashboard-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "219-vega-security-expression-sandbox-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "220-altair-authoring-scaffold-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "221-bokeh-embed-bundle-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "222-bokeh-streaming-data-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "223-bokeh-serverless-browser-feasibility-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "224-bokeh-react-host-lifecycle-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "225-bokeh-widget-callback-interop-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "226-bokeh-theme-token-bridge-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "227-bokeh-large-timeseries-downsampling-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "228-bokeh-security-html-js-sanitization-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "229-ipywidgets-state-model-bridge-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "230-slider-dropdown-control-patterns-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "231-widget-driven-chart-recompute-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "232-ipywidgets-persistence-and-replay-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "233-ipympl-interactive-matplotlib-bridge-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "234-bqplot-react-host-feasibility-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "235-widget-accessibility-focus-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "236-widget-security-kernel-message-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "237-geospatial-ipyleaflet-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "238-network-graph-surface-contract-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "239-3d-webgl-notebook-surface-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "240-low-level-canvas-custom-viz-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "241-ds-prod-readiness-orchestration",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "242-ds-wave0-foundation-implementation",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "243-ds-wave1-chart-contract-implementation",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "244-ds-wave2-runtime-options-implementation",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "245-ds-wave3-specialized-surface-implementation",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "246-ds-prod-release-execution",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 6
+    },
+    {
+      "spec_id": "247-ripeness-holdout-realism-sweep",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 12
+    },
+    {
+      "spec_id": "248-ripeness-boundary-corpus-expansion",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 13
+    },
+    {
+      "spec_id": "249-training-metrics-suspicion-guard",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 13
+    },
+    {
+      "spec_id": "250-playwright-reinforcement-training-suites",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 13
+    },
+    {
+      "spec_id": "251-banana-foundation-ontology-corpus",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "252-banana-concept-generalization-benchmark",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "253-banana-grade-school-explanation-quality",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "254-banana-contrastive-negative-hardening",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "255-autonomous-curriculum-expansion-loop",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 8
+    },
+    {
+      "spec_id": "256-web-analytics-surface-scan",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 7
+    },
+    {
+      "spec_id": "257-native-webassembly-runtime-bridge-spike",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "258-wasm-simd-advanced-calculation-kernels",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "259-react-electron-wasm-worker-integration",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 11
+    },
+    {
+      "spec_id": "260-telemetry-dashboard-wasm-observability",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 14
+    },
+    {
+      "spec_id": "861-telemetry-light-theme",
+      "spec_status": "unknown",
+      "open_tasks": 0,
+      "completed_tasks": 0
+    }
+  ],
+  "deferred_specs": [
+    {
+      "spec_id": "000-project-pivot",
+      "spec_status": "unknown",
+      "note": "no tasks.md"
+    }
+  ]
+}

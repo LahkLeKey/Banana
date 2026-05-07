@@ -1,5 +1,18 @@
 <!--
 Sync Impact Report
+- Version change: 1.10.0 -> 1.10.1
+- Modified principles:
+        - Expanded XVIII. Confidence-Gated Clarification: backlog-drained state is now an explicit confidence gate trigger with mandatory deferred-ledger emission and human-pause protocol.
+- Modified workflow guidance:
+        - Deferred-ledger bullet now specifies machine-readable JSON path and mandatory pause-and-report after emission.
+        - Promotion-ledger bullet now specifies artifact path and scored follow-up slice recommendations for human approval.
+- Templates requiring updates:
+        - No template changes required.
+- Follow-up TODOs:
+        - None.
+
+<!--
+Sync Impact Report (prior)
 - Version change: 1.9.1 -> 1.10.0
 - Modified principles:
 	- Added X. Observable Infrastructure as Code
@@ -103,6 +116,10 @@ Operational and delivery signals must be promoted into explicit, scored follow-u
 ### XVIII. Confidence-Gated Clarification
 Spec Kit work must not guess through ambiguity. When the operator is below 70% confidence that the next edit, command, or workflow change will improve the codebase, the operator MUST stop and ask targeted Q/A before proceeding. The questions must be decision-driving, narrow the uncertainty that blocks progress, and be recorded in the active spec or plan when they change scope, constraints, or acceptance expectations.
 
+A **drained backlog** (all `tasks.md` files report 0 open tasks, no open PRs, no open GitHub issues) is itself a confidence gate: confidence in autonomous new-feature direction is below 70% by definition when no backlog exists. In this state the operator must: (1) confirm the drained state by scanning all `tasks.md` files; (2) emit a deferred-ledger JSON artifact (see Workflow guidance); (3) update `feature.json` to the next candidate spec if clearly identified by the promotion ledger, or leave it pointing to the most recently completed spec; and (4) pause and report the completion state to the human before starting any new spec implementation.
+
+**Resuming after a drain:** A human directive of the form "go for it" or "proceed autonomously" — even without an explicitly named feature — is sufficient approval to resume implementation against the **top-ranked promotion-ledger candidate**. The operator must (a) merge the open deferred-ledger/promotion-ledger PR if CI is passing, (b) set `feature.json` to the top candidate, (c) run the Spec Kit flow (`specify specify` → `specify plan` → `specify tasks`) if a tasks.md does not yet exist, or begin task execution directly if tasks.md is complete, and (d) continue autonomously until the next confidence gate is reached. Do not re-pause for another human confirmation when the "go for it" directive is already in scope.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
@@ -144,8 +161,9 @@ Spec Kit work must not guess through ambiguity. When the operator is below 70% c
 - Multi-host deployment decisions (Vercel + Fly/Railway) must include explicit capacity and suspension-state checks before adding new machines/apps.
 - Before running repository-wide scan loops, operators must attempt checkpoint resume first and document why a full rescan is required if resume is not used.
 - Scan loops that complete should publish a compact summary artifact that can be consumed by later planning and constitution updates.
-- When no runnable specs remain, operators should emit a deferred-ledger summary that accounts for blocked/research specs without forcing a full recomputation loop.
-- After checkpoint accounting, operators should emit a promotion ledger capturing high-value follow-up slices and route those items into new specs.
+- When no runnable specs remain (confirmed by 0 open tasks across all `tasks.md` files): (1) emit a deferred-ledger JSON artifact at `artifacts/orchestration/deferred-ledger-<YYYY-MM-DD>.json` listing all complete spec IDs, any blocked/research-only spec IDs with blocker rationale, and an overall completion summary; (2) pause and report the drained state to the human before starting any new spec. Resume immediately against the top promotion-ledger candidate when the human responds with "go for it" or equivalent.
+- After deferred-ledger emission, emit a promotion-ledger artifact at `artifacts/orchestration/promotion-ledger-<YYYY-MM-DD>.json` capturing high-value follow-up slices scored by value, risk reduction, and dependency-unlock. Each entry must include a spec-creation recommendation so the human can approve the next feature start before autonomous work resumes.
+- **Shell safety**: Never run commands that require interactive input (pagers, prompts, wizard flows) without non-interactive flags. Always use `--no-pager`, `--yes`, `--non-interactive`, `-f`, or equivalent flags. Prefer `python -c` over heredoc stdin for inline scripts. Avoid `gh pr create` without `--base` and `--head` flags. Never chain `sleep` in sync terminals — use async mode or poll with separate calls.
 - When confidence that the next action will improve the codebase falls below 70%, pause implementation and ask focused Q/A before editing or dispatching broad workflow changes. Reversible probes are acceptable only after that clarification step or when the human explicitly requests exploratory work.
 
 ## Governance
@@ -154,4 +172,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.10.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-06
+**Version**: 1.10.2 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-07

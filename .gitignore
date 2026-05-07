@@ -59,6 +59,9 @@ Thumbs.db
 !/artifacts/wasm
 /artifacts/wasm/*
 !/artifacts/wasm/**
+!/artifacts/orchestration
+/artifacts/orchestration/*
+!/artifacts/orchestration/**
 /.wiki
 bash.exe.stackdump
 /tests/unit/TestResults
