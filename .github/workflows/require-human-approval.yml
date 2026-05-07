@@ -70,6 +70,12 @@ jobs:
               return;
             }
 
+            // Trusted human authors bypass the gate entirely — codebase is stable.
+            if (!automationAuthor) {
+              core.notice(`PR authored by human '${pr.user?.login}'; human-approval gate bypassed.`);
+              return;
+            }
+
             if (pr.draft) {
               core.notice(
                 "Automation pull request is in draft state. Human-approval enforcement starts when it is ready for review."
