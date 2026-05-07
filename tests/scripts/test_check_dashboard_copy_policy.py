@@ -10,11 +10,11 @@ Covers:
 - Bad terms file JSON exits with code 2
 - Non-strict mode reports violations but exits 0
 """
+
 from __future__ import annotations
 
 import json
 import subprocess
-import sys
 from pathlib import Path
 
 SCRIPT = Path(__file__).parents[2] / "scripts" / "check-dashboard-copy-policy.ts"
