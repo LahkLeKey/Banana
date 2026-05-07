@@ -1,7 +1,7 @@
 ---
 spec_id: 001-game-engine-architecture
 title: "Game Engine Architecture: C Core + WASM Orchestration"
-status: draft
+status: complete
 created: 2026-05-06
 updated: 2026-05-06
 ---

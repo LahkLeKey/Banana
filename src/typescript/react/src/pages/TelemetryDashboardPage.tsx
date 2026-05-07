@@ -3,13 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import {
   fetchApiHealth,
   fetchApiRoot,
-  fetchTelemetryEvents,
   fetchTelemetryConfig,
+  fetchTelemetryEvents,
   ingestTelemetryEvent,
   resolveApiBaseResolution,
 } from "../lib/api";
-import { recordTelemetryEvent, useTelemetrySnapshot } from "../lib/telemetryStore";
 import type { TelemetryEvent } from "../lib/telemetryStore";
+import { recordTelemetryEvent, useTelemetrySnapshot } from "../lib/telemetryStore";
 
 const DASHBOARD_SOURCES: TelemetryEvent["source"][] = [
   "runtime",
@@ -164,10 +164,9 @@ function buildBuckets(events: TelemetryEvent[], range: RangePreset, now: number)
 function ReadinessBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
-      className={`rounded-full border px-2 py-1 text-xs font-medium ${ok
-        ? "border-green-500 bg-green-50 text-green-700"
-        : "border-red-400 bg-red-50 text-red-700"
-        }`}
+      className={`rounded-full border px-2 py-1 text-xs font-medium ${
+        ok ? "border-green-500 bg-green-50 text-green-700" : "border-red-400 bg-red-50 text-red-700"
+      }`}
     >
       {label}
     </span>
@@ -949,27 +948,19 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-lg border border-cyan-300/60 bg-cyan-50/80 p-3">
               <p className="text-xs text-cyan-800">Visible Events</p>
-              <p className="text-2xl font-semibold text-cyan-950">
-                {filteredEvents.length}
-              </p>
+              <p className="text-2xl font-semibold text-cyan-950">{filteredEvents.length}</p>
             </div>
             <div className="rounded-lg border border-rose-300/60 bg-rose-50/80 p-3">
               <p className="text-xs text-rose-800">Error Rate</p>
-              <p className="text-2xl font-semibold text-rose-900">
-                {formatPct(filteredErrorRate)}
-              </p>
+              <p className="text-2xl font-semibold text-rose-900">{formatPct(filteredErrorRate)}</p>
             </div>
             <div className="rounded-lg border border-indigo-300/60 bg-indigo-50/80 p-3">
               <p className="text-xs text-indigo-800">P95 Duration</p>
-              <p className="text-2xl font-semibold text-indigo-950">
-                {Math.round(filteredP95)} ms
-              </p>
+              <p className="text-2xl font-semibold text-indigo-950">{Math.round(filteredP95)} ms</p>
             </div>
             <div className="rounded-lg border border-emerald-300/60 bg-emerald-50/80 p-3">
               <p className="text-xs text-emerald-800">Active Signals</p>
-              <p className="text-2xl font-semibold text-emerald-950">
-                {activeSignals}
-              </p>
+              <p className="text-2xl font-semibold text-emerald-950">{activeSignals}</p>
             </div>
           </div>
 
@@ -1034,10 +1025,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                   <button
                     key={source}
                     type="button"
-                    className={`rounded-full border px-2 py-1 text-[11px] transition ${selected
-                      ? styles.chip
-                      : "border-slate-300 text-slate-500"
-                      }`}
+                    className={`rounded-full border px-2 py-1 text-[11px] transition ${
+                      selected ? styles.chip : "border-slate-300 text-slate-500"
+                    }`}
                     onClick={() => {
                       setVisibleTimelineSources((current) => ({
                         ...current,
@@ -1059,9 +1049,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                   const errorHeight =
                     bucket.total > 0
                       ? Math.max(
-                        2,
-                        Math.round((bucket.errors / Math.max(1, bucket.total)) * totalHeight)
-                      )
+                          2,
+                          Math.round((bucket.errors / Math.max(1, bucket.total)) * totalHeight)
+                        )
                       : 0;
                   return (
                     <div
@@ -1078,9 +1068,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                           const layerHeight =
                             layerCount > 0
                               ? Math.max(
-                                2,
-                                Math.round((layerCount / maxVisibleSourceBucketCount) * 130)
-                              )
+                                  2,
+                                  Math.round((layerCount / maxVisibleSourceBucketCount) * 130)
+                                )
                               : 0;
                           return (
                             <div
@@ -1220,8 +1210,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                     {topEventSignatures.map((signal) => (
                       <tr
                         key={signal.eventName}
-                        className={`cursor-pointer border-b last:border-b-0 ${selectedSignal === signal.eventName ? "bg-sky-50" : ""
-                          }`}
+                        className={`cursor-pointer border-b last:border-b-0 ${
+                          selectedSignal === signal.eventName ? "bg-sky-50" : ""
+                        }`}
                         onClick={() => {
                           setSelectedSignal(signal.eventName);
                           setEventQuery(signal.eventName);
@@ -1260,10 +1251,11 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                     <div className="flex items-center justify-between gap-2 text-[11px]">
                       <span className="font-mono">{event.event}</span>
                       <span
-                        className={`rounded-full px-2 py-0.5 ${event.status === "error"
-                          ? "bg-rose-100 text-rose-700"
-                          : "bg-emerald-100 text-emerald-700"
-                          }`}
+                        className={`rounded-full px-2 py-0.5 ${
+                          event.status === "error"
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}
                       >
                         {event.status}
                       </span>
@@ -1334,7 +1326,9 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                           key={`${event.source}-${event.timestamp}-${event.event}`}
                           className="border-b last:border-b-0"
                         >
-                          <td className="py-2 pr-2">{new Date(event.timestamp).toLocaleTimeString()}</td>
+                          <td className="py-2 pr-2">
+                            {new Date(event.timestamp).toLocaleTimeString()}
+                          </td>
                           <td className="py-2 pr-2">{event.source}</td>
                           <td className="py-2 pr-2">{event.status}</td>
                           <td className="py-2 pr-2">
@@ -1342,7 +1336,10 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
                               ? `${Math.round(event.durationMs)} ms`
                               : "-"}
                           </td>
-                          <td className="max-w-[360px] truncate py-2" title={JSON.stringify(event.details ?? {})}>
+                          <td
+                            className="max-w-[360px] truncate py-2"
+                            title={JSON.stringify(event.details ?? {})}
+                          >
                             {JSON.stringify(event.details ?? {})}
                           </td>
                         </tr>
@@ -1491,15 +1488,24 @@ export function TelemetryDashboardPage({ autoHydrate = true }: { autoHydrate?: b
           ) : (
             <div className="space-y-3">
               <div className="grid gap-3 md:grid-cols-3">
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm" data-testid="native-wrapper-count">
+                <div
+                  className="rounded border border-slate-200 bg-white p-3 shadow-sm"
+                  data-testid="native-wrapper-count"
+                >
                   <p className="text-xs text-muted-foreground">Wrapper Events</p>
                   <p className="text-lg font-semibold">{nativeLayerBreakdown.wrapper}</p>
                 </div>
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm" data-testid="native-core-count">
+                <div
+                  className="rounded border border-slate-200 bg-white p-3 shadow-sm"
+                  data-testid="native-core-count"
+                >
                   <p className="text-xs text-muted-foreground">Core Events</p>
                   <p className="text-lg font-semibold">{nativeLayerBreakdown.core}</p>
                 </div>
-                <div className="rounded border border-slate-200 bg-white p-3 shadow-sm" data-testid="native-dal-count">
+                <div
+                  className="rounded border border-slate-200 bg-white p-3 shadow-sm"
+                  data-testid="native-dal-count"
+                >
                   <p className="text-xs text-muted-foreground">DAL Events</p>
                   <p className="text-lg font-semibold">{nativeLayerBreakdown.dal}</p>
                 </div>
