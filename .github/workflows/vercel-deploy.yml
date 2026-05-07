@@ -33,6 +33,22 @@ jobs:
       - name: Dashboard copy policy check
         run: bash scripts/check-dashboard-copy-policy.sh
 
+      - name: Setup Emscripten SDK
+        run: |
+          cd /tmp
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+
+      - name: Build WASM engine
+        run: |
+          source /tmp/emsdk/emsdk_env.sh
+          bash scripts/build-engine-wasm.sh
+          mkdir -p artifacts/wasm
+          cp out/wasm/engine.js artifacts/wasm/banana-wasm-engine.js
+          cp out/wasm/engine.wasm artifacts/wasm/banana-wasm-engine.wasm
+
       - name: Install shared UI deps
         run: bun install --cwd src/typescript/shared/ui
 
@@ -44,6 +60,7 @@ jobs:
           VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          BANANA_REQUIRE_WASM_ASSETS: "true"
         run: bun --cwd src/typescript/react run build
 
   deploy-production:
