@@ -1,13 +1,89 @@
 {
-  "generated_at_utc": "2026-05-02T07:50:48.298Z",
-  "strict_mode": false,
+  "generated_at_utc": "2026-05-07T06:23:12.855Z",
+  "strict_mode": true,
   "summary": {
-    "total_findings": 21,
-    "missing_route": 21,
+    "total_findings": 33,
+    "missing_route": 33,
     "status_mismatch": 0,
     "shape_mismatch": 0
   },
   "findings": [
+    {
+      "route_key": "GET /",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Program.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Root ASP.NET endpoint is intentionally absent from Fastify during staged parity rollout.",
+        "approved_at": "2026-05-04T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /api/game/load/{saveId}",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/GameStateController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /api/game/load/{saveId}",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+        "approved_at": "2026-05-07T00:00:00Z",
+        "expires_at": "2026-08-31T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /api/game/saves",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/GameStateController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /api/game/saves",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+        "approved_at": "2026-05-07T00:00:00Z",
+        "expires_at": "2026-08-31T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /api/game/telemetry",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/GameStateController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /api/game/telemetry",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+        "approved_at": "2026-05-07T00:00:00Z",
+        "expires_at": "2026-08-31T00:00:00Z"
+      },
+      "resolved": true
+    },
     {
       "route_key": "GET /api/streaming/verdict",
       "mismatch_type": "missing_route",
@@ -61,6 +137,25 @@
         "owner": "banana-platform",
         "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
         "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /chat/sessions/{sessionId}",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/ChatController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /chat/sessions/{sessionId}",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Controller route token style uses braces while Fastify parity exceptions still include colon-token variant.",
+        "approved_at": "2026-05-04T00:00:00Z",
         "expires_at": "2026-06-30T00:00:00Z"
       },
       "resolved": true
@@ -123,6 +218,44 @@
       "resolved": true
     },
     {
+      "route_key": "GET /operator/telemetry/config",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TelemetryController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /operator/telemetry/config",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Telemetry config endpoint is pending Fastify parity implementation.",
+        "approved_at": "2026-05-04T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /operator/telemetry/events",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TelemetryController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /operator/telemetry/events",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Telemetry events read endpoint is pending Fastify parity implementation.",
+        "approved_at": "2026-05-06T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
       "route_key": "GET /trucks/{truckId}/status",
       "mismatch_type": "missing_route",
       "aspnet": {
@@ -142,6 +275,44 @@
       "resolved": true
     },
     {
+      "route_key": "POST /api/game/save",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/GameStateController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /api/game/save",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+        "approved_at": "2026-05-07T00:00:00Z",
+        "expires_at": "2026-08-31T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /api/game/telemetry",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/GameStateController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /api/game/telemetry",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+        "approved_at": "2026-05-07T00:00:00Z",
+        "expires_at": "2026-08-31T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
       "route_key": "POST /batches/create",
       "mismatch_type": "missing_route",
       "aspnet": {
@@ -156,6 +327,44 @@
         "owner": "banana-platform",
         "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
         "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /chat/sessions",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/ChatController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /chat/sessions",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /chat/sessions/{sessionId}/messages",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/ChatController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /chat/sessions/{sessionId}/messages",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Controller route token style uses braces while Fastify parity exceptions still include colon-token variant.",
+        "approved_at": "2026-05-04T00:00:00Z",
         "expires_at": "2026-06-30T00:00:00Z"
       },
       "resolved": true
@@ -308,6 +517,25 @@
         "owner": "banana-platform",
         "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
         "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /operator/telemetry/events",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TelemetryController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /operator/telemetry/events",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Telemetry events ingest endpoint is pending Fastify parity implementation.",
+        "approved_at": "2026-05-06T00:00:00Z",
         "expires_at": "2026-06-30T00:00:00Z"
       },
       "resolved": true

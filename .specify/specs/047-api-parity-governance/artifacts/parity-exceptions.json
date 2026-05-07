@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-04-27T01:24:08.326Z",
+  "updated_at_utc": "2026-05-07T06:23:06.000Z",
   "exceptions": [
     {
       "route_key": "GET /banana",
@@ -312,6 +312,46 @@
       "rationale": "Route expected by spec but not yet implemented in current sprint.",
       "approved_at": "2026-04-26T00:00:00Z",
       "expires_at": "2026-06-30T00:00:00Z"
+    },
+    {
+      "route_key": "GET /api/game/load/{saveId}",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+      "approved_at": "2026-05-07T00:00:00Z",
+      "expires_at": "2026-08-31T00:00:00Z"
+    },
+    {
+      "route_key": "GET /api/game/saves",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+      "approved_at": "2026-05-07T00:00:00Z",
+      "expires_at": "2026-08-31T00:00:00Z"
+    },
+    {
+      "route_key": "GET /api/game/telemetry",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+      "approved_at": "2026-05-07T00:00:00Z",
+      "expires_at": "2026-08-31T00:00:00Z"
+    },
+    {
+      "route_key": "POST /api/game/save",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+      "approved_at": "2026-05-07T00:00:00Z",
+      "expires_at": "2026-08-31T00:00:00Z"
+    },
+    {
+      "route_key": "POST /api/game/telemetry",
+      "mismatch_type": "missing_route",
+      "owner": "banana-platform",
+      "rationale": "GameStateController routes are game-engine-architecture scope; Fastify parity pending spec 002-phase1-npc-wildlife-controller.",
+      "approved_at": "2026-05-07T00:00:00Z",
+      "expires_at": "2026-08-31T00:00:00Z"
     }
   ]
 }
