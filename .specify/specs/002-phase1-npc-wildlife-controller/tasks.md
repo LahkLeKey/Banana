@@ -21,22 +21,22 @@ created: 2026-05-06
 **Duration**: 1 day  
 **Blocker**: None – can start immediately
 
-- [ ] T001 Create `src/native/engine/` directory structure with `render/`, `physics/`, `ai/`, `world/` subdirectories
+- [x] T001 Create `src/native/engine/` directory structure with `render/`, `physics/`, `ai/`, `world/` subdirectories
 
-- [ ] T002 Create `src/native/engine/CMakeLists.txt` with targets for:
+- [x] T002 Create `src/native/engine/CMakeLists.txt` with targets for:
   - `banana_engine_core` (static library, C files)
   - `banana_engine_wasm` (WASM exports from C)
   - Build flags: `-std=c11`, `-O2`, `-Wall -Wextra`, position-independent code
   - Reference: [Phase 1a plan](./plan.md#phase-1a-rendering-foundation-week-1)
 
-- [ ] T003 [P] Add GLFW, OpenGL, and Emscripten toolchain to root `CMakeLists.txt`:
+- [x] T003 [P] Add GLFW, OpenGL, and Emscripten toolchain to root `CMakeLists.txt`:
   - Linux: apt-get glfw3-dev, libgl1-mesa-dev
   - macOS: brew install glfw
   - Windows: vcpkg GLFW, OpenGL headers
   - WASM: Emscripten SDK (if not already present)
   - Document in [BUILD.md](../../../BUILD.md) or root `README.md`
 
-- [ ] T004 [P] Create `tests/native/phase1-engine-tests.c` with test framework setup:
+- [x] T004 [P] Create `tests/native/phase1-engine-tests.c` with test framework setup:
   - Include minunit.h or similar C test harness
   - Stub functions for rendering, physics, AI tests
   - Build target: `test_phase1_engine` linked to `banana_engine_core`
@@ -68,7 +68,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1a.1: Window & OpenGL Context
 
-- [ ] T005 Create `src/native/engine/render/window.h` with:
+- [x] T005 Create `src/native/engine/render/window.h` with:
   ```c
   typedef struct Window Window;
   Window* window_create(int width, int height, const char *title);
@@ -79,7 +79,7 @@ cmake --build build --target test_phase1_engine
   ```
   - Reference: [Rendering Module spec](../../001-game-engine-architecture/spec.md#11-rendering-module-enginerender)
 
-- [ ] T006 Implement `src/native/engine/render/window.c`:
+- [x] T006 Implement `src/native/engine/render/window.c`:
   - Use GLFW for cross-platform window creation
   - Initialize OpenGL 3.3+ core profile context
   - Set viewport to window size
@@ -94,7 +94,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1a.2: Shader Pipeline
 
-- [ ] T007 [P] Create `src/native/engine/render/shader.h` with:
+- [x] T007 [P] Create `src/native/engine/render/shader.h` with:
   ```c
   typedef struct Shader Shader;
   Shader* shader_create(const char *vert_src, const char *frag_src);
@@ -105,7 +105,7 @@ cmake --build build --target test_phase1_engine
   ```
   - Reference: [Rendering Module spec](../../001-game-engine-architecture/spec.md#11-rendering-module-enginerender)
 
-- [ ] T008 [P] Implement `src/native/engine/render/shader.c`:
+- [x] T008 [P] Implement `src/native/engine/render/shader.c`:
   - Compile vertex + fragment shaders
   - Link into program
   - Cache uniforms (position, color, view/projection matrices)
@@ -118,7 +118,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1a.3: Mesh Management
 
-- [ ] T009 [P] Create `src/native/engine/render/mesh.h` with:
+- [x] T009 [P] Create `src/native/engine/render/mesh.h` with:
   ```c
   typedef struct Mesh Mesh;
   Mesh* mesh_create_cube(void);
@@ -127,7 +127,7 @@ cmake --build build --target test_phase1_engine
   void mesh_destroy(Mesh *m);
   ```
 
-- [ ] T010 [P] Implement `src/native/engine/render/mesh.c`:
+- [x] T010 [P] Implement `src/native/engine/render/mesh.c`:
   - Cube: 24 vertices (6 faces × 4 verts), indexed (36 indices)
   - Sphere: UV-sphere generation at runtime (segments = 16 default)
   - VAO/VBO/EBO management (per-mesh)
@@ -140,7 +140,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1a.4: Material & Rendering Orchestrator
 
-- [ ] T011 Create `src/native/engine/render/material.h` with:
+- [x] T011 Create `src/native/engine/render/material.h` with:
   ```c
   typedef struct Material {
     float color[3];  // RGB
@@ -148,7 +148,7 @@ cmake --build build --target test_phase1_engine
   } Material;
   ```
 
-- [ ] T012 [P] Create `src/native/engine/render/camera.h` with:
+- [x] T012 [P] Create `src/native/engine/render/camera.h` with:
   ```c
   typedef struct Camera Camera;
   Camera* camera_create(float fov, float aspect, float near, float far);
@@ -159,13 +159,13 @@ cmake --build build --target test_phase1_engine
   void camera_destroy(Camera *c);
   ```
 
-- [ ] T013 [P] Implement `src/native/engine/render/camera.c`:
+- [x] T013 [P] Implement `src/native/engine/render/camera.c`:
   - Fixed 60° FOV, perspective projection
   - Orbital camera helper (for rotating view around a point)
   - Matrix math (no external libraries; use inline matrix ops)
   - **Success Criteria**: Camera matrices produce correct perspective
 
-- [ ] T014 Create `src/native/engine/render/renderer.h` with:
+- [x] T014 Create `src/native/engine/render/renderer.h` with:
   ```c
   typedef struct Renderer Renderer;
   Renderer* renderer_create(Window *w, int frame_width, int frame_height);
@@ -177,7 +177,7 @@ cmake --build build --target test_phase1_engine
   ```
   - Reference: [Rendering Module ABI](../../001-game-engine-architecture/spec.md#c--wasm-interface-contract)
 
-- [ ] T015 Implement `src/native/engine/render/renderer.c`:
+- [x] T015 Implement `src/native/engine/render/renderer.c`:
   - Frame buffer setup (render to screen for native, FBO for WASM)
   - Draw calls: set material shader, camera matrices, mesh geometry
   - Frame buffer readback: glReadPixels to linear memory (RGBA, 8-bit)
@@ -189,7 +189,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1a.5: Integration & Testing
 
-- [ ] T016 Add test in `tests/native/phase1-engine-tests.c`:
+- [x] T016 Add test in `tests/native/phase1-engine-tests.c`:
   ```c
   void test_rendering_pipeline() {
     Window *w = window_create(800, 600, "Test");
@@ -216,7 +216,7 @@ cmake --build build --target test_phase1_engine
   }
   ```
 
-- [ ] T017 Build and run test:
+- [x] T017 Build and run test:
   ```bash
   cd build
   ./test_phase1_engine
@@ -236,7 +236,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1b.1: Rigid Body Definitions
 
-- [ ] T018 Create `src/native/engine/physics/body.h` with:
+- [x] T018 Create `src/native/engine/physics/body.h` with:
   ```c
   typedef uint32_t PhysicsBodyId;
   
@@ -272,7 +272,7 @@ cmake --build build --target test_phase1_engine
   ```
   - Reference: [Physics Module spec](../../001-game-engine-architecture/spec.md#12-physics-module-enginephysics)
 
-- [ ] T019 [P] Implement `src/native/engine/physics/body.c`:
+- [x] T019 [P] Implement `src/native/engine/physics/body.c`:
   - Store body state (position, velocity, mass)
   - Force accumulation (apply_force adds to acceleration)
   - Impulse application (instantaneous velocity change)
@@ -280,7 +280,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1b.2: Collision Detection
 
-- [ ] T020 [P] Create `src/native/engine/physics/collider.h` with:
+- [x] T020 [P] Create `src/native/engine/physics/collider.h` with:
   ```c
   typedef struct {
     PhysicsBodyId body1, body2;
@@ -299,7 +299,7 @@ cmake --build build --target test_phase1_engine
   void collider_resolve_collision(Collision *c, PhysicsBody *b1, PhysicsBody *b2);
   ```
 
-- [ ] T021 [P] Implement `src/native/engine/physics/collider.c`:
+- [x] T021 [P] Implement `src/native/engine/physics/collider.c`:
   - AABB vs AABB narrow-phase collision (box-box overlap test)
   - Broad-phase: O(n²) all-pairs (acceptable for phase 1: ≤ 20 bodies)
   - Collision normal + penetration depth calculation
@@ -311,7 +311,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1b.3: Dynamics & Time-Stepping
 
-- [ ] T022 Create `src/native/engine/physics/dynamics.c`:
+- [x] T022 Create `src/native/engine/physics/dynamics.c`:
   - Euler integration: `v += a * dt`, `p += v * dt`
   - Fixed timestep: 60 Hz physics tick (dt = 1/60 ≈ 0.0167s)
   - Gravity constant: 9.81 m/s² downward
@@ -331,7 +331,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1b.4: Physics World Management
 
-- [ ] T023 Create `src/native/engine/physics/world.h` with:
+- [x] T023 Create `src/native/engine/physics/world.h` with:
   ```c
   typedef struct {
     PhysicsBody *bodies;
@@ -347,7 +347,7 @@ cmake --build build --target test_phase1_engine
   void physics_world_destroy(PhysicsWorld *w);
   ```
 
-- [ ] T024 Implement `src/native/engine/physics/world.c`:
+- [x] T024 Implement `src/native/engine/physics/world.c`:
   - World state: dynamic body array (start with capacity 100)
   - `physics_world_step()`: For each body: apply forces → integrate → detect collisions → resolve
   - Gravity: Pull all non-fixed bodies downward at 9.81 m/s²
@@ -359,7 +359,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1b.5: Physics Testing
 
-- [ ] T025 Add physics test in `tests/native/phase1-engine-tests.c`:
+- [x] T025 Add physics test in `tests/native/phase1-engine-tests.c`:
   ```c
   void test_physics_falling_box() {
     PhysicsWorld *w = physics_world_create();
@@ -385,7 +385,7 @@ cmake --build build --target test_phase1_engine
   }
   ```
 
-- [ ] T026 Test determinism:
+- [x] T026 Test determinism:
   - Run test harness, capture frame-by-frame positions
   - Reset world state, re-run, verify positions match within FLT_EPSILON
   - **Success**: Determinism test passes
@@ -403,7 +403,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1c.1: Controller Base Interface
 
-- [ ] T027 Create `src/native/engine/ai/controller.h` with:
+- [x] T027 Create `src/native/engine/ai/controller.h` with:
   ```c
   typedef uint32_t ControllerInstanceId;
   
@@ -435,14 +435,14 @@ cmake --build build --target test_phase1_engine
   ```
   - Reference: [AI Controller Framework spec](../../001-game-engine-architecture/spec.md#13-ai-controller-framework-engineai)
 
-- [ ] T028 Implement `src/native/engine/ai/controller.c`:
+- [x] T028 Implement `src/native/engine/ai/controller.c`:
   - Controller registry (type name → factory function)
   - Generic `controller_update()` / `controller_signal()` dispatch to instance methods
   - **Success Criteria**: Controllers creatable and destroyable without crashes
 
 #### Subtask 1c.2: State Machine
 
-- [ ] T029 [P] Create `src/native/engine/ai/state_machine.h` with:
+- [x] T029 [P] Create `src/native/engine/ai/state_machine.h` with:
   ```c
   typedef struct {
     ControllerState current;
@@ -455,7 +455,7 @@ cmake --build build --target test_phase1_engine
   void fsm_signal(FSMData *fsm, const char *signal);
   ```
 
-- [ ] T030 [P] Implement `src/native/engine/ai/state_machine.c`:
+- [x] T030 [P] Implement `src/native/engine/ai/state_machine.c`:
   - **Idle State**: Stand still for 5-10 seconds, then transition to Patrol
   - **Patrol State**: Walk to waypoints in sequence, repeat
   - **Investigate State**: Walk toward last known "player_nearby" signal position
@@ -468,7 +468,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1c.3: Navigation
 
-- [ ] T031 Create `src/native/engine/ai/navigation.h` with:
+- [x] T031 Create `src/native/engine/ai/navigation.h` with:
   ```c
   typedef struct {
     float waypoints[10][3];  // 10 waypoint max
@@ -481,7 +481,7 @@ cmake --build build --target test_phase1_engine
   float pathfinding_move_toward(float pos[3], float target[3], float speed, float dt);
   ```
 
-- [ ] T032 [P] Implement `src/native/engine/ai/navigation.c`:
+- [x] T032 [P] Implement `src/native/engine/ai/navigation.c`:
   - Simple waypoint-following (no actual A*, just linear waypoint list)
   - 20×20 grid world: 4 corners as default patrol waypoints
   - `pathfinding_move_toward()`: Linear interpolation toward target at speed
@@ -489,20 +489,20 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1c.4: Perception
 
-- [ ] T033 [P] Create `src/native/engine/ai/perception.h` with:
+- [x] T033 [P] Create `src/native/engine/ai/perception.h` with:
   ```c
   int perception_raycast(float origin[3], float direction[3], float max_dist, float hit_point[3]);
   int perception_nearby(float pos[3], float radius, float *nearby_positions, int max_count);
   ```
 
-- [ ] T034 [P] Implement `src/native/engine/ai/perception.c`:
+- [x] T034 [P] Implement `src/native/engine/ai/perception.c`:
   - Raycast: Simple line-of-sight check against axis-aligned world bounds
   - Nearby: Query all entities within radius (simple distance check)
   - **Success Criteria**: Raycasts don't crash; proximity queries work
 
 #### Subtask 1c.5: Wildlife Controller Specialization
 
-- [ ] T035 Create `src/native/engine/ai/wildlife_controller.h` with:
+- [x] T035 Create `src/native/engine/ai/wildlife_controller.h` with:
   ```c
   typedef struct {
     FSMData fsm;
@@ -514,7 +514,7 @@ cmake --build build --target test_phase1_engine
   ControllerInstance* wildlife_controller_create(ControllerInstanceId id, float x, float y, float z);
   ```
 
-- [ ] T036 Implement `src/native/engine/ai/wildlife_controller.c`:
+- [x] T036 Implement `src/native/engine/ai/wildlife_controller.c`:
   - Patrol speed: 2 units/sec
   - Investigation speed: 4 units/sec
   - Investigation radius: 15 units
@@ -525,7 +525,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1c.6: Controller System & Testing
 
-- [ ] T037 Create `src/native/engine/ai/controller_system.h` with:
+- [x] T037 Create `src/native/engine/ai/controller_system.h` with:
   ```c
   typedef struct {
     ControllerInstance *instances;
@@ -540,12 +540,12 @@ cmake --build build --target test_phase1_engine
   void controller_system_destroy(ControllerSystem *sys);
   ```
 
-- [ ] T038 Implement `src/native/engine/ai/controller_system.c`:
+- [x] T038 Implement `src/native/engine/ai/controller_system.c`:
   - Manage array of active controller instances
   - Bulk update all controllers per frame
   - Broadcast signals to all (or filtered by type)
 
-- [ ] T039 Add controller test in `tests/native/phase1-engine-tests.c`:
+- [x] T039 Add controller test in `tests/native/phase1-engine-tests.c`:
   ```c
   void test_wildlife_controller() {
     ControllerSystem *sys = controller_system_create();
@@ -570,7 +570,7 @@ cmake --build build --target test_phase1_engine
   }
   ```
 
-- [ ] T040 Run test:
+- [x] T040 Run test:
   ```bash
   make test_phase1_engine
   ```
@@ -589,7 +589,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1d.1: WASM Module Export Setup
 
-- [ ] T041 Create `src/typescript/api/wasm/game-loop.wasm.ts`:
+- [x] T041 Create `src/typescript/api/wasm/game-loop.wasm.ts`:
   ```typescript
   // C function imports (via WASM imports)
   interface CEngine {
@@ -639,7 +639,7 @@ cmake --build build --target test_phase1_engine
   ```
   - Reference: [WASM Orchestration spec](../../001-game-engine-architecture/spec.md#21-game-loop-game-loopwasmts)
 
-- [ ] T042 Create Emscripten build target in `src/native/engine/CMakeLists.txt`:
+- [x] T042 Create Emscripten build target in `src/native/engine/CMakeLists.txt`:
   - Build `banana_engine_core` as WASM module using Emscripten
   - Enable WASM exports via `EMSCRIPTEN_EXPORTED_FUNCTIONS`
   - Link with `-sWASM=1 -sALLOW_MEMORY_GROWTH=1`
@@ -648,7 +648,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1d.2: WASM Linking & Integration
 
-- [ ] T043 Create `src/typescript/api/wasm/engine-binding.ts`:
+- [x] T043 Create `src/typescript/api/wasm/engine-binding.ts`:
   ```typescript
   import wasmModule from './banana_engine.wasm';
   
@@ -658,14 +658,14 @@ cmake --build build --target test_phase1_engine
   }
   ```
 
-- [ ] T044 Add WASM module to TypeScript API build:
+- [x] T044 Add WASM module to TypeScript API build:
   - Update `tsconfig.json` to include `.wasm` in `compilerOptions.resolveJsonModule`
   - Configure Vite to handle .wasm imports (if using Vite)
   - **Success**: WASM loads without import errors
 
 #### Subtask 1d.3: Test Harness
 
-- [ ] T045 Create `tests/integration/phase1-wasm-harness.spec.ts`:
+- [x] T045 Create `tests/integration/phase1-wasm-harness.spec.ts`:
   ```typescript
   import { GameLoop, initializeEngine } from '@banana/api/wasm';
   
@@ -686,7 +686,7 @@ cmake --build build --target test_phase1_engine
   });
   ```
 
-- [ ] T046 Run test:
+- [x] T046 Run test:
   ```bash
   cd src/typescript/api
   npm test -- phase1-wasm-harness
@@ -706,7 +706,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1e.1: World State Serialization
 
-- [ ] T047 Create `src/typescript/api/wasm/game-state-bridge.ts`:
+- [x] T047 Create `src/typescript/api/wasm/game-state-bridge.ts`:
   ```typescript
   export interface WorldState {
     entities: EntitySnapshot[];
@@ -739,7 +739,7 @@ cmake --build build --target test_phase1_engine
   ```
   - Reference: [Game State Bridge spec](../../001-game-engine-architecture/spec.md#22-game-state-bridge-game-state-bridgets)
 
-- [ ] T048 Implement serialization logic:
+- [x] T048 Implement serialization logic:
   - Copy entity array from C linear memory
   - Convert floats to JSON-serializable format
   - Preserve controller FSM state
@@ -747,7 +747,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1e.2: API Endpoints (ASP.NET)
 
-- [ ] T049 Create new endpoints in `src/c-sharp/asp.net/Controllers/GameStateController.cs`:
+- [x] T049 Create new endpoints in `src/c-sharp/asp.net/Controllers/GameStateController.cs`:
   ```csharp
   [ApiController]
   [Route("api/game")]
@@ -772,13 +772,13 @@ cmake --build build --target test_phase1_engine
   ```
   - Reference: [ASP.NET API spec](../../001-game-engine-architecture/spec.md#31-aspnet-api-unchanged)
 
-- [ ] T050 Create schema migration for `game_state_saves` and `game_state_telemetry` tables:
+- [x] T050 Create schema migration for `game_state_saves` and `game_state_telemetry` tables:
   - **game_state_saves**: id (PK), save_name, world_state (JSON), created_at, updated_at
   - **game_state_telemetry**: id (PK), frame_count, entity_count, avg_frame_ms, created_at
   - Migrate via Prisma (update `schema.prisma`)
   - **Success**: Tables created in Postgres
 
-- [ ] T051 Add persistence layer in `src/c-sharp/asp.net/Services/GameStateService.cs`:
+- [x] T051 Add persistence layer in `src/c-sharp/asp.net/Services/GameStateService.cs`:
   ```csharp
   public class GameStateService {
     public async Task<string> SaveState(GameStateDto state) { ... }
@@ -789,7 +789,7 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1e.3: React Dashboard
 
-- [ ] T052 Create React component `src/typescript/react/src/components/GameWorldMap.tsx`:
+- [x] T052 Create React component `src/typescript/react/src/components/GameWorldMap.tsx`:
   ```typescript
   export const GameWorldMap: React.FC<{ telemetry: TelemetryFeed }> = ({ telemetry }) => {
     return (
@@ -812,19 +812,19 @@ cmake --build build --target test_phase1_engine
   };
   ```
 
-- [ ] T053 Create telemetry display component `src/typescript/react/src/components/GameTelemetry.tsx`:
+- [x] T053 Create telemetry display component `src/typescript/react/src/components/GameTelemetry.tsx`:
   - Show frame count, average frame time, entity count
   - Time-series graph of frame times (last 300 frames)
   - Controller states table
 
-- [ ] T054 Add game state page `src/typescript/react/src/pages/GameStatePage.tsx`:
+- [x] T054 Add game state page `src/typescript/react/src/pages/GameStatePage.tsx`:
   - Integrate GameWorldMap + GameTelemetry
   - Add "Save Game" / "Load Game" buttons (call API endpoints)
   - Real-time telemetry feed (poll API every 100ms or WebSocket)
 
 #### Subtask 1e.4: End-to-End Testing
 
-- [ ] T055 Create comprehensive integration test `tests/integration/phase1-e2e.spec.ts`:
+- [x] T055 Create comprehensive integration test `tests/integration/phase1-e2e.spec.ts`:
   ```typescript
   describe('Phase 1 End-to-End', () => {
     it('should run full game loop for 5 minutes without crash', async () => {
@@ -851,7 +851,7 @@ cmake --build build --target test_phase1_engine
   });
   ```
 
-- [ ] T056 Run end-to-end test:
+- [x] T056 Run end-to-end test:
   ```bash
   npm test -- phase1-e2e
   ```
@@ -859,13 +859,13 @@ cmake --build build --target test_phase1_engine
 
 #### Subtask 1e.5: Performance Validation
 
-- [ ] T057 Create performance benchmark in `tests/native/phase1-perf.c`:
+- [x] T057 Create performance benchmark in `tests/native/phase1-perf.c`:
   - Run 1000 physics steps + controller updates + render calls
   - Measure time per frame
   - Target: < 16.7ms per frame (60 FPS)
   - **Success**: Frame time budget met
 
-- [ ] T058 Validate memory leaks:
+- [x] T058 Validate memory leaks:
   ```bash
   valgrind --leak-check=full --show-leak-kinds=all ./build/test_phase1_engine
   ```
@@ -880,38 +880,38 @@ cmake --build build --target test_phase1_engine
 
 ### Tasks
 
-- [ ] T059 Write `src/native/engine/README.md`:
+- [x] T059 Write `src/native/engine/README.md`:
   - Architecture overview
   - Building instructions (CMake)
   - Module descriptions (rendering, physics, AI)
   - WASM export contract
 
-- [ ] T060 Document C↔WASM interface in [ABI reference](../../../docs/c-wasm-abi-reference.md):
+- [x] T060 Document C↔WASM interface in [ABI reference](../../../docs/c-wasm-abi-reference.md):
   - Function signatures
   - Memory layout (frame buffer offset, entity state layout)
   - Calling conventions
   - Example WASM → C call
 
-- [ ] T061 Update root [BUILD.md](../../../BUILD.md):
+- [x] T061 Update root [BUILD.md](../../../BUILD.md):
   - Phase 1 compilation steps
   - Dependency installation (GLFW, OpenGL, Emscripten)
   - Run tests via `make test`
 
-- [ ] T062 Create [Phase 1 Acceptance Checklist](./PHASE1-ACCEPTANCE.md):
+- [x] T062 Create [Phase 1 Acceptance Checklist](./PHASE1-ACCEPTANCE.md):
   ```markdown
-  - [ ] C engine builds: `cmake --build build`
-  - [ ] Cube renders: frame buffer contains non-zero RGBA
-  - [ ] Physics deterministic: save/load produces identical replay
-  - [ ] 5 NPCs patrol: visible state transitions on signal
-  - [ ] WASM loop runs 60 frames: < 5 sec elapsed
-  - [ ] Save/load cycle: world state persisted + restored
-  - [ ] Telemetry flows to API: events stored in Postgres
-  - [ ] React dashboard displays: entity positions + frame times
-  - [ ] No crashes: 5-minute stress test passes
-  - [ ] 0 memory leaks: Valgrind clean
+  - [x] C engine builds: `cmake --build build`
+  - [x] Cube renders: frame buffer contains non-zero RGBA
+  - [x] Physics deterministic: save/load produces identical replay
+  - [x] 5 NPCs patrol: visible state transitions on signal
+  - [x] WASM loop runs 60 frames: < 5 sec elapsed
+  - [x] Save/load cycle: world state persisted + restored
+  - [x] Telemetry flows to API: events stored in Postgres
+  - [x] React dashboard displays: entity positions + frame times
+  - [x] No crashes: 5-minute stress test passes
+  - [x] 0 memory leaks: Valgrind clean
   ```
 
-- [ ] T063 Final integration test run:
+- [x] T063 Final integration test run:
   ```bash
   cd /c/Github/Banana
   cmake --build build
@@ -1011,18 +1011,18 @@ T002 (CMakeLists.txt)
 
 ## Success Criteria (Phase 1 Complete)
 
-- [ ] C engine builds with `cmake --build build` (Linux/Windows/macOS)
-- [ ] OpenGL renders rotating cube frame
-- [ ] Physics deterministic over 1000+ frame replay
-- [ ] 5 NPC instances patrol independently
-- [ ] WASM orchestrates physics + AI + rendering
-- [ ] Frame cycle completes in < 16.7ms (60 FPS target)
-- [ ] Save/load cycle preserves world state
-- [ ] Telemetry flows to ASP.NET API → Postgres
-- [ ] React dashboard displays live entity positions + frame times
-- [ ] All tests pass (native + integration + E2E)
-- [ ] 0 memory leaks (Valgrind clean)
-- [ ] Documentation complete (README, ABI reference, acceptance checklist)
+- [x] C engine builds with `cmake --build build` (Linux/Windows/macOS)
+- [x] OpenGL renders rotating cube frame
+- [x] Physics deterministic over 1000+ frame replay
+- [x] 5 NPC instances patrol independently
+- [x] WASM orchestrates physics + AI + rendering
+- [x] Frame cycle completes in < 16.7ms (60 FPS target)
+- [x] Save/load cycle preserves world state
+- [x] Telemetry flows to ASP.NET API → Postgres
+- [x] React dashboard displays live entity positions + frame times
+- [x] All tests pass (native + integration + E2E)
+- [x] 0 memory leaks (Valgrind clean)
+- [x] Documentation complete (README, ABI reference, acceptance checklist)
 
 ---
 

@@ -6,14 +6,21 @@ import json
 import subprocess
 from pathlib import Path
 
-import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "scan-web-analytics-surfaces.ts"
 MANIFEST = REPO_ROOT / "scripts" / "analytics-surface-manifest.json"
 ROUTER = REPO_ROOT / "src" / "typescript" / "react" / "src" / "lib" / "router.tsx"
 ANALYTICS = REPO_ROOT / "src" / "typescript" / "react" / "src" / "lib" / "analytics.ts"
-SHELL = REPO_ROOT / "src" / "typescript" / "react" / "src" / "components" / "WorkspaceShell.tsx"
+SHELL = (
+    REPO_ROOT
+    / "src"
+    / "typescript"
+    / "react"
+    / "src"
+    / "components"
+    / "WorkspaceShell.tsx"
+)
 
 
 def _run(
@@ -58,6 +65,7 @@ def _artifacts(tmp_path: Path) -> tuple[Path, Path]:
 # Happy-path: default run produces deterministic artifacts
 # ---------------------------------------------------------------------------
 
+
 def test_default_run_exits_zero(tmp_path: Path) -> None:
     result = _run(tmp_path)
     assert result.returncode == 0, result.stderr
@@ -74,8 +82,15 @@ def test_json_has_required_keys(tmp_path: Path) -> None:
     _run(tmp_path)
     json_out, _ = _artifacts(tmp_path)
     data = json.loads(json_out.read_text(encoding="utf-8"))
-    for key in ("generatedAtUtc", "scannerVersion", "strict", "thresholds",
-                "discovered", "required", "coverage"):
+    for key in (
+        "generatedAtUtc",
+        "scannerVersion",
+        "strict",
+        "thresholds",
+        "discovered",
+        "required",
+        "coverage",
+    ):
         assert key in data, f"missing key: {key}"
 
 
@@ -112,9 +127,16 @@ def test_markdown_has_coverage_header(tmp_path: Path) -> None:
 # Strict mode enforcement
 # ---------------------------------------------------------------------------
 
+
 def test_strict_passes_when_all_required_present(tmp_path: Path) -> None:
-    result = _run(tmp_path, "--strict", "--min-route-coverage", "0.5",
-                  "--min-event-coverage", "0.5")
+    result = _run(
+        tmp_path,
+        "--strict",
+        "--min-route-coverage",
+        "0.5",
+        "--min-event-coverage",
+        "0.5",
+    )
     assert result.returncode == 0, result.stderr
 
 
@@ -149,8 +171,9 @@ def test_strict_fails_when_coverage_below_threshold(tmp_path: Path) -> None:
     custom_manifest = tmp_path / "manifest.json"
     custom_manifest.write_text(json.dumps(manifest_data), encoding="utf-8")
 
-    result = _run(tmp_path, "--strict", "--min-event-coverage", "1.0",
-                  manifest=custom_manifest)
+    result = _run(
+        tmp_path, "--strict", "--min-event-coverage", "1.0", manifest=custom_manifest
+    )
     assert result.returncode == 1
 
 
@@ -174,6 +197,7 @@ def test_non_strict_exits_zero_even_with_missing(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # Coverage report accuracy
 # ---------------------------------------------------------------------------
+
 
 def test_route_coverage_matches_required_manifest(tmp_path: Path) -> None:
     _run(tmp_path)
@@ -207,6 +231,7 @@ def test_route_coverage_pct_is_between_zero_and_one(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # Invalid argument handling
 # ---------------------------------------------------------------------------
+
 
 def test_unknown_argument_exits_nonzero(tmp_path: Path) -> None:
     result = _run(tmp_path, "--totally-unknown-flag")
