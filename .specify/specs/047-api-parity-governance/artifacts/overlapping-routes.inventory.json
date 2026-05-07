@@ -1,0 +1,48 @@
+{
+  "generated_at_utc": "2026-04-27T01:25:00.287Z",
+  "source_pair": {
+    "aspnet": "src/c-sharp/asp.net",
+    "fastify": "src/typescript/api/src"
+  },
+  "routes": [
+    {
+      "route_key": "GET /health",
+      "method": "GET",
+      "path": "/health",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Program.cs",
+        "declaration": "app.MapGet(\"/health\")"
+      },
+      "fastify": {
+        "declared_in": "src/typescript/api/src/routes/health.ts",
+        "declaration": "app.get('/health')"
+      },
+      "expected_statuses": [
+        200
+      ],
+      "required_response_fields": [
+        "status"
+      ]
+    },
+    {
+      "route_key": "POST /ripeness/predict",
+      "method": "POST",
+      "path": "/ripeness/predict",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/RipenessController.cs",
+        "declaration": "[HttpPost(\"predict\")]"
+      },
+      "fastify": {
+        "declared_in": "src/typescript/api/src/routes/ripeness.ts",
+        "declaration": "app.post('/ripeness/predict')"
+      },
+      "expected_statuses": [
+        200
+      ],
+      "required_response_fields": [
+        "label",
+        "confidence"
+      ]
+    }
+  ]
+}
