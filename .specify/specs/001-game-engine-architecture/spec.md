@@ -19,8 +19,8 @@ Transform Banana from an AI classification system into a **fully-featured game e
 
 ## Strategic Context
 
-**From:** Single-purpose AI classifier (banana detection)  
-**To:** Extensible game engine for open-world mechanics  
+**From:** Single-purpose AI classifier (banana detection)
+**To:** Extensible game engine for open-world mechanics
 **Driver:** Full native control over rendering, physics, and AI behavior patterns
 
 ## Architecture Layers
@@ -108,15 +108,15 @@ Top-level game loop and state coordination:
   async function gameLoop(dt: number) {
     // 1. Physics step
     engine.physicsStep(dt);
-    
+
     // 2. Update all controllers
     for (const controller of world.controllers) {
       controller.update(dt);
     }
-    
+
     // 3. Render frame
     engine.renderFrame();
-    
+
     // 4. Emit telemetry (optional, sparse)
     if (frameCount % 60 === 0) {
       api.emit_telemetry('game_tick', { entity_count, frame_ms });
