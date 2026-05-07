@@ -41,7 +41,9 @@ function main() {
   mkdirSync(wasmPublicDir, { recursive: true });
 
   for (const file of files) {
-    copyFileSync(join(wasmSourceDir, file), join(wasmPublicDir, file));
+    // Strip "banana-wasm-" prefix: banana-wasm-engine.js → engine.js
+    const destFile = file.replace(/^banana-wasm-/, "");
+    copyFileSync(join(wasmSourceDir, file), join(wasmPublicDir, destFile));
   }
 
   console.log(
