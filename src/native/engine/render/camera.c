@@ -5,6 +5,11 @@
 #include <math.h>
 #include <string.h>
 
+/* M_PI fallback for platforms that don't define it */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 Camera camera_create(float fov, float aspect, float near_plane, float far_plane) {
     Camera c;
     c.position[0] = 0; c.position[1] = 5; c.position[2] = 10;

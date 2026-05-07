@@ -7,6 +7,9 @@ extern "C" {
 
 #include <stdint.h>
 
+/* Forward declaration */
+struct World;
+
 #define BANANA_SIGNAL_NAME_LEN  32
 #define BANANA_SIGNAL_DATA_LEN  64
 #define BANANA_MAX_SIGNALS      256

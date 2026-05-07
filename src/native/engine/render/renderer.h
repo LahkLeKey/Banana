@@ -10,6 +10,9 @@ extern "C" {
 
 typedef struct Renderer Renderer;
 
+/* Forward declaration */
+struct Mesh;
+
 /* Initialize the renderer.  Must be called after a Window+GL context exists. */
 Renderer *renderer_create(int width, int height);
 

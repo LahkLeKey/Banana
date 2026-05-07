@@ -6,6 +6,11 @@
 #include <string.h>
 #include <math.h>
 
+/* M_PI fallback for platforms that don't define it */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 /* Unified GL detection */
 #ifdef __EMSCRIPTEN__
 #  define BANANA_ENGINE_HAS_GL 1

@@ -5,6 +5,9 @@
 extern "C" {
 #endif
 
+/* Forward declaration */
+struct Shader;
+
 typedef struct Material {
     float color[4];   /* RGBA, 0.0–1.0 */
     float roughness;  /* 0.0 = smooth, 1.0 = rough */
