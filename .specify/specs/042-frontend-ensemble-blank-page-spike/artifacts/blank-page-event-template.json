@@ -1,0 +1,23 @@
+{
+    "event_id": "evt_placeholder",
+    "captured_at": "2026-04-26T00:00:00Z",
+    "trigger_type": "button_click",
+    "failure_class": "navigation_reload",
+    "signals": {
+        "location_changed": true,
+        "render_exception_observed": false
+    },
+    "before": {
+        "url": "http://localhost:5173/",
+        "route": "/"
+    },
+    "after": {
+        "url": "http://localhost:5173/",
+        "route": "/"
+    },
+    "impact": {
+        "verdict_surface_visible": false,
+        "retry_affordance_visible": false
+    },
+    "notes": "Replace placeholder values with observed event data."
+}

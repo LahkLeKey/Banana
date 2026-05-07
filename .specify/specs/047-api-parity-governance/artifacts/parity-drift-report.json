@@ -1,0 +1,418 @@
+{
+  "generated_at_utc": "2026-05-02T07:50:48.298Z",
+  "strict_mode": false,
+  "summary": {
+    "total_findings": 21,
+    "missing_route": 21,
+    "status_mismatch": 0,
+    "shape_mismatch": 0
+  },
+  "findings": [
+    {
+      "route_key": "GET /api/streaming/verdict",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/StreamingController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /api/streaming/verdict",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Route expected by spec but not yet implemented in current sprint.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /banana",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /banana",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /batches/{id}/status",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BatchController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /batches/{id}/status",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /harvest/{batchId}/status",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/HarvestController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /harvest/{batchId}/status",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /health",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Program.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /health",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Route expected by spec but not yet implemented in current sprint.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /operator/audit",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/AuditController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /operator/audit",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Route expected by spec but not yet implemented in current sprint.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "GET /trucks/{truckId}/status",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "GET /trucks/{truckId}/status",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /batches/create",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BatchController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /batches/create",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /harvest/{batchId}/bunches",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/HarvestController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /harvest/{batchId}/bunches",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /harvest/create",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/HarvestController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /harvest/create",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /ml/binary",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /ml/binary",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /ml/ensemble",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /ml/ensemble",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /ml/ensemble/embedding",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /ml/ensemble/embedding",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /ml/regression",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /ml/regression",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /ml/transformer",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/BananaMlController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /ml/transformer",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /not-banana/junk",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/NotBananaController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /not-banana/junk",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /ripeness/predict",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/RipenessController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /ripeness/predict",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Route expected by spec but not yet implemented in current sprint.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /trucks/{truckId}/containers/{containerId}/unload",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /trucks/{truckId}/containers/{containerId}/unload",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /trucks/{truckId}/containers/load",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /trucks/{truckId}/containers/load",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /trucks/{truckId}/relocate",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /trucks/{truckId}/relocate",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    },
+    {
+      "route_key": "POST /trucks/register",
+      "mismatch_type": "missing_route",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/TruckController.cs"
+      },
+      "fastify": null,
+      "remediation": "Add matching Fastify route or document approved temporary exception.",
+      "exception_applied": true,
+      "exception": {
+        "route_key": "POST /trucks/register",
+        "mismatch_type": "missing_route",
+        "owner": "banana-platform",
+        "rationale": "Temporary approved divergence baseline while parity rollout closes legacy surface gaps.",
+        "approved_at": "2026-04-26T00:00:00Z",
+        "expires_at": "2026-06-30T00:00:00Z"
+      },
+      "resolved": true
+    }
+  ],
+  "unresolved_findings": [],
+  "unresolved_summary": {
+    "total_findings": 0,
+    "missing_route": 0,
+    "status_mismatch": 0,
+    "shape_mismatch": 0
+  }
+}
