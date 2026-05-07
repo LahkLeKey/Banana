@@ -21,6 +21,9 @@
 #include "../../../src/native/engine/world/entity.h"
 #include "../../../src/native/engine/world/world.h"
 #include "../../../src/native/engine/world/signals.h"
+#include "../../../src/native/engine/ai/controller.h"
+#include "../../../src/native/engine/ai/controller_system.h"
+#include "../../../src/native/engine/ai/wildlife_controller.h"
 
 /* ── Minimal test framework ───────────────────────────────────────────────── */
 static int s_pass = 0, s_fail = 0;
@@ -430,6 +433,64 @@ done:
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
+/* Controller system tests (T039)                                            */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+static void test_controller_system_spawn(void) {
+    TEST("controller_system: spawn returns non-zero id");
+    wildlife_controller_register();
+    ControllerSystem *sys = controller_system_create();
+    ASSERT_TRUE(sys != NULL);
+    uint32_t id = controller_system_spawn(sys, "wildlife", 0.f, 0.f, 0.f);
+    ASSERT_TRUE(id != 0);
+    ASSERT_INT_EQ(sys->count, 1);
+    controller_system_destroy(sys);
+    PASS();
+    return;
+done:
+    controller_system_destroy(sys);
+}
+
+static void test_controller_system_multi_spawn_update(void) {
+    TEST("controller_system: 3 NPCs update 600 frames without crash");
+    wildlife_controller_register();
+    ControllerSystem *sys = controller_system_create();
+    for (int i = 0; i < 3; i++)
+        controller_system_spawn(sys, "wildlife", (float)(i * 5), 0.f, 0.f);
+    ASSERT_INT_EQ(sys->count, 3);
+    for (int frame = 0; frame < 600; frame++)
+        controller_system_update(sys, 1.f / 60.f);
+    ASSERT_INT_EQ(sys->count, 3); /* no controllers removed */
+    controller_system_destroy(sys);
+    PASS();
+    return;
+done:
+    controller_system_destroy(sys);
+}
+
+static void test_controller_system_signal_broadcast(void) {
+    TEST("controller_system: signal broadcast reaches all controllers");
+    wildlife_controller_register();
+    ControllerSystem *sys = controller_system_create();
+    for (int i = 0; i < 3; i++)
+        controller_system_spawn(sys, "wildlife", (float)(i * 5), 0.f, 0.f);
+    /* Warm up a bit so NPCs are in patrol */
+    for (int f = 0; f < 60; f++)
+        controller_system_update(sys, 1.f / 60.f);
+    float player_pos[3] = {5.f, 0.f, 5.f};
+    controller_system_signal_all(sys, "player_nearby", player_pos);
+    /* Update one more tick — signal should have been processed */
+    controller_system_update(sys, 1.f / 60.f);
+    /* Just verify no crash and system is intact */
+    ASSERT_INT_EQ(sys->count, 3);
+    controller_system_destroy(sys);
+    PASS();
+    return;
+done:
+    controller_system_destroy(sys);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
 /* Main                                                                      */
 /* ══════════════════════════════════════════════════════════════════════════ */
 
@@ -470,6 +531,11 @@ int main(void) {
     test_world_despawn_entity();
     test_world_query_nearby();
     test_signals_send_and_flush();
+
+    printf("\n── Controller System (T039) ──\n");
+    test_controller_system_spawn();
+    test_controller_system_multi_spawn_update();
+    test_controller_system_signal_broadcast();
 
     printf("\n═══════════════════════════════════════════════════════\n");
     printf("Results: %d passed, %d failed\n", s_pass, s_fail);

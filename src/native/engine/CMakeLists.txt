@@ -22,6 +22,7 @@ set(ENGINE_PHYSICS_SOURCES
 
 set(ENGINE_AI_SOURCES
   ai/controller.c
+  ai/controller_system.c
   ai/state_machine.c
   ai/navigation.c
   ai/perception.c
