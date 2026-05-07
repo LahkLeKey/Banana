@@ -10,7 +10,7 @@
  *   engine._engine_tick(dt);
  */
 
-import { type BananaEngineModule, isBananaEngineModule } from "./game-loop.wasm";
+import {type BananaEngineModule, isBananaEngineModule} from "./game-loop.wasm";
 
 export interface EngineBindingOptions {
     /** URL of the Emscripten-generated JS file. Defaults to "/wasm/engine.js". */
@@ -32,7 +32,8 @@ export interface EngineBindingOptions {
  */
 export async function initializeEngine(
     options: EngineBindingOptions = {},
-): Promise<BananaEngineModule> {
+    ): Promise<BananaEngineModule>
+{
     const {
         scriptUrl = "/wasm/engine.js",
         canvasId = "canvas",
@@ -42,7 +43,8 @@ export async function initializeEngine(
     /* ── 1. Inject script tag ─────────────────────────────────────────────── */
     const existing = document.querySelector<HTMLScriptElement>(`script[src="${scriptUrl}"]`);
 
-    if (!existing) {
+    if (!existing)
+    {
         await new Promise<void>((resolve, reject) => {
             const el = document.createElement("script");
             el.src = scriptUrl;
@@ -57,20 +59,22 @@ export async function initializeEngine(
     const mod = await waitForModule("BananaEngine", timeoutMs);
 
     /* ── 3. Assert ABI completeness ───────────────────────────────────────── */
-    if (!isBananaEngineModule(mod)) {
+    if (!isBananaEngineModule(mod))
+    {
         throw new Error(
             "BananaEngine module loaded but is missing required ABI exports. " +
-            "Rebuild with the correct -sEXPORTED_FUNCTIONS list.",
+                "Rebuild with the correct -sEXPORTED_FUNCTIONS list.",
         );
     }
 
     /* ── 4. Initialise ────────────────────────────────────────────────────── */
     // Ensure canvas is available — Emscripten references it during init.
     const canvas = document.getElementById(canvasId);
-    if (!canvas) {
+    if (!canvas)
+    {
         throw new Error(
             `Canvas element with id="${canvasId}" not found. ` +
-            "Add <canvas id=\"canvas\"> to the page before calling initializeEngine().",
+                "Add <canvas id=\"canvas\"> to the page before calling initializeEngine().",
         );
     }
 
@@ -86,14 +90,18 @@ export async function initializeEngine(
  * (resolved Promise from `Module.ready` or the factory function settles),
  * or until `timeoutMs` elapses.
  */
-async function waitForModule(globalName: string, timeoutMs: number): Promise<unknown> {
+async function waitForModule(globalName: string, timeoutMs: number): Promise<unknown>
+{
     const deadline = Date.now() + timeoutMs;
 
-    while (Date.now() < deadline) {
+    while (Date.now() < deadline)
+    {
         const candidate = (window as Record<string, unknown>)[globalName];
-        if (candidate != null) {
+        if (candidate != null)
+        {
             /* Emscripten with MODULARIZE=1 returns a factory; call it. */
-            if (typeof candidate === "function") {
+            if (typeof candidate === "function")
+            {
                 const instance = await (candidate as () => Promise<unknown>)();
                 return instance;
             }
@@ -108,6 +116,7 @@ async function waitForModule(globalName: string, timeoutMs: number): Promise<unk
     );
 }
 
-function sleep(ms: number) {
+function sleep(ms: number)
+{
     return new Promise<void>((r) => setTimeout(r, ms));
 }

@@ -81,12 +81,11 @@ export interface BananaEngineModule {
  * Narrow `unknown` to `BananaEngineModule` at runtime.
  * Use this after loading the engine.js script tag.
  */
-export function isBananaEngineModule(v: unknown): v is BananaEngineModule {
-    if (typeof v !== "object" || v === null) return false;
+export function isBananaEngineModule(v: unknown): v is BananaEngineModule
+{
+    if (typeof v !== "object" || v === null)
+        return false;
     const m = v as Record<string, unknown>;
-    return (
-        typeof m["_engine_init"] === "function" &&
-        typeof m["_engine_tick"] === "function" &&
-        typeof m["_engine_get_entity_count"] === "function"
-    );
+    return (typeof m["_engine_init"] === "function" && typeof m["_engine_tick"] === "function" &&
+            typeof m["_engine_get_entity_count"] === "function");
 }
