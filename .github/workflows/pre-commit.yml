@@ -127,6 +127,8 @@ jobs:
           version: 'v3.14.0'
       - name: Add Bitnami repo
         run: helm repo add bitnami https://charts.bitnami.com/bitnami && helm repo update
+      - name: Build chart dependencies
+        run: helm dependency build helm/banana
       - name: Lint chart
         run: helm lint helm/banana --strict
       - name: Template render check

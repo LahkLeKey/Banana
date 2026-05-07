@@ -80,7 +80,6 @@ ITERATE_BACKLOG_PROMPT_REQUIRED_FRAGMENTS = {
     "workflow-orchestrate-sdlc.sh": "PROMPT missing SDLC orchestration script contract",
     "orchestrate-not-banana-feedback-loop.yml": "PROMPT missing feedback-loop workflow contract",
     "Stop when no eligible backlog items remain.": "PROMPT missing deterministic no-work stop condition",
-
     "Return concrete outputs for each iteration": "PROMPT missing iteration output contract",
 }
 FOCUS_OPEN_PRS_PROMPT = PROMPTS_DIR / "focus-on-open-pull-requests.prompt.md"

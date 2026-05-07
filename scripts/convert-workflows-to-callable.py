@@ -53,7 +53,10 @@ def rewrite(path: Path) -> bool:
 def main() -> int:
     targets = [Path(p) for p in sys.argv[1:]]
     if not targets:
-        print("Usage: convert-workflows-to-callable.py <file> [<file>...]", file=sys.stderr)
+        print(
+            "Usage: convert-workflows-to-callable.py <file> [<file>...]",
+            file=sys.stderr,
+        )
         return 2
     changed = 0
     for t in targets:
