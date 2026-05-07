@@ -1,12 +1,13 @@
 <!--
 Sync Impact Report
-- Version change: 1.8.0 -> 1.9.0
+- Version change: 1.9.1 -> 1.10.0
 - Modified principles:
 	- Added X. Observable Infrastructure as Code
 	- Added XI. Spec-Driven Infrastructure Discovery
 	- Added XII. Infrastructure Blockers Explicit
 	- Added XIII. Performance Budgets as Code
 	- Added XIV. Health Checks and Diagnostics
+-	- Added XVIII. Confidence-Gated Clarification
 - Added XV. Deployment Readiness as Code
 - Added XVI. Memory-First Bootstrapping Efficiency
 - Added XVII. Feedback-Loop Promotion
@@ -17,7 +18,11 @@ Sync Impact Report
 - Added workflow guidance: deployment evidence artifact requirements for Vercel/Fly state
 - Added workflow guidance: checkpoint-first scan discipline to avoid repeated full rescans
 - Added workflow guidance: deferred-ledger closure when remaining specs are blocked/research-only
-- Templates requiring updates: none (all existing templates remain compatible)
+- Added workflow guidance: mandatory targeted Q/A when confidence in the next code-improving step is below 70%
+- Templates requiring updates:
+	- ✅ updated .specify/templates/plan-template.md
+	- ✅ compatible .specify/templates/spec-template.md
+	- ✅ compatible .specify/templates/tasks-template.md
 - Follow-up TODOs:
 	- Add performance budget template to .specify/templates/
 	- Create infrastructure spec template for CLI-driven configuration
@@ -95,6 +100,9 @@ Operational and delivery signals must be promoted into explicit, scored follow-u
 - Promoted items should become explicit Spec Kit slices (spec/tasks) rather than remaining implicit notes.
 - Promotion artifacts must be machine-readable and linked to the originating checkpoint evidence.
 
+### XVIII. Confidence-Gated Clarification
+Spec Kit work must not guess through ambiguity. When the operator is below 70% confidence that the next edit, command, or workflow change will improve the codebase, the operator MUST stop and ask targeted Q/A before proceeding. The questions must be decision-driving, narrow the uncertainty that blocks progress, and be recorded in the active spec or plan when they change scope, constraints, or acceptance expectations.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
@@ -138,6 +146,7 @@ Operational and delivery signals must be promoted into explicit, scored follow-u
 - Scan loops that complete should publish a compact summary artifact that can be consumed by later planning and constitution updates.
 - When no runnable specs remain, operators should emit a deferred-ledger summary that accounts for blocked/research specs without forcing a full recomputation loop.
 - After checkpoint accounting, operators should emit a promotion ledger capturing high-value follow-up slices and route those items into new specs.
+- When confidence that the next action will improve the codebase falls below 70%, pause implementation and ask focused Q/A before editing or dispatching broad workflow changes. Reversible probes are acceptable only after that clarification step or when the human explicitly requests exploratory work.
 
 ## Governance
 
@@ -145,4 +154,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.9.1 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-03
+**Version**: 1.10.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-06

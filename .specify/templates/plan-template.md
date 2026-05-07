@@ -33,6 +33,8 @@
 
 [Gates determined based on constitution file]
 
+- If confidence in the next code-improving step is below 70%, stop and resolve the uncertainty with targeted Q/A before continuing. Record the resulting constraint, assumption, or decision in this plan.
+
 ## Project Structure
 
 ### Documentation (this feature)
