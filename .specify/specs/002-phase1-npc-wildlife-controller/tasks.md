@@ -8,17 +8,17 @@ created: 2026-05-06
 
 # Phase 1 Tasks: NPC Wildlife Controller
 
-**Feature**: Game Engine Architecture - Phase 1 (Rendering Foundation → Physics → NPC Controller → WASM Loop → Integration)  
-**Scope**: Reference [Phase 1 Implementation Plan](./plan.md)  
-**Effort Estimate**: 3-4 weeks (1 dev), 2 weeks (2-3 devs split by module)  
+**Feature**: Game Engine Architecture - Phase 1 (Rendering Foundation → Physics → NPC Controller → WASM Loop → Integration)
+**Scope**: Reference [Phase 1 Implementation Plan](./plan.md)
+**Effort Estimate**: 3-4 weeks (1 dev), 2 weeks (2-3 devs split by module)
 **Team Size**: 1-3 developers (parallelizable by module)
 
 ---
 
 ## Phase 0: Setup (Project Infrastructure)
 
-**Purpose**: Initialize CMake structure and dependencies for C engine + WASM integration  
-**Duration**: 1 day  
+**Purpose**: Initialize CMake structure and dependencies for C engine + WASM integration
+**Duration**: 1 day
 **Blocker**: None – can start immediately
 
 - [x] T001 Create `src/native/engine/` directory structure with `render/`, `physics/`, `ai/`, `world/` subdirectories
@@ -42,7 +42,7 @@ created: 2026-05-06
   - Build target: `test_phase1_engine` linked to `banana_engine_core`
   - Reference: [Integration Tests section](./plan.md#integration-tests)
 
-**Success**: 
+**Success**:
 - Directory structure matches [Architecture Layers in spec](../../001-game-engine-architecture/spec.md#architecture-layers)
 - CMake builds successfully (`cmake --build build`)
 - Test harness compiles
@@ -59,9 +59,9 @@ cmake --build build --target test_phase1_engine
 
 ## Phase 1a: Rendering Foundation (Week 1)
 
-**Goal**: OpenGL rendering pipeline that outputs RGBA frames to shared memory  
-**Independent Test**: Render a rotating cube; verify frame buffer contains non-zero RGBA data  
-**Estimated Duration**: 3-4 days (split across 2 developers is 1.5-2 days)  
+**Goal**: OpenGL rendering pipeline that outputs RGBA frames to shared memory
+**Independent Test**: Render a rotating cube; verify frame buffer contains non-zero RGBA data
+**Estimated Duration**: 3-4 days (split across 2 developers is 1.5-2 days)
 **Parallelizable**: Window + Shader setup can run in parallel with Mesh + Renderer orchestration
 
 ### Tasks
@@ -86,7 +86,7 @@ cmake --build build --target test_phase1_engine
   - Enable VSync
   - Window size: 800×600 (resizable)
   - Error handling: Log GLFW/GL errors to stderr
-  - **Success Criteria**: 
+  - **Success Criteria**:
     - Window opens without crash
     - OpenGL version logged (should be ≥ 3.3)
     - GLFW callbacks registered for resize, input
@@ -197,7 +197,7 @@ cmake --build build --target test_phase1_engine
     Camera *c = camera_create(60.0f, 800.0f/600.0f, 0.1f, 100.0f);
     Mesh *cube = mesh_create_cube();
     Material mat = {.color = {1.0f, 0.0f, 0.0f}, .shader = NULL};  // Shader from renderer
-    
+
     for (int i = 0; i < 10; i++) {
       renderer_begin_frame(r);
       float pos[] = {0, 0, -3};
@@ -205,11 +205,11 @@ cmake --build build --target test_phase1_engine
       renderer_draw_mesh(r, cube, pos, rot, &mat);
       renderer_end_frame(r);
     }
-    
+
     uint8_t *fb = renderer_get_frame_buffer(r);
     assert(fb != NULL, "Frame buffer should be non-NULL");
     // Check for non-zero pixels in frame (sanity check)
-    
+
     mesh_destroy(cube);
     renderer_destroy(r);
     window_destroy(w);
@@ -227,9 +227,9 @@ cmake --build build --target test_phase1_engine
 
 ## Phase 1b: Physics Integration (Week 1-2)
 
-**Goal**: Deterministic rigid-body physics with gravity, collision response, and determinism validation  
-**Independent Test**: Drop a box → falls under gravity → stops at floor; identical sequence replays  
-**Estimated Duration**: 3-4 days  
+**Goal**: Deterministic rigid-body physics with gravity, collision response, and determinism validation
+**Independent Test**: Drop a box → falls under gravity → stops at floor; identical sequence replays
+**Estimated Duration**: 3-4 days
 **Parallelizable**: Body + Collider definitions can run in parallel with Dynamics implementation
 
 ### Tasks
@@ -239,18 +239,18 @@ cmake --build build --target test_phase1_engine
 - [x] T018 Create `src/native/engine/physics/body.h` with:
   ```c
   typedef uint32_t PhysicsBodyId;
-  
+
   typedef enum {
     SHAPE_BOX,
     SHAPE_SPHERE,
     SHAPE_CAPSULE
   } ShapeType;
-  
+
   typedef struct {
     float x, y, z;
     float width, height, depth;
   } BoxShape;
-  
+
   typedef struct PhysicsBody {
     PhysicsBodyId id;
     float pos[3];
@@ -264,7 +264,7 @@ cmake --build build --target test_phase1_engine
       // sphere, capsule...
     } shape;
   } PhysicsBody;
-  
+
   PhysicsBody* physics_body_create(PhysicsBodyId id, float mass, float x, float y, float z, ShapeType shape);
   void physics_body_apply_force(PhysicsBody *b, float fx, float fy, float fz);
   void physics_body_apply_impulse(PhysicsBody *b, float ix, float iy, float iz);
@@ -288,12 +288,12 @@ cmake --build build --target test_phase1_engine
     float contact_point[3];
     float normal[3];
   } Collision;
-  
+
   typedef struct CollisionList {
     Collision *collisions;
     int count;
   } CollisionList;
-  
+
   int collider_aabb_vs_aabb(PhysicsBody *b1, PhysicsBody *b2, Collision *out);
   CollisionList collider_broad_phase(PhysicsBody *bodies, int count);
   void collider_resolve_collision(Collision *c, PhysicsBody *b1, PhysicsBody *b2);
@@ -320,7 +320,7 @@ cmake --build build --target test_phase1_engine
     void physics_resolve_collision(Collision *c, PhysicsBody *b1, PhysicsBody *b2) {
       // Compute relative velocity at contact
       float rel_vel[3] = {b2->vel[0] - b1->vel[0], ...};
-      
+
       // Apply impulse along collision normal
       float impulse = -(1.0f + e) * dot(rel_vel, normal) / (1/m1 + 1/m2);
       vec3_add(b1->vel, vec3_scale(normal, impulse / b1->mass));
@@ -339,7 +339,7 @@ cmake --build build --target test_phase1_engine
     int capacity;
     float gravity[3];
   } PhysicsWorld;
-  
+
   PhysicsWorld* physics_world_create(void);
   PhysicsBodyId physics_world_add_body(PhysicsWorld *w, float mass, float x, float y, float z, ShapeType shape);
   void physics_world_step(PhysicsWorld *w, float dt);
@@ -352,7 +352,7 @@ cmake --build build --target test_phase1_engine
   - `physics_world_step()`: For each body: apply forces → integrate → detect collisions → resolve
   - Gravity: Pull all non-fixed bodies downward at 9.81 m/s²
   - **Success Criteria**: Multiple bodies simulate deterministically
-  - **Determinism Validation**: 
+  - **Determinism Validation**:
     - Record initial state, run 1000 frames
     - Load initial state, run 1000 frames again
     - Positions should match byte-for-byte (or within FLT_EPSILON per axis)
@@ -363,24 +363,24 @@ cmake --build build --target test_phase1_engine
   ```c
   void test_physics_falling_box() {
     PhysicsWorld *w = physics_world_create();
-    
+
     // Floor (fixed, immobile)
     PhysicsBodyId floor_id = physics_world_add_body(w, 0.0f, 0, -1, 0, SHAPE_BOX);
     PhysicsBody *floor = physics_world_get_body(w, floor_id);
     floor->pos[1] = -1.0f;  // At y=-1
-    
+
     // Falling box (mass 1)
     PhysicsBodyId box_id = physics_world_add_body(w, 1.0f, 0, 5, 0, SHAPE_BOX);
-    
+
     // Simulate 500 frames (≈ 8.3 seconds at 60 Hz)
     for (int i = 0; i < 500; i++) {
       physics_world_step(w, 1.0f / 60.0f);
     }
-    
+
     PhysicsBody *box = physics_world_get_body(w, box_id);
     assert(box->pos[1] > -1.0f && box->pos[1] < 0.0f, "Box should rest on floor");
     assert(fabs(box->vel[1]) < 0.01f, "Box velocity should be near-zero");
-    
+
     physics_world_destroy(w);
   }
   ```
@@ -394,9 +394,9 @@ cmake --build build --target test_phase1_engine
 
 ## Phase 1c: NPC Controller Pattern (Week 2)
 
-**Goal**: Reusable AI controller framework with state machine, pathfinding, and signal wiring  
-**Independent Test**: Spawn 3 NPCs, verify patrol state → send signal → all enter investigate state  
-**Estimated Duration**: 4-5 days  
+**Goal**: Reusable AI controller framework with state machine, pathfinding, and signal wiring
+**Independent Test**: Spawn 3 NPCs, verify patrol state → send signal → all enter investigate state
+**Estimated Duration**: 4-5 days
 **Parallelizable**: Controller interface + State machine can run in parallel with Navigation + Perception
 
 ### Tasks
@@ -406,7 +406,7 @@ cmake --build build --target test_phase1_engine
 - [x] T027 Create `src/native/engine/ai/controller.h` with:
   ```c
   typedef uint32_t ControllerInstanceId;
-  
+
   typedef enum {
     CTRL_STATE_IDLE = 0,
     CTRL_STATE_PATROL = 1,
@@ -414,7 +414,7 @@ cmake --build build --target test_phase1_engine
     CTRL_STATE_RETURN = 3,
     CTRL_STATE_DEAD = 4
   } ControllerState;
-  
+
   typedef struct ControllerInstance {
     ControllerInstanceId id;
     char type[64];
@@ -425,9 +425,9 @@ cmake --build build --target test_phase1_engine
     void (*on_signal)(struct ControllerInstance *self, const char *signal, void *data);
     void (*destroy)(struct ControllerInstance *self);
   } ControllerInstance;
-  
+
   typedef ControllerInstance* (*ControllerFactory)(ControllerInstanceId id, float x, float y, float z);
-  
+
   ControllerInstance* controller_create(const char *type, ControllerInstanceId id, float x, float y, float z);
   float controller_update(ControllerInstance *c, float dt);
   void controller_signal(ControllerInstance *c, const char *signal, void *data);
@@ -450,7 +450,7 @@ cmake --build build --target test_phase1_engine
     int waypoint_index;
     float last_signal_pos[3];
   } FSMData;
-  
+
   ControllerState fsm_update(FSMData *fsm, float dt, ControllerState next_state);
   void fsm_signal(FSMData *fsm, const char *signal);
   ```
@@ -474,7 +474,7 @@ cmake --build build --target test_phase1_engine
     float waypoints[10][3];  // 10 waypoint max
     int waypoint_count;
   } Pathfinding;
-  
+
   void pathfinding_init(Pathfinding *pf, float width, float depth);
   void pathfinding_add_waypoint(Pathfinding *pf, float x, float y, float z);
   int pathfinding_get_next_waypoint(Pathfinding *pf, int current_index);
@@ -510,7 +510,7 @@ cmake --build build --target test_phase1_engine
     float move_speed;  // units/sec
     float investigation_radius;
   } WildlifeControllerData;
-  
+
   ControllerInstance* wildlife_controller_create(ControllerInstanceId id, float x, float y, float z);
   ```
 
@@ -532,7 +532,7 @@ cmake --build build --target test_phase1_engine
     int count;
     int capacity;
   } ControllerSystem;
-  
+
   ControllerSystem* controller_system_create(void);
   ControllerInstanceId controller_system_spawn(ControllerSystem *sys, const char *type, float x, float y, float z);
   void controller_system_update(ControllerSystem *sys, float dt);
@@ -549,22 +549,22 @@ cmake --build build --target test_phase1_engine
   ```c
   void test_wildlife_controller() {
     ControllerSystem *sys = controller_system_create();
-    
+
     // Spawn 3 wildlife controllers
     for (int i = 0; i < 3; i++) {
       controller_system_spawn(sys, "wildlife", i * 5.0f, 0, 0);
     }
-    
+
     // Simulate 10 seconds (600 frames at 60 Hz)
     for (int frame = 0; frame < 600; frame++) {
       controller_system_update(sys, 1.0f / 60.0f);
-      
+
       if (frame == 300) {
         // Send signal at frame 300
         controller_system_signal_all(sys, "player_nearby", NULL);
       }
     }
-    
+
     // At least one controller should have changed state due to signal
     controller_system_destroy(sys);
   }
@@ -580,9 +580,9 @@ cmake --build build --target test_phase1_engine
 
 ## Phase 1d: WASM Game Loop (Week 2-3)
 
-**Goal**: Main orchestrator that coordinates rendering, physics, and AI frame-by-frame  
-**Independent Test**: WASM module loads; game loop runs 60 frames; frame times logged  
-**Estimated Duration**: 2-3 days  
+**Goal**: Main orchestrator that coordinates rendering, physics, and AI frame-by-frame
+**Independent Test**: WASM module loads; game loop runs 60 frames; frame times logged
+**Estimated Duration**: 2-3 days
 **Blocker**: Requires rendering (1a), physics (1b), and controller (1c) to be ready
 
 ### Tasks
@@ -603,35 +603,35 @@ cmake --build build --target test_phase1_engine
     controller_system_spawn(sys: number, type_ptr: number, x: number, y: number, z: number): number;
     controller_system_update(sys: number, dt: number): void;
   }
-  
+
   export class GameLoop {
     private engine: CEngine;
     private frameCount: number = 0;
     private lastFrameTime: number = 0;
     private frameTimes: number[] = [];
-    
+
     constructor(engine: CEngine) {
       this.engine = engine;
     }
-    
+
     async tick(dt: number): Promise<void> {
       // Documented call sequence from plan.md
       this.engine.physics_world_step(dt);
       this.engine.controller_system_update(dt);
       this.engine.render_frame();
-      
+
       this.frameCount++;
       if (this.frameCount % 60 === 0) {
         // Emit telemetry every second at 60 FPS
         this.emitTelemetry();
       }
     }
-    
+
     private emitTelemetry(): void {
       // TODO: Send to API (phase 1e)
       console.log(`Frame ${this.frameCount}: avg ${this.getAverageFrameTime().toFixed(2)}ms`);
     }
-    
+
     private getAverageFrameTime(): number {
       return this.frameTimes.reduce((a, b) => a + b, 0) / Math.max(1, this.frameTimes.length);
     }
@@ -651,7 +651,7 @@ cmake --build build --target test_phase1_engine
 - [x] T043 Create `src/typescript/api/wasm/engine-binding.ts`:
   ```typescript
   import wasmModule from './banana_engine.wasm';
-  
+
   export async function initializeEngine(): Promise<CEngine> {
     const instance = await WebAssembly.instantiate(wasmModule);
     return instance.exports as CEngine;
@@ -668,18 +668,18 @@ cmake --build build --target test_phase1_engine
 - [x] T045 Create `tests/integration/phase1-wasm-harness.spec.ts`:
   ```typescript
   import { GameLoop, initializeEngine } from '@banana/api/wasm';
-  
+
   describe('Phase 1 WASM Game Loop', () => {
     it('should initialize engine and run 60 frames', async () => {
       const engine = await initializeEngine();
       const gameLoop = new GameLoop(engine);
-      
+
       const startTime = Date.now();
       for (let frame = 0; frame < 60; frame++) {
         await gameLoop.tick(1.0 / 60.0);
       }
       const elapsedMs = Date.now() - startTime;
-      
+
       console.log(`60 frames in ${elapsedMs}ms (target: ~1000ms)`);
       expect(elapsedMs).toBeLessThan(5000);  // Generous limit for CI
     });
@@ -697,9 +697,9 @@ cmake --build build --target test_phase1_engine
 
 ## Phase 1e: Integration & Telemetry (Week 3)
 
-**Goal**: End-to-end rendering + physics + AI; save/load cycle; telemetry to API  
-**Independent Test**: Full 5-minute runtime; no crashes; save/load produces identical replay  
-**Estimated Duration**: 3-4 days  
+**Goal**: End-to-end rendering + physics + AI; save/load cycle; telemetry to API
+**Independent Test**: Full 5-minute runtime; no crashes; save/load produces identical replay
+**Estimated Duration**: 3-4 days
 **Blocker**: Requires 1a–1d complete
 
 ### Tasks
@@ -714,24 +714,24 @@ cmake --build build --target test_phase1_engine
     physics: PhysicsSnapshot;
     timestamp: number;
   }
-  
+
   export interface EntitySnapshot {
     id: number;
     type: string;
     position: [number, number, number];
     rotation: [number, number, number, number];
   }
-  
+
   export class GameStateBridge {
     serializeWorldState(engine: CEngine): WorldState {
       // Read entity positions from C world state
       // Return as JSON-serializable snapshot
     }
-    
+
     deserializeWorldState(engine: CEngine, state: WorldState): void {
       // Write entity positions back to C world state
     }
-    
+
     async syncToAPI(state: WorldState): Promise<void> {
       // POST to /api/game/save
     }
@@ -757,13 +757,13 @@ cmake --build build --target test_phase1_engine
       // Store state in game_state_saves table
       // Return save_id
     }
-    
+
     [HttpGet("load/{saveId}")]
     public async Task<IActionResult> LoadGameState(string saveId) {
       // Retrieve saved state from DB
       // Return WorldState
     }
-    
+
     [HttpPost("telemetry")]
     public async Task<IActionResult> EmitTelemetry([FromBody] TelemetryEventDto telemetry) {
       // Store in game_state_telemetry table
@@ -834,7 +834,7 @@ cmake --build build --target test_phase1_engine
       // Verify entity positions change
       // Verify controller states cycle through FSM
     });
-    
+
     it('should deterministically replay after save/load', async () => {
       // Run game loop 100 frames
       // Serialize state at frame 100
@@ -842,7 +842,7 @@ cmake --build build --target test_phase1_engine
       // Run another 100 frames
       // Verify positions match between first run frame 100-200 and second run frame 1-100
     });
-    
+
     it('should send telemetry to API', async () => {
       // Mock API endpoints
       // Run game loop with telemetry emission enabled
@@ -875,7 +875,7 @@ cmake --build build --target test_phase1_engine
 
 ## Phase 1f: Polish & Validation (Final)
 
-**Goal**: Documentation, final testing, handoff to Phase 2  
+**Goal**: Documentation, final testing, handoff to Phase 2
 **Estimated Duration**: 1-2 days
 
 ### Tasks
@@ -937,13 +937,13 @@ T002 (CMakeLists.txt)
          ├→ T007-T008 (Shader) [P]
          ├→ T009-T010 (Mesh) [P]
          └→ T011-T017 (Material/Camera/Renderer)
-         
+
        Phase 1b (Physics): T018-T026 [can start after T002]
          ├→ T018-T019 (Body) [P]
          ├→ T020-T021 (Collider) [P]
          ├→ T022-T024 (Dynamics/World)
          └→ T025-T026 (Tests)
-         
+
        Phase 1c (AI): T027-T040 [after 1a+1b complete]
          ├→ T027-T028 (Controller interface)
          ├→ T029-T030 (FSM) [P]
@@ -951,10 +951,10 @@ T002 (CMakeLists.txt)
          ├→ T033-T034 (Perception) [P]
          ├→ T035-T036 (Wildlife spec)
          └→ T037-T040 (System/Tests)
-         
+
        Phase 1d (WASM): T041-T046 [after 1a+1b+1c complete]
          └→ T045-T046 (Tests)
-         
+
        Phase 1e (Integration): T047-T058 [after 1a+1b+1c+1d complete]
          ├→ T047-T048 (Serialization)
          ├→ T049-T051 (API)
@@ -986,8 +986,8 @@ T002 (CMakeLists.txt)
 
 ### Scenario 2: Three Developers
 
-**Developer A**: Rendering (T005-T017)  
-**Developer B**: Physics (T018-T026) + Navigation (T031-T032)  
+**Developer A**: Rendering (T005-T017)
+**Developer B**: Physics (T018-T026) + Navigation (T031-T032)
 **Developer C**: AI Controller (T027-T030, T033-T036) + WASM (T041-T046)
 
 **Timeline**: ~2 weeks with full parallelization

@@ -199,8 +199,10 @@ jobs:
         run: |
           bun scripts/scan-web-analytics-surfaces.ts \
             --out-dir .artifacts/analytics
+      - name: Run dashboard copy policy check
+        run: bun scripts/check-dashboard-copy-policy.ts
       - name: Run scanner unit tests
-        run: python -m pytest tests/scripts/test_scan_web_analytics_surfaces.py -v
+        run: python -m pytest tests/scripts/test_scan_web_analytics_surfaces.py tests/scripts/test_check_dashboard_copy_policy.py -v
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4

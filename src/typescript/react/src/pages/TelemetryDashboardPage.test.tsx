@@ -70,4 +70,16 @@ describe("TelemetryDashboardPage", () => {
         expect(screen.getByTestId("native-core-count").textContent).toContain("1");
         expect(screen.getByTestId("wasm-p95-duration").textContent).toContain("75 ms");
     });
+
+    // Spec 861: light-first palette — bar chart tooltip must use light semantic tokens
+    test("bar chart tooltip uses light-first semantic tokens not dark hardcoded classes", () => {
+        render(<TelemetryDashboardPage autoHydrate={false} />);
+        const page = document.body;
+        const html = page.innerHTML;
+
+        // Must not contain dark hardcoded tooltip background
+        expect(html).not.toContain("bg-slate-900");
+        // Must use semantic border-border/bg-background tokens (light-first)
+        expect(html).toContain("bg-background");
+    });
 });
