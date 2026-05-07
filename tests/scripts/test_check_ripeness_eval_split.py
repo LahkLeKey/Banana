@@ -7,7 +7,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "check-ripeness-eval-split.py"
@@ -34,11 +33,21 @@ def _make_corpus(tmp_path: Path, eval_ids: list[str], samples: list[dict]) -> Pa
 
 
 def _boundary_sample(sid: str, label: str) -> dict:
-    return {"id": sid, "label": label, "text": f"boundary text for {label}", "source": "hard-boundary-v2"}
+    return {
+        "id": sid,
+        "label": label,
+        "text": f"boundary text for {label}",
+        "source": "hard-boundary-v2",
+    }
 
 
 def _seed_sample(sid: str, label: str) -> dict:
-    return {"id": sid, "label": label, "text": f"seed text for {label}", "source": "seed"}
+    return {
+        "id": sid,
+        "label": label,
+        "text": f"seed text for {label}",
+        "source": "seed",
+    }
 
 
 def _passing_corpus(tmp_path: Path) -> Path:

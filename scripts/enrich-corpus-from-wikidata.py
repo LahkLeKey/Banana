@@ -290,13 +290,19 @@ def search_entities(query: str, limit: int, timeout_seconds: float) -> list[str]
         if not isinstance(row, dict):
             continue
         entity_id = row.get("id")
-        if isinstance(entity_id, str) and entity_id.startswith("Q") and entity_id not in seen:
+        if (
+            isinstance(entity_id, str)
+            and entity_id.startswith("Q")
+            and entity_id not in seen
+        ):
             seen.add(entity_id)
             ids.append(entity_id)
     return ids
 
 
-def fetch_entities(entity_ids: list[str], timeout_seconds: float) -> list[dict[str, Any]]:
+def fetch_entities(
+    entity_ids: list[str], timeout_seconds: float
+) -> list[dict[str, Any]]:
     if not entity_ids:
         return []
 
@@ -327,8 +333,12 @@ def fetch_entities(entity_ids: list[str], timeout_seconds: float) -> list[dict[s
             if isinstance(value.get("descriptions"), dict)
             else None
         )
-        aliases_block = value.get("aliases") if isinstance(value.get("aliases"), dict) else {}
-        aliases_rows = aliases_block.get("en") if isinstance(aliases_block, dict) else []
+        aliases_block = (
+            value.get("aliases") if isinstance(value.get("aliases"), dict) else {}
+        )
+        aliases_rows = (
+            aliases_block.get("en") if isinstance(aliases_block, dict) else []
+        )
         aliases: list[str] = []
         if isinstance(aliases_rows, list):
             for row in aliases_rows[:3]:
@@ -340,7 +350,9 @@ def fetch_entities(entity_ids: list[str], timeout_seconds: float) -> list[dict[s
         out.append(
             {
                 "id": entity_id,
-                "label": label.strip() if isinstance(label, str) and label.strip() else None,
+                "label": label.strip()
+                if isinstance(label, str) and label.strip()
+                else None,
                 "description": description.strip()
                 if isinstance(description, str) and description.strip()
                 else None,
@@ -401,78 +413,102 @@ def collect_candidates(
 
             text = build_training_text(entity)
             if not text:
-                trace.append({"query": query, "entity_id": entity.get("id"), "status": "skip_empty"})
+                trace.append(
+                    {
+                        "query": query,
+                        "entity_id": entity.get("id"),
+                        "status": "skip_empty",
+                    }
+                )
                 continue
 
             if len(text) < min_text_length:
-                trace.append({
-                    "query": query,
-                    "entity_id": entity.get("id"),
-                    "status": "skip_short",
-                    "text": text,
-                })
+                trace.append(
+                    {
+                        "query": query,
+                        "entity_id": entity.get("id"),
+                        "status": "skip_short",
+                        "text": text,
+                    }
+                )
                 continue
 
             if label == "banana":
                 if not BANANA_ALLOWED_RE.search(text):
-                    trace.append({
-                        "query": query,
-                        "entity_id": entity.get("id"),
-                        "status": "skip_banana_low_relevance",
-                        "text": text,
-                    })
+                    trace.append(
+                        {
+                            "query": query,
+                            "entity_id": entity.get("id"),
+                            "status": "skip_banana_low_relevance",
+                            "text": text,
+                        }
+                    )
                     continue
                 if not BANANA_CONTEXT_RE.search(text):
-                    trace.append({
-                        "query": query,
-                        "entity_id": entity.get("id"),
-                        "status": "skip_banana_missing_context",
-                        "text": text,
-                    })
+                    trace.append(
+                        {
+                            "query": query,
+                            "entity_id": entity.get("id"),
+                            "status": "skip_banana_missing_context",
+                            "text": text,
+                        }
+                    )
                     continue
                 if BANANA_BLOCK_RE.search(text):
-                    trace.append({
-                        "query": query,
-                        "entity_id": entity.get("id"),
-                        "status": "skip_banana_blocked_topic",
-                        "text": text,
-                    })
+                    trace.append(
+                        {
+                            "query": query,
+                            "entity_id": entity.get("id"),
+                            "status": "skip_banana_blocked_topic",
+                            "text": text,
+                        }
+                    )
                     continue
-                if "plantain" in text.lower() and not PLANTAIN_FOOD_CONTEXT_RE.search(text):
-                    trace.append({
-                        "query": query,
-                        "entity_id": entity.get("id"),
-                        "status": "skip_plantain_non_food",
-                        "text": text,
-                    })
+                if "plantain" in text.lower() and not PLANTAIN_FOOD_CONTEXT_RE.search(
+                    text
+                ):
+                    trace.append(
+                        {
+                            "query": query,
+                            "entity_id": entity.get("id"),
+                            "status": "skip_plantain_non_food",
+                            "text": text,
+                        }
+                    )
                     continue
 
             if label == "not-banana" and BANANA_TOKEN_RE.search(text):
-                trace.append({
-                    "query": query,
-                    "entity_id": entity.get("id"),
-                    "status": "skip_contains_banana",
-                    "text": text,
-                })
+                trace.append(
+                    {
+                        "query": query,
+                        "entity_id": entity.get("id"),
+                        "status": "skip_contains_banana",
+                        "text": text,
+                    }
+                )
                 continue
 
             if label == "not-banana" and NOT_BANANA_BLOCK_RE.search(text):
-                trace.append({
-                    "query": query,
-                    "entity_id": entity.get("id"),
-                    "status": "skip_not_banana_blocked_topic",
-                    "text": text,
-                })
+                trace.append(
+                    {
+                        "query": query,
+                        "entity_id": entity.get("id"),
+                        "status": "skip_not_banana_blocked_topic",
+                        "text": text,
+                    }
+                )
                 continue
 
             key = normalize_text(text)
             if key in existing:
-                trace.append({
-                    "query": query,
-                    "entity_id": entity.get("id"),
-                    "status": "skip_duplicate",
-                    "text": text,
-                })
+                trace.append(
+                    {
+                        "query": query,
+                        "entity_id": entity.get("id"),
+                        "status": "skip_duplicate",
+                        "text": text,
+                    }
+                )
                 continue
 
             existing.add(key)
@@ -484,12 +520,14 @@ def collect_candidates(
                 }
             )
             accepted_for_query += 1
-            trace.append({
-                "query": query,
-                "entity_id": entity.get("id"),
-                "status": "accepted",
-                "text": text,
-            })
+            trace.append(
+                {
+                    "query": query,
+                    "entity_id": entity.get("id"),
+                    "status": "accepted",
+                    "text": text,
+                }
+            )
 
     return accepted, trace
 

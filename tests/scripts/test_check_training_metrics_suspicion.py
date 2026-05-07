@@ -7,7 +7,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "scripts" / "check-training-metrics-suspicion.py"
@@ -32,7 +31,9 @@ def _make_metrics(
     if confusion is None and include_confusion:
         # Build a diagonal confusion matrix with per-cell support > 2
         per = max(3, holdout_size // len(LABELS))
-        confusion = {la: {lb: (per if la == lb else 0) for lb in LABELS} for la in LABELS}
+        confusion = {
+            la: {lb: (per if la == lb else 0) for lb in LABELS} for la in LABELS
+        }
     payload: dict = {
         "schema_version": 1,
         "metrics": {
@@ -58,6 +59,7 @@ def _args(tmp_root: Path) -> list[str]:
 # Passing scenarios
 # ---------------------------------------------------------------------------
 
+
 def test_honest_metrics_pass(tmp_path: Path) -> None:
     """All lanes with honest accuracy and sufficient holdout_size should pass."""
     root = tmp_path
@@ -80,6 +82,7 @@ def test_perfect_accuracy_with_large_holdout_passes(tmp_path: Path) -> None:
 # Failing scenarios
 # ---------------------------------------------------------------------------
 
+
 def test_binary_lane_tiny_holdout_flags(tmp_path: Path) -> None:
     """banana at 1.0 with holdout_size=4 should be flagged."""
     root = tmp_path
@@ -100,11 +103,15 @@ def test_multiclass_lane_tiny_holdout_flags(tmp_path: Path) -> None:
 
 def test_diagonal_only_with_trivial_support_flags(tmp_path: Path) -> None:
     """Perfect diagonal with each cell = 1 is trivially suspicious."""
-    trivial_confusion = {la: {lb: (1 if la == lb else 0) for lb in LABELS} for la in LABELS}
+    trivial_confusion = {
+        la: {lb: (1 if la == lb else 0) for lb in LABELS} for la in LABELS
+    }
     root = tmp_path
     _make_metrics(root, "banana", accuracy=0.9, holdout_size=10)
     _make_metrics(root, "not-banana", accuracy=0.9, holdout_size=10)
-    _make_metrics(root, "ripeness", accuracy=1.0, holdout_size=4, confusion=trivial_confusion)
+    _make_metrics(
+        root, "ripeness", accuracy=1.0, holdout_size=4, confusion=trivial_confusion
+    )
     assert ctms.main(_args(root)) == 1
 
 

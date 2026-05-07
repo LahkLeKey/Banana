@@ -32,7 +32,9 @@ def parse_args() -> argparse.Namespace:
         default=Path("artifacts/training/banana/local/explanation-quality.json"),
         help="Path to write quality report",
     )
-    parser.add_argument("--strict", action="store_true", help="Fail on missing required fact coverage")
+    parser.add_argument(
+        "--strict", action="store_true", help="Fail on missing required fact coverage"
+    )
     return parser.parse_args()
 
 
@@ -45,12 +47,18 @@ def contains_any(text: str, options: list[str]) -> bool:
     return any(opt.lower() in lowered for opt in options)
 
 
-def score_item(item: dict[str, Any], required_facts: list[dict[str, Any]]) -> dict[str, Any]:
+def score_item(
+    item: dict[str, Any], required_facts: list[dict[str, Any]]
+) -> dict[str, Any]:
     explanation = str(item.get("candidate_explanation", "")).strip()
     fact_hits: dict[str, bool] = {}
     for fact in required_facts:
         fact_id = str(fact.get("id", "unknown")).strip() or "unknown"
-        terms = [str(term).strip() for term in fact.get("required_terms", []) if str(term).strip()]
+        terms = [
+            str(term).strip()
+            for term in fact.get("required_terms", [])
+            if str(term).strip()
+        ]
         fact_hits[fact_id] = contains_any(explanation, terms)
 
     word_count = len(words(explanation))
@@ -78,7 +86,9 @@ def main() -> int:
 
     min_words = int(rubric.get("min_words", 1))
     max_words = int(rubric.get("max_words", 9999))
-    strict_required_facts = int(rubric.get("strict_required_facts", len(required_facts)))
+    strict_required_facts = int(
+        rubric.get("strict_required_facts", len(required_facts))
+    )
 
     item_scores: list[dict[str, Any]] = []
     fact_totals = {str(f.get("id", "unknown")): 0 for f in required_facts}
@@ -107,7 +117,9 @@ def main() -> int:
         for key, count in sorted(fact_totals.items())
     }
     avg_word_count = round(
-        (sum(int(score["word_count"]) for score in item_scores) / total_items) if total_items else 0.0,
+        (sum(int(score["word_count"]) for score in item_scores) / total_items)
+        if total_items
+        else 0.0,
         3,
     )
 

@@ -36,13 +36,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--artifacts-root",
         default=str(REPO_ROOT / "artifacts" / "training"),
         help="Root directory containing per-lane training artifacts "
-             "(default: artifacts/training).",
+        "(default: artifacts/training).",
     )
     parser.add_argument(
         "--allow-perfect-lanes",
         default=os.environ.get("BANANA_ALLOW_PERFECT_LANES", ""),
         help="Comma-separated lane names where perfect accuracy is intentionally "
-             "allowed (env: BANANA_ALLOW_PERFECT_LANES).",
+        "allowed (env: BANANA_ALLOW_PERFECT_LANES).",
     )
     parser.add_argument(
         "--lanes",
@@ -156,7 +156,9 @@ def main(argv: list[str] | None = None) -> int:
     all_flags: list[str] = []
 
     for lane_name, lane_cfg in lanes.items():
-        lane_flags = check_lane(lane_name, lane_cfg, skip_perfect=(lane_name in allow_perfect))
+        lane_flags = check_lane(
+            lane_name, lane_cfg, skip_perfect=(lane_name in allow_perfect)
+        )
         all_flags.extend(lane_flags)
 
     if all_flags:

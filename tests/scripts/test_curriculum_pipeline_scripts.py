@@ -20,8 +20,12 @@ def _load(name: str, script_path: Path):
 
 
 mine = _load("mine_gaps", REPO_ROOT / "scripts" / "mine-banana-knowledge-gaps.py")
-gen = _load("gen_curr", REPO_ROOT / "scripts" / "generate-banana-curriculum-candidates.py")
-ingest = _load("ingest_curr", REPO_ROOT / "scripts" / "ingest-banana-curriculum-staging.py")
+gen = _load(
+    "gen_curr", REPO_ROOT / "scripts" / "generate-banana-curriculum-candidates.py"
+)
+ingest = _load(
+    "ingest_curr", REPO_ROOT / "scripts" / "ingest-banana-curriculum-staging.py"
+)
 
 
 def test_curriculum_pipeline(tmp_path: Path) -> None:
@@ -33,7 +37,9 @@ def test_curriculum_pipeline(tmp_path: Path) -> None:
         ],
     }
     coverage = {"counts": {"fruit-identity": 3, "nutrition-potassium": 0}}
-    generalization = {"per_concept_recall": {"fruit-identity": 0.9, "nutrition-potassium": 0.2}}
+    generalization = {
+        "per_concept_recall": {"fruit-identity": 0.9, "nutrition-potassium": 0.2}
+    }
     staging = {"max_auto_accept_per_run": 2, "entries": []}
     corpus = {
         "schema_version": 1,

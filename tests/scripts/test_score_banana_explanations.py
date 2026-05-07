@@ -71,7 +71,9 @@ def test_explanation_quality_fail_on_missing_facts(tmp_path: Path) -> None:
         "max_words": 20,
         "strict_required_facts": 2,
     }
-    prompts = {"items": [{"id": "exp-2", "candidate_explanation": "Banana is a fruit."}]}
+    prompts = {
+        "items": [{"id": "exp-2", "candidate_explanation": "Banana is a fruit."}]
+    }
     rp = tmp_path / "rubric.json"
     pp = tmp_path / "prompts.json"
     out = tmp_path / "report.json"
