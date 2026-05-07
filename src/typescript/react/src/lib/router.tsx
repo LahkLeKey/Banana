@@ -31,6 +31,7 @@ import { OperatorPage } from "../pages/OperatorPage";
 import { QuizQaPage } from "../pages/QuizQaPage";
 import { TelemetryDashboardPage } from "../pages/TelemetryDashboardPage";
 import { WorkspacePage } from "../pages/WorkspacePage";
+import { GameEnginePage } from "../pages/GameEnginePage";
 
 function PageShell() {
   const location = useLocation();
@@ -97,6 +98,7 @@ export const router = createBrowserRouter([
           { path: "review-spikes", element: <Navigate to="/telemetry" replace /> },
           { path: "classify", element: <ClassifyPage /> },
           { path: "operator", element: <OperatorPage /> },
+          { path: "game-engine", element: <GameEnginePage /> },
         ],
       },
       { path: "*", element: <NotFoundPage /> },

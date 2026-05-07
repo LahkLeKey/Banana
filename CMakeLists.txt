@@ -65,8 +65,21 @@ if(BANANA_ENABLE_COVERAGE)
   target_link_options(banana_native PRIVATE -fprofile-arcs -ftest-coverage)
 endif()
 
+# Game engine core modules (Phase 1 pivot).
+option(BANANA_ENABLE_ENGINE "Build the game engine core (render, physics, ai, world)" OFF)
+if(BANANA_ENABLE_ENGINE)
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/native/engine/CMakeLists.txt")
+    add_subdirectory(src/native/engine)
+  endif()
+endif()
+
 # Native test binary (driven by spec 014).
 enable_testing()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/native/CMakeLists.txt")
   add_subdirectory(tests/native)
+endif()
+
+# Engine test binary (Phase 1 setup).
+if(BANANA_ENABLE_ENGINE AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/native/engine/CMakeLists.txt")
+  add_subdirectory(tests/native/engine)
 endif()

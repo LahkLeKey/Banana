@@ -103,6 +103,9 @@ builder.Services.AddSingleton<AuditStore>();
 builder.Services.AddScoped<AuditLogMiddleware>();
 builder.Services.AddSingleton<TelemetryEventStore>();
 
+// Phase 1e — game engine state + telemetry (in-memory, demo scope).
+builder.Services.AddSingleton<Banana.Api.Services.GameStateService>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
