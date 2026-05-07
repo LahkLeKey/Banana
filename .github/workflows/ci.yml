@@ -1,7 +1,8 @@
-name: CI
+name: Monorepo
 
-# Single orchestrator for all PR / push CI. Renders all sub-workflows as a
-# nested job tree in one workflow run instead of dozens of separate runs.
+# Single orchestrator for all monorepo PR / push validation. Renders the
+# underlying lanes as a single workflow run with a single terminal pass/fail
+# gate instead of dozens of separate runs.
 
 on:
   pull_request:
@@ -85,8 +86,8 @@ jobs:
     uses: ./.github/workflows/web-vitals-budget.yml
 
   # --- Final summary gate ---
-  ci-success:
-    name: CI Success
+  monorepo-pass-fail:
+    name: Monorepo / Pass-Fail
     needs:
       - pre-commit
       - ai-contract-guard
@@ -104,9 +105,34 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: Publish monorepo summary
+        run: |
+          {
+            echo "## Monorepo Summary"
+            echo
+            echo "| Lane | Result |"
+            echo "| --- | --- |"
+            echo "| Lint / pre-commit | ${{ needs.pre-commit.result }} |"
+            echo "| Lint / AI contract guard | ${{ needs.ai-contract-guard.result }} |"
+            echo "| Lint / spec parity | ${{ needs.spec-parity.result }} |"
+            echo "| Lint / wiki | ${{ needs.wiki-lint.result }} |"
+            echo "| Lint / helm charts | ${{ needs.helm-lint.result }} |"
+            echo "| Lint / migration discipline | ${{ needs.migration-discipline.result }} |"
+            echo "| Build / turbo | ${{ needs.turbo.result }} |"
+            echo "| Native / ABI check | ${{ needs.native-abi.result }} |"
+            echo "| Native / cross-platform | ${{ needs.native-cross-platform.result }} |"
+            echo "| Native / sanitizers | ${{ needs.native-sanitizers.result }} |"
+            echo "| Runtime / compose | ${{ needs.compose.result }} |"
+            echo "| Runtime / screenshot | ${{ needs.screenshot.result }} |"
+            echo "| Runtime / web vitals budget | ${{ needs.web-vitals.result }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Verify all upstream jobs succeeded
         run: |
-          echo "All required CI jobs reported. Result: ${{ contains(needs.*.result, 'failure') && 'FAILURE' || contains(needs.*.result, 'cancelled') && 'CANCELLED' || 'SUCCESS' }}"
+          echo "Monorepo result: ${{ contains(needs.*.result, 'failure') && 'FAILURE' || contains(needs.*.result, 'cancelled') && 'CANCELLED' || 'SUCCESS' }}"
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
             exit 1
           fi
