@@ -6,8 +6,6 @@
 /* Simple registry: maps type_name → factory function */
 #define BANANA_MAX_CONTROLLER_TYPES 32
 
-typedef ControllerInstance *(*ControllerFactory)(float x, float y, float z);
-
 static struct {
     char             type_name[64];
     ControllerFactory factory;
@@ -50,7 +48,6 @@ void controller_destroy(ControllerInstance *c) {
     free(c);
 }
 
-/* ── WASM ABI (stubs — wired to singleton in engine.c) ───────────────────── */
-uint32_t engine_controller_create(const char *t, float x, float y, float z) { (void)t; (void)x; (void)y; (void)z; return 0; }
-void     engine_controller_update(uint32_t id, float dt)                     { (void)id; (void)dt; }
-void     engine_controller_signal(uint32_t id, const char *sig)              { (void)id; (void)sig; }
+/* engine_controller_create / engine_controller_update / engine_controller_signal
+ * are implemented in engine.c (singleton-backed).
+ * They are NOT defined here to avoid duplicate-symbol errors. */

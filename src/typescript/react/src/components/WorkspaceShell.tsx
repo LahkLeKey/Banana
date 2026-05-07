@@ -68,6 +68,10 @@ export function WorkspaceShell() {
             <NavItem to="/classify" label="Classify" />
             <NavItem to="/operator" label="Operator" />
           </Section>
+
+          <Section title="Engine">
+            <NavItem to="/game-engine" label="Game Engine" />
+          </Section>
         </aside>
 
         <main>

@@ -24,7 +24,10 @@ typedef struct ControllerInstance {
     void (*destroy)(ControllerInstance *self);
 } ControllerInstance;
 
-/* Registry: look up a factory by type_name and instantiate. */
+/* Registry: register a controller type factory, or look up and instantiate. */
+typedef ControllerInstance *(*ControllerFactory)(float x, float y, float z);
+void controller_register(const char *type_name, ControllerFactory factory);
+
 ControllerInstance *controller_create(const char *type_name,
                                        float x, float y, float z);
 

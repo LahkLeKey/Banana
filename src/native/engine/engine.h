@@ -45,6 +45,18 @@ int  engine_tick(float dt);
 /* Tear down all subsystems. */
 void engine_shutdown(void);
 
+/* ── Controller helpers ─────────────────────────────────────────────────────*/
+
+/* Create a controller and attach it to an existing world entity.
+ * Returns the controller ID (0 on failure). */
+uint32_t engine_controller_attach(uint32_t entity_id, const char *type_name);
+
+/* ── Entity query helpers (for React / WASM telemetry overlay) ──────────── */
+int   engine_get_entity_count(void);
+float engine_get_entity_x(int idx);
+float engine_get_entity_z(int idx);
+int   engine_get_entity_state(int idx); /* 0 = inactive, 1 = active */
+
 #ifdef __cplusplus
 }
 #endif

@@ -3,8 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef BANANA_ENGINE_HAS_GLFW
-#include <GL/gl.h>
+/* Unified GL detection: Emscripten (WebGL2/GLES3) or native GLFW */
+#ifdef __EMSCRIPTEN__
+#  define BANANA_ENGINE_HAS_GL 1
+#  include <GLES3/gl3.h>
+#elif defined(BANANA_ENGINE_HAS_GLFW)
+#  define BANANA_ENGINE_HAS_GL 1
+#  include <GL/gl.h>
+#endif
+
+#ifdef BANANA_ENGINE_HAS_GL
 
 struct Shader { unsigned int program; };
 
@@ -58,7 +66,7 @@ void shader_set_mat4(Shader *s, const char *name, const float *m16) {
 
 void shader_destroy(Shader *s) { if (s) { glDeleteProgram(s->program); free(s); } }
 
-#else  /* stubs */
+#else  /* stubs — headless test builds */
 
 struct Shader { int dummy; };
 Shader *shader_create(const char *v, const char *f) { (void)v; (void)f; return malloc(sizeof(Shader)); }

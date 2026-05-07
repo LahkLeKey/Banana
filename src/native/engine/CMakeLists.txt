@@ -25,6 +25,7 @@ set(ENGINE_AI_SOURCES
   ai/state_machine.c
   ai/navigation.c
   ai/perception.c
+  ai/wildlife_controller.c
 )
 
 set(ENGINE_WORLD_SOURCES
@@ -91,25 +92,33 @@ endif()
 if(EMSCRIPTEN)
   # EXPORTED_FUNCTIONS list — mirrors the ABI contract in spec 001
   set(WASM_EXPORTS
+    "_main"
+    "_engine_init"
     "_engine_tick"
+    "_engine_shutdown"
     "_engine_render_frame"
     "_engine_get_frame_buffer"
-    "_physics_world_step"
+    "_engine_world_spawn"
+    "_engine_world_tick"
+    "_engine_controller_create"
+    "_engine_controller_attach"
+    "_engine_controller_update"
+    "_engine_controller_signal"
+    "_engine_get_entity_count"
+    "_engine_get_entity_x"
+    "_engine_get_entity_z"
+    "_engine_get_entity_state"
+    "_physics_step"
     "_physics_add_body"
     "_physics_update_body"
-    "_controller_create"
-    "_controller_update"
-    "_controller_signal"
-    "_world_spawn_entity"
-    "_world_tick"
-    "_world_send_signal"
-    "_world_query_nearby"
   )
 
   # Join into a JSON array string for Emscripten
   string(JOIN "," WASM_EXPORTS_STR ${WASM_EXPORTS})
 
   add_executable(banana_engine_wasm
+    engine.c
+    wasm_main.c
     ${ENGINE_RENDER_SOURCES}
     ${ENGINE_PHYSICS_SOURCES}
     ${ENGINE_AI_SOURCES}
@@ -131,7 +140,7 @@ if(EMSCRIPTEN)
 
   set_target_properties(banana_engine_wasm PROPERTIES
     OUTPUT_NAME "banana_engine"
-    SUFFIX ".wasm"
+    # No SUFFIX override — Emscripten emits .js + .wasm automatically
   )
 
   target_link_options(banana_engine_wasm PRIVATE

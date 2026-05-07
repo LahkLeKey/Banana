@@ -6,8 +6,16 @@
 #include <string.h>
 #include <math.h>
 
-#ifdef BANANA_ENGINE_HAS_GLFW
-#include <GL/gl.h>
+/* Unified GL detection */
+#ifdef __EMSCRIPTEN__
+#  define BANANA_ENGINE_HAS_GL 1
+#  include <GLES3/gl3.h>
+#elif defined(BANANA_ENGINE_HAS_GLFW)
+#  define BANANA_ENGINE_HAS_GL 1
+#  include <GL/gl.h>
+#endif
+
+#ifdef BANANA_ENGINE_HAS_GL
 
 struct Mesh {
     unsigned int vao, vbo, ebo;
@@ -55,7 +63,7 @@ void mesh_destroy(Mesh *m) {
     free(m);
 }
 
-#else
+#else /* headless stub — test builds */
 
 struct Mesh { int index_count; };
 Mesh *mesh_create(const float *v, int vc, const unsigned int *i, int ic) {
