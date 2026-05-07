@@ -6,43 +6,7 @@ permissions:
   pull-requests: write
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "src/typescript/react/src/pages/BananaAIPage.tsx"
-      - "src/typescript/react/src/pages/QuizQaPage.tsx"
-      - "src/typescript/react/grade-school-uat.config.ts"
-      - "tests/e2e/playwright/specs/grade-school-quiz-qa.spec.ts"
-      - "scripts/quiz-model-benchmark-gate.ts"
-      - "scripts/quiz-benchmark-trend-gate.ts"
-      - "src/typescript/react/package.json"
-      - ".github/workflows/grade-school-uat.yml"
-  push:
-    branches: [main]
-    paths:
-      - "src/typescript/react/src/pages/BananaAIPage.tsx"
-      - "src/typescript/react/src/pages/QuizQaPage.tsx"
-      - "src/typescript/react/grade-school-uat.config.ts"
-      - "tests/e2e/playwright/specs/grade-school-quiz-qa.spec.ts"
-      - "scripts/quiz-model-benchmark-gate.ts"
-      - "scripts/quiz-benchmark-trend-gate.ts"
-      - "src/typescript/react/package.json"
-      - ".github/workflows/grade-school-uat.yml"
-  workflow_dispatch:
-    inputs:
-      base_url:
-        description: "Override target URL (default: https://banana.engineer)"
-        required: false
-        default: "https://banana.engineer"
-      gate_mode:
-        description: "Gate behavior: enforce fails the job, observe records warnings only"
-        required: false
-        default: "enforce"
-        type: choice
-        options:
-          - enforce
-          - observe
-
+  workflow_call: {}
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 

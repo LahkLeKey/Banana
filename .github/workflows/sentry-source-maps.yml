@@ -1,10 +1,6 @@
 name: Sentry Source Maps
 on:
-  push:
-    branches: [main]
-    paths: ['src/typescript/react/**']
-  workflow_dispatch:
-
+  workflow_call: {}
 jobs:
   upload-source-maps:
     runs-on: ubuntu-latest

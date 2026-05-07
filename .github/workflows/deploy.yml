@@ -1,0 +1,50 @@
+name: Deploy
+
+# Single orchestrator for all post-merge deploy / publish workflows.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  vercel:
+    name: Deploy / Vercel (React)
+    uses: ./.github/workflows/vercel-deploy.yml
+    secrets: inherit
+
+  api:
+    name: Deploy / API (Fastify + Prisma)
+    uses: ./.github/workflows/api-deploy.yml
+    secrets: inherit
+
+  storybook:
+    name: Deploy / Storybook
+    uses: ./.github/workflows/storybook-deploy.yml
+    secrets: inherit
+
+  containers:
+    name: Deploy / Multi-arch containers
+    uses: ./.github/workflows/container-multi-arch.yml
+    secrets: inherit
+
+  sbom:
+    name: Deploy / SBOM + image signing
+    needs: containers
+    uses: ./.github/workflows/sbom-and-signing.yml
+    secrets: inherit
+
+  sentry:
+    name: Deploy / Sentry source maps
+    needs: vercel
+    uses: ./.github/workflows/sentry-source-maps.yml
+    secrets: inherit

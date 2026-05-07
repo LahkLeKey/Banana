@@ -1,12 +1,7 @@
 name: API Deploy
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "src/typescript/api/**"
-      - ".github/workflows/api-deploy.yml"
-
+  workflow_call: {}
 jobs:
   migrate-and-deploy:
     runs-on: ubuntu-latest

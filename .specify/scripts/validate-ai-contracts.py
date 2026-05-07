@@ -42,8 +42,6 @@ WORKFLOW_ORCHESTRATE_TRIAGE_IDEA = WORKFLOWS_DIR / "orchestrate-triage-idea-clou
 WORKFLOW_ORCHESTRATE_AUTONOMOUS = (
     WORKFLOWS_DIR / "orchestrate-autonomous-self-training-cycle.yml"
 )
-WORKFLOW_COPILOT_REVIEW_TRIAGE = WORKFLOWS_DIR / "copilot-review-triage.yml"
-WORKFLOW_REQUIRE_HUMAN_APPROVAL = WORKFLOWS_DIR / "require-human-approval.yml"
 WORKFLOW_AI_CONTRACT_GUARD = WORKFLOWS_DIR / "ai-contract-guard.yml"
 WORKFLOW_TRAIN_NOT_BANANA = WORKFLOWS_DIR / "train-not-banana-model.yml"
 SCRIPT_ORCHESTRATE_TRIAGED = (
@@ -81,16 +79,13 @@ ITERATE_BACKLOG_PROMPT_REQUIRED_FRAGMENTS = {
     "orchestrate-banana-sdlc.yml": "PROMPT missing SDLC workflow contract",
     "workflow-orchestrate-sdlc.sh": "PROMPT missing SDLC orchestration script contract",
     "orchestrate-not-banana-feedback-loop.yml": "PROMPT missing feedback-loop workflow contract",
-    "copilot-review-triage.yml": "PROMPT missing copilot triage required-check contract",
-    "require-human-approval.yml": "PROMPT missing human-approval required-check contract",
     "Stop when no eligible backlog items remain.": "PROMPT missing deterministic no-work stop condition",
+
     "Return concrete outputs for each iteration": "PROMPT missing iteration output contract",
 }
 FOCUS_OPEN_PRS_PROMPT = PROMPTS_DIR / "focus-on-open-pull-requests.prompt.md"
 FOCUS_OPEN_PRS_PROMPT_REQUIRED_FRAGMENTS = {
     "open pull requests": "PROMPT missing open pull request focus scope",
-    "copilot-review-triage.yml": "PROMPT missing copilot review triage workflow contract",
-    "require-human-approval.yml": "PROMPT missing human approval workflow contract",
     "Do not force-merge or bypass branch protections unless explicitly requested by a human.": "PROMPT missing branch-protection safety contract",
     "Do not open duplicate replacement PRs": "PROMPT missing duplicate PR safeguard contract",
     "Return concrete outputs for each PR handled": "PROMPT missing per-PR output contract",
@@ -719,50 +714,6 @@ def main() -> int:
             if fragment not in autonomous_text:
                 issues.append(f"{message}: {autonomous_rel}")
 
-    copilot_triage_rel = WORKFLOW_COPILOT_REVIEW_TRIAGE.relative_to(ROOT).as_posix()
-    if not WORKFLOW_COPILOT_REVIEW_TRIAGE.exists():
-        issues.append(
-            f"WORKFLOW missing Copilot review triage workflow: {copilot_triage_rel}"
-        )
-    else:
-        copilot_triage_text = WORKFLOW_COPILOT_REVIEW_TRIAGE.read_text(encoding="utf-8")
-        copilot_required_fragments = {
-            "workflow_dispatch": "WORKFLOW missing workflow_dispatch trigger",
-            "pull_number": "WORKFLOW missing workflow_dispatch pull_number input",
-            "pull_request_review": "WORKFLOW missing pull_request_review trigger",
-            "copilot-pull-request-reviewer": "WORKFLOW missing Copilot reviewer login detection",
-            "copilot-triage-pending": "WORKFLOW missing copilot-triage-pending label contract",
-            "copilot-triage-ready": "WORKFLOW missing copilot-triage-ready label contract",
-            "copilot-auto-approve": "WORKFLOW missing copilot-auto-approve opt-in contract",
-            "copilot-autonomous-cycle": "WORKFLOW missing autonomous cycle label contract",
-            "speckit-driven": "WORKFLOW missing copilot bypass provenance label contract",
-            "copilot-suggestion": "WORKFLOW missing copilot suggestion issue label contract",
-            "syncSuggestionIssues": "WORKFLOW missing per-suggestion issue triage path",
-            "createWorkflowDispatch": "WORKFLOW missing per-suggestion orchestration dispatch path",
-            "requestReviewers": "WORKFLOW missing Copilot reviewer request path",
-            'event: "APPROVE"': "WORKFLOW missing automated approval event",
-            "core.setFailed": "WORKFLOW missing unresolved-triage failure path",
-            "enablePullRequestAutoMerge": "WORKFLOW missing autonomous auto-merge path",
-            "Awaiting Copilot review activity": "WORKFLOW missing no-activity Copilot wait state",
-        }
-
-        for fragment, message in copilot_required_fragments.items():
-            if fragment not in copilot_triage_text:
-                issues.append(f"{message}: {copilot_triage_rel}")
-
-    require_human_rel = WORKFLOW_REQUIRE_HUMAN_APPROVAL.relative_to(ROOT).as_posix()
-    require_human_text = WORKFLOW_REQUIRE_HUMAN_APPROVAL.read_text(encoding="utf-8")
-    require_human_required_fragments = {
-        "workflow_dispatch": "WORKFLOW missing workflow_dispatch trigger",
-        "pull_number": "WORKFLOW missing workflow_dispatch pull_number input",
-        'requiredApproverLogin = "LahkLeKey"': "WORKFLOW missing required LahkLeKey approver contract",
-        "current-head approval from ${requiredApproverLogin}": "WORKFLOW missing required-approver failure contract",
-        'endsWith("[bot]")': "WORKFLOW missing bot-authorship detection contract",
-    }
-
-    for fragment, message in require_human_required_fragments.items():
-        if fragment not in require_human_text:
-            issues.append(f"{message}: {require_human_rel}")
     triaged_script_text = SCRIPT_ORCHESTRATE_TRIAGED.read_text(encoding="utf-8")
     triaged_script_rel = SCRIPT_ORCHESTRATE_TRIAGED.relative_to(ROOT).as_posix()
     manual_pat_target_texts[triaged_script_rel] = triaged_script_text

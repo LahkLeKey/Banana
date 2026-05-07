@@ -1,9 +1,6 @@
 name: SBOM Generation & Image Signing
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
+  workflow_call: {}
 permissions:
   contents: read
   packages: write

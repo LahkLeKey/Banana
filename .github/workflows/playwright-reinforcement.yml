@@ -1,35 +1,7 @@
 name: Playwright Reinforcement Training Suites
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "data/banana/corpus.json"
-      - "data/not-banana/corpus.json"
-      - "data/ripeness/corpus.json"
-      - "tests/e2e/playwright/specs/*-reinforcement.spec.ts"
-      - "tests/e2e/playwright/helpers/training-feedback.ts"
-      - "scripts/run-playwright-training-suites.sh"
-      - ".github/workflows/playwright-reinforcement.yml"
-  workflow_dispatch:
-    inputs:
-      mode:
-        description: "Training mode: mock (default) or live"
-        required: false
-        default: "mock"
-      suite:
-        description: "Which suite to run: banana, ripeness, or all"
-        required: false
-        default: "all"
-      apply:
-        description: "Apply feedback entries into corpus after suites"
-        required: false
-        default: "true"
-      auto_train:
-        description: "Run model training after apply"
-        required: false
-        default: "true"
-
+  workflow_call: {}
 permissions:
   contents: read
   actions: write

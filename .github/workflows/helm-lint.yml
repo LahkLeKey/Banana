@@ -1,13 +1,7 @@
 name: Helm Lint
 
 on:
-  push:
-    paths:
-      - 'helm/**'
-  pull_request:
-    paths:
-      - 'helm/**'
-
+  workflow_call: {}
 jobs:
   lint:
     runs-on: ubuntu-latest

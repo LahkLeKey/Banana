@@ -1,10 +1,6 @@
 name: Mutation Testing
 on:
-  push:
-    branches: [main]
-    paths: ['src/typescript/api/src/**', 'src/c-sharp/asp.net/**', 'tests/**']
-  workflow_dispatch:
-
+  workflow_call: {}
 jobs:
   stryker-ts:
     name: Stryker (TypeScript API)

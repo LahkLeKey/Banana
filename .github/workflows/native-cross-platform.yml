@@ -1,17 +1,6 @@
 name: Native Cross-Platform Build
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/native/**'
-      - 'CMakeLists.txt'
-      - 'CMakePresets.json'
-  pull_request:
-    paths:
-      - 'src/native/**'
-      - 'CMakeLists.txt'
-      - 'CMakePresets.json'
-
+  workflow_call: {}
 jobs:
   build:
     strategy:

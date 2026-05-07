@@ -4,11 +4,7 @@ name: Screenshot Suite
 # commits the PNGs to docs/screenshots/, then updates the README gallery.
 # Non-main pushes and PRs skip this workflow intentionally.
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
+  workflow_call: {}
 env:
   PLAYWRIGHT_BASE_URL: "http://localhost:5173"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"

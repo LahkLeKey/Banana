@@ -1,14 +1,7 @@
 name: Wiki Lint
 
 on:
-  pull_request:
-    paths:
-      - '.wiki/**'
-      - '.specify/wiki/**'
-      - 'scripts/wiki-consume-into-specify.sh'
-      - 'scripts/wiki-scaffold.sh'
-      - '.specify/scripts/validate-ai-contracts.py'
-
+  workflow_call: {}
 jobs:
   wiki-lint:
     name: Validate wiki allowlist and human-reference mirror

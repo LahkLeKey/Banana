@@ -1,9 +1,6 @@
 name: Synthetic Monitoring
 on:
-  schedule:
-    - cron: '0 2 * * *'
-  workflow_dispatch:
-
+  workflow_call: {}
 jobs:
   synthetic-health:
     runs-on: ubuntu-latest

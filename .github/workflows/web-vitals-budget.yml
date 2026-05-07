@@ -1,7 +1,6 @@
 name: Web Vitals Budget
 on:
-  pull_request:
-    paths: ['src/typescript/react/**']
+  workflow_call: {}
 jobs:
   vitals-check:
     runs-on: ubuntu-latest

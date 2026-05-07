@@ -1,10 +1,7 @@
 name: Postgres Backup (DR)
 
 on:
-  schedule:
-    - cron: '0 2 * * *'   # daily at 02:00 UTC
-  workflow_dispatch:
-
+  workflow_call: {}
 jobs:
   backup:
     runs-on: ubuntu-latest

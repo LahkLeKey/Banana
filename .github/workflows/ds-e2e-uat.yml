@@ -7,30 +7,7 @@ name: DS Pyodide E2E (UAT)
 # Gates: this job must pass before a PR can be merged. Add "DS Pyodide E2E (UAT)"
 # to the branch protection required status checks in repo settings.
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "src/typescript/react/src/**"
-      - "src/typescript/react/public/notebooks/**"
-      - "tests/e2e/playwright/specs/ds-pyodide-execution.spec.ts"
-      - "tests/e2e/playwright/ds-pyodide.config.ts"
-      - ".github/workflows/ds-e2e-uat.yml"
-  push:
-    branches: [main]
-    paths:
-      - "src/typescript/react/src/**"
-      - "src/typescript/react/public/notebooks/**"
-      - "tests/e2e/playwright/specs/ds-pyodide-execution.spec.ts"
-      - "tests/e2e/playwright/ds-pyodide.config.ts"
-      - ".github/workflows/ds-e2e-uat.yml"
-  # Allow manual trigger for ad-hoc prod smoke checks
-  workflow_dispatch:
-    inputs:
-      base_url:
-        description: "Override target URL (default: https://banana.engineer)"
-        required: false
-        default: "https://banana.engineer"
-
+  workflow_call: {}
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 

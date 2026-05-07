@@ -1,0 +1,112 @@
+name: CI
+
+# Single orchestrator for all PR / push CI. Renders all sub-workflows as a
+# nested job tree in one workflow run instead of dozens of separate runs.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --- Stage 1: fast lint / static guards (parallel) ---
+  pre-commit:
+    name: Lint / pre-commit
+    uses: ./.github/workflows/pre-commit.yml
+
+  ai-contract-guard:
+    name: Lint / AI contract guard
+    uses: ./.github/workflows/ai-contract-guard.yml
+
+  spec-parity:
+    name: Lint / spec ↔ tasks parity
+    uses: ./.github/workflows/validate-spec-tasks-parity.yml
+
+  wiki-lint:
+    name: Lint / wiki
+    uses: ./.github/workflows/wiki-lint.yml
+
+  helm-lint:
+    name: Lint / helm charts
+    uses: ./.github/workflows/helm-lint.yml
+
+  migration-discipline:
+    name: Lint / migration discipline
+    uses: ./.github/workflows/migration-discipline.yml
+
+  # --- Stage 2: typecheck / build ---
+  turbo:
+    name: Build / turbo (typecheck + lint)
+    needs: pre-commit
+    uses: ./.github/workflows/turbo-ci.yml
+
+  # --- Stage 3: native test matrix (parallel after lint) ---
+  native-abi:
+    name: Native / ABI check
+    needs: pre-commit
+    uses: ./.github/workflows/native-abi-check.yml
+
+  native-cross-platform:
+    name: Native / cross-platform
+    needs: pre-commit
+    uses: ./.github/workflows/native-cross-platform.yml
+
+  native-sanitizers:
+    name: Native / sanitizers
+    needs: pre-commit
+    uses: ./.github/workflows/native-sanitizers.yml
+
+  # --- Stage 4: integration / runtime (after build) ---
+  compose:
+    name: Runtime / compose
+    needs: [turbo, native-abi]
+    uses: ./.github/workflows/compose-ci.yml
+    secrets: inherit
+
+  screenshot:
+    name: Runtime / screenshot
+    needs: turbo
+    uses: ./.github/workflows/screenshot-ci.yml
+    secrets: inherit
+
+  web-vitals:
+    name: Runtime / web vitals budget
+    needs: turbo
+    uses: ./.github/workflows/web-vitals-budget.yml
+
+  # --- Final summary gate ---
+  ci-success:
+    name: CI Success
+    needs:
+      - pre-commit
+      - ai-contract-guard
+      - spec-parity
+      - wiki-lint
+      - helm-lint
+      - migration-discipline
+      - turbo
+      - native-abi
+      - native-cross-platform
+      - native-sanitizers
+      - compose
+      - screenshot
+      - web-vitals
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all upstream jobs succeeded
+        run: |
+          echo "All required CI jobs reported. Result: ${{ contains(needs.*.result, 'failure') && 'FAILURE' || contains(needs.*.result, 'cancelled') && 'CANCELLED' || 'SUCCESS' }}"
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            exit 1
+          fi

@@ -1,17 +1,7 @@
 name: native-abi-check
 
 on:
-  pull_request:
-    paths:
-      - 'src/native/**'
-      - 'CMakeLists.txt'
-      - 'CMakePresets.json'
-      - '.specify/contracts/abi-baseline.txt'
-  push:
-    branches: [main]
-    paths:
-      - 'src/native/**'
-
+  workflow_call: {}
 permissions:
   contents: read
 
