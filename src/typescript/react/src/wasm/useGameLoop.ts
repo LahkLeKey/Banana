@@ -37,7 +37,7 @@ export function useGameLoop(engine: WasmEngine | null): GameLoopHandle {
       lastFrameMs.current = dt;
       frameCount.current += 1;
 
-      engine!.engine_tick(dt);
+      engine?.engine_tick(dt);
 
       rafRef.current = requestAnimationFrame(tick);
     }

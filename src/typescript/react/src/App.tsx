@@ -7,18 +7,10 @@ import {
   type EnsembleVerdict,
   ErrorText,
   EscalationPanel,
-  type RipenessResult,
   RetryButton,
   RipenessLabel,
+  type RipenessResult,
 } from "@banana/ui";
-import { FpsOverlay } from "./overlays/FpsOverlay";
-import { HudOverlay } from "./overlays/HudOverlay";
-import { MenuOverlay } from "./overlays/MenuOverlay";
-import { OverlayStack } from "./overlays/OverlayStack";
-import { WasmErrorBanner } from "./wasm/WasmErrorBanner";
-import { WasmViewport } from "./wasm/WasmViewport";
-import { useGameLoop } from "./wasm/useGameLoop";
-import { useWasmLoader } from "./wasm/useWasmLoader";
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -59,6 +51,14 @@ import {
   getVerdictHistory,
   type RecentVerdict,
 } from "./lib/resilience-bootstrap";
+import { FpsOverlay } from "./overlays/FpsOverlay";
+import { HudOverlay } from "./overlays/HudOverlay";
+import { MenuOverlay } from "./overlays/MenuOverlay";
+import { OverlayStack } from "./overlays/OverlayStack";
+import { useGameLoop } from "./wasm/useGameLoop";
+import { useWasmLoader } from "./wasm/useWasmLoader";
+import { WasmErrorBanner } from "./wasm/WasmErrorBanner";
+import { WasmViewport } from "./wasm/WasmViewport";
 
 // Slice 030 -- narrow Electron bridge surface for history publish +
 // drain-success signal. No-op outside Electron (web tab) since the
@@ -129,7 +129,7 @@ export function App() {
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const [chatBootstrapState, setChatBootstrapState] = useState<ChatBootstrapState>("initializing");
   const [chatBootstrapRemediation, setChatBootstrapRemediation] = useState<string | null>(null);
-  const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
+  const [_bootstrapAttempt, setBootstrapAttempt] = useState(0);
   const [isSending, setIsSending] = useState(false);
   // Slice 029 -- last-N verdict history (rendered as "Recent verdicts").
   const [recentVerdicts, setRecentVerdicts] = useState<RecentVerdict[]>([]);
@@ -169,7 +169,7 @@ export function App() {
     if (!bridge?.onVerdict) return;
     const off = bridge.onVerdict((payload: unknown) => {
       const envelope = payload as { verdict?: EnsembleVerdict; embedding?: number[] | null } | null;
-      if (envelope && envelope.verdict) {
+      if (envelope?.verdict) {
         setEnsembleVerdict(envelope.verdict);
         setEnsembleEmbedding(envelope.embedding ?? null);
         setEnsembleError(null);
@@ -227,14 +227,7 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [
-    apiBaseResolutionError,
-    apiBaseUrl,
-    bootstrapAttempt,
-    chatApiBaseUrl,
-    chatUnavailable,
-    platformLabel,
-  ]);
+  }, [apiBaseUrl, chatApiBaseUrl, chatUnavailable, platformLabel]);
 
   const sendMessage = useCallback(async () => {
     if (!session || !apiBaseUrl) return;

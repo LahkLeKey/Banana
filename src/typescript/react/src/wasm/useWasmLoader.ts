@@ -57,9 +57,9 @@ export function useWasmLoader(): WasmLoaderResult {
       const exports = result.instance.exports as Record<string, unknown>;
 
       const resolved: WasmEngine = {
-        engine_tick: exports["engine_tick"] as (dt: number) => number,
-        engine_render_frame: exports["engine_render_frame"] as () => void,
-        engine_get_frame_buffer: exports["engine_get_frame_buffer"] as () => Uint8Array,
+        engine_tick: exports.engine_tick as (dt: number) => number,
+        engine_render_frame: exports.engine_render_frame as () => void,
+        engine_get_frame_buffer: exports.engine_get_frame_buffer as () => Uint8Array,
       };
 
       setEngine(resolved);
