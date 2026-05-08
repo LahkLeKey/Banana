@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useRef } from "react";
-
+import { recordDegradedEntry, recordFirstFrame, recordFrameTick } from "./performanceTracker";
 import type { WasmEngine } from "./useWasmLoader";
 import { emitTelemetry } from "./viewportTelemetry";
 
@@ -52,10 +52,12 @@ export function useGameLoop(engine: WasmEngine | null, options?: GameLoopOptions
       try {
         engine?.engine_tick(dt);
         tickFailuresRef.current = 0;
+        recordFrameTick();
       } catch (err) {
         tickFailuresRef.current += 1;
         if (tickFailuresRef.current >= MAX_TICK_FAILURES) {
           running = false;
+          recordDegradedEntry();
           const reason =
             err instanceof Error
               ? err.message
@@ -75,6 +77,7 @@ export function useGameLoop(engine: WasmEngine | null, options?: GameLoopOptions
       // Emit first-frame telemetry once
       if (!firstFrameEmittedRef.current && options) {
         firstFrameEmittedRef.current = true;
+        recordFirstFrame();
         emitTelemetry({
           kind: "first_frame",
           sessionId: options.sessionId,

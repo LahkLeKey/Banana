@@ -10,7 +10,13 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-
+import {
+  initPerformanceTracker,
+  recordBootReady,
+  recordDegradedEntry,
+  recordRecoveryAttempt,
+  recordRecoverySuccess,
+} from "./performanceTracker";
 import { emitTelemetry } from "./viewportTelemetry";
 
 export type ViewportLifecycleState =
@@ -56,6 +62,7 @@ export function useWasmLoader(): WasmLoaderResult {
   const abortRef = useRef<AbortController | null>(null);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
   const bootStartRef = useRef<number>(Date.now());
+  const _perfTrackerRef = useRef(initPerformanceTracker(sessionIdRef.current));
 
   const load = useCallback(async (attempt: number) => {
     const sessionId = sessionIdRef.current;
@@ -65,6 +72,7 @@ export function useWasmLoader(): WasmLoaderResult {
     setError(null);
 
     if (attempt > 0) {
+      recordRecoveryAttempt();
       emitTelemetry({ kind: "recovery_attempt", sessionId, payload: { attempt } });
     }
 
@@ -111,7 +119,10 @@ export function useWasmLoader(): WasmLoaderResult {
         payload: { fetch_ms: fetchMs, instantiate_ms: instantiateMs, attempt },
       });
 
+      recordBootReady();
+
       if (attempt > 0) {
+        recordRecoverySuccess();
         emitTelemetry({
           kind: "recovery_success",
           sessionId,
@@ -126,6 +137,8 @@ export function useWasmLoader(): WasmLoaderResult {
 
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
+
+      recordDegradedEntry();
 
       if (attempt > 0) {
         emitTelemetry({
