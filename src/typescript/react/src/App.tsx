@@ -11,6 +11,14 @@ import {
   RetryButton,
   RipenessLabel,
 } from "@banana/ui";
+import { FpsOverlay } from "./overlays/FpsOverlay";
+import { HudOverlay } from "./overlays/HudOverlay";
+import { MenuOverlay } from "./overlays/MenuOverlay";
+import { OverlayStack } from "./overlays/OverlayStack";
+import { WasmErrorBanner } from "./wasm/WasmErrorBanner";
+import { WasmViewport } from "./wasm/WasmViewport";
+import { useGameLoop } from "./wasm/useGameLoop";
+import { useWasmLoader } from "./wasm/useWasmLoader";
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -98,6 +106,11 @@ function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMe
 type ChatBootstrapState = "initializing" | "ready" | "failed";
 
 export function App() {
+  // Spec 261: WASM viewport — engine state + game loop
+  const { engine, error: wasmError } = useWasmLoader();
+  const gameLoop = useGameLoop(engine);
+  const [wasmErrorMessage, setWasmErrorMessage] = useState<string | null>(null);
+
   const [banana, setBanana] = useState<number | null>(null);
   const [session, setSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -148,10 +161,10 @@ export function App() {
     const bridge =
       typeof window !== "undefined"
         ? (
-          window as unknown as {
-            banana?: { onVerdict?: (h: (payload: unknown) => void) => () => void };
-          }
-        ).banana
+            window as unknown as {
+              banana?: { onVerdict?: (h: (payload: unknown) => void) => () => void };
+            }
+          ).banana
         : undefined;
     if (!bridge?.onVerdict) return;
     const off = bridge.onVerdict((payload: unknown) => {
@@ -445,198 +458,221 @@ export function App() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-6">
-      <h1 className="text-2xl font-semibold">Banana v2</h1>
-      <p className="text-sm text-muted-foreground">API base: {apiBaseUrl || "<unset>"}</p>
-      {apiBaseResolutionError ? (
-        <Alert variant="destructive" data-testid="api-config-error">
-          <AlertTitle>Frontend runtime configuration error</AlertTitle>
-          <AlertDescription>
-            <p>{apiBaseResolutionError}</p>
-            <p className="mt-1 text-xs">
-              Remediation: run <code>Compose: frontend react down</code>, then{" "}
-              <code>Compose: frontend react up + ready</code>.
-            </p>
-          </AlertDescription>
-        </Alert>
-      ) : null}
+    <>
+      {/* Spec 261: WASM canvas as full-screen background (z-index 0) */}
+      <WasmViewport onError={setWasmErrorMessage} />
 
-      <div className="flex items-center gap-2">
-        <BananaBadge count={banana ?? 0}>(today)</BananaBadge>
-        {ensembleVerdict ? (
-          <BananaBadge variant="ensemble" verdict={ensembleVerdict} showAttention={showAttention} />
-        ) : null}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Ensemble verdict</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <form className="space-y-2" onSubmit={onEnsembleSubmit} data-testid="ensemble-form">
-            <Textarea
-              className="min-h-20"
-              disabled={chatUnavailable || isPredictingEnsemble}
-              onChange={(event) => onEnsembleInputChange(event.target.value)}
-              onKeyDown={(event) => {
-                void onEnsembleInputKeyDown(event);
-              }}
-              placeholder="Describe a possible banana"
-              value={ensembleInput}
-            />
-            <Button
-              disabled={
-                chatUnavailable || isPredictingEnsemble || ensembleInput.trim().length === 0
-              }
-              onClick={(event) => {
-                void onEnsembleClick(event);
-              }}
-              type="button"
-            >
-              {isPredictingEnsemble ? "Predicting..." : "Predict ensemble"}
-            </Button>
-          </form>
-          <div data-testid="ensemble-verdict-surface" className="space-y-2 text-sm">
-            {ensembleError ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <ErrorText data-testid="ensemble-error">{ensembleError}</ErrorText>
-                {lastSubmittedSample !== null ? (
-                  <RetryButton
-                    data-testid="ensemble-retry"
-                    onClick={onRetryEnsemble}
-                    disabled={isPredictingEnsemble}
-                  />
-                ) : null}
-              </div>
-            ) : ensembleVerdict ? (
-              <p data-testid="ensemble-verdict-copy" className="font-medium text-foreground">
-                {verdictCopy(ensembleVerdict)}
-                {ensembleVerdict.did_escalate ? (
-                  <EscalationPanel loadSummary={loadEscalationSummary} />
-                ) : null}
-              </p>
-            ) : (
-              <p data-testid="ensemble-verdict-empty" className="text-muted-foreground">
-                {VERDICT_EMPTY_COPY}
-              </p>
-            )}
-          </div>
-          {recentVerdicts.length > 0 ? (
-            <div
-              data-testid="recent-verdicts"
-              className="space-y-1 border-t border-border pt-2 text-xs"
-            >
-              <p className="font-semibold text-foreground">Recent verdicts</p>
-              <ul className="space-y-1 text-muted-foreground">
-                {recentVerdicts.map((entry) => (
-                  <li key={entry.id} data-testid="recent-verdict-item">
-                    <span className="font-medium text-foreground">
-                      {verdictCopy(entry.verdict as EnsembleVerdict)}
-                    </span>
-                    <span className="ml-2 text-muted-foreground">{entry.input}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Ripeness prediction</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <form className="space-y-2" onSubmit={onRipenessSubmit}>
-            <Textarea
-              className="min-h-24"
-              disabled={chatUnavailable || isPredictingRipeness}
-              onChange={(event) => setRipenessInput(event.target.value)}
-              placeholder="Describe the banana sample"
-              value={ripenessInput}
-            />
-            <Button
-              disabled={
-                chatUnavailable || isPredictingRipeness || ripenessInput.trim().length === 0
-              }
-              type="submit"
-              variant="secondary"
-            >
-              {isPredictingRipeness ? "Predicting..." : "Predict ripeness"}
-            </Button>
-          </form>
-
-          {ripenessResult ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Result:</span>
-              <RipenessLabel value={ripenessResult.label} />
-              <span>
-                confidence{" "}
-                {typeof ripenessResult.confidence === "number" &&
-                  Number.isFinite(ripenessResult.confidence)
-                  ? ripenessResult.confidence.toFixed(4)
-                  : "--"}
-              </span>
-            </div>
-          ) : null}
-          {ripenessError ? <ErrorText>{ripenessError}</ErrorText> : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="space-y-2 pt-6">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>platform: {platformLabel}</span>
-            <span>session: {session?.id ?? chatBootstrapState}</span>
-          </div>
-
-          <div className="flex max-h-80 flex-col gap-2 overflow-y-auto rounded-md border border-border bg-muted/30 p-3">
-            {messages.map((message) => (
-              <ChatMessageBubble key={message.id} message={message} />
-            ))}
-            {messages.length === 0 && !isBootstrapping ? (
-              <p className="text-xs text-muted-foreground">No chat messages yet.</p>
+      {/* Spec 261: Overlay stack — HUD / Menu / Debug layers */}
+      <OverlayStack
+        hud={<HudOverlay />}
+        menu={<MenuOverlay />}
+        debug={
+          <>
+            <FpsOverlay loop={gameLoop} />
+            {(wasmError ?? wasmErrorMessage) ? (
+              <WasmErrorBanner message={wasmError ?? wasmErrorMessage} />
             ) : null}
-          </div>
+          </>
+        }
+      />
 
-          <form className="flex flex-col gap-2 sm:flex-row" onSubmit={onSubmit}>
-            <Input
-              className="flex-1"
-              disabled={!chatReady || chatUnavailable || isBootstrapping || isSending}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Ask the banana assistant"
-              value={draft}
-            />
-            <Button
-              disabled={
-                !chatReady ||
-                chatUnavailable ||
-                isBootstrapping ||
-                isSending ||
-                draft.trim().length === 0
-              }
-              type="submit"
-              variant="secondary"
-            >
-              {isSending ? "Sending..." : "Send"}
-            </Button>
-          </form>
+      <main className="mx-auto max-w-3xl space-y-4 p-6">
+        <h1 className="text-2xl font-semibold">Banana v2</h1>
+        <p className="text-sm text-muted-foreground">API base: {apiBaseUrl || "<unset>"}</p>
+        {apiBaseResolutionError ? (
+          <Alert variant="destructive" data-testid="api-config-error">
+            <AlertTitle>Frontend runtime configuration error</AlertTitle>
+            <AlertDescription>
+              <p>{apiBaseResolutionError}</p>
+              <p className="mt-1 text-xs">
+                Remediation: run <code>Compose: frontend react down</code>, then{" "}
+                <code>Compose: frontend react up + ready</code>.
+              </p>
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
-          {chatError ? <ErrorText>{chatError}</ErrorText> : null}
-          {chatBootstrapRemediation ? (
-            <p className="text-xs text-muted-foreground" data-testid="chat-bootstrap-remediation">
-              {chatBootstrapRemediation}
-            </p>
-          ) : null}
-          {!chatUnavailable && !chatReady && !isBootstrapping ? (
-            <RetryButton
-              data-testid="chat-bootstrap-retry"
-              onClick={onRetryBootstrap}
-              disabled={isBootstrapping}
+        <div className="flex items-center gap-2">
+          <BananaBadge count={banana ?? 0}>(today)</BananaBadge>
+          {ensembleVerdict ? (
+            <BananaBadge
+              variant="ensemble"
+              verdict={ensembleVerdict}
+              showAttention={showAttention}
             />
           ) : null}
-        </CardContent>
-      </Card>
-    </main>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Ensemble verdict</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <form className="space-y-2" onSubmit={onEnsembleSubmit} data-testid="ensemble-form">
+              <Textarea
+                className="min-h-20"
+                disabled={chatUnavailable || isPredictingEnsemble}
+                onChange={(event) => onEnsembleInputChange(event.target.value)}
+                onKeyDown={(event) => {
+                  void onEnsembleInputKeyDown(event);
+                }}
+                placeholder="Describe a possible banana"
+                value={ensembleInput}
+              />
+              <Button
+                disabled={
+                  chatUnavailable || isPredictingEnsemble || ensembleInput.trim().length === 0
+                }
+                onClick={(event) => {
+                  void onEnsembleClick(event);
+                }}
+                type="button"
+              >
+                {isPredictingEnsemble ? "Predicting..." : "Predict ensemble"}
+              </Button>
+            </form>
+            <div data-testid="ensemble-verdict-surface" className="space-y-2 text-sm">
+              {ensembleError ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <ErrorText data-testid="ensemble-error">{ensembleError}</ErrorText>
+                  {lastSubmittedSample !== null ? (
+                    <RetryButton
+                      data-testid="ensemble-retry"
+                      onClick={onRetryEnsemble}
+                      disabled={isPredictingEnsemble}
+                    />
+                  ) : null}
+                </div>
+              ) : ensembleVerdict ? (
+                <p data-testid="ensemble-verdict-copy" className="font-medium text-foreground">
+                  {verdictCopy(ensembleVerdict)}
+                  {ensembleVerdict.did_escalate ? (
+                    <EscalationPanel loadSummary={loadEscalationSummary} />
+                  ) : null}
+                </p>
+              ) : (
+                <p data-testid="ensemble-verdict-empty" className="text-muted-foreground">
+                  {VERDICT_EMPTY_COPY}
+                </p>
+              )}
+            </div>
+            {recentVerdicts.length > 0 ? (
+              <div
+                data-testid="recent-verdicts"
+                className="space-y-1 border-t border-border pt-2 text-xs"
+              >
+                <p className="font-semibold text-foreground">Recent verdicts</p>
+                <ul className="space-y-1 text-muted-foreground">
+                  {recentVerdicts.map((entry) => (
+                    <li key={entry.id} data-testid="recent-verdict-item">
+                      <span className="font-medium text-foreground">
+                        {verdictCopy(entry.verdict as EnsembleVerdict)}
+                      </span>
+                      <span className="ml-2 text-muted-foreground">{entry.input}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Ripeness prediction</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <form className="space-y-2" onSubmit={onRipenessSubmit}>
+              <Textarea
+                className="min-h-24"
+                disabled={chatUnavailable || isPredictingRipeness}
+                onChange={(event) => setRipenessInput(event.target.value)}
+                placeholder="Describe the banana sample"
+                value={ripenessInput}
+              />
+              <Button
+                disabled={
+                  chatUnavailable || isPredictingRipeness || ripenessInput.trim().length === 0
+                }
+                type="submit"
+                variant="secondary"
+              >
+                {isPredictingRipeness ? "Predicting..." : "Predict ripeness"}
+              </Button>
+            </form>
+
+            {ripenessResult ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Result:</span>
+                <RipenessLabel value={ripenessResult.label} />
+                <span>
+                  confidence{" "}
+                  {typeof ripenessResult.confidence === "number" &&
+                  Number.isFinite(ripenessResult.confidence)
+                    ? ripenessResult.confidence.toFixed(4)
+                    : "--"}
+                </span>
+              </div>
+            ) : null}
+            {ripenessError ? <ErrorText>{ripenessError}</ErrorText> : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="space-y-2 pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>platform: {platformLabel}</span>
+              <span>session: {session?.id ?? chatBootstrapState}</span>
+            </div>
+
+            <div className="flex max-h-80 flex-col gap-2 overflow-y-auto rounded-md border border-border bg-muted/30 p-3">
+              {messages.map((message) => (
+                <ChatMessageBubble key={message.id} message={message} />
+              ))}
+              {messages.length === 0 && !isBootstrapping ? (
+                <p className="text-xs text-muted-foreground">No chat messages yet.</p>
+              ) : null}
+            </div>
+
+            <form className="flex flex-col gap-2 sm:flex-row" onSubmit={onSubmit}>
+              <Input
+                className="flex-1"
+                disabled={!chatReady || chatUnavailable || isBootstrapping || isSending}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder="Ask the banana assistant"
+                value={draft}
+              />
+              <Button
+                disabled={
+                  !chatReady ||
+                  chatUnavailable ||
+                  isBootstrapping ||
+                  isSending ||
+                  draft.trim().length === 0
+                }
+                type="submit"
+                variant="secondary"
+              >
+                {isSending ? "Sending..." : "Send"}
+              </Button>
+            </form>
+
+            {chatError ? <ErrorText>{chatError}</ErrorText> : null}
+            {chatBootstrapRemediation ? (
+              <p className="text-xs text-muted-foreground" data-testid="chat-bootstrap-remediation">
+                {chatBootstrapRemediation}
+              </p>
+            ) : null}
+            {!chatUnavailable && !chatReady && !isBootstrapping ? (
+              <RetryButton
+                data-testid="chat-bootstrap-retry"
+                onClick={onRetryBootstrap}
+                disabled={isBootstrapping}
+              />
+            ) : null}
+          </CardContent>
+        </Card>
+      </main>
+    </>
   );
 }
