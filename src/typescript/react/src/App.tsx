@@ -51,13 +51,10 @@ import {
   getVerdictHistory,
   type RecentVerdict,
 } from "./lib/resilience-bootstrap";
-import { FpsOverlay } from "./overlays/FpsOverlay";
 import { HudOverlay } from "./overlays/HudOverlay";
 import { MenuOverlay } from "./overlays/MenuOverlay";
 import { OverlayStack } from "./overlays/OverlayStack";
-import { useGameLoop } from "./wasm/useGameLoop";
-import { useWasmLoader } from "./wasm/useWasmLoader";
-import { WasmErrorBanner } from "./wasm/WasmErrorBanner";
+import type { ViewportLifecycleState } from "./wasm/useWasmLoader";
 import { WasmViewport } from "./wasm/WasmViewport";
 
 // Slice 030 -- narrow Electron bridge surface for history publish +
@@ -106,10 +103,10 @@ function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMe
 type ChatBootstrapState = "initializing" | "ready" | "failed";
 
 export function App() {
-  // Spec 261: WASM viewport — engine state + game loop
-  const { engine, error: wasmError } = useWasmLoader();
-  const gameLoop = useGameLoop(engine);
-  const [wasmErrorMessage, setWasmErrorMessage] = useState<string | null>(null);
+  // Spec 261: WASM viewport — lifecycle state + overlay mode
+  const [viewportLifecycle, setViewportLifecycle] = useState<ViewportLifecycleState>("booting");
+  const [overlayMode, setOverlayMode] = useState(false);
+  const [apiFallbackMode, setApiFallbackMode] = useState(false);
 
   const [banana, setBanana] = useState<number | null>(null);
   const [session, setSession] = useState<ChatSession | null>(null);
@@ -452,21 +449,26 @@ export function App() {
 
   return (
     <>
-      {/* Spec 261: WASM canvas as full-screen background (z-index 0) */}
-      <WasmViewport onError={setWasmErrorMessage} />
+      {/* Spec 261: WASM canvas as full-screen background (z-index 0).
+          Hidden when user has chosen API fallback mode. */}
+      {!apiFallbackMode && (
+        <WasmViewport
+          onLifecycle={setViewportLifecycle}
+          onError={() => {
+            /* lifecycle tracked via onLifecycle */
+          }}
+          overlayMode={overlayMode}
+          onApiFallback={() => setApiFallbackMode(true)}
+          showDebug={viewportLifecycle === "running"}
+        />
+      )}
 
-      {/* Spec 261: Overlay stack — HUD / Menu / Debug layers */}
+      {/* Spec 261: Overlay stack — HUD / Menu layers.
+          onOverlayModeChange feeds input routing in WasmViewport. */}
       <OverlayStack
         hud={<HudOverlay />}
         menu={<MenuOverlay />}
-        debug={
-          <>
-            <FpsOverlay loop={gameLoop} />
-            {(wasmError ?? wasmErrorMessage) ? (
-              <WasmErrorBanner message={wasmError ?? wasmErrorMessage} />
-            ) : null}
-          </>
-        }
+        onOverlayModeChange={setOverlayMode}
       />
 
       <main className="mx-auto max-w-3xl space-y-4 p-6">

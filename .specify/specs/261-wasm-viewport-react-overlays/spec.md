@@ -109,6 +109,75 @@ As an operator, I get clear degraded-mode behavior and diagnostics when viewport
 - **SC-004**: 100% of simulated WASM initialization failures enter degraded mode with actionable recovery UI and telemetry evidence.
 - **SC-005**: CI/UAT evidence includes one passing healthy-path run and one passing degraded-recovery-path run per release gate.
 
+## Viewport Lifecycle State Machine (T001)
+
+The `ViewportRuntimeState` canonical state machine governs all runtime transitions:
+
+```
+booting → ready → running ⇄ degraded → recovering → running
+                  running → stopped
+booting → degraded
+```
+
+| State | Entry Condition | Exit Condition | Allowed Actions |
+|---|---|---|---|
+| `booting` | Component mounts, WASM fetch begins | Fetch+instantiate success → `ready`; timeout/error → `degraded` | Cancel, observe progress |
+| `ready` | WASM instantiated, first engine_tick pending | First frame emitted → `running`; frame timeout → `degraded` | Start loop |
+| `running` | `requestAnimationFrame` loop active, frames emitting | Overlay lock → stays `running`; error → `degraded`; unmount → `stopped` | Tick, render, emit telemetry |
+| `degraded` | WASM fetch failure, init timeout, context loss, tick exception | Retry action → `recovering`; API fallback selected → `stopped` | Retry, select fallback, read error |
+| `recovering` | Retry initiated (re-fetch or re-instantiate) | Success → `ready`; failure → `degraded` | Cancel |
+| `stopped` | Unmount or explicit shutdown or API fallback selected | Terminal — component unmounts | None |
+
+**Timeout thresholds**:
+- WASM fetch: 10 000 ms
+- First frame: 5 000 ms after `ready`
+- Tick exception retry budget: 3 consecutive failures before → `degraded`
+
+**State transitions are synchronous** — no implicit delays. All side effects (telemetry, UI banner, loop stop) fire in the transition handler.
+
+## Overlay Layer Priority and Focus-Lock Contract (T002)
+
+`OverlayLayer` defines four named layers with deterministic stacking and focus-lock rules:
+
+| Layer | z-index | Pointer Events | Focus Lock | Input Routing |
+|---|---|---|---|---|
+| `hud` | 10 | none (pass-through) | none | WASM captures all events |
+| `menu` | 20 | auto on open | soft lock — viewport suspended | UI receives keyboard/pointer |
+| `modal` | 30 | auto always | hard lock — WASM suspended | UI only; WASM input discarded |
+| `debug` | 40 | none (pass-through) | none | WASM captures all events |
+
+**Rules**:
+1. At most one focus-lock layer may be active at a time. `modal` wins over `menu`.
+2. When any focus-lock layer opens, `useInputRouter` transitions to `overlay` mode: canvas `blur()` is called and `pointerEvents: none` is set on the canvas.
+3. When all focus-lock layers close, `useInputRouter` transitions back to `viewport` mode: canvas `focus()` is called.
+4. `hud` and `debug` layers never affect input routing.
+5. Transition latency from layer open/close signal to routing mode change MUST be <= 100 ms (one render cycle).
+
+## Runtime Telemetry Event Schema (T003)
+
+All telemetry events are emitted to `/api/telemetry/frame` via fire-and-forget POST with `Content-Type: application/json`. Events are batched at the 60-frame boundary or on state change.
+
+```typescript
+type TelemetryEventKind =
+  | "viewport_start"       // booting → ready: includes fetch_ms + instantiate_ms
+  | "first_frame"          // ready → running: includes first_frame_ms from boot
+  | "frame_interval"       // steady-state every 60 frames: includes avg_frame_ms
+  | "overlay_open"         // overlay layer opened: includes layer name
+  | "overlay_close"        // overlay layer closed: includes layer name
+  | "degraded_entry"       // entered degraded: includes reason + tick_count
+  | "recovery_attempt"     // recovering: includes attempt number
+  | "recovery_success"     // recovered: includes total downtime_ms
+  | "recovery_failure"     // degraded again: includes attempt number
+  | "stopped"              // runtime stopped: includes total_frames + uptime_ms
+
+interface RuntimeTelemetryEvent {
+  kind: TelemetryEventKind;
+  ts: number;           // Date.now() at emission
+  session_id: string;   // stable UUID per component mount
+  payload: Record<string, number | string | boolean>;
+}
+```
+
 ## Assumptions
 
 - Existing spec 001 game-engine core remains the underlying engine contract.
