@@ -45,8 +45,8 @@
 
 ## Phase 8: Performance Instrumentation
 
-- [x] T021 Instrument viewport lifecycle hooks with performance markers for SC-001 (first interactive frame <= 3.0s), SC-002 (overlay transitions), SC-003 (input routing latency <= 100ms). Record marks to `window.performance` and export via telemetry. [SC-001, SC-002, SC-003]
-- [x] T022 Add performance budget tests to React test suite validating SC-001 through SC-004 thresholds using `@web/test-runner-performance` or equivalent. [SC-001, SC-002, SC-003, SC-004]
+- [x] T021 Instrument viewport lifecycle hooks with performance markers for SC-001 (first interactive frame <= 3.0s), SC-002 (overlay transitions), SC-003 (input routing latency <= 100ms). Record marks to `window.performance` and export via telemetry. [FR-001, FR-002, SC-001, SC-002, SC-003]
+- [x] T022 Add performance budget tests to React test suite validating SC-001 through SC-004 thresholds using `@web/test-runner-performance` or equivalent. [FR-012, SC-001, SC-002, SC-003, SC-004]
 
 ## CI Evidence Capture
 
