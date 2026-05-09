@@ -1,0 +1,82 @@
+{
+  "generated_at_utc": "2026-05-09T20:20:42.036Z",
+  "source_pair": {
+    "aspnet": "src/c-sharp/asp.net",
+    "fastify": "src/typescript/api/src"
+  },
+  "routes": [
+    {
+      "route_key": "GET /health",
+      "method": "GET",
+      "path": "/health",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Program.cs",
+        "declaration": "app.MapGet(\"/health\")"
+      },
+      "fastify": {
+        "declared_in": "src/typescript/api/src/routes/health.ts",
+        "declaration": "app.get(\"/health\")"
+      },
+      "expected_statuses": [
+        200
+      ],
+      "required_response_fields": [
+        "status"
+      ]
+    },
+    {
+      "route_key": "GET /operator/audit",
+      "method": "GET",
+      "path": "/operator/audit",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/AuditController.cs",
+        "declaration": "[HttpGet(\"audit\")]"
+      },
+      "fastify": {
+        "declared_in": "src/typescript/api/src/routes/audit.ts",
+        "declaration": "app.get(\"/operator/audit\")"
+      },
+      "expected_statuses": [
+        200
+      ],
+      "required_response_fields": []
+    },
+    {
+      "route_key": "POST /chat/sessions",
+      "method": "POST",
+      "path": "/chat/sessions",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/ChatController.cs",
+        "declaration": "[HttpPost(\"/chat/sessions\")]"
+      },
+      "fastify": {
+        "declared_in": "src/typescript/api/src/domains/chat/routes.ts",
+        "declaration": "app.post(\"/chat/sessions\")"
+      },
+      "expected_statuses": [
+        200
+      ],
+      "required_response_fields": []
+    },
+    {
+      "route_key": "POST /ripeness/predict",
+      "method": "POST",
+      "path": "/ripeness/predict",
+      "aspnet": {
+        "declared_in": "src/c-sharp/asp.net/Controllers/RipenessController.cs",
+        "declaration": "[HttpPost(\"predict\")]"
+      },
+      "fastify": {
+        "declared_in": "src/typescript/api/src/routes/ripeness.ts",
+        "declaration": "app.post(\"/ripeness/predict\")"
+      },
+      "expected_statuses": [
+        200
+      ],
+      "required_response_fields": [
+        "label",
+        "confidence"
+      ]
+    }
+  ]
+}

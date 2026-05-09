@@ -30,6 +30,10 @@ Establish `Banana-Monorepo` at `.github/workflows/banana.yml` as the single mana
 - Interface Segregation: keep lane-local env/inputs minimal.
 - Dependency Inversion: defer complex logic to scripts under `scripts/`.
 
+4. Architecture-governance lane
+- Add/maintain a bounded lane pattern that validates DDD/SOLID architecture contracts for domain tooling slices (native generators, interop adapters, or equivalent).
+- Ensure architecture-governance checks remain composable and consumed by the terminal gate without introducing top-level workflow sprawl.
+
 ## Validation
 
 - YAML parse succeeds for `banana.yml`.

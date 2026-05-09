@@ -23,3 +23,8 @@
 
 - [x] T011 [US1] Verify Actions UI reflects `Banana-Monorepo` naming after workflow indexing refresh. (FR-002)
 - [x] T012 [US1] Confirm only the canonical harness remains for repository-managed CI/CD lanes. (FR-001, FR-004)
+
+## Phase 5 - Architecture Governance Extension
+
+- [x] T013 [US2] Define architecture-governance lane contract for DDD/SOLID validation of domain tooling slices. (FR-006)
+- [x] T014 [US2] Integrate architecture-governance lane status into terminal pass/fail summary semantics. (FR-004, FR-006)

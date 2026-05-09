@@ -31,6 +31,9 @@
 - [ ] CHK012 Local scope validator command is documented and runnable
 - [ ] CHK013 Local traceability validator command is documented and runnable
 - [ ] CHK014 AI contract and wiki parity checks are documented when contract surfaces change
+- [ ] CHK015 Extension preflight command is documented and evidence is captured
+- [ ] CHK016 Confidence gate is documented with 80% threshold and pause behavior
+- [ ] CHK017 Heartbeat log entries exist for all major orchestration steps
 
 ## Notes
 

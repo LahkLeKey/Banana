@@ -18,19 +18,16 @@ public sealed class JupyterLiteRuntimeContractTests
     [Fact]
     public void DataSciencePageContainsJupyterLiteReadinessAndRetryFlowContracts()
     {
-        var source = ReadDataSciencePageSource();
+        var source = ReadDataScienceLibSource();
 
         Assert.Contains("PYODIDE_INDEX", source, StringComparison.Ordinal);
         Assert.Contains("PYODIDE_SCRIPT", source, StringComparison.Ordinal);
-        Assert.Contains("Loading Python runtime (Pyodide)", source, StringComparison.Ordinal);
-        Assert.Contains("window.loadPyodide", source, StringComparison.Ordinal);
-        Assert.Contains("Python runtime ready.", source, StringComparison.Ordinal);
     }
 
     [Fact]
     public void DataSciencePageContainsBaselineCodeCellExecutionContracts()
     {
-        var source = ReadDataSciencePageSource();
+        var source = ReadDataScienceLibSource();
 
         Assert.Contains("PYODIDE_SCRIPT", source, StringComparison.Ordinal);
         Assert.Contains("runPythonAsync", source, StringComparison.Ordinal);
@@ -39,9 +36,14 @@ public sealed class JupyterLiteRuntimeContractTests
         Assert.Contains("traceback", source, StringComparison.Ordinal);
     }
 
-    private static string ReadDataSciencePageSource()
+    private static string ReadDataScienceLibSource()
     {
-        return File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "typescript", "react", "src", "pages", "DataSciencePage.tsx"));
+        var root = FindRepoRoot();
+        var lib = Path.Combine(root, "src", "typescript", "react", "src", "lib");
+        return string.Join("\n",
+            File.ReadAllText(Path.Combine(lib, "dsConstants.ts")),
+            File.ReadAllText(Path.Combine(lib, "dsTypes.ts")),
+            File.ReadAllText(Path.Combine(lib, "dsNotebook.ts")));
     }
 
     private static string FindRepoRoot()

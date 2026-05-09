@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import {readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, readFileSync, writeFileSync} from 'node:fs';
 
 import {applyParityExceptionsToFindings} from './apply-parity-exceptions.mjs';
 import {buildDriftReport} from './build-drift-report.mjs';
@@ -44,6 +44,9 @@ function parseArgs(argv) {
 }
 
 function parseJson(filePath) {
+  if (!existsSync(filePath)) {
+    return {exceptions: []};
+  }
   return JSON.parse(readFileSync(filePath, 'utf8'));
 }
 

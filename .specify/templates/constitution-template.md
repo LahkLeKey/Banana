@@ -28,6 +28,16 @@
 [PRINCIPLE_5_DESCRIPTION]
 <!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
 
+### [PRINCIPLE_6_NAME]
+<!-- Example: VI. Confidence-Gated Orchestration -->
+[PRINCIPLE_6_DESCRIPTION]
+<!-- Example: Continue autonomously only when confidence >= 80%; below threshold requires human checkpoint before proceeding -->
+
+### [PRINCIPLE_7_NAME]
+<!-- Example: VII. Extension-Health Preflight -->
+[PRINCIPLE_7_DESCRIPTION]
+<!-- Example: Run extension preflight before orchestration and fail fast on corrupted required extensions -->
+
 ## [SECTION_2_NAME]
 <!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
 

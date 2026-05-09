@@ -24,7 +24,7 @@ export function loadFastifyRouteSurface(repoRoot) {
   const files = walkTsFiles(srcRoot);
   const routes = [];
 
-  const routeRegex = /app\.(get|post|put|delete|patch)\('([^']+)'/g;
+  const routeRegex = /app\.(get|post|put|delete|patch)\((['"])([^'"]+)\2/g;
 
   for (const filePath of files) {
     const relativePath = path.relative(repoRoot, filePath).replace(/\\/g, '/');
@@ -33,14 +33,15 @@ export function loadFastifyRouteSurface(repoRoot) {
     let match = routeRegex.exec(source);
     while (match !== null) {
       const method = match[1].toUpperCase();
-      const route = match[2];
+      const quote = match[2];
+      const route = match[3];
       const normalized = normalizeRouteKey(method, route);
 
       routes.push({
         ...normalized,
         source: 'fastify',
         declared_in: relativePath,
-        declaration: `app.${match[1]}('${route}')`,
+        declaration: `app.${match[1]}(${quote}${route}${quote})`,
       });
 
       match = routeRegex.exec(source);

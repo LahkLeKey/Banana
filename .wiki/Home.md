@@ -1,83 +1,35 @@
 # Banana Wiki
 
-> This wiki is the fastest way to get productive in Banana without breaking runtime contracts.
+> Tutorial storage and runbook reference only.
 
-## About This Space
+This wiki is intentionally scoped for humans learning and operating Banana.
+It is not a runtime data sink and not an AI artifact dump.
 
-Banana is a multi-language monorepo with a native C core, ASP.NET API, Fastify API, and React/Electron/Mobile frontends.
-The canonical execution path is `controller → service → pipeline → native interop`.
+## Tutorials
 
----
+Start here for onboarding and day-to-day contributor guidance.
 
-## Sections
-
-### [Getting Started](getting-started/README.md)
-Everything you need on day one: setup checklist, request walkthrough, commands, and repo map.
+- [Getting Started](getting-started/README.md)
 - [First Day Checklist](getting-started/first-day-checklist.md)
 - [How A Request Works](getting-started/how-a-request-works.md)
 - [Build, Run, and Test Commands](getting-started/build-run-test-commands.md)
 - [Repository Layout](getting-started/repository-layout.md)
 
-### [Architecture](architecture/README.md)
-System diagrams, native wrapper design, database pipeline, and domain model.
-- [Overview](architecture/overview.md)
-- [Native Wrapper ABI](architecture/native-wrapper-abi.md)
-- [Database Pipeline Stage](architecture/database-pipeline-stage.md)
-- [Domain Model](architecture/domain-model.md)
+## Runbooks
 
-### [Operations](operations/README.md)
-CI runbooks, compose profiles, WSL2 runtime channels, and triage guides.
+Use these pages for repeatable operations, deployment, and incident handling.
+
+- [Operations Runbooks](operations/README.md)
+- [Deployment Runbook](operations/deployment.md)
 - [CI and Compose Notes](operations/ci-compose-notes.md)
 - [WSL2 Runtime Channels](operations/wsl2-runtime-channels.md)
 - [CI Runtime Compatibility](operations/ci-runtime-compatibility.md)
 - [Compose CI Stabilization](operations/ci-compose-stabilization.md)
+- [Spec-Drain Operations Runbook](operations/spec-drain-operations.md)
+- [Disaster Recovery Runbook](Disaster-Recovery-Runbook.md)
 
-### [Security](security/README.md)
-Threat model, STRIDE analysis, secret inventory, and security headers.
-- [Threat Model](security/threat-model.md)
-- [CSP and Security Headers](security/csp-and-headers.md)
+## Scope Guardrails
 
-### [Data](data/README.md)
-Migration discipline, coverage exceptions, and data contracts.
-- [Migration Discipline](data/migration-discipline.md)
-- [Coverage Exceptions](data/coverage-exceptions.md)
-
-### [Governance](governance/README.md)
-API parity rules and policy documents.
-- [API Parity Governance](governance/api-parity-governance.md)
-
----
-
-## Quick Reference
-
-| I want to... | Go to... |
-|-------------|----------|
-| Get set up on day one | [First Day Checklist](getting-started/first-day-checklist.md) |
-| Understand request execution | [How A Request Works](getting-started/how-a-request-works.md) |
-| Find a command | [Build, Run, and Test Commands](getting-started/build-run-test-commands.md) |
-| Debug a CI failure | [CI and Compose Notes](operations/ci-compose-notes.md) |
-| Understand the native boundary | [Native Wrapper ABI](architecture/native-wrapper-abi.md) |
-| Check security posture | [Threat Model](security/threat-model.md) |
-| Launch mobile/desktop channel | [WSL2 Runtime Channels](operations/wsl2-runtime-channels.md) |
-
----
-
-## Runtime Contracts You Should Not Drift
-
-- `BANANA_NATIVE_PATH` — native library path for API and integration tests
-- `BANANA_PG_CONNECTION` — PostgreSQL-backed native/integration flows
-- `VITE_BANANA_API_BASE_URL` — React frontend API base URL
-- `BANANA_JWT_SECRET` — JWT signing secret (>=32 bytes random)
-
----
-
-## Prompt-Friendly Project Map
-
-Use these boundaries when asking an agent to make changes:
-
-- native core domain: `src/native/core/domain`
-- native DAL: `src/native/core/dal`
-- wrapper ABI + adapters: `src/native/wrapper`
-- ASP.NET API pipeline: `src/c-sharp/asp.net`
-- frontend/electron/mobile: `src/typescript`
-- runtime and delivery automation: `docker`, `scripts`, `.github/workflows`
+- Keep content instructional, procedural, and reviewer-friendly.
+- Do not store runtime dumps, generated AI transcripts, or ephemeral telemetry here.
+- Route machine-generated artifacts to repository artifact paths, not wiki pages.

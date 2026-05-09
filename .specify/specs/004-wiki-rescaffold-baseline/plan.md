@@ -19,6 +19,11 @@ Reset active wiki content to a minimal, in-scope baseline and re-establish deter
 **Constraints**: Keep canonical/source model intact; avoid archived baseline rewrites
 **Scale/Scope**: `.specify/wiki`, `.wiki`, scripts/docs that define wiki sync policy
 
+## Architecture Direction (DDD + SOLID)
+
+- Keep wiki policy rules (allowlist/governance) separate from synchronization orchestration and filesystem publication adapters.
+- Maintain open/closed sync tooling so new wiki sections can be introduced through policy extension instead of script rewrites.
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
@@ -26,6 +31,7 @@ Reset active wiki content to a minimal, in-scope baseline and re-establish deter
 - Preserve canonical AI-consumable source in `.specify/wiki/`.
 - Keep `.wiki/` as publication-only surface.
 - Enforce allowlist-managed page growth.
+- Preserve modular boundaries in wiki tooling to avoid monolithic sync scripts.
 
 ## Project Structure
 

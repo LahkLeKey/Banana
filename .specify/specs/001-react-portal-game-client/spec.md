@@ -14,7 +14,9 @@ The repository accumulated broad, research-heavy specs and workflows that are no
 - Preserve current runtime behavior and deployability of the existing React implementation.
 - Start over the landing entry surface as a WASM-rendered scene integrated into the React shell.
 - Generate core visual assets procedurally through a C-based compiler pipeline that outputs web-consumable asset bundles.
+- Architect procedural asset generation with explicit domain/application/infrastructure boundaries so algorithm and serialization concerns remain independently evolvable.
 - Adopt a 2.5D rendering style for the game-client presentation to improve cross-platform and cross-viewport consistency.
+- Keep the primary engine route viewport-only so users see the 2.5D WASM scene and C-generated assets without dashboard chrome or auxiliary control panels.
 - Reflow portal UX toward game-client framing (viewport-first shell, tactical overlays, mission-control language).
 - Keep only essential CI/CD workflows required to validate and ship the React portal.
 - Remove or archive out-of-scope spec/workflow surfaces from active roots.
@@ -39,6 +41,8 @@ As a user, I open the React portal and land in a WASM-rendered 2.5D entry scene 
 As a user, I can move from the landing surface into the React shell and retain a consistent 2.5D game-client visual language across key routes and viewport sizes.
 
 **Independent Test**: Validate representative routes at desktop/tablet/mobile widths and confirm layout, overlays, and navigation preserve game-client framing without breaking interaction flows.
+
+For the primary engine route, the visible surface should collapse to the viewport itself: the WASM scene and generated assets may be shown, but dashboard cards, route control panels, and analytics-style chrome must not remain on screen.
 
 ### User Story 3 - Safe Delivery Contracts (Priority: P2)
 
@@ -75,6 +79,8 @@ As a maintainer without dedicated art production capacity, I can compile game-re
 - **FR-008**: System MUST provide a C-based generative asset compiler that produces web-consumable assets for Banana Engineer landing/shell scenes.
 - **FR-009**: System MUST support deterministic asset generation based on explicit input parameters (including seed/profile) so repeated runs produce equivalent outputs.
 - **FR-010**: System MUST include generated asset bundles in the React/WASM build contract without requiring manual art asset authoring for baseline scenes.
+- **FR-011**: System MUST structure procedural asset generation using DDD/SOLID-aligned modules (domain rules, application orchestration, infrastructure I/O) to prevent monolithic compiler drift.
+- **FR-012**: System MUST present the primary game-engine route as a viewport-only surface where the visible content is limited to the 2.5D WASM scene and generated C asset visuals, excluding dashboard-style panels and route chrome.
 
 ### Key Entities
 
@@ -83,6 +89,7 @@ As a maintainer without dedicated art production capacity, I can compile game-re
 - **PortalBuildContract**: Required build inputs, assets, and commands for `src/typescript/react` deployment.
 - **ProceduralAssetCompiler**: Native C tool that compiles deterministic visual assets from rule-based generation inputs.
 - **GeneratedAssetBundle**: Versioned web-consumable output package (for example sprites/textures/metadata) produced by the compiler and consumed by the portal build.
+- **AssetGenerationDomainModel**: Core tile/rule/value objects and algorithm contracts independent from filesystem and JSON serialization details.
 - **ActiveSpecRoot**: The set of currently active specs in `.specify/specs`.
 
 ## Success Criteria
@@ -94,6 +101,8 @@ As a maintainer without dedicated art production capacity, I can compile game-re
 - **SC-003**: React portal build succeeds in CI with explicit API base URL and WASM asset contracts.
 - **SC-004**: Active scope remains constrained to pivot-approved spec/workflow surfaces.
 - **SC-005**: Deterministic C asset compilation produces a valid generated asset bundle that is consumed by landing/shell flows in local and CI validation.
+- **SC-006**: Procedural asset compiler code is decomposed into stable DDD/SOLID layers with no single file owning domain rules, orchestration, and persistence simultaneously.
+- **SC-007**: The primary engine route renders as viewport-only in local verification, with generated C assets visibly composited into the scene and no dashboard chrome remaining.
 
 ## Assumptions
 

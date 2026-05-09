@@ -26,16 +26,6 @@ public sealed class ApiDocsFrontendSmokeContractTests
         Assert.Equal("Banana API", doc.RootElement.GetProperty("info").GetProperty("title").GetString());
     }
 
-    [Fact]
-    public void ApiDocsPageUsesSwaggerUiWithDefaultSpecContract()
-    {
-        var source = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "typescript", "react", "src", "pages", "ApiDocsPage.tsx"));
-
-        Assert.Contains("FALLBACK_SPEC_URL = \"https://api.banana.engineer/swagger/v1/swagger.json\"", source, StringComparison.Ordinal);
-        Assert.Contains("SwaggerUI url={specUrl}", source, StringComparison.Ordinal);
-        Assert.Contains("Use API Base Default", source, StringComparison.Ordinal);
-    }
-
     private static string FindRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

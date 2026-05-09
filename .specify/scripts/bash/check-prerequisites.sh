@@ -26,6 +26,8 @@ JSON_MODE=false
 REQUIRE_TASKS=false
 INCLUDE_TASKS=false
 PATHS_ONLY=false
+REQUIRE_ORCHESTRATION_PREFLIGHT=false
+CONFIDENCE=""
 
 for arg in "$@"; do
     case "$arg" in
@@ -41,6 +43,12 @@ for arg in "$@"; do
         --paths-only)
             PATHS_ONLY=true
             ;;
+        --require-orchestration-preflight)
+            REQUIRE_ORCHESTRATION_PREFLIGHT=true
+            ;;
+        --confidence=*)
+            CONFIDENCE="${arg#*=}"
+            ;;
         --help|-h)
             cat << 'EOF'
 Usage: check-prerequisites.sh [OPTIONS]
@@ -52,6 +60,8 @@ OPTIONS:
   --require-tasks     Require tasks.md to exist (for implementation phase)
   --include-tasks     Include tasks.md in AVAILABLE_DOCS list
   --paths-only        Only output path variables (no prerequisite validation)
+    --require-orchestration-preflight  Run preflight gate before prerequisite validation
+    --confidence=<n>    Confidence percentage used with --require-orchestration-preflight
   --help, -h          Show this help message
 
 EXAMPLES:
@@ -63,6 +73,9 @@ EXAMPLES:
 
   # Get feature paths only (no validation)
   ./check-prerequisites.sh --paths-only
+
+    # Enforce orchestration preflight before prerequisite checks
+    ./check-prerequisites.sh --require-orchestration-preflight --confidence=82
 
 EOF
             exit 0
@@ -83,6 +96,14 @@ _paths_output=$(get_feature_paths) || { echo "ERROR: Failed to resolve feature p
 eval "$_paths_output"
 unset _paths_output
 check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
+
+if $REQUIRE_ORCHESTRATION_PREFLIGHT; then
+    if [[ -z "$CONFIDENCE" ]]; then
+        echo "ERROR: --confidence is required with --require-orchestration-preflight" >&2
+        exit 1
+    fi
+    "$SCRIPT_DIR/spec-orchestration-preflight.sh" --confidence "$CONFIDENCE"
+fi
 
 # If paths-only mode, output paths and exit (support JSON + paths-only combined)
 if $PATHS_ONLY; then

@@ -9,15 +9,15 @@
       "priority": 10,
       "registered_commands": {
         "copilot": [
-          "specify.git.feature",
-          "specify.git.validate",
-          "specify.git.remote",
-          "specify.git.initialize",
-          "specify.git.commit"
+          "speckit.git.feature",
+          "speckit.git.validate",
+          "speckit.git.remote",
+          "speckit.git.initialize",
+          "speckit.git.commit"
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-04-24T02:59:56.689077+00:00"
+      "installed_at": "2026-05-09T18:16:01.475209+00:00"
     }
   }
 }

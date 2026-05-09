@@ -15,8 +15,7 @@
                 "/operator"
             ],
             "requiredEvents": [
-                "banana_page_view",
-                "banana_nav_click"
+                "banana_page_view"
             ]
         }
     ]

@@ -1,5 +1,16 @@
 # Banana Backlog — 3-Month Sprint Plan (May–July 2026)
 
+## Spec Kit Deliverables Baseline (May 2026)
+
+The following orchestration deliverables are mandatory for all new .specify execution slices:
+
+- Extension preflight runs first with update-first mode.
+- Confidence gate enforces autonomous continuation at >= 80.
+- Heartbeat entries are appended per major orchestration step.
+- Horizontal scaling slices publish shard plan + merge report artifacts.
+- Validators rerun after orchestration updates (`validate-spec-boundaries.sh`, `validate-task-traceability.sh`).
+- DDD/SOLID decomposition is explicit in plans (domain policy, application orchestration, infrastructure adapters).
+
 **Generated**: 2026-05-01
 **Backlog scored**: #052–#101 (50 stubs; #053 already shipped)
 **Scoring dimensions**: Value Gain (V), Risk Reduction (R), Dependency Unlock (D), Effort inverse (E). Max = 20.
