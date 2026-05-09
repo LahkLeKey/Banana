@@ -1,6 +1,6 @@
 <!--
 Sync Impact Report
-- Version change: 1.10.0 -> 1.10.1
+- Version change: 1.10.1 -> 1.10.2
 - Modified principles:
 	- Added X. Observable Infrastructure as Code
 	- Added XI. Spec-Driven Infrastructure Discovery
@@ -22,6 +22,7 @@ Sync Impact Report
 - Added workflow guidance: deferred-ledger closure when remaining specs are blocked/research-only
 - Added workflow guidance: mandatory targeted Q/A when confidence in the next code-improving step is below 70%
 - Added workflow guidance: single `Banana-Monorepo` harness requirement for all managed lanes
+- Added workflow guidance: canonical harness file path `.github/workflows/banana.yml`
 - Templates requiring updates:
 	- ✅ updated .specify/templates/plan-template.md
 	- ✅ compatible .specify/templates/spec-template.md
@@ -112,6 +113,7 @@ Banana-managed CI/CD lanes must be orchestrated through a single workflow harnes
 - each job has one clear responsibility,
 - new lanes extend the harness without creating parallel top-level workflow sprawl,
 - lane contracts remain stable and composable for the terminal pass/fail summary.
+The canonical harness file is `.github/workflows/banana.yml`.
 
 ## Platform Constraints
 
@@ -165,4 +167,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.10.1 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-09
+**Version**: 1.10.2 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-09
