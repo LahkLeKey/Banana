@@ -203,12 +203,6 @@ jobs:
         run: bun scripts/check-dashboard-copy-policy.ts
       - name: Run scanner unit tests
         run: python -m pytest tests/scripts/test_scan_web_analytics_surfaces.py tests/scripts/test_check_dashboard_copy_policy.py -v
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: analytics-surface-coverage
-          path: .artifacts/analytics/
 
   # --- Stage 2: typecheck / build ---
   turbo:
@@ -220,7 +214,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bunx turbo typecheck lint --filter='./src/typescript/...'
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: .turbo
           key: ${{ runner.os }}-turbo-${{ github.sha }}
@@ -265,7 +259,7 @@ jobs:
           - os: macos-latest
             preset: macos-arm64-release
             triple: macos-arm64
-          - os: windows-latest
+          - os: windows-2025-vs2026
             preset: windows-x86_64-release
             triple: windows-x86_64
     runs-on: ${{ matrix.os }}
@@ -289,11 +283,6 @@ jobs:
         run: cmake --build build/native/${{ matrix.preset }} --config Release
       - name: Install
         run: cmake --install build/native/${{ matrix.preset }} --config Release
-      - name: Upload artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: banana-native-${{ matrix.triple }}
-          path: out/native/${{ matrix.triple }}/
 
   native-sanitizers:
     name: Native / sanitizers
@@ -508,14 +497,6 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:5173
           CI: "true"
-
-      - name: Upload screenshot artifacts
-        if: steps.screenshot-gate.outputs.should_run == 'true' && always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: runtime-screenshots
-          path: docs/screenshots/
-          if-no-files-found: ignore
 
       - name: Update README gallery
         if: steps.screenshot-gate.outputs.should_run == 'true'
