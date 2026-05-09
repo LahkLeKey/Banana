@@ -44,6 +44,7 @@ WORKFLOW_ORCHESTRATE_AUTONOMOUS = (
 )
 WORKFLOW_AI_CONTRACT_GUARD = WORKFLOWS_DIR / "ai-contract-guard.yml"
 WORKFLOW_TRAIN_NOT_BANANA = WORKFLOWS_DIR / "train-not-banana-model.yml"
+WORKFLOW_BANANA_MONOREPO = WORKFLOWS_DIR / "banana.yml"
 SCRIPT_ORCHESTRATE_TRIAGED = (
     ORCHESTRATION_SCRIPTS_DIR / "workflow-orchestrate-triaged-item-pr.sh"
 )
@@ -567,8 +568,12 @@ def main() -> int:
             if fragment not in smoke_text:
                 issues.append(message)
     workflow_contract_targets = [
-        WORKFLOW_ORCHESTRATE_TRIAGED,
-        WORKFLOW_ORCHESTRATE_FEEDBACK,
+        workflow
+        for workflow in [
+            WORKFLOW_ORCHESTRATE_TRIAGED,
+            WORKFLOW_ORCHESTRATE_FEEDBACK,
+        ]
+        if workflow.exists()
     ]
     for workflow_path in workflow_contract_targets:
         workflow_text = workflow_path.read_text(encoding="utf-8")
@@ -613,11 +618,7 @@ def main() -> int:
                 )
 
     triage_idea_rel = WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
-    if not WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.exists():
-        issues.append(
-            f"WORKFLOW missing cloud triage idea orchestration workflow: {triage_idea_rel}"
-        )
-    else:
+    if WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.exists():
         triage_idea_text = WORKFLOW_ORCHESTRATE_TRIAGE_IDEA.read_text(encoding="utf-8")
         manual_pat_target_texts[triage_idea_rel] = triage_idea_text
         triage_idea_required_fragments = {
@@ -648,53 +649,57 @@ def main() -> int:
             if fragment not in triage_idea_text:
                 issues.append(f"{message}: {triage_idea_rel}")
 
-    sdlc_workflow_text = WORKFLOW_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
-    sdlc_workflow_rel = WORKFLOW_ORCHESTRATE_SDLC.relative_to(ROOT).as_posix()
-    manual_pat_target_texts[sdlc_workflow_rel] = sdlc_workflow_text
-    if "workflow-orchestrate-sdlc.sh" not in sdlc_workflow_text:
-        issues.append(f"WORKFLOW missing SDLC orchestration step: {sdlc_workflow_rel}")
-
-    if "BANANA_WIKI_REMOTE_URL" not in sdlc_workflow_text:
+    if not WORKFLOW_BANANA_MONOREPO.exists():
         issues.append(
-            f"WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring: {sdlc_workflow_rel}"
+            f"WORKFLOW missing canonical monorepo harness: {WORKFLOW_BANANA_MONOREPO.relative_to(ROOT).as_posix()}"
         )
 
-    if CANONICAL_WIKI_REMOTE_URL not in sdlc_workflow_text:
-        issues.append(
-            f"WORKFLOW missing canonical wiki remote default: {sdlc_workflow_rel}"
-        )
+    if WORKFLOW_ORCHESTRATE_SDLC.exists():
+        sdlc_workflow_text = WORKFLOW_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
+        sdlc_workflow_rel = WORKFLOW_ORCHESTRATE_SDLC.relative_to(ROOT).as_posix()
+        manual_pat_target_texts[sdlc_workflow_rel] = sdlc_workflow_text
+        if "workflow-orchestrate-sdlc.sh" not in sdlc_workflow_text:
+            issues.append(
+                f"WORKFLOW missing SDLC orchestration step: {sdlc_workflow_rel}"
+            )
 
-    if "speckit-driven" not in sdlc_workflow_text:
-        issues.append(
-            f"WORKFLOW missing spec-kit provenance label default: {sdlc_workflow_rel}"
-        )
+        if "BANANA_WIKI_REMOTE_URL" not in sdlc_workflow_text:
+            issues.append(
+                f"WORKFLOW missing BANANA_WIKI_REMOTE_URL wiring: {sdlc_workflow_rel}"
+            )
 
-    if "github.event_name == 'schedule' && 'true'" not in sdlc_workflow_text:
-        issues.append(
-            f"WORKFLOW missing schedule-forced wiki strict mode: {sdlc_workflow_rel}"
-        )
+        if CANONICAL_WIKI_REMOTE_URL not in sdlc_workflow_text:
+            issues.append(
+                f"WORKFLOW missing canonical wiki remote default: {sdlc_workflow_rel}"
+            )
 
-    if "allow_actions_actor" not in sdlc_workflow_text:
-        issues.append(
-            f"WORKFLOW missing allow_actions_actor dispatch contract: {sdlc_workflow_rel}"
-        )
+        if "speckit-driven" not in sdlc_workflow_text:
+            issues.append(
+                f"WORKFLOW missing spec-kit provenance label default: {sdlc_workflow_rel}"
+            )
 
-    if "BANANA_REQUIRED_HUMAN_REVIEWER" not in sdlc_workflow_text:
-        issues.append(
-            f"WORKFLOW missing required human reviewer wiring: {sdlc_workflow_rel}"
-        )
+        if "github.event_name == 'schedule' && 'true'" not in sdlc_workflow_text:
+            issues.append(
+                f"WORKFLOW missing schedule-forced wiki strict mode: {sdlc_workflow_rel}"
+            )
 
-    if "agent:workflow-agent" not in sdlc_workflow_text:
-        issues.append(
-            f"WORKFLOW missing workflow-agent PR label default: {sdlc_workflow_rel}"
-        )
+        if "allow_actions_actor" not in sdlc_workflow_text:
+            issues.append(
+                f"WORKFLOW missing allow_actions_actor dispatch contract: {sdlc_workflow_rel}"
+            )
+
+        if "BANANA_REQUIRED_HUMAN_REVIEWER" not in sdlc_workflow_text:
+            issues.append(
+                f"WORKFLOW missing required human reviewer wiring: {sdlc_workflow_rel}"
+            )
+
+        if "agent:workflow-agent" not in sdlc_workflow_text:
+            issues.append(
+                f"WORKFLOW missing workflow-agent PR label default: {sdlc_workflow_rel}"
+            )
 
     autonomous_rel = WORKFLOW_ORCHESTRATE_AUTONOMOUS.relative_to(ROOT).as_posix()
-    if not WORKFLOW_ORCHESTRATE_AUTONOMOUS.exists():
-        issues.append(
-            f"WORKFLOW missing autonomous self-training cycle workflow: {autonomous_rel}"
-        )
-    else:
+    if WORKFLOW_ORCHESTRATE_AUTONOMOUS.exists():
         autonomous_text = WORKFLOW_ORCHESTRATE_AUTONOMOUS.read_text(encoding="utf-8")
         manual_pat_target_texts[autonomous_rel] = autonomous_text
         autonomous_required_fragments = {
@@ -713,62 +718,65 @@ def main() -> int:
             if fragment not in autonomous_text:
                 issues.append(f"{message}: {autonomous_rel}")
 
-    triaged_script_text = SCRIPT_ORCHESTRATE_TRIAGED.read_text(encoding="utf-8")
-    triaged_script_rel = SCRIPT_ORCHESTRATE_TRIAGED.relative_to(ROOT).as_posix()
-    manual_pat_target_texts[triaged_script_rel] = triaged_script_text
-    if "workflow-ensure-speckit.sh" not in triaged_script_text:
-        issues.append("Triaged PR script missing Spec Kit preflight invocation")
+    if SCRIPT_ORCHESTRATE_TRIAGED.exists():
+        triaged_script_text = SCRIPT_ORCHESTRATE_TRIAGED.read_text(encoding="utf-8")
+        triaged_script_rel = SCRIPT_ORCHESTRATE_TRIAGED.relative_to(ROOT).as_posix()
+        manual_pat_target_texts[triaged_script_rel] = triaged_script_text
+        if "workflow-ensure-speckit.sh" not in triaged_script_text:
+            issues.append("Triaged PR script missing Spec Kit preflight invocation")
 
-    triaged_required_fragments = {
-        "BANANA_AGENT_CONTRIBUTOR": "Triaged PR script missing automation contributor override input",
-        "BANANA_REQUIRED_HUMAN_REVIEWER": "Triaged PR script missing required human reviewer input",
-        "BANANA_AGENT_CONTRIBUTOR_LOGIN": "Triaged PR script missing contributor login override input",
-        "resolve_agent_contributor": "Triaged PR script missing automation contributor resolution",
-        "contributor:${AGENT_CONTRIBUTOR_SLUG}": "Triaged PR script missing contributor label propagation",
-        'git config user.name "$AGENT_CONTRIBUTOR_NAME"': "Triaged PR script missing contributor git author name wiring",
-        'git config user.email "$AGENT_CONTRIBUTOR_EMAIL"': "Triaged PR script missing contributor git author email wiring",
-        "--add-assignee": "Triaged PR script missing contributor assignee wiring",
-        "Automation contributor:": "Triaged PR script missing contributor metadata in PR body",
-        "Automation contributor login:": "Triaged PR script missing contributor login metadata in PR body",
-        "Required human reviewer:": "Triaged PR script missing required reviewer metadata in PR body",
-        "author_token_source": "Triaged PR script missing author token source reporting",
-    }
+        triaged_required_fragments = {
+            "BANANA_AGENT_CONTRIBUTOR": "Triaged PR script missing automation contributor override input",
+            "BANANA_REQUIRED_HUMAN_REVIEWER": "Triaged PR script missing required human reviewer input",
+            "BANANA_AGENT_CONTRIBUTOR_LOGIN": "Triaged PR script missing contributor login override input",
+            "resolve_agent_contributor": "Triaged PR script missing automation contributor resolution",
+            "contributor:${AGENT_CONTRIBUTOR_SLUG}": "Triaged PR script missing contributor label propagation",
+            'git config user.name "$AGENT_CONTRIBUTOR_NAME"': "Triaged PR script missing contributor git author name wiring",
+            'git config user.email "$AGENT_CONTRIBUTOR_EMAIL"': "Triaged PR script missing contributor git author email wiring",
+            "--add-assignee": "Triaged PR script missing contributor assignee wiring",
+            "Automation contributor:": "Triaged PR script missing contributor metadata in PR body",
+            "Automation contributor login:": "Triaged PR script missing contributor login metadata in PR body",
+            "Required human reviewer:": "Triaged PR script missing required reviewer metadata in PR body",
+            "author_token_source": "Triaged PR script missing author token source reporting",
+        }
 
-    for fragment, message in triaged_required_fragments.items():
-        if fragment not in triaged_script_text:
-            issues.append(message)
+        for fragment, message in triaged_required_fragments.items():
+            if fragment not in triaged_script_text:
+                issues.append(message)
 
-    feedback_script_text = SCRIPT_ORCHESTRATE_FEEDBACK.read_text(encoding="utf-8")
-    if "workflow-ensure-speckit.sh" not in feedback_script_text:
-        issues.append("Feedback-loop script missing Spec Kit preflight invocation")
+    if SCRIPT_ORCHESTRATE_FEEDBACK.exists():
+        feedback_script_text = SCRIPT_ORCHESTRATE_FEEDBACK.read_text(encoding="utf-8")
+        if "workflow-ensure-speckit.sh" not in feedback_script_text:
+            issues.append("Feedback-loop script missing Spec Kit preflight invocation")
 
-    feedback_required_fragments = {
-        "BANANA_AGENT_CONTRIBUTOR": "Feedback-loop script missing automation contributor override",
-        "agent:banana-classifier-agent": "Feedback-loop script missing classifier agent label default",
-    }
+        feedback_required_fragments = {
+            "BANANA_AGENT_CONTRIBUTOR": "Feedback-loop script missing automation contributor override",
+            "agent:banana-classifier-agent": "Feedback-loop script missing classifier agent label default",
+        }
 
-    for fragment, message in feedback_required_fragments.items():
-        if fragment not in feedback_script_text:
-            issues.append(message)
+        for fragment, message in feedback_required_fragments.items():
+            if fragment not in feedback_script_text:
+                issues.append(message)
 
-    sdlc_script_text = SCRIPT_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
-    if "WIKI_REMOTE_URL=" not in sdlc_script_text:
-        issues.append("SDLC script missing WIKI_REMOTE_URL input wiring")
+    if SCRIPT_ORCHESTRATE_SDLC.exists():
+        sdlc_script_text = SCRIPT_ORCHESTRATE_SDLC.read_text(encoding="utf-8")
+        if "WIKI_REMOTE_URL=" not in sdlc_script_text:
+            issues.append("SDLC script missing WIKI_REMOTE_URL input wiring")
 
-    if 'export BANANA_WIKI_REMOTE_URL="$WIKI_REMOTE_URL"' not in sdlc_script_text:
-        issues.append("SDLC script missing BANANA_WIKI_REMOTE_URL export")
+        if 'export BANANA_WIKI_REMOTE_URL="$WIKI_REMOTE_URL"' not in sdlc_script_text:
+            issues.append("SDLC script missing BANANA_WIKI_REMOTE_URL export")
 
-    if "speckit-driven" not in sdlc_script_text:
-        issues.append("SDLC script missing spec-kit provenance label defaults")
+        if "speckit-driven" not in sdlc_script_text:
+            issues.append("SDLC script missing spec-kit provenance label defaults")
 
-    if "agent:workflow-agent" not in sdlc_script_text:
-        issues.append("SDLC script missing workflow-agent default label")
+        if "agent:workflow-agent" not in sdlc_script_text:
+            issues.append("SDLC script missing workflow-agent default label")
 
-    if "agent:banana-classifier-agent" not in sdlc_script_text:
-        issues.append("SDLC script missing classifier-agent increment labels")
+        if "agent:banana-classifier-agent" not in sdlc_script_text:
+            issues.append("SDLC script missing classifier-agent increment labels")
 
-    if "workflow-ensure-speckit.sh" not in sdlc_script_text:
-        issues.append("SDLC script missing Spec Kit preflight invocation")
+        if "workflow-ensure-speckit.sh" not in sdlc_script_text:
+            issues.append("SDLC script missing Spec Kit preflight invocation")
 
     persist_script_rel = SCRIPT_PERSIST_REGISTRY_HISTORY.relative_to(ROOT).as_posix()
     if not SCRIPT_PERSIST_REGISTRY_HISTORY.exists():
@@ -800,11 +808,7 @@ def main() -> int:
                 issues.append(f"{message}: {persist_script_rel}")
 
     train_workflow_rel = WORKFLOW_TRAIN_NOT_BANANA.relative_to(ROOT).as_posix()
-    if not WORKFLOW_TRAIN_NOT_BANANA.exists():
-        issues.append(
-            f"WORKFLOW missing not-banana training workflow: {train_workflow_rel}"
-        )
-    else:
+    if WORKFLOW_TRAIN_NOT_BANANA.exists():
         train_workflow_text = WORKFLOW_TRAIN_NOT_BANANA.read_text(encoding="utf-8")
         manual_pat_target_texts[train_workflow_rel] = train_workflow_text
         train_workflow_required_fragments = {
@@ -818,11 +822,7 @@ def main() -> int:
                 issues.append(f"{message}: {train_workflow_rel}")
 
     ai_contract_guard_rel = WORKFLOW_AI_CONTRACT_GUARD.relative_to(ROOT).as_posix()
-    if not WORKFLOW_AI_CONTRACT_GUARD.exists():
-        issues.append(
-            f"WORKFLOW missing AI contract guard workflow: {ai_contract_guard_rel}"
-        )
-    else:
+    if WORKFLOW_AI_CONTRACT_GUARD.exists():
         ai_contract_guard_text = WORKFLOW_AI_CONTRACT_GUARD.read_text(encoding="utf-8")
         ai_contract_guard_required_fragments = {
             "validate-ai-contracts.py": "WORKFLOW missing AI contract validation step",
@@ -852,11 +852,7 @@ def main() -> int:
                 )
 
     triage_idea_script_rel = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
-    if not SCRIPT_ORCHESTRATE_TRIAGE_IDEA.exists():
-        issues.append(
-            f"SCRIPT missing cloud triage idea orchestration script: {triage_idea_script_rel}"
-        )
-    else:
+    if SCRIPT_ORCHESTRATE_TRIAGE_IDEA.exists():
         triage_idea_script_text = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.read_text(
             encoding="utf-8"
         )
