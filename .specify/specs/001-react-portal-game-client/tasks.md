@@ -1,4 +1,4 @@
-# Tasks: React Portal 2.5D Game Client Pivot
+# Tasks: Banana Engineer
 
 **Input**: Design documents from `.specify/specs/001-react-portal-game-client/`
 **Prerequisites**: plan.md, spec.md
@@ -27,3 +27,10 @@
 - [ ] T011 [US2] Run screenshot/runtime checks proving 2.5D continuity across viewport profiles. (FR-002, FR-003)
 - [ ] T012 [US3] Run CI lane(s) proving minimal automation contract remains intact for this pivot. (FR-006, FR-007)
 - [ ] T013 [US3] Record feature evidence and residual risk notes in this spec directory. (FR-007)
+
+## Phase 5: Procedural Asset Compiler (C)
+
+- [ ] T014 [US4] Define deterministic generation inputs (seed/profile/rules) for baseline Banana Engineer landing and shell asset sets. (FR-009)
+- [ ] T015 [US4] Implement a C-based procedural asset compiler that emits web-consumable generated asset bundles for the React/WASM client. (FR-008, FR-010)
+- [ ] T016 [US4] Integrate generated bundle ingestion into the React build/bootstrap path without requiring manual art authoring for baseline scenes. (FR-004, FR-010)
+- [ ] T017 [US4] Add CI/local validation that re-runs compiler generation and verifies deterministic output + bundle compatibility with landing/shell runtime. (FR-006, FR-009, FR-010)
