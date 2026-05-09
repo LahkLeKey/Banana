@@ -40,3 +40,10 @@
 - [x] T018 [US4] Split procedural generation domain model/rules from orchestration and JSON/file output adapters. (FR-011)
 - [x] T019 [US4] Introduce stable algorithm contracts so WFC, cellular automata, and future strategies can be composed without cross-layer rewrites. (FR-011)
 - [x] T020 [US4] Add architecture guard checks/tests proving deterministic behavior remains intact after DDD/SOLID decomposition. (FR-009, FR-011)
+
+## Phase 7: Viewport Architecture Simplification
+
+- [ ] T021 [US1] Remove all React/Tailwind styling constraints (h-[100dvh], md:, object-contain, flex/justify-center, etc.) from GameEnginePage and simplify JSX to fixed-position div + canvas. Let C/WASM engine own all viewport sizing logic. (FR-001, FR-002)
+- [ ] T022 [US2] Extend C WASM build to expose canvas resize/fullscreen handlers and viewport context from native code so responsive scaling is driven entirely by the engine. (FR-002, FR-003)
+- [ ] T023 [US3] Document HUD overlay mounting points (fixed positioning above canvas) for future menu/status/controls integration. (FR-013)
+- [ ] T024 [US3] Validate viewport scaling and responsiveness across desktop/tablet/mobile-portrait/mobile-landscape; confirm C/WASM engine adapts rendering correctly to all screen sizes. (FR-002, FR-003)

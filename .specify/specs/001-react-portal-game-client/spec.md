@@ -20,6 +20,7 @@ The repository accumulated broad, research-heavy specs and workflows that are no
 - Reflow portal UX toward game-client framing (viewport-first shell, tactical overlays, mission-control language).
 - Keep only essential CI/CD workflows required to validate and ship the React portal.
 - Remove or archive out-of-scope spec/workflow surfaces from active roots.
+- **Viewport Architecture**: C/WASM engine owns all viewport sizing, scaling, and responsive behavior. React serves as a minimal HTML container with zero CSS constraints on the primary canvas element. Future HUD overlays (menu, status, controls) will scaffold separately.
 
 ## Out of Scope
 

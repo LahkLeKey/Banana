@@ -26,6 +26,14 @@ Refocus Banana toward Banana Engineer, a 2.5D game-client-style React portal exp
 - Infrastructure layer: CLI parsing, filesystem paths, JSON emitters, and build integration adapters.
 - Keep algorithm engines open for extension (new generation strategy) but closed for modification of unrelated layers.
 
+## Viewport Architecture
+
+**Canvas Ownership**: The C/WASM engine directly manages all canvas sizing, scaling, and responsive behavior from native code. React is a minimal HTML container with zero CSS constraints on the primary canvas element.
+
+**React Role**: Serve as a fixed-position shell for the engine and eventually host HUD overlays (menu, status, controls). The core viewport rendering — including adaptation to different screen sizes, orientations, and DPIs — is owned entirely by the C/WASM runtime. No Tailwind utilities, flex/grid, or object-contain tricks.
+
+**Why**: Previous iterations accumulated conflicting CSS layout models (absolute positioning + flexbox + object-contain + responsive utilities) that created a source of browser-specific rendering bugs. Centralizing viewport logic in C/WASM eliminates this complexity surface.
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
