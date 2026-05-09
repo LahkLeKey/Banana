@@ -8,12 +8,18 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const reactRoot = resolve(__dirname, "..");
 
-const compilerSource = resolve(reactRoot, "../../../src/native/engine/tools/banana_asset_compiler.c");
+const compilerSource = resolve(
+  reactRoot,
+  "../../../src/native/engine/tools/banana_asset_compiler.c"
+);
 const compilerSourceFiles = [
   resolve(reactRoot, "../../../src/native/engine/tools/banana_asset_compiler.c"),
   resolve(reactRoot, "../../../src/native/engine/tools/domain/banana_asset_domain.c"),
   resolve(reactRoot, "../../../src/native/engine/tools/domain/banana_asset_algorithms.c"),
-  resolve(reactRoot, "../../../src/native/engine/tools/application/banana_asset_generation_service.c"),
+  resolve(
+    reactRoot,
+    "../../../src/native/engine/tools/application/banana_asset_generation_service.c"
+  ),
   resolve(reactRoot, "../../../src/native/engine/tools/infrastructure/banana_asset_json_writer.c"),
 ];
 const compilerBuildDir = resolve(reactRoot, "../../../artifacts/native-tools");
@@ -141,7 +147,8 @@ function copyToPublic() {
 }
 
 function main() {
-  const binaryName = process.platform === "win32" ? "banana_asset_compiler.exe" : "banana_asset_compiler";
+  const binaryName =
+    process.platform === "win32" ? "banana_asset_compiler.exe" : "banana_asset_compiler";
   const binaryPath = resolve(compilerBuildDir, binaryName);
 
   if (process.env.BANANA_SKIP_GENERATED_ASSET_COMPILE !== "true") {

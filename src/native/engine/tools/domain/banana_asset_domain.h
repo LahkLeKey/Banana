@@ -3,23 +3,25 @@
 
 #include <stdint.h>
 
-typedef struct {
-  const char *id;
-  int biome;
-  int elevation_base;
-  int resource_bias;
-  int weight;
+typedef struct
+{
+    const char *id;
+    int biome;
+    int elevation_base;
+    int resource_bias;
+    int weight;
 } banana_tile_def_t;
 
-enum {
-  BANANA_TILE_WATER_DEEP = 0,
-  BANANA_TILE_WATER_SHALLOW = 1,
-  BANANA_TILE_SAND = 2,
-  BANANA_TILE_GRASS = 3,
-  BANANA_TILE_GROVE = 4,
-  BANANA_TILE_HILL = 5,
-  BANANA_TILE_RIDGE = 6,
-  BANANA_TILE_COUNT = 7,
+enum
+{
+    BANANA_TILE_WATER_DEEP = 0,
+    BANANA_TILE_WATER_SHALLOW = 1,
+    BANANA_TILE_SAND = 2,
+    BANANA_TILE_GRASS = 3,
+    BANANA_TILE_GROVE = 4,
+    BANANA_TILE_HILL = 5,
+    BANANA_TILE_RIDGE = 6,
+    BANANA_TILE_COUNT = 7,
 };
 
 uint32_t banana_next_random(uint32_t *state);

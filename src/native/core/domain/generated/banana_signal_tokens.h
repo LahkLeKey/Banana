@@ -2,31 +2,11 @@
 #ifndef BANANA_SIGNAL_TOKENS_GENERATED_H
 #define BANANA_SIGNAL_TOKENS_GENERATED_H
 
-static const char* const k_banana_signal_tokens_generated[] = {
-    "banana",
-    "aliases",
-    "tropical",
-    "keyboard",
-    "bicycle",
-    "bunch",
-    "fruit",
-    "green",
-    "musa",
-    "plantain",
-    "plantation",
-    "row",
-    "the",
-    "two",
-    "used",
-    "weather",
-    "acuminata",
-    "adapter",
-    "along",
-    "appendix",
-    "arrangement",
-    "artisan",
-    "awaiting",
-    "bakery",
+static const char *const k_banana_signal_tokens_generated[] = {
+    "banana", "aliases",  "tropical",    "keyboard", "bicycle",    "bunch",
+    "fruit",  "green",    "musa",        "plantain", "plantation", "row",
+    "the",    "two",      "used",        "weather",  "acuminata",  "adapter",
+    "along",  "appendix", "arrangement", "artisan",  "awaiting",   "bakery",
 };
 
 static const unsigned long k_banana_signal_tokens_generated_count =
