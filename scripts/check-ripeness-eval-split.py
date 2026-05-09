@@ -59,9 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     # FR-247-01 — per-label count
-    label_counts = Counter(
-        samples[eid]["label"] for eid in eval_ids if eid in samples
-    )
+    label_counts = Counter(samples[eid]["label"] for eid in eval_ids if eid in samples)
     for label in LABELS:
         count = label_counts.get(label, 0)
         if count < MIN_PER_LABEL:

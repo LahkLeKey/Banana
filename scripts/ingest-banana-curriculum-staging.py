@@ -11,7 +11,9 @@ from typing import Any
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Ingest staged banana curriculum entries")
+    parser = argparse.ArgumentParser(
+        description="Ingest staged banana curriculum entries"
+    )
     parser.add_argument(
         "--corpus",
         type=Path,
@@ -40,7 +42,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def main() -> int:
@@ -60,7 +67,10 @@ def main() -> int:
     accepted_cap = max(0, min(int(args.max_accept), max_file_cap))
 
     existing_keys = {
-        (str(item.get("label", "")).strip().lower(), str(item.get("text", "")).strip().lower())
+        (
+            str(item.get("label", "")).strip().lower(),
+            str(item.get("text", "")).strip().lower(),
+        )
         for item in samples
         if isinstance(item, dict)
     }
@@ -77,7 +87,10 @@ def main() -> int:
         if status != "staged":
             continue
 
-        entry_id = str(entry.get("id", "")).strip() or f"curr-{len(accepted_ids)+len(rejected_ids)+1:04d}"
+        entry_id = (
+            str(entry.get("id", "")).strip()
+            or f"curr-{len(accepted_ids) + len(rejected_ids) + 1:04d}"
+        )
         text = str(entry.get("text", "")).strip()
         label = str(entry.get("label", "banana")).strip().lower().replace("_", "-")
         if not text or label not in {"banana", "not-banana"}:
@@ -100,7 +113,7 @@ def main() -> int:
             entry["deferred_reason"] = "max acceptance cap reached"
             continue
 
-        sample_id = entry_id if entry_id else f"curriculum-{len(samples)+1:04d}"
+        sample_id = entry_id if entry_id else f"curriculum-{len(samples) + 1:04d}"
         sample: dict[str, Any] = {
             "id": sample_id,
             "label": label,

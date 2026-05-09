@@ -38,7 +38,9 @@ def parse_args() -> argparse.Namespace:
         default=0.5,
         help="Minimum accuracy floor over hard-negative examples",
     )
-    parser.add_argument("--strict", action="store_true", help="Fail when floor is not met")
+    parser.add_argument(
+        "--strict", action="store_true", help="Fail when floor is not met"
+    )
     return parser.parse_args()
 
 
@@ -55,7 +57,9 @@ def load_weights(path: Path) -> dict[str, float]:
 
 
 def tokenize(text: str) -> set[str]:
-    return {raw.strip("'") for raw in TOKEN_PATTERN.findall(text.lower()) if raw.strip("'")}
+    return {
+        raw.strip("'") for raw in TOKEN_PATTERN.findall(text.lower()) if raw.strip("'")
+    }
 
 
 def predict_label(text: str, weights: dict[str, float]) -> str:
@@ -85,7 +89,12 @@ def main() -> int:
         if not isinstance(item, dict):
             continue
         text = str(item.get("text", "")).strip()
-        expected = str(item.get("expected_label", "not-banana")).strip().lower().replace("_", "-")
+        expected = (
+            str(item.get("expected_label", "not-banana"))
+            .strip()
+            .lower()
+            .replace("_", "-")
+        )
         category = str(item.get("category", "unknown")).strip() or "unknown"
         if not text:
             continue

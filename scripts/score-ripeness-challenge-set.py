@@ -20,12 +20,16 @@ from collections import Counter
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-VOCAB_PATH = REPO_ROOT / "artifacts" / "training" / "ripeness" / "local" / "vocabulary.json"
+VOCAB_PATH = (
+    REPO_ROOT / "artifacts" / "training" / "ripeness" / "local" / "vocabulary.json"
+)
 CHALLENGE_PATH = REPO_ROOT / "data" / "ripeness" / "challenge-set.json"
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
 MIN_TOKEN_LENGTH = 3
-PASS_RECALL_THRESHOLD = 0.5  # at least half of challenge prompts per label must be correct
+PASS_RECALL_THRESHOLD = (
+    0.5  # at least half of challenge prompts per label must be correct
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -73,9 +77,11 @@ def main() -> int:
 
     if not vocab_path.exists():
         print(f"[FAIL] vocabulary.json not found: {vocab_path}", file=sys.stderr)
-        print("  Run: python scripts/train-ripeness-model.py --corpus data/ripeness/corpus.json "
-              "--output artifacts/training/ripeness/local --training-profile ci --session-mode single --max-sessions 1",
-              file=sys.stderr)
+        print(
+            "  Run: python scripts/train-ripeness-model.py --corpus data/ripeness/corpus.json "
+            "--output artifacts/training/ripeness/local --training-profile ci --session-mode single --max-sessions 1",
+            file=sys.stderr,
+        )
         return 1
 
     if not challenge_path.exists():
@@ -118,13 +124,22 @@ def main() -> int:
         if predicted == expected:
             correct_by_label[expected] += 1
         else:
-            misses.append({"id": prompt_id, "expected": expected, "predicted": predicted, "text": text})
+            misses.append(
+                {
+                    "id": prompt_id,
+                    "expected": expected,
+                    "predicted": predicted,
+                    "text": text,
+                }
+            )
 
     overall_correct = sum(correct_by_label.values())
     overall_total = sum(total_by_label.values())
 
-    print(f"score-ripeness-challenge-set: {overall_correct}/{overall_total} correct "
-          f"({100*overall_correct/overall_total:.0f}%)")
+    print(
+        f"score-ripeness-challenge-set: {overall_correct}/{overall_total} correct "
+        f"({100 * overall_correct / overall_total:.0f}%)"
+    )
     print()
 
     failures: list[str] = []
@@ -144,8 +159,10 @@ def main() -> int:
         print()
         print("Misclassified prompts:")
         for miss in misses:
-            print(f"  [{miss['id']}] expected={miss['expected']}  predicted={miss['predicted']}")
-            print(f"    \"{miss['text']}\"")
+            print(
+                f"  [{miss['id']}] expected={miss['expected']}  predicted={miss['predicted']}"
+            )
+            print(f'    "{miss["text"]}"')
 
     if failures:
         print()

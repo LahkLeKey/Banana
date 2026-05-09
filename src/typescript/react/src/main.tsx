@@ -12,11 +12,11 @@ initSentry();
 initVitals();
 
 createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-        <ErrorBoundary>
-            <QueryProvider>
-                <RouterProvider router={router} />
-            </QueryProvider>
-        </ErrorBoundary>
-    </StrictMode>
+  <StrictMode>
+    <ErrorBoundary>
+      <QueryProvider>
+        <RouterProvider router={router} />
+      </QueryProvider>
+    </ErrorBoundary>
+  </StrictMode>
 );

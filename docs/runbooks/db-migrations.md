@@ -1,13 +1,13 @@
 # Runbook: Database Migrations
 
-**Audience**: On-call engineers  
+**Audience**: On-call engineers
 **Applies to**: `src/typescript/api` (Prisma + PostgreSQL via `BANANA_PG_CONNECTION`)
 
 ---
 
 ## Standard deploy flow
 
-Migrations run automatically before each API deployment via `.github/workflows/api-deploy.yml`.  
+Migrations run automatically before each API deployment via `.github/workflows/api-deploy.yml`.
 The `prisma migrate deploy` step must exit 0 before the Railway deploy proceeds.
 
 ```bash
@@ -64,7 +64,7 @@ This marks the migration applied without executing it, allowing the deploy to pr
 ## Connection string
 
 The production connection string is stored as `BANANA_PG_CONNECTION` in:
-- GitHub Actions environment `production` (for CI migrations)  
+- GitHub Actions environment `production` (for CI migrations)
 - Railway service environment variables (for runtime access)
 
 Rotation procedure: see [docs/secrets-rotation.md](../secrets-rotation.md).

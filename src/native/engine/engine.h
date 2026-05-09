@@ -8,54 +8,55 @@
  * Native code can include individual module headers directly.
  * ─────────────────────────────────────────────────────────────────────────── */
 
-#include "render/window.h"
-#include "render/shader.h"
-#include "render/mesh.h"
-#include "render/material.h"
-#include "render/camera.h"
-#include "render/renderer.h"
+#include "ai/controller.h"
+#include "ai/navigation.h"
+#include "ai/perception.h"
+#include "ai/state_machine.h"
 #include "physics/body.h"
 #include "physics/collider.h"
 #include "physics/dynamics.h"
 #include "physics/world.h"
-#include "ai/controller.h"
-#include "ai/state_machine.h"
-#include "ai/navigation.h"
-#include "ai/perception.h"
+#include "render/camera.h"
+#include "render/material.h"
+#include "render/mesh.h"
+#include "render/renderer.h"
+#include "render/shader.h"
+#include "render/window.h"
 #include "world/entity.h"
-#include "world/world.h"
 #include "world/signals.h"
+#include "world/world.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/* ── Top-level lifecycle ────────────────────────────────────────────────────*/
+    /* ── Top-level lifecycle ────────────────────────────────────────────────────*/
 
-/* Initialize engine subsystems (render, physics, world).
- * Must be called once before any other engine function.
- * width/height: initial framebuffer dimensions. */
-int  engine_init(int width, int height);
+    /* Initialize engine subsystems (render, physics, world).
+     * Must be called once before any other engine function.
+     * width/height: initial framebuffer dimensions. */
+    int engine_init(int width, int height);
 
-/* Advance one game tick: physics step → controller updates → render frame.
- * dt: elapsed seconds since last tick.
- * Returns 0 on success. */
-int  engine_tick(float dt);
+    /* Advance one game tick: physics step → controller updates → render frame.
+     * dt: elapsed seconds since last tick.
+     * Returns 0 on success. */
+    int engine_tick(float dt);
 
-/* Tear down all subsystems. */
-void engine_shutdown(void);
+    /* Tear down all subsystems. */
+    void engine_shutdown(void);
 
-/* ── Controller helpers ─────────────────────────────────────────────────────*/
+    /* ── Controller helpers ─────────────────────────────────────────────────────*/
 
-/* Create a controller and attach it to an existing world entity.
- * Returns the controller ID (0 on failure). */
-uint32_t engine_controller_attach(uint32_t entity_id, const char *type_name);
+    /* Create a controller and attach it to an existing world entity.
+     * Returns the controller ID (0 on failure). */
+    uint32_t engine_controller_attach(uint32_t entity_id, const char *type_name);
 
-/* ── Entity query helpers (for React / WASM telemetry overlay) ──────────── */
-int   engine_get_entity_count(void);
-float engine_get_entity_x(int idx);
-float engine_get_entity_z(int idx);
-int   engine_get_entity_state(int idx); /* 0 = inactive, 1 = active */
+    /* ── Entity query helpers (for React / WASM telemetry overlay) ──────────── */
+    int engine_get_entity_count(void);
+    float engine_get_entity_x(int idx);
+    float engine_get_entity_z(int idx);
+    int engine_get_entity_state(int idx); /* 0 = inactive, 1 = active */
 
 #ifdef __cplusplus
 }

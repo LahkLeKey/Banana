@@ -1,6 +1,6 @@
 # Feature Specification: DS Wave 0 Foundation Implementation (242)
 
-**Feature Branch**: 
+**Feature Branch**:
 **Created**: 2026-05-03
 **Status**: Ready for implementation
 **Input**: Execute implementation wave based on DS spike outputs.

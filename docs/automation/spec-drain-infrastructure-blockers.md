@@ -1,6 +1,6 @@
 # Spec-Drain Infrastructure Blocker Handling
 
-**Updated**: 2026-05-02  
+**Updated**: 2026-05-02
 **Aligns with**: Constitution Principle XII (Infrastructure Blockers Explicit)
 
 ## Overview
@@ -30,7 +30,7 @@ All specs are classified into three categories by the drain automation:
 
 ### 2. Infrastructure-Blocked (Deferred)
 - **Status**: `**Status**: Ready for implementation` with `[INFRASTRUCTURE]` blocker, OR
-- **Status**: `**Status**: Ready for research` 
+- **Status**: `**Status**: Ready for research`
 - **Blockers**: Explicit `[INFRASTRUCTURE]` marker or research-only status
 - **Processing**: Skipped during drainage; revisited when prerequisites are met
 - **Examples**: Specs 144, 148, 150 (implementation + blocked); Specs 151-155 (research + blocked)

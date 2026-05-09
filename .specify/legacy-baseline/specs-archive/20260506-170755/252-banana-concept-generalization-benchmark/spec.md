@@ -1,7 +1,7 @@
 # Feature Specification: Banana Concept Generalization Benchmark (252)
 
-**Feature Branch**: `252-banana-concept-generalization-benchmark`  
-**Created**: 2026-05-05  
+**Feature Branch**: `252-banana-concept-generalization-benchmark`
+**Created**: 2026-05-05
 **Status**: Draft
 
 ## Problem Statement

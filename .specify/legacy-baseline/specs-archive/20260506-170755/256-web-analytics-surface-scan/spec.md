@@ -1,7 +1,7 @@
 # Feature Specification: Web Analytics Surface Scan (256)
 
-**Feature Branch**: `256-web-analytics-surface-scan`  
-**Created**: 2026-05-05  
+**Feature Branch**: `256-web-analytics-surface-scan`
+**Created**: 2026-05-05
 **Status**: Draft
 
 ## Problem Statement

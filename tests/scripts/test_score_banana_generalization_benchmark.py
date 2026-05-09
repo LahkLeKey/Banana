@@ -20,8 +20,18 @@ spec.loader.exec_module(sbgb)
 def test_benchmark_pass(tmp_path: Path) -> None:
     benchmark = {
         "samples": [
-            {"text": "banana fruit", "expected_label": "banana", "concept": "fruit-identity", "context_family": "definition"},
-            {"text": "metal keyboard", "expected_label": "not-banana", "concept": "fruit-identity", "context_family": "technology"},
+            {
+                "text": "banana fruit",
+                "expected_label": "banana",
+                "concept": "fruit-identity",
+                "context_family": "definition",
+            },
+            {
+                "text": "metal keyboard",
+                "expected_label": "not-banana",
+                "concept": "fruit-identity",
+                "context_family": "technology",
+            },
         ]
     }
     vocabulary = {
@@ -70,8 +80,18 @@ def test_benchmark_pass(tmp_path: Path) -> None:
 def test_benchmark_strict_fail(tmp_path: Path) -> None:
     benchmark = {
         "samples": [
-            {"text": "banana fruit", "expected_label": "banana", "concept": "fruit-identity", "context_family": "definition"},
-            {"text": "banana candy", "expected_label": "not-banana", "concept": "fruit-identity", "context_family": "boundary"},
+            {
+                "text": "banana fruit",
+                "expected_label": "banana",
+                "concept": "fruit-identity",
+                "context_family": "definition",
+            },
+            {
+                "text": "banana candy",
+                "expected_label": "not-banana",
+                "concept": "fruit-identity",
+                "context_family": "boundary",
+            },
         ]
     }
     vocabulary = {"vocabulary": [{"token": "banana", "weight": 1.0}]}

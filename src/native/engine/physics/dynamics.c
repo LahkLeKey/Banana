@@ -3,10 +3,15 @@
 
 static float s_gravity = BANANA_GRAVITY_DEFAULT;
 
-void dynamics_set_gravity(float gy) { s_gravity = gy; }
+void dynamics_set_gravity(float gy)
+{
+    s_gravity = gy;
+}
 
-void dynamics_integrate(PhysicsBody *b, float dt) {
-    if (b->is_static || b->mass <= 0.f) return;
+void dynamics_integrate(PhysicsBody *b, float dt)
+{
+    if (b->is_static || b->mass <= 0.f)
+        return;
 
     /* Apply gravity to force accumulator */
     b->force_accum[1] += s_gravity * b->mass;
@@ -37,7 +42,8 @@ void dynamics_integrate(PhysicsBody *b, float dt) {
     b->force_accum[2] = 0.f;
 }
 
-void dynamics_integrate_all(PhysicsBody **bodies, int count, float dt) {
+void dynamics_integrate_all(PhysicsBody **bodies, int count, float dt)
+{
     for (int i = 0; i < count; i++)
         dynamics_integrate(bodies[i], dt);
 }

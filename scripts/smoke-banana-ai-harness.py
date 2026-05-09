@@ -6,14 +6,18 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 
 REQUIRED_MODEL_FILES = ["vocabulary.json", "metrics.json", "sessions.json"]
-REQUIRED_PROMOTION_FILES = ["vocabulary.json", "metrics.json", "sessions.json", "banana_signal_tokens.h"]
+REQUIRED_PROMOTION_FILES = [
+    "vocabulary.json",
+    "metrics.json",
+    "sessions.json",
+    "banana_signal_tokens.h",
+]
 EXPECTED_MODELS = ["not-banana", "banana", "ripeness"]
 
 
@@ -29,7 +33,9 @@ class CheckResult:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Smoke-check BananaAI harness outputs.")
+    parser = argparse.ArgumentParser(
+        description="Smoke-check BananaAI harness outputs."
+    )
     parser.add_argument(
         "--manifest",
         help=(
@@ -61,7 +67,11 @@ def sha256_file(path: Path) -> str:
 def resolve_manifest_path(workspace_root: Path, explicit_manifest: str | None) -> Path:
     if explicit_manifest:
         manifest_path = Path(explicit_manifest)
-        return manifest_path if manifest_path.is_absolute() else workspace_root / manifest_path
+        return (
+            manifest_path
+            if manifest_path.is_absolute()
+            else workspace_root / manifest_path
+        )
 
     candidate_dir = workspace_root / "artifacts" / "training" / "joint"
     candidates = sorted(candidate_dir.glob("session-*.json"))
@@ -84,7 +94,9 @@ def resolve_path(workspace_root: Path, value: str) -> Path:
     return candidate if candidate.is_absolute() else workspace_root / candidate
 
 
-def validate_model_outputs(workspace_root: Path, manifest: dict[str, Any], result: CheckResult) -> None:
+def validate_model_outputs(
+    workspace_root: Path, manifest: dict[str, Any], result: CheckResult
+) -> None:
     results = manifest.get("results")
     if not isinstance(results, list):
         result.fail("manifest.results missing or invalid")
@@ -138,7 +150,9 @@ def validate_model_outputs(workspace_root: Path, manifest: dict[str, Any], resul
 
     for required_model in EXPECTED_MODELS:
         if required_model not in seen_models:
-            result.fail(f"manifest missing result for required model '{required_model}'")
+            result.fail(
+                f"manifest missing result for required model '{required_model}'"
+            )
 
 
 def validate_not_banana_promotion(

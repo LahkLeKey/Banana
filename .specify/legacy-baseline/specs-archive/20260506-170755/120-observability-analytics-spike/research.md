@@ -47,9 +47,9 @@ First-week baseline to be captured in `docs/lighthouse-baseline.md` after go-liv
 | `https://api.banana.engineer/health` down | `engineering@banana.engineer` | 1) Email → 2) Slack `#ops-alerts` → 3) On-call page |
 | Sentry error spike (>100 events/hr) | `engineering@banana.engineer` | Triage issue in GitHub; hotfix branch if P0 |
 
-**Check interval**: 5 minutes (UptimeRobot free tier maximum resolution).  
-**Alert sensitivity**: Alert after 2 consecutive failures to reduce false positives.  
-**On-call rotation**: Engineering lead for v1; expand to rotation once team grows beyond 2.  
+**Check interval**: 5 minutes (UptimeRobot free tier maximum resolution).
+**Alert sensitivity**: Alert after 2 consecutive failures to reduce false positives.
+**On-call rotation**: Engineering lead for v1; expand to rotation once team grows beyond 2.
 **Runbook**: `docs/runbooks/uptime-monitoring.md`.
 
 > Note: Replace `engineering@banana.engineer` with the actual team email address before

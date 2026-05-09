@@ -1,7 +1,7 @@
 # Feature Specification: Banana Foundation Ontology Corpus (251)
 
-**Feature Branch**: `251-banana-foundation-ontology-corpus`  
-**Created**: 2026-05-05  
+**Feature Branch**: `251-banana-foundation-ontology-corpus`
+**Created**: 2026-05-05
 **Status**: Draft
 
 ## Problem Statement

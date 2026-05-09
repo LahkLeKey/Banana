@@ -1,7 +1,7 @@
 # Spec-Drain Operations Runbook
 
-**Updated**: 2026-05-02  
-**Type**: Infrastructure Automation Documentation  
+**Updated**: 2026-05-02
+**Type**: Infrastructure Automation Documentation
 **Audience**: DevOps, Platform Engineers, Automation Operators
 
 ## Quick Start
