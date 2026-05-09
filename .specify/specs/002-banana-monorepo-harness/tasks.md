@@ -17,7 +17,7 @@
 - [x] Create feature spec in `.specify/specs/002-banana-monorepo-harness/spec.md`.
 - [x] Add implementation plan in `.specify/specs/002-banana-monorepo-harness/plan.md`.
 - [x] Add task scaffold in `.specify/specs/002-banana-monorepo-harness/tasks.md`.
-- [ ] Update `.specify/feature.json` to point to this feature when execution moves to implementation mode.
+- [x] Update `.specify/feature.json` to point to this feature when execution moves to implementation mode.
 
 ## Phase 4 - Verification
 
