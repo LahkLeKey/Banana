@@ -9,11 +9,15 @@
  *   bun scripts/scan-web-analytics-surfaces.ts [options]
  *
  * Options:
- *   --manifest <path>            Coverage manifest (default: scripts/analytics-surface-manifest.json)
+ *   --manifest <path>            Coverage manifest (default:
+ * scripts/analytics-surface-manifest.json)
  *   --out-dir <path>             Output directory   (default: artifacts/analytics)
- *   --router-file <path>         React router source (default: src/typescript/react/src/lib/router.tsx)
- *   --analytics-file <path>      Analytics helper   (default: src/typescript/react/src/lib/analytics.ts)
- *   --workspace-shell-file <path> WorkspaceShell   (default: src/typescript/react/src/components/WorkspaceShell.tsx)
+ *   --router-file <path>         React router source (default:
+ * src/typescript/react/src/lib/router.tsx)
+ *   --analytics-file <path>      Analytics helper   (default:
+ * src/typescript/react/src/lib/analytics.ts)
+ *   --workspace-shell-file <path> WorkspaceShell   (default:
+ * src/typescript/react/src/components/WorkspaceShell.tsx)
  *   --strict                     Exit 1 when coverage thresholds are not met
  *   --min-route-coverage <0-1>   Minimum required route coverage ratio (default: 1)
  *   --min-event-coverage <0-1>   Minimum required event coverage ratio  (default: 1)
@@ -31,7 +35,7 @@
  *                    analytics.ts or WorkspaceShell.tsx for discovery.
  */
 
-import {mkdirSync, readFileSync, writeFileSync} from "node:fs";
+import {existsSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 
 type Args = {
@@ -60,6 +64,19 @@ type EventCoverage = {
 
 const DETERMINISTIC_GENERATED_AT = "1970-01-01T00:00:00Z";
 
+function resolveFirstExisting(cwd: string, candidates: string[]): string
+{
+    for (const candidate of candidates)
+    {
+        const absolute = resolve(cwd, candidate);
+        if (existsSync(absolute))
+        {
+            return absolute;
+        }
+    }
+    return resolve(cwd, candidates[0]);
+}
+
 function parseArgs(argv: string[]): Args
 {
     const cwd = process.cwd();
@@ -68,7 +85,12 @@ function parseArgs(argv: string[]): Args
         outDir : resolve(cwd, "artifacts/analytics"),
         routerPath : resolve(cwd, "src/typescript/react/src/lib/router.tsx"),
         analyticsPath : resolve(cwd, "src/typescript/react/src/lib/analytics.ts"),
-        workspaceShellPath : resolve(cwd, "src/typescript/react/src/components/WorkspaceShell.tsx"),
+        workspaceShellPath :
+            resolveFirstExisting(cwd,
+                                 [
+                                     "src/typescript/react/src/components/WorkspaceShell.tsx",
+                                     "src/typescript/react/src/App.tsx",
+                                 ]),
         strict : false,
         minRouteCoverage : 1,
         minEventCoverage : 1,
@@ -122,6 +144,19 @@ function parseArgs(argv: string[]): Args
     return args;
 }
 
+function resolveWorkspaceShellPath(requestedPath: string): string
+{
+    if (existsSync(requestedPath))
+    {
+        return requestedPath;
+    }
+
+    return resolveFirstExisting(process.cwd(), [
+        "src/typescript/react/src/components/WorkspaceShell.tsx",
+        "src/typescript/react/src/App.tsx",
+    ]);
+}
+
 function readUtf8(path: string): string
 {
     return readFileSync(path, "utf-8");
@@ -150,6 +185,19 @@ function extractRoutes(routerSource: string): string[]
     while ((match = pathRegex.exec(routerSource)) != null)
     {
         routeSet.add(normalizeRoute(match[1]));
+    }
+
+    const legacyRoutesMatch = routerSource.match(
+        /const\s+legacyRoutes\s*=\s*\[([\s\S]*?)\];/m,
+    );
+    if (legacyRoutesMatch)
+    {
+        const entryRegex = /["']([^"']+)["']/g;
+        let entry: RegExpExecArray|null;
+        while ((entry = entryRegex.exec(legacyRoutesMatch[1])) != null)
+        {
+            routeSet.add(normalizeRoute(entry[1]));
+        }
     }
 
     return [...routeSet ].sort((a, b) => a.localeCompare(b));
@@ -279,7 +327,7 @@ function main(): number
     const manifest = JSON.parse(readUtf8(args.manifestPath)) as Manifest;
     const routerSource = readUtf8(args.routerPath);
     const analyticsSource = readUtf8(args.analyticsPath);
-    const shellSource = readUtf8(args.workspaceShellPath);
+    const shellSource = readUtf8(resolveWorkspaceShellPath(args.workspaceShellPath));
 
     const discoveredRoutes = extractRoutes(routerSource);
     const discoveredEvents =

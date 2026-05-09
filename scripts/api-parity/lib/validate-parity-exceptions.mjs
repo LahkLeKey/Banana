@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import {readFileSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 
 const REQUIRED_FIELDS = [
   'route_key',
@@ -12,6 +12,9 @@ const REQUIRED_FIELDS = [
 ];
 
 function parseJson(filePath) {
+  if (!existsSync(filePath)) {
+    return {exceptions: []};
+  }
   return JSON.parse(readFileSync(filePath, 'utf8'));
 }
 
