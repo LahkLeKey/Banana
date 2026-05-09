@@ -1,18 +1,20 @@
-# Feature Specification: React Portal Game Client Pivot
+# Feature Specification: React Portal 2.5D Game Client Pivot
 
 **Feature Branch**: `001-react-portal-game-client`
 **Created**: 2026-05-08
 **Status**: Draft
-**Input**: Re-align Banana from dashboard/research sprawl into a slim game-client experience delivered through the existing React portal.
+**Input**: Re-align Banana from dashboard/research sprawl into a 2.5D game-client experience delivered through the existing React portal, starting with a WASM-rendered landing surface.
 
 ## Problem Statement
 
-The repository accumulated broad, research-heavy specs and workflows that are no longer aligned with the current product goal. The active objective is narrower: keep the existing implementation live while reshaping the React portal into a true game-client runtime shell.
+The repository accumulated broad, research-heavy specs and workflows that are no longer aligned with the current product goal. The active objective is narrower: keep the existing implementation live while reshaping the React portal into a true game-client runtime shell with a cross-platform, cross-viewport friendly 2.5D rendering approach.
 
 ## In Scope
 
 - Preserve current runtime behavior and deployability of the existing React implementation.
-- Reflow the React portal UX toward a game-client presentation (viewport-first shell, tactical overlays, mission-control language).
+- Start over the landing entry surface as a WASM-rendered scene integrated into the React shell.
+- Adopt a 2.5D rendering style for the game-client presentation to improve cross-platform and cross-viewport consistency.
+- Reflow portal UX toward game-client framing (viewport-first shell, tactical overlays, mission-control language).
 - Keep only essential CI/CD workflows required to validate and ship the React portal.
 - Remove or archive out-of-scope spec/workflow surfaces from active roots.
 
@@ -20,31 +22,33 @@ The repository accumulated broad, research-heavy specs and workflows that are no
 
 - New backend platform research programs unrelated to the game-client UX pivot.
 - Re-introducing broad autonomous orchestration workflows as active required checks.
-- Rebuilding native engine internals beyond what is needed to support portal UX integration.
+- Building a full native 3D engine or platform-specific graphics runtime.
+- Backend/data-platform rewrites unrelated to landing and shell rendering direction.
 
 ## User Scenarios & Testing
 
-### User Story 1 - Launch Into A Game Client (Priority: P1)
+### User Story 1 - WASM Landing Entry (Priority: P1)
 
-As a user, I open the React portal and experience an interface that feels like a game client rather than a document/workbench dashboard.
+As a user, I open the React portal and land in a WASM-rendered 2.5D entry scene that feels like a game client rather than a web page.
 
-**Independent Test**: Open primary routes and confirm shell/navigation language, visual hierarchy, and viewport framing match the game-client direction.
+**Independent Test**: Open the root route on desktop and mobile-sized viewports and confirm the landing surface is WASM-rendered, responsive, and visually consistent with the game-client direction.
 
-### User Story 2 - Ship Safely With Minimal Automation (Priority: P1)
+### User Story 2 - Cross-Viewport 2.5D Shell Continuity (Priority: P1)
 
-As a maintainer, I can run a slim CI pipeline that validates the React portal build contract without restoring workflow sprawl.
+As a user, I can move from the landing surface into the React shell and retain a consistent 2.5D game-client visual language across key routes and viewport sizes.
 
-**Independent Test**: Trigger CI and confirm install + build checks run and pass with required env wiring.
+**Independent Test**: Validate representative routes at desktop/tablet/mobile widths and confirm layout, overlays, and navigation preserve game-client framing without breaking interaction flows.
 
-### User Story 3 - Keep Scope Disciplined (Priority: P2)
+### User Story 3 - Safe Delivery Contracts (Priority: P2)
 
-As a team, we can prevent immediate drift back into legacy or random research scope in the active specs/workflows roots.
+As a maintainer, I can ship the pivot safely with explicit WASM build/runtime contracts and minimal CI validation that keeps scope disciplined.
 
-**Independent Test**: Active roots contain only approved spec/workflow files for the pivot and fail checks when non-allowlisted items are introduced.
+**Independent Test**: Trigger CI and confirm React build/runtime checks pass with WASM assets and explicit env wiring, without reintroducing workflow/spec sprawl.
 
 ### Edge Cases
 
-- Production build fails when `VITE_BANANA_API_BASE_URL` is unset.
+- Landing fails to initialize when WASM bootstrap artifacts are missing or delayed.
+- Render quality degrades on narrow/mobile viewports if 2.5D scene scaling is not bounded.
 - Legacy files are reintroduced accidentally by merge/conflict resolution.
 - Deploy credentials are unavailable in CI at run time.
 
@@ -52,29 +56,33 @@ As a team, we can prevent immediate drift back into legacy or random research sc
 
 ### Functional Requirements
 
-- **FR-001**: System MUST maintain a working React portal build path (`bun run build`) during and after the pivot.
-- **FR-002**: System MUST retain only one active pivot spec in `.specify/specs` until new scope is explicitly approved.
-- **FR-003**: System MUST provide a minimal React CI workflow in `.github/workflows` that validates install and build.
-- **FR-004**: System MUST provide a minimal deployment workflow path for React portal releases.
-- **FR-005**: System MUST avoid reintroducing non-pivot workflows/specs into active roots without explicit scope approval.
+- **FR-001**: System MUST render the landing entry route through a WASM-backed renderer integrated into the React app shell.
+- **FR-002**: System MUST use a 2.5D rendering direction for the landing and primary shell presentation rather than flat web-page layout conventions.
+- **FR-003**: System MUST preserve cross-platform and cross-viewport usability for desktop and mobile-sized viewports.
+- **FR-004**: System MUST maintain a working React build path (`bun run build`) with WASM assets included in the build contract.
+- **FR-005**: System MUST preserve explicit runtime configuration contracts (including `VITE_BANANA_API_BASE_URL`) required by the portal.
+- **FR-006**: System MUST provide CI validation coverage sufficient to detect WASM/bootstrap or rendering-contract regressions.
+- **FR-007**: System MUST avoid reintroducing non-pivot workflows/specs into active roots without explicit scope approval.
 
 ### Key Entities
 
+- **WasmLandingSurface**: The WASM-rendered landing entry scene presented at the root route.
+- **ViewportRenderProfile**: A bounded 2.5D layout and scaling profile for desktop, tablet, and mobile-sized viewports.
+- **PortalBuildContract**: Required build inputs, assets, and commands for `src/typescript/react` deployment.
 - **ActiveSpecRoot**: The set of currently active specs in `.specify/specs`.
-- **WorkflowSurface**: The currently active CI/CD workflow files in `.github/workflows`.
-- **PortalBuildContract**: Required build inputs and commands for `src/typescript/react` deployment.
 
 ## Success Criteria
 
 ### Measurable Outcomes
 
-- **SC-001**: `.specify/specs` contains exactly one active feature directory plus root documentation.
-- **SC-002**: `.github/workflows` contains only minimal required workflow YAML files for portal CI/deploy.
-- **SC-003**: React portal build succeeds in CI with explicit API base URL env wiring.
-- **SC-004**: The portal runtime UX aligns with the game-client shell direction across key routes.
+- **SC-001**: Landing route renders through the WASM surface successfully in CI and local verification flows.
+- **SC-002**: 2.5D shell presentation remains usable across defined desktop and mobile-sized viewport profiles.
+- **SC-003**: React portal build succeeds in CI with explicit API base URL and WASM asset contracts.
+- **SC-004**: Active scope remains constrained to pivot-approved spec/workflow surfaces.
 
 ## Assumptions
 
 - Existing React implementation remains the primary runtime delivery surface.
+- WASM landing rendering is feasible within current frontend deployment/runtime constraints.
 - Vercel remains the deploy target for the React portal.
 - Additional specs/workflows can be introduced later only through explicit scope decisions.
