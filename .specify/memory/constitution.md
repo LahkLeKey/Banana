@@ -1,6 +1,6 @@
 <!--
 Sync Impact Report
-- Version change: 1.9.1 -> 1.10.0
+- Version change: 1.10.0 -> 1.10.1
 - Modified principles:
 	- Added X. Observable Infrastructure as Code
 	- Added XI. Spec-Driven Infrastructure Discovery
@@ -8,6 +8,8 @@ Sync Impact Report
 	- Added XIII. Performance Budgets as Code
 	- Added XIV. Health Checks and Diagnostics
 -	- Added XVIII. Confidence-Gated Clarification
+	- Added XVIII. Confidence-Gated Clarification
+	- Added XIX. Unified Monorepo Workflow Harness (DDD + SOLID)
 - Added XV. Deployment Readiness as Code
 - Added XVI. Memory-First Bootstrapping Efficiency
 - Added XVII. Feedback-Loop Promotion
@@ -19,6 +21,7 @@ Sync Impact Report
 - Added workflow guidance: checkpoint-first scan discipline to avoid repeated full rescans
 - Added workflow guidance: deferred-ledger closure when remaining specs are blocked/research-only
 - Added workflow guidance: mandatory targeted Q/A when confidence in the next code-improving step is below 70%
+- Added workflow guidance: single `Banana-Monorepo` harness requirement for all managed lanes
 - Templates requiring updates:
 	- ✅ updated .specify/templates/plan-template.md
 	- ✅ compatible .specify/templates/spec-template.md
@@ -103,6 +106,13 @@ Operational and delivery signals must be promoted into explicit, scored follow-u
 ### XVIII. Confidence-Gated Clarification
 Spec Kit work must not guess through ambiguity. When the operator is below 70% confidence that the next edit, command, or workflow change will improve the codebase, the operator MUST stop and ask targeted Q/A before proceeding. The questions must be decision-driving, narrow the uncertainty that blocks progress, and be recorded in the active spec or plan when they change scope, constraints, or acceptance expectations.
 
+### XIX. Unified Monorepo Workflow Harness (DDD + SOLID)
+Banana-managed CI/CD lanes must be orchestrated through a single workflow harness named `Banana-Monorepo`. Workflow design must follow domain-driven decomposition and SOLID-style responsibilities:
+- each lane/job maps to a bounded domain context,
+- each job has one clear responsibility,
+- new lanes extend the harness without creating parallel top-level workflow sprawl,
+- lane contracts remain stable and composable for the terminal pass/fail summary.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
@@ -147,6 +157,7 @@ Spec Kit work must not guess through ambiguity. When the operator is below 70% c
 - When no runnable specs remain, operators should emit a deferred-ledger summary that accounts for blocked/research specs without forcing a full recomputation loop.
 - After checkpoint accounting, operators should emit a promotion ledger capturing high-value follow-up slices and route those items into new specs.
 - When confidence that the next action will improve the codebase falls below 70%, pause implementation and ask focused Q/A before editing or dispatching broad workflow changes. Reversible probes are acceptable only after that clarification step or when the human explicitly requests exploratory work.
+- Keep all managed CI stages under `Banana-Monorepo`; do not introduce additional top-level workflow files for stage-specific orchestration unless explicitly approved as an exception in the active spec.
 
 ## Governance
 
@@ -154,4 +165,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.10.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-06
+**Version**: 1.10.1 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-09
