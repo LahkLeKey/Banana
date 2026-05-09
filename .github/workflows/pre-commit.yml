@@ -427,7 +427,6 @@ jobs:
 
   screenshot:
     name: Runtime / screenshot
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: turbo
     runs-on: ubuntu-latest
     permissions:
@@ -438,34 +437,85 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine screenshot lane eligibility
+        id: screenshot-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "reason=push-main" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_sha="${{ github.event.pull_request.base.sha }}"
+            head_sha="${{ github.event.pull_request.head.sha }}"
+            changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+
+            if echo "$changed_files" | grep -E -q '^(src/typescript/react/|src/typescript/shared/ui/|scripts/update-readme-screenshots\.sh|docs/screenshots/)'; then
+              echo "should_run=true" >> "$GITHUB_OUTPUT"
+              echo "reason=portal-change" >> "$GITHUB_OUTPUT"
+            else
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              echo "reason=no-portal-change" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+          echo "reason=unsupported-event" >> "$GITHUB_OUTPUT"
+
+      - name: Screenshot lane skipped
+        if: steps.screenshot-gate.outputs.should_run != 'true'
+        run: echo "Skipping screenshot lane: ${{ steps.screenshot-gate.outputs.reason }}"
+
       - name: Setup Bun
+        if: steps.screenshot-gate.outputs.should_run == 'true'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
       - name: Install Node.js (for Playwright browsers)
+        if: steps.screenshot-gate.outputs.should_run == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
       - name: Install React dependencies
+        if: steps.screenshot-gate.outputs.should_run == 'true'
         working-directory: src/typescript/react
         run: bun install
       - name: Install Playwright + browsers
+        if: steps.screenshot-gate.outputs.should_run == 'true'
         working-directory: src/typescript/react
         run: bunx playwright install chromium --with-deps
       - name: Start Vite dev server (background)
+        if: steps.screenshot-gate.outputs.should_run == 'true'
         working-directory: src/typescript/react
         run: |
           bun run dev &
           timeout 60 bash -c 'until curl -sf http://localhost:5173 > /dev/null 2>&1; do sleep 1; done'
       - name: Ensure docs/screenshots directory exists
+        if: steps.screenshot-gate.outputs.should_run == 'true'
         run: mkdir -p docs/screenshots
       - name: Run Playwright screenshot suite
+        if: steps.screenshot-gate.outputs.should_run == 'true'
         working-directory: src/typescript/react
         run: bun run screenshots
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:5173
           CI: "true"
+
+      - name: Upload screenshot artifacts
+        if: steps.screenshot-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-screenshots
+          path: docs/screenshots/
+
       - name: Update README gallery
+        if: steps.screenshot-gate.outputs.should_run == 'true'
         run: bash scripts/update-readme-screenshots.sh
 
   web-vitals:
