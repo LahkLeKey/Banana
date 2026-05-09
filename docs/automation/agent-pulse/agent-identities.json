@@ -83,5 +83,15 @@
             "followable": false,
             "contributor_name": "Wf Workflow Agent"
         }
-    ]
+        },
+        {
+            "slug": "compose-runtime-agent",
+            "display_name": "Compose Runtime Agent",
+            "icon": "Cr",
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/compose-runtime-agent/",
+            "followable": false,
+            "contributor_name": "Cr Compose Runtime Agent"
+        }
+        ]
 }
