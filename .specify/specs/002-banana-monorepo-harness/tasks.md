@@ -21,5 +21,5 @@
 
 ## Phase 4 - Verification
 
-- [ ] Verify Actions UI reflects `Banana-Monorepo` naming after workflow indexing refresh.
-- [ ] Confirm only the canonical harness remains for repository-managed CI/CD lanes.
+- [x] Verify Actions UI reflects `Banana-Monorepo` naming after workflow indexing refresh.
+- [x] Confirm only the canonical harness remains for repository-managed CI/CD lanes.

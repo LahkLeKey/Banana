@@ -4,7 +4,7 @@
 
 Adds a biologically-inspired layer (replay, EWC-style consolidation, surprise
 weighting, dopamine-style learning-rate modulation, anti-forgetting guard) on
-top of Banana's existing autonomous self-training cycle. New git-event and
+top of Banana's historical self-training experimentation phase. New git-event and
 sleep-schedule workflows retrain only the affected models. Fully **opt-in** —
 default behavior is byte-for-byte unchanged.
 
@@ -58,8 +58,7 @@ default behavior is byte-for-byte unchanged.
 
 - Drop `--neuro-profile` (or pass `off`) on the trainers.
 - Disable the new workflows in repo settings; the existing
-  `train-not-banana-model.yml` and autonomous-self-training cycle continue
-  unchanged.
+  `train-not-banana-model.yml` path continues unchanged.
 - All neuro outputs live under `artifacts/training/<model>/{replay,consolidation}`
   and `evidence-<trigger>.json`; deleting them has no effect on the
   existing deterministic artifacts.

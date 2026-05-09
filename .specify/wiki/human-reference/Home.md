@@ -53,7 +53,6 @@ Deployments, CI runbooks, compose profiles, WSL2 runtime channels, and triage gu
 
 ### [Governance](governance/README.md)
 - [API Parity Governance](governance/api-parity-governance.md)
-- [Autonomous Self-Training](governance/autonomous-self-training.md)
 
 ---
 

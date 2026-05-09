@@ -43,9 +43,8 @@ Migration discipline, coverage exceptions, and data contracts.
 - [Coverage Exceptions](data/coverage-exceptions.md)
 
 ### [Governance](governance/README.md)
-API parity rules, autonomous self-training contracts, and policy documents.
+API parity rules and policy documents.
 - [API Parity Governance](governance/api-parity-governance.md)
-- [Autonomous Self-Training](governance/autonomous-self-training.md)
 
 ---
 

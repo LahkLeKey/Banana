@@ -38,4 +38,3 @@ data/coverage-exceptions.md
 data/migration-discipline.md
 governance/README.md
 governance/api-parity-governance.md
-governance/autonomous-self-training.md

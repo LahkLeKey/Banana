@@ -1,6 +1,6 @@
 # scripts/neuro
 
-Neuroscience-inspired helpers for the Banana autonomous self-training cycle (Spec Kit feature 050).
+Neuroscience-inspired helpers from legacy Spec Kit feature 050, retained as optional trainer-side experiments.
 
 All helpers are **additive and opt-in** behind `--neuro-profile {off,ci,local}` on the trainers
 (`scripts/train-{not-banana,banana,ripeness}-model.py`). Default is `off`, which preserves the

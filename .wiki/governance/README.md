@@ -8,6 +8,5 @@
 | Page | Description |
 |------|-------------|
 | [API Parity Governance](api-parity-governance.md) | |
-| [Autonomous Self-Training](autonomous-self-training.md) | |
 
 <!-- AUTO-INDEX END -->

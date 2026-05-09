@@ -39,9 +39,6 @@ WORKFLOW_ORCHESTRATE_FEEDBACK = (
     WORKFLOWS_DIR / "orchestrate-not-banana-feedback-loop.yml"
 )
 WORKFLOW_ORCHESTRATE_TRIAGE_IDEA = WORKFLOWS_DIR / "orchestrate-triage-idea-cloud.yml"
-WORKFLOW_ORCHESTRATE_AUTONOMOUS = (
-    WORKFLOWS_DIR / "orchestrate-autonomous-self-training-cycle.yml"
-)
 WORKFLOW_AI_CONTRACT_GUARD = WORKFLOWS_DIR / "ai-contract-guard.yml"
 WORKFLOW_TRAIN_NOT_BANANA = WORKFLOWS_DIR / "train-not-banana-model.yml"
 WORKFLOW_BANANA_MONOREPO = WORKFLOWS_DIR / "banana.yml"
@@ -697,26 +694,6 @@ def main() -> int:
             issues.append(
                 f"WORKFLOW missing workflow-agent PR label default: {sdlc_workflow_rel}"
             )
-
-    autonomous_rel = WORKFLOW_ORCHESTRATE_AUTONOMOUS.relative_to(ROOT).as_posix()
-    if WORKFLOW_ORCHESTRATE_AUTONOMOUS.exists():
-        autonomous_text = WORKFLOW_ORCHESTRATE_AUTONOMOUS.read_text(encoding="utf-8")
-        manual_pat_target_texts[autonomous_rel] = autonomous_text
-        autonomous_required_fragments = {
-            "pull_request_target": "WORKFLOW missing autonomous continuation trigger",
-            "copilot-autonomous-cycle": "WORKFLOW missing copilot-autonomous-cycle label contract",
-            "speckit-driven": "WORKFLOW missing spec-kit provenance label contract",
-            "workflow-orchestrate-sdlc.sh": "WORKFLOW missing SDLC orchestrator execution",
-            "training-profile ci --session-mode single --max-sessions 1": "WORKFLOW missing bounded minimal-resource training command",
-            "BANANA_REQUIRED_HUMAN_REVIEWER": "WORKFLOW missing required human reviewer wiring",
-            "agent:workflow-agent": "WORKFLOW missing workflow-agent PR label default",
-            "agent:banana-classifier-agent": "WORKFLOW missing classifier agent increment labels",
-            CANONICAL_WIKI_REMOTE_URL: "WORKFLOW missing canonical wiki remote default",
-        }
-
-        for fragment, message in autonomous_required_fragments.items():
-            if fragment not in autonomous_text:
-                issues.append(f"{message}: {autonomous_rel}")
 
     if SCRIPT_ORCHESTRATE_TRIAGED.exists():
         triaged_script_text = SCRIPT_ORCHESTRATE_TRIAGED.read_text(encoding="utf-8")
