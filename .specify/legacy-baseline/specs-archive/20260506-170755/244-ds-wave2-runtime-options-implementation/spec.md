@@ -1,6 +1,6 @@
 # Feature Specification: DS Wave 2 Runtime Options Implementation (244)
 
-**Feature Branch**: 
+**Feature Branch**:
 **Created**: 2026-05-03
 **Status**: Ready for implementation
 **Input**: Execute implementation wave based on DS spike outputs.

@@ -1,7 +1,7 @@
 # Feature Specification: Banana Grade-School Explanation Quality (253)
 
-**Feature Branch**: `253-banana-grade-school-explanation-quality`  
-**Created**: 2026-05-05  
+**Feature Branch**: `253-banana-grade-school-explanation-quality`
+**Created**: 2026-05-05
 **Status**: Draft
 
 ## Problem Statement

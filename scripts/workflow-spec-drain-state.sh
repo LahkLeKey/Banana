@@ -158,31 +158,31 @@ runnable_specs = []
 for spec_dir in sorted(specs_root.iterdir()):
     if not spec_dir.is_dir():
         continue
-    
+
     spec_file = spec_dir / "spec.md"
     tasks_file = spec_dir / "tasks.md"
-    
+
     # Must have both spec.md and tasks.md
     if not (spec_file.exists() and tasks_file.exists()):
         continue
-    
+
     spec_id = spec_dir.name
-    
+
     # Skip already completed or failed specs
     if spec_id in completed or spec_id in failed_specs:
         continue
-    
+
     # Check Status in spec.md: skip "Ready for research" unless explicitly set to process
     spec_content = spec_file.read_text(encoding="utf-8")
     if "**Status**: Ready for research" in spec_content:
         # Skip research-only specs (they require infrastructure decisions/setup)
         continue
-    
+
     # Check for infrastructure blockers in Prerequisites
     if "[INFRASTRUCTURE]" in spec_content:
         # Skip specs with explicit infrastructure blockers
         continue
-    
+
     runnable_specs.append(spec_id)
 
 # Return first runnable spec or empty string if none

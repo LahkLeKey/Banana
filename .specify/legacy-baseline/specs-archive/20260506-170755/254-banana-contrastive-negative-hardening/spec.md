@@ -1,7 +1,7 @@
 # Feature Specification: Banana Contrastive Negative Hardening (254)
 
-**Feature Branch**: `254-banana-contrastive-negative-hardening`  
-**Created**: 2026-05-05  
+**Feature Branch**: `254-banana-contrastive-negative-hardening`
+**Created**: 2026-05-05
 **Status**: Draft
 
 ## Problem Statement

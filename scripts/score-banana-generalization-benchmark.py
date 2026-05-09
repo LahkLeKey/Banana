@@ -14,7 +14,9 @@ TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Score banana generalization benchmark")
+    parser = argparse.ArgumentParser(
+        description="Score banana generalization benchmark"
+    )
     parser.add_argument(
         "--benchmark",
         type=Path,
@@ -145,13 +147,16 @@ def main() -> int:
     failing_contexts = {
         k: v
         for k, v in context_scores.items()
-        if v < float(args.min_context_accuracy) and int(per_context_total.get(k, 0)) >= 2
+        if v < float(args.min_context_accuracy)
+        and int(per_context_total.get(k, 0)) >= 2
     }
 
     top_confusions: list[dict[str, Any]] = []
     for context, counter in sorted(confusion_clusters.items()):
         for edge, count in counter.most_common(3):
-            top_confusions.append({"context_family": context, "edge": edge, "count": int(count)})
+            top_confusions.append(
+                {"context_family": context, "edge": edge, "count": int(count)}
+            )
 
     summary = {
         "schema_version": 1,

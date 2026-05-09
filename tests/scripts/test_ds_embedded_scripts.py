@@ -28,120 +28,137 @@ NOTEBOOKS_DIR = REPO_ROOT / "src" / "typescript" / "react" / "public" / "noteboo
 # Mirror the .join("\n") output from dsConstants.ts — tested by running them.
 # ---------------------------------------------------------------------------
 
-VIZ_BAR_SCAFFOLD = "\n".join([
-    "import json",
-    "figure = {",
-    "    'data': [{'type': 'bar', 'x': ['banana', 'ripeness', 'chat', 'trucks'], 'y': [42, 31, 18, 25], 'marker': {'color': ['#3b82f6','#10b981','#f59e0b','#ef4444']}}],",
-    "    'layout': {'title': {'text': 'Requests by Endpoint Group'}, 'xaxis': {'title': 'group'}, 'yaxis': {'title': 'count'}, 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'}",
-    "}",
-    "print('BANANA_PLOTLY::' + json.dumps(figure))",
-])
+VIZ_BAR_SCAFFOLD = "\n".join(
+    [
+        "import json",
+        "figure = {",
+        "    'data': [{'type': 'bar', 'x': ['banana', 'ripeness', 'chat', 'trucks'], 'y': [42, 31, 18, 25], 'marker': {'color': ['#3b82f6','#10b981','#f59e0b','#ef4444']}}],",
+        "    'layout': {'title': {'text': 'Requests by Endpoint Group'}, 'xaxis': {'title': 'group'}, 'yaxis': {'title': 'count'}, 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'}",
+        "}",
+        "print('BANANA_PLOTLY::' + json.dumps(figure))",
+    ]
+)
 
-VIZ_LINE_SCAFFOLD = "\n".join([
-    "import json",
-    "figure = {",
-    "    'data': [{'type': 'scatter', 'mode': 'lines+markers', 'x': ['run-1','run-2','run-3','run-4','run-5'], 'y': [0.79, 0.84, 0.86, 0.88, 0.90], 'name': 'accuracy', 'line': {'color': '#3b82f6'}}],",
-    "    'layout': {'title': {'text': 'Accuracy Trend'}, 'xaxis': {'title': 'run'}, 'yaxis': {'title': 'accuracy', 'range': [0, 1]}, 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'}",
-    "}",
-    "print('BANANA_PLOTLY::' + json.dumps(figure))",
-])
+VIZ_LINE_SCAFFOLD = "\n".join(
+    [
+        "import json",
+        "figure = {",
+        "    'data': [{'type': 'scatter', 'mode': 'lines+markers', 'x': ['run-1','run-2','run-3','run-4','run-5'], 'y': [0.79, 0.84, 0.86, 0.88, 0.90], 'name': 'accuracy', 'line': {'color': '#3b82f6'}}],",
+        "    'layout': {'title': {'text': 'Accuracy Trend'}, 'xaxis': {'title': 'run'}, 'yaxis': {'title': 'accuracy', 'range': [0, 1]}, 'paper_bgcolor': 'rgba(0,0,0,0)', 'plot_bgcolor': 'rgba(0,0,0,0)'}",
+        "}",
+        "print('BANANA_PLOTLY::' + json.dumps(figure))",
+    ]
+)
 
-TABLE_SCAFFOLD = "\n".join([
-    "import json",
-    "table = {",
-    "    'columns': ['lane', 'samples', 'accuracy'],",
-    "    'rows': [",
-    "        ['banana', 512, 0.94],",
-    "        ['not-banana', 498, 0.91],",
-    "        ['ripeness', 321, 0.88]",
-    "    ]",
-    "}",
-    "print('BANANA_TABLE::' + json.dumps(table))",
-])
+TABLE_SCAFFOLD = "\n".join(
+    [
+        "import json",
+        "table = {",
+        "    'columns': ['lane', 'samples', 'accuracy'],",
+        "    'rows': [",
+        "        ['banana', 512, 0.94],",
+        "        ['not-banana', 498, 0.91],",
+        "        ['ripeness', 321, 0.88]",
+        "    ]",
+        "}",
+        "print('BANANA_TABLE::' + json.dumps(table))",
+    ]
+)
 
-VEGA_GATE_SCAFFOLD = "\n".join([
-    "import json",
-    "payload = {",
-    "    'title': 'Vega-Lite contract sample',",
-    "    'summary': 'Declarative analytics specs are preserved and surfaced, but not rendered in the active wave.',",
-    "    'detail': 'Use this marker to capture the spec contract safely while Plotly remains the only live chart renderer.'",
-    "}",
-    "print('BANANA_VEGA::' + json.dumps(payload))",
-])
+VEGA_GATE_SCAFFOLD = "\n".join(
+    [
+        "import json",
+        "payload = {",
+        "    'title': 'Vega-Lite contract sample',",
+        "    'summary': 'Declarative analytics specs are preserved and surfaced, but not rendered in the active wave.',",
+        "    'detail': 'Use this marker to capture the spec contract safely while Plotly remains the only live chart renderer.'",
+        "}",
+        "print('BANANA_VEGA::' + json.dumps(payload))",
+    ]
+)
 
-BOKEH_GATE_SCAFFOLD = "\n".join([
-    "import json",
-    "payload = {",
-    "    'title': 'Bokeh runtime gate',",
-    "    'summary': 'Streaming and Bokeh bundle payloads are recognized as gated runtime options.',",
-    "    'detail': 'The notebook records this intent without loading a second interactive stack into the browser surface.'",
-    "}",
-    "print('BANANA_BOKEH::' + json.dumps(payload))",
-])
+BOKEH_GATE_SCAFFOLD = "\n".join(
+    [
+        "import json",
+        "payload = {",
+        "    'title': 'Bokeh runtime gate',",
+        "    'summary': 'Streaming and Bokeh bundle payloads are recognized as gated runtime options.',",
+        "    'detail': 'The notebook records this intent without loading a second interactive stack into the browser surface.'",
+        "}",
+        "print('BANANA_BOKEH::' + json.dumps(payload))",
+    ]
+)
 
-WIDGET_GATE_SCAFFOLD = "\n".join([
-    "import json",
-    "payload = {",
-    "    'title': 'Widget interop gate',",
-    "    'summary': 'ipywidgets-style controls remain gated until state replay and security boundaries are implemented.',",
-    "    'detail': 'Use the marker to document a notebook requirement without pretending the browser host can execute widget traffic today.'",
-    "}",
-    "print('BANANA_WIDGET::' + json.dumps(payload))",
-    "print('BANANA_BQPLOT::' + json.dumps({'title': 'bqplot gate', 'summary': 'Widget-driven plotting stays behind the same gate.'}))",
-])
+WIDGET_GATE_SCAFFOLD = "\n".join(
+    [
+        "import json",
+        "payload = {",
+        "    'title': 'Widget interop gate',",
+        "    'summary': 'ipywidgets-style controls remain gated until state replay and security boundaries are implemented.',",
+        "    'detail': 'Use the marker to document a notebook requirement without pretending the browser host can execute widget traffic today.'",
+        "}",
+        "print('BANANA_WIDGET::' + json.dumps(payload))",
+        "print('BANANA_BQPLOT::' + json.dumps({'title': 'bqplot gate', 'summary': 'Widget-driven plotting stays behind the same gate.'}))",
+    ]
+)
 
-SPECIALIZED_SURFACE_SCAFFOLD = "\n".join([
-    "import json",
-    "print('BANANA_GEO::' + json.dumps({'title': 'Geospatial surface deferred', 'summary': 'Map and tile flows are explicitly deferred beyond the current release wave.'}))",
-    "print('BANANA_NETWORK::' + json.dumps({'title': 'Network graph surface deferred', 'summary': 'Relationship views need a dedicated host and are not bundled into the default notebook runner.'}))",
-    "print('BANANA_3D::' + json.dumps({'title': '3D surface deferred', 'summary': 'WebGL-heavy notebook views remain outside the current DS release boundary.'}))",
-])
+SPECIALIZED_SURFACE_SCAFFOLD = "\n".join(
+    [
+        "import json",
+        "print('BANANA_GEO::' + json.dumps({'title': 'Geospatial surface deferred', 'summary': 'Map and tile flows are explicitly deferred beyond the current release wave.'}))",
+        "print('BANANA_NETWORK::' + json.dumps({'title': 'Network graph surface deferred', 'summary': 'Relationship views need a dedicated host and are not bundled into the default notebook runner.'}))",
+        "print('BANANA_3D::' + json.dumps({'title': '3D surface deferred', 'summary': 'WebGL-heavy notebook views remain outside the current DS release boundary.'}))",
+    ]
+)
 
 # Pyodide-style browser helper (uses `from js import XMLHttpRequest`)
-BROWSER_HTTP_HELPER = "\n".join([
-    "import json",
-    "from js import XMLHttpRequest",
-    "",
-    "API_BASE = 'https://api.banana.engineer'",
-    "",
-    "def pp(obj):",
-    "    if isinstance(obj, str):",
-    "        try:",
-    "            obj = json.loads(obj)",
-    "        except Exception:",
-    "            print(obj)",
-    "            return",
-    "    print(json.dumps(obj, indent=2))",
-    "",
-    "def call_endpoint(method, path, payload=None, headers=None):",
-    "    url = path if str(path).startswith('http') else f\"{API_BASE}{path}\"",
-    "    try:",
-    "        xhr = XMLHttpRequest.new()",
-    "        xhr.open(method.upper(), url, False)",
-    "        xhr.setRequestHeader('Accept', 'application/json')",
-    "        if headers:",
-    "            for k, v in headers.items():",
-    "                xhr.setRequestHeader(str(k), str(v))",
-    "        body = None",
-    "        if payload is not None:",
-    "            xhr.setRequestHeader('Content-Type', 'application/json')",
-    "            body = json.dumps(payload)",
-    "        xhr.send(body)",
-    "        return {'ok': 200 <= int(xhr.status) < 300, 'status': int(xhr.status), 'body': str(xhr.responseText)}",
-    "    except Exception as ex:",
-    "        return {'ok': False, 'status': None, 'body': str(ex)}",
-    "",
-    "def get(path, **kw):",
-    "    return call_endpoint('GET', path, **kw)",
-    "",
-    "def post(path, **kw):",
-    "    return call_endpoint('POST', path, **kw)",
-])
+BROWSER_HTTP_HELPER = "\n".join(
+    [
+        "import json",
+        "from js import XMLHttpRequest",
+        "",
+        "API_BASE = 'https://api.banana.engineer'",
+        "",
+        "def pp(obj):",
+        "    if isinstance(obj, str):",
+        "        try:",
+        "            obj = json.loads(obj)",
+        "        except Exception:",
+        "            print(obj)",
+        "            return",
+        "    print(json.dumps(obj, indent=2))",
+        "",
+        "def call_endpoint(method, path, payload=None, headers=None):",
+        "    url = path if str(path).startswith('http') else f\"{API_BASE}{path}\"",
+        "    try:",
+        "        xhr = XMLHttpRequest.new()",
+        "        xhr.open(method.upper(), url, False)",
+        "        xhr.setRequestHeader('Accept', 'application/json')",
+        "        if headers:",
+        "            for k, v in headers.items():",
+        "                xhr.setRequestHeader(str(k), str(v))",
+        "        body = None",
+        "        if payload is not None:",
+        "            xhr.setRequestHeader('Content-Type', 'application/json')",
+        "            body = json.dumps(payload)",
+        "        xhr.send(body)",
+        "        return {'ok': 200 <= int(xhr.status) < 300, 'status': int(xhr.status), 'body': str(xhr.responseText)}",
+        "    except Exception as ex:",
+        "        return {'ok': False, 'status': None, 'body': str(ex)}",
+        "",
+        "def get(path, **kw):",
+        "    return call_endpoint('GET', path, **kw)",
+        "",
+        "def post(path, **kw):",
+        "    return call_endpoint('POST', path, **kw)",
+    ]
+)
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _exec_capture(code: str, globs: dict[str, Any] | None = None) -> str:
     """Execute *code* and return everything written to stdout."""
@@ -156,13 +173,14 @@ def _marker_json(output: str, prefix: str) -> Any:
     """Extract and parse the JSON payload after *prefix* on the first matching line."""
     for line in output.splitlines():
         if line.startswith(prefix):
-            return json.loads(line[len(prefix):])
+            return json.loads(line[len(prefix) :])
     raise AssertionError(f"No line starting with {prefix!r} found in output:\n{output}")
 
 
 # ---------------------------------------------------------------------------
 # Scaffold output contracts
 # ---------------------------------------------------------------------------
+
 
 class TestVizBarScaffold:
     def test_emits_banana_plotly_marker(self) -> None:
@@ -312,6 +330,7 @@ class TestSpecializedSurfaceScaffold:
 # Notebook 01 urllib-based HTTP helpers
 # ---------------------------------------------------------------------------
 
+
 # Extract cells from 01-platform-setup.ipynb
 def _load_notebook_cells(name: str) -> list[str]:
     nb = json.loads((NOTEBOOKS_DIR / name).read_text(encoding="utf-8"))
@@ -369,10 +388,15 @@ class TestNotebook01Helpers:
 
         class _FakeResponse:
             status = 200
+
             def read(self) -> bytes:
                 return b'{"ok": true}'
-            def __enter__(self): return self
-            def __exit__(self, *_): pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                pass
 
         with patch("urllib.request.urlopen", return_value=_FakeResponse()):
             result = ns["call_endpoint"]("GET", "/health")
@@ -382,6 +406,7 @@ class TestNotebook01Helpers:
 
     def test_call_endpoint_returns_not_ok_on_http_error(self) -> None:
         import urllib.error
+
         ns = self._exec_helpers()
 
         err = urllib.error.HTTPError("/health", 404, "Not Found", {}, None)
@@ -408,9 +433,15 @@ class TestNotebook01Helpers:
 
         class _FakeResp:
             status = 200
-            def read(self) -> bytes: return b"{}"
-            def __enter__(self): return self
-            def __exit__(self, *_): pass
+
+            def read(self) -> bytes:
+                return b"{}"
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                pass
 
         def _fake_urlopen(req: Any) -> _FakeResp:
             calls.append(req.get_method())
@@ -427,9 +458,15 @@ class TestNotebook01Helpers:
 
         class _FakeResp:
             status = 200
-            def read(self) -> bytes: return b"{}"
-            def __enter__(self): return self
-            def __exit__(self, *_): pass
+
+            def read(self) -> bytes:
+                return b"{}"
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                pass
 
         def _fake_urlopen(req: Any) -> _FakeResp:
             calls.append(req.get_method())
@@ -448,6 +485,7 @@ class TestNotebook01Helpers:
 # ---------------------------------------------------------------------------
 # BROWSER_HTTP_HELPER with mocked `js` module (Pyodide compat)
 # ---------------------------------------------------------------------------
+
 
 def _make_js_mock(status: int = 200, response_text: str = "{}") -> types.ModuleType:
     """Build a fake `js` module with a controllable XMLHttpRequest."""
@@ -514,7 +552,9 @@ class TestBrowserHttpHelper:
         ns = self._exec_helper(js_mod)
         ns["call_endpoint"]("GET", "/ping")
         xhr = js_mod.XMLHttpRequest.new.return_value
-        xhr.open.assert_called_once_with("GET", "https://api.banana.engineer/ping", False)
+        xhr.open.assert_called_once_with(
+            "GET", "https://api.banana.engineer/ping", False
+        )
 
     def test_call_endpoint_sends_json_payload(self) -> None:
         js_mod = _make_js_mock()
@@ -618,8 +658,9 @@ def test_notebook_fixture_has_metadata(filename: str) -> None:
     assert isinstance(data.get("metadata"), dict)
     # Notebooks may use kernelspec or language_info (or both) to declare the language.
     meta = data["metadata"]
-    lang = (
-        meta.get("kernelspec", {}).get("language")
-        or meta.get("language_info", {}).get("name")
+    lang = meta.get("kernelspec", {}).get("language") or meta.get(
+        "language_info", {}
+    ).get("name")
+    assert lang == "python", (
+        f"{filename} missing python language declaration in metadata"
     )
-    assert lang == "python", f"{filename} missing python language declaration in metadata"

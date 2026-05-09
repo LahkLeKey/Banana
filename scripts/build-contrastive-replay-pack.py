@@ -23,7 +23,9 @@ def parse_args() -> argparse.Namespace:
         default=Path("data/not-banana/replay/contrastive-replay-pack.json"),
         help="Output replay pack path",
     )
-    parser.add_argument("--max-entries", type=int, default=50, help="Max replay entries to include")
+    parser.add_argument(
+        "--max-entries", type=int, default=50, help="Max replay entries to include"
+    )
     return parser.parse_args()
 
 
@@ -69,7 +71,7 @@ def main() -> int:
 
         replay_entries.append(
             {
-                "id": str(item.get("id", f"replay-{len(replay_entries)+1:03d}")),
+                "id": str(item.get("id", f"replay-{len(replay_entries) + 1:03d}")),
                 "label": label,
                 "text": text,
                 "source": "reinforcement-disagreement",
@@ -87,8 +89,14 @@ def main() -> int:
         "entries": replay_entries,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(output_payload, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"output": str(args.output), "entry_count": len(replay_entries)}, indent=2))
+    args.output.write_text(
+        json.dumps(output_payload, indent=2) + "\n", encoding="utf-8"
+    )
+    print(
+        json.dumps(
+            {"output": str(args.output), "entry_count": len(replay_entries)}, indent=2
+        )
+    )
     return 0
 
 

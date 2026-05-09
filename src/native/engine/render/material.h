@@ -2,23 +2,25 @@
 #define BANANA_ENGINE_MATERIAL_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/* Forward declaration */
-struct Shader;
+    /* Forward declaration */
+    struct Shader;
 
-typedef struct Material {
-    float color[4];   /* RGBA, 0.0–1.0 */
-    float roughness;  /* 0.0 = smooth, 1.0 = rough */
-    float metallic;   /* 0.0 = dielectric, 1.0 = metal */
-} Material;
+    typedef struct Material
+    {
+        float color[4];  /* RGBA, 0.0–1.0 */
+        float roughness; /* 0.0 = smooth, 1.0 = rough */
+        float metallic;  /* 0.0 = dielectric, 1.0 = metal */
+    } Material;
 
-/* Solid color material. */
-Material material_solid(float r, float g, float b, float a);
+    /* Solid color material. */
+    Material material_solid(float r, float g, float b, float a);
 
-/* Apply material uniforms to the currently bound shader. */
-void material_apply(const Material *m, struct Shader *s);
+    /* Apply material uniforms to the currently bound shader. */
+    void material_apply(const Material *m, struct Shader *s);
 
 #ifdef __cplusplus
 }

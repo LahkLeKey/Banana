@@ -1,7 +1,7 @@
 # Feature Specification: Autonomous Curriculum Expansion Loop (255)
 
-**Feature Branch**: `255-autonomous-curriculum-expansion-loop`  
-**Created**: 2026-05-05  
+**Feature Branch**: `255-autonomous-curriculum-expansion-loop`
+**Created**: 2026-05-05
 **Status**: Draft
 
 ## Problem Statement

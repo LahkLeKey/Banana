@@ -7,7 +7,6 @@ import argparse
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 TEMPLATES: dict[str, list[str]] = {
     "fruit-identity": [
@@ -38,7 +37,9 @@ TEMPLATES: dict[str, list[str]] = {
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate banana curriculum candidates")
+    parser = argparse.ArgumentParser(
+        description="Generate banana curriculum candidates"
+    )
     parser.add_argument(
         "--gaps",
         type=Path,
@@ -51,12 +52,19 @@ def parse_args() -> argparse.Namespace:
         default=Path("data/banana/curriculum/staging.json"),
         help="Staging file path",
     )
-    parser.add_argument("--max-new", type=int, default=10, help="Max new candidates to add")
+    parser.add_argument(
+        "--max-new", type=int, default=10, help="Max new candidates to add"
+    )
     return parser.parse_args()
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def main() -> int:
@@ -75,7 +83,11 @@ def main() -> int:
     max_auto = int(staging.get("max_auto_accept_per_run", max(1, args.max_new)))
     allowed_new = max(0, min(int(args.max_new), max_auto))
 
-    seen_texts = {str(item.get("text", "")).strip().lower() for item in entries if isinstance(item, dict)}
+    seen_texts = {
+        str(item.get("text", "")).strip().lower()
+        for item in entries
+        if isinstance(item, dict)
+    }
     created = 0
 
     for gap in gaps:
@@ -95,7 +107,7 @@ def main() -> int:
                 continue
             entries.append(
                 {
-                    "id": f"curr-{concept_id}-{len(entries)+1:04d}",
+                    "id": f"curr-{concept_id}-{len(entries) + 1:04d}",
                     "label": "banana",
                     "text": template,
                     "concepts": [concept_id],

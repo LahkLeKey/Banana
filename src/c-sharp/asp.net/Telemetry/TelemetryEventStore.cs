@@ -190,11 +190,11 @@ limit @limit;
                 return;
             }
 
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync(cancellationToken);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync(cancellationToken);
 
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
 create table if not exists operator_telemetry_events (
     id bigserial primary key,
     source text not null,
@@ -216,7 +216,7 @@ create index if not exists idx_operator_telemetry_events_source
     on operator_telemetry_events (source);
 ";
 
-        await cmd.ExecuteNonQueryAsync(cancellationToken);
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
             _schemaReady = true;
         }
         finally

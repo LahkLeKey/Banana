@@ -518,7 +518,10 @@ def main() -> int:
             expected = str(prompt.get("label", ""))
             text = str(prompt.get("text", ""))
             predicted, _ = predict_label(
-                text, token_weights_for_challenge, args.min_token_length, args.allow_numeric_tokens
+                text,
+                token_weights_for_challenge,
+                args.min_token_length,
+                args.allow_numeric_tokens,
             )
             ch_total[expected] = ch_total.get(expected, 0) + 1
             if predicted == expected:
@@ -531,7 +534,8 @@ def main() -> int:
             "accuracy": round(ch_right / ch_all, 6) if ch_all else 0.0,
             "per_label_recall": {
                 label: round(ch_correct.get(label, 0) / ch_total[label], 6)
-                if ch_total.get(label, 0) > 0 else 0.0
+                if ch_total.get(label, 0) > 0
+                else 0.0
                 for label in LABELS
             },
         }

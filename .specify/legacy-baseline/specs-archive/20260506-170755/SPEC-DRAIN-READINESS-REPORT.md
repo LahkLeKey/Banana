@@ -1,6 +1,6 @@
 # Spec-Drain Bulk Execution: Execution Contract Report
 
-**Date**: 2026-05-02  
+**Date**: 2026-05-02
 **Status**: ⚠️ QUALITY-GATE READY, REAL EXECUTION POLICY-BLOCKED UNTIL PLAN MANIFEST EXISTS
 
 ## Executive Summary
@@ -10,9 +10,9 @@ The autonomous spec-drain automation system now has correct quality-gate behavio
 ## Spec Classification
 
 ### Category 1: Executable (Plan-Eligible) — 154 Specs
-**Status**: Ready for implementation  
-**Quality Gate**: ✅ PASS (all required sections present)  
-**Infrastructure**: Not required  
+**Status**: Ready for implementation
+**Quality Gate**: ✅ PASS (all required sections present)
+**Infrastructure**: Not required
 **Processing**: Selectable by drainage loop; requires manifest entry for real execution
 
 **Examples**:
@@ -30,9 +30,9 @@ The autonomous spec-drain automation system now has correct quality-gate behavio
 - 149-api-rate-limit-verification
 
 ### Category 2: Infrastructure-Blocked (Deferred) — 3 Specs
-**Status**: Ready for implementation + [INFRASTRUCTURE] blocker  
-**Quality Gate**: ✅ PASS  
-**Infrastructure**: Requires live services (Vercel, Railway, production metrics)  
+**Status**: Ready for implementation + [INFRASTRUCTURE] blocker
+**Quality Gate**: ✅ PASS
+**Infrastructure**: Requires live services (Vercel, Railway, production metrics)
 **Processing**: Skipped without failure; revisited when prerequisites available
 
 **Specs**:
@@ -52,8 +52,8 @@ The autonomous spec-drain automation system now has correct quality-gate behavio
    - Prerequisites: Live database with production patterns
 
 ### Category 3: Research-Only (Phase 2) — 5 Specs
-**Status**: Ready for research (no infrastructure decision yet)  
-**Quality Gate**: ✅ PASS  
+**Status**: Ready for research (no infrastructure decision yet)
+**Quality Gate**: ✅ PASS
 **Processing**: Skipped during implementation phase; revisited after infrastructure planning
 
 **Specs**:
@@ -75,9 +75,9 @@ All 162 specs pass `validate-spec-quality.sh` checks:
 - `## Out of Scope` (bounded list)
 - `## Success Criteria` (measurable outcomes)
 
-✅ **152 specs were auto-fixed** with missing required sections  
-✅ **12 specs already had** all sections  
-✅ **0 specs fail** quality validation  
+✅ **152 specs were auto-fixed** with missing required sections
+✅ **12 specs already had** all sections
+✅ **0 specs fail** quality validation
 
 ## Spec-Drain Configuration
 
@@ -198,11 +198,11 @@ Current verified real-mode behavior without a manifest:
 
 ## Sign-Off
 
-✅ All 162 specifications are quality-validated  
-✅ Spec-drain automation now enforces its execution contract explicitly  
-✅ Infrastructure blocker handling is implemented  
-✅ 154 specs are selectable for execution once a manifest exists  
-✅ 3 specs deferred until prerequisites available  
+✅ All 162 specifications are quality-validated
+✅ Spec-drain automation now enforces its execution contract explicitly
+✅ Infrastructure blocker handling is implemented
+✅ 154 specs are selectable for execution once a manifest exists
+✅ 3 specs deferred until prerequisites available
 ✅ 5 specs deferred until research phase decisions made
 
 **Status**: DRY-RUN READY; REAL EXECUTION BLOCKED UNTIL MANIFEST PROVIDED

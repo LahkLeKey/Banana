@@ -15,8 +15,8 @@
 | `ClassifyPage-xvs1-zhr.js` | 23.88 KB | **7.90 KB** | Lazy-loaded route chunk |
 | `web-vitals-By3A_XPg.js` | 5.89 KB | **2.25 KB** | Vercel Speed Insights |
 
-Total first-load transfer (gzip): ~122 KB JS + 3.62 KB CSS = ~126 KB.  
-Repeat visits (vendor chunks cached): ~68 KB (index only).  
+Total first-load transfer (gzip): ~122 KB JS + 3.62 KB CSS = ~126 KB.
+Repeat visits (vendor chunks cached): ~68 KB (index only).
 **Cache-hit reduction: ~46% on repeat visits.**
 
 ### Before (baseline — estimated from pre-split build):
@@ -33,7 +33,7 @@ Vite `rollupOptions.output.manualChunks` extracts:
 - `index`: app code — 214.03 KB raw / 67.98 KB gzip (only chunk that changes per deploy)
 
 **Result**: On repeat visits only the `index` chunk (~68 KB gzip) is re-fetched.
-Router, query, and radix chunks are served from browser cache.  
+Router, query, and radix chunks are served from browser cache.
 Estimated repeat-visit savings: ~43 KB gzip vs a monolithic bundle.
 
 ## React Lazy-Loading Evaluation (spec 119 T004)
@@ -59,7 +59,7 @@ Audit of `src/typescript/react/src/index.css` and `index.html`:
 
 ## Vercel Image Optimization (spec 119 T007)
 
-No user-supplied image URLs in the current classify flow. The classify route submits an image as a multipart file upload to the ASP.NET API, not a URL. Vercel Image Optimization (`/_vercel/image`) operates on `<img src>` URLs and is not applicable to the file-upload flow.  
+No user-supplied image URLs in the current classify flow. The classify route submits an image as a multipart file upload to the ASP.NET API, not a URL. Vercel Image Optimization (`/_vercel/image`) operates on `<img src>` URLs and is not applicable to the file-upload flow.
 Revisit if a banana image gallery or URL-based classify UX is added in a future spec.
 
 ## Cache Headers (spec 135)

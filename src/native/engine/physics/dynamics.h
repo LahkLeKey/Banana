@@ -2,7 +2,8 @@
 #define BANANA_ENGINE_DYNAMICS_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include "body.h"
@@ -10,14 +11,14 @@ extern "C" {
 /* Gravity constant (m/s²). Override via dynamics_set_gravity(). */
 #define BANANA_GRAVITY_DEFAULT -9.81f
 
-void dynamics_set_gravity(float gy);
+    void dynamics_set_gravity(float gy);
 
-/* Semi-implicit (symplectic) Euler integration.
- * Integrates a single body's velocity and position by dt seconds. */
-void dynamics_integrate(PhysicsBody *b, float dt);
+    /* Semi-implicit (symplectic) Euler integration.
+     * Integrates a single body's velocity and position by dt seconds. */
+    void dynamics_integrate(PhysicsBody *b, float dt);
 
-/* Integrate all bodies in an array. */
-void dynamics_integrate_all(PhysicsBody **bodies, int count, float dt);
+    /* Integrate all bodies in an array. */
+    void dynamics_integrate_all(PhysicsBody **bodies, int count, float dt);
 
 #ifdef __cplusplus
 }

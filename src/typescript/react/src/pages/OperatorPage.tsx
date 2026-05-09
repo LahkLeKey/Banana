@@ -5,7 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Textarea } from "../components/ui/textarea";
 import { Button } from "../components/ui/button";
-import { createChatSession, sendChatMessage, resolveApiBaseUrl, resolveChatApiBaseUrl } from "../lib/api";
+import {
+  createChatSession,
+  sendChatMessage,
+  resolveApiBaseUrl,
+  resolveChatApiBaseUrl,
+} from "../lib/api";
 
 type Message = { role: "user" | "assistant"; content: string };
 type FailedTurn = { prompt: string; error: string };
@@ -19,7 +24,10 @@ const QUICK_COMMANDS = [
 ];
 
 export function OperatorPage() {
-  const [telemetryConfig, setTelemetryConfig] = useState<{ sample_rate: number; unit: string } | null>(null);
+  const [telemetryConfig, setTelemetryConfig] = useState<{
+    sample_rate: number;
+    unit: string;
+  } | null>(null);
   const [telemetryError, setTelemetryError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [recentSessions, setRecentSessions] = useState<string[]>([]);
@@ -57,7 +65,9 @@ export function OperatorPage() {
         const chatBase = resolveChatApiBaseUrl(base);
         const res = await createChatSession(base, "web", chatBase);
         setSessionId(res.session.id);
-        setRecentSessions((prev) => [res.session.id, ...prev.filter((s) => s !== res.session.id)].slice(0, 8));
+        setRecentSessions((prev) =>
+          [res.session.id, ...prev.filter((s) => s !== res.session.id)].slice(0, 8)
+        );
         setMessages([{ role: "assistant", content: res.welcome_message.content }]);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -94,8 +104,9 @@ export function OperatorPage() {
 
   const filteredMessages = messages.filter((msg) => {
     const matchesRole = roleFilter === "all" || msg.role === roleFilter;
-    const matchesSearch = searchQuery.trim().length === 0
-      || msg.content.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    const matchesSearch =
+      searchQuery.trim().length === 0 ||
+      msg.content.toLowerCase().includes(searchQuery.trim().toLowerCase());
     return matchesRole && matchesSearch;
   });
 
@@ -149,7 +160,10 @@ export function OperatorPage() {
   }
 
   function handleKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
   }
 
   return (
@@ -171,7 +185,9 @@ export function OperatorPage() {
               {telemetryConfig.unit === "percent" ? "%" : ""}
             </p>
           ) : telemetryError ? (
-            <p className="text-muted-foreground">Unable to load telemetry config: {telemetryError}</p>
+            <p className="text-muted-foreground">
+              Unable to load telemetry config: {telemetryError}
+            </p>
           ) : (
             <p className="text-muted-foreground">Loading telemetry config…</p>
           )}
@@ -184,30 +200,49 @@ export function OperatorPage() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border px-2 py-1 text-xs">session {sessionId ? sessionId.slice(-8) : "n/a"}</span>
+            <span className="rounded-full border px-2 py-1 text-xs">
+              session {sessionId ? sessionId.slice(-8) : "n/a"}
+            </span>
             <span className="rounded-full border px-2 py-1 text-xs">tokens ~{tokenEstimate}</span>
-            <Button size="sm" variant="outline" onClick={pinCurrentSession} disabled={!sessionId}>Pin Current Session</Button>
+            <Button size="sm" variant="outline" onClick={pinCurrentSession} disabled={!sessionId}>
+              Pin Current Session
+            </Button>
           </div>
 
           <div className="grid gap-2 md:grid-cols-2">
             <div className="space-y-1">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Pinned Sessions</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Pinned Sessions
+              </p>
               {pinnedSessions.length === 0 ? (
                 <p className="text-xs text-muted-foreground">No pinned sessions yet.</p>
-              ) : pinnedSessions.map((id) => (
-                <div key={id} className="flex items-center justify-between rounded border px-2 py-1 text-xs">
-                  <span className="font-mono">{id}</span>
-                  <Button size="sm" variant="ghost" onClick={() => unpinSession(id)}>Unpin</Button>
-                </div>
-              ))}
+              ) : (
+                pinnedSessions.map((id) => (
+                  <div
+                    key={id}
+                    className="flex items-center justify-between rounded border px-2 py-1 text-xs"
+                  >
+                    <span className="font-mono">{id}</span>
+                    <Button size="sm" variant="ghost" onClick={() => unpinSession(id)}>
+                      Unpin
+                    </Button>
+                  </div>
+                ))
+              )}
             </div>
             <div className="space-y-1">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Recent Sessions</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Recent Sessions
+              </p>
               {recentSessions.length === 0 ? (
                 <p className="text-xs text-muted-foreground">No recent sessions yet.</p>
-              ) : recentSessions.map((id) => (
-                <div key={id} className="rounded border px-2 py-1 text-xs font-mono">{id}</div>
-              ))}
+              ) : (
+                recentSessions.map((id) => (
+                  <div key={id} className="rounded border px-2 py-1 text-xs font-mono">
+                    {id}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -231,20 +266,29 @@ export function OperatorPage() {
 
           <div className="flex flex-wrap gap-2">
             {QUICK_COMMANDS.map((cmd) => (
-              <Button key={cmd} size="sm" variant="outline" onClick={() => setInput(cmd)}>{cmd}</Button>
+              <Button key={cmd} size="sm" variant="outline" onClick={() => setInput(cmd)}>
+                {cmd}
+              </Button>
             ))}
           </div>
 
           {failedTurns.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Failed Turns</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Failed Turns
+              </p>
               {failedTurns.map((turn, idx) => (
-                <div key={`${turn.prompt}-${idx}`} className="flex items-start justify-between gap-2 rounded-md border p-2 text-xs">
+                <div
+                  key={`${turn.prompt}-${idx}`}
+                  className="flex items-start justify-between gap-2 rounded-md border p-2 text-xs"
+                >
                   <div>
                     <p className="font-medium">{turn.prompt}</p>
                     <p className="text-destructive">{turn.error}</p>
                   </div>
-                  <Button size="sm" onClick={() => retryFailedTurn(turn.prompt)}>Retry</Button>
+                  <Button size="sm" onClick={() => retryFailedTurn(turn.prompt)}>
+                    Retry
+                  </Button>
                 </div>
               ))}
             </div>
@@ -262,11 +306,17 @@ export function OperatorPage() {
         <CardContent className="flex flex-col h-full p-4 gap-3">
           <div className="flex-1 overflow-y-auto space-y-3 pr-1">
             {filteredMessages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
-                  }`}>
+              <div
+                key={i}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground"
+                  }`}
+                >
                   {msg.content}
                 </div>
               </div>

@@ -89,6 +89,6 @@ See [docs/runbooks/db-migrations.md](runbooks/db-migrations.md).
 local (bun run dev) → PR preview (Vercel auto) → production (merge to main)
 ```
 
-- **Local**: `VITE_BANANA_API_BASE_URL=http://localhost:8081`  
-- **Preview**: `VITE_BANANA_API_BASE_URL=https://staging-api.banana.engineer` (Vercel Preview tier)  
+- **Local**: `VITE_BANANA_API_BASE_URL=http://localhost:8081`
+- **Preview**: `VITE_BANANA_API_BASE_URL=https://staging-api.banana.engineer` (Vercel Preview tier)
 - **Production**: `VITE_BANANA_API_BASE_URL=https://api.banana.engineer` (Vercel Production tier)

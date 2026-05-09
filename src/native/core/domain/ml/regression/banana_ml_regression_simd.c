@@ -14,8 +14,8 @@
  * This file is NOT included in the native shared library CMake target.
  * It is compiled only by scripts/build-wasm.sh with -msimd128.
  */
-#include "banana_ml_regression.h"
 #include "banana_ml_regression_simd.h"
+#include "banana_ml_regression.h"
 #include "banana_status.h"
 #include "domain/ml/shared/banana_ml_shared.h"
 
@@ -33,14 +33,18 @@ int banana_ml_regression_predict_simd(const BananaMlFeatureVector *features, dou
     if (!features || !out_score)
         return BANANA_INVALID_ARGUMENT;
 
-    if (!isfinite(features->banana_signal_ratio) || features->banana_signal_ratio < 0.0 || features->banana_signal_ratio > 1.0 ||
-        !isfinite(features->not_banana_signal_ratio) || features->not_banana_signal_ratio < 0.0 || features->not_banana_signal_ratio > 1.0 ||
-        !isfinite(features->unique_token_ratio) || features->unique_token_ratio < 0.0 || features->unique_token_ratio > 1.0 ||
-        !isfinite(features->length_ratio) || features->length_ratio < 0.0 || features->length_ratio > 1.0 ||
-        !isfinite(features->positive_bigram_ratio) || features->positive_bigram_ratio < 0.0 || features->positive_bigram_ratio > 1.0 ||
-        !isfinite(features->negative_bigram_ratio) || features->negative_bigram_ratio < 0.0 || features->negative_bigram_ratio > 1.0 ||
-        !isfinite(features->banana_attention_ratio) || features->banana_attention_ratio < 0.0 || features->banana_attention_ratio > 1.0 ||
-        !isfinite(features->not_banana_attention_ratio) || features->not_banana_attention_ratio < 0.0 || features->not_banana_attention_ratio > 1.0)
+    if (!isfinite(features->banana_signal_ratio) || features->banana_signal_ratio < 0.0 ||
+        features->banana_signal_ratio > 1.0 || !isfinite(features->not_banana_signal_ratio) ||
+        features->not_banana_signal_ratio < 0.0 || features->not_banana_signal_ratio > 1.0 ||
+        !isfinite(features->unique_token_ratio) || features->unique_token_ratio < 0.0 ||
+        features->unique_token_ratio > 1.0 || !isfinite(features->length_ratio) ||
+        features->length_ratio < 0.0 || features->length_ratio > 1.0 ||
+        !isfinite(features->positive_bigram_ratio) || features->positive_bigram_ratio < 0.0 ||
+        features->positive_bigram_ratio > 1.0 || !isfinite(features->negative_bigram_ratio) ||
+        features->negative_bigram_ratio < 0.0 || features->negative_bigram_ratio > 1.0 ||
+        !isfinite(features->banana_attention_ratio) || features->banana_attention_ratio < 0.0 ||
+        features->banana_attention_ratio > 1.0 || !isfinite(features->not_banana_attention_ratio) ||
+        features->not_banana_attention_ratio < 0.0 || features->not_banana_attention_ratio > 1.0)
     {
         return BANANA_INVALID_ARGUMENT;
     }
@@ -51,24 +55,20 @@ int banana_ml_regression_predict_simd(const BananaMlFeatureVector *features, dou
      *        [positive_bigram, negative_bigram], [banana_attn, not_banana_attn]
      */
     const double ratios[8] = {
-        features->banana_signal_ratio,
-        features->not_banana_signal_ratio,
-        features->unique_token_ratio,
-        features->length_ratio,
-        features->positive_bigram_ratio,
-        features->negative_bigram_ratio,
-        features->banana_attention_ratio,
-        features->not_banana_attention_ratio,
+        features->banana_signal_ratio,    features->not_banana_signal_ratio,
+        features->unique_token_ratio,     features->length_ratio,
+        features->positive_bigram_ratio,  features->negative_bigram_ratio,
+        features->banana_attention_ratio, features->not_banana_attention_ratio,
     };
     const double weights[8] = {
-         1.40,  /* banana_signal_ratio */
-        -1.10,  /* not_banana_signal_ratio */
-         0.30,  /* unique_token_ratio */
-         0.20,  /* length_ratio */
-         0.40,  /* positive_bigram_ratio */
-        -0.30,  /* negative_bigram_ratio */
-         0.35,  /* banana_attention_ratio */
-        -0.25,  /* not_banana_attention_ratio */
+        1.40,  /* banana_signal_ratio */
+        -1.10, /* not_banana_signal_ratio */
+        0.30,  /* unique_token_ratio */
+        0.20,  /* length_ratio */
+        0.40,  /* positive_bigram_ratio */
+        -0.30, /* negative_bigram_ratio */
+        0.35,  /* banana_attention_ratio */
+        -0.25, /* not_banana_attention_ratio */
     };
 
     double dot = 0.0;
@@ -83,7 +83,7 @@ int banana_ml_regression_predict_simd(const BananaMlFeatureVector *features, dou
     dot += ratios[7] * weights[7];
 
     double linear = 0.20 + dot;
-    double score  = banana_ml_sigmoid_approx((linear * 2.0) - 0.8);
-    *out_score    = banana_ml_clamp01(score);
+    double score = banana_ml_sigmoid_approx((linear * 2.0) - 0.8);
+    *out_score = banana_ml_clamp01(score);
     return BANANA_OK;
 }

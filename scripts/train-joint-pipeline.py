@@ -35,7 +35,9 @@ TRAINERS = [
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="BananaAI multi-model training harness.")
+    parser = argparse.ArgumentParser(
+        description="BananaAI multi-model training harness."
+    )
     parser.add_argument(
         "--corpus-dir",
         default="data/",
@@ -235,7 +237,9 @@ def main() -> None:
         result["model"] = trainer["name"]
         result["output"] = str(trainer_output_path)
         session_meta["results"].append(result)
-        session_meta["model_metrics"][trainer["name"]] = load_metrics_summary(trainer_output_path)
+        session_meta["model_metrics"][trainer["name"]] = load_metrics_summary(
+            trainer_output_path
+        )
         if not result["success"]:
             all_success = False
             print(

@@ -46,7 +46,9 @@ def main() -> int:
         raise ValueError(f"{args.ontology}: concepts must be non-empty")
 
     min_samples = int(ontology.get("min_samples_per_concept", 1))
-    concept_ids = [str(c.get("id", "")).strip() for c in concepts if str(c.get("id", "")).strip()]
+    concept_ids = [
+        str(c.get("id", "")).strip() for c in concepts if str(c.get("id", "")).strip()
+    ]
 
     coverage_counts: dict[str, int] = {cid: 0 for cid in concept_ids}
     if args.coverage_report.exists():
