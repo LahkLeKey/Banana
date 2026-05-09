@@ -76,12 +76,14 @@ As QA automation, I can validate active contracts without false failures tied to
 - **FR-003**: Active validation scripts under `.specify/scripts/` MUST pass without retired self-training workflow path assertions.
 - **FR-004**: Active documentation MUST represent self-training as retired or legacy-only and MUST NOT describe it as an active required path.
 - **FR-005**: Legacy historical material MAY remain only under `.specify/legacy-baseline/` and MUST be treated as archival context.
+- **FR-006**: Active replacement automation surfaces introduced during retirement MUST preserve DDD/SOLID decomposition (domain logic vs orchestration vs infrastructure adapters) instead of monolithic script growth.
 
 ### Key Entities
 
 - **ActiveAutomationSurface**: Repository-managed workflows, scripts, and validators currently used by CI and orchestration.
 - **RetiredSelfTrainingArtifact**: Any active-root file or reference whose purpose is autonomous self-training execution.
 - **LegacyArchiveBoundary**: The `.specify/legacy-baseline/` tree where historical references can remain non-operational.
+- **AutomationArchitectureBoundary**: Separation contract that keeps retirement logic, orchestration flow, and I/O/reporting concerns modular.
 
 ## Success Criteria
 
@@ -91,6 +93,7 @@ As QA automation, I can validate active contracts without false failures tied to
 - **SC-002**: Active contract validation completes without failing on missing autonomous self-training workflow files.
 - **SC-003**: CI harness run contains no autonomous self-training lane or required check.
 - **SC-004**: Documentation search across active roots contains only retirement/legacy phrasing for self-training.
+- **SC-005**: Retirement automation remains modular with explicit architecture boundaries and no new monolithic control scripts.
 
 ## Assumptions
 

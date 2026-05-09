@@ -109,6 +109,16 @@
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-006**: Orchestration MUST run extension-health preflight before execution and surface failures explicitly.
+- **FR-007**: Orchestration MUST enforce autonomous continuation only when confidence is >= 80%.
+- **FR-008**: Orchestration MUST append heartbeat evidence for each major step with confidence and checkpoint decision.
+
+### Orchestration Contract *(required for Spec Kit workflow slices)*
+
+- **Preflight Command**: `.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`
+- **Confidence Gate Command**: `.specify/scripts/bash/spec-confidence-gate.sh --confidence <n> --step "go-copilot-start" --threshold 80 --notes "startup gate"`
+- **Pause Rule**: If confidence is < 80%, stop and request human input.
+- **Evidence**: Heartbeat entries in `heartbeat-log.md` and validator reports in `artifacts/spec-validation/`.
 
 *Example of marking unclear requirements:*
 

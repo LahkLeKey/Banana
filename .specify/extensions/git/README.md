@@ -2,6 +2,8 @@
 
 Git repository initialization, feature branch creation, numbering (sequential/timestamp), validation, remote detection, and auto-commit for Spec Kit.
 
+This extension participates in the Banana Spec Kit orchestration contract where every run starts with extension preflight + confidence gating before feature execution.
+
 ## Overview
 
 This extension provides Git operations as an optional, self-contained module. It manages:
@@ -16,34 +18,51 @@ This extension provides Git operations as an optional, self-contained module. It
 
 | Command | Description |
 |---------|-------------|
-| `specify.git.initialize` | Initialize a Git repository with a configurable commit message |
-| `specify.git.feature` | Create a feature branch with sequential or timestamp numbering |
-| `specify.git.validate` | Validate current branch follows feature branch naming conventions |
-| `specify.git.remote` | Detect Git remote URL for GitHub integration |
-| `specify.git.commit` | Auto-commit changes (configurable per-command enable/disable and messages) |
+| `speckit.git.initialize` | Initialize a Git repository with a configurable commit message |
+| `speckit.git.feature` | Create a feature branch with sequential or timestamp numbering |
+| `speckit.git.validate` | Validate current branch follows feature branch naming conventions |
+| `speckit.git.remote` | Detect Git remote URL for GitHub integration |
+| `speckit.git.commit` | Auto-commit changes (configurable per-command enable/disable and messages) |
 
 ## Hooks
 
 | Event | Command | Optional | Description |
 |-------|---------|----------|-------------|
-| `before_constitution` | `specify.git.initialize` | No | Init git repo before constitution |
-| `before_specify` | `specify.git.feature` | No | Create feature branch before specification |
-| `before_clarify` | `specify.git.commit` | Yes | Commit outstanding changes before clarification |
-| `before_plan` | `specify.git.commit` | Yes | Commit outstanding changes before planning |
-| `before_tasks` | `specify.git.commit` | Yes | Commit outstanding changes before task generation |
-| `before_implement` | `specify.git.commit` | Yes | Commit outstanding changes before implementation |
-| `before_checklist` | `specify.git.commit` | Yes | Commit outstanding changes before checklist |
-| `before_analyze` | `specify.git.commit` | Yes | Commit outstanding changes before analysis |
-| `before_taskstoissues` | `specify.git.commit` | Yes | Commit outstanding changes before issue sync |
-| `after_constitution` | `specify.git.commit` | Yes | Auto-commit after constitution update |
-| `after_specify` | `specify.git.commit` | Yes | Auto-commit after specification |
-| `after_clarify` | `specify.git.commit` | Yes | Auto-commit after clarification |
-| `after_plan` | `specify.git.commit` | Yes | Auto-commit after planning |
-| `after_tasks` | `specify.git.commit` | Yes | Auto-commit after task generation |
-| `after_implement` | `specify.git.commit` | Yes | Auto-commit after implementation |
-| `after_checklist` | `specify.git.commit` | Yes | Auto-commit after checklist |
-| `after_analyze` | `specify.git.commit` | Yes | Auto-commit after analysis |
-| `after_taskstoissues` | `specify.git.commit` | Yes | Auto-commit after issue sync |
+| `before_constitution` | `speckit.git.initialize` | No | Init git repo before constitution |
+| `before_specify` | `speckit.git.feature` | No | Create feature branch before specification |
+| `before_clarify` | `speckit.git.commit` | Yes | Commit outstanding changes before clarification |
+| `before_plan` | `speckit.git.commit` | Yes | Commit outstanding changes before planning |
+| `before_tasks` | `speckit.git.commit` | Yes | Commit outstanding changes before task generation |
+| `before_implement` | `speckit.git.commit` | Yes | Commit outstanding changes before implementation |
+| `before_checklist` | `speckit.git.commit` | Yes | Commit outstanding changes before checklist |
+| `before_analyze` | `speckit.git.commit` | Yes | Commit outstanding changes before analysis |
+| `before_taskstoissues` | `speckit.git.commit` | Yes | Commit outstanding changes before issue sync |
+| `after_constitution` | `speckit.git.commit` | Yes | Auto-commit after constitution update |
+| `after_specify` | `speckit.git.commit` | Yes | Auto-commit after specification |
+| `after_clarify` | `speckit.git.commit` | Yes | Auto-commit after clarification |
+| `after_plan` | `speckit.git.commit` | Yes | Auto-commit after planning |
+| `after_tasks` | `speckit.git.commit` | Yes | Auto-commit after task generation |
+| `after_implement` | `speckit.git.commit` | Yes | Auto-commit after implementation |
+| `after_checklist` | `speckit.git.commit` | Yes | Auto-commit after checklist |
+| `after_analyze` | `speckit.git.commit` | Yes | Auto-commit after analysis |
+| `after_taskstoissues` | `speckit.git.commit` | Yes | Auto-commit after issue sync |
+
+## Orchestration Preflight Contract
+
+Before running multi-step Spec Kit orchestration:
+
+1. Run extension health preflight:
+  - `.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`
+2. Run confidence gate with 80% minimum:
+  - `.specify/scripts/bash/spec-confidence-gate.sh --confidence <n> --step "go-copilot-start" --threshold 80 --notes "startup gate"`
+3. If confidence is below threshold, pause and request human input.
+4. Append heartbeat evidence after each major step.
+
+DDD/SOLID orchestration mapping:
+
+- Domain policy: confidence threshold and checkpoint rules.
+- Application flow: orchestration sequencing across preflight, planning, and validators.
+- Infrastructure adapters: shell scripts and artifacts under `.specify/scripts` and `artifacts/spec-validation`.
 
 ## Configuration
 
@@ -85,7 +104,7 @@ specify extension enable git
 ## Graceful Degradation
 
 When Git is not installed or the directory is not a Git repository:
-- Spec directories are still created under `.specify/specs/`
+- Spec directories are still created under `specs/`
 - Branch creation is skipped with a warning
 - Branch validation is skipped with a warning
 - Remote detection returns empty results

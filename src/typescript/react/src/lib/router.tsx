@@ -19,19 +19,23 @@ import { useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { isAnalyticsEnabled, trackPageView } from "./analytics";
-import { ApiDocsPage } from "../pages/ApiDocsPage";
-import { WorkspaceShell } from "../components/WorkspaceShell";
-import { BananaAIPage } from "../pages/BananaAIPage";
-import { ClassifyPage } from "../pages/ClassifyPage";
-import { DataSciencePage } from "../pages/DataSciencePage";
-import { FunctionsPage } from "../pages/FunctionsPage";
-import { KnowledgePage } from "../pages/KnowledgePage";
-import { NotFoundPage } from "../pages/NotFoundPage";
-import { OperatorPage } from "../pages/OperatorPage";
-import { QuizQaPage } from "../pages/QuizQaPage";
-import { TelemetryDashboardPage } from "../pages/TelemetryDashboardPage";
-import { WorkspacePage } from "../pages/WorkspacePage";
 import { GameEnginePage } from "../pages/GameEnginePage";
+
+const legacyRoutes = [
+  "landing",
+  "workspace",
+  "knowledge",
+  "functions",
+  "api-docs",
+  "data-science",
+  "banana-ai",
+  "quiz-qa",
+  "telemetry",
+  "review-spikes",
+  "classify",
+  "operator",
+  "game-engine",
+];
 
 function PageShell() {
   const location = useLocation();
@@ -83,25 +87,9 @@ export const router = createBrowserRouter([
     element: <PageShell />,
     errorElement: <RouteErrorBoundary />,
     children: [
-      {
-        element: <WorkspaceShell />,
-        children: [
-          { index: true, element: <Navigate to="/workspace" replace /> },
-          { path: "workspace", element: <WorkspacePage /> },
-          { path: "knowledge", element: <KnowledgePage /> },
-          { path: "functions", element: <FunctionsPage /> },
-          { path: "api-docs", element: <ApiDocsPage /> },
-          { path: "data-science", element: <DataSciencePage /> },
-          { path: "banana-ai", element: <BananaAIPage /> },
-          { path: "quiz-qa", element: <QuizQaPage /> },
-          { path: "telemetry", element: <TelemetryDashboardPage /> },
-          { path: "review-spikes", element: <Navigate to="/telemetry" replace /> },
-          { path: "classify", element: <ClassifyPage /> },
-          { path: "operator", element: <OperatorPage /> },
-          { path: "game-engine", element: <GameEnginePage /> },
-        ],
-      },
-      { path: "*", element: <NotFoundPage /> },
+      { index: true, element: <GameEnginePage /> },
+      ...legacyRoutes.map((path) => ({ path, element: <Navigate to="/" replace /> })),
+      { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
 ]);

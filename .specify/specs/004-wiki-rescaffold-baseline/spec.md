@@ -75,12 +75,14 @@ As QA, I can rely on allowlist enforcement to block unreviewed wiki growth.
 - **FR-003**: `.wiki/` MUST be regenerated to match canonical source and remove stale pages.
 - **FR-004**: `.specify/wiki/human-reference-allowlist.txt` MUST include only approved baseline paths.
 - **FR-005**: Wiki sync/validation documentation MUST describe the new baseline and publication process.
+- **FR-006**: Wiki sync and governance tooling MUST follow DDD/SOLID decomposition, separating policy rules, synchronization orchestration, and filesystem adapters.
 
 ### Key Entities
 
 - **CanonicalWikiSource**: `.specify/wiki/human-reference/` content approved for AI-facing canonical documentation.
 - **PublishedWikiSurface**: `.wiki/` pages generated or synchronized from canonical source.
 - **WikiAllowlistPolicy**: Path-level guardrails that constrain allowed wiki content growth.
+- **WikiSyncArchitectureBoundary**: Modular separation between governance policy evaluation and publication transport logic.
 
 ## Success Criteria
 
@@ -90,6 +92,7 @@ As QA, I can rely on allowlist enforcement to block unreviewed wiki growth.
 - **SC-002**: Sync dry-run reports zero unexpected page creations outside allowlist.
 - **SC-003**: Validation fails deterministically for out-of-allowlist wiki paths.
 - **SC-004**: All baseline wiki index/home links resolve to existing pages.
+- **SC-005**: Wiki governance/sync automation remains modular with explicit policy-orchestration-adapter boundaries.
 
 ## Assumptions
 

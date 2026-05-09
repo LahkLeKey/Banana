@@ -1,9 +1,9 @@
 # Traceability Report
 
-- Spec: /c/Github/Banana/.specify/specs/003-retire-self-training-surfaces/spec.md
+- Spec: .specify/specs/003-retire-self-training-surfaces/spec.md
 - Tasks: .specify/specs/003-retire-self-training-surfaces/tasks.md
-- Total tasks: 10
-- Mapped tasks: 10
+- Total tasks: 13
+- Mapped tasks: 13
 - Drift findings: 0
 
 ## Traceability Map
@@ -20,6 +20,9 @@
 | T008 | requirement | FR-001 | approved |
 | T009 | requirement | FR-001 | approved |
 | T010 | requirement | FR-004 | approved |
+| T011 | requirement | FR-005 | approved |
+| T012 | requirement | FR-006 | approved |
+| T013 | requirement | FR-006 | approved |
 
 ## Drift Findings
 

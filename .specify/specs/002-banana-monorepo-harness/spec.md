@@ -52,12 +52,14 @@ As a team member, I can rely on Spec Kit constitution rules to prevent workflow 
 - **FR-003**: Managed lanes MUST be modeled as domain jobs within the harness and orchestrated with explicit `needs` dependencies.
 - **FR-004**: The harness MUST publish a terminal summary/pass-fail stage that reports lane-level outcomes.
 - **FR-005**: Governance docs and constitution memory MUST codify the single-harness policy and DDD/SOLID composition rules.
+- **FR-006**: Harness lanes that validate domain tooling (for example native procedural generators) MUST enforce DDD/SOLID architecture checks as part of managed CI governance.
 
 ### Key Entities
 
 - **WorkflowHarness**: The single orchestrator workflow (`banana.yml`) that coordinates all managed CI/CD lanes.
 - **DomainLane**: A bounded workflow job representing one domain responsibility (lint, build, native, runtime, etc.).
 - **TerminalGate**: The summary/pass-fail step that consolidates lane outcomes into merge readiness.
+- **ArchitectureGateLane**: A managed harness lane that verifies DDD/SOLID architectural boundaries for domain tooling slices.
 
 ## Success Criteria
 
@@ -67,6 +69,7 @@ As a team member, I can rely on Spec Kit constitution rules to prevent workflow 
 - **SC-002**: CI runs present all managed stages under workflow name `Banana-Monorepo`.
 - **SC-003**: Terminal gate output includes lane-by-lane result rows and deterministic failure semantics.
 - **SC-004**: Constitution and workflow docs include explicit canonical harness name/path and DDD/SOLID rules.
+- **SC-005**: Harness design includes an explicit architecture-governance path for enforcing DDD/SOLID constraints in domain tooling changes.
 
 ## Assumptions
 

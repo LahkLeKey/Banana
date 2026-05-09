@@ -1,0 +1,102 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "banana://spec-kit/shard-merge-report.schema.json",
+    "title": "ShardMergeReport",
+    "type": "object",
+    "required": [
+        "generatedAtUtc",
+        "version",
+        "ordering",
+        "shardOutcomes",
+        "blockers",
+        "overallStatus"
+    ],
+    "properties": {
+        "generatedAtUtc": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        },
+        "ordering": {
+            "type": "string",
+            "enum": [
+                "lexicographic-feature-directory"
+            ]
+        },
+        "shardOutcomes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "shardId",
+                    "status",
+                    "features",
+                    "evidencePaths"
+                ],
+                "properties": {
+                    "shardId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "passed",
+                            "failed",
+                            "paused",
+                            "deferred",
+                            "sequenced"
+                        ]
+                    },
+                    "features": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "evidencePaths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "blockers": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "type",
+                    "shardId",
+                    "summary"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "checkpoint-pending",
+                            "extension-unhealthy",
+                            "conflict-sequenced"
+                        ]
+                    },
+                    "shardId": {
+                        "type": "string"
+                    },
+                    "summary": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "overallStatus": {
+            "type": "string",
+            "enum": [
+                "ready",
+                "blocked",
+                "partial"
+            ]
+        }
+    }
+}

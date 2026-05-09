@@ -33,7 +33,16 @@
 
 [Gates determined based on constitution file]
 
-- If confidence in the next code-improving step is below 70%, stop and resolve the uncertainty with targeted Q/A before continuing. Record the resulting constraint, assumption, or decision in this plan.
+- If confidence in the next code-improving step is below 80%, stop and resolve the uncertainty with targeted Q/A before continuing. Record the resulting constraint, assumption, or decision in this plan.
+
+## Orchestration Preflight
+
+- Run extension health preflight before implementation orchestration:
+  - `.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`
+- Run confidence gate before major execution slices:
+  - `.specify/scripts/bash/spec-confidence-gate.sh --confidence <n> --step "go-copilot-start" --threshold 80 --notes "startup gate"`
+- Append heartbeat evidence per major step in `.specify/specs/[###-feature-name]/heartbeat-log.md`.
+- If confidence drops below 80, pause and request human input before continuing.
 
 ## Project Structure
 
@@ -95,6 +104,13 @@ ios/ or android/
 
 **Structure Decision**: [Document the selected structure and reference the real
 directories captured above]
+
+## DDD/SOLID Decomposition
+
+- **Domain Policy**: Identify immutable orchestration rules (confidence threshold, checkpoint contract, sequencing policy).
+- **Application Flow**: Describe how scripts/pipelines compose those rules without reimplementing policy.
+- **Infrastructure Adapters**: List concrete scripts/artifacts that persist evidence and execute external commands.
+- **Single Responsibility**: Ensure each script/module owns one concern and is testable in isolation.
 
 ## Complexity Tracking
 

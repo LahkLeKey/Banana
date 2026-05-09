@@ -28,6 +28,13 @@
 - [ ] All changes are auditable by persisted artifacts and PR evidence.
 - [ ] GitHub/API-dependent automation has an explicit rate-limit resilience path and rerun guidance.
 
+## Orchestration Preflight
+
+- [ ] Extension preflight was executed: `.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`
+- [ ] Confidence gate was executed with threshold 80.
+- [ ] Heartbeat file path is defined for this feature.
+- [ ] Pause/escalation path is documented for confidence below 80.
+
 ## Project Structure
 
 <!-- List the primary files/directories this spec touches -->
@@ -37,6 +44,12 @@ scripts/
 src/
 tests/
 ```
+
+## DDD/SOLID Decomposition
+
+- Domain Policy: [rules, thresholds, and checkpoint constraints]
+- Application Orchestration: [flow/use-case coordination]
+- Infrastructure Adapters: [scripts/files/external command adapters]
 
 ## Phases
 

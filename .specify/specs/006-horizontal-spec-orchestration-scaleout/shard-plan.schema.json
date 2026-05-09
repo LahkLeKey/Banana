@@ -1,0 +1,76 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "banana://spec-kit/shard-plan.schema.json",
+    "title": "ShardPlan",
+    "type": "object",
+    "required": [
+        "generatedAtUtc",
+        "version",
+        "parallelShards",
+        "sequentialShard",
+        "conflictRules"
+    ],
+    "properties": {
+        "generatedAtUtc": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        },
+        "parallelShards": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "shardId",
+                    "features"
+                ],
+                "properties": {
+                    "shardId": {
+                        "type": "string"
+                    },
+                    "features": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "requiredExtensions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "sequentialShard": {
+            "type": "object",
+            "required": [
+                "shardId",
+                "features",
+                "reason"
+            ],
+            "properties": {
+                "shardId": {
+                    "type": "string"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "conflictRules": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}

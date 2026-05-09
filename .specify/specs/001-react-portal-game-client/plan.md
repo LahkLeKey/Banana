@@ -19,6 +19,13 @@ Refocus Banana toward Banana Engineer, a 2.5D game-client-style React portal exp
 **Constraints**: Preserve runtime contracts (`VITE_BANANA_API_BASE_URL`), keep cross-viewport usability, enforce deterministic asset outputs, and avoid reintroducing workflow/spec sprawl
 **Scale/Scope**: `src/typescript/react`, `src/native`, `.github/workflows`, `.specify/specs`
 
+## Architecture Direction (DDD + SOLID)
+
+- Domain layer: tile vocabulary, adjacency rules, and algorithm contracts (WFC/CA strategy interfaces).
+- Application layer: deterministic pipeline orchestration and generation use-cases.
+- Infrastructure layer: CLI parsing, filesystem paths, JSON emitters, and build integration adapters.
+- Keep algorithm engines open for extension (new generation strategy) but closed for modification of unrelated layers.
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
@@ -28,6 +35,7 @@ Refocus Banana toward Banana Engineer, a 2.5D game-client-style React portal exp
 - Preserve existing runtime contracts and avoid unrelated domain churn.
 - Keep 2.5D + WASM rollout bounded to landing and shell presentation scope.
 - Keep procedural asset generation deterministic and consumable by the web build path.
+- Enforce DDD/SOLID decomposition in native procedural generation code before adding additional algorithm complexity.
 
 ## Project Structure
 

@@ -1,7 +1,13 @@
 {
   "integration": "copilot",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "installed_at": "2026-04-26T05:46:15.517189+00:00",
+  "orchestration_contract": {
+    "confidence_threshold": 80,
+    "requires_extension_preflight": true,
+    "requires_heartbeat_per_major_step": true,
+    "preflight_script": ".specify/scripts/bash/spec-orchestration-preflight.sh"
+  },
   "files": {
     ".github/agents/speckit.analyze.agent.md": "56285817b93f55ae926eade0528673d25ffcf441e8109492323bfbe8941be8f7",
     ".github/agents/speckit.checklist.agent.md": "53ce35462c1df402780e730ea54150a30872e6e0d6d44a8bd38dd8b5d42900a9",

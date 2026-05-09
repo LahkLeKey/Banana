@@ -2,6 +2,8 @@
 
 > [Home](../Home.md) › Operations
 
+Runbook-only operational procedures for deployment, CI, runtime channels, and incident response.
+
 <!-- AUTO-INDEX START -->
 ## Pages In This Section
 

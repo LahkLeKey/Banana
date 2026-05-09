@@ -8,6 +8,8 @@
 
 Monitor and control the autonomous spec-drain process:
 
+Retirement boundary: this runbook covers spec-drain orchestration only. Autonomous self-training surfaces are retired from active automation and remain archival-only under `.specify/legacy-baseline/**`.
+
 ```bash
 # Check drainage progress
 jq . artifacts/spec-drain-state.json

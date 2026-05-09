@@ -19,6 +19,11 @@ Retire autonomous self-training from active repository surfaces by removing runt
 **Constraints**: Keep changes scoped to active roots; do not rewrite archival trees
 **Scale/Scope**: `.github/workflows`, `scripts`, `.specify/scripts`, `docs`, `.specify/wiki`
 
+## Architecture Direction (DDD + SOLID)
+
+- Keep retirement-domain decisions (what is active vs legacy) separated from orchestration flow and output/reporting mechanics.
+- Avoid new monolithic scripts by isolating policy evaluation, command orchestration, and artifact publication concerns.
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
@@ -26,6 +31,7 @@ Retire autonomous self-training from active repository surfaces by removing runt
 - Preserve one canonical managed harness in `.github/workflows/banana.yml`.
 - Treat warnings/notices as QA-relevant noise to remove where feasible.
 - Keep archival history under `.specify/legacy-baseline/` untouched except for explicit references from active surfaces.
+- Enforce modular script boundaries so retirement follow-ups remain open for extension and closed for unrelated rewrites.
 
 ## Project Structure
 

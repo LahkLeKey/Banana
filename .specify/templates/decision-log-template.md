@@ -10,9 +10,9 @@ Use this template to record retain/defer/split/reject decisions for planning dri
 
 ## Decisions
 
-| Timestamp (UTC) | Finding ID | Decision Type | Decision Owner | Follow-up Destination | Rationale |
-| --- | --- | --- | --- | --- | --- |
-| [YYYY-MM-DDTHH:MM:SSZ] | [DF-001] | [retain\|defer\|split\|reject] | [owner] | [destination or n/a] | [why this decision was made] |
+| Timestamp (UTC) | Finding ID | Decision Type | Decision Owner | Confidence (%) | Human Checkpoint | Follow-up Destination | Rationale |
+| --- | --- | --- | --- | ---: | --- | --- | --- |
+| [YYYY-MM-DDTHH:MM:SSZ] | [DF-001] | [retain\|defer\|split\|reject] | [owner] | [80-100] | [yes\|no] | [destination or n/a] | [why this decision was made] |
 
 ## Guidance
 
@@ -20,3 +20,4 @@ Use this template to record retain/defer/split/reject decisions for planning dri
 - Use `defer` or `split` only when a concrete destination is captured.
 - Keep rationale actionable and reviewer-friendly.
 - Mirror the same decision record to machine-readable jsonl when automation requires it.
+- If confidence is below 80, set Human Checkpoint to `yes` and capture escalation context.

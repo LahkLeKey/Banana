@@ -158,6 +158,10 @@ TERM_GUARD_EXCLUDED_SUFFIXES = {
     ".woff2",
     ".zip",
 }
+RETIRED_SELF_TRAINING_PATH_FRAGMENTS: tuple[str, ...] = (
+    "orchestrate-autonomous-self-training-cycle.yml",
+    "autonomous-self-training-default-increments.json",
+)
 
 
 def parse_frontmatter(path: Path) -> tuple[dict[str, str] | None, str]:
@@ -338,6 +342,26 @@ def validate_no_legacy_terms(issues: list[str]) -> None:
                         f"TERM_GUARD prohibited phrase '{label}' found: {rel}:{line_number} ({snippet})"
                     )
                     break
+
+
+def evaluate_retired_self_training_contract_violations(
+    target_texts: dict[str, str],
+) -> list[str]:
+    violations: list[str] = []
+    for target_rel, target_text in target_texts.items():
+        for fragment in RETIRED_SELF_TRAINING_PATH_FRAGMENTS:
+            if fragment in target_text:
+                violations.append(
+                    f"RETIRED_SELF_TRAINING_CONTRACT active contract references retired self-training path fragment '{fragment}': {target_rel}"
+                )
+    return violations
+
+
+def report_retired_self_training_contract_violations(
+    issues: list[str],
+    target_texts: dict[str, str],
+) -> None:
+    issues.extend(evaluate_retired_self_training_contract_violations(target_texts))
 
 
 def main() -> int:
@@ -827,6 +851,8 @@ def main() -> int:
                 issues.append(
                     f"PAT_ANTI_PATTERN manual PAT fragment '{fragment}' should not appear: {target_rel}"
                 )
+
+    report_retired_self_training_contract_violations(issues, manual_pat_target_texts)
 
     triage_idea_script_rel = SCRIPT_ORCHESTRATE_TRIAGE_IDEA.relative_to(ROOT).as_posix()
     if SCRIPT_ORCHESTRATE_TRIAGE_IDEA.exists():

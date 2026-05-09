@@ -65,6 +65,30 @@ endif()
 # ─────────────────────────────────────────────────────────────────────────────
 
 if(NOT EMSCRIPTEN)
+  add_executable(banana_asset_compiler
+    tools/banana_asset_compiler.c
+    tools/domain/banana_asset_domain.c
+    tools/domain/banana_asset_algorithms.c
+    tools/application/banana_asset_generation_service.c
+    tools/infrastructure/banana_asset_json_writer.c
+  )
+
+  target_include_directories(banana_asset_compiler PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/domain
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/application
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/infrastructure
+  )
+
+  if(MSVC)
+    target_compile_options(banana_asset_compiler PRIVATE /W3)
+    target_compile_definitions(banana_asset_compiler PRIVATE _CRT_SECURE_NO_WARNINGS)
+  else()
+    target_compile_options(banana_asset_compiler PRIVATE
+      -std=c11 -O2 -Wall -Wextra -Wpedantic
+    )
+  endif()
+
   find_package(OpenGL QUIET)
   find_package(glfw3 QUIET)
 

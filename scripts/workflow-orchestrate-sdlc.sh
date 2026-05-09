@@ -22,6 +22,7 @@ PLAN_JSON="${BANANA_SDLC_INCREMENT_PLAN_JSON:-}"
 PLAN_PATH="${BANANA_SDLC_INCREMENT_PLAN_PATH:-}"
 PLAN_MODEL="${BANANA_SDLC_INCREMENT_PLAN_MODEL:-}"
 PLAN_CATALOG_PATH="${BANANA_SDLC_INCREMENT_CATALOG_PATH:-docs/automation/agent-pulse/sdlc-default-increments.json}"
+RETIRED_SELF_TRAINING_CATALOG_PATH="docs/automation/agent-pulse/autonomous-self-training-default-increments.json"
 DEFAULT_BASE_BRANCH="${BANANA_BASE_BRANCH:-main}"
 DEFAULT_BRANCH_PREFIX="${BANANA_BRANCH_PREFIX:-sdlc}"
 DEFAULT_DRAFT_PR="${BANANA_DRAFT_PR:-true}"
@@ -51,6 +52,18 @@ AUTO_MERGE_METHOD="${BANANA_AUTO_MERGE_METHOD:-squash}"
 
 CLI_MODE="${1:-}"
 CLI_TARGET="${2:-}"
+
+guard_retired_self_training_catalog_path() {
+  local selected_catalog_path="$1"
+  if [[ "$selected_catalog_path" == "$RETIRED_SELF_TRAINING_CATALOG_PATH" ]]; then
+    echo "Error: retired self-training catalog path is not allowed: ${RETIRED_SELF_TRAINING_CATALOG_PATH}" >&2
+    echo "Use docs/automation/agent-pulse/sdlc-default-increments.json or provide an explicit non-retired catalog path." >&2
+    return 1
+  fi
+  return 0
+}
+
+guard_retired_self_training_catalog_path "$PLAN_CATALOG_PATH"
 
 # Positional shortcut: bash scripts/workflow-orchestrate-sdlc.sh speckit:bootstrap 104
 if [[ "$CLI_MODE" == "speckit:bootstrap" ]]; then
