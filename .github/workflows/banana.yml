@@ -18,6 +18,7 @@ permissions:
 env:
   BANANA_CI_ARTIFACT_ROOT: .artifacts/compose-ci
   BANANA_COVERAGE_ARTIFACT_ROOT: .artifacts/coverage
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
   group: ci-${{ github.ref }}
