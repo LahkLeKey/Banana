@@ -1,4 +1,4 @@
-name: Banana Monorepo Gating
+name: Banana-Monorepo
 
 # Single orchestrator for all monorepo PR / push validation. Renders the
 # underlying lanes as a single workflow run with a single terminal pass/fail
