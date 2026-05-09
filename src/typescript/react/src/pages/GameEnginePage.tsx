@@ -289,13 +289,13 @@ export function GameEnginePage() {
 
   return (
     <div className="relative h-[100dvh] min-h-[100svh] w-full overflow-hidden bg-black">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.10),_transparent_40%),linear-gradient(180deg,_rgba(2,6,23,0.25),_rgba(2,6,23,0.75))]" />
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.10),_transparent_40%),linear-gradient(180deg,_rgba(2,6,23,0.25),_rgba(2,6,23,0.75))]" />
       <canvas
         ref={canvasRef}
         id="canvas"
         width={1280}
         height={720}
-        className="absolute inset-0 h-full w-full object-contain"
+        className="absolute inset-0 z-10 h-full w-full object-contain"
         style={{ imageRendering: "pixelated", objectPosition: "center" }}
       />
       <canvas
@@ -303,14 +303,14 @@ export function GameEnginePage() {
         aria-hidden="true"
         width={1280}
         height={720}
-        className="pointer-events-none absolute inset-0 h-full w-full object-contain opacity-80 mix-blend-screen"
+        className="pointer-events-none absolute inset-0 z-20 hidden h-full w-full object-contain opacity-45 mix-blend-screen md:block"
         style={{ objectPosition: "center" }}
       />
       {(status === "loading" || !terrain || !palette) && !error && !assetError && (
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(15,23,42,0.08),_rgba(2,6,23,0.32))]" />
+        <div className="pointer-events-none absolute inset-0 z-30 bg-[radial-gradient(circle_at_center,_rgba(15,23,42,0.08),_rgba(2,6,23,0.32))]" />
       )}
       {(status === "error" || status === "unavailable" || assetError) && (
-        <div className="absolute bottom-4 left-4 max-w-md rounded-md border border-red-400/30 bg-slate-950/80 px-4 py-3 text-sm text-red-200 backdrop-blur">
+        <div className="absolute bottom-4 left-4 z-40 max-w-md rounded-md border border-red-400/30 bg-slate-950/80 px-4 py-3 text-sm text-red-200 backdrop-blur">
           {assetError ?? error}
         </div>
       )}
