@@ -130,9 +130,9 @@ bash scripts/validate-api-parity-governance.sh --strict
     assert vstp.check_feature(d) == []
 
 
-def test_feature_047_has_no_validation_task_drift() -> None:
-    feature = REPO_ROOT / ".specify" / "specs" / "047-api-parity-governance"
-    assert feature.exists(), "Expected feature 047 to exist"
+def test_feature_002_has_no_validation_task_drift() -> None:
+    feature = REPO_ROOT / ".specify" / "specs" / "002-banana-monorepo-harness"
+    assert feature.exists(), "Expected feature 002 to exist"
     assert vstp.check_feature(feature) == []
 
 

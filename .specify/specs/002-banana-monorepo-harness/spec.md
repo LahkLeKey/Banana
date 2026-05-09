@@ -67,3 +67,9 @@ As a team member, I can rely on Spec Kit constitution rules to prevent workflow 
 - **SC-002**: CI runs present all managed stages under workflow name `Banana-Monorepo`.
 - **SC-003**: Terminal gate output includes lane-by-lane result rows and deterministic failure semantics.
 - **SC-004**: Constitution and workflow docs include explicit canonical harness name/path and DDD/SOLID rules.
+
+## Assumptions
+
+- Repository-managed CI/CD lanes continue to run through GitHub Actions.
+- Dynamic platform-managed workflows outside repository control remain out of scope for this governance slice.
+- Domain lanes can be added as jobs within `banana.yml` without introducing new top-level workflow files.
