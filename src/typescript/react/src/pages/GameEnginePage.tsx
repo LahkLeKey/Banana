@@ -288,22 +288,28 @@ export function GameEnginePage() {
   }, []);
 
   return (
-    <div className="relative h-[100dvh] min-h-[100svh] w-full overflow-hidden bg-black">
+    <div className="relative h-[100dvh] min-h-[100svh] w-full overflow-hidden bg-black flex items-center justify-center">
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.10),_transparent_40%),linear-gradient(180deg,_rgba(2,6,23,0.25),_rgba(2,6,23,0.75))]" />
       <canvas
         ref={canvasRef}
         id="canvas"
         width={1280}
         height={720}
-        className="absolute inset-0 z-10 h-full w-full object-contain"
-        style={{ imageRendering: "pixelated", objectPosition: "center" }}
+        className="z-10 object-contain"
+        style={{
+          imageRendering: "pixelated",
+          objectPosition: "center",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          aspectRatio: "16/9",
+        }}
       />
       <canvas
         ref={assetCanvasRef}
         aria-hidden="true"
         width={1280}
         height={720}
-        className="pointer-events-none absolute inset-0 z-20 hidden h-full w-full object-contain opacity-45 mix-blend-screen md:block"
+        className="pointer-events-none absolute inset-0 z-20 hidden object-contain opacity-45 mix-blend-screen md:block"
         style={{ objectPosition: "center" }}
       />
       {(status === "loading" || !terrain || !palette) && !error && !assetError && (
