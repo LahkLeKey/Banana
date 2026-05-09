@@ -205,7 +205,7 @@ jobs:
         run: python -m pytest tests/scripts/test_scan_web_analytics_surfaces.py tests/scripts/test_check_dashboard_copy_policy.py -v
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: analytics-surface-coverage
           path: .artifacts/analytics/
@@ -290,7 +290,7 @@ jobs:
       - name: Install
         run: cmake --install build/native/${{ matrix.preset }} --config Release
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: banana-native-${{ matrix.triple }}
           path: out/native/${{ matrix.triple }}/
@@ -481,7 +481,7 @@ jobs:
           bun-version: latest
       - name: Install Node.js (for Playwright browsers)
         if: steps.screenshot-gate.outputs.should_run == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
       - name: Install React dependencies
@@ -511,7 +511,7 @@ jobs:
 
       - name: Upload screenshot artifacts
         if: steps.screenshot-gate.outputs.should_run == 'true' && always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: runtime-screenshots
           path: docs/screenshots/
