@@ -2,7 +2,7 @@
 
 This repository uses a single workflow harness:
 
-- `.github/workflows/pre-commit.yml` with workflow name `Banana-Monorepo`
+- `.github/workflows/banana.yml` with workflow name `Banana-Monorepo`
 
 All managed CI/CD lanes must be orchestrated inside this harness so operators can
 triage one unified graph and one pass/fail summary.

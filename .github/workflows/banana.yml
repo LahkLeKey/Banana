@@ -328,7 +328,7 @@ jobs:
       - name: Run workflow runtime compatibility check
         run: |
           bash scripts/check-workflow-runtime-deprecations.sh \
-            --workflow .github/workflows/pre-commit.yml \
+            --workflow .github/workflows/banana.yml \
             --exceptions .github/runtime-compatibility-exceptions.yml \
             --output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.json \
             --text-output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt
