@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "typeRoots": ["../src/typescript/api/node_modules/@types"],
+    "types": ["node"]
+  },
+  "include": ["./*.ts"]
+}
