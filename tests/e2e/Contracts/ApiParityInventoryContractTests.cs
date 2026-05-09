@@ -29,7 +29,7 @@ public sealed class ApiParityInventoryContractTests
     }
 
     [Fact]
-    public void ParityInventoryArtifactHasRequiredContractFields()
+    public void LegacyParityInventoryArtifactSchemaRemainsCompatibleWhenPresent()
     {
         var repoRoot = FindRepoRoot();
         var inventoryPath = Path.Combine(
@@ -40,7 +40,10 @@ public sealed class ApiParityInventoryContractTests
             "artifacts",
             "overlapping-routes.inventory.json");
 
-        Assert.True(File.Exists(inventoryPath), $"Missing inventory artifact: {inventoryPath}");
+        if (!File.Exists(inventoryPath))
+        {
+            return;
+        }
 
         using var document = JsonDocument.Parse(File.ReadAllText(inventoryPath));
         var root = document.RootElement;

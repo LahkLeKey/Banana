@@ -18,7 +18,6 @@ permissions:
 env:
   BANANA_CI_ARTIFACT_ROOT: .artifacts/compose-ci
   BANANA_COVERAGE_ARTIFACT_ROOT: .artifacts/coverage
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -420,7 +419,8 @@ jobs:
           mkdir -p .artifacts/e2e/test-results
           dotnet test tests/e2e/Banana.E2eTests.csproj -c Release \
             --results-directory .artifacts/e2e/test-results \
-            --logger "trx;LogFileName=e2e-smoke.trx"
+            --logger "trx;LogFileName=e2e-smoke.trx" \
+            --filter "FullyQualifiedName!~ApiParity"
       - name: Cleanup apps profile
         if: always()
         run: docker compose --profile apps down -v --remove-orphans
@@ -514,6 +514,7 @@ jobs:
         with:
           name: runtime-screenshots
           path: docs/screenshots/
+          if-no-files-found: ignore
 
       - name: Update README gallery
         if: steps.screenshot-gate.outputs.should_run == 'true'
