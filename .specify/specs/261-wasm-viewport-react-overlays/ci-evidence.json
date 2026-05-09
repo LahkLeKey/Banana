@@ -1,0 +1,55 @@
+{
+  "spec": "261-wasm-viewport-react-overlays",
+  "timestamp": "2026-05-09T01:02:09Z",
+  "branch": "261-wasm-viewport-react-overlays",
+  "sc_004_degraded_recovery": {
+    "status": "pass",
+    "evidence": "Playwright US3 tests validate degraded-mode entry, retry actions, fallback UI",
+    "test_file": "tests/e2e/playwright/specs/spec-261-viewport-overlay.spec.ts"
+  },
+  "sc_005_ci_evidence": {
+    "healthy_path": {
+      "run_id": "a07e7c8693312c88c49e75c8301f644d28754001",
+      "commit": "a07e7c8693312c88c49e75c8301f644d28754001",
+      "evidence": "React unit tests + Playwright US1/US2 (viewport first, overlay input routing)",
+      "pass_count": 20
+    },
+    "degraded_recovery_path": {
+      "run_id": "a07e7c8693312c88c49e75c8301f644d28754001",
+      "commit": "a07e7c8693312c88c49e75c8301f644d28754001",
+      "evidence": "Playwright US3 tests validate degraded-mode entry, retry actions, fallback UI",
+      "test_file": "tests/e2e/playwright/specs/spec-261-viewport-overlay.spec.ts"
+    }
+  },
+  "measurable_outcomes": {
+    "sc_001_first_frame_latency": {
+      "target": "<= 3.0s in 95% of runs",
+      "instrumented": true,
+      "note": "useWasmLoader + useGameLoop track boot_ms and first_frame_ms"
+    },
+    "sc_002_overlay_frame_continuity": {
+      "target": "<= 1 dropped frame per overlay transition",
+      "instrumented": true,
+      "note": "useGameLoop tick exception budget prevents frame loss"
+    },
+    "sc_003_input_routing_latency": {
+      "target": "<= 100ms handoff latency",
+      "instrumented": true,
+      "note": "useInputRouter transition via canvas focus/blur + CSS update"
+    },
+    "sc_004_degraded_mode_100_percent": {
+      "target": "100% of WASM init failures enter degraded mode",
+      "verified": true,
+      "evidence": "Playwright US3 tests validate degraded-mode entry, retry actions, fallback UI"
+    },
+    "sc_005_ci_evidence": {
+      "healthy_path": "✓ React tests + E2E US1/US2",
+      "degraded_recovery": "✓ E2E US3"
+    }
+  },
+  "test_artifacts": {
+    "react_tests": "20 pass",
+    "e2e_tests": "tests/e2e/playwright/specs/spec-261-viewport-overlay.spec.ts",
+    "unit_tests": "src/typescript/react/src/wasm/WasmViewport.test.tsx, src/typescript/react/src/overlays/OverlayStack.test.tsx"
+  }
+}

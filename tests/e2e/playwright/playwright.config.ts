@@ -1,6 +1,8 @@
 import {defineConfig, devices} from "@playwright/test";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173";
+const playwrightPort = process.env.PLAYWRIGHT_PORT ?? "5173";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${playwrightPort}`;
+const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER === "1" ? true : !process.env.CI;
 
 export default defineConfig({
     testDir : "./specs",
@@ -11,9 +13,10 @@ export default defineConfig({
     workers : 1,
     reporter : [ [ "list" ], [ "html", {open : "never", outputFolder : "./playwright-report"} ] ],
     webServer : {
-        command : "cd ../../../src/typescript/react && bun run dev -- --host 127.0.0.1 --port 5173",
+        command : `cd ../../../src/typescript/react && bun run dev -- --host 127.0.0.1 --port ${
+            playwrightPort}`,
         url : baseURL,
-        reuseExistingServer : !process.env.CI,
+        reuseExistingServer,
         timeout : 120_000,
     },
     use : {
