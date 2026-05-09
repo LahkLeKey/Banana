@@ -397,7 +397,7 @@ fi
 PARSED_REVIEWERS_CSV="$(IFS=','; echo "${parsed_reviewers[*]:-}")"
 
 echo "Using automation contributor: ${AGENT_CONTRIBUTOR_NAME} <${AGENT_CONTRIBUTOR_EMAIL}> (icon=${AGENT_CONTRIBUTOR_ICON:-n/a}, follow=${AGENT_CONTRIBUTOR_PROFILE_URL})"
-if [[ "$AGENT_CONTRIBUTOR_FOLLOWABLE" != "true" ]]; then
+if [[ "$AGENT_CONTRIBUTOR_FOLLOWABLE" == "true" && -z "$AGENT_IDENTITY_GITHUB_LOGIN" ]]; then
   echo "::notice::Pulse will show a default avatar for '${AGENT_CONTRIBUTOR_SLUG}' until a real GitHub login/avatar is mapped in docs/automation/agent-pulse/agent-identities.json."
 fi
 

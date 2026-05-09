@@ -1,5 +1,16 @@
 <!--
 Sync Impact Report
+- Version change: 1.10.2 -> 1.11.0
+- Modified principles:
+	- Added XX. Zero-Warning CI Discipline
+- Added platform constraints: CI warnings treated as errors, suppression documentation requirement
+- Added workflow guidance: enumerate all CI warnings per run, pin deprecating actions in same slice
+- Templates requiring updates:
+	- .specify/templates/plan-template.md (no structural change needed)
+	- .specify/templates/spec-template.md (no structural change needed)
+	- .specify/templates/tasks-template.md (no structural change needed)
+
+Previous sync:
 - Version change: 1.10.1 -> 1.10.2
 - Modified principles:
 	- Added X. Observable Infrastructure as Code
@@ -115,6 +126,14 @@ Banana-managed CI/CD lanes must be orchestrated through a single workflow harnes
 - lane contracts remain stable and composable for the terminal pass/fail summary.
 The canonical harness file is `.github/workflows/banana.yml`.
 
+### XX. Zero-Warning CI Discipline
+CI pipeline warnings and informational notices are treated as errors by QA agents and must be resolved before a branch can be considered clean. This means:
+- **Deprecation warnings** (e.g., action runtime version notices) must be eliminated by pinning the affected action or dependency to a supported runtime within the same delivery slice that surfaces them — they are never left as acceptable noise.
+- **Informational notices** emitted by CI tooling or validation scripts (e.g., missing avatar mappings, unresolved agent identities, incomplete configurations) must be resolved or explicitly deferred in the active spec with a tracked follow-up task. Silent deferral is not permitted.
+- A CI run that emits warnings or notices is not considered pristine; it is treated as having a partial failure by QA agents even when all job conclusions are `success`.
+- When a warning is structurally unavoidable (e.g., a third-party dependency that cannot yet be updated), it must be documented in an `exceptions/ci-warning-suppressions.md` file with an expiry date, owner, and remediation plan. Undocumented suppressions are violations.
+- QA agents reviewing a PR must explicitly enumerate all warnings and notices present in the CI run output and confirm each is either resolved or has a tracked exception before approving.
+
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
@@ -135,6 +154,8 @@ The canonical harness file is `.github/workflows/banana.yml`.
 - Host-level blocked states (for example, domain configured but no production deploy) must be treated as delivery blockers until remediated or explicitly deferred.
 - Spec-drain automation must persist and reuse checkpoint state files (for example under `artifacts/sdlc-orchestration/`) instead of requiring full rescans per run.
 - Bootstrap inventory snapshots must remain machine-readable under `artifacts/orchestration/` so follow-up scans can operate incrementally.
+- CI warnings and informational notices are treated as errors; a run with any unresolved warning or notice is not considered a clean baseline.
+- Structurally unavoidable warning suppressions must be documented in `exceptions/ci-warning-suppressions.md` with an expiry date and owner.
 
 ## Workflow and Review
 
@@ -160,6 +181,8 @@ The canonical harness file is `.github/workflows/banana.yml`.
 - After checkpoint accounting, operators should emit a promotion ledger capturing high-value follow-up slices and route those items into new specs.
 - When confidence that the next action will improve the codebase falls below 70%, pause implementation and ask focused Q/A before editing or dispatching broad workflow changes. Reversible probes are acceptable only after that clarification step or when the human explicitly requests exploratory work.
 - Keep all managed CI stages under `Banana-Monorepo`; do not introduce additional top-level workflow files for stage-specific orchestration unless explicitly approved as an exception in the active spec.
+- After every CI run, enumerate all warnings and notices in the run output. Any unresolved warning or notice must be fixed in the same branch or filed as a tracked follow-up task with an expiry before the branch is considered clean.
+- When a CI action emits a runtime deprecation warning, pin the action to a Node 24-native version in the same slice that surfaces the warning — do not defer to a separate cleanup PR.
 
 ## Governance
 
@@ -167,4 +190,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.10.2 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-09
+**Version**: 1.11.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-09

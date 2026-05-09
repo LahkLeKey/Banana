@@ -13,7 +13,7 @@ export default defineConfig({
     webServer : {
         command : "cd ../../../src/typescript/react && bun run dev -- --host 127.0.0.1 --port 5173",
         url : baseURL,
-        reuseExistingServer : !process.env.CI,
+        reuseExistingServer : true,
         timeout : 120_000,
     },
     use : {

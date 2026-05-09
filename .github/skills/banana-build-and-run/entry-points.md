@@ -70,7 +70,6 @@
 - Incremental SDLC orchestration script: `bash scripts/workflow-orchestrate-sdlc.sh`
 - Local SDLC dry-run script: `bash scripts/workflow-local-orchestrate-sdlc.sh`
 - Full SDLC orchestration workflow: `.github/workflows/orchestrate-banana-sdlc.yml`
-- Autonomous bounded self-training workflow: `.github/workflows/orchestrate-autonomous-self-training-cycle.yml`
 - CI multi-release build input: `release_matrix_json` (workflow dispatch) to build multiple model releases in one run.
 - CI repository persistence input: `persist_registry_history=true` to create a registry-history pull request containing snapshot bundles at `registry_history_path`.
 - CI repository persistence PR controls: `registry_history_pr_base_branch`, `registry_history_open_draft_pr`, `registry_history_pr_labels`, and `registry_history_pr_reviewers`.

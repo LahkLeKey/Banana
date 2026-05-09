@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-CATALOG_PATH="docs/automation/agent-pulse/autonomous-self-training-default-increments.json"
+CATALOG_PATH="docs/automation/agent-pulse/sdlc-default-increments.json"
 OUTPUT_PATH="artifacts/sdlc-orchestration/deterministic-agent-pulse-plan.json"
 MODEL_JSON_PATH="artifacts/sdlc-orchestration/deterministic-agent-pulse-model.json"
 MODEL_BINARY_PATH="build/native-tools/banana_agent_pulse_model_cli"

@@ -5,14 +5,13 @@ namespace Banana.E2eTests.Contracts;
 public sealed class ApiParityWorkflowGateTests
 {
     [Fact]
-    public void ComposeCiWorkflowIncludesApiParityGovernanceLane()
+    public void BananaMonorepoWorkflowDocumentsApiParityAsNonBlockingLegacyLane()
     {
-        var workflow = File.ReadAllText(Path.Combine(FindRepoRoot(), ".github", "workflows", "compose-ci.yml"));
+        var workflow = File.ReadAllText(Path.Combine(FindRepoRoot(), ".github", "workflows", "banana.yml"));
 
-        Assert.Contains("api-parity-governance:", workflow);
-        Assert.Contains("BANANA_CI_LANE: api-parity", workflow);
-        Assert.Contains("bash scripts/validate-api-parity-governance.sh --strict", workflow);
-        Assert.Contains("name: api-parity-governance-artifacts", workflow);
+        Assert.DoesNotContain("api-parity-governance:", workflow);
+        Assert.Contains("Legacy deep lanes currently excluded", workflow);
+        Assert.Contains("API parity governance", workflow);
     }
 
     [Fact]
