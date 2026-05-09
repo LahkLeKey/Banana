@@ -470,7 +470,8 @@ jobs:
 
       - name: Screenshot lane skipped
         if: steps.screenshot-gate.outputs.should_run != 'true'
-        run: echo "Skipping screenshot lane: ${{ steps.screenshot-gate.outputs.reason }}"
+        run: |
+          echo "Skipping screenshot lane: ${{ steps.screenshot-gate.outputs.reason }}"
 
       - name: Setup Bun
         if: steps.screenshot-gate.outputs.should_run == 'true'
