@@ -69,9 +69,9 @@
             "slug": "integration-agent",
             "display_name": "Integration Agent",
             "icon": "Au",
-            "github_login": "integration-agent",
-            "follow_url": "https://github.com/integration-agent",
-            "followable": true,
+            "github_login": "",
+            "follow_url": "docs/automation/agent-pulse/agents/integration-agent/",
+            "followable": false,
             "contributor_name": "Au Integration Agent"
         },
         {
