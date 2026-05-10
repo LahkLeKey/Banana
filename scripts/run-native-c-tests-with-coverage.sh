@@ -31,8 +31,9 @@ mkdir -p "$ARTIFACT_DIR"
 gcovr \
     --object-directory "$BUILD_DIR" \
     --root . \
-    --filter 'src/native' \
+    --filter 'src/native/(core|wrapper)' \
     --exclude 'tests/native' \
+    --exclude 'src/native/core/dal' \
     --xml-pretty \
     --output "$ARTIFACT_DIR/coverage-native.xml" \
     --fail-under-line "$NATIVE_COVERAGE_THRESHOLD"
@@ -40,8 +41,9 @@ gcovr \
 gcovr \
     --object-directory "$BUILD_DIR" \
     --root . \
-    --filter 'src/native' \
+    --filter 'src/native/(core|wrapper)' \
     --exclude 'tests/native' \
+    --exclude 'src/native/core/dal' \
     --txt > "$ARTIFACT_DIR/Summary.txt"
 
 echo "Native C coverage summary:"

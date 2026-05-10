@@ -1,5 +1,5 @@
 # Test runner (spec 014). dotnet + bun + native artifacts.
-FROM mcr.microsoft.com/dotnet/sdk:8.0
+FROM mcr.microsoft.com/dotnet/sdk:9.0
 RUN apt-get update && apt-get install -y curl unzip libpq5 python3 \
  && curl -fsSL https://bun.sh/install | bash \
  && rm -rf /var/lib/apt/lists/*

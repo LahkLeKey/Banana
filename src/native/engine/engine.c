@@ -10,7 +10,7 @@ static Window *s_window = NULL;
 static Renderer *s_renderer = NULL;
 static PhysicsWorld *s_physics = NULL;
 static World *s_world = NULL;
-static Mesh *s_entity_mesh = NULL;  /* banana mesh for actors */
+static Mesh *s_entity_mesh = NULL; /* banana mesh for actors */
 static EntityId s_player_id = 0;
 /* Initialization guard */
 static int s_engine_initialized = 0;
@@ -40,6 +40,7 @@ static float s_camera_target[3] = {0.f, 0.f, 0.f};
 static int s_camera_valid = 0;
 static float s_move_input_x = 0.f;
 static float s_move_input_z = 0.f;
+static void _mat4_force_link(void);
 
 /* ── Active controller table ─────────────────────────────────────────────── */
 #define BANANA_MAX_ACTIVE_CONTROLLERS 256
@@ -331,8 +332,8 @@ static void update_player_motion(float dt)
             player->position[2] += move_dir[2] * speed * dt;
             player->position[0] = clampf_local(player->position[0], -island_span, island_span);
             player->position[2] = clampf_local(player->position[2], -island_span, island_span);
-            player->position[1] = terrain_sample_height(player->position[0], player->position[2]) +
-                                  0.55f;
+            player->position[1] =
+                terrain_sample_height(player->position[0], player->position[2]) + 0.55f;
         }
     }
 }
@@ -346,8 +347,8 @@ static void follow_player_camera(void)
     if (!player || !player->active)
         return;
 
-    Camera camera = camera_create(55.f, (float)s_viewport_width / (float)s_viewport_height,
-                                  0.1f, 1000.f);
+    Camera camera =
+        camera_create(55.f, (float)s_viewport_width / (float)s_viewport_height, 0.1f, 1000.f);
     camera_look_at(&camera, player->position[0] + 10.f, player->position[1] + 15.f,
                    player->position[2] + 10.f, player->position[0], player->position[1] - 0.5f,
                    player->position[2]);
@@ -703,6 +704,7 @@ void engine_controller_signal(uint32_t id, const char *sig)
 /* Entity query helpers for React telemetry overlay */
 int engine_get_entity_count(void)
 {
+    _mat4_force_link();
     return s_world ? s_world->entity_count : 0;
 }
 

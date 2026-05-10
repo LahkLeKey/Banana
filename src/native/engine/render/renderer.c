@@ -59,6 +59,7 @@ static const char *DEFAULT_FRAG =
     "}\n";
 #endif /* platform */
 
+#ifdef BANANA_ENGINE_HAS_GL
 /* ── Internal mat4 multiply (column-major, A × B → C) ───────────────────── */
 static void r_mat4_mul(const float *A, const float *B, float *C)
 {
@@ -90,6 +91,7 @@ static void r_scale(float x, float y, float z, float *m16)
     m16[10] = z;
     m16[15] = 1.f;
 }
+#endif
 
 struct Renderer
 {

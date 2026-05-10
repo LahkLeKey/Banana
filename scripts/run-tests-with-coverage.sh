@@ -32,7 +32,7 @@ emit_normalized_result() {
   bash scripts/coverage-normalize-lane-result.sh "${normalize_args[@]}"
 }
 
-dotnet test Banana.sln \
+dotnet test src/c-sharp/asp.net/asp.net.sln \
   --collect:"XPlat Code Coverage" \
   --results-directory "$OUT" \
   -p:CollectCoverage=true -p:CoverletOutputFormat=cobertura
