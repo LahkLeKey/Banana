@@ -9,10 +9,42 @@ import { PrismaClient } from "@prisma/client";
 import type { FastifyInstance } from "fastify";
 import { requireRole } from "../middleware/auth.ts";
 
-const prisma = new PrismaClient();
+let prismaClient: PrismaClient | null = null;
+let prismaInitAttempted = false;
+
+function getAuditReadPrisma(app: FastifyInstance): PrismaClient | null {
+  if (prismaInitAttempted) return prismaClient;
+  prismaInitAttempted = true;
+
+  const accelerateUrl = process.env.PRISMA_ACCELERATE_URL;
+  if (!accelerateUrl) {
+    app.log.warn("audit-routes: PRISMA_ACCELERATE_URL not set, endpoint disabled");
+    return null;
+  }
+
+  try {
+    prismaClient = new PrismaClient({
+      accelerateUrl,
+      log: ["warn", "error"],
+    });
+  } catch (err) {
+    app.log.warn({ err }, "audit-routes: prisma initialization failed, endpoint disabled");
+    prismaClient = null;
+  }
+
+  return prismaClient;
+}
 
 export async function registerAuditRoutes(app: FastifyInstance): Promise<void> {
   app.get("/operator/audit", { preHandler: requireRole("operator") }, async (request, reply) => {
+    const prisma = getAuditReadPrisma(app);
+    if (!prisma) {
+      return reply.code(503).send({
+        error: "audit route unavailable",
+        reason: "PRISMA_ACCELERATE_URL is not configured",
+      });
+    }
+
     const query = request.query as {
       action?: string;
       actor?: string;
