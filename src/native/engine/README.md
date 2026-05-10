@@ -1,6 +1,6 @@
 # Banana Engine — Native C → WASM
 
-This directory contains the Phase 1 game engine: a pure-C runtime compiled to
+This directory contains the domain-contract game engine: a pure-C runtime compiled to
 WebAssembly via Emscripten and consumed by the React frontend.
 
 ## Module map
@@ -14,7 +14,7 @@ engine/
 ├── render/
 │   ├── window.h / window.c    ← context creation (triple-path: WASM / GLFW / headless)
 │   ├── shader.h / shader.c    ← GLSL compile + link
-│   ├── mesh.h / mesh.c        ← vertex buffer builders (cube, sphere)
+│   ├── mesh.h / mesh.c        ← vertex buffer builders (banana-derived profiles, terrain)
 │   ├── material.h             ← Material struct (color[3])
 │   ├── camera.h / camera.c    ← perspective + view/projection matrices
 │   └── renderer.h / renderer.c← FBO render loop, MVP transforms
@@ -47,8 +47,8 @@ engine/
 
 ```bash
 cmake -B build -DBANANA_ENABLE_ENGINE=ON
-cmake --build build --target banana_test_engine_phase1
-./build/tests/native/engine/banana_test_engine_phase1
+cmake --build build --target banana_test_engine_domain_contracts
+./build/tests/native/engine/banana_test_engine_domain_contracts
 ```
 
 ### WASM bundle (requires emcc)
@@ -115,8 +115,8 @@ for the frame-time chart.
 
 ## Testing
 
-Tests live in `tests/native/engine/test_engine_phase1.c` and are compiled into
-`banana_test_engine_phase1`.  All tests run in headless mode (no GL context)
+Tests live in `tests/native/engine/test_engine_domain_contracts.c` and are compiled into
+`banana_test_engine_domain_contracts`.  All tests run in headless mode (no GL context)
 via stub implementations.
 
 Current status: **26/26 passing**.

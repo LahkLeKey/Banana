@@ -37,9 +37,15 @@
   - Developed independently
   - Tested independently
   - Deployed independently
-  - Demonstrated to users independently
 -->
 
+
+### Test Organization
+
+- Describe how automated tests map to bounded domains or user stories.
+- Prefer suite names that reflect the owned behavior (for example physics, AI FSM, navigation, render, world) rather than implementation phases.
+- If the feature introduces native code, specify whether tests are split into domain-contract suites with a thin aggregate orchestrator.
+- Call out any required coverage, sanitizer, leak, or static-analysis gates that must pass before the feature is considered complete.
 ### User Story 1 - [Brief Title] (Priority: P1)
 
 [Describe this user journey in plain language]

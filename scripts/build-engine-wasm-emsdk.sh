@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$SCRIPT_DIR/.."
 ENGINE_DIR="$ROOT/src/native/engine"
 OUT_DIR="$ROOT/out/wasm"
+ARTIFACT_DIR="$ROOT/artifacts/wasm"
 REACT_PUBLIC="$ROOT/src/typescript/react/public/wasm"
 
 # Source Emscripten
@@ -42,7 +43,7 @@ SOURCES=(
     "$ENGINE_DIR/wasm_main.c"
 )
 
-EXPORTS='["_main","_engine_world_spawn","_engine_controller_attach","_engine_controller_signal","_engine_tick","_engine_get_entity_count","_engine_get_entity_x","_engine_get_entity_z","_engine_get_entity_state"]'
+EXPORTS='["_main","_engine_init","_engine_tick","_engine_shutdown","_engine_render_frame","_engine_get_frame_buffer","_engine_world_spawn","_engine_world_tick","_engine_controller_create","_engine_controller_attach","_engine_controller_update","_engine_controller_signal","_engine_get_entity_count","_engine_get_entity_x","_engine_get_entity_z","_engine_get_entity_state","_engine_set_move_input","_engine_get_click_count","_engine_get_target_reached_count","_engine_get_has_move_target","_physics_step","_physics_add_body","_physics_update_body"]'
 
 echo "[wasm] Compiling ${#SOURCES[@]} sources…"
 
@@ -55,10 +56,13 @@ $EMCC \
     -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]' \
     -s MODULARIZE=1 -s EXPORT_NAME=BananaEngine \
     -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=33554432 \
+    -s NO_EXIT_RUNTIME=1 \
     -s ENVIRONMENT=web \
     -o "$OUT_DIR/engine.js"
 
 echo "[wasm] Build complete: $OUT_DIR/"
 mkdir -p "$REACT_PUBLIC"
 cp "$OUT_DIR/engine.js" "$REACT_PUBLIC/" && cp "$OUT_DIR/engine.wasm" "$REACT_PUBLIC/" 2>/dev/null || true
+mkdir -p "$ARTIFACT_DIR"
+cp "$OUT_DIR/engine.js" "$ARTIFACT_DIR/banana-wasm-engine.js" && cp "$OUT_DIR/engine.wasm" "$ARTIFACT_DIR/banana-wasm-engine.wasm" 2>/dev/null || true
 echo "[wasm] Copied to $REACT_PUBLIC/"

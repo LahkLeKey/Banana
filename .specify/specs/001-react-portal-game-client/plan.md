@@ -5,7 +5,7 @@
 
 ## Summary
 
-Refocus Banana toward Banana Engineer, a 2.5D game-client-style React portal experience, by rebuilding the landing route as a WASM-rendered entry surface and introducing a C-based procedural asset compiler that generates web-consumable visuals without manual art dependencies.
+Refocus Banana toward Banana Engineer, a 2.5D C/WASM-first game-client-style React portal experience, by rebuilding the landing route as a WASM-rendered entry surface and introducing C-owned procedural terrain generation that renders directly in the runtime scene.
 
 ## Technical Context
 
@@ -16,8 +16,10 @@ Refocus Banana toward Banana Engineer, a 2.5D game-client-style React portal exp
 **Target Platform**: Web portal (desktop/mobile browser), GitHub-hosted runners
 **Project Type**: Frontend rendering pivot + CI governance hardening
 **Performance Goals**: Maintain stable startup/build behavior while introducing WASM landing rendering and generated asset ingestion
-**Constraints**: Preserve runtime contracts (`VITE_BANANA_API_BASE_URL`), keep cross-viewport usability, enforce deterministic asset outputs, and avoid reintroducing workflow/spec sprawl
+**Constraints**: Preserve runtime contracts (`VITE_BANANA_API_BASE_URL`), keep cross-viewport usability, enforce deterministic terrain/asset outputs, and avoid reintroducing workflow/spec sprawl
 **Scale/Scope**: `src/typescript/react`, `src/native`, `.github/workflows`, `.specify/specs`
+
+The canonical procedural asset input contract lives in [procedural-generation-inputs.md](procedural-generation-inputs.md); treat it as the source of truth for seed/profile/width/height/cellularAutomataIterations defaults and override order.
 
 ## Architecture Direction (DDD + SOLID)
 
@@ -31,6 +33,8 @@ Refocus Banana toward Banana Engineer, a 2.5D game-client-style React portal exp
 **Canvas Ownership**: The C/WASM engine directly manages all canvas sizing, scaling, and responsive behavior from native code. React is a minimal HTML container with zero CSS constraints on the primary canvas element.
 
 **React Role**: Serve as a fixed-position shell for the engine and eventually host HUD overlays (menu, status, controls). The core viewport rendering — including adaptation to different screen sizes, orientations, and DPIs — is owned entirely by the C/WASM runtime. No Tailwind utilities, flex/grid, or object-contain tricks.
+
+**HUD Mounting Contract**: React overlays attach to fixed zones layered above canvas (`hud-top-left`, `hud-top-right`, `hud-bottom-center`). These mounts are non-layout-participating overlays and must never resize or reposition the canvas render surface.
 
 **Why**: Previous iterations accumulated conflicting CSS layout models (absolute positioning + flexbox + object-contain + responsive utilities) that created a source of browser-specific rendering bugs. Centralizing viewport logic in C/WASM eliminates this complexity surface.
 

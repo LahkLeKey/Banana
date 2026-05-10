@@ -1,14 +1,14 @@
 <!--
 Sync Impact Report
-- Version change: 1.13.0 -> 1.13.1
+- Version change: 1.13.2 -> 1.13.3
 - Modified principles:
-	- Updated XVIII. Confidence-Gated Clarification (80% threshold)
-	- Added XXII. Confidence Heartbeat Orchestration
+	- Added XXIII. Banana-Derived Procedural Primitive Exclusivity
+	- Added XXIV. Domain-Contract Test Decomposition
 - Added workflow guidance: explicit Spec Kit orchestration preflight steps and command sequence
 - Templates requiring updates:
-	- ✅ updated .specify/templates/plan-template.md (orchestration preflight + DDD/SOLID decomposition)
-	- ✅ updated .specify/templates/spec-template.md (preflight/heartbeat functional requirements)
-	- ✅ updated .specify/templates/tasks-template.md (preflight + heartbeat task scaffolding)
+	- ✅ updated .specify/templates/plan-template.md (domain-contract test decomposition)
+	- ✅ updated .specify/templates/spec-template.md (test organization guidance)
+	- ✅ updated .specify/templates/tasks-template.md (bounded-suite native test guidance)
 
 Previous sync:
 - Version change: 1.10.1 -> 1.10.2
@@ -125,6 +125,12 @@ Spec Kit orchestration must maintain an explicit confidence heartbeat throughout
 - any below-threshold step requires a human-input checkpoint before execution continues,
 - heartbeat evidence must be captured in feature artifacts (plan/tasks/evidence notes) for auditability.
 
+### XXIII. Banana-Derived Procedural Primitive Exclusivity
+Procedural-generation geometry in Banana runtime surfaces must derive from a banana primitive baseline. Classical primitive constructors (cube, sphere, plane) are not allowed as first-class generation sources in engine/runtime pathways. When block-like or orb-like structures are required, they must be generated through banana-derived vector profiles and documented as such in active specs.
+
+### XXIV. Domain-Contract Test Decomposition
+Native and engine test surfaces must be organized by bounded domain contracts, not timeline phases. Test targets, files, and suites should use domain names that communicate responsibility (for example physics, AI FSM, navigation, controller, render, world/signals) and should avoid ambiguous phase labels. Each suite must own one primary responsibility and compose through a thin orchestrator target for aggregate execution.
+
 ### XIX. Unified Monorepo Workflow Harness (DDD + SOLID)
 Banana-managed CI/CD lanes must be orchestrated through a single workflow harness named `Banana-Monorepo`. Workflow design must follow domain-driven decomposition and SOLID-style responsibilities:
 - each lane/job maps to a bounded domain context,
@@ -172,6 +178,8 @@ Implementation inside each Banana bounded context must follow domain-driven deco
 - CI warnings and informational notices are treated as errors; a run with any unresolved warning or notice is not considered a clean baseline.
 - Structurally unavoidable warning suppressions must be documented in `exceptions/ci-warning-suppressions.md` with an expiry date and owner.
 - New native/tooling features must be organized into domain/application/infrastructure slices (or equivalent bounded modules) before complexity exceeds a single-file prototype.
+- Runtime procedural geometry must use banana-derived primitive adapters only; classical primitive constructors are disallowed for new engine/proc-gen work.
+- Native test targets and files must use domain-contract naming and bounded suite ownership; phase-oriented labels are not permitted for new test surfaces.
 
 ## Workflow and Review
 
@@ -200,6 +208,8 @@ Implementation inside each Banana bounded context must follow domain-driven deco
 - After every CI run, enumerate all warnings and notices in the run output. Any unresolved warning or notice must be fixed in the same branch or filed as a tracked follow-up task with an expiry before the branch is considered clean.
 - When a CI action emits a runtime deprecation warning, pin the action to a Node 24-native version in the same slice that surfaces the warning — do not defer to a separate cleanup PR.
 - For procedural-generation and engine-adjacent tooling, require explicit contracts between algorithm engines, configuration parsing, and output serializers so alternate algorithms can be introduced without broad rewrites.
+- For procedural-generation mesh work, review evidence must show banana-derived primitive usage (orbanana vector adapters) rather than direct cube/sphere/plane builders.
+- For native test refactors, reviewers must verify that test structure mirrors domain boundaries and SOLID ownership (single-responsibility suite files + explicit orchestrator).
 - Before Spec Kit orchestration runs, extension health must be verified (`specify extension list`) and corrupted/disabled required extensions must be remediated or explicitly deferred with owner and expiry.
 
 ### Spec Kit Orchestration Preflight
@@ -220,4 +230,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.13.1 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-09
+**Version**: 1.13.3 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-09

@@ -82,6 +82,15 @@ static void r_translation(float x, float y, float z, float *m16)
     m16[14] = z;
 }
 
+static void r_scale(float x, float y, float z, float *m16)
+{
+    memset(m16, 0, 64);
+    m16[0] = x;
+    m16[5] = y;
+    m16[10] = z;
+    m16[15] = 1.f;
+}
+
 struct Renderer
 {
     int width;
@@ -131,7 +140,7 @@ Renderer *renderer_create(int width, int height)
     r->height = height;
     r->frame_buffer = malloc((size_t)width * height * 4);
     r->camera = camera_create(60.f, (float)width / height, 0.1f, 1000.f);
-    camera_look_at(&r->camera, 0, 5, 10, 0, 0, 0);
+    camera_look_at(&r->camera, 12, 18, 12, 0, 0, 0);
 
 #ifdef BANANA_ENGINE_HAS_GL
     r->default_shader = shader_create(DEFAULT_VERT, DEFAULT_FRAG);
@@ -160,7 +169,7 @@ void renderer_begin_frame(Renderer *r)
 {
 #ifdef BANANA_ENGINE_HAS_GL
     glBindFramebuffer(GL_FRAMEBUFFER, r->use_fbo ? r->fbo : 0);
-    glClearColor(0.08f, 0.08f, 0.12f, 1.f);
+    glClearColor(0.12f, 0.24f, 0.42f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #else
     (void)r;
@@ -175,11 +184,13 @@ void renderer_draw_mesh(Renderer *r, struct Mesh *mesh, const float *position,
 #ifdef BANANA_ENGINE_HAS_GL
     shader_bind(r->default_shader);
 
-    /* MVP = ViewProjection × Translation(position) */
-    float vp[16], T[16], mvp[16];
+    /* MVP = ViewProjection × Translation(position) × Scale(scale) */
+    float vp[16], T[16], S[16], TS[16], mvp[16];
     camera_get_view_projection(&r->camera, vp);
     r_translation(position[0], position[1], position[2], T);
-    r_mat4_mul(vp, T, mvp);
+    r_scale(scale[0], scale[1], scale[2], S);
+    r_mat4_mul(T, S, TS);
+    r_mat4_mul(vp, TS, mvp);
 
     shader_set_mat4(r->default_shader, "u_mvp", mvp);
     material_apply(material, r->default_shader);

@@ -306,6 +306,43 @@ jobs:
           cd build/sanitizers
           ctest --output-on-failure --timeout 60
 
+  native-quality-gate:
+    name: Native / quality gate (100% + memory)
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: banana
+          POSTGRES_PASSWORD: banana
+          POSTGRES_DB: banana
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install native quality gate dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake ninja-build clang clang-tools gcc binutils
+          python -m pip install --upgrade pip gcovr
+      - name: Enforce native 100% line coverage gate
+        env:
+          BANANA_PG_CONNECTION: postgresql://banana:banana@localhost:5432/banana
+          BANANA_NATIVE_COVERAGE_THRESHOLD: "100"
+        run: bash scripts/run-native-c-tests-with-coverage.sh
+      - name: Enforce native static memory + leak analysis gate
+        run: bash scripts/run-native-static-memory-analysis.sh
+
   # --- Stage 4: integration / runtime (after build) ---
   runtime-compatibility:
     name: Runtime / workflow compatibility
@@ -464,6 +501,7 @@ jobs:
       - native-abi
       - native-cross-platform
       - native-sanitizers
+      - native-quality-gate
       - runtime-compatibility
       - architecture-governance
       - compose
@@ -492,6 +530,7 @@ jobs:
             echo "| Native / ABI check | ${{ needs.native-abi.result }} |"
             echo "| Native / cross-platform | ${{ needs.native-cross-platform.result }} |"
             echo "| Native / sanitizers | ${{ needs.native-sanitizers.result }} |"
+            echo "| Native / quality gate (100% + memory) | ${{ needs.native-quality-gate.result }} |"
             echo "| Runtime / workflow compatibility | ${{ needs.runtime-compatibility.result }} |"
             echo "| Governance / architecture contracts | ${{ needs.architecture-governance.result }} |"
             echo "| Runtime / compose | ${{ needs.compose.result }} |"

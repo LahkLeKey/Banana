@@ -10,6 +10,8 @@ typedef struct
     int elevation_base;
     int resource_bias;
     int weight;
+    const char *display_color_role;
+    const char *display_color_hex;
 } banana_tile_def_t;
 
 enum

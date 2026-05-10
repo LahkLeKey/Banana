@@ -17,7 +17,39 @@ struct Window
     int height;
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE gl;
     int should_close;
+    double mouse_x;
+    double mouse_y;
+    int right_click_pending;
 };
+
+static EM_BOOL window_mouse_move_callback(int event_type, const EmscriptenMouseEvent *event,
+                                          void *user_data)
+{
+    (void)event_type;
+    Window *w = (Window *)user_data;
+    if (!w)
+        return EM_FALSE;
+    w->mouse_x = event->canvasX;
+    w->mouse_y = event->canvasY;
+    return EM_FALSE;
+}
+
+static EM_BOOL window_mouse_down_callback(int event_type, const EmscriptenMouseEvent *event,
+                                          void *user_data)
+{
+    (void)event_type;
+    Window *w = (Window *)user_data;
+    if (!w)
+        return EM_FALSE;
+    w->mouse_x = event->canvasX;
+    w->mouse_y = event->canvasY;
+    if (event->button == 2)
+    {
+        w->right_click_pending = 1;
+        return EM_FALSE;
+    }
+    return EM_FALSE;
+}
 
 Window *window_create(int width, int height, const char *title)
 {
@@ -25,6 +57,8 @@ Window *window_create(int width, int height, const char *title)
     Window *w = (Window *)calloc(1, sizeof(Window));
     w->width = width;
     w->height = height;
+    w->mouse_x = width * 0.5;
+    w->mouse_y = height * 0.5;
 
     emscripten_set_canvas_element_size("#canvas", width, height);
 
@@ -43,6 +77,7 @@ Window *window_create(int width, int height, const char *title)
         return NULL;
     }
     emscripten_webgl_make_context_current(w->gl);
+    emscripten_set_mousemove_callback("#canvas", w, 1, window_mouse_move_callback);
     fprintf(stdout, "[engine/window] WebGL2 context created %dx%d\n", width, height);
     return w;
 }
@@ -55,6 +90,18 @@ void window_poll_events(Window *w)
 {
     (void)w; /* browser handles events */
 }
+
+int window_take_right_click(Window *w, float *x, float *y)
+{
+    if (!w || !w->right_click_pending)
+        return 0;
+    w->right_click_pending = 0;
+    if (x)
+        *x = (float)w->mouse_x;
+    if (y)
+        *y = (float)w->mouse_y;
+    return 1;
+}
 void window_swap_buffers(Window *w)
 {
     (void)w; /* WebGL auto-presents    */
@@ -62,6 +109,43 @@ void window_swap_buffers(Window *w)
 
 void window_get_size(Window *w, int *width, int *height)
 {
+    double css_w = 0.0;
+    double css_h = 0.0;
+    double dpr = emscripten_get_device_pixel_ratio();
+    if (dpr <= 0.0)
+        dpr = 1.0;
+
+    if (emscripten_get_element_css_size("#canvas", &css_w, &css_h) == EMSCRIPTEN_RESULT_SUCCESS)
+    {
+        int fb_w = (int)(css_w * dpr);
+        int fb_h = (int)(css_h * dpr);
+        if (fb_w > 0 && fb_h > 0 && (fb_w != w->width || fb_h != w->height))
+        {
+            emscripten_set_canvas_element_size("#canvas", fb_w, fb_h);
+            w->width = fb_w;
+            w->height = fb_h;
+        }
+    }
+
+    if (width)
+        *width = w->width;
+    if (height)
+        *height = w->height;
+}
+
+void window_get_input_size(Window *w, int *width, int *height)
+{
+    double css_w = 0.0;
+    double css_h = 0.0;
+    if (emscripten_get_element_css_size("#canvas", &css_w, &css_h) == EMSCRIPTEN_RESULT_SUCCESS)
+    {
+        if (width)
+            *width = (int)css_w;
+        if (height)
+            *height = (int)css_h;
+        return;
+    }
+
     if (width)
         *width = w->width;
     if (height)
@@ -139,6 +223,14 @@ void window_get_size(Window *w, int *width, int *height)
     glfwGetFramebufferSize(w->glfw, width, height);
 }
 
+void window_get_input_size(Window *w, int *width, int *height)
+{
+    if (width)
+        *width = w->width;
+    if (height)
+        *height = w->height;
+}
+
 void window_destroy(Window *w)
 {
     if (!w)
@@ -185,6 +277,14 @@ void window_get_size(Window *w, int *width, int *height)
 {
     *width = w->width;
     *height = w->height;
+}
+
+void window_get_input_size(Window *w, int *width, int *height)
+{
+    if (width)
+        *width = w->width;
+    if (height)
+        *height = w->height;
 }
 void window_destroy(Window *w)
 {
