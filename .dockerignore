@@ -3,7 +3,7 @@ build/
 out/
 .artifacts/
 
-# Node — never let host node_modules leak into Linux builds (009/012 contract)
+# Node — never let host node_modules leak into Linux builds
 **/node_modules
 **/.next
 **/.vite
