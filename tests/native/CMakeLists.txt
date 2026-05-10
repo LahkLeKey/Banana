@@ -80,3 +80,23 @@ if(WIN32)
       $<TARGET_FILE:banana_native>
       $<TARGET_FILE_DIR:banana_test_abi_version>)
 endif()
+
+# Native quality gate compiles with -DNDEBUG globally; keep assert-driven test
+# validations active so strict warning checks do not see false unused symbols.
+set(BANANA_NATIVE_TEST_TARGETS
+  banana_test_calc
+  banana_test_ml_models
+  banana_test_operational_domains
+  banana_test_dal_contracts
+  banana_test_ml_regression
+  banana_test_ml_binary
+  banana_test_ml_transformer
+  banana_test_ml_transformer_quant
+  banana_test_abi_version
+)
+
+foreach(native_test_target IN LISTS BANANA_NATIVE_TEST_TARGETS)
+  target_compile_options(${native_test_target} PRIVATE
+    $<$<C_COMPILER_ID:MSVC>:/UNDEBUG>
+    $<$<NOT:$<C_COMPILER_ID:MSVC>>:-UNDEBUG>)
+endforeach()
