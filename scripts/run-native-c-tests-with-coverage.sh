@@ -31,7 +31,7 @@ mkdir -p "$ARTIFACT_DIR"
 gcovr \
     --object-directory "$BUILD_DIR" \
     --root . \
-    --filter 'src/native' \
+    --filter 'src/native/(core|wrapper)' \
     --exclude 'tests/native' \
     --xml-pretty \
     --output "$ARTIFACT_DIR/coverage-native.xml" \
@@ -40,7 +40,7 @@ gcovr \
 gcovr \
     --object-directory "$BUILD_DIR" \
     --root . \
-    --filter 'src/native' \
+    --filter 'src/native/(core|wrapper)' \
     --exclude 'tests/native' \
     --txt > "$ARTIFACT_DIR/Summary.txt"
 
