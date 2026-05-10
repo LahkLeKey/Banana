@@ -3,11 +3,11 @@
 **Feature Branch**: `001-react-portal-game-client`
 **Created**: 2026-05-08
 **Status**: Draft
-**Input**: Re-align Banana from dashboard/research sprawl into a 2.5D game-client experience titled "Banana Engineer," delivered through the existing React portal and starting with a WASM-rendered landing surface.
+**Input**: Re-align Banana from dashboard/research sprawl into a C/WASM-first 2.5D game-client experience titled "Banana Engineer," delivered through the existing React portal with native procedural terrain generation.
 
 ## Problem Statement
 
-The repository accumulated broad, research-heavy specs and workflows that are no longer aligned with the current product goal. The active objective is narrower: keep the existing implementation live while reshaping the React portal into a true game-client runtime shell with a cross-platform, cross-viewport friendly 2.5D rendering approach.
+The repository accumulated broad, research-heavy specs and workflows that are no longer aligned with the current product goal. The active objective is narrower: keep the existing implementation live while reshaping the React portal into a true game-client runtime shell where rendering, terrain generation, and viewport adaptation are owned by native C/WASM.
 
 ## In Scope
 
@@ -15,8 +15,8 @@ The repository accumulated broad, research-heavy specs and workflows that are no
 - Start over the landing entry surface as a WASM-rendered scene integrated into the React shell.
 - Generate core visual assets procedurally through a C-based compiler pipeline that outputs web-consumable asset bundles.
 - Architect procedural asset generation with explicit domain/application/infrastructure boundaries so algorithm and serialization concerns remain independently evolvable.
-- Adopt a 2.5D rendering style for the game-client presentation to improve cross-platform and cross-viewport consistency.
-- Keep the primary engine route viewport-only so users see the 2.5D WASM scene and C-generated assets without dashboard chrome or auxiliary control panels.
+- Render a true 2.5D scene (entities + terrain layering) from native C/WASM rather than composited sprite overlays.
+- Keep the primary engine route viewport-only so users see the 2.5D WASM scene and C-generated terrain without dashboard chrome or auxiliary control panels.
 - Reflow portal UX toward game-client framing (viewport-first shell, tactical overlays, mission-control language).
 - Keep only essential CI/CD workflows required to validate and ship the React portal.
 - Remove or archive out-of-scope spec/workflow surfaces from active roots.
@@ -26,7 +26,7 @@ The repository accumulated broad, research-heavy specs and workflows that are no
 
 - New backend platform research programs unrelated to the game-client UX pivot.
 - Re-introducing broad autonomous orchestration workflows as active required checks.
-- Building a full native 3D engine or platform-specific graphics runtime.
+- Building a full native graphics runtime or platform-specific graphics engine.
 - Backend/data-platform rewrites unrelated to landing and shell rendering direction.
 
 ## User Scenarios & Testing
@@ -43,7 +43,7 @@ As a user, I can move from the landing surface into the React shell and retain a
 
 **Independent Test**: Validate representative routes at desktop/tablet/mobile widths and confirm layout, overlays, and navigation preserve game-client framing without breaking interaction flows.
 
-For the primary engine route, the visible surface should collapse to the viewport itself: the WASM scene and generated assets may be shown, but dashboard cards, route control panels, and analytics-style chrome must not remain on screen.
+For the primary engine route, the visible surface should collapse to the viewport itself: the WASM scene and generated C terrain may be shown, but dashboard cards, route control panels, and analytics-style chrome must not remain on screen.
 
 ### User Story 3 - Safe Delivery Contracts (Priority: P2)
 
@@ -60,7 +60,7 @@ As a maintainer without dedicated art production capacity, I can compile game-re
 ### Edge Cases
 
 - Landing fails to initialize when WASM bootstrap artifacts are missing or delayed.
-- Render quality degrades on narrow/mobile viewports if 2.5D scene scaling is not bounded.
+- Render quality degrades on narrow/mobile viewports if C-owned viewport resizing is not bounded.
 - Asset compiler output is non-deterministic between environments for the same input seed/profile.
 - Generated assets exceed acceptable size budgets and regress startup performance.
 - Legacy files are reintroduced accidentally by merge/conflict resolution.
@@ -71,27 +71,49 @@ As a maintainer without dedicated art production capacity, I can compile game-re
 ### Functional Requirements
 
 - **FR-001**: System MUST render the landing entry route through a WASM-backed renderer integrated into the React app shell.
-- **FR-002**: System MUST use a 2.5D rendering direction for the landing and primary shell presentation rather than flat web-page layout conventions.
+- **FR-002**: System MUST use native 2.5D rendering for the landing and primary shell presentation rather than flat web-page or sprite-overlay conventions.
 - **FR-003**: System MUST preserve cross-platform and cross-viewport usability for desktop and mobile-sized viewports.
 - **FR-004**: System MUST maintain a working React build path (`bun run build`) with WASM assets included in the build contract.
 - **FR-005**: System MUST preserve explicit runtime configuration contracts (including `VITE_BANANA_API_BASE_URL`) required by the portal.
 - **FR-006**: System MUST provide CI validation coverage sufficient to detect WASM/bootstrap or rendering-contract regressions.
 - **FR-007**: System MUST avoid reintroducing non-pivot workflows/specs into active roots without explicit scope approval.
-- **FR-008**: System MUST provide a C-based generative asset compiler that produces web-consumable assets for Banana Engineer landing/shell scenes.
+- **FR-008**: System MUST provide a C-based procedural generation pipeline that produces runtime terrain data and supporting web-consumable assets for Banana Engineer scenes.
 - **FR-009**: System MUST support deterministic asset generation based on explicit input parameters (including seed/profile) so repeated runs produce equivalent outputs.
-- **FR-010**: System MUST include generated asset bundles in the React/WASM build contract without requiring manual art asset authoring for baseline scenes.
+- **FR-010**: System MUST include generated terrain/assets in the React/WASM build contract without requiring manual art asset authoring for baseline scenes.
 - **FR-011**: System MUST structure procedural asset generation using DDD/SOLID-aligned modules (domain rules, application orchestration, infrastructure I/O) to prevent monolithic compiler drift.
-- **FR-012**: System MUST present the primary game-engine route as a viewport-only surface where the visible content is limited to the 2.5D WASM scene and generated C asset visuals, excluding dashboard-style panels and route chrome.
+- **FR-012**: System MUST present the primary game-engine route as a viewport-only surface where the visible content is limited to the 2.5D WASM scene and generated C terrain/asset visuals, excluding dashboard-style panels and route chrome.
+- **FR-013**: System MUST reserve explicit HUD mount zones (top-left status, top-right controls, bottom-center action strip) as React overlay attachment points above the C/WASM canvas without constraining canvas sizing.
+
+### Procedural Input Contract
+
+- The canonical deterministic inputs (seed, profile, width, height, cellularAutomataIterations) and override precedence are defined in [procedural-generation-inputs.md](procedural-generation-inputs.md).
+- The baseline input tuple for the generated asset bundle must remain deterministic unless that contract file is updated first.
+- Changes to the generated asset tuple, palette roles, or terrain width/height are specification changes and must be reflected in the procedural input contract before implementation.
 
 ### Key Entities
 
 - **WasmLandingSurface**: The WASM-rendered landing entry scene presented at the root route.
-- **ViewportRenderProfile**: A bounded 2.5D layout and scaling profile for desktop, tablet, and mobile-sized viewports.
+- **ViewportRenderProfile**: A bounded native viewport scaling profile for desktop, tablet, and mobile-sized viewports.
 - **PortalBuildContract**: Required build inputs, assets, and commands for `src/typescript/react` deployment.
 - **ProceduralAssetCompiler**: Native C tool that compiles deterministic visual assets from rule-based generation inputs.
+- **ProceduralInputContract**: Canonical seed/profile/width/height/cellularAutomataIterations and post-process parameter set used to drive deterministic generated assets for Banana Engineer.
 - **GeneratedAssetBundle**: Versioned web-consumable output package (for example sprites/textures/metadata) produced by the compiler and consumed by the portal build.
 - **AssetGenerationDomainModel**: Core tile/rule/value objects and algorithm contracts independent from filesystem and JSON serialization details.
 - **ActiveSpecRoot**: The set of currently active specs in `.specify/specs`.
+
+## HUD Mount Zones (Documentation Contract)
+
+- `hud-top-left`: status telemetry (fps, seed, biome)
+- `hud-top-right`: controls/settings (pause, quality, debug)
+- `hud-bottom-center`: action strip / context commands
+
+These zones are overlay-only and must not change the ownership contract where C/WASM controls viewport width/height and render scaling.
+
+## Terrain Rendering Readability
+
+- Terrain, entity meshes, and overlay attachments must remain visually separable across desktop and mobile-sized viewports.
+- The generated palette contract must preserve stable color roles so terrain stays readable behind entities without relying on dashboard-style chrome.
+- Readability changes must not alter canvas ownership or introduce React layout constraints on the primary render surface.
 
 ## Success Criteria
 
@@ -103,7 +125,7 @@ As a maintainer without dedicated art production capacity, I can compile game-re
 - **SC-004**: Active scope remains constrained to pivot-approved spec/workflow surfaces.
 - **SC-005**: Deterministic C asset compilation produces a valid generated asset bundle that is consumed by landing/shell flows in local and CI validation.
 - **SC-006**: Procedural asset compiler code is decomposed into stable DDD/SOLID layers with no single file owning domain rules, orchestration, and persistence simultaneously.
-- **SC-007**: The primary engine route renders as viewport-only in local verification, with generated C assets visibly composited into the scene and no dashboard chrome remaining.
+- **SC-007**: The primary engine route renders as viewport-only in local verification, with generated C terrain visibly rendered in-scene and no dashboard chrome remaining.
 
 ## Assumptions
 

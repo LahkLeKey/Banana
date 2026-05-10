@@ -11,7 +11,7 @@
 ## Phase 2: WASM Landing + 2.5D Shell Pivot
 
 - [x] T003 [US1] Implement WASM-backed landing route bootstrap in the React app entry flow. (FR-001, FR-004)
-- [x] T004 [US1] Build landing presentation with 2.5D scene conventions instead of flat web-page framing. (FR-002)
+- [x] T004 [US1] Build landing presentation with native 2.5D scene conventions instead of flat web-page framing. (FR-002)
 - [x] T005 [US2] Rework shell/navigation to preserve 2.5D game-client continuity after landing handoff. (FR-002, FR-003)
 - [x] T006 [US2] Validate desktop and mobile-sized viewport behavior for landing and primary routes. (FR-003)
 
@@ -30,7 +30,7 @@
 
 ## Phase 5: Procedural Asset Compiler (C)
 
-- [x] T014 [US4] Define deterministic generation inputs (seed/profile/rules) for baseline Banana Engineer landing and shell asset sets. (FR-009)
+- [x] T014 [US4] Define deterministic generation inputs in procedural-generation-inputs.md (seed/profile/width/height/cellularAutomataIterations/override order) for baseline Banana Engineer landing and shell asset sets. (FR-009)
 - [x] T015 [US4] Implement a C-based procedural asset compiler that emits web-consumable generated asset bundles for the React/WASM client. (FR-008, FR-010)
 - [x] T016 [US4] Integrate generated bundle ingestion into the React build/bootstrap path without requiring manual art authoring for baseline scenes. (FR-004, FR-010)
 - [x] T017 [US4] Add CI/local validation that re-runs compiler generation and verifies deterministic output + bundle compatibility with landing/shell runtime. (FR-006, FR-009, FR-010)
@@ -43,7 +43,13 @@
 
 ## Phase 7: Viewport Architecture Simplification
 
-- [ ] T021 [US1] Remove all React/Tailwind styling constraints (h-[100dvh], md:, object-contain, flex/justify-center, etc.) from GameEnginePage and simplify JSX to fixed-position div + canvas. Let C/WASM engine own all viewport sizing logic. (FR-001, FR-002)
-- [ ] T022 [US2] Extend C WASM build to expose canvas resize/fullscreen handlers and viewport context from native code so responsive scaling is driven entirely by the engine. (FR-002, FR-003)
-- [ ] T023 [US3] Document HUD overlay mounting points (fixed positioning above canvas) for future menu/status/controls integration. (FR-013)
-- [ ] T024 [US3] Validate viewport scaling and responsiveness across desktop/tablet/mobile-portrait/mobile-landscape; confirm C/WASM engine adapts rendering correctly to all screen sizes. (FR-002, FR-003)
+- [x] T021 [US1] Remove all React/Tailwind styling constraints (h-[100dvh], md:, object-contain, flex/justify-center, etc.) from GameEnginePage and simplify JSX to fixed-position div + canvas. Let C/WASM engine own all viewport sizing logic. (FR-001, FR-002)
+- [x] T022 [US2] Extend C WASM build to expose canvas resize/fullscreen handlers and viewport context from native code so responsive scaling is driven entirely by the engine. (FR-002, FR-003)
+- [x] T023 [US3] Document HUD overlay mounting points (fixed positioning above canvas) for future menu/status/controls integration. (FR-013)
+- [x] T024 [US3] Validate viewport scaling and responsiveness across desktop/tablet/mobile-portrait/mobile-landscape; confirm C/WASM engine adapts rendering correctly to all screen sizes. (FR-002, FR-003)
+
+## Phase 8: Native Procedural Terrain Runtime
+
+- [x] T025 [US1] Render deterministic C-generated terrain directly in the runtime 2.5D scene (no React sprite terrain overlays). (FR-002, FR-008, FR-012)
+- [x] T026 [US2] Tune terrain layering, palette colors, and material readability so terrain remains visible behind entity meshes across viewport sizes and stays aligned with the visual rendering contract. (FR-003, FR-012)
+- [x] T027 [US3] Add runtime validation evidence proving terrain visibility and C-owned viewport resizing on mobile + desktop. (FR-003, FR-006, FR-012)

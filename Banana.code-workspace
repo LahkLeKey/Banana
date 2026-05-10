@@ -77,7 +77,8 @@
       ".specify/legacy-baseline/**": true
     },
     "[shellscript]": { "files.eol": "\n" },
-    "dotnet.defaultSolution": "src/c-sharp/asp.net/Banana.Api.csproj"
+    "dotnet.defaultSolution": "src/c-sharp/asp.net/Banana.Api.csproj",
+    "powershell.cwd": "(Monorepo) Banana"
   },
   "extensions": {
     "recommendations": [

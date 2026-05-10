@@ -133,6 +133,11 @@ if(EMSCRIPTEN)
     "_engine_get_entity_x"
     "_engine_get_entity_z"
     "_engine_get_entity_state"
+    # Keyboard-only movement intent API (mouse move path intentionally inert)
+    "_engine_set_move_input"
+    "_engine_get_click_count"
+    "_engine_get_target_reached_count"
+    "_engine_get_has_move_target"
     "_physics_step"
     "_physics_add_body"
     "_physics_update_body"
@@ -174,6 +179,7 @@ if(EMSCRIPTEN)
     "SHELL:-s EXPORTED_RUNTIME_METHODS=[cwrap,ccall,getValue,setValue]"
     "SHELL:-s ALLOW_MEMORY_GROWTH=1"
     "SHELL:-s INITIAL_MEMORY=33554432"
+    "SHELL:-s NO_EXIT_RUNTIME=1"
     # Frame buffer at fixed offset (32 MB base + 8 MB frame buffer region)
     "SHELL:-s TOTAL_STACK=8388608"
     "SHELL:-s MODULARIZE=1"

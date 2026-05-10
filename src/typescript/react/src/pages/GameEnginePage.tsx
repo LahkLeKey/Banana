@@ -6,13 +6,67 @@ type BananaEngineModule = {
   cwrap: (name: string, returnType: string, argTypes: string[]) => (...args: unknown[]) => unknown;
 };
 
+const ENGINE_ASSET_VERSION = "20260510-10";
+
 declare global {
   interface Window {
-    BananaEngine?: (config: { canvas: HTMLCanvasElement }) => Promise<BananaEngineModule>;
+    BananaEngine?: (config: {
+      canvas: HTMLCanvasElement;
+      locateFile?: (path: string, prefix: string) => string;
+    }) => Promise<BananaEngineModule>;
+    __bananaEngineModule?: BananaEngineModule;
   }
 }
 
 type EngineStatus = "idle" | "loading" | "running" | "error" | "unavailable";
+
+type ContextMenuState = {
+  visible: boolean;
+  x: number;
+  y: number;
+};
+
+const MOVEMENT_KEYS = new Set([
+  "w",
+  "a",
+  "s",
+  "d",
+  "arrowup",
+  "arrowleft",
+  "arrowdown",
+  "arrowright",
+]);
+
+export function isMovementKey(key: string): boolean {
+  return MOVEMENT_KEYS.has(key.toLowerCase());
+}
+
+export function computeMoveAxes(keys: ReadonlySet<string>): { moveX: number; moveZ: number } {
+  const moveX = (keys.has("d") || keys.has("arrowright") ? 1 : 0) +
+    (keys.has("a") || keys.has("arrowleft") ? -1 : 0);
+  const moveZ = (keys.has("w") || keys.has("arrowup") ? 1 : 0) +
+    (keys.has("s") || keys.has("arrowdown") ? -1 : 0);
+  return { moveX, moveZ };
+}
+
+export function computeContextMenuPosition(
+  clientX: number,
+  clientY: number,
+  viewportWidth: number,
+  viewportHeight: number,
+  menuWidth = 220,
+  menuHeight = 140,
+  padding = 8
+): { x: number; y: number } {
+  const safeX = Math.min(clientX, viewportWidth - menuWidth - padding);
+  const safeY = Math.min(clientY, viewportHeight - menuHeight - padding);
+  return { x: Math.max(padding, safeX), y: Math.max(padding, safeY) };
+}
+
+const CONTEXT_MENU_ACTIONS = [
+  "Interact (coming soon)",
+  "Harvest (coming soon)",
+];
 
 /* Asset rendering now fully handled by C/WASM engine */
 
@@ -28,11 +82,21 @@ type EngineStatus = "idle" | "loading" | "running" | "error" | "unavailable";
 export function GameEnginePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const moduleRef = useRef<BananaEngineModule | null>(null);
-  const rafRef = useRef<number>(0);
+  const intervalRef = useRef<number>(0);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
+  const activeKeysRef = useRef<Set<string>>(new Set());
+  const keyDownHandlerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
+  const keyUpHandlerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
+  const blurHandlerRef = useRef<(() => void) | null>(null);
+  const visibilityHandlerRef = useRef<(() => void) | null>(null);
 
   const [status, setStatus] = useState<EngineStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
 
   /* C/WASM engine handles all asset rendering */
 
@@ -42,19 +106,7 @@ export function GameEnginePage() {
 
     setStatus("loading");
 
-    /* Dynamically load engine.js built by scripts/build-engine-wasm.sh */
-    const script = document.createElement("script");
-    script.src = "/wasm/engine.js";
-    scriptRef.current = script;
-
-    script.onerror = () => {
-      setStatus("unavailable");
-      setError(
-        "engine.js not found. Run: bash scripts/build-engine-wasm.sh (requires Emscripten SDK)"
-      );
-    };
-
-    script.onload = async () => {
+    const startEngine = async () => {
       if (!window.BananaEngine) {
         setStatus("error");
         setError("BananaEngine factory not found after script load");
@@ -62,31 +114,123 @@ export function GameEnginePage() {
       }
 
       try {
-        const mod = await window.BananaEngine({ canvas });
+        const mod = await window.BananaEngine({
+          canvas,
+          locateFile: (path, prefix) => `${prefix}${path}?v=${ENGINE_ASSET_VERSION}`,
+        });
         moduleRef.current = mod;
+        window.__bananaEngineModule = mod;
+
+        const keyDown = (event: KeyboardEvent) => {
+          const key = event.key.toLowerCase();
+          if (key === "escape") {
+            setContextMenu((prev) => ({ ...prev, visible: false }));
+            return;
+          }
+          if (isMovementKey(key)) {
+            activeKeysRef.current.add(key);
+            event.preventDefault();
+            setContextMenu((prev) => ({ ...prev, visible: false }));
+          }
+        };
+
+        const keyUp = (event: KeyboardEvent) => {
+          const key = event.key.toLowerCase();
+          activeKeysRef.current.delete(key);
+        };
+
+        const clearMovementIntent = () => {
+          activeKeysRef.current.clear();
+          mod.ccall("engine_set_move_input", "null", ["number", "number"], [0, 0]);
+        };
+
+        const onBlur = () => {
+          clearMovementIntent();
+        };
+
+        const onVisibilityChange = () => {
+          if (document.hidden) {
+            clearMovementIntent();
+          }
+        };
+
+        keyDownHandlerRef.current = keyDown;
+        keyUpHandlerRef.current = keyUp;
+        blurHandlerRef.current = onBlur;
+        visibilityHandlerRef.current = onVisibilityChange;
+        window.addEventListener("keydown", keyDown, { capture: true });
+        window.addEventListener("keyup", keyUp, { capture: true });
+        window.addEventListener("blur", onBlur);
+        document.addEventListener("visibilitychange", onVisibilityChange);
         setStatus("running");
 
         const fpsLoop = () => {
-          rafRef.current = requestAnimationFrame(fpsLoop);
+          const { moveX, moveZ } = computeMoveAxes(activeKeysRef.current);
+          mod.ccall("engine_set_move_input", "null", ["number", "number"], [moveX, moveZ]);
+          mod.ccall("engine_tick", "number", ["number"], [1 / 60]);
         };
-        rafRef.current = requestAnimationFrame(fpsLoop);
+        intervalRef.current = window.setInterval(fpsLoop, 16);
       } catch (e) {
         setStatus("error");
         setError(e instanceof Error ? e.message : "Engine initialization failed");
       }
     };
 
-    document.head.appendChild(script);
+    if (typeof window.BananaEngine === "function") {
+      void startEngine();
+    } else {
+      /* Dynamically load engine.js built by scripts/build-engine-wasm.sh */
+      const script = document.createElement("script");
+      script.src = `/wasm/engine.js?v=${ENGINE_ASSET_VERSION}`;
+      scriptRef.current = script;
+
+      script.onerror = () => {
+        setStatus("unavailable");
+        setError(
+          "engine.js not found. Run: bash scripts/build-engine-wasm.sh (requires Emscripten SDK)"
+        );
+      };
+
+      script.onload = () => {
+        void startEngine();
+      };
+
+      document.head.appendChild(script);
+    }
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      window.clearInterval(intervalRef.current);
+      if (keyDownHandlerRef.current) {
+        window.removeEventListener("keydown", keyDownHandlerRef.current, { capture: true });
+        keyDownHandlerRef.current = null;
+      }
+      if (keyUpHandlerRef.current) {
+        window.removeEventListener("keyup", keyUpHandlerRef.current, { capture: true });
+        keyUpHandlerRef.current = null;
+      }
+      if (blurHandlerRef.current) {
+        window.removeEventListener("blur", blurHandlerRef.current);
+        blurHandlerRef.current = null;
+      }
+      if (visibilityHandlerRef.current) {
+        document.removeEventListener("visibilitychange", visibilityHandlerRef.current);
+        visibilityHandlerRef.current = null;
+      }
+      activeKeysRef.current.clear();
       scriptRef.current?.remove();
+      delete window.__bananaEngineModule;
+      moduleRef.current = null;
       /* Module shutdown is handled internally by Emscripten on unload */
     };
   }, []);
 
   return (
     <div
+      onMouseDown={() => {
+        if (contextMenu.visible) {
+          setContextMenu((prev) => ({ ...prev, visible: false }));
+        }
+      }}
       style={{
         position: "fixed",
         top: 0,
@@ -103,6 +247,16 @@ export function GameEnginePage() {
       <canvas
         ref={canvasRef}
         id="canvas"
+        onContextMenu={(event) => {
+          event.preventDefault();
+          const pos = computeContextMenuPosition(
+            event.clientX,
+            event.clientY,
+            window.innerWidth,
+            window.innerHeight
+          );
+          setContextMenu({ visible: true, x: pos.x, y: pos.y });
+        }}
         style={{
           display: "block",
           width: "100%",
@@ -129,6 +283,85 @@ export function GameEnginePage() {
           }}
         >
           {error}
+        </div>
+      )}
+
+      <div
+        style={{
+          position: "fixed",
+          top: 16,
+          left: 16,
+          padding: "10px 12px",
+          backgroundColor: "rgba(0, 0, 0, 0.55)",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          borderRadius: 6,
+          color: "rgba(255, 255, 255, 0.92)",
+          fontSize: 13,
+          fontFamily: "monospace",
+          lineHeight: 1.45,
+          zIndex: 1000,
+          pointerEvents: "none",
+          whiteSpace: "pre-line",
+        }}
+      >
+        {"Controls\nRight Click: Open action menu\nWASD / Arrow Keys: Move banana"}
+      </div>
+
+      {contextMenu.visible && (
+        <div
+          onMouseDown={(event) => event.stopPropagation()}
+          style={{
+            position: "fixed",
+            top: contextMenu.y,
+            left: contextMenu.x,
+            width: 220,
+            padding: 8,
+            backgroundColor: "rgba(18, 18, 22, 0.96)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            borderRadius: 8,
+            boxShadow: "0 12px 28px rgba(0, 0, 0, 0.45)",
+            color: "rgba(255, 255, 255, 0.94)",
+            fontSize: 13,
+            fontFamily: "monospace",
+            zIndex: 1200,
+          }}
+        >
+          <div style={{ padding: "4px 6px", opacity: 0.85, fontWeight: 700 }}>Actions</div>
+          {CONTEXT_MENU_ACTIONS.map((label) => (
+            <button
+              key={label}
+              type="button"
+              disabled
+              style={{
+                width: "100%",
+                textAlign: "left",
+                border: "none",
+                background: "transparent",
+                color: "rgba(255, 255, 255, 0.6)",
+                padding: "8px 6px",
+                fontFamily: "monospace",
+                cursor: "default",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setContextMenu((prev) => ({ ...prev, visible: false }))}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              border: "none",
+              background: "transparent",
+              color: "rgba(255, 255, 255, 0.9)",
+              padding: "8px 6px",
+              fontFamily: "monospace",
+              cursor: "pointer",
+            }}
+          >
+            Close
+          </button>
         </div>
       )}
     </div>

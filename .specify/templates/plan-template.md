@@ -29,7 +29,7 @@
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: Must pass before research. Re-check after design.*
 
 [Gates determined based on constitution file]
 
@@ -51,11 +51,11 @@
 ```text
 .specify/specs/[###-feature]/
 ├── plan.md              # This file (specify plan command output)
-├── research.md          # Phase 0 output (specify plan command)
-├── data-model.md        # Phase 1 output (specify plan command)
-├── quickstart.md        # Phase 1 output (specify plan command)
-├── contracts/           # Phase 1 output (specify plan command)
-└── tasks.md             # Phase 2 output (specify tasks command - NOT created by specify plan)
+├── research.md          # research output (specify plan command)
+├── data-model.md        # design output (specify plan command)
+├── quickstart.md        # design output (specify plan command)
+├── contracts/           # design output (specify plan command)
+└── tasks.md             # tasks output (specify tasks command - NOT created by specify plan)
 ```
 
 ### Source Code (repository root)
@@ -111,6 +111,13 @@ directories captured above]
 - **Application Flow**: Describe how scripts/pipelines compose those rules without reimplementing policy.
 - **Infrastructure Adapters**: List concrete scripts/artifacts that persist evidence and execute external commands.
 - **Single Responsibility**: Ensure each script/module owns one concern and is testable in isolation.
+
+## Domain-Contract Test Decomposition
+
+- **Bounded Test Suites**: Name native and engine test targets after the domain they verify (for example physics, AI FSM, navigation, controller, render, world/signals) instead of phase labels.
+- **Suite Ownership**: Keep each suite focused on one responsibility and expose a thin orchestrator target only for aggregate execution.
+- **Testable Boundaries**: Describe the minimum unit of behavior for each suite so tests mirror the codebase's bounded contexts and SOLID seams.
+- **Coverage Contract**: Call out the exact coverage/static-analysis gates required for native slices, including 100% line coverage and leak/static checks when applicable.
 
 ## Complexity Tracking
 

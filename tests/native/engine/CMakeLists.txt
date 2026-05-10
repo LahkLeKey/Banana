@@ -1,17 +1,23 @@
-# Engine test binary — Phase 1 (T004)
-add_executable(banana_test_engine_phase1
-  test_engine_phase1.c
+# Engine domain contract test binary (DDD/SOLID aligned)
+add_executable(banana_test_engine_domain_contracts
+  test_engine_domain_contracts.c
+  test_engine_physics_suite.c
+  test_engine_ai_fsm_suite.c
+  test_engine_ai_navigation_suite.c
+  test_engine_ai_controller_suite.c
+  test_engine_render_suite.c
+  test_engine_world_suite.c
 )
 
-target_link_libraries(banana_test_engine_phase1 PRIVATE banana_engine_core)
+target_link_libraries(banana_test_engine_domain_contracts PRIVATE banana_engine_core)
 
 if(UNIX)
-  target_link_libraries(banana_test_engine_phase1 PRIVATE m)
+  target_link_libraries(banana_test_engine_domain_contracts PRIVATE m)
 endif()
 
 # Windows: copy engine DLL if needed (banana_engine_core is static, so not needed yet)
 
-add_test(NAME banana_test_engine_phase1 COMMAND banana_test_engine_phase1)
+add_test(NAME banana_test_engine_domain_contracts COMMAND banana_test_engine_domain_contracts)
 
 add_executable(banana_test_engine_asset_generation
   test_engine_asset_generation.c
@@ -44,3 +50,15 @@ target_compile_definitions(
 add_test(
   NAME banana_test_engine_asset_compiler_integration
   COMMAND banana_test_engine_asset_compiler_integration)
+
+add_executable(banana_test_engine_runtime_contracts
+  test_engine_runtime_contracts.c
+)
+
+target_link_libraries(banana_test_engine_runtime_contracts PRIVATE banana_engine_core)
+
+if(UNIX)
+  target_link_libraries(banana_test_engine_runtime_contracts PRIVATE m)
+endif()
+
+add_test(NAME banana_test_engine_runtime_contracts COMMAND banana_test_engine_runtime_contracts)

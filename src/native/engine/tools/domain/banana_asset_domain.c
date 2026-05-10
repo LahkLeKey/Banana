@@ -1,9 +1,13 @@
 #include "banana_asset_domain.h"
 
 static const banana_tile_def_t BANANA_TILE_DEFS[BANANA_TILE_COUNT] = {
-    {"water_deep", 0, 5, 0, 8}, {"water_shallow", 1, 12, 0, 7}, {"sand", 2, 20, 1, 6},
-    {"grass", 3, 35, 2, 10},    {"grove", 4, 46, 3, 9},         {"hill", 5, 64, 2, 6},
-    {"ridge", 6, 82, 1, 4},
+    {"water_deep", 0, 5, 0, 8, "deep-water", "#0A2540"},
+    {"water_shallow", 1, 12, 0, 7, "shallow-water", "#1A4D6D"},
+    {"sand", 2, 20, 1, 6, "shoreline", "#DDB66B"},
+    {"grass", 3, 35, 2, 10, "grassland", "#5E8C31"},
+    {"grove", 4, 46, 3, 9, "forest", "#2F5D3A"},
+    {"hill", 5, 64, 2, 6, "highland", "#8A7B57"},
+    {"ridge", 6, 82, 1, 4, "ridge", "#BFC5CC"},
 };
 
 static uint32_t BANANA_TILE_NEIGHBOR_MASKS[BANANA_TILE_COUNT];

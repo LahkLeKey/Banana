@@ -58,6 +58,20 @@ extern "C"
     float engine_get_entity_z(int idx);
     int engine_get_entity_state(int idx); /* 0 = inactive, 1 = active */
 
+    /* Keyboard movement intent only. Inputs are expected in [-1, 1]. */
+    void engine_set_move_input(float input_x, float input_z);
+
+    /* Debug diagnostics for de-scoped mouse movement path. */
+    int engine_get_click_count(void);
+    int engine_get_target_reached_count(void);
+    int engine_get_has_move_target(void);
+    int engine_handle_right_click(float canvas_x, float canvas_y);
+    int engine_handle_right_click_normalized(float screen_x, float screen_y);
+
+    /* ── Terrain update helpers (WFC/CA integration) ─────────────────────── */
+    int engine_terrain_set_height(int x, int z, int elevation);
+    void engine_terrain_mark_region_dirty(int min_x, int min_z, int max_x, int max_z);
+
 #ifdef __cplusplus
 }
 #endif
