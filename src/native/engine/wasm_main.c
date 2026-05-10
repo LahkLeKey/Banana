@@ -14,9 +14,6 @@
 #include "ai/wildlife_controller.h"
 #include "engine.h"
 
-/* Number of NPCs to spawn in the opening world. */
-#define WASM_NPC_COUNT 5
-
 /* ── Per-frame tick (called by emscripten_set_main_loop at 60 Hz) ────────── */
 
 static void game_tick(void)
@@ -40,23 +37,7 @@ int main(void)
         return 1;
     }
 
-    /* Spawn NPC wildlife entities in a loose grid. */
-    float starts[WASM_NPC_COUNT][2] = {
-        {2.0f, 2.0f}, {12.0f, 4.0f}, {6.0f, 14.0f}, {18.0f, 10.0f}, {10.0f, 20.0f},
-    };
-
-    for (int i = 0; i < WASM_NPC_COUNT; i++)
-    {
-        uint32_t eid = engine_world_spawn(ENTITY_TYPE_NPC, starts[i][0], 0.0f, starts[i][1]);
-        engine_controller_attach(eid, "wildlife");
-    }
-
-    fprintf(stdout, "[wasm_main] %d NPCs spawned — starting game loop\n", WASM_NPC_COUNT);
-
-    /* Hand control to the browser; main() returns immediately. */
-    emscripten_set_main_loop(game_tick, 0 /* use rAF, no fps cap */, 1);
-
-    engine_shutdown();
+    fprintf(stdout, "[wasm_main] island scene ready\n");
     return 0;
 }
 

@@ -4,18 +4,20 @@
 
 - T001/T002: active root inventory and guardrails documented.
 - T003: root route now serves a WASM landing entry page.
-- T004: landing page uses 2.5D visual framing and WASM lifecycle UX.
+- T004: landing page uses native 2.5D visual framing and WASM lifecycle UX.
 - T005: workspace shell visual framing aligned with landing continuity.
 - T007/T008/T009: CI/env/deployment wiring validated in canonical harness + local build flow.
 - T010: targeted frontend validation run via `bun run build` with required env contract.
 - T006/T011: desktop/mobile viewport runtime checks and screenshot captures completed.
+- T024/T027: native C runtime-contract tests now validate viewport profile resizing (desktop/tablet/mobile portrait/mobile landscape) and terrain/runtime behavior without ad-hoc visual-only confirmation.
 - Legacy React overlay cleanup: removed random dashboard module overlays from default workspace route and replaced with mission-control cards + quick actions.
-- Primary engine route simplified to viewport-only presentation: full-screen 2.5D WASM surface with C-generated asset overlay and no dashboard chrome.
+- Primary engine route simplified to viewport-only presentation: full-screen WASM surface with C-generated terrain and asset visuals, no dashboard chrome.
 - Legacy router cutover: root route now serves the new engine surface and prior routes redirect back to `/`.
 - Dead legacy React route surface removed from source tree after router cutover (unused pages, shell, and orphaned telemetry test deleted).
 - Deterministic procedural-generation input contract documented and emitted through the canonical generated asset manifest.
 - Native compiler output canonicalized to `banana-generated-assets.manifest.json`; stale duplicate manifest output removed from the generation path.
 - Native asset compiler integration test and React build both passed against the updated deterministic manifest contract.
+- Native palette/readability contract now emits stable display color roles and hex values, with integration tests validating the palette schema and basic luminance separation.
 - Minimal automation contract validators now pass after restoring the missing prompt contracts and syncing prompt wiki snapshots.
 - Procedural generation architecture split confirmed in the native toolchain (`domain/`, `application/`, `infrastructure/`) with no monolithic compiler file owning rules, orchestration, and JSON output together.
 - Stable procedural algorithm contracts now mediate generation service orchestration via `banana_asset_algorithm_contract_t` and a default composable WFC + cellular automata contract.
@@ -76,7 +78,7 @@
    - Removed orphaned `TelemetryDashboardPage` test with its page implementation.
    - `VITE_BANANA_API_BASE_URL=https://api.banana.engineer bun run build` passes after cleanup, with reduced bundled CSS footprint.
 11. Procedural input contract validation
-   - Added `.specify/specs/001-react-portal-game-client/procedural-generation-inputs.md` documenting canonical deterministic inputs: seed, profile, width, height, cellular automata iterations, and rule metadata.
+   - Added `.specify/specs/001-react-portal-game-client/procedural-generation-inputs.md` as the canonical deterministic input contract for seed, profile, width, height, cellular automata iterations, rule metadata, and override precedence.
    - Updated the native compiler manifest to emit deterministic input fields, algorithm metadata, rule metadata, and the canonical file name `banana-generated-assets.manifest.json`.
    - Updated the React prepare step to clear stale generated artifacts before compile/copy so only canonical outputs remain in the build contract.
 12. Procedural compiler and ingestion validation
@@ -100,6 +102,14 @@
    - Added native tests proving the contract path preserves deterministic output for repeated same-seed runs.
    - Added native guard tests proving invalid algorithm contracts are rejected instead of being silently accepted.
    - `cmake --build --preset default --target banana_test_engine_asset_generation && ctest --preset default -R banana_test_engine_asset_generation --output-on-failure` passed after the new guard checks were added.
+17. Runtime viewport + terrain contract validation (C tests)
+   - Added `tests/native/engine/test_engine_runtime_contracts.c` and wired it into `tests/native/engine/CMakeLists.txt` as `banana_test_engine_runtime_contracts`.
+   - Test coverage includes:
+     - banana-only primitive mesh constructors (`mesh_create_banana*`, block-like, orb-like)
+     - terrain heightfield mesh contract (`mesh_create_terrain_heightfield` valid/invalid input behavior)
+     - renderer resize contract across desktop/tablet/mobile portrait/mobile landscape profiles
+     - engine tick + terrain mutation APIs (`engine_terrain_set_height`, `engine_terrain_mark_region_dirty`) in runtime loop smoke coverage
+   - `cmake --build --preset default --target banana_test_engine_runtime_contracts && ctest --preset default -R banana_test_engine_runtime_contracts --output-on-failure` passed.
 
 ## Residual Risks
 

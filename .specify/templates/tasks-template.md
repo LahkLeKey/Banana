@@ -44,7 +44,7 @@ description: "Task list template for feature implementation"
   ============================================================================
 -->
 
-## Phase 1: Setup (Shared Infrastructure)
+## Setup (Shared Infrastructure)
 
 **Purpose**: Project initialization and basic structure
 
@@ -54,13 +54,15 @@ description: "Task list template for feature implementation"
 - [ ] T004 Run orchestration extension preflight (`.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`)
 - [ ] T005 Record startup confidence gate + heartbeat (`.specify/scripts/bash/spec-confidence-gate.sh --confidence <n> --step "go-copilot-start"`)
 
+**Native testing note**: If the feature touches `src/native/**`, plan the test surface as bounded domain suites (for example physics, AI FSM, navigation, controller, render, world/signals) plus a thin orchestrator target. Avoid phase-based target names for new native tests.
+
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Foundational (Blocking Prerequisites)
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+**⚠️ CRITICAL**: No user story work can begin until this stage is complete
 
 Examples of foundational tasks (adjust based on your project):
 
@@ -75,7 +77,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ---
 
-## Phase 3: User Story 1 - [Title] (Priority: P1) 🎯 MVP
+## User Story 1 - [Title] (Priority: P1) 🎯 MVP
 
 **Goal**: [Brief description of what this story delivers]
 
@@ -102,7 +104,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ---
 
-## Phase 4: User Story 2 - [Title] (Priority: P2)
+## User Story 2 - [Title] (Priority: P2)
 
 **Goal**: [Brief description of what this story delivers]
 
@@ -125,7 +127,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ---
 
-## Phase 5: User Story 3 - [Title] (Priority: P3)
+## User Story 3 - [Title] (Priority: P3)
 
 **Goal**: [Brief description of what this story delivers]
 
@@ -147,11 +149,11 @@ Examples of foundational tasks (adjust based on your project):
 
 ---
 
-[Add more user story phases as needed, following the same pattern]
+[Add more user story sections as needed, following the same pattern]
 
 ---
 
-## Phase N: Polish & Cross-Cutting Concerns
+## Polish & Cross-Cutting Concerns
 
 **Purpose**: Improvements that affect multiple user stories
 
@@ -166,24 +168,25 @@ Examples of foundational tasks (adjust based on your project):
 
 ## Dependencies & Execution Order
 
-### Phase Dependencies
+### Stage Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+- **Setup**: No dependencies - can start immediately
+- **Foundational**: Depends on Setup completion - BLOCKS all user stories
+- **User Stories**: All depend on Foundational completion
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P2 → P3)
-- **Polish (Final Phase)**: Depends on all desired user stories being complete
+- **Polish**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
 
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable
-- **User Story 3 (P3)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable
+- **User Story 1 (P1)**: Can start after Foundational - No dependencies on other stories
+- **User Story 2 (P2)**: Can start after Foundational - May integrate with US1 but should be independently testable
+- **User Story 3 (P3)**: Can start after Foundational - May integrate with US1/US2 but should be independently testable
 
 ### Within Each User Story
 
 - Tests (if included) MUST be written and FAIL before implementation
+- Native tests should be split by bounded domain responsibility, not by implementation phase labels.
 - Models before services
 - Services before endpoints
 - Core implementation before integration
@@ -192,8 +195,8 @@ Examples of foundational tasks (adjust based on your project):
 ### Parallel Opportunities
 
 - All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2)
-- Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
+- All Foundational tasks marked [P] can run in parallel
+- Once Foundational completes, all user stories can start in parallel (if team capacity allows)
 - All tests for a user story marked [P] can run in parallel
 - Models within a story marked [P] can run in parallel
 - Different user stories can be worked on in parallel by different team members
@@ -218,9 +221,9 @@ Task: "Create [Entity2] model in src/models/[entity2].py"
 
 ### MVP First (User Story 1 Only)
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1
+1. Complete Setup
+2. Complete Foundational (CRITICAL - blocks all stories)
+3. Complete User Story 1
 4. **STOP and VALIDATE**: Test User Story 1 independently
 5. Deploy/demo if ready
 

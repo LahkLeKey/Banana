@@ -4,6 +4,12 @@
 
 This file defines the deterministic input contract for Banana Engineer baseline generated assets under spec 001.
 
+## Source of Truth
+
+- The canonical build-preparation defaults live in `src/typescript/react/scripts/prepare-procedural-assets.mjs`.
+- The resolved manifest and generated terrain/palette bundles are written to `src/typescript/react/public/generated-assets/` for the portal build contract.
+- Generated asset outputs must stay aligned with the current React build defaults unless this file is updated first.
+
 ## Canonical Inputs
 
 - `seed`: primary deterministic RNG seed for WFC tile collapse, cellular automata tie breaks, elevation noise, and resource noise.
@@ -29,9 +35,17 @@ This file defines the deterministic input contract for Banana Engineer baseline 
 - Elevation noise range: `[-5, 5]`
 - Resource noise range: `[-3, 3]`
 
+## Visual Rendering Contract
+
+- Palette output must include stable display color roles and hex values for the generated terrain set, not only abstract biome or elevation labels.
+- Palette color assignments must remain deterministic for the same input tuple so visual output is reproducible across runs.
+- Terrain colors must remain visually distinguishable from entity mesh colors at both mobile and desktop viewport sizes.
+- Any palette adjustment that changes visible terrain readability must be treated as a contract change for the generated asset bundle.
+
 ## Runtime and Build Wiring
 
 - React build preparation reads environment variables in `src/typescript/react/scripts/prepare-procedural-assets.mjs`
+- Override precedence is: environment variables -> build script defaults -> compiler CLI arguments -> generated manifest.
 - Supported environment overrides:
   - `BANANA_GENERATED_ASSET_SEED`
   - `BANANA_GENERATED_ASSET_PROFILE`

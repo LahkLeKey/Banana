@@ -7,11 +7,14 @@ cd "$ROOT_DIR"
 BUILD_DIR="build/native-coverage"
 ARTIFACT_DIR=".artifacts/native-c"
 COVERAGE_ARTIFACT_ROOT="${BANANA_COVERAGE_ARTIFACT_ROOT:-.artifacts/coverage}"
+NATIVE_COVERAGE_THRESHOLD="${BANANA_NATIVE_COVERAGE_THRESHOLD:-100}"
 
 if [[ -z "${BANANA_PG_CONNECTION:-}" ]]; then
     echo "BANANA_PG_CONNECTION is required for PostgreSQL-first native coverage runs."
     exit 1
 fi
+
+echo "Native C coverage gate: ${NATIVE_COVERAGE_THRESHOLD}% line coverage minimum"
 
 rm -rf "$BUILD_DIR"
 
@@ -32,7 +35,7 @@ gcovr \
     --exclude 'tests/native' \
     --xml-pretty \
     --output "$ARTIFACT_DIR/coverage-native.xml" \
-    --fail-under-line 80
+    --fail-under-line "$NATIVE_COVERAGE_THRESHOLD"
 
 gcovr \
     --object-directory "$BUILD_DIR" \
@@ -71,9 +74,9 @@ PY
 
     native_integration_status="${BANANA_NATIVE_INTEGRATION_STATUS:-}"
     if [[ -z "$native_integration_status" ]]; then
-        native_integration_status="$(python3 - "$measured_percent" <<'PY'
+        native_integration_status="$(python3 - "$measured_percent" "$NATIVE_COVERAGE_THRESHOLD" <<'PY'
 import sys
-print("pass" if float(sys.argv[1]) >= 80.0 else "fail")
+print("pass" if float(sys.argv[1]) >= float(sys.argv[2]) else "fail")
 PY
 )"
     fi

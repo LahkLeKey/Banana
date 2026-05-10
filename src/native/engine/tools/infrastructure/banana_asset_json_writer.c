@@ -17,8 +17,10 @@ int banana_write_palette_json(const char *path)
     fprintf(f, "{\n  \"tiles\": [\n");
     for (int i = 0; i < banana_tile_count(); i++)
     {
-        fprintf(f, "    {\"id\":\"%s\",\"biome\":%d,\"elevationBase\":%d,\"resourceBias\":%d}%s\n",
-                defs[i].id, defs[i].biome, defs[i].elevation_base, defs[i].resource_bias,
+        fprintf(f,
+            "    {\"id\":\"%s\",\"biome\":%d,\"elevationBase\":%d,\"resourceBias\":%d,\"displayColorRole\":\"%s\",\"displayColorHex\":\"%s\"}%s\n",
+            defs[i].id, defs[i].biome, defs[i].elevation_base, defs[i].resource_bias,
+            defs[i].display_color_role, defs[i].display_color_hex,
                 (i + 1 < banana_tile_count()) ? "," : "");
     }
     fprintf(f, "  ]\n}\n");

@@ -18,11 +18,17 @@ extern "C"
     /* Process pending OS events (keyboard, mouse, resize). */
     void window_poll_events(Window *w);
 
+    /* Return 1 once when the right mouse button is pressed on the canvas. */
+    int window_take_right_click(Window *w, float *x, float *y);
+
     /* Present the back buffer to the screen. */
     void window_swap_buffers(Window *w);
 
     /* Retrieve current framebuffer dimensions (may differ from creation size). */
     void window_get_size(Window *w, int *width, int *height);
+
+    /* Retrieve current input-space dimensions (CSS pixels on Web/WASM). */
+    void window_get_input_size(Window *w, int *width, int *height);
 
     /* Destroy the window and its OpenGL context. */
     void window_destroy(Window *w);

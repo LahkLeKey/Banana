@@ -3,7 +3,6 @@ build/
 build-engine/
 out/
 dist/
-storybook-static/
 
 # Native artifacts
 *.dll

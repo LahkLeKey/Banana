@@ -21,7 +21,7 @@
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: Must pass before research. Re-check after design.*
 
 - [ ] Existing safety contracts are preserved.
 - [ ] No production deployment bypasses are introduced.
@@ -53,7 +53,7 @@ tests/
 
 ## Phases
 
-### Phase 1: Setup
+### Setup
 
 **Goal**: Establish scaffolding and verify prerequisites.
 
@@ -61,7 +61,7 @@ tests/
 |------|---------|------------|
 | <!-- Task 1 --> | <!-- paths --> | <!-- acceptance --> |
 
-### Phase 2: Implementation
+### Implementation
 
 **Goal**: Deliver the core functionality.
 
@@ -69,7 +69,7 @@ tests/
 |------|---------|------------|
 | <!-- Task 1 --> | <!-- paths --> | <!-- acceptance --> |
 
-### Phase 3: Validation
+### Validation
 
 **Goal**: Confirm all success criteria are met.
 

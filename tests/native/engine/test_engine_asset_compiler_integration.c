@@ -133,6 +133,90 @@ static int extract_checksum(const char *json_text, char *out, size_t out_size) {
   return 1;
 }
 
+static int hex_digit_value(char c) {
+  if (c >= '0' && c <= '9') {
+    return c - '0';
+  }
+  if (c >= 'a' && c <= 'f') {
+    return 10 + (c - 'a');
+  }
+  if (c >= 'A' && c <= 'F') {
+    return 10 + (c - 'A');
+  }
+  return -1;
+}
+
+static int parse_hex_color(const char *hex, unsigned char rgb[3]) {
+  if (!hex || hex[0] != '#' || strlen(hex) != 7) {
+    return 0;
+  }
+
+  for (int i = 0; i < 3; i++) {
+    int hi = hex_digit_value(hex[1 + i * 2]);
+    int lo = hex_digit_value(hex[2 + i * 2]);
+    if (hi < 0 || lo < 0) {
+      return 0;
+    }
+    rgb[i] = (unsigned char)((hi << 4) | lo);
+  }
+
+  return 1;
+}
+
+static double srgb_channel_to_linear(unsigned char channel) {
+  double value = (double)channel / 255.0;
+  if (value <= 0.04045) {
+    return value / 12.92;
+  }
+  return ((value + 0.055) / 1.055) * ((value + 0.055) / 1.055) * ((value + 0.055) / 1.055);
+}
+
+static double relative_luminance(const char *hex) {
+  unsigned char rgb[3];
+  if (!parse_hex_color(hex, rgb)) {
+    return -1.0;
+  }
+
+  return 0.2126 * srgb_channel_to_linear(rgb[0]) +
+         0.7152 * srgb_channel_to_linear(rgb[1]) +
+         0.0722 * srgb_channel_to_linear(rgb[2]);
+}
+
+static void test_palette_emits_stable_display_colors(void) {
+  TEST("asset_compiler: palette emits stable display color roles and hex values");
+
+  const char *out_dir = "generated-assets-integration";
+  const char *palette_path = "generated-assets-integration/banana-generated-palette.json";
+
+  ASSERT_TRUE(ensure_dir_exists(out_dir) == 1, "failed to create output dir");
+  ASSERT_TRUE(run_compiler_command(out_dir, 515151u, "palette-visual", 18, 18, 4),
+              "compiler process failed");
+
+  char *palette = read_text_file(palette_path);
+  ASSERT_TRUE(palette != NULL, "failed to read palette file");
+
+  ASSERT_TRUE(strstr(palette, "\"id\":\"water_deep\",\"biome\":0,\"elevationBase\":5,\"resourceBias\":0,\"displayColorRole\":\"deep-water\",\"displayColorHex\":\"#0A2540\"") != NULL,
+              "deep-water palette entry missing");
+  ASSERT_TRUE(strstr(palette, "\"id\":\"grass\",\"biome\":3,\"elevationBase\":35,\"resourceBias\":2,\"displayColorRole\":\"grassland\",\"displayColorHex\":\"#5E8C31\"") != NULL,
+              "grassland palette entry missing");
+  ASSERT_TRUE(strstr(palette, "\"id\":\"ridge\",\"biome\":6,\"elevationBase\":82,\"resourceBias\":1,\"displayColorRole\":\"ridge\",\"displayColorHex\":\"#BFC5CC\"") != NULL,
+              "ridge palette entry missing");
+
+  double deep_water_luminance = relative_luminance("#0A2540");
+  double grass_luminance = relative_luminance("#5E8C31");
+  double ridge_luminance = relative_luminance("#BFC5CC");
+
+  ASSERT_TRUE(deep_water_luminance >= 0.0 && grass_luminance >= 0.0 && ridge_luminance >= 0.0,
+              "failed to calculate palette luminance");
+  ASSERT_TRUE(grass_luminance - deep_water_luminance > 0.10,
+              "terrain palette contrast between water and grass is too low");
+  ASSERT_TRUE(ridge_luminance - grass_luminance > 0.05,
+              "terrain palette contrast between grass and ridge is too low");
+
+  free(palette);
+  PASS();
+}
+
 static void test_compiler_emits_metadata_contract(void) {
   TEST("asset_compiler: emits algorithm/postProcess/checksum metadata contract");
 
@@ -240,6 +324,7 @@ int main(void) {
   printf("\n=== Banana Engine Asset Compiler Integration Tests ===\n\n");
 
   test_compiler_emits_metadata_contract();
+  test_palette_emits_stable_display_colors();
   test_compiler_same_seed_is_deterministic();
   test_compiler_different_seeds_diverge();
 
