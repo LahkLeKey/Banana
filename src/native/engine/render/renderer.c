@@ -234,11 +234,14 @@ const unsigned char *renderer_get_frame_buffer(Renderer *r)
 
 void renderer_resize(Renderer *r, int width, int height)
 {
+    if (width <= 0 || height <= 0)
+        return;
+
     r->width = width;
     r->height = height;
     r->camera.aspect = (float)width / height;
     r->frame_buffer = realloc(r->frame_buffer, (size_t)width * height * 4);
-#ifdef BANANA_ENGINE_HAS_GLFW
+#ifdef BANANA_ENGINE_HAS_GL
     glViewport(0, 0, width, height);
 #endif
 }
