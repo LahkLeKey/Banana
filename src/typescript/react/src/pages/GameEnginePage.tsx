@@ -81,6 +81,7 @@ const CONTEXT_MENU_ACTIONS = [
  */
 export function GameEnginePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const moduleRef = useRef<BananaEngineModule | null>(null);
   const intervalRef = useRef<number>(0);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
@@ -226,17 +227,17 @@ export function GameEnginePage() {
 
   return (
     <div
+      ref={viewportRef}
       onMouseDown={() => {
         if (contextMenu.visible) {
           setContextMenu((prev) => ({ ...prev, visible: false }));
         }
       }}
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
+        position: "relative",
         width: "100%",
         height: "100%",
+        minHeight: "100dvh",
         margin: 0,
         padding: 0,
         overflow: "hidden",
@@ -249,11 +250,16 @@ export function GameEnginePage() {
         id="canvas"
         onContextMenu={(event) => {
           event.preventDefault();
+          const bounds = viewportRef.current?.getBoundingClientRect();
+          const relativeX = bounds ? event.clientX - bounds.left : event.clientX;
+          const relativeY = bounds ? event.clientY - bounds.top : event.clientY;
+          const viewportWidth = bounds?.width ?? window.innerWidth;
+          const viewportHeight = bounds?.height ?? window.innerHeight;
           const pos = computeContextMenuPosition(
-            event.clientX,
-            event.clientY,
-            window.innerWidth,
-            window.innerHeight
+            relativeX,
+            relativeY,
+            viewportWidth,
+            viewportHeight
           );
           setContextMenu({ visible: true, x: pos.x, y: pos.y });
         }}
@@ -268,7 +274,7 @@ export function GameEnginePage() {
       {(status === "error" || status === "unavailable") && error && (
         <div
           style={{
-            position: "fixed",
+            position: "absolute",
             bottom: 16,
             left: 16,
             maxWidth: 320,
@@ -288,7 +294,7 @@ export function GameEnginePage() {
 
       <div
         style={{
-          position: "fixed",
+          position: "absolute",
           top: 16,
           left: 16,
           padding: "10px 12px",
@@ -311,7 +317,7 @@ export function GameEnginePage() {
         <div
           onMouseDown={(event) => event.stopPropagation()}
           style={{
-            position: "fixed",
+            position: "absolute",
             top: contextMenu.y,
             left: contextMenu.x,
             width: 220,
