@@ -42,9 +42,11 @@ export function isMovementKey(key: string): boolean {
 }
 
 export function computeMoveAxes(keys: ReadonlySet<string>): { moveX: number; moveZ: number } {
-  const moveX = (keys.has("d") || keys.has("arrowright") ? 1 : 0) +
+  const moveX =
+    (keys.has("d") || keys.has("arrowright") ? 1 : 0) +
     (keys.has("a") || keys.has("arrowleft") ? -1 : 0);
-  const moveZ = (keys.has("w") || keys.has("arrowup") ? 1 : 0) +
+  const moveZ =
+    (keys.has("w") || keys.has("arrowup") ? 1 : 0) +
     (keys.has("s") || keys.has("arrowdown") ? -1 : 0);
   return { moveX, moveZ };
 }
@@ -63,10 +65,7 @@ export function computeContextMenuPosition(
   return { x: Math.max(padding, safeX), y: Math.max(padding, safeY) };
 }
 
-const CONTEXT_MENU_ACTIONS = [
-  "Interact (coming soon)",
-  "Harvest (coming soon)",
-];
+const CONTEXT_MENU_ACTIONS = ["Interact (coming soon)", "Harvest (coming soon)"];
 
 /* Asset rendering now fully handled by C/WASM engine */
 
