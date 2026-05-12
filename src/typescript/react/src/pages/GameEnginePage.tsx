@@ -523,6 +523,27 @@ export function GameEnginePage() {
           {interactionMessage}
         </div>
       )}
+
+      {/* Engine version debug badge */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: interactionMessage ? 72 : 16,
+          right: 16,
+          padding: "4px 8px",
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: 4,
+          color: "rgba(255, 255, 255, 0.5)",
+          fontSize: 10,
+          fontFamily: "monospace",
+          zIndex: 999,
+          pointerEvents: "none",
+          letterSpacing: "0.05em",
+        }}
+      >
+        Engine v{ENGINE_ASSET_VERSION}
+      </div>
     </div>
   );
 }
