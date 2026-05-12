@@ -71,6 +71,14 @@ void camera_get_view(const Camera *c, float *m16)
     float up[3] = {c->up[0], c->up[1], c->up[2]};
     float s[3];
     cross3(f, up, s);
+    if (fabsf(dot3(s, s)) < 1e-8f)
+    {
+        /* Guard against degenerate look vectors parallel to up. */
+        up[0] = 0.f;
+        up[1] = 0.f;
+        up[2] = 1.f;
+        cross3(f, up, s);
+    }
     norm3(s);
     float u[3];
     cross3(s, f, u);
@@ -96,9 +104,12 @@ void camera_get_projection(const Camera *c, float *m16)
     float rad = c->fov_degrees * ((float)M_PI / 180.f);
     float t = 1.f / tanf(rad * 0.5f);
     float fn = c->far_plane - c->near_plane;
+    float aspect = c->aspect;
+    if (aspect <= 0.0f)
+        aspect = 1.0f;
 
     memset(m16, 0, 16 * sizeof(float));
-    m16[0] = t / c->aspect;
+    m16[0] = t / aspect;
     m16[5] = t;
     m16[10] = -(c->far_plane + c->near_plane) / fn;
     m16[11] = -1.f;

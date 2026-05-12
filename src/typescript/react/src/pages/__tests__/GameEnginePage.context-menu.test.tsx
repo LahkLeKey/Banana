@@ -21,11 +21,16 @@ describe("GameEnginePage context menu geometry", () => {
 
 describe("GameEnginePage context menu behavior", () => {
     let originalBananaEngine: unknown;
+    const ccallCalls: Array<unknown[]> = [];
 
     beforeEach(() => {
+        ccallCalls.length = 0;
         originalBananaEngine = (window as any).BananaEngine;
         (window as any).BananaEngine = async () => ({
-            ccall: () => 0,
+            ccall: (...args: unknown[]) => {
+                ccallCalls.push(args);
+                return 1;
+            },
             cwrap: () => () => 0,
         });
     });
@@ -64,6 +69,25 @@ describe("GameEnginePage context menu behavior", () => {
             fireEvent.mouseDown(canvas);
         });
 
+        expect(screen.queryByText("Actions")).toBeNull();
+    });
+
+    test("executes action through engine bridge", async () => {
+        const { container } = await renderReadyPage();
+        const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+
+        await act(async () => {
+            fireEvent.contextMenu(canvas, { clientX: 120, clientY: 140 });
+        });
+
+        await act(async () => {
+            fireEvent.click(screen.getByText("Interact"));
+        });
+
+        const actionCalls = ccallCalls.filter(
+            (args) => args[0] === "engine_handle_right_click_normalized"
+        );
+        expect(actionCalls.length).toBeGreaterThan(0);
         expect(screen.queryByText("Actions")).toBeNull();
     });
 

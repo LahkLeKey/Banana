@@ -43,5 +43,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at `.specify/specs/048-player-controller-foundation/plan.md`
+at `.specify/specs/049-arpg-view-actors/plan.md`
 <!-- SPECKIT END -->

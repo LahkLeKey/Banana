@@ -24,6 +24,13 @@ type ContextMenuState = {
   visible: boolean;
   x: number;
   y: number;
+  normalizedX: number;
+  normalizedY: number;
+};
+
+type ContextMenuAction = {
+  label: string;
+  actionId: string;
 };
 
 const MOVEMENT_KEYS = new Set([
@@ -65,7 +72,10 @@ export function computeContextMenuPosition(
   return { x: Math.max(padding, safeX), y: Math.max(padding, safeY) };
 }
 
-const CONTEXT_MENU_ACTIONS = ["Interact (coming soon)", "Harvest (coming soon)"];
+const CONTEXT_MENU_ACTIONS: ContextMenuAction[] = [
+  { label: "Interact", actionId: "interact" },
+  { label: "Harvest", actionId: "harvest" },
+];
 
 /* Asset rendering now fully handled by C/WASM engine */
 
@@ -96,9 +106,37 @@ export function GameEnginePage() {
     visible: false,
     x: 0,
     y: 0,
+    normalizedX: 0,
+    normalizedY: 0,
   });
+  const [interactionMessage, setInteractionMessage] = useState<string | null>(null);
 
   /* C/WASM engine handles all asset rendering */
+
+  const runContextAction = (actionId: string) => {
+    const mod = moduleRef.current;
+    if (!mod) {
+      setInteractionMessage("Action unavailable: engine not ready.");
+      setContextMenu((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
+    const result = Number(
+      mod.ccall(
+        "engine_handle_right_click_normalized",
+        "number",
+        ["number", "number"],
+        [contextMenu.normalizedX, contextMenu.normalizedY]
+      )
+    );
+
+    if (result === 1) {
+      setInteractionMessage(`${actionId}: applied to nearest actor.`);
+    } else {
+      setInteractionMessage(`${actionId}: no target in range.`);
+    }
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -224,6 +262,8 @@ export function GameEnginePage() {
     };
   }, []);
 
+  const showSplash = status === "idle" || status === "loading";
+
   return (
     <div
       ref={viewportRef}
@@ -243,6 +283,85 @@ export function GameEnginePage() {
         backgroundColor: "#000",
       }}
     >
+      {/* Splash loading overlay — visible while WASM engine initializes */}
+      {showSplash && (
+        <>
+          <style>{`
+            @keyframes potassium-pulse {
+              0%, 100% { opacity: 0.35; letter-spacing: 0.18em; }
+              50%       { opacity: 1;    letter-spacing: 0.28em; }
+            }
+            @keyframes potassium-fadein {
+              from { opacity: 0; transform: scale(0.97); }
+              to   { opacity: 1; transform: scale(1); }
+            }
+          `}</style>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "radial-gradient(ellipse at 50% 60%, #1a1400 0%, #000 70%)",
+              zIndex: 2000,
+              animation: "potassium-fadein 0.4s ease both",
+              gap: 0,
+            }}
+          >
+            <img
+              src="/splash.png"
+              alt="Banana Engine — Peel-Powered Performance"
+              style={{
+                width: "min(560px, 90vw)",
+                height: "auto",
+                imageRendering: "auto",
+                filter: "drop-shadow(0 0 40px rgba(210,160,0,0.35))",
+                userSelect: "none",
+                pointerEvents: "none",
+              }}
+            />
+            <div
+              style={{
+                marginTop: 8,
+                fontFamily: "'Arial Black', Impact, sans-serif",
+                fontSize: "clamp(11px, 1.8vw, 16px)",
+                fontWeight: 900,
+                color: "#d4a800",
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                animation: "potassium-pulse 1.6s ease-in-out infinite",
+              }}
+            >
+              Initializing
+            </div>
+            <div
+              style={{
+                marginTop: 10,
+                fontFamily: "monospace",
+                fontSize: "clamp(9px, 1.1vw, 11px)",
+                color: "rgba(255,255,255,0.3)",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              100% Potassium Powered · Natural Fuel Efficiency · Low Emissions*
+            </div>
+            <div
+              style={{
+                marginTop: 4,
+                fontFamily: "monospace",
+                fontSize: "clamp(8px, 0.9vw, 10px)",
+                color: "rgba(255,255,255,0.15)",
+                letterSpacing: "0.05em",
+              }}
+            >
+              *Exhaust may contain potassium
+            </div>
+          </div>
+        </>
+      )}
       {/* Primary WASM viewport — 100% coverage, responsive sizing handled by C engine */}
       <canvas
         ref={canvasRef}
@@ -260,7 +379,15 @@ export function GameEnginePage() {
             viewportWidth,
             viewportHeight
           );
-          setContextMenu({ visible: true, x: pos.x, y: pos.y });
+          const normalizedX = viewportWidth > 0 ? relativeX / viewportWidth : 0;
+          const normalizedY = viewportHeight > 0 ? relativeY / viewportHeight : 0;
+          setContextMenu({
+            visible: true,
+            x: pos.x,
+            y: pos.y,
+            normalizedX,
+            normalizedY,
+          });
         }}
         style={{
           display: "block",
@@ -332,23 +459,23 @@ export function GameEnginePage() {
           }}
         >
           <div style={{ padding: "4px 6px", opacity: 0.85, fontWeight: 700 }}>Actions</div>
-          {CONTEXT_MENU_ACTIONS.map((label) => (
+          {CONTEXT_MENU_ACTIONS.map((action) => (
             <button
-              key={label}
+              key={action.actionId}
               type="button"
-              disabled
+              onClick={() => runContextAction(action.actionId)}
               style={{
                 width: "100%",
                 textAlign: "left",
                 border: "none",
                 background: "transparent",
-                color: "rgba(255, 255, 255, 0.6)",
+                color: "rgba(255, 255, 255, 0.9)",
                 padding: "8px 6px",
                 fontFamily: "monospace",
-                cursor: "default",
+                cursor: "pointer",
               }}
             >
-              {label}
+              {action.label}
             </button>
           ))}
           <button
@@ -367,6 +494,26 @@ export function GameEnginePage() {
           >
             Close
           </button>
+        </div>
+      )}
+
+      {interactionMessage && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 16,
+            right: 16,
+            padding: "8px 10px",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            borderRadius: 6,
+            color: "rgba(255, 255, 255, 0.9)",
+            fontSize: 12,
+            fontFamily: "monospace",
+            zIndex: 1000,
+          }}
+        >
+          {interactionMessage}
         </div>
       )}
     </div>

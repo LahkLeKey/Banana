@@ -8,6 +8,7 @@ int run_engine_ai_navigation_suite(void);
 int run_engine_ai_controller_suite(void);
 int run_engine_render_suite(void);
 int run_engine_world_suite(void);
+int run_engine_interaction_suite(void);
 
 int main(void)
 {
@@ -21,6 +22,7 @@ int main(void)
     failures += run_engine_ai_controller_suite();
     failures += run_engine_render_suite();
     failures += run_engine_world_suite();
+    failures += run_engine_interaction_suite();
 
     printf("\n============================================\n");
     printf("Total suite failures: %d\n", failures);

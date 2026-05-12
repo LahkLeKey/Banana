@@ -1,5 +1,6 @@
 #include "test_engine_domain_suite_framework.h"
 
+#include "../../../src/native/engine/engine.h"
 #include "../../../src/native/engine/world/entity.h"
 #include "../../../src/native/engine/world/signals.h"
 #include "../../../src/native/engine/world/world.h"
@@ -90,6 +91,33 @@ done:
         world_destroy(w);
 }
 
+static void test_engine_scene_spawns_non_player_actors(DomainSuiteStats *stats)
+{
+    int init_result = 0;
+    int entity_count = 0;
+    int off_center_actors = 0;
+
+    SUITE_TEST("engine_init: scene spawns off-center non-player actors");
+    init_result = engine_init(800, 600);
+    SUITE_ASSERT_INT_EQ(stats, init_result, 0);
+
+    entity_count = engine_get_entity_count();
+    SUITE_ASSERT_TRUE(stats, entity_count >= 5);
+
+    for (int i = 0; i < entity_count; i++)
+    {
+        float x = engine_get_entity_x(i);
+        float z = engine_get_entity_z(i);
+        if (fabsf(x) >= 2.0f || fabsf(z) >= 2.0f)
+            off_center_actors++;
+    }
+
+    SUITE_ASSERT_TRUE(stats, off_center_actors >= 2);
+    SUITE_PASS(stats);
+done:
+    engine_shutdown();
+}
+
 int run_engine_world_suite(void)
 {
     DomainSuiteStats stats = {0, 0};
@@ -99,6 +127,7 @@ int run_engine_world_suite(void)
     test_world_despawn_entity(&stats);
     test_world_query_nearby(&stats);
     test_signals_send_and_flush(&stats);
+    test_engine_scene_spawns_non_player_actors(&stats);
 
     printf("World+Signals: %d passed, %d failed\n\n", stats.pass, stats.fail);
     return stats.fail;
