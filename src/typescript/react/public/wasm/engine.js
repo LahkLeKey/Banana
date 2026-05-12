@@ -1724,6 +1724,9 @@ async function createWasm() {
       return 0;
     };
 
+  var _emscripten_glActiveTexture = (x0) => GLctx.activeTexture(x0);
+  var _glActiveTexture = _emscripten_glActiveTexture;
+
   var _emscripten_glAttachShader = (program, shader) => {
       GLctx.attachShader(GL.programs[program], GL.shaders[shader]);
     };
@@ -1769,6 +1772,11 @@ async function createWasm() {
   
     };
   var _glBindFramebuffer = _emscripten_glBindFramebuffer;
+
+  var _emscripten_glBindTexture = (target, texture) => {
+      GLctx.bindTexture(target, GL.textures[texture]);
+    };
+  var _glBindTexture = _emscripten_glBindTexture;
 
   var _emscripten_glBindVertexArray = (vao) => {
       GLctx.bindVertexArray(GL.vaos[vao]);
@@ -1955,6 +1963,12 @@ async function createWasm() {
         );
     };
   var _glGenBuffers = _emscripten_glGenBuffers;
+
+  var _emscripten_glGenTextures = (n, textures) => {
+      GL.genObject(n, textures, 'createTexture', GL.textures
+        );
+    };
+  var _glGenTextures = _emscripten_glGenTextures;
 
   var _emscripten_glGenVertexArrays = (n, arrays) => {
       GL.genObject(n, arrays, 'createVertexArray', GL.vaos
@@ -2312,6 +2326,30 @@ async function createWasm() {
     };
   var _glShaderSource = _emscripten_glShaderSource;
 
+  
+  
+  
+  var _emscripten_glTexImage2D = (target, level, internalFormat, width, height, border, format, type, pixels) => {
+      if (GL.currentContext.version >= 2) {
+        if (GLctx.currentPixelUnpackBufferBinding) {
+          GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
+          return;
+        }
+        if (pixels) {
+          var heap = heapObjectForWebGLType(type);
+          var index = toTypedArrayIndex(pixels, heap);
+          GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, heap, index);
+          return;
+        }
+      }
+      var pixelData = pixels ? emscriptenWebGLGetTexPixelData(type, format, width, height, pixels, internalFormat) : null;
+      GLctx.texImage2D(target, level, internalFormat, width, height, border, format, type, pixelData);
+    };
+  var _glTexImage2D = _emscripten_glTexImage2D;
+
+  var _emscripten_glTexParameteri = (x0, x1, x2) => GLctx.texParameteri(x0, x1, x2);
+  var _glTexParameteri = _emscripten_glTexParameteri;
+
   var webglGetUniformLocation = (location) => {
       var p = GLctx.currentProgram;
   
@@ -2335,6 +2373,12 @@ async function createWasm() {
       GLctx.uniform1f(webglGetUniformLocation(location), v0);
     };
   var _glUniform1f = _emscripten_glUniform1f;
+
+  
+  var _emscripten_glUniform1i = (location, v0) => {
+      GLctx.uniform1i(webglGetUniformLocation(location), v0);
+    };
+  var _glUniform1i = _emscripten_glUniform1i;
 
   
   var _emscripten_glUniform3f = (location, v0, v1, v2) => {
@@ -3054,6 +3098,7 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('onFree');
   ignoredModuleProp('onSbrkGrow');
 }
+function renderer_load_default_tile_texture_async(texture_id) { if (typeof Module === "undefined") { return; } if (Module.__bananaSplashTextureRequested) { return; } Module.__bananaSplashTextureRequested = true; const gl = (typeof GLctx !== "undefined" && GLctx) ? GLctx : Module.ctx; const texture = (typeof GL !== "undefined" && GL.textures) ? GL.textures[texture_id] : null; if (!gl || !texture) { return; } const image = new Image(); image.onload = () => { gl.bindTexture(gl.TEXTURE_2D, texture); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.generateMipmap(gl.TEXTURE_2D); gl.bindTexture(gl.TEXTURE_2D, null); }; image.src = "/splash.png"; }
 
 // Imports from the Wasm binary.
 var _engine_tick = Module['_engine_tick'] = makeInvalidEarlyAccess('_engine_tick');
@@ -3064,9 +3109,8 @@ var _engine_get_entity_count = Module['_engine_get_entity_count'] = makeInvalidE
 var _engine_get_entity_x = Module['_engine_get_entity_x'] = makeInvalidEarlyAccess('_engine_get_entity_x');
 var _engine_get_entity_z = Module['_engine_get_entity_z'] = makeInvalidEarlyAccess('_engine_get_entity_z');
 var _engine_get_entity_state = Module['_engine_get_entity_state'] = makeInvalidEarlyAccess('_engine_get_entity_state');
-var _engine_get_click_count = Module['_engine_get_click_count'] = makeInvalidEarlyAccess('_engine_get_click_count');
-var _engine_get_target_reached_count = Module['_engine_get_target_reached_count'] = makeInvalidEarlyAccess('_engine_get_target_reached_count');
-var _engine_get_has_move_target = Module['_engine_get_has_move_target'] = makeInvalidEarlyAccess('_engine_get_has_move_target');
+var _engine_handle_right_click = Module['_engine_handle_right_click'] = makeInvalidEarlyAccess('_engine_handle_right_click');
+var _engine_handle_right_click_normalized = Module['_engine_handle_right_click_normalized'] = makeInvalidEarlyAccess('_engine_handle_right_click_normalized');
 var _engine_set_move_input = Module['_engine_set_move_input'] = makeInvalidEarlyAccess('_engine_set_move_input');
 var _malloc = makeInvalidEarlyAccess('_malloc');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
@@ -3093,9 +3137,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['engine_get_entity_x'] != 'undefined', 'missing Wasm export: engine_get_entity_x');
   assert(typeof wasmExports['engine_get_entity_z'] != 'undefined', 'missing Wasm export: engine_get_entity_z');
   assert(typeof wasmExports['engine_get_entity_state'] != 'undefined', 'missing Wasm export: engine_get_entity_state');
-  assert(typeof wasmExports['engine_get_click_count'] != 'undefined', 'missing Wasm export: engine_get_click_count');
-  assert(typeof wasmExports['engine_get_target_reached_count'] != 'undefined', 'missing Wasm export: engine_get_target_reached_count');
-  assert(typeof wasmExports['engine_get_has_move_target'] != 'undefined', 'missing Wasm export: engine_get_has_move_target');
+  assert(typeof wasmExports['engine_handle_right_click'] != 'undefined', 'missing Wasm export: engine_handle_right_click');
+  assert(typeof wasmExports['engine_handle_right_click_normalized'] != 'undefined', 'missing Wasm export: engine_handle_right_click_normalized');
   assert(typeof wasmExports['engine_set_move_input'] != 'undefined', 'missing Wasm export: engine_set_move_input');
   assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
   assert(typeof wasmExports['main'] != 'undefined', 'missing Wasm export: main');
@@ -3118,9 +3161,8 @@ function assignWasmExports(wasmExports) {
   _engine_get_entity_x = Module['_engine_get_entity_x'] = createExportWrapper('engine_get_entity_x', 1);
   _engine_get_entity_z = Module['_engine_get_entity_z'] = createExportWrapper('engine_get_entity_z', 1);
   _engine_get_entity_state = Module['_engine_get_entity_state'] = createExportWrapper('engine_get_entity_state', 1);
-  _engine_get_click_count = Module['_engine_get_click_count'] = createExportWrapper('engine_get_click_count', 0);
-  _engine_get_target_reached_count = Module['_engine_get_target_reached_count'] = createExportWrapper('engine_get_target_reached_count', 0);
-  _engine_get_has_move_target = Module['_engine_get_has_move_target'] = createExportWrapper('engine_get_has_move_target', 0);
+  _engine_handle_right_click = Module['_engine_handle_right_click'] = createExportWrapper('engine_handle_right_click', 2);
+  _engine_handle_right_click_normalized = Module['_engine_handle_right_click_normalized'] = createExportWrapper('engine_handle_right_click_normalized', 2);
   _engine_set_move_input = Module['_engine_set_move_input'] = createExportWrapper('engine_set_move_input', 2);
   _malloc = createExportWrapper('malloc', 1);
   _main = Module['_main'] = createExportWrapper('main', 2);
@@ -3161,11 +3203,15 @@ var wasmImports = {
   /** @export */
   fd_write: _fd_write,
   /** @export */
+  glActiveTexture: _glActiveTexture,
+  /** @export */
   glAttachShader: _glAttachShader,
   /** @export */
   glBindBuffer: _glBindBuffer,
   /** @export */
   glBindFramebuffer: _glBindFramebuffer,
+  /** @export */
+  glBindTexture: _glBindTexture,
   /** @export */
   glBindVertexArray: _glBindVertexArray,
   /** @export */
@@ -3197,6 +3243,8 @@ var wasmImports = {
   /** @export */
   glGenBuffers: _glGenBuffers,
   /** @export */
+  glGenTextures: _glGenTextures,
+  /** @export */
   glGenVertexArrays: _glGenVertexArrays,
   /** @export */
   glGetProgramInfoLog: _glGetProgramInfoLog,
@@ -3215,7 +3263,13 @@ var wasmImports = {
   /** @export */
   glShaderSource: _glShaderSource,
   /** @export */
+  glTexImage2D: _glTexImage2D,
+  /** @export */
+  glTexParameteri: _glTexParameteri,
+  /** @export */
   glUniform1f: _glUniform1f,
+  /** @export */
+  glUniform1i: _glUniform1i,
   /** @export */
   glUniform3f: _glUniform3f,
   /** @export */
@@ -3225,7 +3279,9 @@ var wasmImports = {
   /** @export */
   glVertexAttribPointer: _glVertexAttribPointer,
   /** @export */
-  glViewport: _glViewport
+  glViewport: _glViewport,
+  /** @export */
+  renderer_load_default_tile_texture_async
 };
 
 

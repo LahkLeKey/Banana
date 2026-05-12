@@ -14,6 +14,8 @@ extern "C"
         float color[4];  /* RGBA, 0.0–1.0 */
         float roughness; /* 0.0 = smooth, 1.0 = rough */
         float metallic;  /* 0.0 = dielectric, 1.0 = metal */
+        float use_texture;
+        float uv_scale;
     } Material;
 
     /* Solid color material. */

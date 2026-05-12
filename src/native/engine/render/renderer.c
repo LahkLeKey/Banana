@@ -9,6 +9,7 @@
 /* ── GL platform detection ───────────────────────────────────────────────── */
 #ifdef __EMSCRIPTEN__
 #define BANANA_ENGINE_HAS_GL 1
+#include <emscripten.h>
 #include <GLES3/gl3.h>
 
 static const char *DEFAULT_VERT = "#version 300 es\n"
@@ -17,8 +18,10 @@ static const char *DEFAULT_VERT = "#version 300 es\n"
                                   "in vec2 a_uv;\n"
                                   "uniform mat4 u_mvp;\n"
                                   "out vec3 v_normal;\n"
+                                  "out vec2 v_uv;\n"
                                   "void main() {\n"
                                   "  v_normal = a_normal;\n"
+                                  "  v_uv = a_uv;\n"
                                   "  gl_Position = u_mvp * vec4(a_pos, 1.0);\n"
                                   "}\n";
 
@@ -26,11 +29,19 @@ static const char *DEFAULT_FRAG =
     "#version 300 es\n"
     "precision mediump float;\n"
     "in vec3 v_normal;\n"
+    "in vec2 v_uv;\n"
     "uniform vec3 u_color;\n"
+    "uniform float u_use_texture;\n"
+    "uniform float u_uv_scale;\n"
+    "uniform sampler2D u_tile_texture;\n"
     "out vec4 frag_color;\n"
     "void main() {\n"
+    "  vec3 base_color = u_color;\n"
+    "  if (u_use_texture > 0.5) {\n"
+    "    base_color *= texture(u_tile_texture, v_uv * u_uv_scale).rgb;\n"
+    "  }\n"
     "  float diff = max(dot(normalize(v_normal), vec3(0.5,1.0,0.5)), 0.15);\n"
-    "  frag_color = vec4(u_color * diff, 1.0);\n"
+    "  frag_color = vec4(base_color * diff, 1.0);\n"
     "}\n";
 
 #elif defined(BANANA_ENGINE_HAS_GLFW)
@@ -43,19 +54,29 @@ static const char *DEFAULT_VERT = "#version 330 core\n"
                                   "layout(location=2) in vec2 a_uv;\n"
                                   "uniform mat4 u_mvp;\n"
                                   "out vec3 v_normal;\n"
+                                  "out vec2 v_uv;\n"
                                   "void main() {\n"
                                   "  v_normal = a_normal;\n"
+                                  "  v_uv = a_uv;\n"
                                   "  gl_Position = u_mvp * vec4(a_pos, 1.0);\n"
                                   "}\n";
 
 static const char *DEFAULT_FRAG =
     "#version 330 core\n"
     "in vec3 v_normal;\n"
+    "in vec2 v_uv;\n"
     "uniform vec3 u_color;\n"
+    "uniform float u_use_texture;\n"
+    "uniform float u_uv_scale;\n"
+    "uniform sampler2D u_tile_texture;\n"
     "out vec4 frag_color;\n"
     "void main() {\n"
+    "  vec3 base_color = u_color;\n"
+    "  if (u_use_texture > 0.5) {\n"
+    "    base_color *= texture(u_tile_texture, v_uv * u_uv_scale).rgb;\n"
+    "  }\n"
     "  float diff = max(dot(normalize(v_normal), vec3(0.5,1,0.5)), 0.15);\n"
-    "  frag_color = vec4(u_color * diff, 1.0);\n"
+    "  frag_color = vec4(base_color * diff, 1.0);\n"
     "}\n";
 #endif /* platform */
 
@@ -106,8 +127,59 @@ struct Renderer
     unsigned int fbo_texture;
     unsigned int fbo_depth;
     int use_fbo; /* 1 = native readback, 0 = direct to canvas (WASM) */
+    unsigned int default_tile_texture;
 #endif
 };
+
+#ifdef BANANA_ENGINE_HAS_GL
+static unsigned int renderer_create_fallback_tile_texture(void)
+{
+    unsigned int texture_id = 0;
+    const unsigned char pixel[4] = {255u, 255u, 255u, 255u};
+
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return texture_id;
+}
+#endif
+
+#ifdef __EMSCRIPTEN__
+EM_JS(void, renderer_load_default_tile_texture_async, (unsigned int texture_id), {
+    if (typeof Module === "undefined") {
+        return;
+    }
+    if (Module.__bananaSplashTextureRequested) {
+        return;
+    }
+    Module.__bananaSplashTextureRequested = true;
+
+    const gl = (typeof GLctx !== "undefined" && GLctx) ? GLctx : Module.ctx;
+    const texture = (typeof GL !== "undefined" && GL.textures) ? GL.textures[texture_id] : null;
+    if (!gl || !texture) {
+        return;
+    }
+
+    const image = new Image();
+    image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    };
+    image.src = "/splash.png";
+});
+#endif
 
 #ifdef BANANA_ENGINE_HAS_GL
 
@@ -146,6 +218,10 @@ Renderer *renderer_create(int width, int height)
 
 #ifdef BANANA_ENGINE_HAS_GL
     r->default_shader = shader_create(DEFAULT_VERT, DEFAULT_FRAG);
+    r->default_tile_texture = renderer_create_fallback_tile_texture();
+#ifdef __EMSCRIPTEN__
+    renderer_load_default_tile_texture_async(r->default_tile_texture);
+#endif
 #ifdef __EMSCRIPTEN__
     /* WASM: render direct to canvas (FBO 0); no readback needed */
     r->use_fbo = 0;
@@ -195,6 +271,12 @@ void renderer_draw_mesh(Renderer *r, struct Mesh *mesh, const float *position,
     r_mat4_mul(vp, TS, mvp);
 
     shader_set_mat4(r->default_shader, "u_mvp", mvp);
+    shader_set_int(r->default_shader, "u_tile_texture", 0);
+    glActiveTexture(GL_TEXTURE0);
+    if (material->use_texture > 0.5f && r->default_tile_texture)
+        glBindTexture(GL_TEXTURE_2D, r->default_tile_texture);
+    else
+        glBindTexture(GL_TEXTURE_2D, 0);
     material_apply(material, r->default_shader);
     mesh_draw(mesh);
 #else
@@ -253,6 +335,10 @@ void renderer_destroy(Renderer *r)
     glDeleteFramebuffers(1, &r->fbo);
     glDeleteTextures(1, &r->fbo_texture);
     glDeleteRenderbuffers(1, &r->fbo_depth);
+#endif
+#ifdef BANANA_ENGINE_HAS_GL
+    if (r->default_tile_texture)
+        glDeleteTextures(1, &r->default_tile_texture);
 #endif
     free(r);
 }

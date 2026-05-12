@@ -109,4 +109,41 @@ describe("GameEnginePage controller arbitration", () => {
     });
     expectLatestMoveInput(0, 0);
   });
+
+  test("runtime bridge emits stable engine ccall contract names", async () => {
+    await renderReadyPage();
+
+    await act(async () => {
+      fireEvent.keyDown(window, { key: "w" });
+      fpsTick?.();
+    });
+
+    const invokedNames = ccallCalls.map((args) => String(args[0]));
+    expect(invokedNames.includes("engine_set_move_input")).toBeTrue();
+    expect(invokedNames.includes("engine_tick")).toBeTrue();
+  });
+
+  test("action selection keeps movement loop responsive", async () => {
+    const { container } = await renderReadyPage();
+    const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+
+    await act(async () => {
+      fireEvent.keyDown(window, { key: "d" });
+      fpsTick?.();
+    });
+    expectLatestMoveInput(1, 0);
+
+    await act(async () => {
+      fireEvent.contextMenu(canvas, { clientX: 160, clientY: 180 });
+    });
+    expect(screen.getByText("Actions")).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Interact"));
+      fpsTick?.();
+    });
+
+    expect(screen.queryByText("Actions")).toBeNull();
+    expectLatestMoveInput(1, 0);
+  });
 });

@@ -1,5 +1,6 @@
 #include "test_engine_domain_suite_framework.h"
 
+#include "../../../src/native/engine/engine.h"
 #include "../../../src/native/engine/ai/controller_system.h"
 #include "../../../src/native/engine/ai/wildlife_controller.h"
 
@@ -70,6 +71,31 @@ done:
         controller_system_destroy(sys);
 }
 
+static void test_interaction_targeting_keeps_actor_population_stable(DomainSuiteStats *stats)
+{
+    int init_result = 0;
+    int initial_count = 0;
+    int first_target = 0;
+    int second_target = 0;
+
+    SUITE_TEST("interaction targeting: repeated selections keep actor population stable");
+    init_result = engine_init(800, 600);
+    SUITE_ASSERT_INT_EQ(stats, init_result, 0);
+
+    initial_count = engine_get_entity_count();
+    SUITE_ASSERT_TRUE(stats, initial_count >= 5);
+
+    first_target = engine_handle_right_click_normalized(0.5f, 0.5f);
+    second_target = engine_handle_right_click_normalized(0.1f, 0.9f);
+
+    SUITE_ASSERT_INT_EQ(stats, first_target, 1);
+    SUITE_ASSERT_INT_EQ(stats, second_target, 1);
+    SUITE_ASSERT_INT_EQ(stats, engine_get_entity_count(), initial_count);
+    SUITE_PASS(stats);
+done:
+    engine_shutdown();
+}
+
 int run_engine_ai_controller_suite(void)
 {
     DomainSuiteStats stats = (DomainSuiteStats){0, 0};
@@ -78,6 +104,7 @@ int run_engine_ai_controller_suite(void)
     test_controller_system_spawn(&stats);
     test_controller_system_multi_spawn_update(&stats);
     test_controller_system_signal_broadcast(&stats);
+    test_interaction_targeting_keeps_actor_population_stable(&stats);
 
     printf("AI Controller: %d passed, %d failed\n\n", stats.pass, stats.fail);
     return stats.fail;

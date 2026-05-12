@@ -17,6 +17,7 @@ extern "C"
 
     /* Set uniform values. Shader must be bound first. */
     void shader_set_float(Shader *s, const char *name, float value);
+    void shader_set_int(Shader *s, const char *name, int value);
     void shader_set_vec3(Shader *s, const char *name, float x, float y, float z);
     void shader_set_mat4(Shader *s, const char *name, const float *m16);
 

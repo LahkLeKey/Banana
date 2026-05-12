@@ -40,6 +40,7 @@ static float s_camera_target[3] = {0.f, 0.f, 0.f};
 static int s_camera_valid = 0;
 static float s_move_input_x = 0.f;
 static float s_move_input_z = 0.f;
+static EntityId s_selected_actor_id = 0;
 static void _mat4_force_link(void);
 
 /* ── Active controller table ─────────────────────────────────────────────── */
@@ -203,6 +204,72 @@ static void vec3_cross(const float *a, const float *b, float *out)
 
 static float terrain_sample_height(float x, float z);
 
+static void reset_non_player_actor_scales(void)
+{
+    if (!s_world)
+        return;
+
+    for (int i = 0; i < s_world->entity_count; i++)
+    {
+        Entity *e = s_world->entities[i];
+        if (!e || !e->active || e->id == s_player_id)
+            continue;
+
+        e->scale[0] = 1.0f;
+        e->scale[1] = 1.0f;
+        e->scale[2] = 1.0f;
+    }
+}
+
+static int highlight_nearest_actor_to_player(void)
+{
+    if (!s_world || !s_player_id)
+        return 0;
+
+    Entity *player = world_get_entity(s_world, s_player_id);
+    if (!player || !player->active)
+        return 0;
+
+    Entity *best = NULL;
+    float best_dist_sq = 0.0f;
+    const float max_interaction_radius = 6.0f;
+    const float max_interaction_radius_sq = max_interaction_radius * max_interaction_radius;
+
+    for (int i = 0; i < s_world->entity_count; i++)
+    {
+        Entity *e = s_world->entities[i];
+        if (!e || !e->active || e->id == s_player_id)
+            continue;
+
+        float dx = e->position[0] - player->position[0];
+        float dz = e->position[2] - player->position[2];
+        float dist_sq = dx * dx + dz * dz;
+        if (dist_sq > max_interaction_radius_sq)
+            continue;
+
+        if (!best || dist_sq < best_dist_sq)
+        {
+            best = e;
+            best_dist_sq = dist_sq;
+        }
+    }
+
+    reset_non_player_actor_scales();
+
+    if (!best)
+    {
+        s_selected_actor_id = 0;
+        return 0;
+    }
+
+    s_selected_actor_id = best->id;
+    best->scale[0] = 1.35f;
+    best->scale[1] = 1.10f;
+    best->scale[2] = 1.25f;
+    best->position[1] = terrain_sample_height(best->position[0], best->position[2]) + 0.85f;
+    return 1;
+}
+
 static int compute_camera_ground_basis(float *forward, float *right)
 {
     if (!s_camera_valid)
@@ -265,6 +332,8 @@ static void terrain_draw(void)
     float identity[4] = {0.f, 0.f, 0.f, 1.f};
     float unit[3] = {1.f, 0.48f, 1.f};
     Material terrain_mat = material_solid(0.35f, 0.66f, 0.30f, 1.f);
+    terrain_mat.use_texture = 1.0f;
+    terrain_mat.uv_scale = 8.0f;
     float world_origin = (float)(BANANA_TERRAIN_SIZE - 1) * 0.5f;
 
     for (int cz = 0; cz < BANANA_TERRAIN_CHUNK_ROWS; cz++)
@@ -412,6 +481,36 @@ int engine_init(int width, int height)
             player->scale[0] = 1.25f;
             player->scale[1] = 0.95f;
             player->scale[2] = 1.10f;
+        }
+    }
+
+    {
+        const float actor_positions[4][2] = {
+            {-3.0f, -2.5f},
+            {2.5f, -3.0f},
+            {-2.0f, 2.75f},
+            {3.25f, 2.25f},
+        };
+        const EntityType actor_types[4] = {
+            ENTITY_TYPE_NPC,
+            ENTITY_TYPE_DYNAMIC,
+            ENTITY_TYPE_NPC,
+            ENTITY_TYPE_DYNAMIC,
+        };
+
+        for (int i = 0; i < 4; i++)
+        {
+            float x = actor_positions[i][0];
+            float z = actor_positions[i][1];
+            float y = terrain_sample_height(x, z) + 0.55f;
+            EntityId actor_id = world_spawn_entity(s_world, actor_types[i], x, y, z);
+            Entity *actor = world_get_entity(s_world, actor_id);
+            if (actor)
+            {
+                actor->scale[0] = 1.0f;
+                actor->scale[1] = 1.0f;
+                actor->scale[2] = 1.0f;
+            }
         }
     }
 
@@ -768,18 +867,18 @@ int engine_get_has_move_target(void)
 
 int engine_handle_right_click(float canvas_x, float canvas_y)
 {
-    /* US3 arbitration invariant: right-click bridge is UI-only and never mutates movement state. */
+    /* Coordinates are currently advisory; target selection is proximity-based in this slice. */
     (void)canvas_x;
     (void)canvas_y;
-    return 0;
+    return highlight_nearest_actor_to_player();
 }
 
 int engine_handle_right_click_normalized(float screen_x, float screen_y)
 {
-    /* US3 arbitration invariant: normalized mouse bridge remains intentionally inert. */
+    /* Normalized coordinates are reserved for future ray-picking precision. */
     (void)screen_x;
     (void)screen_y;
-    return 0;
+    return highlight_nearest_actor_to_player();
 }
 
 void engine_set_move_input(float input_x, float input_z)

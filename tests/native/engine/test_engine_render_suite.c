@@ -34,6 +34,27 @@ done:
     return;
 }
 
+static void test_camera_projection_changes_with_aspect_ratio(DomainSuiteStats *stats)
+{
+    Camera square;
+    Camera wide;
+    float square_proj[16] = {0};
+    float wide_proj[16] = {0};
+
+    SUITE_TEST("camera_get_projection: viewport ratio affects projection scaling");
+    square = camera_create(60.f, 1.f, 0.1f, 1000.f);
+    wide = camera_create(60.f, 16.f / 9.f, 0.1f, 1000.f);
+
+    camera_get_projection(&square, square_proj);
+    camera_get_projection(&wide, wide_proj);
+
+    /* m[0] encodes horizontal scaling and must differ across aspect ratios. */
+    SUITE_ASSERT_TRUE(stats, fabsf(square_proj[0] - wide_proj[0]) > 0.0001f);
+    SUITE_PASS(stats);
+done:
+    return;
+}
+
 static void test_renderer_frame_buffer_non_null(DomainSuiteStats *stats)
 {
     Renderer *r = NULL;
@@ -102,6 +123,7 @@ int run_engine_render_suite(void)
     printf("-- Rendering Suite --\n");
     test_camera_view_matrix(&stats);
     test_camera_projection_matrix(&stats);
+    test_camera_projection_changes_with_aspect_ratio(&stats);
     test_renderer_frame_buffer_non_null(&stats);
     test_renderer_frame_buffer_non_zero(&stats);
     test_mesh_create_banana(&stats);

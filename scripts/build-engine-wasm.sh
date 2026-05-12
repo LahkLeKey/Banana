@@ -67,7 +67,7 @@ SOURCES=(
 )
 
 # ── Exported WASM functions (callable from JS via Module.ccall / cwrap) ──────
-EXPORTS='["_main","_engine_world_spawn","_engine_controller_attach","_engine_controller_signal","_engine_tick","_engine_get_entity_count","_engine_get_entity_x","_engine_get_entity_z","_engine_get_entity_state"]'
+EXPORTS='["_main","_engine_world_spawn","_engine_controller_attach","_engine_controller_signal","_engine_tick","_engine_set_move_input","_engine_handle_right_click","_engine_handle_right_click_normalized","_engine_get_entity_count","_engine_get_entity_x","_engine_get_entity_z","_engine_get_entity_state"]'
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 echo "[build-engine-wasm] Compiling ${#SOURCES[@]} source files…"

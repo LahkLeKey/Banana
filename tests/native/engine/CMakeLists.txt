@@ -7,6 +7,7 @@ add_executable(banana_test_engine_domain_contracts
   test_engine_ai_controller_suite.c
   test_engine_render_suite.c
   test_engine_world_suite.c
+  test_engine_interaction_suite.c
 )
 
 target_link_libraries(banana_test_engine_domain_contracts PRIVATE banana_engine_core)
