@@ -422,21 +422,26 @@ export function GameEnginePage() {
         style={{
           position: "absolute",
           top: 16,
-          left: 16,
-          padding: "10px 12px",
-          backgroundColor: "rgba(0, 0, 0, 0.55)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-          borderRadius: 6,
-          color: "rgba(255, 255, 255, 0.92)",
-          fontSize: 13,
+          left: "50%",
+          transform: "translateX(-50%)",
+          padding: "10px 14px",
+          background:
+            "linear-gradient(180deg, rgba(17,17,24,0.82) 0%, rgba(9,9,12,0.72) 100%)",
+          border: "1px solid rgba(255, 210, 102, 0.35)",
+          borderRadius: 8,
+          color: "rgba(255, 255, 255, 0.95)",
+          fontSize: 12,
           fontFamily: "monospace",
           lineHeight: 1.45,
           zIndex: 1000,
           pointerEvents: "none",
           whiteSpace: "pre-line",
+          textAlign: "center",
+          letterSpacing: "0.03em",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.38)",
         }}
       >
-        {"Controls\nRight Click: Open action menu\nWASD / Arrow Keys: Move banana"}
+        {"ARPG Controls\nWASD / Arrow Keys: Move\nRight Click: Action menu"}
       </div>
 
       {contextMenu.visible && (
