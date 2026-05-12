@@ -6,7 +6,7 @@ type BananaEngineModule = {
   cwrap: (name: string, returnType: string, argTypes: string[]) => (...args: unknown[]) => unknown;
 };
 
-const ENGINE_ASSET_VERSION = "20260510-10";
+const ENGINE_ASSET_VERSION = "20260512-01";
 
 declare global {
   interface Window {
