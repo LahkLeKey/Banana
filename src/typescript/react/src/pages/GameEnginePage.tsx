@@ -6,7 +6,9 @@ type BananaEngineModule = {
   cwrap: (name: string, returnType: string, argTypes: string[]) => (...args: unknown[]) => unknown;
 };
 
-const ENGINE_ASSET_VERSION = "20260512-01";
+const ENGINE_ASSET_VERSION =
+  (import.meta as { env?: Record<string, string | undefined> }).env
+    ?.VITE_ENGINE_ASSET_VERSION ?? "20260512-01";
 
 declare global {
   interface Window {

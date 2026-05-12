@@ -16,7 +16,12 @@ export default defineConfig(({ mode }) => {
     );
   }
 
+  const engineAssetVersion = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ?? "local-dev";
+
   return {
+    define: {
+      "import.meta.env.VITE_ENGINE_ASSET_VERSION": JSON.stringify(engineAssetVersion),
+    },
     plugins: [
       react(),
       ...(process.env.SENTRY_AUTH_TOKEN
