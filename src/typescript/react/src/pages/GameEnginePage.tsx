@@ -122,8 +122,17 @@ export function GameEnginePage() {
       const bounds = viewport.getBoundingClientRect();
       const cssWidth = Math.max(1, Math.floor(bounds.width));
       const cssHeight = Math.max(1, Math.floor(bounds.height));
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const pixelWidth = Math.max(1, Math.floor(cssWidth * dpr));
+      const pixelHeight = Math.max(1, Math.floor(cssHeight * dpr));
       canvas.style.width = `${cssWidth}px`;
       canvas.style.height = `${cssHeight}px`;
+      if (canvas.width !== pixelWidth) {
+        canvas.width = pixelWidth;
+      }
+      if (canvas.height !== pixelHeight) {
+        canvas.height = pixelHeight;
+      }
     };
 
     syncCanvasCssSize();
