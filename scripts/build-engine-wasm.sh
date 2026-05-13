@@ -95,10 +95,24 @@ emcc \
 
 echo "[build-engine-wasm] Build complete: $OUT_DIR/engine.js + engine.wasm"
 
+# ── Emit engine version metadata for runtime cache-busting + diagnostics ────
+if command -v sha256sum &>/dev/null; then
+    HASH="$(sha256sum "$OUT_DIR/engine.wasm" | awk '{print $1}' | cut -c1-12)"
+elif command -v shasum &>/dev/null; then
+    HASH="$(shasum -a 256 "$OUT_DIR/engine.wasm" | awk '{print $1}' | cut -c1-12)"
+else
+    HASH="$(wc -c < "$OUT_DIR/engine.wasm" | tr -d ' ')-bytes"
+fi
+BUILD_UTC="$(date -u +"%Y%m%d-%H%M%S")"
+ENGINE_VERSION="${BUILD_UTC}-${HASH}"
+printf '{\n  "engineAssetVersion": "%s"\n}\n' "$ENGINE_VERSION" > "$OUT_DIR/engine.version.json"
+
 # ── Copy to React public directory so Vite serves it ─────────────────────────
 mkdir -p "$REACT_PUBLIC"
 cp "$OUT_DIR/engine.js"   "$REACT_PUBLIC/engine.js"
 cp "$OUT_DIR/engine.wasm" "$REACT_PUBLIC/engine.wasm"
+cp "$OUT_DIR/engine.version.json" "$REACT_PUBLIC/engine.version.json"
 
 echo "[build-engine-wasm] Copied to $REACT_PUBLIC"
+echo "[build-engine-wasm] Engine asset version: $ENGINE_VERSION"
 echo "[build-engine-wasm] Done. Start React dev server and open /game-engine"

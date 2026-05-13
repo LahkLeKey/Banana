@@ -335,6 +335,7 @@ static void terrain_draw(void)
     terrain_mat.use_texture = 1.0f;
     terrain_mat.uv_scale = 8.0f;
     float world_origin = (float)(BANANA_TERRAIN_SIZE - 1) * 0.5f;
+    float chunk_center_offset = ((float)BANANA_TERRAIN_CHUNK_SIZE * 0.5f) - 0.5f;
 
     for (int cz = 0; cz < BANANA_TERRAIN_CHUNK_ROWS; cz++)
     {
@@ -346,9 +347,9 @@ static void terrain_draw(void)
                 continue;
 
             float pos[3] = {
-                (float)(cx * BANANA_TERRAIN_CHUNK_SIZE) - world_origin,
+                (float)(cx * BANANA_TERRAIN_CHUNK_SIZE) - world_origin + chunk_center_offset,
                 -1.45f,
-                (float)(cz * BANANA_TERRAIN_CHUNK_SIZE) - world_origin,
+                (float)(cz * BANANA_TERRAIN_CHUNK_SIZE) - world_origin + chunk_center_offset,
             };
             renderer_draw_mesh(s_renderer, mesh, pos, identity, unit, &terrain_mat);
         }
@@ -416,16 +417,17 @@ static void follow_player_camera(void)
     if (!player || !player->active)
         return;
 
+    /* Tight ARPG framing: reduce FOV and bring the camera closer so terrain fills the viewport. */
     Camera camera =
-        camera_create(55.f, (float)s_viewport_width / (float)s_viewport_height, 0.1f, 1000.f);
-    camera_look_at(&camera, player->position[0] + 10.f, player->position[1] + 15.f,
-                   player->position[2] + 10.f, player->position[0], player->position[1] - 0.5f,
+        camera_create(44.f, (float)s_viewport_width / (float)s_viewport_height, 0.1f, 1000.f);
+    camera_look_at(&camera, player->position[0] + 7.0f, player->position[1] + 10.5f,
+                   player->position[2] + 7.0f, player->position[0], player->position[1] - 0.35f,
                    player->position[2]);
-    s_camera_eye[0] = player->position[0] + 10.f;
-    s_camera_eye[1] = player->position[1] + 15.f;
-    s_camera_eye[2] = player->position[2] + 10.f;
+    s_camera_eye[0] = player->position[0] + 7.0f;
+    s_camera_eye[1] = player->position[1] + 10.5f;
+    s_camera_eye[2] = player->position[2] + 7.0f;
     s_camera_target[0] = player->position[0];
-    s_camera_target[1] = player->position[1] - 0.5f;
+    s_camera_target[1] = player->position[1] - 0.35f;
     s_camera_target[2] = player->position[2];
     s_camera_valid = 1;
     renderer_set_camera(s_renderer, &camera);

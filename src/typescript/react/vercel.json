@@ -25,6 +25,15 @@
       ]
     },
     {
+      "source": "/wasm/(engine\\.js|engine\\.wasm)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/wasm/(.*)",
       "headers": [
         {

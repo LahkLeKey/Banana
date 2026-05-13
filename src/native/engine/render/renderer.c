@@ -247,6 +247,7 @@ void renderer_begin_frame(Renderer *r)
 {
 #ifdef BANANA_ENGINE_HAS_GL
     glBindFramebuffer(GL_FRAMEBUFFER, r->use_fbo ? r->fbo : 0);
+    glViewport(0, 0, r->width, r->height);
     glClearColor(0.12f, 0.24f, 0.42f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #else
@@ -320,7 +321,7 @@ void renderer_resize(Renderer *r, int width, int height)
     r->height = height;
     r->camera.aspect = (float)width / height;
     r->frame_buffer = realloc(r->frame_buffer, (size_t)width * height * 4);
-#ifdef BANANA_ENGINE_HAS_GLFW
+#ifdef BANANA_ENGINE_HAS_GL
     glViewport(0, 0, width, height);
 #endif
 }

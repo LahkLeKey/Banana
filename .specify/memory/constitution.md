@@ -1,10 +1,11 @@
 <!--
 Sync Impact Report
-- Version change: 1.13.2 -> 1.13.3
+- Version change: 1.13.3 -> 1.13.4
 - Modified principles:
 	- Added XXIII. Banana-Derived Procedural Primitive Exclusivity
 	- Added XXIV. Domain-Contract Test Decomposition
 - Added workflow guidance: explicit Spec Kit orchestration preflight steps and command sequence
+- Added workflow guidance: WASM rebuild + hot-reload contract for ARPG/runtime viewport fixes
 - Templates requiring updates:
 	- ✅ updated .specify/templates/plan-template.md (domain-contract test decomposition)
 	- ✅ updated .specify/templates/spec-template.md (test organization guidance)
@@ -189,6 +190,10 @@ Implementation inside each Banana bounded context must follow domain-driven deco
 - Run `scripts/validate-ai-contracts.py` whenever AI workflow contracts (prompts, agents, skills, instructions, workflows, wiki mapping) are touched.
 - Run `scripts/workflow-sync-wiki.sh` in the same change when contract surfaces move.
 - For frontend and Electron behavior checks, open the VS Code Simple Browser at the relevant local or Vercel preview URL **before starting work** on any web portal change (React page, component, layout, navigation). Keep it open for hot-reload feedback during implementation and verify rendered state against the active runtime profile before marking tasks done.
+- For native engine changes that affect React-delivered WASM runtime behavior (camera, terrain, renderer, input bridge), rebuild and publish updated WASM artifacts in the same slice. Canonical rebuild command on Windows/Git Bash is:
+	`MSYS_NO_PATHCONV=1 docker run --rm -v "/c/Github/Banana:/workspace" -w /workspace emscripten/emsdk:3.1.57 bash -lc "bash scripts/build-engine-wasm.sh --release"`
+- When WASM artifacts are rebuilt, commit updated `src/typescript/react/public/wasm/engine.js` and `src/typescript/react/public/wasm/engine.wasm` together so preview/prod consume the same native behavior.
+- React runtime iteration must support hot reload for WASM bundle updates without restarting compose/docker channels; dev workflows should rely on browser refresh or in-page auto-reload watchers after artifact rebuild.
 - When a change touches overlapping ASP.NET and Fastify API capability, include parity validation evidence (or intentional-drift rationale) in the active Spec Kit artifacts before task closure.
 - For checks that call GitHub REST/GraphQL or action metadata APIs, include explicit rate-limit handling and a documented rerun path in the active spec artifacts before task closure.
 - For changes that touch the Vercel deployment manifest (`vercel.json`), the Vite build config, or `VITE_BANANA_API_BASE_URL` wiring, validate a clean `bun run build` and confirm the production environment contract before task closure.
@@ -230,4 +235,4 @@ This constitution governs Spec Kit driven development and automation workflows i
 Amendments require a pull request that documents rationale, migration impact, and validation updates.
 Reviewers should block merges that violate these principles.
 
-**Version**: 1.13.3 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-09
+**Version**: 1.13.4 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-12
