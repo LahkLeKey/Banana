@@ -39,6 +39,17 @@ type ContextMenuAction = {
   actionId: string;
 };
 
+type RadialControlState = {
+  visible: boolean;
+  x: number;
+  y: number;
+  activeDirection: "up" | "down" | "left" | "right" | null;
+};
+
+const RADIAL_RADIUS = 60;
+const RADIAL_INNER_RADIUS = 20;
+const DIRECTION_THRESHOLD = 0.35;
+
 const MOVEMENT_KEYS = new Set([
   "w",
   "a",
@@ -78,6 +89,33 @@ export function computeContextMenuPosition(
   return { x: Math.max(padding, safeX), y: Math.max(padding, safeY) };
 }
 
+export function getDirectionFromTouch(
+  touchX: number,
+  touchY: number,
+  radialCenterX: number,
+  radialCenterY: number
+): "up" | "down" | "left" | "right" | null {
+  const deltaX = touchX - radialCenterX;
+  const deltaY = touchY - radialCenterY;
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+  if (distance < RADIAL_INNER_RADIUS) {
+    return null;
+  }
+
+  if (distance / RADIAL_RADIUS < DIRECTION_THRESHOLD) {
+    return null;
+  }
+
+  const angle = Math.atan2(deltaY, deltaX);
+  const normalizedAngle = ((angle * 180) / Math.PI + 360) % 360;
+
+  if (normalizedAngle < 45 || normalizedAngle >= 315) return "right";
+  if (normalizedAngle < 135) return "down";
+  if (normalizedAngle < 225) return "left";
+  return "up";
+}
+
 const CONTEXT_MENU_ACTIONS: ContextMenuAction[] = [
   { label: "Interact", actionId: "interact" },
   { label: "Harvest", actionId: "harvest" },
@@ -105,6 +143,16 @@ export function GameEnginePage() {
   const keyUpHandlerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
   const blurHandlerRef = useRef<(() => void) | null>(null);
   const visibilityHandlerRef = useRef<(() => void) | null>(null);
+  const touchStartHandlerRef = useRef<((event: TouchEvent) => void) | null>(null);
+  const touchMoveHandlerRef = useRef<((event: TouchEvent) => void) | null>(null);
+  const touchEndHandlerRef = useRef<((event: TouchEvent) => void) | null>(null);
+  const pointerDownHandlerRef = useRef<((event: PointerEvent) => void) | null>(null);
+  const pointerMoveHandlerRef = useRef<((event: PointerEvent) => void) | null>(null);
+  const pointerUpHandlerRef = useRef<((event: PointerEvent) => void) | null>(null);
+  const activePointerIdRef = useRef<number | null>(null);
+  const touchStartTimerRef = useRef<number>(0);
+  const activeTouchIdRef = useRef<number | null>(null);
+  const radialKeysRef = useRef<Set<string>>(new Set());
 
   const [status, setStatus] = useState<EngineStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +162,12 @@ export function GameEnginePage() {
     y: 0,
     normalizedX: 0,
     normalizedY: 0,
+  });
+  const [radialControl, setRadialControl] = useState<RadialControlState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    activeDirection: null,
   });
   const [interactionMessage, setInteractionMessage] = useState<string | null>(null);
   const [engineAssetVersion, setEngineAssetVersion] = useState<string>("pending");
@@ -300,7 +354,9 @@ export function GameEnginePage() {
 
         const clearMovementIntent = () => {
           activeKeysRef.current.clear();
+          radialKeysRef.current.clear();
           mod.ccall("engine_set_move_input", "null", ["number", "number"], [0, 0]);
+          setRadialControl({ visible: false, x: 0, y: 0, activeDirection: null });
         };
 
         const onBlur = () => {
@@ -313,18 +369,161 @@ export function GameEnginePage() {
           }
         };
 
+        /* Touch handlers for mobile radial movement control */
+        const onTouchStart = (event: TouchEvent) => {
+          if (event.touches.length === 0) return;
+
+          const touch = event.touches[0];
+          activeTouchIdRef.current = touch.identifier;
+
+          const bounds = viewportRef.current?.getBoundingClientRect();
+          const touchX = bounds ? touch.clientX - bounds.left : touch.clientX;
+          const touchY = bounds ? touch.clientY - bounds.top : touch.clientY;
+
+          /* Show radial after brief hold (150ms) */
+          touchStartTimerRef.current = window.setTimeout(() => {
+            setRadialControl({
+              visible: true,
+              x: touchX,
+              y: touchY,
+              activeDirection: null,
+            });
+          }, 150);
+        };
+
+        const onTouchMove = (event: TouchEvent) => {
+          if (activeTouchIdRef.current === null) return;
+
+          const touch = Array.from(event.touches).find(
+            (t) => t.identifier === activeTouchIdRef.current
+          );
+          if (!touch) return;
+
+          const bounds = viewportRef.current?.getBoundingClientRect();
+          const touchX = bounds ? touch.clientX - bounds.left : touch.clientX;
+          const touchY = bounds ? touch.clientY - bounds.top : touch.clientY;
+
+          setRadialControl((prev) => {
+            if (!prev.visible) return prev;
+
+            const direction = getDirectionFromTouch(touchX, touchY, prev.x, prev.y);
+
+            /* Update active keys based on direction */
+            if (direction !== prev.activeDirection) {
+              radialKeysRef.current.clear();
+
+              if (direction === "up") {
+                radialKeysRef.current.add("w");
+              } else if (direction === "down") {
+                radialKeysRef.current.add("s");
+              } else if (direction === "left") {
+                radialKeysRef.current.add("a");
+              } else if (direction === "right") {
+                radialKeysRef.current.add("d");
+              }
+            }
+
+            return { ...prev, activeDirection: direction };
+          });
+        };
+
+        const onTouchEnd = (event: TouchEvent) => {
+          const touch = Array.from(event.changedTouches).find(
+            (t) => t.identifier === activeTouchIdRef.current
+          );
+          if (!touch) return;
+
+          window.clearTimeout(touchStartTimerRef.current);
+          activeTouchIdRef.current = null;
+          radialKeysRef.current.clear();
+          setRadialControl({ visible: false, x: 0, y: 0, activeDirection: null });
+        };
+
+        const onPointerDown = (event: PointerEvent) => {
+          if (event.pointerType === "mouse") return;
+
+          activePointerIdRef.current = event.pointerId;
+
+          const bounds = viewportRef.current?.getBoundingClientRect();
+          const touchX = bounds ? event.clientX - bounds.left : event.clientX;
+          const touchY = bounds ? event.clientY - bounds.top : event.clientY;
+
+          window.clearTimeout(touchStartTimerRef.current);
+          touchStartTimerRef.current = window.setTimeout(() => {
+            setRadialControl({
+              visible: true,
+              x: touchX,
+              y: touchY,
+              activeDirection: null,
+            });
+          }, 150);
+        };
+
+        const onPointerMove = (event: PointerEvent) => {
+          if (activePointerIdRef.current !== event.pointerId) return;
+
+          const bounds = viewportRef.current?.getBoundingClientRect();
+          const touchX = bounds ? event.clientX - bounds.left : event.clientX;
+          const touchY = bounds ? event.clientY - bounds.top : event.clientY;
+
+          setRadialControl((prev) => {
+            if (!prev.visible) return prev;
+
+            const direction = getDirectionFromTouch(touchX, touchY, prev.x, prev.y);
+
+            if (direction !== prev.activeDirection) {
+              radialKeysRef.current.clear();
+
+              if (direction === "up") {
+                radialKeysRef.current.add("w");
+              } else if (direction === "down") {
+                radialKeysRef.current.add("s");
+              } else if (direction === "left") {
+                radialKeysRef.current.add("a");
+              } else if (direction === "right") {
+                radialKeysRef.current.add("d");
+              }
+            }
+
+            return { ...prev, activeDirection: direction };
+          });
+        };
+
+        const onPointerUp = (event: PointerEvent) => {
+          if (activePointerIdRef.current !== event.pointerId) return;
+
+          window.clearTimeout(touchStartTimerRef.current);
+          activePointerIdRef.current = null;
+          radialKeysRef.current.clear();
+          setRadialControl({ visible: false, x: 0, y: 0, activeDirection: null });
+        };
+
         keyDownHandlerRef.current = keyDown;
         keyUpHandlerRef.current = keyUp;
         blurHandlerRef.current = onBlur;
         visibilityHandlerRef.current = onVisibilityChange;
+        touchStartHandlerRef.current = onTouchStart;
+        touchMoveHandlerRef.current = onTouchMove;
+        touchEndHandlerRef.current = onTouchEnd;
+        pointerDownHandlerRef.current = onPointerDown;
+        pointerMoveHandlerRef.current = onPointerMove;
+        pointerUpHandlerRef.current = onPointerUp;
         window.addEventListener("keydown", keyDown, { capture: true });
         window.addEventListener("keyup", keyUp, { capture: true });
         window.addEventListener("blur", onBlur);
         document.addEventListener("visibilitychange", onVisibilityChange);
+        window.addEventListener("touchstart", onTouchStart, { passive: true });
+        window.addEventListener("touchmove", onTouchMove, { passive: true });
+        window.addEventListener("touchend", onTouchEnd, { passive: true });
+        window.addEventListener("pointerdown", onPointerDown, { passive: true });
+        window.addEventListener("pointermove", onPointerMove, { passive: true });
+        window.addEventListener("pointerup", onPointerUp, { passive: true });
+        window.addEventListener("pointercancel", onPointerUp, { passive: true });
         setStatus("running");
 
         const fpsLoop = () => {
-          const { moveX, moveZ } = computeMoveAxes(activeKeysRef.current);
+          const combinedKeys = new Set([...activeKeysRef.current, ...radialKeysRef.current]);
+          const { moveX, moveZ } = computeMoveAxes(combinedKeys);
           mod.ccall("engine_set_move_input", "null", ["number", "number"], [moveX, moveZ]);
           mod.ccall("engine_tick", "number", ["number"], [1 / 60]);
         };
@@ -359,6 +558,7 @@ export function GameEnginePage() {
 
     return () => {
       window.clearInterval(intervalRef.current);
+      window.clearTimeout(touchStartTimerRef.current);
       if (keyDownHandlerRef.current) {
         window.removeEventListener("keydown", keyDownHandlerRef.current, { capture: true });
         keyDownHandlerRef.current = null;
@@ -375,7 +575,34 @@ export function GameEnginePage() {
         document.removeEventListener("visibilitychange", visibilityHandlerRef.current);
         visibilityHandlerRef.current = null;
       }
+      if (touchStartHandlerRef.current) {
+        window.removeEventListener("touchstart", touchStartHandlerRef.current);
+        touchStartHandlerRef.current = null;
+      }
+      if (touchMoveHandlerRef.current) {
+        window.removeEventListener("touchmove", touchMoveHandlerRef.current);
+        touchMoveHandlerRef.current = null;
+      }
+      if (touchEndHandlerRef.current) {
+        window.removeEventListener("touchend", touchEndHandlerRef.current);
+        touchEndHandlerRef.current = null;
+      }
+      if (pointerDownHandlerRef.current) {
+        window.removeEventListener("pointerdown", pointerDownHandlerRef.current);
+        pointerDownHandlerRef.current = null;
+      }
+      if (pointerMoveHandlerRef.current) {
+        window.removeEventListener("pointermove", pointerMoveHandlerRef.current);
+        pointerMoveHandlerRef.current = null;
+      }
+      if (pointerUpHandlerRef.current) {
+        window.removeEventListener("pointerup", pointerUpHandlerRef.current);
+        window.removeEventListener("pointercancel", pointerUpHandlerRef.current);
+        pointerUpHandlerRef.current = null;
+      }
       activeKeysRef.current.clear();
+      radialKeysRef.current.clear();
+      activePointerIdRef.current = null;
       scriptRef.current?.remove();
       delete window.__bananaEngineModule;
       moduleRef.current = null;
@@ -562,7 +789,7 @@ export function GameEnginePage() {
           boxShadow: "0 8px 24px rgba(0,0,0,0.38)",
         }}
       >
-        {"ARPG Controls\nWASD / Arrow Keys: Move\nRight Click: Action menu"}
+        {"ARPG Controls\nWASD / Arrow Keys: Move\nMobile: Hold to show radial\nRight Click: Action menu"}
       </div>
 
       {contextMenu.visible && (
@@ -620,6 +847,160 @@ export function GameEnginePage() {
           >
             Close
           </button>
+        </div>
+      )}
+
+      {/* Mobile radial movement control */}
+      {radialControl.visible && (
+        <div
+          data-testid="mobile-radial-control"
+          style={{
+            position: "absolute",
+            left: radialControl.x - RADIAL_RADIUS,
+            top: radialControl.y - RADIAL_RADIUS,
+            width: RADIAL_RADIUS * 2,
+            height: RADIAL_RADIUS * 2,
+            pointerEvents: "none",
+            zIndex: 800,
+          }}
+        >
+          <svg
+            width={RADIAL_RADIUS * 2}
+            height={RADIAL_RADIUS * 2}
+            viewBox={`0 0 ${RADIAL_RADIUS * 2} ${RADIAL_RADIUS * 2}`}
+            style={{ position: "absolute" }}
+          >
+            {/* Outer circle background */}
+            <circle
+              cx={RADIAL_RADIUS}
+              cy={RADIAL_RADIUS}
+              r={RADIAL_RADIUS}
+              fill="rgba(0, 0, 0, 0.4)"
+              stroke="rgba(255, 255, 255, 0.2)"
+              strokeWidth="1"
+            />
+
+            {/* Inner circle (dead zone) */}
+            <circle
+              cx={RADIAL_RADIUS}
+              cy={RADIAL_RADIUS}
+              r={RADIAL_INNER_RADIUS}
+              fill="rgba(255, 255, 255, 0.05)"
+              stroke="rgba(255, 255, 255, 0.15)"
+              strokeWidth="1"
+            />
+
+            {/* Direction indicators */}
+            {/* Up (W) */}
+            <path
+              d={`M ${RADIAL_RADIUS} ${RADIAL_INNER_RADIUS} L ${RADIAL_RADIUS + 12} ${RADIAL_INNER_RADIUS + 15} L ${RADIAL_RADIUS} ${RADIAL_RADIUS - 5} L ${RADIAL_RADIUS - 12} ${RADIAL_INNER_RADIUS + 15} Z`}
+              fill={radialControl.activeDirection === "up" ? "rgba(100, 200, 255, 0.8)" : "rgba(255, 255, 255, 0.2)"}
+              stroke="rgba(255, 255, 255, 0.3)"
+              strokeWidth="0.5"
+            />
+
+            {/* Down (S) */}
+            <path
+              d={`M ${RADIAL_RADIUS} ${RADIAL_RADIUS + RADIAL_INNER_RADIUS + 5} L ${RADIAL_RADIUS + 12} ${RADIAL_RADIUS - RADIAL_INNER_RADIUS - 15} L ${RADIAL_RADIUS} ${RADIAL_RADIUS + 5} L ${RADIAL_RADIUS - 12} ${RADIAL_RADIUS - RADIAL_INNER_RADIUS - 15} Z`}
+              fill={radialControl.activeDirection === "down" ? "rgba(100, 200, 255, 0.8)" : "rgba(255, 255, 255, 0.2)"}
+              stroke="rgba(255, 255, 255, 0.3)"
+              strokeWidth="0.5"
+            />
+
+            {/* Left (A) */}
+            <path
+              d={`M ${RADIAL_INNER_RADIUS} ${RADIAL_RADIUS} L ${RADIAL_INNER_RADIUS + 15} ${RADIAL_RADIUS - 12} L ${RADIAL_RADIUS - 5} ${RADIAL_RADIUS} L ${RADIAL_INNER_RADIUS + 15} ${RADIAL_RADIUS + 12} Z`}
+              fill={radialControl.activeDirection === "left" ? "rgba(100, 200, 255, 0.8)" : "rgba(255, 255, 255, 0.2)"}
+              stroke="rgba(255, 255, 255, 0.3)"
+              strokeWidth="0.5"
+            />
+
+            {/* Right (D) */}
+            <path
+              d={`M ${RADIAL_RADIUS + RADIAL_INNER_RADIUS + 5} ${RADIAL_RADIUS} L ${RADIAL_RADIUS - RADIAL_INNER_RADIUS - 15} ${RADIAL_RADIUS - 12} L ${RADIAL_RADIUS + 5} ${RADIAL_RADIUS} L ${RADIAL_RADIUS - RADIAL_INNER_RADIUS - 15} ${RADIAL_RADIUS + 12} Z`}
+              fill={radialControl.activeDirection === "right" ? "rgba(100, 200, 255, 0.8)" : "rgba(255, 255, 255, 0.2)"}
+              stroke="rgba(255, 255, 255, 0.3)"
+              strokeWidth="0.5"
+            />
+
+            {/* Center touch indicator */}
+            <circle
+              cx={RADIAL_RADIUS}
+              cy={RADIAL_RADIUS}
+              r="4"
+              fill="rgba(255, 255, 255, 0.3)"
+            />
+          </svg>
+
+          {/* Labels */}
+          <div
+            data-testid="mobile-radial-up"
+            style={{
+              position: "absolute",
+              top: RADIAL_INNER_RADIUS - 8,
+              left: "50%",
+              transform: "translateX(-50%)",
+              fontSize: 11,
+              fontFamily: "monospace",
+              fontWeight: 700,
+              color: radialControl.activeDirection === "up" ? "rgba(100, 200, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+              textShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
+              pointerEvents: "none",
+            }}
+          >
+            W
+          </div>
+          <div
+            data-testid="mobile-radial-down"
+            style={{
+              position: "absolute",
+              bottom: RADIAL_INNER_RADIUS - 8,
+              left: "50%",
+              transform: "translateX(-50%)",
+              fontSize: 11,
+              fontFamily: "monospace",
+              fontWeight: 700,
+              color: radialControl.activeDirection === "down" ? "rgba(100, 200, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+              textShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
+              pointerEvents: "none",
+            }}
+          >
+            S
+          </div>
+          <div
+            data-testid="mobile-radial-left"
+            style={{
+              position: "absolute",
+              left: RADIAL_INNER_RADIUS - 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: 11,
+              fontFamily: "monospace",
+              fontWeight: 700,
+              color: radialControl.activeDirection === "left" ? "rgba(100, 200, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+              textShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
+              pointerEvents: "none",
+            }}
+          >
+            A
+          </div>
+          <div
+            data-testid="mobile-radial-right"
+            style={{
+              position: "absolute",
+              right: RADIAL_INNER_RADIUS - 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: 11,
+              fontFamily: "monospace",
+              fontWeight: 700,
+              color: radialControl.activeDirection === "right" ? "rgba(100, 200, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+              textShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
+              pointerEvents: "none",
+            }}
+          >
+            D
+          </div>
         </div>
       )}
 
