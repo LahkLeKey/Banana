@@ -335,6 +335,7 @@ static void terrain_draw(void)
     terrain_mat.use_texture = 1.0f;
     terrain_mat.uv_scale = 8.0f;
     float world_origin = (float)(BANANA_TERRAIN_SIZE - 1) * 0.5f;
+    float chunk_center_offset = ((float)BANANA_TERRAIN_CHUNK_SIZE * 0.5f) - 0.5f;
 
     for (int cz = 0; cz < BANANA_TERRAIN_CHUNK_ROWS; cz++)
     {
@@ -346,9 +347,9 @@ static void terrain_draw(void)
                 continue;
 
             float pos[3] = {
-                (float)(cx * BANANA_TERRAIN_CHUNK_SIZE) - world_origin,
+                (float)(cx * BANANA_TERRAIN_CHUNK_SIZE) - world_origin + chunk_center_offset,
                 -1.45f,
-                (float)(cz * BANANA_TERRAIN_CHUNK_SIZE) - world_origin,
+                (float)(cz * BANANA_TERRAIN_CHUNK_SIZE) - world_origin + chunk_center_offset,
             };
             renderer_draw_mesh(s_renderer, mesh, pos, identity, unit, &terrain_mat);
         }

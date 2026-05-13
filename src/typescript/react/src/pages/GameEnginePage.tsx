@@ -113,6 +113,43 @@ export function GameEnginePage() {
   });
   const [interactionMessage, setInteractionMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    const env = (import.meta as { env?: Record<string, unknown> }).env;
+    const isDev = Boolean(env?.DEV);
+    if (!isDev) return;
+
+    let lastFingerprint: string | null = null;
+    const pollForWasmChanges = async () => {
+      try {
+        const response = await fetch(`/wasm/engine.js?dev-watch=${Date.now()}`, {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const text = await response.text();
+        const fingerprint = `${text.length}:${text.slice(0, 512)}`;
+        if (lastFingerprint === null) {
+          lastFingerprint = fingerprint;
+          return;
+        }
+
+        if (fingerprint !== lastFingerprint) {
+          window.location.reload();
+        }
+      } catch {
+        /* best-effort dev polling; ignore transient fetch errors */
+      }
+    };
+
+    const watcher = window.setInterval(() => {
+      void pollForWasmChanges();
+    }, 3000);
+
+    return () => {
+      window.clearInterval(watcher);
+    };
+  }, []);
+
   /* C/WASM engine handles all asset rendering */
 
   const runContextAction = (actionId: string) => {
