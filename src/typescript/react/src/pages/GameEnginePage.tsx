@@ -6,13 +6,13 @@ type BananaEngineModule = {
   cwrap: (name: string, returnType: string, argTypes: string[]) => (...args: unknown[]) => unknown;
 };
 
-const ENGINE_ASSET_VERSION = (() => {
+function resolveFallbackEngineVersion(): string {
   const env = (import.meta as { env?: Record<string, string | undefined> }).env;
   const configured = env?.VITE_ENGINE_ASSET_VERSION;
   if (configured) return configured;
   if (env?.DEV) return `dev-${Date.now()}`;
-  return "20260512-01";
-})();
+  return "unknown";
+}
 
 declare global {
   interface Window {
@@ -116,6 +116,7 @@ export function GameEnginePage() {
     normalizedY: 0,
   });
   const [interactionMessage, setInteractionMessage] = useState<string | null>(null);
+  const [engineAssetVersion, setEngineAssetVersion] = useState<string>("pending");
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -154,26 +155,26 @@ export function GameEnginePage() {
   }, []);
 
   useEffect(() => {
-    const env = (import.meta as { env?: Record<string, unknown> }).env;
-    const isDev = Boolean(env?.DEV);
-    if (!isDev) return;
+    if (window.location.hostname === "app.example") return;
 
-    let lastFingerprint: string | null = null;
+    let lastVersion: string | null = null;
     const pollForWasmChanges = async () => {
       try {
-        const response = await fetch(`/wasm/engine.js?dev-watch=${Date.now()}`, {
+        const response = await fetch(`/wasm/engine.version.json?dev-watch=${Date.now()}`, {
           cache: "no-store",
         });
         if (!response.ok) return;
 
-        const text = await response.text();
-        const fingerprint = `${text.length}:${text.slice(0, 512)}`;
-        if (lastFingerprint === null) {
-          lastFingerprint = fingerprint;
+        const payload = (await response.json()) as { engineAssetVersion?: string };
+        const currentVersion = payload.engineAssetVersion;
+        if (!currentVersion) return;
+
+        if (lastVersion === null) {
+          lastVersion = currentVersion;
           return;
         }
 
-        if (fingerprint !== lastFingerprint) {
+        if (currentVersion !== lastVersion) {
           window.location.reload();
         }
       } catch {
@@ -187,6 +188,42 @@ export function GameEnginePage() {
 
     return () => {
       window.clearInterval(watcher);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (window.location.hostname === "app.example") {
+      setEngineAssetVersion(resolveFallbackEngineVersion());
+      return;
+    }
+
+    let canceled = false;
+
+    const loadEngineVersion = async () => {
+      try {
+        const response = await fetch(`/wasm/engine.version.json?meta=${Date.now()}`, {
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          if (!canceled) setEngineAssetVersion(resolveFallbackEngineVersion());
+          return;
+        }
+        const payload = (await response.json()) as { engineAssetVersion?: string };
+        if (!canceled && payload.engineAssetVersion) {
+          setEngineAssetVersion(payload.engineAssetVersion);
+        } else if (!canceled) {
+          setEngineAssetVersion(resolveFallbackEngineVersion());
+        }
+      } catch {
+        if (!canceled) {
+          setEngineAssetVersion(resolveFallbackEngineVersion());
+        }
+      }
+    };
+
+    void loadEngineVersion();
+    return () => {
+      canceled = true;
     };
   }, []);
 
@@ -218,6 +255,8 @@ export function GameEnginePage() {
   };
 
   useEffect(() => {
+    if (engineAssetVersion === "pending") return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -233,7 +272,7 @@ export function GameEnginePage() {
       try {
         const mod = await window.BananaEngine({
           canvas,
-          locateFile: (path, prefix) => `${prefix}${path}?v=${ENGINE_ASSET_VERSION}`,
+          locateFile: (path, prefix) => `${prefix}${path}?v=${engineAssetVersion}`,
         });
         moduleRef.current = mod;
         window.__bananaEngineModule = mod;
@@ -298,7 +337,7 @@ export function GameEnginePage() {
     } else {
       /* Dynamically load engine.js built by scripts/build-engine-wasm.sh */
       const script = document.createElement("script");
-      script.src = `/wasm/engine.js?v=${ENGINE_ASSET_VERSION}`;
+      script.src = `/wasm/engine.js?v=${engineAssetVersion}`;
       scriptRef.current = script;
 
       script.onerror = () => {
@@ -339,7 +378,7 @@ export function GameEnginePage() {
       moduleRef.current = null;
       /* Module shutdown is handled internally by Emscripten on unload */
     };
-  }, []);
+  }, [engineAssetVersion]);
 
   const showSplash = status === "idle" || status === "loading";
 
@@ -619,7 +658,7 @@ export function GameEnginePage() {
           letterSpacing: "0.05em",
         }}
       >
-        Engine v{ENGINE_ASSET_VERSION}
+        Engine v{engineAssetVersion}
       </div>
     </div>
   );
