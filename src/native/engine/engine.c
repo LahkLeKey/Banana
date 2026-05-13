@@ -416,16 +416,17 @@ static void follow_player_camera(void)
     if (!player || !player->active)
         return;
 
+    /* Tight ARPG framing: reduce FOV and bring the camera closer so terrain fills the viewport. */
     Camera camera =
-        camera_create(55.f, (float)s_viewport_width / (float)s_viewport_height, 0.1f, 1000.f);
-    camera_look_at(&camera, player->position[0] + 10.f, player->position[1] + 15.f,
-                   player->position[2] + 10.f, player->position[0], player->position[1] - 0.5f,
+        camera_create(44.f, (float)s_viewport_width / (float)s_viewport_height, 0.1f, 1000.f);
+    camera_look_at(&camera, player->position[0] + 7.0f, player->position[1] + 10.5f,
+                   player->position[2] + 7.0f, player->position[0], player->position[1] - 0.35f,
                    player->position[2]);
-    s_camera_eye[0] = player->position[0] + 10.f;
-    s_camera_eye[1] = player->position[1] + 15.f;
-    s_camera_eye[2] = player->position[2] + 10.f;
+    s_camera_eye[0] = player->position[0] + 7.0f;
+    s_camera_eye[1] = player->position[1] + 10.5f;
+    s_camera_eye[2] = player->position[2] + 7.0f;
     s_camera_target[0] = player->position[0];
-    s_camera_target[1] = player->position[1] - 0.5f;
+    s_camera_target[1] = player->position[1] - 0.35f;
     s_camera_target[2] = player->position[2];
     s_camera_valid = 1;
     renderer_set_camera(s_renderer, &camera);
