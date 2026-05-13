@@ -114,6 +114,33 @@ export function GameEnginePage() {
   const [interactionMessage, setInteractionMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    const viewport = viewportRef.current;
+    if (!canvas || !viewport) return;
+
+    const syncCanvasCssSize = () => {
+      const bounds = viewport.getBoundingClientRect();
+      const cssWidth = Math.max(1, Math.floor(bounds.width));
+      const cssHeight = Math.max(1, Math.floor(bounds.height));
+      canvas.style.width = `${cssWidth}px`;
+      canvas.style.height = `${cssHeight}px`;
+    };
+
+    syncCanvasCssSize();
+
+    const observer = new ResizeObserver(() => {
+      syncCanvasCssSize();
+    });
+    observer.observe(viewport);
+
+    window.addEventListener("resize", syncCanvasCssSize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncCanvasCssSize);
+    };
+  }, []);
+
+  useEffect(() => {
     const env = (import.meta as { env?: Record<string, unknown> }).env;
     const isDev = Boolean(env?.DEV);
     if (!isDev) return;
@@ -312,10 +339,10 @@ export function GameEnginePage() {
         }
       }}
       style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        minHeight: "100dvh",
+        position: "fixed",
+        inset: 0,
+        width: "100vw",
+        height: "100dvh",
         margin: 0,
         padding: 0,
         overflow: "hidden",
