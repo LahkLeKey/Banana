@@ -1,3 +1,4 @@
 # Banana
 
-<img width="587" height="578" alt="image" src="https://github.com/user-attachments/assets/c617ca20-f4f0-40cf-af52-b0e10d3b05ab" />
+<img width="2427" height="1251" alt="image" src="https://github.com/user-attachments/assets/43603a14-7da9-4d46-819f-5531a4193991" />
+
