@@ -20,6 +20,7 @@ ROOT="$SCRIPT_DIR/.."
 ENGINE_DIR="$ROOT/src/native/engine"
 OUT_DIR="$ROOT/out/wasm"
 REACT_PUBLIC="$ROOT/src/typescript/react/public/wasm"
+ARTIFACTS_DIR="$ROOT/artifacts/wasm"
 
 # ── Flags ────────────────────────────────────────────────────────────────────
 OPT="-O0 -g"
@@ -113,6 +114,13 @@ cp "$OUT_DIR/engine.js"   "$REACT_PUBLIC/engine.js"
 cp "$OUT_DIR/engine.wasm" "$REACT_PUBLIC/engine.wasm"
 cp "$OUT_DIR/engine.version.json" "$REACT_PUBLIC/engine.version.json"
 
+# ── Copy to canonical artifact directory for CI / reproducible app builds ───
+mkdir -p "$ARTIFACTS_DIR"
+cp "$OUT_DIR/engine.js"   "$ARTIFACTS_DIR/banana-wasm-engine.js"
+cp "$OUT_DIR/engine.wasm" "$ARTIFACTS_DIR/banana-wasm-engine.wasm"
+cp "$OUT_DIR/engine.version.json" "$ARTIFACTS_DIR/banana-wasm-engine.version.json"
+
 echo "[build-engine-wasm] Copied to $REACT_PUBLIC"
+echo "[build-engine-wasm] Copied to $ARTIFACTS_DIR"
 echo "[build-engine-wasm] Engine asset version: $ENGINE_VERSION"
 echo "[build-engine-wasm] Done. Start React dev server and open /game-engine"
