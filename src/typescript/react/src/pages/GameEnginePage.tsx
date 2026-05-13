@@ -155,6 +155,9 @@ export function GameEnginePage() {
   }, []);
 
   useEffect(() => {
+    const env = (import.meta as { env?: Record<string, unknown> }).env;
+    const isDev = Boolean(env?.DEV);
+    if (!isDev) return;
     if (window.location.hostname === "app.example") return;
 
     let lastVersion: string | null = null;
