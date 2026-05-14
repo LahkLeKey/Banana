@@ -2,7 +2,12 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { computeContextMenuPosition, computeMoveAxes, isMovementKey } from "../GameEnginePage";
+import {
+  computeContextMenuPosition,
+  computeMoveAxes,
+  getDirectionFromTouch,
+  isMovementKey,
+} from "../GameEnginePage";
 
 describe("GameEnginePage controller input mapping", () => {
   test("recognizes WASD and Arrow keys as movement keys", () => {
@@ -49,5 +54,16 @@ describe("GameEnginePage controller input mapping", () => {
     expect(resizedViewport.y).toBeLessThanOrEqual(500 - 140 - 8);
     expect(resizedViewport.x).toBeGreaterThanOrEqual(8);
     expect(resizedViewport.y).toBeGreaterThanOrEqual(8);
+  });
+
+  test("maps touch drags to cardinal WASD directions", () => {
+    expect(getDirectionFromTouch(100, 20, 100, 100)).toBe("up");
+    expect(getDirectionFromTouch(100, 180, 100, 100)).toBe("down");
+    expect(getDirectionFromTouch(30, 100, 100, 100)).toBe("left");
+    expect(getDirectionFromTouch(180, 100, 100, 100)).toBe("right");
+  });
+
+  test("keeps small drifts inside the radial dead zone", () => {
+    expect(getDirectionFromTouch(120, 100, 100, 100)).toBeNull();
   });
 });

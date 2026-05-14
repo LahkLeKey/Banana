@@ -220,6 +220,33 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: ${{ runner.os }}-turbo-
 
+  wasm-engine:
+    name: Build / wasm engine assets
+    needs: turbo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build wasm binaries in Docker
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" -w /workspace emscripten/emsdk:3.1.57 \
+            bash -lc "bash scripts/build-engine-wasm.sh --release"
+      - uses: oven-sh/setup-bun@v2
+      - name: Install React dependencies
+        run: cd src/typescript/react && bun install
+      - name: Validate production API base URL secret
+        env:
+          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
+        run: |
+          if [[ -z "${VITE_BANANA_API_BASE_URL:-}" || "${VITE_BANANA_API_BASE_URL}" == "https://api.example.com" ]]; then
+            echo "::error::Missing or invalid VITE_BANANA_API_BASE_URL secret. Set a real production API URL before running this workflow."
+            exit 1
+          fi
+      - name: Verify React app builds with fresh wasm artifacts
+        env:
+          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
+          BANANA_REQUIRE_WASM_ASSETS: "true"
+        run: cd src/typescript/react && bun run build
+
   # --- Stage 3: native test matrix (parallel after lint) ---
   native-abi:
     name: Native / ABI check
@@ -475,14 +502,22 @@ jobs:
 
   web-vitals:
     name: Runtime / web vitals budget
-    needs: turbo
+    needs: wasm-engine
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
+      - name: Validate production API base URL secret
+        env:
+          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
+        run: |
+          if [[ -z "${VITE_BANANA_API_BASE_URL:-}" || "${VITE_BANANA_API_BASE_URL}" == "https://api.example.com" ]]; then
+            echo "::error::Missing or invalid VITE_BANANA_API_BASE_URL secret. Set a real production API URL before running this workflow."
+            exit 1
+          fi
       - run: cd src/typescript/react && bun install && bun run build
         env:
-          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL || 'https://api.example.com' }}
+          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
       - name: Lab vitals check (Lighthouse CI)
         run: bunx lhci autorun --config=.lighthouserc.json || echo "Lighthouse CI not configured yet - stub"
 
@@ -498,6 +533,7 @@ jobs:
       - migration-discipline
       - analytics-scan
       - turbo
+      - wasm-engine
       - native-abi
       - native-cross-platform
       - native-sanitizers
@@ -527,6 +563,7 @@ jobs:
             echo "| Lint / migration discipline | ${{ needs.migration-discipline.result }} |"
             echo "| Lint / analytics surface scan | ${{ needs.analytics-scan.result }} |"
             echo "| Build / turbo | ${{ needs.turbo.result }} |"
+            echo "| Build / wasm engine assets | ${{ needs.wasm-engine.result }} |"
             echo "| Native / ABI check | ${{ needs.native-abi.result }} |"
             echo "| Native / cross-platform | ${{ needs.native-cross-platform.result }} |"
             echo "| Native / sanitizers | ${{ needs.native-sanitizers.result }} |"

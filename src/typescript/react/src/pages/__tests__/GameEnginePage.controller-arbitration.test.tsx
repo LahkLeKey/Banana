@@ -9,12 +9,16 @@ describe("GameEnginePage controller arbitration", () => {
   let originalBananaEngine: unknown;
   let originalSetInterval: typeof window.setInterval;
   let originalClearInterval: typeof window.clearInterval;
+  let originalSetTimeout: typeof window.setTimeout;
+  let originalClearTimeout: typeof window.clearTimeout;
   let fpsTick: (() => void) | null;
+  let touchHoldTimer: (() => void) | null;
   const ccallCalls: Array<unknown[]> = [];
 
   beforeEach(() => {
     ccallCalls.length = 0;
     fpsTick = null;
+    touchHoldTimer = null;
 
     originalBananaEngine = (window as any).BananaEngine;
     (window as any).BananaEngine = async () => ({
@@ -27,6 +31,8 @@ describe("GameEnginePage controller arbitration", () => {
 
     originalSetInterval = window.setInterval;
     originalClearInterval = window.clearInterval;
+    originalSetTimeout = window.setTimeout;
+    originalClearTimeout = window.clearTimeout;
     window.setInterval = ((cb: TimerHandler) => {
       fpsTick = cb as () => void;
       return 1;
@@ -34,6 +40,13 @@ describe("GameEnginePage controller arbitration", () => {
     window.clearInterval = (() => {
       return undefined;
     }) as typeof window.clearInterval;
+    window.setTimeout = ((cb: TimerHandler) => {
+      touchHoldTimer = cb as () => void;
+      return 2;
+    }) as typeof window.setTimeout;
+    window.clearTimeout = (() => {
+      return undefined;
+    }) as typeof window.clearTimeout;
   });
 
   afterEach(() => {
@@ -41,15 +54,20 @@ describe("GameEnginePage controller arbitration", () => {
     (window as any).BananaEngine = originalBananaEngine;
     window.setInterval = originalSetInterval;
     window.clearInterval = originalClearInterval;
+    window.setTimeout = originalSetTimeout;
+    window.clearTimeout = originalClearTimeout;
   });
 
   async function renderReadyPage() {
-    let view: ReturnType<typeof render>;
+    let view: ReturnType<typeof render> | undefined;
     await act(async () => {
       view = render(<GameEnginePage />);
       await Promise.resolve();
     });
-    return view!;
+    if (!view) {
+      throw new Error("GameEnginePage did not render");
+    }
+    return view;
   }
 
   function expectLatestMoveInput(moveX: number, moveZ: number) {
@@ -145,5 +163,51 @@ describe("GameEnginePage controller arbitration", () => {
 
     expect(screen.queryByText("Actions")).toBeNull();
     expectLatestMoveInput(1, 0);
+  });
+
+  test("mobile hold reveals the radial and maps touch direction to movement", async () => {
+    const { container } = await renderReadyPage();
+    const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+
+    await act(async () => {
+      fireEvent.pointerDown(canvas, {
+        pointerId: 7,
+        pointerType: "touch",
+        clientX: 200,
+        clientY: 200,
+      });
+    });
+
+    expect(screen.queryByTestId("mobile-radial-control")).toBeNull();
+
+    await act(async () => {
+      touchHoldTimer?.();
+    });
+
+    expect(screen.getByTestId("mobile-radial-control")).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.pointerMove(canvas, {
+        pointerId: 7,
+        pointerType: "touch",
+        clientX: 260,
+        clientY: 200,
+      });
+      fpsTick?.();
+    });
+
+    expect(screen.getByTestId("mobile-radial-right").textContent).toBe("D");
+
+    await act(async () => {
+      fireEvent.pointerUp(canvas, {
+        pointerId: 7,
+        pointerType: "touch",
+        clientX: 260,
+        clientY: 200,
+      });
+      fpsTick?.();
+    });
+
+    expect(screen.queryByTestId("mobile-radial-control")).toBeNull();
   });
 });

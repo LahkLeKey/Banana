@@ -1,4 +1,13 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -44,6 +53,18 @@ function main() {
     // Strip "banana-wasm-" prefix: banana-wasm-engine.js → engine.js
     const destFile = file.replace(/^banana-wasm-/, "");
     copyFileSync(join(wasmSourceDir, file), join(wasmPublicDir, destFile));
+  }
+
+  // Guarantee version metadata exists for runtime cache-busting/display in all build paths.
+  const versionPath = join(wasmPublicDir, "engine.version.json");
+  if (!existsSync(versionPath)) {
+    const wasmPath = join(wasmPublicDir, "engine.wasm");
+    if (existsSync(wasmPath)) {
+      const wasmBytes = readFileSync(wasmPath);
+      const hash = createHash("sha256").update(wasmBytes).digest("hex").slice(0, 12);
+      const payload = { engineAssetVersion: `artifact-${hash}` };
+      writeFileSync(versionPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+    }
   }
 
   console.log(
