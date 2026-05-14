@@ -615,11 +615,6 @@ export function GameEnginePage() {
   return (
     <div
       ref={viewportRef}
-      onMouseDown={() => {
-        if (contextMenu.visible) {
-          setContextMenu((prev) => ({ ...prev, visible: false }));
-        }
-      }}
       style={{
         position: "fixed",
         inset: 0,
@@ -713,7 +708,6 @@ export function GameEnginePage() {
       {/* Primary WASM viewport — 100% coverage, responsive sizing handled by C engine */}
       <canvas
         ref={canvasRef}
-        id="canvas"
         onContextMenu={(event) => {
           event.preventDefault();
           const bounds = viewportRef.current?.getBoundingClientRect();
@@ -773,8 +767,7 @@ export function GameEnginePage() {
           left: "50%",
           transform: "translateX(-50%)",
           padding: "10px 14px",
-          background:
-            "linear-gradient(180deg, rgba(17,17,24,0.82) 0%, rgba(9,9,12,0.72) 100%)",
+          background: "linear-gradient(180deg, rgba(17,17,24,0.82) 0%, rgba(9,9,12,0.72) 100%)",
           border: "1px solid rgba(255, 210, 102, 0.35)",
           borderRadius: 8,
           color: "rgba(255, 255, 255, 0.95)",
@@ -789,12 +782,31 @@ export function GameEnginePage() {
           boxShadow: "0 8px 24px rgba(0,0,0,0.38)",
         }}
       >
-        {"ARPG Controls\nWASD / Arrow Keys: Move\nMobile: Hold to show radial\nRight Click: Action menu"}
+        {
+          "ARPG Controls\nWASD / Arrow Keys: Move\nMobile: Hold to show radial\nRight Click: Action menu"
+        }
       </div>
 
       {contextMenu.visible && (
+        <button
+          type="button"
+          aria-label="Close action menu"
+          onMouseDown={() => setContextMenu((prev) => ({ ...prev, visible: false }))}
+          style={{
+            position: "absolute",
+            inset: 0,
+            border: "none",
+            padding: 0,
+            margin: 0,
+            background: "transparent",
+            zIndex: 1100,
+            cursor: "default",
+          }}
+        />
+      )}
+
+      {contextMenu.visible && (
         <div
-          onMouseDown={(event) => event.stopPropagation()}
           style={{
             position: "absolute",
             top: contextMenu.y,
@@ -865,11 +877,14 @@ export function GameEnginePage() {
           }}
         >
           <svg
+            aria-label="Mobile movement radial"
+            role="img"
             width={RADIAL_RADIUS * 2}
             height={RADIAL_RADIUS * 2}
             viewBox={`0 0 ${RADIAL_RADIUS * 2} ${RADIAL_RADIUS * 2}`}
             style={{ position: "absolute" }}
           >
+            <title>Mobile movement radial</title>
             {/* Outer circle background */}
             <circle
               cx={RADIAL_RADIUS}
@@ -894,7 +909,11 @@ export function GameEnginePage() {
             {/* Up (W) */}
             <path
               d={`M ${RADIAL_RADIUS} ${RADIAL_INNER_RADIUS} L ${RADIAL_RADIUS + 12} ${RADIAL_INNER_RADIUS + 15} L ${RADIAL_RADIUS} ${RADIAL_RADIUS - 5} L ${RADIAL_RADIUS - 12} ${RADIAL_INNER_RADIUS + 15} Z`}
-              fill={radialControl.activeDirection === "up" ? "rgba(100, 200, 255, 0.8)" : "rgba(255, 255, 255, 0.2)"}
+              fill={
+                radialControl.activeDirection === "up"
+                  ? "rgba(100, 200, 255, 0.8)"
+                  : "rgba(255, 255, 255, 0.2)"
+              }
               stroke="rgba(255, 255, 255, 0.3)"
               strokeWidth="0.5"
             />
@@ -902,7 +921,11 @@ export function GameEnginePage() {
             {/* Down (S) */}
             <path
               d={`M ${RADIAL_RADIUS} ${RADIAL_RADIUS + RADIAL_INNER_RADIUS + 5} L ${RADIAL_RADIUS + 12} ${RADIAL_RADIUS - RADIAL_INNER_RADIUS - 15} L ${RADIAL_RADIUS} ${RADIAL_RADIUS + 5} L ${RADIAL_RADIUS - 12} ${RADIAL_RADIUS - RADIAL_INNER_RADIUS - 15} Z`}
-              fill={radialControl.activeDirection === "down" ? "rgba(100, 200, 255, 0.8)" : "rgba(255, 255, 255, 0.2)"}
+              fill={
+                radialControl.activeDirection === "down"
+                  ? "rgba(100, 200, 255, 0.8)"
+                  : "rgba(255, 255, 255, 0.2)"
+              }
               stroke="rgba(255, 255, 255, 0.3)"
               strokeWidth="0.5"
             />
@@ -910,7 +933,11 @@ export function GameEnginePage() {
             {/* Left (A) */}
             <path
               d={`M ${RADIAL_INNER_RADIUS} ${RADIAL_RADIUS} L ${RADIAL_INNER_RADIUS + 15} ${RADIAL_RADIUS - 12} L ${RADIAL_RADIUS - 5} ${RADIAL_RADIUS} L ${RADIAL_INNER_RADIUS + 15} ${RADIAL_RADIUS + 12} Z`}
-              fill={radialControl.activeDirection === "left" ? "rgba(100, 200, 255, 0.8)" : "rgba(255, 255, 255, 0.2)"}
+              fill={
+                radialControl.activeDirection === "left"
+                  ? "rgba(100, 200, 255, 0.8)"
+                  : "rgba(255, 255, 255, 0.2)"
+              }
               stroke="rgba(255, 255, 255, 0.3)"
               strokeWidth="0.5"
             />
@@ -918,18 +945,17 @@ export function GameEnginePage() {
             {/* Right (D) */}
             <path
               d={`M ${RADIAL_RADIUS + RADIAL_INNER_RADIUS + 5} ${RADIAL_RADIUS} L ${RADIAL_RADIUS - RADIAL_INNER_RADIUS - 15} ${RADIAL_RADIUS - 12} L ${RADIAL_RADIUS + 5} ${RADIAL_RADIUS} L ${RADIAL_RADIUS - RADIAL_INNER_RADIUS - 15} ${RADIAL_RADIUS + 12} Z`}
-              fill={radialControl.activeDirection === "right" ? "rgba(100, 200, 255, 0.8)" : "rgba(255, 255, 255, 0.2)"}
+              fill={
+                radialControl.activeDirection === "right"
+                  ? "rgba(100, 200, 255, 0.8)"
+                  : "rgba(255, 255, 255, 0.2)"
+              }
               stroke="rgba(255, 255, 255, 0.3)"
               strokeWidth="0.5"
             />
 
             {/* Center touch indicator */}
-            <circle
-              cx={RADIAL_RADIUS}
-              cy={RADIAL_RADIUS}
-              r="4"
-              fill="rgba(255, 255, 255, 0.3)"
-            />
+            <circle cx={RADIAL_RADIUS} cy={RADIAL_RADIUS} r="4" fill="rgba(255, 255, 255, 0.3)" />
           </svg>
 
           {/* Labels */}
@@ -943,7 +969,10 @@ export function GameEnginePage() {
               fontSize: 11,
               fontFamily: "monospace",
               fontWeight: 700,
-              color: radialControl.activeDirection === "up" ? "rgba(100, 200, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+              color:
+                radialControl.activeDirection === "up"
+                  ? "rgba(100, 200, 255, 1)"
+                  : "rgba(255, 255, 255, 0.4)",
               textShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
               pointerEvents: "none",
             }}
@@ -960,7 +989,10 @@ export function GameEnginePage() {
               fontSize: 11,
               fontFamily: "monospace",
               fontWeight: 700,
-              color: radialControl.activeDirection === "down" ? "rgba(100, 200, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+              color:
+                radialControl.activeDirection === "down"
+                  ? "rgba(100, 200, 255, 1)"
+                  : "rgba(255, 255, 255, 0.4)",
               textShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
               pointerEvents: "none",
             }}
@@ -977,7 +1009,10 @@ export function GameEnginePage() {
               fontSize: 11,
               fontFamily: "monospace",
               fontWeight: 700,
-              color: radialControl.activeDirection === "left" ? "rgba(100, 200, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+              color:
+                radialControl.activeDirection === "left"
+                  ? "rgba(100, 200, 255, 1)"
+                  : "rgba(255, 255, 255, 0.4)",
               textShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
               pointerEvents: "none",
             }}
@@ -994,7 +1029,10 @@ export function GameEnginePage() {
               fontSize: 11,
               fontFamily: "monospace",
               fontWeight: 700,
-              color: radialControl.activeDirection === "right" ? "rgba(100, 200, 255, 1)" : "rgba(255, 255, 255, 0.4)",
+              color:
+                radialControl.activeDirection === "right"
+                  ? "rgba(100, 200, 255, 1)"
+                  : "rgba(255, 255, 255, 0.4)",
               textShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
               pointerEvents: "none",
             }}

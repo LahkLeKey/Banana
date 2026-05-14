@@ -59,12 +59,15 @@ describe("GameEnginePage controller arbitration", () => {
   });
 
   async function renderReadyPage() {
-    let view: ReturnType<typeof render>;
+    let view: ReturnType<typeof render> | undefined;
     await act(async () => {
       view = render(<GameEnginePage />);
       await Promise.resolve();
     });
-    return view!;
+    if (!view) {
+      throw new Error("GameEnginePage did not render");
+    }
+    return view;
   }
 
   function expectLatestMoveInput(moveX: number, moveZ: number) {

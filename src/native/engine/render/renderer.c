@@ -9,8 +9,8 @@
 /* ── GL platform detection ───────────────────────────────────────────────── */
 #ifdef __EMSCRIPTEN__
 #define BANANA_ENGINE_HAS_GL 1
-#include <emscripten.h>
 #include <GLES3/gl3.h>
+#include <emscripten.h>
 
 static const char *DEFAULT_VERT = "#version 300 es\n"
                                   "in vec3 a_pos;\n"
@@ -150,6 +150,7 @@ static unsigned int renderer_create_fallback_tile_texture(void)
 #endif
 
 #ifdef __EMSCRIPTEN__
+/* clang-format off */
 EM_JS(void, renderer_load_default_tile_texture_async, (unsigned int texture_id), {
     if (typeof Module === "undefined") {
         return;
@@ -179,6 +180,7 @@ EM_JS(void, renderer_load_default_tile_texture_async, (unsigned int texture_id),
     };
     image.src = "/splash.png";
 });
+/* clang-format on */
 #endif
 
 #ifdef BANANA_ENGINE_HAS_GL
