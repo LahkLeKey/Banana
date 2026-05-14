@@ -40,7 +40,6 @@ static float s_camera_target[3] = {0.f, 0.f, 0.f};
 static int s_camera_valid = 0;
 static float s_move_input_x = 0.f;
 static float s_move_input_z = 0.f;
-static EntityId s_selected_actor_id = 0;
 static void _mat4_force_link(void);
 
 /* ── Active controller table ─────────────────────────────────────────────── */
@@ -203,72 +202,6 @@ static void vec3_cross(const float *a, const float *b, float *out)
 }
 
 static float terrain_sample_height(float x, float z);
-
-static void reset_non_player_actor_scales(void)
-{
-    if (!s_world)
-        return;
-
-    for (int i = 0; i < s_world->entity_count; i++)
-    {
-        Entity *e = s_world->entities[i];
-        if (!e || !e->active || e->id == s_player_id)
-            continue;
-
-        e->scale[0] = 1.0f;
-        e->scale[1] = 1.0f;
-        e->scale[2] = 1.0f;
-    }
-}
-
-static int highlight_nearest_actor_to_player(void)
-{
-    if (!s_world || !s_player_id)
-        return 0;
-
-    Entity *player = world_get_entity(s_world, s_player_id);
-    if (!player || !player->active)
-        return 0;
-
-    Entity *best = NULL;
-    float best_dist_sq = 0.0f;
-    const float max_interaction_radius = 6.0f;
-    const float max_interaction_radius_sq = max_interaction_radius * max_interaction_radius;
-
-    for (int i = 0; i < s_world->entity_count; i++)
-    {
-        Entity *e = s_world->entities[i];
-        if (!e || !e->active || e->id == s_player_id)
-            continue;
-
-        float dx = e->position[0] - player->position[0];
-        float dz = e->position[2] - player->position[2];
-        float dist_sq = dx * dx + dz * dz;
-        if (dist_sq > max_interaction_radius_sq)
-            continue;
-
-        if (!best || dist_sq < best_dist_sq)
-        {
-            best = e;
-            best_dist_sq = dist_sq;
-        }
-    }
-
-    reset_non_player_actor_scales();
-
-    if (!best)
-    {
-        s_selected_actor_id = 0;
-        return 0;
-    }
-
-    s_selected_actor_id = best->id;
-    best->scale[0] = 1.35f;
-    best->scale[1] = 1.10f;
-    best->scale[2] = 1.25f;
-    best->position[1] = terrain_sample_height(best->position[0], best->position[2]) + 0.85f;
-    return 1;
-}
 
 static int compute_camera_ground_basis(float *forward, float *right)
 {
@@ -869,18 +802,18 @@ int engine_get_has_move_target(void)
 
 int engine_handle_right_click(float canvas_x, float canvas_y)
 {
-    /* Coordinates are currently advisory; target selection is proximity-based in this slice. */
+    /* Mouse interaction remains intentionally inert in the native runtime contract. */
     (void)canvas_x;
     (void)canvas_y;
-    return highlight_nearest_actor_to_player();
+    return 0;
 }
 
 int engine_handle_right_click_normalized(float screen_x, float screen_y)
 {
-    /* Normalized coordinates are reserved for future ray-picking precision. */
+    /* Normalized mouse interaction remains intentionally inert in the runtime contract. */
     (void)screen_x;
     (void)screen_y;
-    return highlight_nearest_actor_to_player();
+    return 0;
 }
 
 void engine_set_move_input(float input_x, float input_z)
