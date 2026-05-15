@@ -250,7 +250,7 @@ export function GameEnginePage() {
       window.removeEventListener("resize", syncCanvasCssSize);
       window.visualViewport?.removeEventListener("resize", syncCanvasCssSize);
     };
-  }, []);
+  }, [resolveViewportSize]);
 
   useEffect(() => {
     const env = (import.meta as { env?: Record<string, unknown> }).env;
@@ -850,7 +850,6 @@ export function GameEnginePage() {
       {/* Primary WASM viewport — 100% coverage, responsive sizing handled by C engine */}
       <canvas
         ref={canvasRef}
-        id="canvas"
         onContextMenu={(event) => {
           event.preventDefault();
           const bounds = viewportRef.current?.getBoundingClientRect();
