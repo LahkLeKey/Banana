@@ -185,41 +185,43 @@ export function GameEnginePage() {
   const [interactionMessage, setInteractionMessage] = useState<string | null>(null);
   const [engineAssetVersion, setEngineAssetVersion] = useState<string>("pending");
 
-  const resolveViewportSize = () => {
-    const viewport = viewportRef.current;
-    const bounds = viewport?.getBoundingClientRect();
-    const visualViewport = window.visualViewport;
-
-    // On some mobile browsers during chrome/url-bar transitions, fixed containers
-    // can briefly report 0x0. Fall back to visualViewport/window dimensions.
-    const cssWidth = Math.max(
-      1,
-      Math.floor(
-        (bounds && bounds.width > 1 ? bounds.width : 0) ||
-          visualViewport?.width ||
-          window.innerWidth ||
-          document.documentElement.clientWidth ||
-          1
-      )
-    );
-    const cssHeight = Math.max(
-      1,
-      Math.floor(
-        (bounds && bounds.height > 1 ? bounds.height : 0) ||
-          visualViewport?.height ||
-          window.innerHeight ||
-          document.documentElement.clientHeight ||
-          1
-      )
-    );
-
-    return { cssWidth, cssHeight };
-  };
-
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const viewport = viewportRef.current;
     if (!canvas || !viewport) return;
+
+    // Native WASM window path resolves the target by #canvas.
+    canvas.id = "canvas";
+
+    const resolveViewportSize = () => {
+      const bounds = viewport.getBoundingClientRect();
+      const visualViewport = window.visualViewport;
+
+      // On some mobile browsers during chrome/url-bar transitions, fixed containers
+      // can briefly report 0x0. Fall back to visualViewport/window dimensions.
+      const cssWidth = Math.max(
+        1,
+        Math.floor(
+          (bounds.width > 1 ? bounds.width : 0) ||
+            visualViewport?.width ||
+            window.innerWidth ||
+            document.documentElement.clientWidth ||
+            1
+        )
+      );
+      const cssHeight = Math.max(
+        1,
+        Math.floor(
+          (bounds.height > 1 ? bounds.height : 0) ||
+            visualViewport?.height ||
+            window.innerHeight ||
+            document.documentElement.clientHeight ||
+            1
+        )
+      );
+
+      return { cssWidth, cssHeight };
+    };
 
     const syncCanvasCssSize = () => {
       const { cssWidth, cssHeight } = resolveViewportSize();
@@ -250,7 +252,7 @@ export function GameEnginePage() {
       window.removeEventListener("resize", syncCanvasCssSize);
       window.visualViewport?.removeEventListener("resize", syncCanvasCssSize);
     };
-  }, [resolveViewportSize]);
+  }, []);
 
   useEffect(() => {
     const env = (import.meta as { env?: Record<string, unknown> }).env;
@@ -850,6 +852,11 @@ export function GameEnginePage() {
       {/* Primary WASM viewport — 100% coverage, responsive sizing handled by C engine */}
       <canvas
         ref={canvasRef}
+        onMouseDown={() => {
+          if (contextMenu.visible) {
+            setContextMenu((prev) => ({ ...prev, visible: false }));
+          }
+        }}
         onContextMenu={(event) => {
           event.preventDefault();
           const bounds = viewportRef.current?.getBoundingClientRect();
