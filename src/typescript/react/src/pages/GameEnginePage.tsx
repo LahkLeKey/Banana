@@ -14,11 +14,23 @@ function resolveFallbackEngineVersion(): string {
   return "unknown";
 }
 
+function isWebGL2Available(): boolean {
+  try {
+    const probeCanvas = document.createElement("canvas");
+    const context = probeCanvas.getContext("webgl2");
+    return context !== null;
+  } catch {
+    return false;
+  }
+}
+
 declare global {
   interface Window {
     BananaEngine?: (config: {
       canvas: HTMLCanvasElement;
       locateFile?: (path: string, prefix: string) => string;
+      printErr?: (text: string) => void;
+      onAbort?: (reason: string) => void;
     }) => Promise<BananaEngineModule>;
     __bananaEngineModule?: BananaEngineModule;
   }
@@ -151,6 +163,7 @@ export function GameEnginePage() {
   const pointerUpHandlerRef = useRef<((event: PointerEvent) => void) | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const touchStartTimerRef = useRef<number>(0);
+  const renderHealthTimerRef = useRef<number>(0);
   const activeTouchIdRef = useRef<number | null>(null);
   const radialKeysRef = useRef<Set<string>>(new Set());
 
@@ -172,15 +185,44 @@ export function GameEnginePage() {
   const [interactionMessage, setInteractionMessage] = useState<string | null>(null);
   const [engineAssetVersion, setEngineAssetVersion] = useState<string>("pending");
 
+  const resolveViewportSize = () => {
+    const viewport = viewportRef.current;
+    const bounds = viewport?.getBoundingClientRect();
+    const visualViewport = window.visualViewport;
+
+    // On some mobile browsers during chrome/url-bar transitions, fixed containers
+    // can briefly report 0x0. Fall back to visualViewport/window dimensions.
+    const cssWidth = Math.max(
+      1,
+      Math.floor(
+        (bounds && bounds.width > 1 ? bounds.width : 0) ||
+          visualViewport?.width ||
+          window.innerWidth ||
+          document.documentElement.clientWidth ||
+          1
+      )
+    );
+    const cssHeight = Math.max(
+      1,
+      Math.floor(
+        (bounds && bounds.height > 1 ? bounds.height : 0) ||
+          visualViewport?.height ||
+          window.innerHeight ||
+          document.documentElement.clientHeight ||
+          1
+      )
+    );
+
+    return { cssWidth, cssHeight };
+  };
+
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const viewport = viewportRef.current;
     if (!canvas || !viewport) return;
 
     const syncCanvasCssSize = () => {
-      const bounds = viewport.getBoundingClientRect();
-      const cssWidth = Math.max(1, Math.floor(bounds.width));
-      const cssHeight = Math.max(1, Math.floor(bounds.height));
+      const { cssWidth, cssHeight } = resolveViewportSize();
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       const pixelWidth = Math.max(1, Math.floor(cssWidth * dpr));
       const pixelHeight = Math.max(1, Math.floor(cssHeight * dpr));
@@ -202,9 +244,11 @@ export function GameEnginePage() {
     observer.observe(viewport);
 
     window.addEventListener("resize", syncCanvasCssSize);
+    window.visualViewport?.addEventListener("resize", syncCanvasCssSize);
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", syncCanvasCssSize);
+      window.visualViewport?.removeEventListener("resize", syncCanvasCssSize);
     };
   }, []);
 
@@ -317,6 +361,15 @@ export function GameEnginePage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const hasPreloadedEngineFactory = typeof window.BananaEngine === "function";
+    if (!hasPreloadedEngineFactory && !isWebGL2Available()) {
+      setStatus("unavailable");
+      setError(
+        "This browser/device cannot create a WebGL2 context. Open on a WebGL2-capable browser/device or enable hardware acceleration."
+      );
+      return;
+    }
+
     setStatus("loading");
 
     const startEngine = async () => {
@@ -326,11 +379,41 @@ export function GameEnginePage() {
         return;
       }
 
+      let runtimeInitFailed = false;
+      const applyRuntimeFatal = (rawMessage: string) => {
+        const message = (rawMessage || "").toLowerCase();
+        if (!message) return;
+        const isFatalInit =
+          message.includes("webgl2 context creation failed") ||
+          message.includes("window_create failed") ||
+          message.includes("engine_init failed") ||
+          message.includes("abort");
+        if (!isFatalInit) return;
+        runtimeInitFailed = true;
+        window.clearInterval(intervalRef.current);
+        window.clearTimeout(renderHealthTimerRef.current);
+        setStatus("unavailable");
+        setError(
+          "WebGL viewport initialization failed on this runtime. Open on a WebGL2-capable browser/device or enable hardware acceleration, then reload."
+        );
+      };
+
       try {
         const mod = await window.BananaEngine({
           canvas,
           locateFile: (path, prefix) => `${prefix}${path}?v=${engineAssetVersion}`,
+          printErr: (text) => {
+            applyRuntimeFatal(text);
+          },
+          onAbort: (reason) => {
+            applyRuntimeFatal(reason);
+          },
         });
+
+        if (runtimeInitFailed) {
+          return;
+        }
+
         moduleRef.current = mod;
         window.__bananaEngineModule = mod;
 
@@ -521,13 +604,69 @@ export function GameEnginePage() {
         window.addEventListener("pointercancel", onPointerUp, { passive: true });
         setStatus("running");
 
+        let tickCounter = 0;
+        let consecutiveBlankFrameProbes = 0;
+        const probeFramebuffer = () => {
+          try {
+            const gl = canvas.getContext("webgl2");
+            if (!gl) {
+              applyRuntimeFatal("webgl2 context creation failed");
+              return;
+            }
+            const width = Math.max(1, canvas.width);
+            const height = Math.max(1, canvas.height);
+            const sampleAt = (x: number, y: number) => {
+              const pixel = new Uint8Array(4);
+              gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+              return pixel;
+            };
+            const samples = [
+              sampleAt(Math.floor(width / 2), Math.floor(height / 2)),
+              sampleAt(Math.floor(width / 4), Math.floor(height / 4)),
+              sampleAt(Math.max(0, width - 2), Math.max(0, height - 2)),
+            ];
+            const hasAnyRenderedPixel = samples.some(
+              (pixel) => pixel[0] !== 0 || pixel[1] !== 0 || pixel[2] !== 0 || pixel[3] !== 0
+            );
+            if (hasAnyRenderedPixel) {
+              consecutiveBlankFrameProbes = 0;
+              return;
+            }
+            consecutiveBlankFrameProbes += 1;
+            if (consecutiveBlankFrameProbes >= 2) {
+              applyRuntimeFatal("engine_init failed");
+            }
+          } catch {
+            applyRuntimeFatal("engine_init failed");
+          }
+        };
+
         const fpsLoop = () => {
-          const combinedKeys = new Set([...activeKeysRef.current, ...radialKeysRef.current]);
-          const { moveX, moveZ } = computeMoveAxes(combinedKeys);
-          mod.ccall("engine_set_move_input", "null", ["number", "number"], [moveX, moveZ]);
-          mod.ccall("engine_tick", "number", ["number"], [1 / 60]);
+          try {
+            const combinedKeys = new Set([...activeKeysRef.current, ...radialKeysRef.current]);
+            const { moveX, moveZ } = computeMoveAxes(combinedKeys);
+            mod.ccall("engine_set_move_input", "null", ["number", "number"], [moveX, moveZ]);
+            mod.ccall("engine_tick", "number", ["number"], [1 / 60]);
+            tickCounter += 1;
+            if (tickCounter % 60 === 0) {
+              probeFramebuffer();
+            }
+          } catch {
+            setStatus("error");
+            setError(
+              "Engine runtime failed while rendering. Reload the page or run on a browser/device with working WebGL2."
+            );
+            window.clearInterval(intervalRef.current);
+          }
         };
         intervalRef.current = window.setInterval(fpsLoop, 16);
+
+        // Some runtimes return a canvas but never produce frames. Perform an
+        // initial probe shortly after startup, then rely on periodic probes in the tick loop.
+        renderHealthTimerRef.current = window.setTimeout(() => {
+          if (runtimeInitFailed) return;
+          probeFramebuffer();
+        }, 1200);
       } catch (e) {
         setStatus("error");
         setError(e instanceof Error ? e.message : "Engine initialization failed");
@@ -559,6 +698,7 @@ export function GameEnginePage() {
     return () => {
       window.clearInterval(intervalRef.current);
       window.clearTimeout(touchStartTimerRef.current);
+      window.clearTimeout(renderHealthTimerRef.current);
       if (keyDownHandlerRef.current) {
         window.removeEventListener("keydown", keyDownHandlerRef.current, { capture: true });
         keyDownHandlerRef.current = null;
@@ -619,11 +759,13 @@ export function GameEnginePage() {
         position: "fixed",
         inset: 0,
         width: "100vw",
-        height: "100dvh",
+        height: "100vh",
+        minHeight: "100dvh",
         margin: 0,
         padding: 0,
         overflow: "hidden",
         backgroundColor: "#000",
+        touchAction: "none",
       }}
     >
       {/* Splash loading overlay — visible while WASM engine initializes */}
@@ -708,6 +850,7 @@ export function GameEnginePage() {
       {/* Primary WASM viewport — 100% coverage, responsive sizing handled by C engine */}
       <canvas
         ref={canvasRef}
+        id="canvas"
         onContextMenu={(event) => {
           event.preventDefault();
           const bounds = viewportRef.current?.getBoundingClientRect();
@@ -736,9 +879,62 @@ export function GameEnginePage() {
           width: "100%",
           height: "100%",
           imageRendering: "pixelated",
+          touchAction: "none",
         }}
       />
       {/* Error HUD overlay (future: menu/status integration point) */}
+      {(status === "error" || status === "unavailable") && error && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            background:
+              "radial-gradient(circle at 50% 35%, rgba(48,22,22,0.95) 0%, rgba(12,8,8,0.98) 75%)",
+            zIndex: 1500,
+          }}
+        >
+          <div
+            style={{
+              width: "min(92vw, 560px)",
+              border: "1px solid rgba(248, 113, 113, 0.4)",
+              borderRadius: 10,
+              backgroundColor: "rgba(17, 12, 12, 0.86)",
+              boxShadow: "0 18px 36px rgba(0, 0, 0, 0.5)",
+              padding: "18px 16px",
+              color: "rgba(254, 226, 226, 1)",
+              fontFamily: "monospace",
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+              Viewport unavailable
+            </div>
+            <div style={{ fontSize: 13, lineHeight: 1.45, opacity: 0.95, marginBottom: 12 }}>
+              {error}
+            </div>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              style={{
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                borderRadius: 6,
+                background: "rgba(255, 255, 255, 0.08)",
+                color: "rgba(255, 255, 255, 0.95)",
+                padding: "8px 10px",
+                fontFamily: "monospace",
+                fontSize: 12,
+                cursor: "pointer",
+              }}
+            >
+              Reload viewport
+            </button>
+          </div>
+        </div>
+      )}
+
       {(status === "error" || status === "unavailable") && error && (
         <div
           style={{
