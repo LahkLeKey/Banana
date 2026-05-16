@@ -48,8 +48,8 @@ static BananaAnticheatSession *find_session(const char *session_id, int create)
         uint32_t idx = (start + offset) % BANANA_ANTICHEAT_MAX_SESSIONS;
         BananaAnticheatSession *slot = &s_sessions[idx];
 
-        if (slot->in_use && strncmp(slot->session_id, session_id,
-                                    BANANA_ANTICHEAT_SESSION_ID_MAX - 1) == 0)
+        if (slot->in_use &&
+            strncmp(slot->session_id, session_id, BANANA_ANTICHEAT_SESSION_ID_MAX - 1) == 0)
             return slot;
 
         if (!slot->in_use)
@@ -92,14 +92,11 @@ int banana_core_anticheat_reset_session(const char *session_id)
 }
 
 int banana_core_anticheat_submit_usermode_heartbeat(const char *session_id,
-                                                     uint32_t heartbeat_sequence,
-                                                     uint32_t simulation_tick,
-                                                     int debugger_present,
-                                                     int code_integrity_violations,
-                                                     int memory_map_anomalies,
-                                                     int timing_anomalies,
-                                                     int *out_score,
-                                                     int *out_flagged)
+                                                    uint32_t heartbeat_sequence,
+                                                    uint32_t simulation_tick, int debugger_present,
+                                                    int code_integrity_violations,
+                                                    int memory_map_anomalies, int timing_anomalies,
+                                                    int *out_score, int *out_flagged)
 {
     BananaAnticheatSession *session = NULL;
     int delta = 0;
@@ -142,10 +139,10 @@ int banana_core_anticheat_submit_usermode_heartbeat(const char *session_id,
     if (simulation_tick > session->last_simulation_tick)
         session->last_simulation_tick = simulation_tick;
 
-    session->rolling_integrity_hash = anticheat_mix_u32(session->rolling_integrity_hash,
-                                                        heartbeat_sequence);
-    session->rolling_integrity_hash = anticheat_mix_u32(session->rolling_integrity_hash,
-                                                        simulation_tick);
+    session->rolling_integrity_hash =
+        anticheat_mix_u32(session->rolling_integrity_hash, heartbeat_sequence);
+    session->rolling_integrity_hash =
+        anticheat_mix_u32(session->rolling_integrity_hash, simulation_tick);
     session->rolling_integrity_hash = anticheat_mix_u32(
         session->rolling_integrity_hash,
         (uint32_t)((debugger_present ? 1u : 0u) + (uint32_t)code_integrity_violations * 5u +
@@ -156,13 +153,9 @@ int banana_core_anticheat_submit_usermode_heartbeat(const char *session_id,
     return BANANA_OK;
 }
 
-int banana_core_anticheat_submit_driver_telemetry(const char *session_id,
-                                                  uint32_t heartbeat_sequence,
-                                                  int suspicious_ring12_driver_count,
-                                                  int unsigned_driver_count,
-                                                  int hidden_module_count,
-                                                  int *out_score,
-                                                  int *out_flagged)
+int banana_core_anticheat_submit_driver_telemetry(
+    const char *session_id, uint32_t heartbeat_sequence, int suspicious_ring12_driver_count,
+    int unsigned_driver_count, int hidden_module_count, int *out_score, int *out_flagged)
 {
     BananaAnticheatSession *session = NULL;
     int delta = 0;
@@ -170,8 +163,7 @@ int banana_core_anticheat_submit_driver_telemetry(const char *session_id,
     if (!session_id || !session_id[0] || !out_score || !out_flagged)
         return BANANA_INVALID_ARGUMENT;
 
-    if (suspicious_ring12_driver_count < 0 || unsigned_driver_count < 0 ||
-        hidden_module_count < 0)
+    if (suspicious_ring12_driver_count < 0 || unsigned_driver_count < 0 || hidden_module_count < 0)
         return BANANA_INVALID_ARGUMENT;
 
     session = find_session(session_id, 1);
@@ -199,22 +191,20 @@ int banana_core_anticheat_submit_driver_telemetry(const char *session_id,
     if (heartbeat_sequence > session->last_driver_heartbeat)
         session->last_driver_heartbeat = heartbeat_sequence;
 
-    session->rolling_integrity_hash = anticheat_mix_u32(session->rolling_integrity_hash,
-                                                        heartbeat_sequence);
-    session->rolling_integrity_hash = anticheat_mix_u32(
-        session->rolling_integrity_hash,
-        (uint32_t)(suspicious_ring12_driver_count * 13 + unsigned_driver_count * 17 +
-                   hidden_module_count * 19));
+    session->rolling_integrity_hash =
+        anticheat_mix_u32(session->rolling_integrity_hash, heartbeat_sequence);
+    session->rolling_integrity_hash =
+        anticheat_mix_u32(session->rolling_integrity_hash,
+                          (uint32_t)(suspicious_ring12_driver_count * 13 +
+                                     unsigned_driver_count * 17 + hidden_module_count * 19));
 
     *out_score = session->score;
     *out_flagged = compute_flagged(session);
     return BANANA_OK;
 }
 
-int banana_core_anticheat_get_session_status(const char *session_id,
-                                             int *out_score,
-                                             int *out_flagged,
-                                             uint32_t *out_integrity_hash)
+int banana_core_anticheat_get_session_status(const char *session_id, int *out_score,
+                                             int *out_flagged, uint32_t *out_integrity_hash)
 {
     BananaAnticheatSession *session = NULL;
 

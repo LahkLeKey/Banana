@@ -30,7 +30,11 @@ def collect_api_files(api_root: Path) -> list[str]:
             continue
         if "node_modules" in relative_parts:
             continue
-        if len(relative_parts) > 1 and relative_parts[0] == "src" and relative_parts[1] == "generated":
+        if (
+            len(relative_parts) > 1
+            and relative_parts[0] == "src"
+            and relative_parts[1] == "generated"
+        ):
             continue
         files.append(candidate.relative_to(api_root).as_posix())
     return files

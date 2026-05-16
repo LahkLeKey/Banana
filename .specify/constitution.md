@@ -9,7 +9,7 @@ Sync Impact Report
 -->
 # Banana Project Constitution
 
-**Version**: 1.1.0 | **Date**: 2026-05-15 | **Status**: Active  
+**Version**: 1.1.0 | **Date**: 2026-05-15 | **Status**: Active
 **Custodians**: Architecture Council | **Review Cycle**: Quarterly + per baseline reset
 
 ---
@@ -592,9 +592,9 @@ Escalate architectural decisions to the architecture team if:
 
 ## Approval
 
-**Constitution Approved By**: Architecture Team  
-**Date**: 2026-05-15  
-**Next Review**: 2026-08-15  
+**Constitution Approved By**: Architecture Team
+**Date**: 2026-05-15
+**Next Review**: 2026-08-15
 **Version Control**: `.specify/constitution.md` (tracked in git)
 
 ---

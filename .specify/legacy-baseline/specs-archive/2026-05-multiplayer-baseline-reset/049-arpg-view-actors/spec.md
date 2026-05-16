@@ -24,17 +24,17 @@
   - Follows **Single Responsibility Principle**: manages only input state and aggregation
   - Exports pure functions, no framework dependencies
   - Value Object: `MovementInput` (immutable, comparable)
-  
+
 - ✅ `InteractionDomain` — InteractionManager entity for context menu state and action execution
   - Follows **Open/Closed Principle**: extensible action handlers without core modification
   - Follows **Interface Segregation**: ActionHandler function signature, separate outcomes
   - Value Object: `InteractionOutcome` (immutable, serializable)
-  
+
 - ✅ `ViewportDomain` — ViewportSizer entity for responsive sizing with mobile fallback chain
   - Follows **Dependency Inversion**: accepts element as dependency, returns pure calculations
   - Mobile-robust: visualViewport → window → documentElement fallback chain
   - Value Object: `ViewportSize` (CSS and device pixel space)
-  
+
 - ✅ `GameEngineUIService` — Application Service orchestrating all three domains
   - **State Machine**: idle → loading → running → error/unavailable
   - Publishes state changes to listeners (Observer pattern)
@@ -72,7 +72,7 @@
   - `ViewportDomain` — Responsive sizing and frame rate adaptation ✅
   - `GameEngineUIService` — Application service orchestrating all domains ✅
   - **Result**: All 11 domain tests passing; state machine ready for GameEnginePage integration
-  
+
 - ✅ **(COMPLETED Phase 2)** Integrate GameEngineUIService into GameEnginePage
   - Refactor event handlers to use InputAggregator
   - Refactor context menu logic to use InteractionManager
@@ -84,7 +84,7 @@
   - `ReplicationDomain` scaffolded with world state and delta application contracts
   - `PredictionDomain` and `ConnectionManager` introduced as framework-agnostic domain services
   - Shared domain tests expanded and passing in `@banana/ui`
-  
+
 - Re-scaffold the base playable scene so the player and terrain are visually centered in a stable ARPG-style follow-camera view.
 - Define deterministic camera behavior for keyboard movement so player traversal feels anchored and legible across viewport sizes.
 - Complete the custom context menu as an interaction surface for nearby world actors.
