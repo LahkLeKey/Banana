@@ -54,7 +54,10 @@ describe("GameEnginePage context menu behavior", () => {
         script.onload?.(new Event("load"));
       });
     }
-    return view!;
+    if (!view) {
+      throw new Error("Expected GameEnginePage to render a viewport element.");
+    }
+    return view;
   }
 
   test("opens on right-click and closes on outside mouse down", async () => {

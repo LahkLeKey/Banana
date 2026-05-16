@@ -3,8 +3,6 @@ import {
   type ContextMenuAction,
   type ContextMenuState,
   ControlsHint,
-  computeContextMenuPosition,
-  computeMoveAxes,
   type EngineStatus,
   EngineVersionBadge,
   ErrorBadge,
@@ -15,7 +13,6 @@ import {
   isMovementKey,
   MobileRadialControl,
   NetcodeDomain,
-  RADIAL_CONFIG,
   type RadialControlState,
   ReplicationDomain,
   SplashOverlay,
@@ -126,6 +123,7 @@ export function GameEnginePage() {
     if (!canvas || !viewport) return;
 
     // Native WASM window path resolves the target by #canvas.
+    // biome-ignore lint: useUniqueElementIds: Emscripten native code hardcodes #canvas.
     canvas.id = "canvas";
 
     const resolveViewportSize = () => {
@@ -456,7 +454,7 @@ export function GameEnginePage() {
 
         /* Event handlers delegate to GameEngineUIService domains */
         const inputMgr = uiService.getInputAggregator();
-        const viewportMgr = uiService.getViewportSizer();
+        const _viewportMgr = uiService.getViewportSizer();
 
         const keyDown = (event: KeyboardEvent) => {
           const key = event.key.toLowerCase();
@@ -817,6 +815,7 @@ export function GameEnginePage() {
     >
       <SplashOverlay visible={showSplash} />
 
+      {/* biome-ignore lint: useUniqueElementIds */}
       {/* Primary WASM viewport — 100% coverage, responsive sizing handled by C engine */}
       <canvas
         id="canvas"
