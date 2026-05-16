@@ -8,6 +8,7 @@
  */
 
 import type { ContextMenuAction, EngineStatus } from "../components/GameEngineTypes";
+
 import { InputAggregator, type MovementInput } from "./InputDomain";
 import { InteractionManager, type InteractionOutcome } from "./InteractionDomain";
 import { type ViewportSize, ViewportSizer } from "./ViewportDomain";
