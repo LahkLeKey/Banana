@@ -69,14 +69,3 @@ repos:
         exclude: '^(src/typescript/react/public/wasm/|src/typescript/.*/dist/)'
         pass_filenames: true
         additional_dependencies: ['@biomejs/biome@2.0.0']
-
-  # ── .NET format ────────────────────────────────────────────────────────────
-  - repo: local
-    hooks:
-      - id: dotnet-format
-        name: "dotnet format: C# style check"
-        language: system
-        entry: dotnet
-        args: ['format', 'src/c-sharp/asp.net/asp.net.sln', '--verify-no-changes', '--severity', 'warn']
-        pass_filenames: false
-        files: '^src/c-sharp/.*\.cs$'
