@@ -8,18 +8,17 @@ import { defineConfig, loadEnv } from "vite";
 // Spec 138: Sentry source-map upload when SENTRY_AUTH_TOKEN is present.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_");
-
-  if (mode === "production" && !env.VITE_BANANA_API_BASE_URL) {
-    throw new Error(
-      "[Banana] VITE_BANANA_API_BASE_URL is required for production builds. " +
-        "Set it in your Vercel environment variables or .env.production.local."
-    );
-  }
+  const resolvedApiBaseUrl =
+    env.VITE_BANANA_API_BASE_URL?.trim() ||
+    (process.env.VERCEL_ENV === "preview"
+      ? "https://staging-api.banana.engineer"
+      : "https://api.banana.engineer");
 
   const engineAssetVersion = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ?? "local-dev";
 
   return {
     define: {
+      "import.meta.env.VITE_BANANA_API_BASE_URL": JSON.stringify(resolvedApiBaseUrl),
       "import.meta.env.VITE_ENGINE_ASSET_VERSION": JSON.stringify(engineAssetVersion),
     },
     plugins: [
