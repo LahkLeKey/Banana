@@ -1,6 +1,6 @@
 Banana has been deployed!
 
-API (ASP.NET) is running on port {{ .Values.api.port }} inside the cluster.
+API service is running on port {{ .Values.api.port }} inside the cluster.
 TS API (Fastify) is running on port {{ .Values.tsApi.port }} inside the cluster.
 
 To access the API from outside the cluster, run:

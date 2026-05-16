@@ -29,10 +29,6 @@
       "path": "src/native"
     },
     {
-      "name": "(C#) Api",
-      "path": "src/c-sharp/asp.net"
-    },
-    {
       "name": "(TS) Api",
       "path": "src/typescript/api"
     },
@@ -77,7 +73,6 @@
       ".specify/legacy-baseline/**": true
     },
     "[shellscript]": { "files.eol": "\n" },
-    "dotnet.defaultSolution": "src/c-sharp/asp.net/Banana.Api.csproj",
     "powershell.cwd": "(Monorepo) Banana"
   },
   "extensions": {

@@ -67,8 +67,8 @@ fi
 case "$profile" in
   runtime)
     compose_profiles=("runtime")
-    default_service="api"
-    default_services=("api")
+    default_service="api-fastify"
+    default_services=("api-fastify")
     ;;
   apps)
     compose_profiles=("apps")
@@ -107,8 +107,8 @@ case "$profile" in
     ;;
   all)
     compose_profiles=("all")
-    default_service="api"
-    default_services=("api")
+    default_service="api-fastify"
+    default_services=("api-fastify")
     ;;
   *)
     echo "[banana] unsupported profile '$profile'" >&2
