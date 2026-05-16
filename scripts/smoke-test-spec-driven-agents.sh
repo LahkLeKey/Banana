@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 AGENTS=(
   api-pipeline-agent
-  csharp-api-agent
+    api-interop-agent
   react-ui-agent
   electron-agent
   workflow-agent

@@ -63,7 +63,7 @@ export function buildMissingRouteFindings(repoRoot) {
         mismatchType: 'missing_route',
         aspnet: null,
         fastify: {declared_in: fastifyRoute.declared_in},
-        remediation: 'Add matching ASP.NET route or document approved temporary exception.',
+        remediation: 'Add matching legacy compatibility route mapping or document approved temporary exception.',
       }));
     }
   }

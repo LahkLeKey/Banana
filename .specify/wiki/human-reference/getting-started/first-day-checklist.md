@@ -24,24 +24,21 @@ Read these pages in order:
 
 Open these folders/files in this exact order:
 
-1. `src/c-sharp/asp.net/Controllers/BananaController.cs`
-2. `src/c-sharp/asp.net/Services/BananaService.cs`
-3. `src/c-sharp/asp.net/Pipeline/Steps/`
-4. `src/c-sharp/asp.net/DataAccess/`
-5. `src/c-sharp/asp.net/NativeInterop/`
-6. `src/native/wrapper/`
-7. `src/native/core/domain/`
-8. `src/native/core/dal/domain/`
+1. `src/typescript/api/src/routes/`
+2. `src/typescript/api/src/domains/`
+3. `src/typescript/api/src/lib/anti-cheat-interop.ts`
+4. `src/native/wrapper/`
+5. `src/native/core/domain/`
+6. `src/native/core/dal/domain/`
 
 Goal: see how one /banana request moves through the app.
 
 ## Step 3: Run The Project
 
 1. Build native with VS Code task `Build Native Library` or `scripts/build-native.bat`.
-2. Build API with VS Code task `Build Banana API`.
+2. Build API with `bun run --cwd src/typescript/api build`.
 3. Run tests:
-        - `dotnet test tests/unit/Banana.UnitTests.csproj -c Release`
-        - `dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release`
+                - `bun test --cwd src/typescript/api`
         - `ctest --test-dir build/native -C Release --output-on-failure`
 4. Start API locally with `scripts/run-api.sh`.
 5. Open Swagger and call:
@@ -58,7 +55,7 @@ Goal: see how one /banana request moves through the app.
 
 - Native load issue: check BANANA_NATIVE_PATH.
 - DB issue in native path: check BANANA_PG_CONNECTION.
-- DB issue in managed path: check `ConnectionStrings:DefaultConnection` and `DbAccess` options.
+- DB issue in API path: check `DATABASE_URL`/Prisma runtime config and `BANANA_PG_CONNECTION` for native flows.
 - Wrong /banana output: inspect pipeline step order and metadata headers.
 - 500 response: check `ErrorHandlingMiddleware` mapping and logs.
 - Mobile launch issue: check WSLg mount, Android SDK + AVD in Ubuntu, and `http://localhost:19006` readiness.
@@ -71,9 +68,8 @@ Goal: see how one /banana request moves through the app.
 
 ## Simple Mental Model
 
-- Controller receives transport input.
-- Service orchestrates route-specific behavior.
-- Pipeline runs ordered steps for `GET /banana`.
-- Wrapper exports are the only native ABI used by managed callers.
+- Route handler receives transport input.
+- Service/domain layer orchestrates route-specific behavior.
+- Wrapper exports are the only native ABI used by API callers.
 - Native core domain handles business behavior.
 - Native DAL handles projection and aggregate persistence concerns.

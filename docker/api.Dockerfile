@@ -1,15 +1,19 @@
-# ASP.NET API (spec 007). BANANA_NATIVE_PATH points at the mounted .so.
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /src
-COPY Directory.Build.props ./
-COPY src/c-sharp/asp.net ./src/c-sharp/asp.net
-RUN dotnet publish src/c-sharp/asp.net/Banana.Api.csproj -c Release -o /app
+# TypeScript API runtime image with native FFI path contract.
+FROM oven/bun:1.3
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
 RUN apt-get update && apt-get install -y libpq5 curl && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-COPY --from=build /app .
-ENV ASPNETCORE_URLS=http://+:8080
+
+WORKDIR /workspace
+COPY src/typescript/api/package.json ./src/typescript/api/
+COPY src/typescript/api/bun.lock ./src/typescript/api/
+COPY src/typescript/api/prisma.config.ts ./src/typescript/api/
+RUN cd src/typescript/api && bun install --frozen-lockfile --production || bun install --no-frozen-lockfile --production
+COPY src/typescript/api ./src/typescript/api
+
+ENV NODE_ENV=production
+ENV PORT=8080
 ENV BANANA_NATIVE_PATH=/native
+
+WORKDIR /workspace/src/typescript/api
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "Banana.Api.dll"]
+CMD ["bun", "run", "src/index.ts"]

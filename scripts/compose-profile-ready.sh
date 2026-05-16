@@ -56,7 +56,7 @@ fi
 
 case "$profile" in
   runtime)
-    target_service="${service:-api}"
+    target_service="${service:-api-fastify}"
     health_url="${BANANA_RUNTIME_HEALTH_URL:-http://localhost:8080/health}"
     ;;
   apps)
@@ -96,7 +96,7 @@ case "$profile" in
     health_url="${BANANA_FASTIFY_HEALTH_URL:-http://localhost:8081/health}"
     ;;
   all)
-    target_service="${service:-api}"
+    target_service="${service:-api-fastify}"
     health_url="${BANANA_RUNTIME_HEALTH_URL:-http://localhost:8080/health}"
     ;;
   *)

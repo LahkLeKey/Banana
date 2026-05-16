@@ -1,6 +1,7 @@
 # Implementation Plan: [FEATURE]
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Jurisdiction**: [federal | domain | package] | **Agent of Record**: [agent/team]
 **Input**: Feature specification from `.specify/specs/[###-feature-name]/spec.md`
 
 **Note**: This template is filled in by the `specify plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
@@ -8,6 +9,14 @@
 ## Summary
 
 [Extract from feature spec: primary requirement + technical approach from research]
+
+## Authority Chain
+
+- **Governing Spec**: `.specify/specs/[###-feature-name]/spec.md`
+- **Bounded Context**: [domain governed by this plan]
+- **Executing Authority**: [agent/team implementing the plan]
+- **Superseded Inputs**: [none | prior specs/docs absorbed by this feature]
+- **Archive Action**: [none | archive prior specs from active baseline in same change]
 
 ## Technical Context
 

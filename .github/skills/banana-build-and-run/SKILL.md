@@ -12,7 +12,7 @@ Use this skill to pick the right existing build or runtime entry point instead o
 
 1. Pick the entry point that matches the narrowest helper agent first, then widen only if multiple helpers are involved.
 2. Native-only work should start from the CMake task or existing native coverage script.
-3. ASP.NET work should reuse the `Build Banana API` task and explicit native/runtime env vars when running locally.
+3. TypeScript API work should reuse Bun scripts under `src/typescript/api` and explicit native/runtime env vars when running locally.
 4. React work should use Bun scripts under `src/typescript/react`.
 5. Cross-layer runtime work should prefer the compose scripts and profiles already defined in the repo.
 

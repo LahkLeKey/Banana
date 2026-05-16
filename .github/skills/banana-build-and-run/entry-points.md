@@ -7,10 +7,10 @@
 - Coverage build path: `scripts/run-native-c-tests-with-coverage.sh`
 - Primary helpers: `native-core-agent`, `native-dal-agent`, `native-wrapper-agent`
 
-## ASP.NET
+## TypeScript API
 
-- Workspace task: `Build Banana API`
-- Full build script: `scripts/build-all.sh`
+- Build: `bun run --cwd src/typescript/api build`
+- Test: `bun test --cwd src/typescript/api`
 - Local run helper: `scripts/run-api.sh` when available in the current environment
 - Primary helpers: `api-pipeline-agent`, `api-interop-agent`
 

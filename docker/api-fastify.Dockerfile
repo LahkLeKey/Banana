@@ -7,6 +7,6 @@ COPY src/typescript/api/prisma.config.ts ./src/typescript/api/
 RUN cd src/typescript/api && bun install --frozen-lockfile --production || bun install --no-frozen-lockfile --production
 COPY src/typescript/api ./src/typescript/api
 ENV NODE_ENV=production
-EXPOSE 8081
+EXPOSE 8080
 WORKDIR /workspace/src/typescript/api
 CMD ["bun", "run", "src/index.ts"]

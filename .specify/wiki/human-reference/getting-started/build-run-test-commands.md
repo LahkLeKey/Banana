@@ -11,7 +11,7 @@ This page contains the command snippets used for local development and CI parity
 ## VS Code Tasks
 
 - `Build Native Library`
-- `Build Banana API`
+- `Compose: runtime up + ready`
 - `Start Compose Apps`
 - `Stop Compose Apps`
 
@@ -43,20 +43,22 @@ Option B (manual):
 
 ```bash
 export BANANA_NATIVE_PATH="$(pwd)/build/native/bin/Release"
-dotnet run --project src/c-sharp/asp.net/Banana.Api.csproj
+cd src/typescript/api
+bun run dev
 ```
 
 PowerShell equivalent:
 
 ```powershell
 $env:BANANA_NATIVE_PATH = "$PWD/build/native/bin/Release"
-dotnet run --project src/c-sharp/asp.net/Banana.Api.csproj
+Set-Location src/typescript/api
+bun run dev
 ```
 
-Swagger URLs:
+API URLs:
 
-- `http://localhost:5000/swagger`
-- `https://localhost:5001/swagger`
+- `http://localhost:8080/health`
+- `http://localhost:8080/api/game/session/start`
 
 ## Docker Compose Orchestration
 
@@ -145,14 +147,13 @@ export BANANA_ENV_NATIVE_PATH="$(pwd)/build/native/bin/Release"
 ## Test Commands
 
 ```bash
-dotnet test tests/unit/Banana.UnitTests.csproj -c Release
-dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release
+bun test --cwd src/typescript/api
 ctest --test-dir build/native -C Release --output-on-failure
 ```
 
 ## Coverage Commands
 
-Aggregated managed and native-friendly coverage flow:
+Aggregated API and native-friendly coverage flow:
 
 ```bash
 export BANANA_PG_CONNECTION="host=127.0.0.1 port=5432 user=cinterop password=cinterop dbname=cinterop"

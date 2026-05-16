@@ -25,50 +25,31 @@ services:
       - native-artifacts:/artifacts
     profiles: ["runtime", "tests", "all", "electron", "apps", "api-fastify"]
 
-  api:
+  api-fastify:
     build:
       context: .
-      dockerfile: docker/api.Dockerfile
+      dockerfile: docker/api-fastify.Dockerfile
     depends_on:
       native-build:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080
+      DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
       BANANA_NATIVE_PATH: /native
-      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+      BANANA_ANTICHEAT_ADAPTER: ffi-only
+      PORT: "8080"
     ports:
       - "8080:8080"
     volumes:
       - native-artifacts:/native:ro
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
     profiles: ["runtime", "electron", "apps", "all", "api-fastify"]
-
-  api-fastify:
-    build:
-      context: .
-      dockerfile: docker/api-fastify.Dockerfile
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
-      PORT: "8081"
-    ports:
-      - "8081:8081"
-    profiles: ["api-fastify", "apps", "all"]
 
   test-unit:
     build:
       context: .
       dockerfile: docker/tests.Dockerfile
-    command: ["bash", "-lc", "dotnet test src/c-sharp/asp.net --filter Category=Unit"]
+    command: ["bash", "-lc", "cd src/typescript/api && bun install --frozen-lockfile && bun test"]
     profiles: ["tests"]
 
   test-integration:
@@ -82,10 +63,11 @@ services:
         condition: service_completed_successfully
     environment:
       BANANA_NATIVE_PATH: /native
-      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+      DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
+      BANANA_ANTICHEAT_ADAPTER: ffi-only
     volumes:
       - native-artifacts:/native:ro
-    command: ["bash", "-lc", "dotnet test src/c-sharp/asp.net --filter Category=Integration"]
+    command: ["bash", "-lc", "cd src/typescript/api && bun install --frozen-lockfile && bun test"]
     profiles: ["tests"]
 
   test-all:
@@ -99,7 +81,8 @@ services:
         condition: service_completed_successfully
     environment:
       BANANA_NATIVE_PATH: /native
-      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
+      DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
+      BANANA_ANTICHEAT_ADAPTER: ffi-only
     volumes:
       - native-artifacts:/native:ro
     command: ["bash", "-lc", "bash scripts/run-tests-with-coverage.sh"]

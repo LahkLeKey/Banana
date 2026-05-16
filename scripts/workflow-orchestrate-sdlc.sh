@@ -297,7 +297,7 @@ else
     "change_command": "python scripts/sync-banana-api-coverage-denominator.py",
     "commit_message": "chore(api): sync coverage denominator manifest",
     "pr_title": "triage(api): sync coverage denominator manifest",
-    "pr_body": "Automated SDLC increment: keep Banana.Api coverage denominator manifest aligned with source file inventory.",
+    "pr_body": "Automated SDLC increment: keep TypeScript API coverage denominator manifest aligned with source file inventory.",
     "labels": "automation,sdlc,triaged-item,requires-human-approval,copilot-auto-approve,speckit-driven,coverage-100,agent:workflow-agent"
   }
 ]

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spec 014 — dotnet test + Cobertura coverage merge.
+# Spec 014 — TypeScript API tests + normalized lane output.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -32,31 +32,15 @@ emit_normalized_result() {
   bash scripts/coverage-normalize-lane-result.sh "${normalize_args[@]}"
 }
 
-dotnet test src/c-sharp/asp.net/asp.net.sln \
-  --collect:"XPlat Code Coverage" \
-  --results-directory "$OUT" \
-  -p:CollectCoverage=true -p:CoverletOutputFormat=cobertura
+cd src/typescript/api
+bun install --frozen-lockfile
+bun test
+cd ../../..
 
 if [[ -x scripts/coverage-denominator-policy.sh && -x scripts/coverage-normalize-lane-result.sh ]]; then
-  lane_id="${BANANA_COVERAGE_LANE_ID:-dotnet-unit}"
-  domain="${BANANA_COVERAGE_DOMAIN:-aspnet}"
-  coverage_file="$(find "$OUT" -type f -name 'coverage.cobertura.xml' | head -n 1 || true)"
-
-  measured_percent=""
-  if [[ -n "$coverage_file" ]]; then
-    measured_percent="$(python3 - "$coverage_file" <<'PY'
-import sys
-import xml.etree.ElementTree as ET
-
-tree = ET.parse(sys.argv[1])
-root = tree.getroot()
-line_rate = float(root.attrib.get("line-rate", "0"))
-print(f"{line_rate * 100:.2f}")
-PY
-)"
-  fi
-
-  emit_normalized_result "$lane_id" "$domain" "pass" "$measured_percent" "$OUT"
+  lane_id="${BANANA_COVERAGE_LANE_ID:-typescript-api-unit}"
+  domain="${BANANA_COVERAGE_DOMAIN:-typescript-api}"
+  emit_normalized_result "$lane_id" "$domain" "pass" "" "$OUT"
 
   # Additional unit-domain normalization scaffolding for UI/runtime packages.
   # These statuses are intentionally environment-driven so callers can map
@@ -95,13 +79,6 @@ PY
     "${BANANA_UNIT_SHARED_UI_STATUS:-not-applicable}" \
     "${BANANA_UNIT_SHARED_UI_MEASURED:-}" \
     ".artifacts/shared-ui"
-
-  emit_normalized_result \
-    "dotnet-integration" \
-    "aspnet" \
-    "${BANANA_INTEGRATION_DOTNET_STATUS:-not-applicable}" \
-    "${BANANA_INTEGRATION_DOTNET_MEASURED:-}" \
-    ".artifacts/coverage/integration-report"
 
   emit_normalized_result \
     "typescript-api-integration" \

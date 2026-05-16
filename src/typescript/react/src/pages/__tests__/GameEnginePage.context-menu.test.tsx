@@ -3,7 +3,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 
-import { computeContextMenuPosition, GameEnginePage } from "../GameEnginePage";
+import { computeContextMenuPosition } from "@banana/ui";
+import { GameEnginePage } from "../GameEnginePage";
 
 describe("GameEnginePage context menu geometry", () => {
     test("clamps menu position within viewport bounds", () => {

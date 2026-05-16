@@ -9,7 +9,7 @@ Runbook-only operational procedures for deployment, CI, runtime channels, and in
 
 | Page | Description |
 |------|-------------|
-| [Deployment Runbook](deployment.md) | Deploy React to Vercel and ASP.NET API to Fly.io |
+| [Deployment Runbook](deployment.md) | Deploy React to Vercel and TypeScript API runtime surfaces |
 | [CI and Compose Notes](ci-compose-notes.md) | |
 | [Compose CI Stabilization](ci-compose-stabilization.md) | |
 | [CI Runtime Compatibility](ci-runtime-compatibility.md) | |

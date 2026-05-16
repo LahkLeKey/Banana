@@ -1,4 +1,5 @@
-# Fly.io production image — builds native .so then ASP.NET API in one image.
+# Fly.io production image — builds native .so then TypeScript API in one image.
+
 # Stage 1: build native C library
 FROM ubuntu:24.04 AS native-build
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -12,20 +13,23 @@ RUN cmake -S . -B build/native -DCMAKE_BUILD_TYPE=Release \
  && mkdir -p out/native/bin \
  && cp build/native/libbanana_native.so out/native/bin/
 
-# Stage 2: build ASP.NET API
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS api-build
-WORKDIR /src
-COPY Directory.Build.props ./
-COPY src/c-sharp/asp.net ./src/c-sharp/asp.net
-RUN dotnet publish src/c-sharp/asp.net/Banana.Api.csproj -c Release -o /app
+# Stage 2: install API runtime dependencies
+FROM oven/bun:1.3 AS api-build
+WORKDIR /workspace
+COPY src/typescript/api/package.json ./src/typescript/api/
+COPY src/typescript/api/bun.lock ./src/typescript/api/
+COPY src/typescript/api/prisma.config.ts ./src/typescript/api/
+RUN cd src/typescript/api && bun install --frozen-lockfile --production || bun install --no-frozen-lockfile --production
+COPY src/typescript/api ./src/typescript/api
 
 # Stage 3: runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM oven/bun:1.3
 RUN apt-get update && apt-get install -y libpq5 curl && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-COPY --from=api-build /app .
+WORKDIR /workspace/src/typescript/api
+COPY --from=api-build /workspace/src/typescript/api ./
 COPY --from=native-build /workspace/out/native/bin/libbanana_native.so /native/libbanana_native.so
-ENV ASPNETCORE_URLS=http://+:8080
+ENV NODE_ENV=production
+ENV PORT=8080
 ENV BANANA_NATIVE_PATH=/native
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "Banana.Api.dll"]
+CMD ["bun", "run", "src/index.ts"]

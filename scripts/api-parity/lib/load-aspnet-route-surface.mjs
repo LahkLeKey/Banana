@@ -1,13 +1,33 @@
 #!/usr/bin/env node
 
-import {readdirSync, readFileSync} from 'node:fs';
+import {existsSync, readdirSync, readFileSync} from 'node:fs';
 import path from 'node:path';
 
 import {normalizeRouteKey} from './normalize-route-key.mjs';
 
+function resolveLegacyApiRoot(repoRoot) {
+  const configuredRoot = process.env.BANANA_API_PARITY_LEGACY_ROOT;
+  if (!configuredRoot) {
+    return null;
+  }
+
+  return path.isAbsolute(configuredRoot)
+    ? configuredRoot
+    : path.join(repoRoot, configuredRoot);
+}
+
 function loadControllerRoutes(repoRoot) {
-  const controllersDir = path.join(repoRoot, 'src', 'c-sharp', 'asp.net', 'Controllers');
+  const legacyRoot = resolveLegacyApiRoot(repoRoot);
   const routes = [];
+
+  if (!legacyRoot) {
+    return routes;
+  }
+
+  const controllersDir = path.join(legacyRoot, 'Controllers');
+  if (!existsSync(controllersDir)) {
+    return routes;
+  }
 
   for (const fileName of readdirSync(controllersDir)) {
     if (!fileName.endsWith('.cs')) continue;
@@ -51,7 +71,16 @@ function loadControllerRoutes(repoRoot) {
 }
 
 function loadProgramMapRoutes(repoRoot) {
-  const programPath = path.join(repoRoot, 'src', 'c-sharp', 'asp.net', 'Program.cs');
+  const legacyRoot = resolveLegacyApiRoot(repoRoot);
+  if (!legacyRoot) {
+    return [];
+  }
+
+  const programPath = path.join(legacyRoot, 'Program.cs');
+  if (!existsSync(programPath)) {
+    return [];
+  }
+
   const relativePath = path.relative(repoRoot, programPath).replace(/\\/g, '/');
   const source = readFileSync(programPath, 'utf8');
   const routes = [];

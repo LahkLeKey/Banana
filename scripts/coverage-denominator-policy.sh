@@ -109,7 +109,6 @@ cat > "$snapshot_output" <<EOF
   "rounding_rule": "$rounding_rule",
   "include_roots": [
     "src/native",
-    "src/c-sharp/asp.net",
     "src/typescript"
   ],
   "exclude_globs": [

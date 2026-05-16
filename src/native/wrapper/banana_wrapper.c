@@ -167,6 +167,63 @@ int banana_get_truck_status(const char *truck_id, char **out_json)
     return banana_core_get_truck_status(truck_id, out_json);
 }
 
+/* === Anti-cheat === */
+
+int banana_anticheat_reset_session(const char *session_id)
+{
+    return banana_core_anticheat_reset_session(session_id);
+}
+
+int banana_anticheat_submit_usermode_heartbeat(const char *session_id,
+                                               uint32_t heartbeat_sequence,
+                                               uint32_t simulation_tick,
+                                               int debugger_present,
+                                               int code_integrity_violations,
+                                               int memory_map_anomalies,
+                                               int timing_anomalies,
+                                               int *out_score,
+                                               int *out_flagged)
+{
+    return banana_core_anticheat_submit_usermode_heartbeat(
+        session_id,
+        heartbeat_sequence,
+        simulation_tick,
+        debugger_present,
+        code_integrity_violations,
+        memory_map_anomalies,
+        timing_anomalies,
+        out_score,
+        out_flagged);
+}
+
+int banana_anticheat_submit_driver_telemetry(const char *session_id,
+                                             uint32_t heartbeat_sequence,
+                                             int suspicious_ring12_driver_count,
+                                             int unsigned_driver_count,
+                                             int hidden_module_count,
+                                             int *out_score,
+                                             int *out_flagged)
+{
+    return banana_core_anticheat_submit_driver_telemetry(session_id,
+                                                         heartbeat_sequence,
+                                                         suspicious_ring12_driver_count,
+                                                         unsigned_driver_count,
+                                                         hidden_module_count,
+                                                         out_score,
+                                                         out_flagged);
+}
+
+int banana_anticheat_get_session_status(const char *session_id,
+                                        int *out_score,
+                                        int *out_flagged,
+                                        uint32_t *out_integrity_hash)
+{
+    return banana_core_anticheat_get_session_status(session_id,
+                                                    out_score,
+                                                    out_flagged,
+                                                    out_integrity_hash);
+}
+
 /* === Memory === */
 void banana_free(void *pointer)
 {

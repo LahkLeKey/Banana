@@ -34,8 +34,8 @@ CLEAN_SPEC = """\
 
 ```
 ctest --preset default --output-on-failure
-dotnet test src/c-sharp/asp.net/asp.net.sln --collect:"XPlat Code Coverage"
-bash scripts/check-dotnet-coverage-threshold.sh
+bun test src/typescript/api
+bash scripts/coverage-denominator-policy.sh --snapshot-output .artifacts/coverage/typescript-api/denominator-policy.json
 ```
 """
 
@@ -43,8 +43,8 @@ CLEAN_TASKS = """\
 # Tasks
 
 - [ ] T01 Run `ctest --preset default --output-on-failure`.
-- [ ] T02 Run `dotnet test src/c-sharp/asp.net/asp.net.sln`.
-- [ ] T03 Run `bash scripts/check-dotnet-coverage-threshold.sh`.
+- [ ] T02 Run `bun test src/typescript/api`.
+- [ ] T03 Run `bash scripts/coverage-denominator-policy.sh --snapshot-output .artifacts/coverage/typescript-api/denominator-policy.json`.
 """
 
 
@@ -60,7 +60,7 @@ def test_drift_detected_when_task_missing(tmp_path: Path) -> None:
     d = _write_feature(tmp_path, CLEAN_SPEC, drifted_tasks)
     missing = vstp.check_feature(d)
     assert len(missing) == 1
-    assert "check-dotnet-coverage-threshold.sh" in missing[0].raw
+    assert "coverage-denominator-policy.sh" in missing[0].raw
 
 
 def test_chained_commands_split(tmp_path: Path) -> None:
@@ -95,10 +95,10 @@ def test_flags_stripped_for_matching(tmp_path: Path) -> None:
 ## Validation lane
 
 ```
-dotnet test src/c-sharp/asp.net/asp.net.sln --collect:"XPlat Code Coverage"
+bun test src/typescript/api --preload ./tests/setup.ts
 ```
 """
-    tasks_md = "- [ ] T01 dotnet test src/c-sharp/asp.net/asp.net.sln green\n"
+    tasks_md = "- [ ] T01 bun test src/typescript/api green\n"
     d = _write_feature(tmp_path, spec_md, tasks_md)
     assert vstp.check_feature(d) == []
 
@@ -132,7 +132,16 @@ bash scripts/validate-api-parity-governance.sh --strict
 
 def test_feature_002_has_no_validation_task_drift() -> None:
     feature = REPO_ROOT / ".specify" / "specs" / "002-banana-monorepo-harness"
-    assert feature.exists(), "Expected feature 002 to exist"
+    if not feature.exists():
+        feature = (
+            REPO_ROOT
+            / ".specify"
+            / "legacy-baseline"
+            / "specs-archive"
+            / "2026-05-spec-refresh"
+            / "002-banana-monorepo-harness"
+        )
+    assert feature.exists(), "Expected feature 002 to exist in active or archived specs"
     assert vstp.check_feature(feature) == []
 
 

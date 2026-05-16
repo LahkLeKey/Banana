@@ -76,7 +76,7 @@ function buildInventory(repoRoot) {
   return {
     generated_at_utc: new Date().toISOString(),
     source_pair: {
-      aspnet: 'src/c-sharp/asp.net',
+      aspnet: 'legacy/retired-csharp-surface',
       fastify: 'src/typescript/api/src',
     },
     routes,

@@ -22,9 +22,9 @@ The API receives input, calls a route-specific service path, and returns JSON. T
 
 ## Full Walkthrough For GET /banana
 
-1. Request reaches `BananaController`.
-2. `BananaController` calls `BananaService.Calculate`.
-3. `BananaService` creates `PipelineContext` and calls `PipelineExecutor<PipelineContext>`.
+1. Request reaches the banana route handler.
+2. The route handler calls the banana service.
+3. The service creates a pipeline context and executes the ordered pipeline.
 4. Pipeline steps execute in order:
    - `ValidationStep`
    - `DatabaseAccessStep`
@@ -33,29 +33,29 @@ The API receives input, calls a route-specific service path, and returns JSON. T
    - `AuditStep`
 5. `DatabaseAccessStep` runs the configured DB client through `IDataAccessPipelineClient`.
 6. `NativeCalculationStep` calls `INativeBananaClient`.
-7. `BananaController` writes DB metadata headers:
+7. The route layer writes DB metadata headers:
    - `X-Banana-Db-Contract`
    - `X-Banana-Db-Source`
    - `X-Banana-Db-RowCount`
-8. API returns `BananaResponse`.
+8. API returns a banana response payload.
 
 ```mermaid
 flowchart TD
-  A[GET /banana] --> B[BananaController]
-  B --> C[BananaService]
-  C --> D[PipelineExecutor]
+   A[GET /banana] --> B[Banana Route Handler]
+   B --> C[Banana Service]
+   C --> D[Pipeline Executor]
   D --> E[ValidationStep]
   E --> F[DatabaseAccessStep]
   F --> G[NativeCalculationStep]
   G --> H[PostProcessingStep]
   H --> I[AuditStep]
 
-  F --> J[IDataAccessPipelineClient]
-  J --> K[NativeDalDbDataAccessClient]
-  J --> L[ManagedNpgsqlDataAccessClient]
+   F --> J[Data Access Pipeline Client]
+   J --> K[NativeDalDbDataAccessClient]
+   J --> L[ApiPrismaDataAccessClient]
 
-  G --> M[INativeBananaClient]
-  M --> N[NativeBananaClient]
+   G --> M[Native Adapter]
+   M --> N[Native API Client]
   N --> O[NativeMethods wrapper ABI]
   O --> P[src/native/core/domain]
   O --> Q[src/native/core/dal/domain]
@@ -63,9 +63,9 @@ flowchart TD
 
 ## Batch And Ripeness Paths
 
-`BatchController` and `RipenessController` do not execute `PipelineExecutor` today.
+Batch and ripeness routes do not execute `PipelineExecutor` today.
 
-They call service classes directly:
+They call service modules directly:
 
 - `BatchService` calls native batch lifecycle operations (`CreateBatch`, `GetBatchStatus`).
 - `RipenessService` validates telemetry input and calls `PredictBatchRipeness`.
@@ -74,20 +74,20 @@ They call service classes directly:
 ## Database Modes For GET /banana
 
 - `NativeDal`: uses wrapper DB projection path.
-- `ManagedNpgsql`: uses managed Npgsql query path.
+- `ApiPrisma`: uses API-side Prisma query path.
 
 Both modes share `IDataAccessPipelineClient`, so the rest of the pipeline stays unchanged.
 
 ## Important Rules
 
-- Managed code does not call native internals directly.
+- API route/service code does not call native internals directly.
 - Wrapper owns native memory allocation and free behavior.
 - Core domain and DAL domain are internal native modules.
 - Keep `BANANA_NATIVE_PATH` explicit for local API runs.
 
 ## Where To Debug
 
-- Wrong `/banana` response: start in controller, service, and pipeline steps.
+- Wrong `/banana` response: start in route handler, service, and pipeline steps.
 - Batch or ripeness route issue: start in `BatchService` or `RipenessService`.
 - Native loading issue: check `NativeLibraryResolver` and `BANANA_NATIVE_PATH`.
 - DB issue: confirm `DbAccess:Mode`, `BANANA_PG_CONNECTION`, and connection-string settings.

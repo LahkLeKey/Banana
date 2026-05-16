@@ -413,11 +413,11 @@ DOMAIN_MAP = {
         "testing": "CTest, native unit tests under tests/native/",
     },
     "api": {
-        "keywords": ["api", "fastify", "asp.net", "dotnet", "endpoint", "controller", "route", "middleware", "swagger"],
+        "keywords": ["api", "fastify", "bun", "typescript", "endpoint", "route", "middleware", "swagger", "ffi"],
         "wave": "api",
-        "tech": "TypeScript/Bun or C#/.NET 8",
+        "tech": "TypeScript/Bun",
         "deps": "Fastify, Prisma 7, pg-boss, zod",
-        "testing": "Bun test, dotnet test with coverage",
+        "testing": "Bun test, coverage normalization scripts",
     },
     "frontend": {
         "keywords": ["react", "electron", "vite", "tailwind", "component", "ui", "frontend", "shadcn", "mobile", "expo"],

@@ -21,13 +21,13 @@
             "contributor_name": "Ap API Pipeline Agent"
         },
         {
-            "slug": "csharp-api-agent",
-            "display_name": "CSharp API Agent",
-            "icon": "Cs",
+            "slug": "api-interop-agent",
+            "display_name": "API Interop Agent",
+            "icon": "Ai",
             "github_login": "",
-            "follow_url": "docs/automation/agent-pulse/agents/csharp-api-agent/",
+            "follow_url": "docs/automation/agent-pulse/agents/api-interop-agent/",
             "followable": false,
-            "contributor_name": "Cs CSharp API Agent"
+            "contributor_name": "Ai API Interop Agent"
         },
         {
             "slug": "native-core-agent",

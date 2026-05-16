@@ -11,7 +11,7 @@ int main(void) {
     assert(minor == BANANA_WRAPPER_ABI_VERSION_MINOR);
     /* Enforce minimum known version so CI catches regressions */
     assert(major >= 2);
-    assert(minor >= 4);
+    assert(minor >= 5);
     printf("[native-unit] banana_native_version: %d.%d ok\n", major, minor);
     return 0;
 }

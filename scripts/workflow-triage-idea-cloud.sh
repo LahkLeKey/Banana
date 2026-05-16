@@ -628,7 +628,7 @@ EOF
 
   task2_body=$(cat <<EOF
 <!-- banana-intake-source: ${source_marker} -->
-<!-- banana-target-agent: csharp-api-agent -->
+<!-- banana-target-agent: api-interop-agent -->
 
 ## Parent Story
 
@@ -640,10 +640,10 @@ EOF
 
 ## Task Objective
 
-Wire classification pipeline endpoint so chatbot questions resolve through controller/service/pipeline/native flow.
+Wire classification pipeline endpoint so chatbot questions resolve through route/service/native interop flow.
 EOF
 )
-  task2_meta="$(create_labeled_issue "task(epic-${epic_issue_number}): expose chatbot classification pipeline path" "$task2_body" "automation,${TASK_LABEL},${source_bucket_label},${source_label},agent:csharp-api-agent")"
+  task2_meta="$(create_labeled_issue "task(epic-${epic_issue_number}): expose chatbot classification pipeline path" "$task2_body" "automation,${TASK_LABEL},${source_bucket_label},${source_label},agent:api-interop-agent")"
   task2_number="${task2_meta%%|*}"
   task2_url="${task2_meta#*|}"
 

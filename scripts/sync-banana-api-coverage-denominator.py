@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Synchronize or validate the Banana.Api coverage denominator manifest."""
+"""Synchronize or validate the TypeScript API coverage denominator manifest."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-API_ROOT = ROOT / "src" / "c-sharp" / "asp.net"
+API_ROOT = ROOT / "src" / "typescript" / "api"
 DEFAULT_MANIFEST = API_ROOT / "coverage-denominator.json"
 
 
@@ -22,11 +22,15 @@ def utc_now() -> str:
     )
 
 
-def collect_cs_files(api_root: Path) -> list[str]:
+def collect_api_files(api_root: Path) -> list[str]:
     files: list[str] = []
-    for candidate in sorted(api_root.rglob("*.cs")):
+    for candidate in sorted(api_root.rglob("*.ts")):
         relative_parts = candidate.relative_to(api_root).parts
-        if "obj" in relative_parts or "bin" in relative_parts:
+        if "dist" in relative_parts or "build" in relative_parts:
+            continue
+        if "node_modules" in relative_parts:
+            continue
+        if len(relative_parts) > 1 and relative_parts[0] == "src" and relative_parts[1] == "generated":
             continue
         files.append(candidate.relative_to(api_root).as_posix())
     return files
@@ -35,7 +39,7 @@ def collect_cs_files(api_root: Path) -> list[str]:
 def build_manifest(files: list[str]) -> dict:
     return {
         "schema_version": 1,
-        "project": "Banana.Api",
+        "project": "banana-typescript-api",
         "generated_at_utc": utc_now(),
         "tracked_file_count": len(files),
         "tracked_files": files,
@@ -92,7 +96,7 @@ def main() -> int:
     args = parse_args()
     manifest_path = Path(args.manifest)
 
-    expected_files = collect_cs_files(API_ROOT)
+    expected_files = collect_api_files(API_ROOT)
     if args.check:
         ok, report = check_manifest(manifest_path, expected_files)
         if not args.quiet:

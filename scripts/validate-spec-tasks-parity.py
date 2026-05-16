@@ -140,8 +140,8 @@ def matches_in_tasks(validator: Validator, tasks_text: str) -> bool:
 
     The leader plus at least one signature token must appear together
     on a single task line. Flags (-x, --foo) are ignored for matching
-    so that a task can reference `dotnet test` even if the spec
-    declared `dotnet test --collect:"XPlat Code Coverage"`.
+    so that a task can reference `bun test` even if the spec
+    declared `bun test --coverage`.
 
     Special case: if the validator's discriminator token is a script
     path (contains `/` AND ends with `.sh`/`.py`), the path alone is

@@ -3,6 +3,9 @@
 **Feature Branch**: `[###-feature-name]`
 **Created**: [DATE]
 **Status**: Draft
+**Jurisdiction**: [federal | domain | package]
+**Agent of Record**: [owning agent or team]
+**Supersedes**: [none | ###-prior-spec, ###-prior-spec]
 **Input**: User description: "$ARGUMENTS"
 
 ## In Scope *(mandatory)*
@@ -14,6 +17,18 @@
 
 - [In-scope outcome 1]
 - [In-scope outcome 2]
+
+## Authority and Lineage *(mandatory)*
+
+<!--
+  ACTION REQUIRED: State the bounded context this spec governs, the agent/team
+  that may execute within that jurisdiction, and whether any prior specs are
+  absorbed and must be archived from the active baseline.
+-->
+
+- **Bounded Context**: [domain governed by this spec]
+- **Executing Authority**: [agent or team allowed to implement it]
+- **Supersession Rule**: [none / absorbs ### and archives it from active baseline]
 
 ## Out of Scope *(mandatory)*
 

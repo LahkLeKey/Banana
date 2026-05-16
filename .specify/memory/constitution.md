@@ -68,7 +68,7 @@ Frontend and desktop UX changes must be validated in an interactive in-workspace
 For **web portal work** (React, Electron, any page/component that renders in a browser), the VS Code Simple Browser must be opened at the relevant local or Vercel preview URL **at the start of work**, not only at task closure. The workflow is: open Simple Browser → make changes → hot-reload confirms the change → validate → close task. For Vercel-deployed portals (`banana.engineer`, preview URLs) the browser tab should also be opened to confirm the production or preview deployment renders correctly before marking any deploy-related task done.
 
 ### VII. Cross-API Feature Parity
-When ASP.NET and Fastify expose overlapping capability areas, behavior parity is mandatory. Route availability, status semantics, and response-shape contracts must stay aligned or be explicitly documented as intentional divergence in the active spec before merge.
+When API surfaces expose overlapping capability areas (for example route modules, runtime channels, or compatibility layers), behavior parity is mandatory. Route availability, status semantics, and response-shape contracts must stay aligned or be explicitly documented as intentional divergence in the active spec before merge.
 
 ### VIII. Rate-Limit Resilient Automation
 Workflow gates that depend on GitHub APIs or marketplace action metadata must include a rate-limit resilience path. Required checks must avoid permanent false-negative failure caused solely by transient installation-token exhaustion and must provide deterministic recovery evidence through retries, backoff windows, rerun guidance, or non-blocking fallback classification.
@@ -159,9 +159,9 @@ Implementation inside each Banana bounded context must follow domain-driven deco
 ## Platform Constraints
 
 - Use `BANANA_PG_CONNECTION` whenever PostgreSQL-backed native and integration paths are exercised.
-- Keep `BANANA_NATIVE_PATH` explicit for ASP.NET runtime wiring.
+- Keep `BANANA_NATIVE_PATH` explicit for TypeScript API runtime wiring.
 - Preserve `VITE_BANANA_API_BASE_URL` as the frontend API base URL contract.
-- Preserve feature parity expectations across ASP.NET (`:8080`) and Fastify (`:8081`) for overlapping route contracts used by frontend/runtime channels.
+- Preserve feature parity expectations across TypeScript API runtime channels for overlapping route contracts used by frontend/runtime channels.
 - Preserve Bun as package manager for TypeScript React/Electron/mobile domains.
 - Keep runtime-channel behavior aligned with the Windows + Docker Desktop + Ubuntu WSL2 contract.
 - Treat `banana.engineer` as the production hostname; keep `VITE_BANANA_API_BASE_URL` pointing to the production API and never hardcode localhost in production builds.
@@ -185,7 +185,7 @@ Implementation inside each Banana bounded context must follow domain-driven deco
 ## Workflow and Review
 
 - Scope changes to the owning domain unless a cross-layer contract actually changes.
-- Prefer existing entry points in `scripts/`, workspace tasks, CMake targets, dotnet projects, Bun scripts, and compose profiles.
+- Prefer existing entry points in `scripts/`, workspace tasks, CMake targets, Bun scripts, and compose profiles.
 - Keep automation pull requests on provenance labels including `speckit-driven` and required-check workflows.
 - Run `scripts/validate-ai-contracts.py` whenever AI workflow contracts (prompts, agents, skills, instructions, workflows, wiki mapping) are touched.
 - Run `scripts/workflow-sync-wiki.sh` in the same change when contract surfaces move.
@@ -194,7 +194,7 @@ Implementation inside each Banana bounded context must follow domain-driven deco
 	`MSYS_NO_PATHCONV=1 docker run --rm -v "/c/Github/Banana:/workspace" -w /workspace emscripten/emsdk:3.1.57 bash -lc "bash scripts/build-engine-wasm.sh --release"`
 - When WASM artifacts are rebuilt, commit updated `src/typescript/react/public/wasm/engine.js` and `src/typescript/react/public/wasm/engine.wasm` together so preview/prod consume the same native behavior.
 - React runtime iteration must support hot reload for WASM bundle updates without restarting compose/docker channels; dev workflows should rely on browser refresh or in-page auto-reload watchers after artifact rebuild.
-- When a change touches overlapping ASP.NET and Fastify API capability, include parity validation evidence (or intentional-drift rationale) in the active Spec Kit artifacts before task closure.
+- When a change touches overlapping API capability across runtime channels, include parity validation evidence (or intentional-drift rationale) in the active Spec Kit artifacts before task closure.
 - For checks that call GitHub REST/GraphQL or action metadata APIs, include explicit rate-limit handling and a documented rerun path in the active spec artifacts before task closure.
 - For changes that touch the Vercel deployment manifest (`vercel.json`), the Vite build config, or `VITE_BANANA_API_BASE_URL` wiring, validate a clean `bun run build` and confirm the production environment contract before task closure.
 - When implementing a spec marked `Ready for research` (infrastructure-dependent), confirm live infrastructure prerequisites are available before beginning work. If prerequisites are unavailable, flag the spec as blocked and continue with other ready specs.

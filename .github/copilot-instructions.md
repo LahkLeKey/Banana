@@ -1,15 +1,15 @@
 # Banana Copilot Instructions
 
-- Treat Banana as a multi-language monorepo with four primary domains: native C under `src/native`, ASP.NET under `src/c-sharp/asp.net`, React/Electron/Mobile under `src/typescript`, and delivery/runtime assets under `docker`, `scripts`, and `.github/workflows`.
+- Treat Banana as a multi-language monorepo with three primary domains: native C under `src/native`, TypeScript API/frontend under `src/typescript`, and delivery/runtime assets under `docker`, `scripts`, and `.github/workflows`.
 - Preserve the controller -> service -> pipeline -> native interop flow documented in `docs/developer-onboarding.md`.
 - Keep changes scoped to the touched domain unless a cross-layer contract actually changes.
 - Break broad work into helper-sized slices and prefer the narrowest helper agent that owns the touched files: banana classifier, native core, native DAL, native wrapper, API pipeline, API interop, React UI, Electron, mobile runtime, compose runtime, workflow, technical writer, value-risk prioritization, or test triage.
 - Use parent domain agents only when more than one helper in the same domain must move together.
-- Prefer existing entry points over inventing new ones: workspace tasks, `scripts/*.sh`, CMake targets, `dotnet` test projects, Bun scripts, and Docker Compose profiles.
+- Prefer existing entry points over inventing new ones: workspace tasks, `scripts/*.sh`, CMake targets, Bun scripts, and Docker Compose profiles.
 - For Spec Kit-driven work, use the Specify CLI flow (`specify specify`, `specify plan`, `specify tasks`) and verify `.specify/feature.json` points at the intended feature and that the corresponding `.specify/specs/<feature>/plan.md` exists before implementation.
 - For `003-coverage-80-rehydration` execution, validate normalized lane schema parity, tuple completeness, and workspace-relative evidence paths before closing tasks.
 - For native or integration work, assume `BANANA_PG_CONNECTION` is required whenever PostgreSQL-backed flows are exercised.
-- For ASP.NET local/runtime work, keep `BANANA_NATIVE_PATH` explicit and avoid hardcoded machine-specific paths.
+- For TypeScript API local/runtime work, keep `BANANA_NATIVE_PATH` explicit and avoid hardcoded machine-specific paths.
 - For React work, preserve Bun as the package manager and `VITE_BANANA_API_BASE_URL` as the API base URL contract.
 - For frontend and Electron UX validation, default to the VS Code integrated browser/web view path so runtime checks, terminal diagnostics, and rendered UI verification stay in one window.
 - When behavior changes, update the nearest docs or prompt/skill references rather than scattering duplicate guidance.

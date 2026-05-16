@@ -81,6 +81,16 @@ if(WIN32)
       $<TARGET_FILE_DIR:banana_test_abi_version>)
 endif()
 
+add_executable(banana_test_anticheat test_anticheat.c)
+target_link_libraries(banana_test_anticheat PRIVATE banana_native)
+add_test(NAME banana_test_anticheat COMMAND banana_test_anticheat)
+if(WIN32)
+  add_custom_command(TARGET banana_test_anticheat POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:banana_native>
+      $<TARGET_FILE_DIR:banana_test_anticheat>)
+endif()
+
 # Native quality gate compiles with -DNDEBUG globally; keep assert-driven test
 # validations active so strict warning checks do not see false unused symbols.
 set(BANANA_NATIVE_TEST_TARGETS
@@ -93,6 +103,7 @@ set(BANANA_NATIVE_TEST_TARGETS
   banana_test_ml_transformer
   banana_test_ml_transformer_quant
   banana_test_abi_version
+  banana_test_anticheat
 )
 
 foreach(native_test_target IN LISTS BANANA_NATIVE_TEST_TARGETS)

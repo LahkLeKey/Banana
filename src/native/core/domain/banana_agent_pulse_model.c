@@ -4,8 +4,8 @@
 
 static const BananaAgentPulseLane BANANA_AGENT_PULSE_LANES[] = {
     {"banana-classifier-agent", 100, 1, "feedback-and-training"},
-    {"api-pipeline-agent", 95, 2, "controller-service-pipeline"},
-    {"csharp-api-agent", 93, 2, "api-services-and-interop"},
+    {"api-pipeline-agent", 95, 2, "route-service-pipeline"},
+    {"api-interop-agent", 93, 2, "api-services-and-interop"},
     {"native-core-agent", 91, 2, "native-core-domain"},
     {"react-ui-agent", 89, 2, "react-ui-flows"},
     {"electron-agent", 87, 2, "electron-runtime"},

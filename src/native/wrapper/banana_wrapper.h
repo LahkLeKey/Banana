@@ -22,6 +22,7 @@
 #define BANANA_WRAPPER_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -46,8 +47,9 @@ extern "C"
 /* Minor 1: additive `banana_classify_banana_binary_with_threshold` (slice 011).
  * Minor 2: additive `banana_classify_banana_transformer_ex` (slice 012).
  * Minor 3: additive `banana_classify_banana_transformer_quant_embedding` (slice 016).
- * Minor 4: additive `banana_native_version` (feature 072). */
-#define BANANA_WRAPPER_ABI_VERSION_MINOR 4
+ * Minor 4: additive `banana_native_version` (feature 072).
+ * Minor 5: additive native anti-cheat telemetry exports (feature 050). */
+#define BANANA_WRAPPER_ABI_VERSION_MINOR 5
 
     /* ABI version query — always succeeds.
      * out_major and out_minor are CALLER-OWNED and must be non-NULL.
@@ -154,6 +156,33 @@ extern "C"
     BANANA_API int banana_relocate_truck(const char *truck_id, const char *input_json,
                                          char **out_json);
     BANANA_API int banana_get_truck_status(const char *truck_id, char **out_json);
+
+    /* === Anti-cheat / server-authoritative telemetry ===
+     * Usermode-only protections and suspicious driver signal ingestion.
+     * These APIs score telemetry in native code and return cumulative risk.
+     */
+    BANANA_API int banana_anticheat_reset_session(const char *session_id);
+    BANANA_API int banana_anticheat_submit_usermode_heartbeat(const char *session_id,
+                                                              uint32_t heartbeat_sequence,
+                                                              uint32_t simulation_tick,
+                                                              int debugger_present,
+                                                              int code_integrity_violations,
+                                                              int memory_map_anomalies,
+                                                              int timing_anomalies,
+                                                              int *out_score,
+                                                              int *out_flagged);
+    BANANA_API int banana_anticheat_submit_driver_telemetry(
+        const char *session_id,
+        uint32_t heartbeat_sequence,
+        int suspicious_ring12_driver_count,
+        int unsigned_driver_count,
+        int hidden_module_count,
+        int *out_score,
+        int *out_flagged);
+    BANANA_API int banana_anticheat_get_session_status(const char *session_id,
+                                                       int *out_score,
+                                                       int *out_flagged,
+                                                       uint32_t *out_integrity_hash);
 
     /* === Memory === */
     BANANA_API void banana_free(void *pointer);

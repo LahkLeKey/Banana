@@ -46,17 +46,9 @@ src/
         domain/
         internal/
     wrapper/
-  c-sharp/
-    asp.net/
-      Controllers/
-      DataAccess/
-      Middleware/
-      Models/
-      NativeInterop/
-      Pipeline/
-        Steps/
-      Services/
   typescript/
+    api/
+      src/
     react/
       src/
     electron/
@@ -66,7 +58,6 @@ src/
 
 tests/
   native/
-  unit/
   integration/
 
 scripts/

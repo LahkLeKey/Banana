@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PROFILE="${BANANA_E2E_COMPOSE_PROFILE:-apps}"
-SERVICES="${BANANA_E2E_BOOTSTRAP_SERVICES:-api}"
+SERVICES="${BANANA_E2E_BOOTSTRAP_SERVICES:-api-fastify}"
 HEALTH_URL="${BANANA_E2E_HEALTH_URL:-http://localhost:8080/health}"
 TIMEOUT_SEC="${BANANA_E2E_HEALTH_TIMEOUT_SEC:-180}"
 ARTIFACT_DIR=".artifacts/e2e"
@@ -32,7 +32,7 @@ EOF
   exit 1
 fi
 
-if printf '%s\n' "${service_array[@]}" | grep -qx "api"; then
+if printf '%s\n' "${service_array[@]}" | grep -qx "api-fastify"; then
   deadline=$((SECONDS + TIMEOUT_SEC))
   until curl -fsS "$HEALTH_URL" >/dev/null 2>&1; do
     if (( SECONDS >= deadline )); then
