@@ -6,7 +6,7 @@
  * Follows Open/Closed Principle: extensible action handlers without modifying core logic.
  */
 
-import type { ContextMenuAction, ContextMenuState } from "./GameEngineTypes";
+import type { ContextMenuAction, ContextMenuState } from "../components/GameEngineTypes";
 
 /**
  * Value Object: Represents the result of an interaction action

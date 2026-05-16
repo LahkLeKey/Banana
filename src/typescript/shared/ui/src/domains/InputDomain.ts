@@ -6,7 +6,7 @@
  * Follows Dependency Inversion: exports pure functions, no framework dependencies.
  */
 
-import type { RadialDirection } from "./GameEngineTypes";
+import type { RadialDirection } from "../components/GameEngineTypes";
 
 /**
  * Value Object: Represents a discrete movement input at a point in time
