@@ -28,7 +28,6 @@ export function computeCosineDrift(a: number[], b: number[]): number {
 export type { ContextMenuProps } from "./components/ContextMenu";
 export { ContextMenu } from "./components/ContextMenu";
 export type {
-  ControlsHintProps,
   EngineVersionBadgeProps,
   ErrorBadgeProps,
   InteractionMessageBadgeProps,

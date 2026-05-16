@@ -91,9 +91,7 @@ export function ErrorBadge({ message }: ErrorBadgeProps) {
 /**
  * Controls hint displayed at top center
  */
-export type ControlsHintProps = {};
-
-export function ControlsHint({}: ControlsHintProps) {
+export function ControlsHint() {
   const hint =
     "ARPG Controls\nWASD / Arrow Keys: Move\nMobile: Hold to show radial\nRight Click: Action menu";
 
