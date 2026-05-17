@@ -4,7 +4,7 @@ This directory now contains the active baseline specs only.
 
 ## Active Baseline
 
-- 050-multiplayer-server-authority
+- 052-v3-pure-c-typescript-reset
 
 ## Archived During Refresh
 
@@ -19,6 +19,10 @@ Additional multiplayer baseline consolidation archives were moved to:
 Additional non-core artifacts from active specs were archived to:
 
 .specify/legacy-baseline/specs-archive/2026-05-spec-refresh-active-prune
+
+Current reset archive created during V3 baseline realignment:
+
+.specify/legacy-baseline/specs-archive/2026-05-v3-reset
 
 ## Operating Rule
 
@@ -41,6 +45,6 @@ Each active spec folder should default to these core files only:
 
 Optional drilldown documents are allowed only when actively referenced by spec.md.
 
-## Multiplayer Baseline Rule
+## Reset Baseline Rule
 
-For multiplayer execution, Spec 050 is the sole active authority. Prior foundations may remain in archive for lineage, but agents should bootstrap from 050 first and treat archived specs as historical evidence only.
+For current execution, Spec 052 is the sole active authority. Prior foundations remain in archive for lineage and evidence only.

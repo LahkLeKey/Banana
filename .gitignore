@@ -1,71 +1,28 @@
-# Build outputs
+# Native and build outputs
 build/
-build-engine/
 out/
-dist/
-
-# Native artifacts
-*.dll
-*.so
-*.so.*
-*.dylib
-*.lib
-*.exp
-*.ilk
-*.map
-*.a
-*.la
-*.lo
+bin/
+obj/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
 *.o
-*.obj
-*.elf
-
-# Executables and debug symbols
+*.a
+*.so
+*.dll
 *.exe
-*.out
-*.app
-*.pdb
-*.idb
-*.dSYM/
 
-# .NET
-**/bin/
-**/obj/
-*.user
-*.suo
-.vs/
-
-# Node/Electron
-node_modules/
+# JavaScript and TypeScript outputs
 **/node_modules/
-npm-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+**/dist/
+*.log
+.env*
+coverage/
 
-# Docker
-.docker/
-
-# Local environment
-.env
-
-
-# OS
+# Universal workspace noise
 .DS_Store
 Thumbs.db
-
-/.artifacts
-/artifacts/*
-!/artifacts/wasm
-/artifacts/wasm/*
-!/artifacts/wasm/**
-/.wiki
-bash.exe.stackdump
-/tests/unit/TestResults
-/scripts/__pycache__
-
-# SBOM outputs (spec #086)
-artifacts/sboms/
-*.pyc
-
-.vercel
-.env*.local
+*.tmp
+*.swp
+.idea/
