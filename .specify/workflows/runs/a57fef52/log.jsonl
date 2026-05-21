@@ -1,0 +1,12 @@
+{"event": "step_started", "step_id": "specify", "type": "command", "timestamp": "2026-05-19T00:50:15.950414+00:00"}
+{"event": "step_completed", "step_id": "specify", "status": "completed", "timestamp": "2026-05-19T00:51:03.967494+00:00"}
+{"event": "step_started", "step_id": "review-spec", "type": "gate", "timestamp": "2026-05-19T00:51:03.968954+00:00"}
+{"event": "step_completed", "step_id": "review-spec", "status": "paused", "timestamp": "2026-05-19T00:51:03.969725+00:00"}
+{"event": "workflow_finished", "status": "paused", "timestamp": "2026-05-19T00:51:03.971001+00:00"}
+{"event": "step_started", "step_id": "review-spec", "type": "gate", "timestamp": "2026-05-19T00:51:05.956442+00:00"}
+{"event": "step_completed", "step_id": "review-spec", "status": "completed", "timestamp": "2026-05-19T00:51:18.381911+00:00"}
+{"event": "step_started", "step_id": "plan", "type": "command", "timestamp": "2026-05-19T00:51:18.383618+00:00"}
+{"event": "step_completed", "step_id": "plan", "status": "failed", "timestamp": "2026-05-19T00:51:32.891060+00:00"}
+{"event": "step_failed", "step_id": "plan", "error": "Interrupted by user", "timestamp": "2026-05-19T00:51:32.891840+00:00"}
+{"event": "workflow_finished", "status": "failed", "timestamp": "2026-05-19T00:51:32.893666+00:00"}
+{"event": "step_started", "step_id": "plan", "type": "command", "timestamp": "2026-05-19T00:52:15.310801+00:00"}

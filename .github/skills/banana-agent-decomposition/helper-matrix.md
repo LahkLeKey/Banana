@@ -4,12 +4,12 @@
 
 - `native-core-agent`: `src/native/core`, core models, algorithms, execution context, and focused native tests
 - `native-dal-agent`: `src/native/core/dal`, PostgreSQL-gated native data access, payload shaping, and `BANANA_PG_CONNECTION` behavior
-- `native-wrapper-agent`: `src/native/wrapper`, ABI exports, status codes, memory ownership, and managed interop coordination
+- `native-wrapper-agent`: `src/native/wrapper`, ABI exports, status codes, memory ownership, and runtime interop coordination
 
-## ASP.NET Helpers
+## API Helpers
 
-- `api-pipeline-agent`: controllers, services, middleware, DI wiring, pipeline executor, and ordered steps in `src/c-sharp/asp.net`
-- `api-interop-agent`: `NativeInterop`, `DataAccess`, managed status translation, marshalling, and native contract synchronization
+- `api-pipeline-agent`: Fastify routes, services, middleware/plugins, and ordered request orchestration in `src/typescript/api`
+- `api-interop-agent`: API/native interop, status translation, and native contract synchronization
 
 ## Frontend Helpers
 
@@ -28,7 +28,7 @@
 ## Parent Agents
 
 - `native-c-agent`: coordinate when core, DAL, and wrapper all move together
-- `csharp-api-agent`: coordinate when pipeline and interop or data access move together
+- `api-domain-agent`: coordinate when pipeline and interop or data access move together
 - `react-agent`: coordinate React plus Electron or broader frontend work
 - `banana-classifier-agent`: coordinate banana-vs-not-banana product slices across training, native inference, API contract, and simple frontend UX
 - `infrastructure-agent`: coordinate compose/runtime and workflow changes together

@@ -1,198 +1,34 @@
-name: banana-container
-
-# Profiles (spec 012): runtime, tests, electron, apps, all, api-fastify, android-emulator (gated).
-
 services:
-  postgres:
-    image: postgres:16
+  api-overworld:
+    image: oven/bun:1.2
+    working_dir: /workspace/src/typescript/api
+    command:
+      - sh
+      - -lc
+      - sh /workspace/scripts/ensure-native-linux-artifact.sh && bun install && bun run dev
     environment:
-      POSTGRES_USER: cinterop
-      POSTGRES_PASSWORD: cinterop
-      POSTGRES_DB: cinterop
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cinterop -d cinterop"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-    profiles: ["runtime", "tests", "electron", "apps", "all", "api-fastify"]
-
-  native-build:
-    build:
-      context: .
-      dockerfile: docker/native-builder.Dockerfile
-    command: ["bash", "-lc", "mkdir -p /artifacts && cp -f /workspace/out/native/bin/libbanana_native.so /artifacts/libbanana_native.so && ls -l /artifacts"]
-    volumes:
-      - native-artifacts:/artifacts
-    profiles: ["runtime", "tests", "all", "electron", "apps", "api-fastify"]
-
-  api:
-    build:
-      context: .
-      dockerfile: docker/api.Dockerfile
-    depends_on:
-      native-build:
-        condition: service_completed_successfully
-      postgres:
-        condition: service_healthy
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080
-      BANANA_NATIVE_PATH: /native
-      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
-    ports:
-      - "8080:8080"
-    volumes:
-      - native-artifacts:/native:ro
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health >/dev/null || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-    profiles: ["runtime", "electron", "apps", "all", "api-fastify"]
-
-  api-fastify:
-    build:
-      context: .
-      dockerfile: docker/api-fastify.Dockerfile
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://cinterop:cinterop@postgres:5432/cinterop
+      HOST: 0.0.0.0
       PORT: "8081"
+      BANANA_ENGINE_ADAPTER: inmemory
+      BANANA_NATIVE_PATH: /workspace/out/native/bin/libbanana_native.so
+      BANANA_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
     ports:
       - "8081:8081"
-    profiles: ["api-fastify", "apps", "all"]
-
-  test-unit:
-    build:
-      context: .
-      dockerfile: docker/tests.Dockerfile
-    command: ["bash", "-lc", "dotnet test src/c-sharp/asp.net --filter Category=Unit"]
-    profiles: ["tests"]
-
-  test-integration:
-    build:
-      context: .
-      dockerfile: docker/tests.Dockerfile
-    depends_on:
-      postgres:
-        condition: service_healthy
-      native-build:
-        condition: service_completed_successfully
-    environment:
-      BANANA_NATIVE_PATH: /native
-      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
     volumes:
-      - native-artifacts:/native:ro
-    command: ["bash", "-lc", "dotnet test src/c-sharp/asp.net --filter Category=Integration"]
-    profiles: ["tests"]
+      - .:/workspace
 
-  test-all:
-    build:
-      context: .
-      dockerfile: docker/tests.Dockerfile
+  react-overworld:
+    image: oven/bun:1.2
+    working_dir: /workspace/src/typescript/react
+    command:
+      - sh
+      - -lc
+      - bun install --cwd /workspace/src/typescript/shared/ui && bun run --cwd /workspace/src/typescript/shared/ui tokens:gen && bun install && bun run dev --host 0.0.0.0 --port 5173
+    environment:
+      VITE_BANANA_API_BASE_URL: http://localhost:8081
     depends_on:
-      postgres:
-        condition: service_healthy
-      native-build:
-        condition: service_completed_successfully
-    environment:
-      BANANA_NATIVE_PATH: /native
-      BANANA_PG_CONNECTION: host=postgres port=5432 user=cinterop password=cinterop dbname=cinterop
-    volumes:
-      - native-artifacts:/native:ro
-    command: ["bash", "-lc", "bash scripts/run-tests-with-coverage.sh"]
-    profiles: ["tests"]
-
-  electron-example:
-    build:
-      context: .
-      dockerfile: docker/electron.Dockerfile
-    command: ["bash", "-lc", "npm run smoke"]
-    profiles: ["electron"]
-
-  electron-desktop:
-    build:
-      context: .
-      dockerfile: docker/electron.Dockerfile
-    environment:
-      DISPLAY: ${DISPLAY:-:0}
-      BANANA_ELECTRON_RENDERER_URL: http://react-app:5173
-      BANANA_API_BASE_URL: ${BANANA_ELECTRON_API_URL:-http://localhost:8080}
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:ro
-      - /mnt/wslg:/mnt/wslg
-    depends_on:
-      - react-app
-    profiles: ["electron", "apps"]
-
-  react-app:
-    build:
-      context: .
-      dockerfile: docker/react.Dockerfile
-    environment:
-      VITE_BANANA_API_BASE_URL: ${BANANA_REACT_API_URL:-http://localhost:8080}
+      - api-overworld
     ports:
       - "5173:5173"
-    profiles: ["apps", "electron"]
-
-  react-native-web:
-    build:
-      context: .
-      dockerfile: docker/react-native.Dockerfile
-    command: ["bash", "-lc", "bun run web"]
-    environment:
-      EXPO_PUBLIC_BANANA_API_BASE_URL: ${BANANA_MOBILE_API_URL:-http://localhost:8080}
-    ports:
-      - "19006:19006"
-    profiles: ["apps"]
-
-  android-emulator:
-    build:
-      context: .
-      dockerfile: docker/react-native.Dockerfile
-    command: ["bash", "-lc", "scripts/compose-mobile-emulators-wsl2.sh"]
-    devices:
-      - /dev/kvm
-    profiles: ["android-emulator"]
-
-  workflow-train-not-banana-local:
-    build:
-      context: .
-      dockerfile: docker/workflow-local.Dockerfile
-    command: ["bash", "-lc", "scripts/workflow-local-train-not-banana.sh"]
-    profiles: ["workflows"]
-
-  workflow-orchestrate-triaged-local:
-    build:
-      context: .
-      dockerfile: docker/workflow-local.Dockerfile
-    command: ["bash", "-lc", "scripts/workflow-local-orchestrate-triaged-item-pr.sh"]
-    profiles: ["workflows"]
-
-  workflow-orchestrate-sdlc-local:
-    build:
-      context: .
-      dockerfile: docker/workflow-local.Dockerfile
-    command: ["bash", "-lc", "scripts/workflow-local-orchestrate-sdlc.sh"]
-    profiles: ["workflows"]
-
-  vault:
-    image: hashicorp/vault:1.16
-    profiles: ["secrets-management"]
-    ports:
-      - "8200:8200"
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: banana-dev-token
-      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
-    cap_add:
-      - IPC_LOCK
-    healthcheck:
-      test: ["CMD", "vault", "status", "-address=http://127.0.0.1:8200"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  native-artifacts:
+    volumes:
+      - .:/workspace

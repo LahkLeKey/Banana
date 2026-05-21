@@ -1,0 +1,53 @@
+{
+  "run_id": "aa57170b",
+  "workflow_id": "speckit",
+  "status": "running",
+  "current_step_index": 2,
+  "current_step_id": "plan",
+  "step_results": {
+    "specify": {
+      "integration": "copilot",
+      "model": null,
+      "options": {},
+      "input": {
+        "args": ".specify/specs/052-v3-pure-c-typescript-reset"
+      },
+      "output": {
+        "command": "specify.specify",
+        "integration": "copilot",
+        "model": null,
+        "options": {},
+        "input": {
+          "args": ".specify/specs/052-v3-pure-c-typescript-reset"
+        },
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "dispatched": true
+      },
+      "status": "completed"
+    },
+    "review-spec": {
+      "integration": null,
+      "model": null,
+      "options": [
+        "approve",
+        "reject"
+      ],
+      "input": {},
+      "output": {
+        "message": "Review the generated spec before planning.",
+        "options": [
+          "approve",
+          "reject"
+        ],
+        "on_reject": "abort",
+        "show_file": null,
+        "choice": "approve"
+      },
+      "status": "completed"
+    }
+  },
+  "created_at": "2026-05-19T00:51:44.848201+00:00",
+  "updated_at": "2026-05-19T00:53:03.512659+00:00"
+}

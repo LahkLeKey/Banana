@@ -1,19 +1,18 @@
 ---
-name: ASP.NET Pipeline Standards
-description: Guidance for Banana ASP.NET controllers, services, pipeline steps, middleware, and interop code.
-applyTo: "src/c-sharp/asp.net/**/*.cs"
+name: TypeScript API Pipeline Standards
+description: Guidance for Banana Fastify routes, domain services, middleware, and native interop boundaries.
+applyTo: "src/typescript/api/src/**/*.ts"
 ---
 
-# ASP.NET Pipeline Standards
+# TypeScript API Pipeline Standards
 
-- Use `api-pipeline-agent` for controllers, services, middleware, `Program.cs`, and ordered pipeline work.
-- Use `api-interop-agent` for `NativeInterop`, `DataAccess`, status translation, and managed/native contract synchronization.
-- Use `csharp-api-agent` only when both helper-owned surfaces need coordination.
-- Preserve the ordered pipeline model centered on `PipelineExecutor<PipelineContext>` and `IPipelineStep<PipelineContext>`.
-- Register new pipeline steps in `Program.cs`, assign deterministic `Order` values, and add tests for ordering or branching behavior.
-- Keep HTTP concerns in controllers, orchestration in services/pipeline steps, and native boundary logic in `NativeInterop`.
-- Route error translation through `ErrorHandlingMiddleware` rather than ad-hoc controller handling.
-- Prefer DI + options binding patterns already used by `DbAccessOptions` instead of static configuration reads.
+- Use `api-pipeline-agent` for Fastify routes, domain services, plugins, and ordered pipeline work.
+- Use `api-interop-agent` for native interop boundaries, status translation, and API/native contract synchronization.
+- Preserve route -> service -> native interop flow and avoid ad-hoc transport logic in services.
+- Keep HTTP concerns in route files, orchestration in domain services, and native boundary logic in interop modules.
+- Route error translation through shared API middleware/plugins rather than per-route ad-hoc handling.
+- Prefer dependency injection patterns already used by route registrars and domain modules.
+- If API/runtime routes depend on WASM engine capabilities, treat missing WASM parallel contract evidence as deployment-blocking and surface actionable errors.
 
 ## Shared Frontend Contract
 

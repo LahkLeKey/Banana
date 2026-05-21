@@ -3,16 +3,16 @@
 ## Domains
 
 - Native C: `src/native`, `tests/native`, `CMakeLists.txt`
-- ASP.NET: `src/c-sharp/asp.net`, `tests/unit`, `tests/integration`
-- Frontend/Electron/Mobile: `src/typescript/react`, `src/typescript/electron`, `src/typescript/react-native`
+- TypeScript API: `src/typescript/api`, `tests/integration`
+- Frontend/Electron/Mobile: `src/typescript/react`, `src/typescript/electron`, `src/typescript/react-native`, `src/typescript/shared/ui`
 - Delivery/runtime: `docker`, `scripts`, `docker-compose.yml`, `.github/workflows`
 
 ## Core Flow
 
-- HTTP enters `Controllers/BananaController.cs`
-- Orchestration lives in `Services/BananaService.cs`
-- Ordered work runs through `Pipeline/PipelineExecutor.cs` and `Pipeline/Steps/*`
-- Native interop crosses through `NativeInterop/NativeBananaClient.cs` and `NativeMethods.cs`
+- HTTP enters Fastify route modules under `src/typescript/api/src/routes` and `src/typescript/api/src/domains/**/routes.ts`
+- Orchestration lives in TypeScript domain services and route handlers
+- Ordered work runs through route -> service -> native interop boundaries
+- Native interop crosses through `src/typescript/api/src/lib/anti-cheat-interop.ts` and related adapters
 - Native implementation lives in `src/native/core`, `src/native/core/dal`, and `src/native/wrapper`
 
 ## Helper Routing
@@ -20,8 +20,8 @@
 - `native-core-agent`: `src/native/core` and focused native tests
 - `native-dal-agent`: `src/native/core/dal` and PostgreSQL-gated native behavior
 - `native-wrapper-agent`: `src/native/wrapper` and downstream ABI coordination
-- `api-pipeline-agent`: controllers, services, middleware, pipeline, and `Program.cs`
-- `api-interop-agent`: `NativeInterop`, `DataAccess`, and managed/native contract mapping
+- `api-pipeline-agent`: Fastify routes, services, middleware/plugins, and API bootstrap
+- `api-interop-agent`: API/native interop and contract mapping
 - `react-ui-agent`: `src/typescript/react/src`
 - `electron-agent`: `src/typescript/electron`
 - `compose-runtime-agent`: `docker-compose.yml`, `docker`, and local runtime scripts
@@ -32,13 +32,13 @@
 ## Key Contracts
 
 - `BANANA_PG_CONNECTION` for PostgreSQL-backed native and integration flows
-- `BANANA_NATIVE_PATH` for managed/native runtime loading
+- `BANANA_NATIVE_PATH` for TypeScript API/native runtime loading
 - `VITE_BANANA_API_BASE_URL` for React runtime API calls
 
 ## Existing Entry Points
 
 - Native build task: `Build Native Library`
-- API build task: `Build Banana API`
+- API build task: `bun run --cwd src/typescript/api build`
 - Compose stack task: `Start Compose Apps`
 - Mobile emulator launcher: `scripts/launch-container-channels-with-wsl2-mobile.sh`
 - Aggregate tests: `scripts/run-tests-with-coverage.sh`

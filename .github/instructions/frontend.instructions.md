@@ -16,6 +16,7 @@ applyTo: "src/typescript/**/*.{ts,tsx,js,json,css}"
 - Maintain compatibility with the compose-based local runtime described in `README.md` and `docker-compose.yml`.
 - Prefer minimal, typed UI changes and avoid introducing frontend dependencies without clear need.
 - If a frontend change affects backend payload shape, document the contract assumption and coordinate with API tests or prompts.
+- For WASM parallel runtime paths, preserve browser thread prerequisites (cross-origin isolation headers and worker readiness) and fail clearly when unavailable.
 
 ## Shared Frontend Contract
 

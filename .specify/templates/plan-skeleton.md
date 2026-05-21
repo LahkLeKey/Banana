@@ -12,7 +12,7 @@
 **Language/Version**: <!-- e.g., TypeScript 5 / Node 22 -->
 **Primary Dependencies**: <!-- e.g., Fastify 5, Prisma 7, Bun 1 -->
 **Storage**: <!-- e.g., PostgreSQL via Prisma, file artifacts -->
-**Testing**: <!-- e.g., Bun test, dotnet test, CTest -->
+**Testing**: <!-- e.g., Bun test, CTest -->
 **Target Platform**: <!-- e.g., GitHub Actions + local Git Bash -->
 **Project Type**: <!-- e.g., API, frontend, native, workflow -->
 **Performance Goals**: <!-- e.g., Under 10s CI job runtime -->

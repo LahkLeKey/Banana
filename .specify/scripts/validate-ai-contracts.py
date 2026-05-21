@@ -163,6 +163,24 @@ RETIRED_SELF_TRAINING_PATH_FRAGMENTS: tuple[str, ...] = (
     "autonomous-self-training-default-increments.json",
 )
 
+WASM_PARALLEL_WORKFLOW_REQUIRED_FRAGMENTS: tuple[str, ...] = (
+    "Build / wasm engine assets",
+    "Runtime / wasm parallel contract gate",
+    "scripts/build-engine-wasm.sh --release",
+    "BANANA_WASM_PARALLEL_REQUIRED: \"true\"",
+    "scripts/validate-wasm-parallel-contract.sh",
+)
+
+WASM_PARALLEL_BUILD_SCRIPT_REQUIRED_FRAGMENTS: tuple[str, ...] = (
+    "-pthread",
+    "-fopenmp",
+    "-s USE_PTHREADS=1",
+    "-s PTHREAD_POOL_SIZE=4",
+    "-s PROXY_TO_PTHREAD=1",
+    "domain/services/wfc_worldgen_service.c",
+    "domain/services/cellular_worldgen_service.c",
+)
+
 
 def parse_frontmatter(path: Path) -> tuple[dict[str, str] | None, str]:
     text = path.read_text(encoding="utf-8")
@@ -362,6 +380,27 @@ def report_retired_self_training_contract_violations(
     target_texts: dict[str, str],
 ) -> None:
     issues.extend(evaluate_retired_self_training_contract_violations(target_texts))
+
+
+def evaluate_wasm_parallel_contract_violations(
+    workflow_text: str,
+    build_script_text: str,
+) -> list[str]:
+    violations: list[str] = []
+
+    for fragment in WASM_PARALLEL_WORKFLOW_REQUIRED_FRAGMENTS:
+        if fragment not in workflow_text:
+            violations.append(
+                "WASM_PARALLEL_CONTRACT missing workflow fragment: " + fragment
+            )
+
+    for fragment in WASM_PARALLEL_BUILD_SCRIPT_REQUIRED_FRAGMENTS:
+        if fragment not in build_script_text:
+            violations.append(
+                "WASM_PARALLEL_CONTRACT missing build-script fragment: " + fragment
+            )
+
+    return violations
 
 
 def main() -> int:
@@ -674,6 +713,19 @@ def main() -> int:
         issues.append(
             f"WORKFLOW missing canonical monorepo harness: {WORKFLOW_BANANA_MONOREPO.relative_to(ROOT).as_posix()}"
         )
+    else:
+        workflow_text = WORKFLOW_BANANA_MONOREPO.read_text(encoding="utf-8")
+        build_script_path = SCRIPTS_DIR / "build-engine-wasm.sh"
+        if not build_script_path.exists():
+            issues.append("WASM_PARALLEL_CONTRACT missing build script: scripts/build-engine-wasm.sh")
+        else:
+            build_script_text = build_script_path.read_text(encoding="utf-8")
+            issues.extend(
+                evaluate_wasm_parallel_contract_violations(
+                    workflow_text,
+                    build_script_text,
+                )
+            )
 
     if WORKFLOW_ORCHESTRATE_SDLC.exists():
         sdlc_workflow_text = WORKFLOW_ORCHESTRATE_SDLC.read_text(encoding="utf-8")

@@ -25,6 +25,50 @@ export function computeCosineDrift(a: number[], b: number[]): number {
   return 1 - dot / (magA * magB);
 }
 
+export type { ContextMenuProps } from "./components/ContextMenu";
+export { ContextMenu } from "./components/ContextMenu";
+export type {
+  EngineVersionBadgeProps,
+  ErrorBadgeProps,
+  InteractionMessageBadgeProps,
+  ViewportErrorOverlayProps,
+} from "./components/GameEngineOverlays";
+export {
+  ControlsHint,
+  EngineVersionBadge,
+  ErrorBadge,
+  InteractionMessageBadge,
+  ViewportErrorOverlay,
+} from "./components/GameEngineOverlays";
+// Game Engine UI — shared components for ARPG viewport
+export type {
+  ContextMenuAction,
+  ContextMenuState,
+  EngineStatus,
+  RadialControlState,
+  RadialDirection,
+} from "./components/GameEngineTypes";
+export {
+  computeContextMenuPosition,
+  computeMoveAxes,
+  getDirectionFromTouch,
+  isMovementKey,
+  MOVEMENT_KEYS,
+  RADIAL_CONFIG,
+} from "./components/GameEngineTypes";
+export type { MobileRadialControlProps } from "./components/MobileRadialControl";
+export { MobileRadialControl } from "./components/MobileRadialControl";
+export type { SplashOverlayProps } from "./components/SplashOverlay";
+export { SplashOverlay } from "./components/SplashOverlay";
+export * from "./domains/ConnectionManager";
+export * from "./domains/GameEngineUIService";
+// Domain-Driven Design: Game Engine UI Domains
+export * from "./domains/InputDomain";
+export * from "./domains/InteractionDomain";
+export * from "./domains/NetcodeDomain";
+export * from "./domains/PredictionDomain";
+export * from "./domains/ReplicationDomain";
+export * from "./domains/ViewportDomain";
 export type {
   ChatMessage,
   ChatMessageStatus,

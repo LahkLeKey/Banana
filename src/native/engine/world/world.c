@@ -1,6 +1,5 @@
 #include "world.h"
 #include "signals.h"
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -55,24 +54,6 @@ void world_tick(World *w, float dt)
     /* Deliver queued signals first */
     signals_flush(w);
     /* Future: update physics bodies, AI controllers */
-}
-
-int world_query_nearby(const World *w, const float *position, float radius, EntityId *out_ids,
-                       int max_results)
-{
-    int found = 0;
-    for (int i = 0; i < w->entity_count && found < max_results; i++)
-    {
-        Entity *e = w->entities[i];
-        if (!e || !e->active)
-            continue;
-        float dx = e->position[0] - position[0];
-        float dy = e->position[1] - position[1];
-        float dz = e->position[2] - position[2];
-        if (sqrtf(dx * dx + dy * dy + dz * dz) <= radius)
-            out_ids[found++] = e->id;
-    }
-    return found;
 }
 
 void world_destroy(World *w)

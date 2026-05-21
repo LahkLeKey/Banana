@@ -25,13 +25,12 @@ inputs to later specs:
 1. [005-v2-regeneration](specs/005-v2-regeneration/spec.md) — overall goals + dependency graph + success criteria.
 2. [006-native-core](specs/006-native-core/spec.md) — native C, ABI, DAL gating.
 3. [008-typescript-api](specs/008-typescript-api/spec.md) — Fastify + Prisma 7 routes.
-4. [007-aspnet-pipeline](specs/007-aspnet-pipeline/spec.md) — ASP.NET pipeline + interop seam.
-5. [009-react-shared-ui](specs/009-react-shared-ui/spec.md) — `@banana/ui` public surface.
-6. [010-electron-desktop](specs/010-electron-desktop/spec.md) — desktop runtime.
-7. [011-react-native-mobile](specs/011-react-native-mobile/spec.md) — mobile runtime.
-8. [012-compose-runtime](specs/012-compose-runtime/spec.md) — compose + scripts.
-9. [014-test-coverage](specs/014-test-coverage/spec.md) — test taxonomy + coverage.
-10. [013-ai-orchestration](specs/013-ai-orchestration/spec.md) — `.github/` AI surface + workflows.
+4. [009-react-shared-ui](specs/009-react-shared-ui/spec.md) — `@banana/ui` public surface.
+5. [010-electron-desktop](specs/010-electron-desktop/spec.md) — desktop runtime.
+6. [011-react-native-mobile](specs/011-react-native-mobile/spec.md) — mobile runtime.
+7. [012-compose-runtime](specs/012-compose-runtime/spec.md) — compose + scripts.
+8. [014-test-coverage](specs/014-test-coverage/spec.md) — test taxonomy + coverage.
+9. [013-ai-orchestration](specs/013-ai-orchestration/spec.md) — `.github/` AI surface + workflows.
 
 For each spec read `plan.md` (HOW), `tasks.md` (ORDERED WORK), and
 `contracts/*.md` (INVARIANTS). `quickstart.md` shows the end-to-end smoke.
@@ -88,28 +87,21 @@ contract. Keep core under `src/native/core/`, DAL under
 `src/native/core/dal/` (Postgres-gated, returns `DbNotConfigured`), wrapper
 under `src/native/wrapper/`. Module count ≤ 15.
 
-### Step 3 — `src/c-sharp/asp.net/` (driven by 007)
-
-Build controllers per [http-routes.md](legacy-baseline/inventories/http-routes.md).
-Single typed `PipelineContext`, single interop seam under
-`NativeInterop/` (one `LibraryImport` site per export). Use
-`BANANA_NATIVE_PATH` for library resolution.
-
-### Step 4 — `src/typescript/api/` (driven by 008)
+### Step 3 — `src/typescript/api/` (driven by 008)
 
 Fastify + Bun + Prisma 7. Use `prisma.config.ts` (NOT inline `url`) per
 [prisma-schema-snapshot.md](legacy-baseline/inventories/prisma-schema-snapshot.md).
 Route ownership table is `008/contracts/route-ownership.md` — every Fastify
 route declares which Prisma model it persists into.
 
-### Step 5 — `src/typescript/{shared/ui,react,electron,react-native}/` (driven by 009, 010, 011)
+### Step 4 — `src/typescript/{shared/ui,react,electron,react-native}/` (driven by 009, 010, 011)
 
 - `shared/ui` exposes only via `@banana/ui` public index (`009/contracts/shared-ui-public-surface.md`).
 - React app uses `VITE_BANANA_API_BASE_URL`, Bun, single canonical configs (`009`).
 - Electron uses `npm ci --omit=dev` + `CXXFLAGS=-fpermissive`; `electron-example` (smoke) ≠ `electron-desktop` (UI). See `010/contracts/runtime-channels.md`.
 - React Native: Android via WSLg (KVM-required, profile-gated), iOS web-preview fallback on Linux. See `011/contracts/mobile-runtime-channels.md`.
 
-### Step 6 — `docker/` + `scripts/` (driven by 012)
+### Step 5 — `docker/` + `scripts/` (driven by 012)
 
 Recreate the 8 Dockerfiles per [dockerfiles-inventory.md](legacy-baseline/inventories/dockerfiles-inventory.md)
 and the canonical channel scripts per `012/contracts/channel-scripts.md`.
@@ -117,7 +109,7 @@ Lessons that MUST carry over: CRLF normalization in shell COPY paths,
 `.dockerignore` excluding `**/node_modules`, `bun install --cwd shared/ui`
 before app install, lockfile installs in Electron.
 
-### Step 7 — `.github/` (driven by 013)
+### Step 6 — `.github/` (driven by 013)
 
 Use [github-ai-surface/](legacy-baseline/github-ai-surface/) as the source
 of structure. Recreate:
@@ -130,14 +122,14 @@ The validator (`.specify/scripts/validate-ai-contracts.py`) auto-detects
 whether to read the live `.github/` tree or fall back to the snapshot, so
 it stays green throughout the rebuild.
 
-### Step 8 — `tests/` (driven by 014)
+### Step 7 — `tests/` (driven by 014)
 
 Recreate test taxonomy per `014/contracts/test-taxonomy.md`: unit /
 integration / e2e / native, with stable `coverage-denominator.json`
 maintained by `scripts/sync-banana-api-coverage-denominator.py`. Loud DAL
 gating applies to integration; ≤2 fake-update files per change.
 
-### Step 9 — `.wiki/` (driven by 013)
+### Step 8 — `.wiki/` (driven by 013)
 
 The 12-page human-reference wiki is mirrored at
 `.specify/wiki/human-reference/`. Run
@@ -170,7 +162,7 @@ The following `.specify/scripts/` are pre-loaded for use during rebuild:
 These propagate across every step:
 
 - `BANANA_PG_CONNECTION` absence → `DbNotConfigured` (loud gate, not silent fail).
-- `BANANA_NATIVE_PATH` is the only library resolution mechanism for ASP.NET.
+- `BANANA_NATIVE_PATH` is the only native library resolution mechanism for runtime API channels.
 - `VITE_BANANA_API_BASE_URL` is compile-time-injected; no runtime lookup.
 - `DATABASE_URL` is consumed via `prisma.config.ts`, never inline `url`.
 - Bun is the package manager for `src/typescript/{api,react,react-native,shared/ui}`. Electron is the exception and uses `npm ci`.

@@ -1,6 +1,8 @@
 #include "world.h"
 #include "collider.h"
 #include "dynamics.h"
+#include "raycast.h"
+#include "world_collision.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,19 +36,7 @@ void physics_world_step_fixed(PhysicsWorld *w)
     dynamics_integrate_all(w->bodies, w->body_count, dt);
     /* 2. Collision detection + resolution */
     CollisionList cols = collider_broad_phase(w->bodies, w->body_count);
-    for (int i = 0; i < cols.count; i++)
-    {
-        PhysicsBody *a = NULL, *b = NULL;
-        for (int k = 0; k < w->body_count; k++)
-        {
-            if (w->bodies[k]->id == cols.items[i].body_a)
-                a = w->bodies[k];
-            if (w->bodies[k]->id == cols.items[i].body_b)
-                b = w->bodies[k];
-        }
-        if (a && b)
-            collider_resolve(&cols.items[i], a, b);
-    }
+    physics_world_resolve_collision_pairs(w, &cols);
 }
 
 void physics_world_step(PhysicsWorld *w, float dt)
@@ -62,54 +52,15 @@ void physics_world_step(PhysicsWorld *w, float dt)
 int physics_world_raycast(const PhysicsWorld *w, const float *origin, const float *direction,
                           PhysicsBodyId *hit_body_out, float *t_out)
 {
-    /* Simple AABB slab method for box bodies only (T1b.3 will expand this) */
-    float best_t = 1e9f;
-    int hit = 0;
-    for (int i = 0; i < w->body_count; i++)
-    {
-        PhysicsBody *b = w->bodies[i];
-        if (b->shape_type != SHAPE_BOX)
-            continue;
-        float *p = b->position;
-        float *he = b->shape.box.half_extents;
-        float tmin = -1e9f, tmax = 1e9f;
-        for (int axis = 0; axis < 3; axis++)
-        {
-            float d = direction[axis];
-            float mn = p[axis] - he[axis];
-            float mx = p[axis] + he[axis];
-            if (d != 0.f)
-            {
-                float t1 = (mn - origin[axis]) / d;
-                float t2 = (mx - origin[axis]) / d;
-                if (t1 > t2)
-                {
-                    float tmp = t1;
-                    t1 = t2;
-                    t2 = tmp;
-                }
-                if (t1 > tmin)
-                    tmin = t1;
-                if (t2 < tmax)
-                    tmax = t2;
-            }
-            else if (origin[axis] < mn || origin[axis] > mx)
-            {
-                tmin = 1e9f;
-                break;
-            }
-        }
-        if (tmin < tmax && tmin > 0.f && tmin < best_t)
-        {
-            best_t = tmin;
-            if (hit_body_out)
-                *hit_body_out = b->id;
-            if (t_out)
-                *t_out = tmin;
-            hit = 1;
-        }
-    }
-    return hit;
+    if (!w)
+        return 0;
+
+    return physics_raycast_bodies((PhysicsBody **)w->bodies,
+                                  w->body_count,
+                                  origin,
+                                  direction,
+                                  hit_body_out,
+                                  t_out);
 }
 
 void physics_world_destroy(PhysicsWorld *w)

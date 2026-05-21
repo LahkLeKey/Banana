@@ -5,6 +5,15 @@
 #include "../domain/banana_asset_algorithms.h"
 #include "../domain/banana_asset_domain.h"
 
+static uint32_t banana_cell_seed(uint32_t seed, int index)
+{
+    uint32_t mixed = seed ^ 0xDEADBEEFu;
+    mixed ^= (uint32_t)index * 2246822519u;
+    mixed ^= mixed >> 13;
+    mixed *= 1274126177u;
+    return mixed ^ (mixed >> 16);
+}
+
 int banana_generate_terrain_cells(const banana_compiler_config_t *config, int cellular_iterations,
                                   banana_terrain_cell_t *out_cells, uint64_t *out_checksum)
 {
@@ -42,23 +51,30 @@ int banana_generate_terrain_cells_with_contract(const banana_compiler_config_t *
                                  config->seed);
 
     const banana_tile_def_t *defs = banana_tile_defs();
-    uint32_t rng_state = config->seed ^ 0xDEADBEEFu;
     uint64_t checksum = 1469598103934665603ull;
+
+    {
+        int i = 0;
+#pragma omp parallel for schedule(static)
+        for (i = 0; i < cell_count; i++)
+        {
+            int tile = tiles[i];
+            uint32_t rng_state = banana_cell_seed(config->seed, i);
+            int elevation_noise = (int)(banana_next_random(&rng_state) % 11u) - 5;
+            int resource_noise = (int)(banana_next_random(&rng_state) % 7u) - 3;
+
+            out_cells[i].tile_index = tile;
+            out_cells[i].elevation = defs[tile].elevation_base + elevation_noise;
+            out_cells[i].resource = defs[tile].resource_bias + resource_noise;
+            if (out_cells[i].resource < 0)
+            {
+                out_cells[i].resource = 0;
+            }
+        }
+    }
 
     for (int i = 0; i < cell_count; i++)
     {
-        int tile = tiles[i];
-        int elevation_noise = (int)(banana_next_random(&rng_state) % 11u) - 5;
-        int resource_noise = (int)(banana_next_random(&rng_state) % 7u) - 3;
-
-        out_cells[i].tile_index = tile;
-        out_cells[i].elevation = defs[tile].elevation_base + elevation_noise;
-        out_cells[i].resource = defs[tile].resource_bias + resource_noise;
-        if (out_cells[i].resource < 0)
-        {
-            out_cells[i].resource = 0;
-        }
-
         checksum ^= (uint64_t)(unsigned int)out_cells[i].tile_index;
         checksum *= 1099511628211ull;
         checksum ^= (uint64_t)(unsigned int)out_cells[i].elevation;

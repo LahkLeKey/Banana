@@ -18,10 +18,10 @@ Primary workflow:
         - Enforces native 80 percent line-coverage gate.
         - Uploads `.artifacts/native-c` artifacts.
 
-2. `dotnet-tests-coverage`
+2. `api-tests-coverage`
         - Depends on native coverage job.
         - Builds native library.
-        - Runs unit and integration tests with coverage.
+                - Runs TypeScript API tests with coverage.
         - Generates report in `.artifacts/coverage/report`.
         - Uploads `test-results` and `coverage-report` artifacts.
 
@@ -54,7 +54,7 @@ Note: mobile emulator launch does not require a separate compose profile today.
 ## Required Contracts In CI
 
 - `BANANA_PG_CONNECTION` must point to reachable PostgreSQL host and port.
-- `BANANA_NATIVE_PATH` must point at built native artifacts for managed test runs.
+- `BANANA_NATIVE_PATH` must point at built native artifacts for API runtime test runs.
 - CI jobs print DB host and port only for debugging visibility.
 
 ## Local Mirrors For CI Stages
@@ -68,7 +68,7 @@ Note: mobile emulator launch does not require a separate compose profile today.
 ## Fast Triage Map
 
 - Native build or ABI failure: inspect `native-c-tests-coverage` first.
-- Managed coverage failure: inspect `dotnet-tests-coverage` and `ErrorHandlingMiddleware` logs.
+- API coverage failure: inspect `api-tests-coverage` and API runtime logs.
 - Compose health failure: inspect `compose-runtime` and `/health` readiness.
 - Electron smoke failure: inspect `compose-electron` and native bridge path resolution.
 - Mobile emulator launch failure: inspect WSL2 distro resolution, WSLg preflight checks, Android SDK/AVD setup, and `http://localhost:19006` endpoint readiness.

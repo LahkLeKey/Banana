@@ -10,8 +10,8 @@
  */
 import type { FastifyInstance } from "fastify";
 
-function resolveAspNetBaseUrl(): string {
-  return (process.env.BANANA_ASPNET_API_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
+function resolveApiBaseUrl(): string {
+  return (process.env.BANANA_API_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
 }
 
 function sseEvent(data: unknown): string {
@@ -33,10 +33,10 @@ export async function registerStreamingRoutes(app: FastifyInstance): Promise<voi
 
     reply.raw.write(sseEvent({ type: "progress", step: "input_validation", pct: 25 }));
 
-    // Proxy to ASP.NET ensemble for actual ML scoring
+    // Proxy to upstream API ensemble service for scoring
     let verdict: unknown = { label: "unknown", score: 0, status: "error" };
     try {
-      const upstreamUrl = `${resolveAspNetBaseUrl()}/ml/ensemble`;
+      const upstreamUrl = `${resolveApiBaseUrl()}/ml/ensemble`;
       const upstreamRes = await fetch(upstreamUrl, {
         method: "POST",
         headers: { "content-type": "application/json" },

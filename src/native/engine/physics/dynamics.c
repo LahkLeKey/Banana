@@ -1,4 +1,9 @@
 #include "dynamics.h"
+
+#if !defined(BANANA_ENGINE_HAS_OPENMP) && !defined(__INTELLISENSE__)
+#error "Strict parallel runtime requires OpenMP (BANANA_ENGINE_HAS_OPENMP)."
+#endif
+
 #include <string.h>
 
 static float s_gravity = BANANA_GRAVITY_DEFAULT;
@@ -44,6 +49,9 @@ void dynamics_integrate(PhysicsBody *b, float dt)
 
 void dynamics_integrate_all(PhysicsBody **bodies, int count, float dt)
 {
-    for (int i = 0; i < count; i++)
+    int i = 0;
+
+#pragma omp parallel for schedule(static)
+    for (i = 0; i < count; i++)
         dynamics_integrate(bodies[i], dt);
 }

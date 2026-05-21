@@ -7,11 +7,11 @@
 - Tests: native CMake tests or `scripts/run-native-c-tests-with-coverage.sh`
 - Coverage: native coverage script with 80% line gate
 
-## ASP.NET-only change
+## TypeScript API-only change
 
 - Primary helpers: `api-pipeline-agent`, `api-interop-agent`
-- Build: `Build Banana API`
-- Tests: `dotnet test tests/unit/Banana.UnitTests.csproj -c Release`
+- Build: `bun run --cwd src/typescript/api build`
+- Tests: `bun test --cwd src/typescript/api`
 - Expand to integration tests if interop, data access, or runtime config changed
 
 ## Frontend or Electron change
@@ -22,8 +22,8 @@
 
 ## Cross-layer backend change
 
-- Likely coordinators: `csharp-api-agent`, `native-c-agent`, `integration-agent`
-- Tests: `dotnet test tests/integration/Banana.IntegrationTests.csproj -c Release`
+- Likely coordinators: `api-domain-agent`, `native-c-agent`, `integration-agent`
+- Tests: `bun test --cwd src/typescript/api`
 - Aggregate coverage: `scripts/run-tests-with-coverage.sh`
 - Runtime parity: compose profile or workflow path if containers changed
 

@@ -1,0 +1,21 @@
+{
+  "kind": "banana-generated-assets",
+  "compiler": "banana_asset_compiler",
+  "profile": "default",
+  "seed": 20260509,
+  "width": 48,
+  "height": 48,
+  "algorithm": "wave-function-collapse+cellular-automata",
+  "postProcess": {"cellularAutomataIterations": 3},
+  "rules": {
+    "tileVocabulary": "banana_tile_defs",
+    "adjacency": "neighbor biomes differ by at most 1",
+    "tileWeighting": "weighted random selection from tile definitions",
+    "elevationNoiseRange": [-5, 5],
+    "resourceNoiseRange": [-3, 3]
+  },
+  "files": [
+    {"name":"palette","file":"banana-generated-palette.json"},
+    {"name":"terrain","file":"banana-generated-terrain.json","checksum":"0xF24FB56AA1D3A2BD"}
+  ]
+}

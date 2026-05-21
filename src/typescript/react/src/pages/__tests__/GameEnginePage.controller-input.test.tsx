@@ -7,7 +7,7 @@ import {
   computeMoveAxes,
   getDirectionFromTouch,
   isMovementKey,
-} from "../GameEnginePage";
+} from "@banana/ui";
 
 describe("GameEnginePage controller input mapping", () => {
   test("recognizes WASD and Arrow keys as movement keys", () => {

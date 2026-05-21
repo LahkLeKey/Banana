@@ -15,6 +15,8 @@ applyTo: "{docker-compose.yml,docker/**/*,.github/workflows/**/*.yml,scripts/**/
 - Reuse current CI stages in `.github/workflows/compose-ci.yml` for build, coverage, and runtime validation.
 - Preserve cross-platform awareness: Windows task/build helpers exist alongside bash-based CI and compose scripts.
 - If you change a workflow or script entry point, update the closest human-facing docs or prompt/skill references.
+- For WASM engine pipelines, keep threading contract checks explicit (`USE_PTHREADS`, `PTHREAD_POOL_SIZE`, cross-origin-isolation readiness) and enforce via CI hard gates.
+- Use `scripts/validate-wasm-parallel-contract.sh` for runtime/workflow contract gating when parallel worldgen is required.
 
 ## Shared Frontend Contract
 

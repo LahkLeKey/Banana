@@ -20,6 +20,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { isAnalyticsEnabled, trackPageView } from "./analytics";
 import { GameEnginePage } from "../pages/GameEnginePage";
+import { SessionRoomPage } from "../pages/SessionRoomPage";
 
 const legacyRoutes = [
   "landing",
@@ -34,7 +35,6 @@ const legacyRoutes = [
   "review-spikes",
   "classify",
   "operator",
-  "game-engine",
 ];
 
 function PageShell() {
@@ -87,7 +87,9 @@ export const router = createBrowserRouter([
     element: <PageShell />,
     errorElement: <RouteErrorBoundary />,
     children: [
-      { index: true, element: <GameEnginePage /> },
+      { index: true, element: <Navigate to="/session-room" replace /> },
+      { path: "session-room", element: <SessionRoomPage /> },
+      { path: "game-engine", element: <GameEnginePage /> },
       ...legacyRoutes.map((path) => ({ path, element: <Navigate to="/" replace /> })),
       { path: "*", element: <Navigate to="/" replace /> },
     ],

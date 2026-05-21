@@ -21,10 +21,10 @@ export type ChatSession = {
 };
 
 /**
- * Slice 015 -- mirrors the ASP.NET `EnsembleVerdictResult` JSON contract
- * (slice 014). Field order locked: label, score, did_escalate,
- * calibration_magnitude, status. Any drift here vs the managed contract
- * MUST fail the snapshot test in `react/src/lib/api.test.ts`.
+ * Slice 015 -- mirrors the TypeScript API ensemble verdict JSON contract.
+ * Field order locked: label, score, did_escalate, calibration_magnitude,
+ * status. Any drift here vs the API contract MUST fail the snapshot test in
+ * `react/src/lib/api.test.ts`.
  */
 export type EnsembleLabel = "banana" | "not_banana" | "unknown";
 export type EnsembleStatus = "ok" | "degraded";

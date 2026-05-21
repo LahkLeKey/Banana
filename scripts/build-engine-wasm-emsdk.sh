@@ -1,68 +1,53 @@
 #!/usr/bin/env bash
-# Temporary wrapper for building WASM with Emscripten from /tmp/emsdk
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$SCRIPT_DIR/.."
-ENGINE_DIR="$ROOT/src/native/engine"
-OUT_DIR="$ROOT/out/wasm"
-ARTIFACT_DIR="$ROOT/artifacts/wasm"
-REACT_PUBLIC="$ROOT/src/typescript/react/public/wasm"
+BUILD_SCRIPT="$SCRIPT_DIR/build-engine-wasm.sh"
+DEFAULT_EMSDK_PATH="/tmp/emsdk"
+DOCKER_IMAGE="emscripten/emsdk:3.1.57"
 
-# Source Emscripten
-source /tmp/emsdk/emsdk_env.sh
-EMCC="python /tmp/emsdk/upstream/emscripten/emcc.py"
+if command -v emcc >/dev/null 2>&1; then
+    echo "[build-engine-wasm-emsdk] Using active emcc from PATH"
+    exec bash "$BUILD_SCRIPT" "$@"
+fi
 
-OPT="-O0 -g"
-[[ "${1:-}" == "--release" ]] && OPT="-O2" && echo "[wasm] Release build" || echo "[wasm] Debug build"
+EMSDK_ROOT="${EMSDK_PATH:-$DEFAULT_EMSDK_PATH}"
+if [[ -f "$EMSDK_ROOT/emsdk_env.sh" ]]; then
+    echo "[build-engine-wasm-emsdk] Activating emsdk from $EMSDK_ROOT"
+    # shellcheck disable=SC1091
+    source "$EMSDK_ROOT/emsdk_env.sh" >/dev/null 2>&1
+  export EMSDK_PATH="$EMSDK_ROOT"
+  if [[ -f "$EMSDK_ROOT/upstream/emscripten/emcc.sh" ]]; then
+    export EMCC_SCRIPT="$EMSDK_ROOT/upstream/emscripten/emcc.sh"
+  elif [[ -f "$EMSDK_ROOT/upstream/emscripten/emcc.py" ]]; then
+    export EMCC_SCRIPT="$EMSDK_ROOT/upstream/emscripten/emcc.py"
+  fi
+    exec bash "$BUILD_SCRIPT" "$@"
+fi
 
-mkdir -p "$OUT_DIR"
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+    echo "[build-engine-wasm-emsdk] Using Docker image $DOCKER_IMAGE"
+    exec docker run --rm \
+        -v "$ROOT:/workspace" \
+        -w /workspace \
+        "$DOCKER_IMAGE" \
+  bash scripts/build-engine-wasm.sh "$@"
+fi
 
-SOURCES=(
-    "$ENGINE_DIR/engine.c"
-    "$ENGINE_DIR/render/window.c"
-    "$ENGINE_DIR/render/shader.c"
-    "$ENGINE_DIR/render/mesh.c"
-    "$ENGINE_DIR/render/material.c"
-    "$ENGINE_DIR/render/camera.c"
-    "$ENGINE_DIR/render/renderer.c"
-    "$ENGINE_DIR/physics/body.c"
-    "$ENGINE_DIR/physics/collider.c"
-    "$ENGINE_DIR/physics/dynamics.c"
-    "$ENGINE_DIR/physics/world.c"
-    "$ENGINE_DIR/ai/controller.c"
-    "$ENGINE_DIR/ai/controller_system.c"
-    "$ENGINE_DIR/ai/state_machine.c"
-    "$ENGINE_DIR/ai/navigation.c"
-    "$ENGINE_DIR/ai/perception.c"
-    "$ENGINE_DIR/ai/wildlife_controller.c"
-    "$ENGINE_DIR/world/entity.c"
-    "$ENGINE_DIR/world/world.c"
-    "$ENGINE_DIR/world/signals.c"
-    "$ENGINE_DIR/wasm_main.c"
-)
+cat >&2 <<EOF
+[build-engine-wasm-emsdk] ERROR: No usable Emscripten toolchain found.
 
-EXPORTS='["_main","_engine_init","_engine_tick","_engine_shutdown","_engine_render_frame","_engine_get_frame_buffer","_engine_world_spawn","_engine_world_tick","_engine_controller_create","_engine_controller_attach","_engine_controller_update","_engine_controller_signal","_engine_get_entity_count","_engine_get_entity_x","_engine_get_entity_z","_engine_get_entity_state","_engine_set_move_input","_engine_get_click_count","_engine_get_target_reached_count","_engine_get_has_move_target","_physics_step","_physics_add_body","_physics_update_body"]'
+Tried, in order:
+  1. emcc on PATH
+  2. EMSDK_PATH/emsdk_env.sh
+  3. $DEFAULT_EMSDK_PATH/emsdk_env.sh
+  4. Docker daemon with image $DOCKER_IMAGE
 
-echo "[wasm] Compiling ${#SOURCES[@]} sources…"
-
-$EMCC \
-    "${SOURCES[@]}" \
-    -I "$ENGINE_DIR" -I "$ENGINE_DIR/render" -I "$ENGINE_DIR/physics" -I "$ENGINE_DIR/ai" -I "$ENGINE_DIR/world" \
-    -std=c11 $OPT \
-    -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 \
-    -s EXPORTED_FUNCTIONS="$EXPORTS" \
-    -s EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]' \
-    -s MODULARIZE=1 -s EXPORT_NAME=BananaEngine \
-    -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=33554432 \
-    -s NO_EXIT_RUNTIME=1 \
-    -s ENVIRONMENT=web \
-    -o "$OUT_DIR/engine.js"
-
-echo "[wasm] Build complete: $OUT_DIR/"
-mkdir -p "$REACT_PUBLIC"
-cp "$OUT_DIR/engine.js" "$REACT_PUBLIC/" && cp "$OUT_DIR/engine.wasm" "$REACT_PUBLIC/" 2>/dev/null || true
-mkdir -p "$ARTIFACT_DIR"
-cp "$OUT_DIR/engine.js" "$ARTIFACT_DIR/banana-wasm-engine.js" && cp "$OUT_DIR/engine.wasm" "$ARTIFACT_DIR/banana-wasm-engine.wasm" 2>/dev/null || true
-echo "[wasm] Copied to $REACT_PUBLIC/"
+To build locally, either:
+  - activate emsdk first, or
+  - set EMSDK_PATH to your emsdk root, or
+  - start Docker Desktop so the CI-style container build can run.
+EOF
+exit 1

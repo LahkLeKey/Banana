@@ -32,20 +32,45 @@ else
 fi
 
 # ── Verify emcc is available ─────────────────────────────────────────────────
-if ! command -v emcc &>/dev/null; then
+EMCC_CMD=(emcc)
+if [[ -n "${EMCC_SCRIPT:-}" && -f "${EMCC_SCRIPT}" ]]; then
+    case "$EMCC_SCRIPT" in
+        *.py)
+            EMCC_CMD=(python "${EMCC_SCRIPT}")
+            ;;
+        *.sh)
+            EMCC_CMD=(bash "${EMCC_SCRIPT}")
+            ;;
+        *)
+            EMCC_CMD=("${EMCC_SCRIPT}")
+            ;;
+    esac
+    echo "[build-engine-wasm] Using emcc script from EMCC_SCRIPT=${EMCC_SCRIPT}"
+elif command -v emcc &>/dev/null; then
+    EMCC_CMD=(emcc)
+    echo "[build-engine-wasm] Using emcc $(emcc --version | head -1)"
+elif [[ -n "${EMSDK_PATH:-}" && -f "${EMSDK_PATH}/upstream/emscripten/emcc.sh" ]]; then
+    EMCC_CMD=(bash "${EMSDK_PATH}/upstream/emscripten/emcc.sh")
+    echo "[build-engine-wasm] Using emcc.sh from EMSDK_PATH=${EMSDK_PATH}"
+elif [[ -n "${EMSDK_PATH:-}" && -f "${EMSDK_PATH}/upstream/emscripten/emcc.py" ]]; then
+    EMCC_CMD=(python "${EMSDK_PATH}/upstream/emscripten/emcc.py")
+    echo "[build-engine-wasm] Using emcc.py from EMSDK_PATH=${EMSDK_PATH}"
+else
     echo ""
     echo "ERROR: emcc not found. Activate the Emscripten SDK first:"
     echo "  source /path/to/emsdk/emsdk_env.sh"
     echo ""
     exit 1
 fi
-echo "[build-engine-wasm] Using emcc $(emcc --version | head -1)"
+
+echo "[build-engine-wasm] Using emcc $("${EMCC_CMD[@]}" --version | head -1)"
 
 mkdir -p "$OUT_DIR"
 
 # ── Source files ─────────────────────────────────────────────────────────────
 SOURCES=(
     "$ENGINE_DIR/engine.c"
+    "$ENGINE_DIR/engine_serialize.c"
     "$ENGINE_DIR/render/window.c"
     "$ENGINE_DIR/render/shader.c"
     "$ENGINE_DIR/render/mesh.c"
@@ -73,7 +98,7 @@ EXPORTS='["_main","_engine_world_spawn","_engine_controller_attach","_engine_con
 # ── Build ─────────────────────────────────────────────────────────────────────
 echo "[build-engine-wasm] Compiling ${#SOURCES[@]} source files…"
 
-emcc \
+"${EMCC_CMD[@]}" \
     "${SOURCES[@]}" \
     -I "$ENGINE_DIR" \
     -I "$ENGINE_DIR/render" \
