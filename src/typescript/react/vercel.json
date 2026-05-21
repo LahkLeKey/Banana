@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/((?!_vercel/|assets/|notebooks/|.*\\..*).*)",
       "destination": "/index.html"
     }

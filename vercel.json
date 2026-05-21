@@ -1,0 +1,15 @@
+{
+  "installCommand": "cd src/typescript/react && bun install",
+  "buildCommand": "cd src/typescript/react && bun run build",
+  "outputDirectory": "src/typescript/react/dist",
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!_vercel/|assets/|notebooks/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
