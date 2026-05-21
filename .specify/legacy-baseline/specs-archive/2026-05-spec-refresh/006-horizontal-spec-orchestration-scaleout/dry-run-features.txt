@@ -1,3 +1,0 @@
-.specify/specs/003-retire-self-training-surfaces
-.specify/specs/004-wiki-rescaffold-baseline
-.specify/specs/005-confidence-heartbeat-orchestration

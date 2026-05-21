@@ -1,4 +1,0 @@
-{"event": "step_started", "step_id": "specify", "type": "command", "timestamp": "2026-05-16T06:32:20.838068+00:00"}
-{"event": "step_completed", "step_id": "specify", "status": "failed", "timestamp": "2026-05-16T06:33:29.512091+00:00"}
-{"event": "step_failed", "step_id": "specify", "error": "Interrupted by user", "timestamp": "2026-05-16T06:33:29.513306+00:00"}
-{"event": "workflow_finished", "status": "failed", "timestamp": "2026-05-16T06:33:29.515250+00:00"}
