@@ -1,4 +1,9 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "bun install",
+  "buildCommand": "cd src/typescript/react && bun install && bun run build",
+  "outputDirectory": "src/typescript/react/dist",
+  "framework": "vite",
   "rewrites": [
     {
       "source": "/",
