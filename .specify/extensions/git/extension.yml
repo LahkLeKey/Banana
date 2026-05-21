@@ -3,8 +3,8 @@ schema_version: "1.0"
 extension:
   id: git
   name: "Git Branching Workflow"
-  version: "1.1.0"
-  description: "Feature branch creation, numbering (sequential/timestamp), validation, and Git remote detection with Spec Kit preflight orchestration guidance"
+  version: "1.0.0"
+  description: "Feature branch creation, numbering (sequential/timestamp), validation, and Git remote detection"
   author: spec-kit-core
   repository: https://github.com/github/spec-kit
   license: MIT
@@ -133,10 +133,8 @@ tags:
   - "git"
   - "branching"
   - "workflow"
-  - "orchestration-preflight"
 
 config:
   defaults:
     branch_numbering: sequential
     init_commit_message: "[Spec Kit] Initial commit"
-    orchestration_confidence_threshold: 80

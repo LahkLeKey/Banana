@@ -7,12 +7,6 @@ branch_numbering: sequential
 # Commit message used by `git commit` during repository initialization
 init_commit_message: "[Spec Kit] Initial commit"
 
-# Confidence/preflight orchestration defaults for Banana Spec Kit runs.
-orchestration:
-  confidence_threshold: 80
-  require_extension_preflight: true
-  require_heartbeat_per_major_step: true
-
 # Auto-commit before/after core commands.
 # Set "default" to enable for all commands, then override per-command.
 # Each key can be true/false. Message is customizable per-command.

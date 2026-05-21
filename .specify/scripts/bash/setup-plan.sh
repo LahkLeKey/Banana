@@ -8,17 +8,17 @@ ARGS=()
 
 for arg in "$@"; do
     case "$arg" in
-        --json)
-            JSON_MODE=true
+        --json) 
+            JSON_MODE=true 
             ;;
-        --help|-h)
+        --help|-h) 
             echo "Usage: $0 [--json]"
             echo "  --json    Output results in JSON format"
             echo "  --help    Show this help message"
-            exit 0
+            exit 0 
             ;;
-        *)
-            ARGS+=("$arg")
+        *) 
+            ARGS+=("$arg") 
             ;;
     esac
 done
@@ -32,8 +32,10 @@ _paths_output=$(get_feature_paths) || { echo "ERROR: Failed to resolve feature p
 eval "$_paths_output"
 unset _paths_output
 
-# Check if we're on a proper feature branch (only for git repos)
-check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
+# If feature.json pins an existing feature directory, branch naming is not required.
+if ! feature_json_matches_feature_dir "$REPO_ROOT" "$FEATURE_DIR"; then
+    check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
+fi
 
 # Ensure the feature directory exists
 mkdir -p "$FEATURE_DIR"
@@ -65,8 +67,9 @@ if $JSON_MODE; then
     fi
 else
     echo "FEATURE_SPEC: $FEATURE_SPEC"
-    echo "IMPL_PLAN: $IMPL_PLAN"
+    echo "IMPL_PLAN: $IMPL_PLAN" 
     echo "SPECS_DIR: $FEATURE_DIR"
     echo "BRANCH: $CURRENT_BRANCH"
     echo "HAS_GIT: $HAS_GIT"
 fi
+

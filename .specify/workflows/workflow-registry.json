@@ -1,26 +1,13 @@
 {
   "schema_version": "1.0",
   "workflows": {
-    "drift-realignment": {
-      "name": "Drift Realignment Cycle",
-      "version": "1.0.0",
-      "description": "Runs specify -> plan -> tasks with drift-alignment review gates rooted in .specify",
-      "source": "local",
-      "installed_at": "2026-04-25T00:00:00+00:00",
-      "updated_at": "2026-04-25T00:00:00+00:00",
-      "artifacts": {
-        "traceability_report": ".specify/specs/<active-feature>/traceability-report.md",
-        "decision_log_markdown": ".specify/specs/<active-feature>/decision-log.md",
-        "decision_log_jsonl": ".specify/specs/<active-feature>/decision-log.jsonl"
-      }
-    },
     "speckit": {
       "name": "Full SDD Cycle",
       "version": "1.0.0",
       "description": "Runs specify \u2192 plan \u2192 tasks \u2192 implement with review gates",
       "source": "bundled",
-      "installed_at": "2026-04-24T02:59:56.803477+00:00",
-      "updated_at": "2026-04-24T02:59:56.803487+00:00"
+      "installed_at": "2026-05-21T08:03:11.497687+00:00",
+      "updated_at": "2026-05-21T08:03:11.497695+00:00"
     }
   }
 }

@@ -1,7 +1,0 @@
-{
-  "inputs": {
-    "spec": ".specify/specs/052-v3-pure-c-typescript-reset/spec.md",
-    "integration": "forge",
-    "scope": "full"
-  }
-}
