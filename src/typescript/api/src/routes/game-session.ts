@@ -568,6 +568,8 @@ export async function registerGameSessionRoutes(
                   type: 'error',
                   error: 'invalid_input',
                   detail: validation.reason,
+                  expectedSequence: player.lastSequence,
+                  expectedTick: player.lastTick,
                 }));
                 return;
               }

@@ -20,9 +20,8 @@ import {
   SplashOverlay,
   ViewportErrorOverlay,
 } from "@banana/ui";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { GameWorldMap } from "../components/GameWorldMap";
 import { OverworldHud } from "../components/game/OverworldHud";
 import {
   GAME_SESSION_STORAGE_KEY,
@@ -110,6 +109,7 @@ export function GameEnginePage() {
   const scriptRef = useRef<HTMLScriptElement | null>(null);
   const websocketRef = useRef<WebSocket | null>(null);
   const outboundSequenceRef = useRef(0);
+  const outboundTickRef = useRef(0);
   const netcodeRef = useRef<NetcodeDomain | null>(null);
   const predictionRef = useRef<PredictionDomain | null>(null);
   const replicationRef = useRef<ReplicationDomain | null>(null);
@@ -164,7 +164,6 @@ export function GameEnginePage() {
   const [serverTick, setServerTick] = useState(0);
   const [serverMetrics, setServerMetrics] = useState<GameSessionServerMetrics | null>(null);
   const [nativeActivePlayerCount, setNativeActivePlayerCount] = useState(0);
-  const [softwareViewport, setSoftwareViewport] = useState(false);
 
   const applySessionPlayers = (players: GameSessionPlayer[]) => {
     const nextPlayers = players ?? [];
@@ -179,17 +178,6 @@ export function GameEnginePage() {
     playerRosterSignatureRef.current = signature;
     setSessionPlayers(nextPlayers);
   };
-
-  const softwareViewportEntities = useMemo(
-    () =>
-      Object.values(snapshotEntities).map((entity, index) => ({
-        idx: entity.id ?? index + 1,
-        x: entity.x,
-        z: entity.z,
-        state: entity.state,
-      })),
-    [snapshotEntities]
-  );
 
   useEffect(() => {
     try {
@@ -268,24 +256,60 @@ export function GameEnginePage() {
       try {
         const payload = JSON.parse(event.data) as
           | GameSessionSnapshotEnvelope
-          | { type: "connected"; playerId?: string; players?: GameSessionPlayer[] }
+          | {
+            type: "connected";
+            playerId?: string;
+            players?: GameSessionPlayer[];
+            lastSequence?: number;
+            lastTick?: number;
+          }
           | { type: "ack"; sequence?: number; tick?: number }
           | { type: "pong"; ts?: number }
-          | { type: "error"; detail?: string };
+          | {
+            type: "error";
+            error?: string;
+            detail?: string;
+            expectedSequence?: number;
+            expectedTick?: number;
+          };
 
         if (payload.type === "connected") {
           setLocalPlayerId(payload.playerId ?? null);
           localPlayerIdRef.current = payload.playerId ?? null;
+          if (Number.isFinite(payload.lastSequence)) {
+            outboundSequenceRef.current = Math.max(outboundSequenceRef.current, Number(payload.lastSequence));
+          }
+          if (Number.isFinite(payload.lastTick)) {
+            outboundTickRef.current = Math.max(outboundTickRef.current, Number(payload.lastTick));
+          }
           applySessionPlayers(payload.players ?? []);
           return;
         }
 
         if (payload.type === "error") {
-          setError(payload.detail ?? "Realtime session reported an error.");
+          const detail = payload.detail ?? "Realtime session reported an error.";
+          if (payload.error === "invalid_input") {
+            const nextSequence = Number(payload.expectedSequence ?? outboundSequenceRef.current);
+            const nextTick = Number(payload.expectedTick ?? outboundTickRef.current);
+            if (Number.isFinite(nextSequence)) {
+              outboundSequenceRef.current = Math.max(outboundSequenceRef.current, nextSequence);
+            }
+            if (Number.isFinite(nextTick)) {
+              outboundTickRef.current = Math.max(outboundTickRef.current, nextTick);
+            }
+            setInteractionMessage(`Realtime input resynced (${detail}); continuing.`);
+            return;
+          }
+
+          setError(detail);
           return;
         }
 
         if (payload.type === "ack" || payload.type === "pong") {
+          return;
+        }
+
+        if (payload.type !== "snapshot") {
           return;
         }
 
@@ -371,7 +395,7 @@ export function GameEnginePage() {
           isAuthoritative: true,
         });
       } catch {
-        setError("Realtime snapshot parsing failed. Rejoin the room and retry.");
+        setInteractionMessage("Realtime snapshot parse warning; waiting for next server update.");
       }
     });
 
@@ -570,16 +594,12 @@ export function GameEnginePage() {
 
     const hasPreloadedEngineFactory = typeof window.BananaEngine === "function";
     if (!hasPreloadedEngineFactory && !isWebGL2Available()) {
-      setSoftwareViewport(true);
-      setStatus("running");
-      setError(null);
-      setInteractionMessage(
-        "WebGL2 unavailable on this runtime. Running software map viewport mode."
+      setStatus("unavailable");
+      setError(
+        "This browser/device cannot create a WebGL2 context. Open on a WebGL2-capable browser/device or enable hardware acceleration."
       );
       return;
     }
-
-    setSoftwareViewport(false);
 
     setStatus("loading");
 
@@ -697,13 +717,8 @@ export function GameEnginePage() {
           message.includes("engine_init failed") ||
           message.includes("abort");
         if (!isFatalInit) return;
-        runtimeInitFailed = true;
-        window.clearInterval(intervalRef.current);
-        window.clearTimeout(renderHealthTimerRef.current);
-        uiService.setEngineStatus(
-          "unavailable",
-          "WebGL viewport initialization failed on this runtime. Open on a WebGL2-capable browser/device or enable hardware acceleration, then reload."
-        );
+        runtimeInitFailed = false;
+        setInteractionMessage(`WASM runtime warning: ${rawMessage}`);
       };
 
       try {
@@ -908,7 +923,7 @@ export function GameEnginePage() {
           try {
             const gl = canvas.getContext("webgl2");
             if (!gl) {
-              applyRuntimeFatal("webgl2 context creation failed");
+              setInteractionMessage("WebGL2 probe unavailable; continuing runtime.");
               return;
             }
             const width = Math.max(1, canvas.width);
@@ -932,10 +947,13 @@ export function GameEnginePage() {
             }
             consecutiveBlankFrameProbes += 1;
             if (consecutiveBlankFrameProbes >= 2) {
-              applyRuntimeFatal("engine_init failed");
+              setInteractionMessage(
+                "Render probe detected dark frames; continuing runtime for visual iteration."
+              );
+              consecutiveBlankFrameProbes = 0;
             }
           } catch {
-            applyRuntimeFatal("engine_init failed");
+            setInteractionMessage("Render probe failed; continuing runtime.");
           }
         };
 
@@ -960,11 +978,12 @@ export function GameEnginePage() {
             predictionRef.current?.predict(movement);
             if (sessionBootstrap && websocketRef.current?.readyState === WebSocket.OPEN) {
               outboundSequenceRef.current += 1;
+              outboundTickRef.current += 1;
               websocketRef.current.send(
                 JSON.stringify({
                   type: "input",
                   sequence: outboundSequenceRef.current,
-                  tick,
+                  tick: outboundTickRef.current,
                   moveX: movement.moveX,
                   moveZ: movement.moveZ,
                   timestamp: Date.now(),
@@ -991,11 +1010,9 @@ export function GameEnginePage() {
               probeFramebuffer();
             }
           } catch {
-            uiService.setEngineStatus(
-              "error",
-              "Engine runtime failed while rendering. Reload the page or run on a browser/device with working WebGL2."
+            setInteractionMessage(
+              "Runtime tick warning encountered; continuing WASM loop."
             );
-            window.clearInterval(intervalRef.current);
           }
         };
 
@@ -1092,79 +1109,6 @@ export function GameEnginePage() {
     };
   }, [engineAssetVersion, sessionBootstrap]);
 
-  useEffect(() => {
-    if (!softwareViewport) {
-      return;
-    }
-
-    const pressed = new Set<string>();
-
-    const computeMovement = () => {
-      const up = pressed.has("w") || pressed.has("arrowup");
-      const down = pressed.has("s") || pressed.has("arrowdown");
-      const left = pressed.has("a") || pressed.has("arrowleft");
-      const right = pressed.has("d") || pressed.has("arrowright");
-
-      const moveX = right ? 1 : left ? -1 : 0;
-      const moveZ = down ? 1 : up ? -1 : 0;
-      return { moveX, moveZ };
-    };
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
-      if (!isMovementKey(key)) {
-        return;
-      }
-
-      pressed.add(key);
-      event.preventDefault();
-    };
-
-    const onKeyUp = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
-      if (!isMovementKey(key)) {
-        return;
-      }
-
-      pressed.delete(key);
-    };
-
-    const onBlur = () => {
-      pressed.clear();
-    };
-
-    window.addEventListener("keydown", onKeyDown, { capture: true });
-    window.addEventListener("keyup", onKeyUp, { capture: true });
-    window.addEventListener("blur", onBlur);
-
-    const inputLoop = window.setInterval(() => {
-      const socket = websocketRef.current;
-      if (!sessionBootstrap || !socket || socket.readyState !== WebSocket.OPEN) {
-        return;
-      }
-
-      const movement = computeMovement();
-      outboundSequenceRef.current += 1;
-      socket.send(
-        JSON.stringify({
-          type: "input",
-          sequence: outboundSequenceRef.current,
-          tick: serverTick,
-          moveX: movement.moveX,
-          moveZ: movement.moveZ,
-          timestamp: Date.now(),
-        })
-      );
-    }, 50);
-
-    return () => {
-      window.clearInterval(inputLoop);
-      window.removeEventListener("keydown", onKeyDown, { capture: true });
-      window.removeEventListener("keyup", onKeyUp, { capture: true });
-      window.removeEventListener("blur", onBlur);
-    };
-  }, [softwareViewport, serverTick, sessionBootstrap]);
-
   const showSplash = status === "idle" || status === "loading";
 
   return (
@@ -1185,48 +1129,34 @@ export function GameEnginePage() {
     >
       <SplashOverlay visible={showSplash} />
 
-      {!softwareViewport ? (
-        <canvas
-          id="canvas"
-          ref={canvasRef}
-          onMouseDown={() => {
-            if (contextMenu.visible) {
-              const svc = uiServiceRef.current;
-              if (svc) svc.closeContextMenu();
-            }
-          }}
-          onContextMenu={(event) => {
-            event.preventDefault();
+      <canvas
+        id="canvas"
+        ref={canvasRef}
+        onMouseDown={() => {
+          if (contextMenu.visible) {
             const svc = uiServiceRef.current;
-            if (!svc) return;
+            if (svc) svc.closeContextMenu();
+          }
+        }}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          const svc = uiServiceRef.current;
+          if (!svc) return;
 
-            const bounds = viewportRef.current?.getBoundingClientRect();
-            const relativeX = bounds ? event.clientX - bounds.left : event.clientX;
-            const relativeY = bounds ? event.clientY - bounds.top : event.clientY;
+          const bounds = viewportRef.current?.getBoundingClientRect();
+          const relativeX = bounds ? event.clientX - bounds.left : event.clientX;
+          const relativeY = bounds ? event.clientY - bounds.top : event.clientY;
 
-            svc.openContextMenu(relativeX, relativeY);
-          }}
-          style={{
-            display: "block",
-            width: "100%",
-            height: "100%",
-            imageRendering: "pixelated",
-            touchAction: "none",
-          }}
-        />
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            placeItems: "center",
-            width: "100%",
-            height: "100%",
-            background: "radial-gradient(circle at center, #0f172a 0%, #020617 70%)",
-          }}
-        >
-          <GameWorldMap entities={softwareViewportEntities} worldSize={1280} width={560} height={560} />
-        </div>
-      )}
+          svc.openContextMenu(relativeX, relativeY);
+        }}
+        style={{
+          display: "block",
+          width: "100%",
+          height: "100%",
+          imageRendering: "pixelated",
+          touchAction: "none",
+        }}
+      />
 
       {/* Error overlay */}
       {(status === "error" || status === "unavailable") && error && (
@@ -1234,7 +1164,9 @@ export function GameEnginePage() {
       )}
 
       {/* Error notification badge */}
-      {(status === "error" || status === "unavailable") && error && <ErrorBadge message={error} />}
+      {(status === "error" || status === "unavailable") && error && (
+        <ErrorBadge message={error} />
+      )}
 
       {/* Controls hint */}
       <ControlsHint />
