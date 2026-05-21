@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "engine_serialize.h"
+#include "ai/npc_merchant.h"
 #include "ai/wildlife_controller.h"
 #include "ui/ui.h"
 #include "runtime/controller_sync.h"
@@ -59,6 +60,7 @@ static float s_camera_target[3] = {0.f, 0.f, 0.f};
 static int s_camera_valid = 0;
 static float s_move_input_x = 0.f;
 static float s_move_input_z = 0.f;
+static int s_merchants_seeded = 0;
 
 /* ── Active controller table ─────────────────────────────────────────────── */
 #define BANANA_MAX_ACTIVE_CONTROLLERS 256
@@ -214,7 +216,49 @@ static void tick_phase_render_scene(void)
                                 s_entity_mesh,
                                 s_terrain_initialized,
                                 terrain_draw_runtime,
-                                runtime_render_material_for_entity);
+                                runtime_render_material_for_actor);
+}
+
+static const char *engine_player_active_guid(void)
+{
+    const char *player_guid = NULL;
+    int binding_count = runtime_player_registry_count();
+    for (int i = 0; i < binding_count; i++) {
+        NativePlayerBinding *binding = runtime_player_registry_get(i);
+        if (!binding || !binding->guid[0]) {
+            continue;
+        }
+        if (binding->entity_id == s_player_id) {
+            return binding->guid;
+        }
+        if (!player_guid) {
+            player_guid = binding->guid;
+        }
+    }
+    return player_guid;
+}
+
+static int engine_seed_default_merchant_if_needed(int npc_id)
+{
+    if (npc_id < 0) {
+        return -1;
+    }
+
+    if (!s_merchants_seeded) {
+        npc_merchant_init();
+        s_merchants_seeded = 1;
+    }
+
+    while (npc_merchant_count() <= npc_id) {
+        int merchant_id = npc_merchant_register(npc_merchant_count(), 0.0f, 0.0f, 500);
+        if (merchant_id < 0) {
+            return -1;
+        }
+        npc_merchant_add_inventory_item(merchant_id, "wood", 100, 200, 5);
+        npc_merchant_add_inventory_item(merchant_id, "ore", 50, 100, 15);
+    }
+
+    return 0;
 }
 
 /* ── Tick ────────────────────────────────────────────────────────────────── */
@@ -259,6 +303,10 @@ void engine_shutdown(void)
     s_physics = NULL;
     s_world = NULL;
     s_player_id = 0;
+    if (s_merchants_seeded) {
+        npc_merchant_shutdown();
+        s_merchants_seeded = 0;
+    }
     runtime_player_registry_reset();
     s_engine_initialized = 0;
     s_camera_valid = 0;
@@ -565,25 +613,34 @@ void engine_ui_shutdown(void)
 int engine_player_get_resource(const char *resource_type)
 {
     if (!resource_type) return 0;
-    
-    /* TODO: Query player inventory via player_registry
-       For now: return stub values */
-    if (strcmp(resource_type, "wood") == 0) return 0;
-    if (strcmp(resource_type, "ore") == 0) return 0;
-    if (strcmp(resource_type, "gold") == 0) return 0;
+
+    const char *player_guid = engine_player_active_guid();
+
+    if (player_guid) {
+        return runtime_player_registry_get_resource(player_guid, resource_type);
+    }
+
     return 0;
 }
 
 int engine_player_add_resource(const char *resource_type, int amount)
 {
     if (!resource_type) return 0;
-    
-    /* TODO: Add resource to player inventory via player_registry
-       For now: return stub values */
-    if (strcmp(resource_type, "wood") == 0) return amount;
-    if (strcmp(resource_type, "ore") == 0) return amount;
-    if (strcmp(resource_type, "gold") == 0) return amount;
+
+    const char *player_guid = engine_player_active_guid();
+
+    if (player_guid) {
+        runtime_player_registry_add_resource(player_guid, resource_type, amount);
+        return runtime_player_registry_get_resource(player_guid, resource_type);
+    }
+
     return 0;
+}
+
+static int engine_player_set_resource_total(const char *resource_type, int target_amount)
+{
+    int current = engine_player_get_resource(resource_type);
+    return engine_player_add_resource(resource_type, target_amount - current);
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -593,53 +650,64 @@ int engine_player_add_resource(const char *resource_type, int amount)
 int engine_npc_merchant_get_price(int npc_id, const char *item_type)
 {
     /* Query merchant pricing via npc_merchant module */
-    if (!item_type) return 0;
-    
-    /* TODO: Implement price lookup from merchant registry
-       For now: Return hardcoded prices
-       wood: 5 gold, ore: 15 gold */
-    
-    if (strcmp(item_type, "wood") == 0) return 5;
-    if (strcmp(item_type, "ore") == 0) return 15;
+    if (!item_type || engine_seed_default_merchant_if_needed(npc_id) != 0) return 0;
+
+    int stock = 0;
+    int price = 0;
+    if (npc_merchant_get_item_price(npc_id, item_type, &stock, &price) == 0) {
+        return price;
+    }
+
     return 0;
 }
 
 int engine_npc_merchant_trade_buy(int npc_id, const char *item_type, int quantity)
 {
-    if (!s_world || !item_type) return -1;
-    
-    /* Execute trade: player buys from merchant */
-    int price = engine_npc_merchant_get_price(npc_id, item_type);
-    int total_cost = price * quantity;
-    
+    if (!s_world || !item_type || quantity <= 0) return -1;
+    if (engine_seed_default_merchant_if_needed(npc_id) != 0) return -1;
+
     int player_gold = engine_player_get_resource("gold");
-    if (player_gold < total_cost) {
-        return -2; /* Insufficient gold */
+    MerchantTradeResult result = npc_merchant_trade_buy(npc_id, item_type, quantity, &player_gold);
+    if (result == MERCHANT_TRADE_INSUFFICIENT_GOLD) {
+        return -2;
     }
-    
-    /* Deduct gold, add item */
-    engine_player_add_resource("gold", -total_cost);
+    if (result == MERCHANT_TRADE_INSUFFICIENT_STOCK) {
+        return -3;
+    }
+    if (result != MERCHANT_TRADE_OK) {
+        return -1;
+    }
+
+    engine_player_set_resource_total("gold", player_gold);
     engine_player_add_resource(item_type, quantity);
-    
+
     return 0; /* Success */
 }
 
 int engine_npc_merchant_trade_sell(int npc_id, const char *item_type, int quantity)
 {
-    if (!s_world || !item_type) return -1;
-    
-    /* Execute trade: player sells to merchant */
-    int price = engine_npc_merchant_get_price(npc_id, item_type) / 2; /* Half price for selling */
-    int total_revenue = price * quantity;
-    
+    if (!s_world || !item_type || quantity <= 0) return -1;
+    if (engine_seed_default_merchant_if_needed(npc_id) != 0) return -1;
+
     int player_amount = engine_player_get_resource(item_type);
     if (player_amount < quantity) {
-        return -2; /* Insufficient items */
+        return -2;
     }
-    
-    /* Deduct item, add gold */
+
+    int player_gold = engine_player_get_resource("gold");
+    MerchantTradeResult result = npc_merchant_trade_sell(npc_id, item_type, quantity, &player_gold);
+    if (result == MERCHANT_TRADE_INSUFFICIENT_STOCK) {
+        return -3;
+    }
+    if (result == MERCHANT_TRADE_INSUFFICIENT_GOLD) {
+        return -4;
+    }
+    if (result != MERCHANT_TRADE_OK) {
+        return -1;
+    }
+
     engine_player_add_resource(item_type, -quantity);
-    engine_player_add_resource("gold", total_revenue);
-    
+    engine_player_set_resource_total("gold", player_gold);
+
     return 0; /* Success */
 }

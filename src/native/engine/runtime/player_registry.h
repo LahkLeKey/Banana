@@ -24,6 +24,7 @@ extern "C"
         int is_stale;          /* Flag: set when player exceeds staleness window */
         int wood_count;        /* Resource inventory: wood */
         int ore_count;         /* Resource inventory: ore */
+        int gold_count;        /* Resource inventory: gold */
     } NativePlayerBinding;
 
     typedef float (*RuntimeTerrainSampleFn)(float x, float z);

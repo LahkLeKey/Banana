@@ -1,9 +1,0 @@
-{
-  "kind": "banana-character-vectors",
-  "layers": [
-    {"id":"head","shape":"rounded-rect","size":[0.38,0.46],"color":"#ffd84a"},
-    {"id":"body","shape":"rounded-rect","size":[0.52,0.58],"color":"#f2c56a"},
-    {"id":"cape","shape":"poly","points":[[-0.24,0.18],[0.0,-0.44],[0.24,0.18]],"color":"#cf3047"},
-    {"id":"sword","shape":"poly","points":[[-0.04,0.0],[0.48,0.02],[0.52,-0.02],[-0.04,-0.02]],"color":"#eaf3ff"}
-  ]
-}

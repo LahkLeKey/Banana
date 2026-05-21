@@ -1,5 +1,0 @@
-cmake_minimum_required(VERSION 3.20)
-project(banana_native_v3 C)
-add_library(banana_native SHARED scaffold/native_entry.c)
-target_include_directories(banana_native PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_compile_features(banana_native PRIVATE c_std_11)

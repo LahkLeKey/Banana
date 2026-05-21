@@ -35,7 +35,7 @@
       "command": "bun",
       "args": [
         "-e",
-        "import { apiScaffold } from './src/typescript/api/src/index.ts'; console.log(apiScaffold);"
+        "import { registerHealthRoutes } from \"./src/typescript/api/src/routes/health.ts\"; console.log(typeof registerHealthRoutes);"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -47,7 +47,7 @@
       "command": "bun",
       "args": [
         "-e",
-        "import { uiScaffold } from './src/typescript/shared/ui/src/index.ts'; console.log(uiScaffold);"
+        "import \"./src/typescript/shared/ui/src/types.ts\"; console.log(\"ui-types-ok\");"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

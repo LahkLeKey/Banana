@@ -1,1 +1,0 @@
-{"name":"@banana/ui","private":true,"type":"module","exports":{".":"./src/index.ts"},"scripts":{"build":"echo ui build"}}

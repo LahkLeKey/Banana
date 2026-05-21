@@ -1,4 +1,0 @@
-Original: src/native/core/anticheat_trust.c, anticheat_trust.h
-Migrated: src/native/anticheat/domain/services/anticheat_trust.c, anticheat_trust.h
-Date: 2026-05-15
-Notes: DDD/SOLID refactor, see README-migration.md

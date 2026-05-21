@@ -285,6 +285,12 @@ void runtime_player_registry_add_resource(const char *guid, const char *resource
         if (binding->ore_count < 0)
             binding->ore_count = 0;
     }
+    else if (strcmp(resource_type, "gold") == 0)
+    {
+        binding->gold_count += amount;
+        if (binding->gold_count < 0)
+            binding->gold_count = 0;
+    }
 }
 
 int runtime_player_registry_get_resource(const char *guid, const char *resource_type)
@@ -300,6 +306,8 @@ int runtime_player_registry_get_resource(const char *guid, const char *resource_
         return binding->wood_count;
     else if (strcmp(resource_type, "ore") == 0)
         return binding->ore_count;
+    else if (strcmp(resource_type, "gold") == 0)
+        return binding->gold_count;
 
     return 0;
 }

@@ -25,7 +25,7 @@ void runtime_render_submit_frame(Renderer *renderer,
             if (!entity || !entity->active)
                 continue;
 
-            Material material = resolve_material(entity->type);
+            Material material = resolve_material(entity);
             renderer_draw_mesh(renderer, entity_mesh, entity->position, identity, entity->scale, &material);
         }
     }

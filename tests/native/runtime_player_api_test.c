@@ -58,6 +58,17 @@ int main(void)
             return 1;
     }
 
+        runtime_player_registry_add_resource("player-1", "gold", 100);
+        runtime_player_registry_add_resource("player-1", "wood", 3);
+        runtime_player_registry_add_resource("player-1", "ore", 2);
+        runtime_player_registry_add_resource("player-1", "gold", -25);
+        if (!expect_int("gold resource", runtime_player_registry_get_resource("player-1", "gold"), 75))
+            return 1;
+        if (!expect_int("wood resource", runtime_player_registry_get_resource("player-1", "wood"), 3))
+            return 1;
+        if (!expect_int("ore resource", runtime_player_registry_get_resource("player-1", "ore"), 2))
+            return 1;
+
     runtime_player_api_set_transform(world, "player-1", 99.0f, 5.0f, -99.0f, 1, 8.0f, sample_height);
     {
         Entity *entity = world_get_entity(world, entity_id);

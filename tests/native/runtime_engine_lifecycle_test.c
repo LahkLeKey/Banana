@@ -83,9 +83,9 @@ int main(void)
     if (!expect_true("default registry added", runtime_player_registry_count() == 1))
         return 1;
 
-    if (!expect_true("spawn actors", runtime_engine_lifecycle_spawn_default_actors(world, sample_height_fn, NULL) == 4))
+    if (!expect_true("spawn actors", runtime_engine_lifecycle_spawn_default_actors(world, sample_height_fn, NULL) == 8))
         return 1;
-    if (!expect_true("entity count after actors", world->entity_count == 5))
+    if (!expect_true("entity count after actors", world->entity_count == 9))
         return 1;
 
     controllers[0] = (ControllerInstance *)calloc(1, sizeof(ControllerInstance));

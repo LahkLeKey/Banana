@@ -198,6 +198,48 @@ int test_npc_merchant_trade_sell_merchant_full(void) {
   return 0;
 }
 
+/* Test: Trade sell - merchant cannot afford payout */
+int test_npc_merchant_trade_sell_insufficient_merchant_gold(void) {
+  npc_merchant_init();
+
+  int merchant_id = npc_merchant_register(0, 10.0f, 10.0f, 20);
+  npc_merchant_add_inventory_item(merchant_id, "wood", 50, 100, 10);
+
+  int player_gold = 0;
+  MerchantTradeResult result = npc_merchant_trade_sell(merchant_id, "wood", 3, &player_gold);
+
+  assert(result == MERCHANT_TRADE_INSUFFICIENT_GOLD);
+  assert(player_gold == 0); /* Unchanged */
+
+  MerchantNPC merchant;
+  npc_merchant_get(merchant_id, &merchant);
+  assert(merchant.gold_balance == 20); /* Unchanged */
+
+  int quantity, price;
+  npc_merchant_get_item_price(merchant_id, "wood", &quantity, &price);
+  assert(quantity == 50); /* Unchanged */
+
+  printf("✓ Test: trade_sell_insufficient_merchant_gold\n");
+  return 0;
+}
+
+/* Test: Trade sell - invalid quantity */
+int test_npc_merchant_trade_sell_invalid_quantity(void) {
+  npc_merchant_init();
+
+  int merchant_id = npc_merchant_register(0, 10.0f, 10.0f, 500);
+  npc_merchant_add_inventory_item(merchant_id, "wood", 50, 100, 10);
+
+  int player_gold = 0;
+  MerchantTradeResult result = npc_merchant_trade_sell(merchant_id, "wood", 0, &player_gold);
+
+  assert(result == MERCHANT_TRADE_INVALID_ITEM);
+  assert(player_gold == 0);
+
+  printf("✓ Test: trade_sell_invalid_quantity\n");
+  return 0;
+}
+
 /* Test: Multiple merchants */
 int test_npc_merchant_multiple(void) {
   npc_merchant_init();
@@ -255,6 +297,8 @@ int main(void) {
   failed += test_npc_merchant_trade_buy_invalid_item();
   failed += test_npc_merchant_trade_sell_success();
   failed += test_npc_merchant_trade_sell_merchant_full();
+  failed += test_npc_merchant_trade_sell_insufficient_merchant_gold();
+  failed += test_npc_merchant_trade_sell_invalid_quantity();
   failed += test_npc_merchant_multiple();
   failed += test_npc_merchant_clear();
 

@@ -94,6 +94,9 @@ MerchantTradeResult npc_merchant_trade_buy(int merchant_id, const char *item_nam
   if (!player_gold) {
     return MERCHANT_TRADE_INVALID_MERCHANT;
   }
+  if (quantity <= 0) {
+    return MERCHANT_TRADE_INVALID_ITEM;
+  }
 
   MerchantInventoryItem *item = npc_merchant_find_item(merchant_id, item_name);
   if (!item) {
@@ -128,6 +131,9 @@ MerchantTradeResult npc_merchant_trade_sell(int merchant_id, const char *item_na
   if (!player_gold) {
     return MERCHANT_TRADE_INVALID_MERCHANT;
   }
+  if (quantity <= 0) {
+    return MERCHANT_TRADE_INVALID_ITEM;
+  }
 
   MerchantInventoryItem *item = npc_merchant_find_item(merchant_id, item_name);
   if (!item) {
@@ -135,6 +141,14 @@ MerchantTradeResult npc_merchant_trade_sell(int merchant_id, const char *item_na
   }
 
   int total_revenue = item->price_gold * quantity;
+
+  if (merchant_id < 0 || merchant_id >= g_merchant_registry.count) {
+    return MERCHANT_TRADE_INVALID_MERCHANT;
+  }
+
+  if (g_merchant_registry.merchants[merchant_id].gold_balance < total_revenue) {
+    return MERCHANT_TRADE_INSUFFICIENT_GOLD;
+  }
 
   if (item->quantity + quantity > item->max_stock) {
     return MERCHANT_TRADE_INSUFFICIENT_STOCK; /* Merchant inventory full */
@@ -144,15 +158,10 @@ MerchantTradeResult npc_merchant_trade_sell(int merchant_id, const char *item_na
   item->quantity += quantity;
   *player_gold += total_revenue;
 
-  if (merchant_id >= 0 && merchant_id < g_merchant_registry.count) {
+  {
     MerchantNPC *merchant = &g_merchant_registry.merchants[merchant_id];
     merchant->gold_balance -= total_revenue;
     merchant->last_activity_at = 0; /* Update timestamp if needed */
-
-    /* Prevent merchant from going negative */
-    if (merchant->gold_balance < 0) {
-      merchant->gold_balance = 0;
-    }
   }
 
   return MERCHANT_TRADE_OK;

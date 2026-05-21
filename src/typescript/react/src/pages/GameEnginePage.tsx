@@ -20,8 +20,9 @@ import {
   SplashOverlay,
   ViewportErrorOverlay,
 } from "@banana/ui";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import { GameWorldMap } from "../components/GameWorldMap";
 import { OverworldHud } from "../components/game/OverworldHud";
 import {
   GAME_SESSION_STORAGE_KEY,
@@ -163,6 +164,7 @@ export function GameEnginePage() {
   const [serverTick, setServerTick] = useState(0);
   const [serverMetrics, setServerMetrics] = useState<GameSessionServerMetrics | null>(null);
   const [nativeActivePlayerCount, setNativeActivePlayerCount] = useState(0);
+  const [softwareViewport, setSoftwareViewport] = useState(false);
 
   const applySessionPlayers = (players: GameSessionPlayer[]) => {
     const nextPlayers = players ?? [];
@@ -177,6 +179,17 @@ export function GameEnginePage() {
     playerRosterSignatureRef.current = signature;
     setSessionPlayers(nextPlayers);
   };
+
+  const softwareViewportEntities = useMemo(
+    () =>
+      Object.values(snapshotEntities).map((entity, index) => ({
+        idx: entity.id ?? index + 1,
+        x: entity.x,
+        z: entity.z,
+        state: entity.state,
+      })),
+    [snapshotEntities]
+  );
 
   useEffect(() => {
     try {
@@ -557,12 +570,16 @@ export function GameEnginePage() {
 
     const hasPreloadedEngineFactory = typeof window.BananaEngine === "function";
     if (!hasPreloadedEngineFactory && !isWebGL2Available()) {
-      setStatus("unavailable");
-      setError(
-        "This browser/device cannot create a WebGL2 context. Open on a WebGL2-capable browser/device or enable hardware acceleration."
+      setSoftwareViewport(true);
+      setStatus("running");
+      setError(null);
+      setInteractionMessage(
+        "WebGL2 unavailable on this runtime. Running software map viewport mode."
       );
       return;
     }
+
+    setSoftwareViewport(false);
 
     setStatus("loading");
 
@@ -1075,6 +1092,79 @@ export function GameEnginePage() {
     };
   }, [engineAssetVersion, sessionBootstrap]);
 
+  useEffect(() => {
+    if (!softwareViewport) {
+      return;
+    }
+
+    const pressed = new Set<string>();
+
+    const computeMovement = () => {
+      const up = pressed.has("w") || pressed.has("arrowup");
+      const down = pressed.has("s") || pressed.has("arrowdown");
+      const left = pressed.has("a") || pressed.has("arrowleft");
+      const right = pressed.has("d") || pressed.has("arrowright");
+
+      const moveX = right ? 1 : left ? -1 : 0;
+      const moveZ = down ? 1 : up ? -1 : 0;
+      return { moveX, moveZ };
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      if (!isMovementKey(key)) {
+        return;
+      }
+
+      pressed.add(key);
+      event.preventDefault();
+    };
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      if (!isMovementKey(key)) {
+        return;
+      }
+
+      pressed.delete(key);
+    };
+
+    const onBlur = () => {
+      pressed.clear();
+    };
+
+    window.addEventListener("keydown", onKeyDown, { capture: true });
+    window.addEventListener("keyup", onKeyUp, { capture: true });
+    window.addEventListener("blur", onBlur);
+
+    const inputLoop = window.setInterval(() => {
+      const socket = websocketRef.current;
+      if (!sessionBootstrap || !socket || socket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      const movement = computeMovement();
+      outboundSequenceRef.current += 1;
+      socket.send(
+        JSON.stringify({
+          type: "input",
+          sequence: outboundSequenceRef.current,
+          tick: serverTick,
+          moveX: movement.moveX,
+          moveZ: movement.moveZ,
+          timestamp: Date.now(),
+        })
+      );
+    }, 50);
+
+    return () => {
+      window.clearInterval(inputLoop);
+      window.removeEventListener("keydown", onKeyDown, { capture: true });
+      window.removeEventListener("keyup", onKeyUp, { capture: true });
+      window.removeEventListener("blur", onBlur);
+    };
+  }, [softwareViewport, serverTick, sessionBootstrap]);
+
   const showSplash = status === "idle" || status === "loading";
 
   return (
@@ -1095,36 +1185,48 @@ export function GameEnginePage() {
     >
       <SplashOverlay visible={showSplash} />
 
-      {/* biome-ignore lint: useUniqueElementIds */}
-      {/* Primary WASM viewport — 100% coverage, responsive sizing handled by C engine */}
-      <canvas
-        id="canvas"
-        ref={canvasRef}
-        onMouseDown={() => {
-          if (contextMenu.visible) {
+      {!softwareViewport ? (
+        <canvas
+          id="canvas"
+          ref={canvasRef}
+          onMouseDown={() => {
+            if (contextMenu.visible) {
+              const svc = uiServiceRef.current;
+              if (svc) svc.closeContextMenu();
+            }
+          }}
+          onContextMenu={(event) => {
+            event.preventDefault();
             const svc = uiServiceRef.current;
-            if (svc) svc.closeContextMenu();
-          }
-        }}
-        onContextMenu={(event) => {
-          event.preventDefault();
-          const svc = uiServiceRef.current;
-          if (!svc) return;
+            if (!svc) return;
 
-          const bounds = viewportRef.current?.getBoundingClientRect();
-          const relativeX = bounds ? event.clientX - bounds.left : event.clientX;
-          const relativeY = bounds ? event.clientY - bounds.top : event.clientY;
+            const bounds = viewportRef.current?.getBoundingClientRect();
+            const relativeX = bounds ? event.clientX - bounds.left : event.clientX;
+            const relativeY = bounds ? event.clientY - bounds.top : event.clientY;
 
-          svc.openContextMenu(relativeX, relativeY);
-        }}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-          imageRendering: "pixelated",
-          touchAction: "none",
-        }}
-      />
+            svc.openContextMenu(relativeX, relativeY);
+          }}
+          style={{
+            display: "block",
+            width: "100%",
+            height: "100%",
+            imageRendering: "pixelated",
+            touchAction: "none",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            placeItems: "center",
+            width: "100%",
+            height: "100%",
+            background: "radial-gradient(circle at center, #0f172a 0%, #020617 70%)",
+          }}
+        >
+          <GameWorldMap entities={softwareViewportEntities} worldSize={1280} width={560} height={560} />
+        </div>
+      )}
 
       {/* Error overlay */}
       {(status === "error" || status === "unavailable") && error && (

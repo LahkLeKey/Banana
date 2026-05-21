@@ -58,46 +58,59 @@ int runtime_engine_lifecycle_spawn_default_actors(World *world,
                                                   RuntimeTerrainSampleFn terrain_sample_height,
                                                   RuntimeAttachControllerFn attach_controller)
 {
-    const float actor_positions[4][2] = {
-        {-3.0f, -2.5f},
-        {2.5f, -3.0f},
-        {-2.0f, 2.75f},
-        {3.25f, 2.25f},
+    typedef struct RuntimeActorArchetype {
+        float x;
+        float z;
+        float y_offset;
+        EntityType type;
+        float sx;
+        float sy;
+        float sz;
+        const char *role;
+        int attach_ai;
+    } RuntimeActorArchetype;
+
+    static const RuntimeActorArchetype actor_archetypes[] = {
+        {-4.2f, -2.8f, 0.55f, ENTITY_TYPE_NPC,     1.15f, 1.00f, 1.15f, "merchant", 0},
+        {-2.6f, -3.4f, 0.40f, ENTITY_TYPE_DYNAMIC, 0.75f, 0.75f, 0.75f, "resource", 0},
+        {-1.4f, -2.0f, 0.45f, ENTITY_TYPE_DYNAMIC, 0.85f, 0.90f, 0.85f, "resource", 0},
+        { 3.2f, -2.9f, 0.55f, ENTITY_TYPE_NPC,     1.05f, 1.05f, 1.05f, "combat",   1},
+        { 4.0f, -1.8f, 0.55f, ENTITY_TYPE_NPC,     0.95f, 1.10f, 0.95f, "wildlife", 1},
+        {-2.4f,  2.8f, 0.45f, ENTITY_TYPE_TRIGGER, 0.95f, 1.30f, 0.95f, "quest",    0},
+        {-3.7f,  3.6f, 0.35f, ENTITY_TYPE_STATIC,  1.40f, 0.60f, 1.40f, "camp",     0},
+        { 2.8f,  2.9f, 0.55f, ENTITY_TYPE_NPC,     1.00f, 1.00f, 1.00f, "wildlife", 1},
     };
-    const EntityType actor_types[4] = {
-        ENTITY_TYPE_NPC,
-        ENTITY_TYPE_DYNAMIC,
-        ENTITY_TYPE_NPC,
-        ENTITY_TYPE_DYNAMIC,
-    };
+    int spawned = 0;
     int i = 0;
 
     if (!world || !terrain_sample_height)
         return 0;
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < (int)(sizeof(actor_archetypes) / sizeof(actor_archetypes[0])); i++)
     {
-        float x = actor_positions[i][0];
-        float z = actor_positions[i][1];
-        float y = terrain_sample_height(x, z) + 0.55f;
-        EntityId actor_id = world_spawn_entity(world, actor_types[i], x, y, z);
+        const RuntimeActorArchetype *archetype = &actor_archetypes[i];
+        float y = terrain_sample_height(archetype->x, archetype->z) + archetype->y_offset;
+        EntityId actor_id = world_spawn_entity(world, archetype->type, archetype->x, y, archetype->z);
         Entity *actor = world_get_entity(world, actor_id);
         if (actor)
         {
-            actor->scale[0] = 1.0f;
-            actor->scale[1] = 1.0f;
-            actor->scale[2] = 1.0f;
+            actor->scale[0] = archetype->sx;
+            actor->scale[1] = archetype->sy;
+            actor->scale[2] = archetype->sz;
+            if (archetype->role)
+                strncpy(actor->controller_kind, archetype->role, sizeof(actor->controller_kind) - 1);
 
-            if (actor->type == ENTITY_TYPE_NPC && attach_controller)
+            if (actor->type == ENTITY_TYPE_NPC && archetype->attach_ai && attach_controller)
             {
                 uint32_t controller_id = attach_controller(actor_id, "wildlife");
                 if (controller_id != 0)
-                    strncpy(actor->controller_kind, "wildlife", sizeof(actor->controller_kind) - 1);
+                    actor->controller_id = controller_id;
             }
+            spawned += 1;
         }
     }
 
-    return 4;
+    return spawned;
 }
 
 void runtime_engine_lifecycle_destroy_controllers(ControllerInstance **controllers,

@@ -1,1 +1,0 @@
-Migrated from core/anticheat_scoring.[ch] and core/anticheat_trust.[ch] as part of DDD/SOLID refactor. See parent README for context.

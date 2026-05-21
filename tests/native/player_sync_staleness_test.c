@@ -6,8 +6,6 @@
 
 #include "world/world.h"
 
-#define TERRAIN_SIZE 18
-
 static float sample_height_fn(float x, float z)
 {
     (void)x;
@@ -40,7 +38,7 @@ int main(void)
     int64_t stale_threshold_ms = 2000;  /* 2-second staleness window */
 
     /* Create a world for entity management */
-    world = world_create(TERRAIN_SIZE);
+    world = world_create();
     if (!expect_int("world created", world != NULL ? 1 : 0, 1))
         goto cleanup;
 
@@ -103,7 +101,7 @@ int main(void)
     world_destroy(world);
 
     /* Create a fresh world for this sub-test */
-    world = world_create(TERRAIN_SIZE);
+    world = world_create();
     if (!expect_int("world created for deactivate test", world != NULL ? 1 : 0, 1))
         goto cleanup;
 

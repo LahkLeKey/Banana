@@ -11,7 +11,7 @@ extern "C"
 {
 #endif
 
-    typedef Material (*RuntimeMaterialResolver)(EntityType type);
+    typedef Material (*RuntimeMaterialResolver)(const Entity *entity);
     typedef void (*RuntimeTerrainDrawFn)(void);
 
     void runtime_render_submit_frame(Renderer *renderer,

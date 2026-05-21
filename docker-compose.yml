@@ -5,11 +5,12 @@ services:
     command:
       - sh
       - -lc
-      - bun install && bun run dev
+      - sh /workspace/scripts/ensure-native-linux-artifact.sh && bun install && bun run dev
     environment:
       HOST: 0.0.0.0
       PORT: "8081"
       BANANA_ENGINE_ADAPTER: inmemory
+      BANANA_NATIVE_PATH: /workspace/out/native/bin/libbanana_native.so
       BANANA_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
     ports:
       - "8081:8081"

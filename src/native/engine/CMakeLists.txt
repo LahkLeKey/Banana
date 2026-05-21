@@ -14,6 +14,7 @@ set(ENGINE_RENDER_SOURCES
   render/camera.c
   render/renderer.c
   render/renderer_draw.c
+  render/actor_mesh_registry.c
 )
 
 set(ENGINE_PHYSICS_SOURCES
@@ -63,6 +64,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine_lifecycle.c
   runtime/engine_tick.c
   runtime/input_contract.c
+  runtime/input_binding.c
   runtime/interactive_objects.c
   runtime/interlock.c
   runtime/parallel_contract.c
@@ -72,6 +74,10 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/player_motion_host.c
   runtime/player_motion.c
   runtime/player_registry.c
+  runtime/player_resources.c
+  runtime/interactive_collection.c
+  runtime/interactive_object_spawner.c
+  runtime/chunk_stream_packet.c
   runtime/render_material.c
   runtime/render_submit.c
   runtime/terrain_features.c
@@ -80,6 +86,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/terrain_height.c
   runtime/terrain_mutation.c
   runtime/terrain_runtime.c
+  runtime/terrain_chunks.c
   runtime/tick_phases.c
   runtime/world_abi.c
   runtime/world_metrics.c
@@ -654,6 +661,19 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_npc_merchant_test COMMAND banana_npc_merchant_test)
 
+  add_executable(banana_engine_merchant_trade_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_merchant_trade_test.c
+  )
+  target_link_libraries(banana_engine_merchant_trade_test PRIVATE banana_engine_core)
+  target_include_directories(banana_engine_merchant_trade_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+  )
+  add_test(NAME banana_engine_merchant_trade_test COMMAND banana_engine_merchant_trade_test)
+
   add_executable(banana_terrain_features_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/terrain_features_test.c
   )
@@ -680,4 +700,101 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/ui
   )
   add_test(NAME banana_ui_system_test COMMAND banana_ui_system_test)
+
+  add_executable(banana_input_binding_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/input_binding_test.c
+  )
+  target_link_libraries(banana_input_binding_test PRIVATE banana_engine_core)
+  target_include_directories(banana_input_binding_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_input_binding_test COMMAND banana_input_binding_test)
+
+  add_executable(banana_terrain_chunks_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/terrain_chunks_test.c
+  )
+  target_link_libraries(banana_terrain_chunks_test PRIVATE banana_engine_core)
+  target_include_directories(banana_terrain_chunks_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_terrain_chunks_test COMMAND banana_terrain_chunks_test)
+
+  add_executable(banana_player_resources_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player_resources_test.c
+  )
+  target_link_libraries(banana_player_resources_test PRIVATE banana_engine_core)
+  target_include_directories(banana_player_resources_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_player_resources_test COMMAND banana_player_resources_test)
+
+  add_executable(banana_interactive_collection_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/interactive_collection_test.c
+  )
+  target_link_libraries(banana_interactive_collection_test PRIVATE banana_engine_core)
+  target_include_directories(banana_interactive_collection_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_interactive_collection_test COMMAND banana_interactive_collection_test)
+
+  add_executable(banana_interactive_object_spawner_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/interactive_object_spawner_test.c
+  )
+  target_link_libraries(banana_interactive_object_spawner_test PRIVATE banana_engine_core)
+  target_include_directories(banana_interactive_object_spawner_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_interactive_object_spawner_test COMMAND banana_interactive_object_spawner_test)
+
+  add_executable(banana_chunk_stream_packet_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/chunk_stream_packet_test.c
+  )
+  target_link_libraries(banana_chunk_stream_packet_test PRIVATE banana_engine_core)
+  target_include_directories(banana_chunk_stream_packet_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_chunk_stream_packet_test COMMAND banana_chunk_stream_packet_test)
+
+  add_executable(banana_actor_mesh_registry_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/actor_mesh_registry_test.c
+  )
+  target_link_libraries(banana_actor_mesh_registry_test PRIVATE banana_engine_core)
+  target_include_directories(banana_actor_mesh_registry_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+  )
+  add_test(NAME banana_actor_mesh_registry_test COMMAND banana_actor_mesh_registry_test)
 endif()

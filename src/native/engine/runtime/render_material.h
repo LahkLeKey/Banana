@@ -10,6 +10,7 @@ extern "C"
 #endif
 
     Material runtime_render_material_for_entity(EntityType type);
+    Material runtime_render_material_for_actor(const Entity *entity);
 
 #ifdef __cplusplus
 }

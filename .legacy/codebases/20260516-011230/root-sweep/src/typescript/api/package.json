@@ -1,1 +1,0 @@
-{"name":"@banana/api","private":true,"type":"module","scripts":{"dev":"echo api scaffold","build":"echo api build"}}

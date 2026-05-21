@@ -21,6 +21,7 @@ import {registerRipenessRoutes} from './routes/ripeness.ts';
 import {registerStreamingChatRoutes} from './routes/streaming-chat.ts';
 import {registerStreamingRoutes} from './routes/streaming.ts';
 import {webhooksRoutes} from './routes/webhooks.ts';
+import {registerWorldRoutes} from './routes/world.ts';
 
 const app = Fastify({logger: true});
 
@@ -88,6 +89,7 @@ await registerJobRoutes(app);
 await registerAuditRoutes(app);
 await registerStreamingRoutes(app);
 await registerStreamingChatRoutes(app);
+await registerWorldRoutes(app);
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? '0.0.0.0';

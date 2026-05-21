@@ -1,4 +1,0 @@
-Original: src/native/core/anticheat_session.c, anticheat_session.h
-Migrated: src/native/anticheat/domain/entities/anticheat_session.c, anticheat_session.h
-Date: 2026-05-15
-Notes: DDD/SOLID refactor, see README-migration.md
