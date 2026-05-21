@@ -1,3 +1,0 @@
----
-agent: specify.git.feature
----

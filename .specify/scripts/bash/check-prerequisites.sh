@@ -26,8 +26,6 @@ JSON_MODE=false
 REQUIRE_TASKS=false
 INCLUDE_TASKS=false
 PATHS_ONLY=false
-REQUIRE_ORCHESTRATION_PREFLIGHT=false
-CONFIDENCE=""
 
 for arg in "$@"; do
     case "$arg" in
@@ -43,12 +41,6 @@ for arg in "$@"; do
         --paths-only)
             PATHS_ONLY=true
             ;;
-        --require-orchestration-preflight)
-            REQUIRE_ORCHESTRATION_PREFLIGHT=true
-            ;;
-        --confidence=*)
-            CONFIDENCE="${arg#*=}"
-            ;;
         --help|-h)
             cat << 'EOF'
 Usage: check-prerequisites.sh [OPTIONS]
@@ -60,23 +52,18 @@ OPTIONS:
   --require-tasks     Require tasks.md to exist (for implementation phase)
   --include-tasks     Include tasks.md in AVAILABLE_DOCS list
   --paths-only        Only output path variables (no prerequisite validation)
-    --require-orchestration-preflight  Run preflight gate before prerequisite validation
-    --confidence=<n>    Confidence percentage used with --require-orchestration-preflight
   --help, -h          Show this help message
 
 EXAMPLES:
   # Check task prerequisites (plan.md required)
   ./check-prerequisites.sh --json
-
+  
   # Check implementation prerequisites (plan.md + tasks.md required)
   ./check-prerequisites.sh --json --require-tasks --include-tasks
-
+  
   # Get feature paths only (no validation)
   ./check-prerequisites.sh --paths-only
-
-    # Enforce orchestration preflight before prerequisite checks
-    ./check-prerequisites.sh --require-orchestration-preflight --confidence=82
-
+  
 EOF
             exit 0
             ;;
@@ -95,14 +82,10 @@ source "$SCRIPT_DIR/common.sh"
 _paths_output=$(get_feature_paths) || { echo "ERROR: Failed to resolve feature paths" >&2; exit 1; }
 eval "$_paths_output"
 unset _paths_output
-check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
 
-if $REQUIRE_ORCHESTRATION_PREFLIGHT; then
-    if [[ -z "$CONFIDENCE" ]]; then
-        echo "ERROR: --confidence is required with --require-orchestration-preflight" >&2
-        exit 1
-    fi
-    "$SCRIPT_DIR/spec-orchestration-preflight.sh" --confidence "$CONFIDENCE"
+# If feature.json pins an existing feature directory, branch naming is not required.
+if ! feature_json_matches_feature_dir "$REPO_ROOT" "$FEATURE_DIR"; then
+    check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
 fi
 
 # If paths-only mode, output paths and exit (support JSON + paths-only combined)
@@ -136,20 +119,20 @@ fi
 # Validate required directories and files
 if [[ ! -d "$FEATURE_DIR" ]]; then
     echo "ERROR: Feature directory not found: $FEATURE_DIR" >&2
-    echo "Run 'specify specify' first to create the feature structure." >&2
+    echo "Run /speckit.specify first to create the feature structure." >&2
     exit 1
 fi
 
 if [[ ! -f "$IMPL_PLAN" ]]; then
     echo "ERROR: plan.md not found in $FEATURE_DIR" >&2
-    echo "Run 'specify plan' first to create the implementation plan." >&2
+    echo "Run /speckit.plan first to create the implementation plan." >&2
     exit 1
 fi
 
 # Check for tasks.md if required
 if $REQUIRE_TASKS && [[ ! -f "$TASKS" ]]; then
     echo "ERROR: tasks.md not found in $FEATURE_DIR" >&2
-    echo "Run 'specify tasks' first to create the task list." >&2
+    echo "Run /speckit.tasks first to create the task list." >&2
     exit 1
 fi
 
@@ -198,13 +181,13 @@ else
     # Text output
     echo "FEATURE_DIR:$FEATURE_DIR"
     echo "AVAILABLE_DOCS:"
-
+    
     # Show status of each potential document
     check_file "$RESEARCH" "research.md"
     check_file "$DATA_MODEL" "data-model.md"
     check_dir "$CONTRACTS_DIR" "contracts/"
     check_file "$QUICKSTART" "quickstart.md"
-
+    
     if $INCLUDE_TASKS; then
         check_file "$TASKS" "tasks.md"
     fi

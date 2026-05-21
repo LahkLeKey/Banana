@@ -2,8 +2,6 @@
 
 Git repository initialization, feature branch creation, numbering (sequential/timestamp), validation, remote detection, and auto-commit for Spec Kit.
 
-This extension participates in the Banana Spec Kit orchestration contract where every run starts with extension preflight + confidence gating before feature execution.
-
 ## Overview
 
 This extension provides Git operations as an optional, self-contained module. It manages:
@@ -46,23 +44,6 @@ This extension provides Git operations as an optional, self-contained module. It
 | `after_checklist` | `speckit.git.commit` | Yes | Auto-commit after checklist |
 | `after_analyze` | `speckit.git.commit` | Yes | Auto-commit after analysis |
 | `after_taskstoissues` | `speckit.git.commit` | Yes | Auto-commit after issue sync |
-
-## Orchestration Preflight Contract
-
-Before running multi-step Spec Kit orchestration:
-
-1. Run extension health preflight:
-  - `.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`
-2. Run confidence gate with 80% minimum:
-  - `.specify/scripts/bash/spec-confidence-gate.sh --confidence <n> --step "go-copilot-start" --threshold 80 --notes "startup gate"`
-3. If confidence is below threshold, pause and request human input.
-4. Append heartbeat evidence after each major step.
-
-DDD/SOLID orchestration mapping:
-
-- Domain policy: confidence threshold and checkpoint rules.
-- Application flow: orchestration sequencing across preflight, planning, and validators.
-- Infrastructure adapters: shell scripts and artifacts under `.specify/scripts` and `artifacts/spec-validation`.
 
 ## Configuration
 

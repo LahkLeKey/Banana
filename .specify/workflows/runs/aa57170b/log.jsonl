@@ -1,5 +1,0 @@
-{"event": "step_started", "step_id": "specify", "type": "command", "timestamp": "2026-05-19T00:51:44.853249+00:00"}
-{"event": "step_completed", "step_id": "specify", "status": "completed", "timestamp": "2026-05-19T00:52:40.541797+00:00"}
-{"event": "step_started", "step_id": "review-spec", "type": "gate", "timestamp": "2026-05-19T00:52:40.543795+00:00"}
-{"event": "step_completed", "step_id": "review-spec", "status": "completed", "timestamp": "2026-05-19T00:53:03.511807+00:00"}
-{"event": "step_started", "step_id": "plan", "type": "command", "timestamp": "2026-05-19T00:53:03.513956+00:00"}

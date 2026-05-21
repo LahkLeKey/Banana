@@ -1,44 +1,12 @@
 # Feature Specification: [FEATURE NAME]
 
 **Feature Branch**: `[###-feature-name]`
+
 **Created**: [DATE]
+
 **Status**: Draft
-**Jurisdiction**: [federal | domain | package]
-**Agent of Record**: [owning agent or team]
-**Supersedes**: [none | ###-prior-spec, ###-prior-spec]
+
 **Input**: User description: "$ARGUMENTS"
-
-## In Scope *(mandatory)*
-
-<!--
-  ACTION REQUIRED: List the specific outcomes included in this feature slice.
-  Keep these bounded and directly tied to user value.
--->
-
-- [In-scope outcome 1]
-- [In-scope outcome 2]
-
-## Authority and Lineage *(mandatory)*
-
-<!--
-  ACTION REQUIRED: State the bounded context this spec governs, the agent/team
-  that may execute within that jurisdiction, and whether any prior specs are
-  absorbed and must be archived from the active baseline.
--->
-
-- **Bounded Context**: [domain governed by this spec]
-- **Executing Authority**: [agent or team allowed to implement it]
-- **Supersession Rule**: [none / absorbs ### and archives it from active baseline]
-
-## Out of Scope *(mandatory)*
-
-<!--
-  ACTION REQUIRED: List explicit exclusions for this slice.
-  Use this section to prevent implementation drift.
--->
-
-- [Out-of-scope item 1]
-- [Out-of-scope item 2]
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -52,15 +20,9 @@
   - Developed independently
   - Tested independently
   - Deployed independently
+  - Demonstrated to users independently
 -->
 
-
-### Test Organization
-
-- Describe how automated tests map to bounded domains or user stories.
-- Prefer suite names that reflect the owned behavior (for example physics, AI FSM, navigation, render, world) rather than implementation phases.
-- If the feature introduces native code, specify whether tests are split into domain-contract suites with a thin aggregate orchestrator.
-- Call out any required coverage, sanitizer, leak, or static-analysis gates that must pass before the feature is considered complete.
 ### User Story 1 - [Brief Title] (Priority: P1)
 
 [Describe this user journey in plain language]
@@ -130,16 +92,6 @@
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
-- **FR-006**: Orchestration MUST run extension-health preflight before execution and surface failures explicitly.
-- **FR-007**: Orchestration MUST enforce autonomous continuation only when confidence is >= 80%.
-- **FR-008**: Orchestration MUST append heartbeat evidence for each major step with confidence and checkpoint decision.
-
-### Orchestration Contract *(required for Spec Kit workflow slices)*
-
-- **Preflight Command**: `.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`
-- **Confidence Gate Command**: `.specify/scripts/bash/spec-confidence-gate.sh --confidence <n> --step "go-copilot-start" --threshold 80 --notes "startup gate"`
-- **Pause Rule**: If confidence is < 80%, stop and request human input.
-- **Evidence**: Heartbeat entries in `heartbeat-log.md` and validator reports in `artifacts/spec-validation/`.
 
 *Example of marking unclear requirements:*
 

@@ -1,5 +1,0 @@
-# Archival-only allowlist for self-training retirement work (T002)
-# Paths in this allowlist are historical context and must not be treated
-# as active automation surfaces during retirement edits/validation.
-
-.specify/legacy-baseline/**

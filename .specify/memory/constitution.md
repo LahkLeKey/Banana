@@ -1,107 +1,50 @@
-<!--
-Sync Impact Report
-- Version change: 1.13.4 -> 2.0.0
-- Modified principles:
-  - Replaced broad multi-domain governance set with a narrow Spec Kit constitution focused on active specs and execution flow
-- Added sections:
-  - Active Spec Scope
-  - Autopilot Execution Contract
-- Removed sections:
-  - Infrastructure/deployment-specific constitutional mandates not required for Spec Kit core flow
-  - Runtime/engine-specific mandates not required for current planning specs
-- Templates requiring updates:
-  - ✅ verified compatible .specify/templates/spec-template.md
-  - ✅ verified compatible .specify/templates/plan-template.md
-  - ✅ verified compatible .specify/templates/tasks-template.md
-- Follow-up TODOs:
-  - none
--->
-# Banana Spec Kit Constitution
+# [PROJECT_NAME] Constitution
+<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
 
 ## Core Principles
 
-### I. Active Spec Authority
-All autonomous work MUST be governed by the active feature pointer in `.specify/feature.json`.
-The active spec directory is the only implementation authority for that run; other specs are
-lineage or reference unless explicitly absorbed by supersession language.
+### [PRINCIPLE_1_NAME]
+<!-- Example: I. Library-First -->
+[PRINCIPLE_1_DESCRIPTION]
+<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
 
-### II. Spec Kit Sequence Is Mandatory
-Feature delivery MUST follow the Spec Kit chain in order: `specify specify`, `specify plan`,
-`specify tasks`, then implementation. Skipping a stage requires explicit human approval plus a
-recorded rationale in the active spec artifacts.
+### [PRINCIPLE_2_NAME]
+<!-- Example: II. CLI Interface -->
+[PRINCIPLE_2_DESCRIPTION]
+<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
 
-### III. Confidence and Heartbeat Gate
-Autonomous continuation is allowed only when confidence is at least 80%. Each major step MUST
-record heartbeat evidence in the active spec folder. If confidence falls below 80%, execution
-MUST pause for targeted human clarification before further implementation.
+### [PRINCIPLE_3_NAME]
+<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
+[PRINCIPLE_3_DESCRIPTION]
+<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
 
-### IV. Bounded Scope and Lane Ownership
-Changes MUST stay inside the active spec scope and its declared lane ownership model. Cross-lane
-or cross-domain edits are allowed only when the active spec explicitly defines the contract
-change and affected paths.
+### [PRINCIPLE_4_NAME]
+<!-- Example: IV. Integration Testing -->
+[PRINCIPLE_4_DESCRIPTION]
+<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
 
-### V. Evidence-Backed Task Closure
-Tasks may be marked complete only with evidence in active artifacts (task updates, heartbeat
-notes, validator output, or test/build evidence). Claims without repository-traceable evidence
-are non-compliant.
+### [PRINCIPLE_5_NAME]
+<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
+[PRINCIPLE_5_DESCRIPTION]
+<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
 
-### VI. Current Spec Set Focus
-Constitutional enforcement is narrowed to current specs under `.specify/specs/`, with priority to
-the active feature and directly linked superseding specs. Historical or exploratory governance
-rules outside the active spec chain do not block active delivery unless reintroduced by amendment.
+## [SECTION_2_NAME]
+<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
 
-### VII. Documentation Parity for Workflow Contracts
-When Spec Kit workflow contracts change (instructions, prompts, scripts, validators, templates,
-or wiki-mapped workflow docs), updates MUST ship in the same slice to keep operator behavior and
-automation behavior aligned.
+[SECTION_2_CONTENT]
+<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
 
-## Active Spec Scope
+## [SECTION_3_NAME]
+<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
 
-- Active feature pointer: `.specify/feature.json`
-- Active spec root: `.specify/specs/`
-- Current tracked specs in repository scope:
-  - `052-v3-pure-c-typescript-reset`
-  - `053-mmoarpg-engine-legacy-consumed`
-
-## Platform Constraints
-
-- Preserve the `controller -> service -> pipeline -> native interop` contract for managed flows.
-- Use existing repo entry points before creating new orchestration surfaces:
-  - `.specify/scripts/bash/*`
-  - workspace tasks
-  - CMake targets
-  - Bun scripts
-  - Compose profiles
-- Keep runtime environment contracts explicit when applicable:
-  - `BANANA_PG_CONNECTION` for PostgreSQL-backed paths
-  - `BANANA_NATIVE_PATH` for TypeScript API native wiring
-  - `VITE_BANANA_API_BASE_URL` for frontend API routing
-
-## Autopilot Execution Contract
-
-Run this baseline before each autonomous Spec Kit execution pass:
-
-1. `.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`
-2. `.specify/scripts/bash/spec-confidence-gate.sh --confidence <n> --step "go-copilot-start" --threshold 80 --notes "startup gate"`
-3. Resolve active feature from `.specify/feature.json`
-4. Run tasks through active `tasks.md` in dependency order
-5. Append heartbeat evidence before/after major execution and validation steps
+[SECTION_3_CONTENT]
+<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
 
 ## Governance
+<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-This constitution governs Spec Kit-driven planning and implementation behavior in Banana.
-Amendments require a pull request that records rationale, semantic version bump reasoning,
-and any template compatibility impacts.
+[GOVERNANCE_RULES]
+<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
 
-Versioning policy:
-
-- MAJOR: incompatible governance change or large principle set contraction/expansion
-- MINOR: new principle or materially expanded workflow obligations
-- PATCH: wording clarifications that do not change obligations
-
-Compliance review expectations:
-
-- Reviewers block merges that violate core principles.
-- Any approved exception must be recorded in active spec artifacts with owner and expiry.
-
-**Version**: 2.0.0 | **Ratified**: 2026-04-24 | **Last Amended**: 2026-05-18
+**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
+<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
