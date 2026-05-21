@@ -1,0 +1,18 @@
+{
+  "kind": "banana-character-asset-manifest",
+  "importedFrom": "C:\\Github\\Banana\\artifacts\\generated-characters",
+  "characters": [
+    {
+      "id": "banana-tempest",
+      "file": "banana-tempest/character.2p5d.json",
+      "clips": [
+        "idle",
+        "run",
+        "jump",
+        "slash",
+        "cast",
+        "hurt"
+      ]
+    }
+  ]
+}

@@ -19,6 +19,7 @@
 - Keep wiki updates in the same orchestration path (via `scripts/workflow-sync-wiki.sh`) when delivery behavior, workflows, or runbooks change.
 - Treat `.specify/wiki/` as the canonical AI-consumable wiki store and keep `.wiki/` as a human-reference publication surface.
 - Until expanded intentionally, enforce `.wiki` markdown pages via `.specify/wiki/human-reference-allowlist.txt` to prevent unreviewed page growth.
+- Treat WASM parallel runtime behavior as a contract: keep pthread/OpenMP flags and thread-pool budgets explicit, and enforce failures via CI hard gates when budgets are not met.
 
 ## Runtime Contract Lessons (2026-04)
 
@@ -43,5 +44,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at `.specify/specs/049-arpg-view-actors/plan.md`
+at `.specify/specs/052-v3-pure-c-typescript-reset/plan.md`
 <!-- SPECKIT END -->

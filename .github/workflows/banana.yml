@@ -240,6 +240,18 @@ jobs:
           BANANA_REQUIRE_WASM_ASSETS: "true"
         run: cd src/typescript/react && bun run build
 
+  wasm-parallel-contract-gate:
+    name: Runtime / wasm parallel contract gate
+    needs: wasm-engine
+    runs-on: ubuntu-latest
+    env:
+      BANANA_WASM_PARALLEL_REQUIRED: "true"
+      BANANA_WASM_PTHREAD_POOL_MIN: "4"
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate wasm parallel build contract
+        run: bash scripts/validate-wasm-parallel-contract.sh
+
   # --- Stage 3: native test matrix (parallel after lint) ---
   native-abi:
     name: Native / ABI check
@@ -526,6 +538,7 @@ jobs:
       - analytics-scan
       - turbo
       - wasm-engine
+      - wasm-parallel-contract-gate
       - native-abi
       - native-cross-platform
       - native-sanitizers
@@ -556,6 +569,7 @@ jobs:
             echo "| Lint / analytics surface scan | ${{ needs.analytics-scan.result }} |"
             echo "| Build / turbo | ${{ needs.turbo.result }} |"
             echo "| Build / wasm engine assets | ${{ needs.wasm-engine.result }} |"
+            echo "| Runtime / wasm parallel contract gate | ${{ needs.wasm-parallel-contract-gate.result }} |"
             echo "| Native / ABI check | ${{ needs.native-abi.result }} |"
             echo "| Native / cross-platform | ${{ needs.native-cross-platform.result }} |"
             echo "| Native / sanitizers | ${{ needs.native-sanitizers.result }} |"

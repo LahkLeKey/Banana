@@ -12,6 +12,7 @@ applyTo: "src/typescript/api/src/**/*.ts"
 - Keep HTTP concerns in route files, orchestration in domain services, and native boundary logic in interop modules.
 - Route error translation through shared API middleware/plugins rather than per-route ad-hoc handling.
 - Prefer dependency injection patterns already used by route registrars and domain modules.
+- If API/runtime routes depend on WASM engine capabilities, treat missing WASM parallel contract evidence as deployment-blocking and surface actionable errors.
 
 ## Shared Frontend Contract
 

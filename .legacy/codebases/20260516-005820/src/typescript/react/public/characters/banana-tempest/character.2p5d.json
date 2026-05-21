@@ -1,0 +1,15 @@
+{
+  "kind": "banana-character-2p5d",
+  "id": "banana-tempest",
+  "displayName": "Banana Tempest",
+  "renderModel": {"type":"billboard-bone-layers","cameraFacing":true,"depthParallax":0.22},
+  "vectorSource": "vectors/rig.vec2.json",
+  "clips": [
+    {"name":"idle","file":"clips/idle.vec2anim.json","fps":12},
+    {"name":"run","file":"clips/run.vec2anim.json","fps":18},
+    {"name":"jump","file":"clips/jump.vec2anim.json","fps":18},
+    {"name":"slash","file":"clips/slash.vec2anim.json","fps":20},
+    {"name":"cast","file":"clips/cast.vec2anim.json","fps":16},
+    {"name":"hurt","file":"clips/hurt.vec2anim.json","fps":14}
+  ]
+}

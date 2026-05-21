@@ -1,89 +1,29 @@
 {
   "folders": [
-    {
-      "name": "(Monorepo) Banana",
-      "path": "."
-    },
-    {
-      "name": "(Monorepo) Docker",
-      "path": "docker"
-    },
-    {
-      "name": "(Monorepo) Tests",
-      "path": "tests"
-    },
-    {
-      "name": "(Monorepo) Training Data",
-      "path": "data"
-    },
-    {
-      "name": "(Monorepo) Scripts",
-      "path": "scripts"
-    },
-    {
-      "name": "(Specify) Specs",
-      "path": ".specify/specs"
-    },
-    {
-      "name": "(C) Native",
-      "path": "src/native"
-    },
-    {
-      "name": "(TS) Api",
-      "path": "src/typescript/api"
-    },
-    {
-      "name": "(TS) Electron",
-      "path": "src/typescript/electron"
-    },
-    {
-      "name": "(TS) React",
-      "path": "src/typescript/react"
-    },
-    {
-      "name": "(TS) React-Native",
-      "path": "src/typescript/react-native"
-    },
-    {
-      "name": "(TS) Shared-UI",
-      "path": "src/typescript/shared/ui"
-    }
+    { "path": "." },
+    { "path": "src" },
+    { "path": "src/native" },
+    { "path": "src/typescript" },
+    { "path": "src/typescript/api" },
+    { "path": "src/typescript/react" },
+    { "path": "src/typescript/electron" },
+    { "path": "src/typescript/react-native" },
+    { "path": "src/typescript/shared/ui" },
+    { "path": "tests" },
+    { "path": "scripts" },
+    { "path": "data" },
+    { "path": "docker" },
+    { "path": ".specify/specs" }
   ],
   "settings": {
+    "terminal.integrated.cwd": "${workspaceFolder}",
     "files.eol": "\n",
-    "cmake.useCMakePresets": "always",
-    "cmake.configurePreset": "default",
-    "cmake.buildPreset": "default",
-    "cmake.testPreset": "default",
-    "cmake.defaultConfigurePreset": "default",
-    "cmake.defaultBuildPreset": "default",
-    "cmake.defaultTestPreset": "default",
-    "cmake.configureOnOpen": false,
-    "files.exclude": {
-      "**/node_modules": true,
-      "**/build": true,
-      "**/.artifacts": true,
-      "**/bin": true,
-      "**/obj": true
-    },
+    "search.useIgnoreFiles": true,
     "search.exclude": {
       "**/node_modules": true,
       "**/build": true,
-      "**/.artifacts": true,
-      ".specify/legacy-baseline/**": true
-    },
-    "[shellscript]": { "files.eol": "\n" },
-    "powershell.cwd": "(Monorepo) Banana"
-  },
-  "extensions": {
-    "recommendations": [
-      "ms-dotnettools.csharp",
-      "ms-vscode.cmake-tools",
-      "oven.bun-vscode",
-      "esbenp.prettier-vscode",
-      "dbaeumer.vscode-eslint",
-      "ms-azuretools.vscode-docker",
-      "Prisma.prisma"
-    ]
+      "**/out": true,
+      "**/.legacy": false
+    }
   }
 }

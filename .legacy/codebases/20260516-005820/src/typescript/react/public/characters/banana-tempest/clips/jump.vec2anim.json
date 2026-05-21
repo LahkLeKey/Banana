@@ -1,0 +1,22 @@
+{
+  "kind": "banana-character-clip",
+  "name": "jump",
+  "fps": 18,
+  "loop": false,
+  "frames": [
+    {"index":0,"bones":{"hips":{"ty":0.0000},"arm_l":{"rot":-0.00},"arm_r":{"rot":0.00},"leg_l":{"rot":-0.00},"leg_r":{"rot":0.00},"cape":{"rot":6.24}}},
+    {"index":1,"bones":{"hips":{"ty":0.0526},"arm_l":{"rot":-5.58},"arm_r":{"rot":5.58},"leg_l":{"rot":3.35},"leg_r":{"rot":-3.35},"cape":{"rot":7.19}}},
+    {"index":2,"bones":{"hips":{"ty":0.1022},"arm_l":{"rot":-9.88},"arm_r":{"rot":9.88},"leg_l":{"rot":5.93},"leg_r":{"rot":-5.93},"cape":{"rot":6.50}}},
+    {"index":3,"bones":{"hips":{"ty":0.1459},"arm_l":{"rot":-11.91},"arm_r":{"rot":11.91},"leg_l":{"rot":7.15},"leg_r":{"rot":-7.15},"cape":{"rot":4.33}}},
+    {"index":4,"bones":{"hips":{"ty":0.1811},"arm_l":{"rot":-11.22},"arm_r":{"rot":11.22},"leg_l":{"rot":6.73},"leg_r":{"rot":-6.73},"cape":{"rot":1.15}}},
+    {"index":5,"bones":{"hips":{"ty":0.2057},"arm_l":{"rot":-7.96},"arm_r":{"rot":7.96},"leg_l":{"rot":4.77},"leg_r":{"rot":-4.77},"cape":{"rot":-2.28}}},
+    {"index":6,"bones":{"hips":{"ty":0.2184},"arm_l":{"rot":-2.87},"arm_r":{"rot":2.87},"leg_l":{"rot":1.72},"leg_r":{"rot":-1.72},"cape":{"rot":-5.19}}},
+    {"index":7,"bones":{"hips":{"ty":0.2184},"arm_l":{"rot":2.87},"arm_r":{"rot":-2.87},"leg_l":{"rot":-1.72},"leg_r":{"rot":1.72},"cape":{"rot":-6.92}}},
+    {"index":8,"bones":{"hips":{"ty":0.2057},"arm_l":{"rot":7.96},"arm_r":{"rot":-7.96},"leg_l":{"rot":-4.77},"leg_r":{"rot":4.77},"cape":{"rot":-7.05}}},
+    {"index":9,"bones":{"hips":{"ty":0.1811},"arm_l":{"rot":11.22},"arm_r":{"rot":-11.22},"leg_l":{"rot":-6.73},"leg_r":{"rot":6.73},"cape":{"rot":-5.58}}},
+    {"index":10,"bones":{"hips":{"ty":0.1459},"arm_l":{"rot":11.91},"arm_r":{"rot":-11.91},"leg_l":{"rot":-7.15},"leg_r":{"rot":7.15},"cape":{"rot":-2.82}}},
+    {"index":11,"bones":{"hips":{"ty":0.1022},"arm_l":{"rot":9.88},"arm_r":{"rot":-9.88},"leg_l":{"rot":-5.93},"leg_r":{"rot":5.93},"cape":{"rot":0.58}}},
+    {"index":12,"bones":{"hips":{"ty":0.0526},"arm_l":{"rot":5.58},"arm_r":{"rot":-5.58},"leg_l":{"rot":-3.35},"leg_r":{"rot":3.35},"cape":{"rot":3.85}}},
+    {"index":13,"bones":{"hips":{"ty":0.0000},"arm_l":{"rot":0.00},"arm_r":{"rot":-0.00},"leg_l":{"rot":-0.00},"leg_r":{"rot":0.00},"cape":{"rot":6.24}}}
+  ]
+}

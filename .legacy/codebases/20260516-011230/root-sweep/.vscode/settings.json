@@ -1,0 +1,24 @@
+{
+    "cmake.useCMakePresets": "always",
+    "cmake.configurePreset": "default",
+    "cmake.buildPreset": "default",
+    "cmake.testPreset": "default",
+    "cmake.defaultConfigurePreset": "default",
+    "cmake.defaultBuildPreset": "default",
+    "cmake.defaultTestPreset": "default",
+    "cmake.configureOnOpen": false,
+    "cmake.configureSettings": {
+        "CMAKE_C_COMPILER": "C:/Program Files/LLVM/bin/clang.exe"
+    },
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
+    }
+}

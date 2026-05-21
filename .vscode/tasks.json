@@ -2,337 +2,99 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Compose: runtime up + ready",
+      "label": "Native: configure (v3)",
       "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up && bash scripts/compose-profile-ready.sh --profile runtime'",
+      "command": "cmake",
+      "args": [
+        "-S",
+        "src/native",
+        "-B",
+        "out/v3-native"
+      ],
       "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
+        "cwd": "${workspaceFolder}"
+      }
     },
     {
-      "label": "Compose: runtime down",
+      "label": "Native: build (v3)",
       "type": "shell",
-      "command": "bash",
+      "command": "cmake",
       "args": [
-        "scripts/compose-run-profile.sh",
-        "--profile",
-        "runtime",
-        "--action",
+        "--build",
+        "out/v3-native"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Native: configure (v3)",
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "API: smoke (v3)",
+      "type": "shell",
+      "command": "bun",
+      "args": [
+        "-e",
+        "import { apiScaffold } from './src/typescript/api/src/index.ts'; console.log(apiScaffold);"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "UI: smoke (v3)",
+      "type": "shell",
+      "command": "bun",
+      "args": [
+        "-e",
+        "import { uiScaffold } from './src/typescript/shared/ui/src/index.ts'; console.log(uiScaffold);"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "Runtime: up (overworld compose)",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "compose",
+        "up",
+        "-d",
+        "api-overworld",
+        "react-overworld"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "Runtime: down (overworld compose)",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "compose",
         "down"
       ],
       "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
+        "cwd": "${workspaceFolder}"
+      }
     },
     {
-      "label": "Compose: apps up + ready",
+      "label": "Runtime: logs (overworld compose)",
       "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile apps --action up && bash scripts/compose-profile-ready.sh --profile apps'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: frontend react up + ready",
-      "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile apps --action up -- --build && bash scripts/compose-profile-ready.sh --profile apps'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: apps down",
-      "type": "shell",
-      "command": "bash",
+      "command": "docker",
       "args": [
-        "scripts/compose-run-profile.sh",
-        "--profile",
-        "apps",
-        "--action",
-        "down"
+        "compose",
+        "logs",
+        "-f",
+        "api-overworld",
+        "react-overworld"
       ],
+      "isBackground": true,
       "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: frontend react down",
-      "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile apps --action down; bash scripts/compose-run-profile.sh --profile runtime --action down'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Validate: frontend config drift",
-      "type": "shell",
-      "command": "bash",
-      "args": [
-        "scripts/validate-frontend-config-drift.sh",
-        "--require-running"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: electron-desktop up + ready",
-      "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile electron-desktop --action up && bash scripts/compose-profile-ready.sh --profile electron-desktop'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: frontend electron up + ready",
-      "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile electron-desktop --action up -- --build && bash scripts/compose-profile-ready.sh --profile electron-desktop'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: electron-desktop down",
-      "type": "shell",
-      "command": "bash",
-      "args": [
-        "scripts/compose-run-profile.sh",
-        "--profile",
-        "electron-desktop",
-        "--action",
-        "down"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: frontend electron down",
-      "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile electron-desktop --action down; bash scripts/compose-run-profile.sh --profile runtime --action down'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: mobile up + ready",
-      "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile mobile --action up && bash scripts/compose-profile-ready.sh --profile mobile'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: frontend mobile up + ready",
-      "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile runtime --action up -- --build && bash scripts/compose-profile-ready.sh --profile runtime && bash scripts/compose-run-profile.sh --profile mobile --action up -- --build && bash scripts/compose-profile-ready.sh --profile mobile'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: mobile down",
-      "type": "shell",
-      "command": "bash",
-      "args": [
-        "scripts/compose-run-profile.sh",
-        "--profile",
-        "mobile",
-        "--action",
-        "down"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Compose: frontend mobile down",
-      "type": "shell",
-      "command": "bash -lc 'bash scripts/compose-run-profile.sh --profile mobile --action down; bash scripts/compose-run-profile.sh --profile runtime --action down'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: not-banana (ci profile)",
-      "type": "shell",
-      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
-      "args": [
-        "scripts/train-not-banana-model.py",
-        "--corpus",
-        "data/not-banana/corpus.json",
-        "--output",
-        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/not-banana/local",
-        "--training-profile",
-        "ci",
-        "--session-mode",
-        "single",
-        "--max-sessions",
-        "1"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: not-banana (local profile)",
-      "type": "shell",
-      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
-      "args": [
-        "scripts/train-not-banana-model.py",
-        "--corpus",
-        "data/not-banana/corpus.json",
-        "--output",
-        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/not-banana/local",
-        "--training-profile",
-        "local"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: banana (ci profile)",
-      "type": "shell",
-      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
-      "args": [
-        "scripts/train-banana-model.py",
-        "--corpus",
-        "data/banana/corpus.json",
-        "--output",
-        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/banana/local",
-        "--training-profile",
-        "ci",
-        "--session-mode",
-        "single",
-        "--max-sessions",
-        "1"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: banana (local profile)",
-      "type": "shell",
-      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
-      "args": [
-        "scripts/train-banana-model.py",
-        "--corpus",
-        "data/banana/corpus.json",
-        "--output",
-        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/banana/local",
-        "--training-profile",
-        "local"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: ripeness (ci profile)",
-      "type": "shell",
-      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
-      "args": [
-        "scripts/train-ripeness-model.py",
-        "--corpus",
-        "data/ripeness/corpus.json",
-        "--output",
-        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/ripeness/local",
-        "--training-profile",
-        "ci",
-        "--session-mode",
-        "single",
-        "--max-sessions",
-        "1"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: ripeness (local profile)",
-      "type": "shell",
-      "command": "${workspaceFolder:(Monorepo) Banana}/.venv/Scripts/python.exe",
-      "args": [
-        "scripts/train-ripeness-model.py",
-        "--corpus",
-        "data/ripeness/corpus.json",
-        "--output",
-        "${workspaceFolder:(Monorepo) Banana}/artifacts/training/ripeness/local",
-        "--training-profile",
-        "local"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: BananaAI harness (ci profile)",
-      "type": "shell",
-      "command": "bash -lc '/c/Github/Banana/.venv/Scripts/python.exe scripts/train-joint-pipeline.py --training-profile ci --session-mode single --max-sessions 1 --promote-not-banana-runtime --sync-native-header'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: BananaAI harness (local incremental)",
-      "type": "shell",
-      "command": "bash -lc '/c/Github/Banana/.venv/Scripts/python.exe scripts/train-joint-pipeline.py --training-profile local --session-mode incremental --max-sessions 6 --promote-not-banana-runtime --sync-native-header'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Validate: BananaAI harness smoke",
-      "type": "shell",
-      "command": "bash -lc '/c/Github/Banana/.venv/Scripts/python.exe scripts/smoke-banana-ai-harness.py'",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Validate: not-banana API trained-artifact smoke",
-      "type": "shell",
-      "command": "bash scripts/smoke-not-banana-api-trained-artifact.sh .",
-      "options": {
-        "cwd": "${workspaceFolder:(Monorepo) Banana}"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Train: all (ci profile)",
-      "dependsOrder": "sequence",
-      "dependsOn": [
-        "Train: not-banana (ci profile)",
-        "Train: banana (ci profile)",
-        "Train: ripeness (ci profile)"
-      ],
-      "problemMatcher": []
+        "cwd": "${workspaceFolder}"
+      }
     }
   ]
 }

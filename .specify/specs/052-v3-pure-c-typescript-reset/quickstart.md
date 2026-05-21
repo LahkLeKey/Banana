@@ -83,3 +83,19 @@ npm run build --prefix src/typescript/shared/ui
 ```
 
 Use stitch-slice validation only after the dependent lanes already have current evidence.
+
+## 8. Run the shared overworld with Docker Compose
+
+Use a single authoritative runtime room (`overworld`) for local multi-client checks:
+
+```bash
+docker compose up --build api-overworld react-overworld
+```
+
+Inspect the runtime in one stream:
+
+```bash
+docker compose logs -f api-overworld react-overworld
+```
+
+Open `http://localhost:5173/session-room` and use **Enter overworld**. Do not require manual room ID entry in this baseline.

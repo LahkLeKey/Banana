@@ -13,6 +13,8 @@ applyTo: "{tests/**/*.cs,tests/**/*.c,scripts/run-tests-with-coverage.sh,scripts
 - When a change touches more than one layer, favor the repo’s aggregated test path in `scripts/run-tests-with-coverage.sh`.
 - Coverage artifacts should continue to land in the existing `build`, `.artifacts`, or `artifacts` locations rather than new output folders.
 - Do not lower or bypass the native coverage gate without an explicit user request.
+- For WASM parallel features, add regression coverage that validates required pthread/pool/build fragments and keep CI hard-gated when budgets are not met.
+- Treat missing WASM parallel contract evidence as a blocking test failure for lanes that declare parallel worldgen required.
 
 ## Shared Frontend Contract
 

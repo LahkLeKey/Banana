@@ -52,6 +52,11 @@ export class ReplicationDomain {
     return nextState;
   }
 
+  public applyAuthoritativeState(state: WorldState): WorldState {
+    this.recordState(state.tick, state);
+    return state;
+  }
+
   public getStateAtTick(tick: number): ReplicatedState | undefined {
     return this.stateHistory.find((s) => s.tick === tick);
   }

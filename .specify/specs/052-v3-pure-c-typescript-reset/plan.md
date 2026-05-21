@@ -1,54 +1,56 @@
-# Implementation Plan: V3 Runtime Baseline Reset
+# Implementation Plan: [FEATURE]
 
-**Branch**: `[864-v3-pure-c-typescript-reset]` | **Date**: 2026-05-16 | **Spec**: [.specify/specs/052-v3-pure-c-typescript-reset/spec.md](.specify/specs/052-v3-pure-c-typescript-reset/spec.md)
-**Jurisdiction**: federal | **Agent of Record**: Platform Architecture
-**Input**: Feature specification from `.specify/specs/052-v3-pure-c-typescript-reset/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Jurisdiction**: [federal | domain | package] | **Agent of Record**: [agent/team]
+**Input**: Feature specification from `.specify/specs/[###-feature-name]/spec.md`
+
+**Note**: This template is filled in by the `specify plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
-Reset V3 planning to one repository-grounded authority by treating the current scaffolded source tree as the active runtime baseline, demoting archived/speculative lineage to reference-only status, and generating downstream planning artifacts around four bounded execution lanes: native gameplay, API gameplay, frontend gameplay, and shared gameplay contracts.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Authority Chain
 
-- **Governing Spec**: `.specify/specs/052-v3-pure-c-typescript-reset/spec.md`
-- **Bounded Context**: Cross-repository governance for the V3 gameplay baseline, evidence inventory, stale-path exclusion, and downstream planning handoff
-- **Executing Authority**: Platform Architecture coordinating native gameplay, API gameplay, frontend gameplay, and shared gameplay contract lanes
-- **Superseded Inputs**: `050-multiplayer-server-authority`, `051-ai-gameplay-loop`, and any archived viewport-first lineage in `.specify/legacy-baseline/`
-- **Archive Action**: Keep archived specs and legacy code snapshots for lineage only; do not treat them as active authority when current source paths disagree
+- **Governing Spec**: `.specify/specs/[###-feature-name]/spec.md`
+- **Bounded Context**: [domain governed by this plan]
+- **Executing Authority**: [agent/team implementing the plan]
+- **Superseded Inputs**: [none | prior specs/docs absorbed by this feature]
+- **Archive Action**: [none | archive prior specs from active baseline in same change]
 
 ## Technical Context
 
-**Language/Version**: C via CMake 3.20 native scaffold; TypeScript/JavaScript ESM package scaffolds under `src/typescript/*`  
-**Primary Dependencies**: CMake native build, Bun/Node import-smoke tooling, Spec Kit bash orchestration scripts under `.specify/scripts/bash/`  
-**Storage**: N/A for the reset baseline; no active persistence contract is implemented in current scaffold surfaces  
-**Testing**: Spec extension preflight, confidence gate heartbeat, native CMake configure/build smoke, and package-script build smokes for the TypeScript scaffold packages  
-**Target Platform**: Repository-root planning artifacts for the Banana monorepo; runtime channels remain governed by the Windows + Docker Desktop + Ubuntu WSL2 contract when real runtime surfaces are reintroduced  
-**Project Type**: Multi-language monorepo scaffold with native core, managed orchestration shells, and documentation-driven planning artifacts  
-**Performance Goals**: Planning authority must resolve baseline-scope decisions from reset artifacts alone; sampled retained capabilities should remain traceable to evidence within 10 minutes per spec success criteria  
-**Constraints**: One active baseline only; gameplay/customer-facing scope only; preserve controller -> service -> pipeline -> native interop layering for future managed flows; treat unverified archived or heartbeat claims as lineage rather than runtime truth  
-**Scale/Scope**: Current active runtime surface is limited to `src/native`, five TypeScript package scaffolds (`api`, `react`, `electron`, `react-native`, `shared/ui`), and scaffold placeholders under `scripts`, `tests`, `docs`, `docker`, and `data`
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
+
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
 *GATE: Must pass before research. Re-check after design.*
 
-- **Domain Core First**: Pass. The active runtime baseline centers on `src/native` as the only current gameplay-adjacent implementation surface, with managed layers treated as orchestration shells.
-- **Layered Interop Contract**: Pass. The plan preserves the future `controller -> service -> pipeline -> native interop` boundary by assigning lane ownership instead of collapsing responsibilities.
-- **Spec First Delivery**: Pass. Planning outputs are generated from the active spec and written into the feature folder before any further implementation slicing.
-- **Documentation and Wiki Parity**: Pass for this planning slice. The agent context pointer is updated to the new plan so future work reads the correct authority.
-- **Confidence-Gated Clarification / Heartbeat**: Pass. Preflight passed and the startup confidence gate recorded 92% in `heartbeat-log.md`, which is above the 80% threshold.
-- **Gameplay-Only Scope Gate**: Pass. This plan excludes workflow-only, training, workbench, and stale viewport-first pathways from V3 runtime authority.
-- **Post-Design Re-check**: Pass. `research.md`, `data-model.md`, `quickstart.md`, and `contracts/` all preserve the same active-authority, single-lane, gameplay-only rules with no justified violations.
+[Gates determined based on constitution file]
 
 - If confidence in the next code-improving step is below 80%, stop and resolve the uncertainty with targeted Q/A before continuing. Record the resulting constraint, assumption, or decision in this plan.
 
 ## Orchestration Preflight
 
-- Extension health preflight completed successfully:
+- Run extension health preflight before implementation orchestration:
   - `.specify/scripts/bash/spec-extension-preflight.sh --update-first --json`
-- Confidence gate completed successfully:
-  - `.specify/scripts/bash/spec-confidence-gate.sh --confidence 92 --step "go-copilot-start" --threshold 80 --notes "startup gate"`
-- Heartbeat evidence is recorded in `.specify/specs/052-v3-pure-c-typescript-reset/heartbeat-log.md`.
+- Run confidence gate before major execution slices:
+  - `.specify/scripts/bash/spec-confidence-gate.sh --confidence <n> --step "go-copilot-start" --threshold 80 --notes "startup gate"`
+- Append heartbeat evidence per major step in `.specify/specs/[###-feature-name]/heartbeat-log.md`.
 - If confidence drops below 80, pause and request human input before continuing.
 
 ## Project Structure
@@ -56,102 +58,81 @@ Reset V3 planning to one repository-grounded authority by treating the current s
 ### Documentation (this feature)
 
 ```text
-.specify/specs/052-v3-pure-c-typescript-reset/
-├── plan.md
-├── research.md
-├── data-model.md
-├── quickstart.md
-├── contracts/
-│   ├── baseline-authority.md
-│   └── execution-lanes.md
-├── heartbeat-log.md
-├── codebase-scan.md
-├── v3-scope-gate-checklist.md
-├── v3-bootstrap-docket.md
-└── tasks.md
+.specify/specs/[###-feature]/
+├── plan.md              # This file (specify plan command output)
+├── research.md          # research output (specify plan command)
+├── data-model.md        # design output (specify plan command)
+├── quickstart.md        # design output (specify plan command)
+├── contracts/           # design output (specify plan command)
+└── tasks.md             # tasks output (specify tasks command - NOT created by specify plan)
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── native/
-│   ├── CMakeLists.txt
-│   ├── include/banana_native_v3.h
-│   └── scaffold/native_entry.c
-└── typescript/
-    ├── api/
-    │   ├── package.json
-    │   └── src/index.ts
-    ├── react/
-    │   ├── package.json
-    │   └── src/index.ts
-    ├── electron/
-    │   ├── package.json
-    │   └── main.js
-    ├── react-native/
-    │   ├── package.json
-    │   └── index.ts
-    └── shared/ui/
-        ├── package.json
-        └── src/index.ts
+├── models/
+├── services/
+├── cli/
+└── lib/
 
-scripts/README.md
-tests/README.md
-docker/README.md
-docs/
-data/
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Use the current monorepo scaffold as the only active runtime structure. Planning artifacts must point to existing native and TypeScript scaffold paths, while `scripts`, `tests`, `docker`, `docs`, and `data` remain supporting placeholders until future gameplay slices introduce executable surfaces. `codebase-scan.md`, `v3-scope-gate-checklist.md`, and `v3-bootstrap-docket.md` are the downstream planning drilldowns that turn this scaffold baseline into evidence-backed lane handoffs.
-
-## Phase 0 Research Summary
-
-- The current source tree, `.specify/specs/README.md`, and `.specify/feature.json` collectively establish Spec 052 as the sole active V3 baseline.
-- The authoritative runtime baseline is intentionally minimal: `banana_native_v3_abi_version()` / `banana_native_v3_ping()` in native C plus placeholder TypeScript package entry points.
-- Archived specs, legacy snapshots, and any artifact claims that reference unavailable functions or modules are lineage-only unless backed by current source paths.
-- The correct downstream decomposition is four bounded lanes with two later stitch points:
-  - Lane A: native gameplay baseline
-  - Lane B: API gameplay/session orchestration
-  - Lane C: frontend runtime shells
-  - Lane D: shared gameplay contracts
-
-## Phase 1 Design
-
-### Artifact Outputs
-
-- `research.md`: documents baseline authority, stale-path policy, lane selection, and validation decisions
-- `data-model.md`: defines the planning entities and validation rules used to classify retained capabilities
-- `contracts/baseline-authority.md`: codifies what sources may and may not govern V3 planning decisions
-- `contracts/execution-lanes.md`: codifies single-lane ownership and stitch-point rules
-- `quickstart.md`: explains how to apply the reset baseline to downstream planning work
-
-### Baseline Design Decisions
-
-1. **Source-first authority**: Current repository paths outrank archived specs and older planning notes.
-2. **Scaffold-first truth**: The present baseline is intentionally minimal and should not be inflated with unimplemented capability claims.
-3. **Gameplay-only retention**: Only customer-facing gameplay/runtime work is eligible for V3 planning.
-4. **Single-lane ownership**: Each retained capability belongs to exactly one of the four execution lanes until a defined stitch slice is reached.
-5. **Evidence-backed continuation**: Every downstream slice must cite a live source path or an explicitly archived lineage reference plus migration note.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## DDD/SOLID Decomposition
 
-- **Domain Policy**: One active baseline, one owning lane per retained capability, source-first authority, and confidence/heartbeat gates at or above 80%.
-- **Application Flow**: The plan consumes the governing spec, scans live repository surfaces, classifies retained capabilities, and emits lane-specific artifacts without embedding implementation detail into shared governance rules.
-- **Infrastructure Adapters**: `.specify/scripts/bash/setup-plan.sh`, `.specify/scripts/bash/spec-extension-preflight.sh`, `.specify/scripts/bash/spec-confidence-gate.sh`, `heartbeat-log.md`, and the generated contracts/data-model artifacts.
-- **Single Responsibility**: Each artifact owns one concern: plan (execution strategy), research (resolved decisions), data model (entities and rules), contracts (governance interfaces), quickstart (operator workflow).
+- **Domain Policy**: Identify immutable orchestration rules (confidence threshold, checkpoint contract, sequencing policy).
+- **Application Flow**: Describe how scripts/pipelines compose those rules without reimplementing policy.
+- **Infrastructure Adapters**: List concrete scripts/artifacts that persist evidence and execute external commands.
+- **Single Responsibility**: Ensure each script/module owns one concern and is testable in isolation.
 
 ## Domain-Contract Test Decomposition
 
-- **Bounded Test Suites**: Current validation is scaffold-oriented and should remain lane-specific as implementation resumes:
-  - Native lane: CMake configure/build smoke around `banana_native`
-  - API lane: package-level import/build smoke for `src/typescript/api`
-  - Frontend lane: shell boot/import smoke for `react`, `electron`, and `react-native`
-  - Shared contracts lane: export smoke for `src/typescript/shared/ui`
-- **Suite Ownership**: Each lane owns its validation independently; only stitch slices add cross-lane compatibility checks.
-- **Testable Boundaries**: Native ABI exports, managed package entry points, and contract module exports are the minimum current boundaries that can be validated without reactivating archived systems.
-- **Coverage Contract**: No expanded coverage gate is added in this planning slice; future native gameplay slices must define domain-contract coverage targets before complexity grows beyond the scaffold.
+- **Bounded Test Suites**: Name native and engine test targets after the domain they verify (for example physics, AI FSM, navigation, controller, render, world/signals) instead of phase labels.
+- **Suite Ownership**: Keep each suite focused on one responsibility and expose a thin orchestrator target only for aggregate execution.
+- **Testable Boundaries**: Describe the minimum unit of behavior for each suite so tests mirror the codebase's bounded contexts and SOLID seams.
+- **Coverage Contract**: Call out the exact coverage/static-analysis gates required for native slices, including 100% line coverage and leak/static checks when applicable.
 
 ## Complexity Tracking
 
-No constitution violations require justification for this planning slice.
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

@@ -15,6 +15,8 @@ applyTo: "{CMakeLists.txt,src/native/**/*.c,src/native/**/*.h,tests/native/**/*.
 - Prefer updating CMake targets and existing native tests over adding ad-hoc shell build logic.
 - Validate native changes with the existing CMake test flow or the `Build Native Library` workspace task when appropriate.
 - When coverage is relevant, use `scripts/run-native-c-tests-with-coverage.sh` and respect the 80% line coverage gate.
+- For WASM worldgen paths, keep parallel compile/runtime contracts explicit (`-pthread`, `USE_PTHREADS`, `PTHREAD_POOL_SIZE`, OpenMP where supported).
+- If parallel budgets are required by the feature, enforce them as CI hard gates instead of best-effort warnings.
 
 ## Shared Frontend Contract
 

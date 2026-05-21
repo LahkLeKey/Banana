@@ -15,6 +15,11 @@ export interface PredictionResult {
   readonly divergenceReason?: string;
 }
 
+export interface PredictionReplayResult {
+  readonly authoritative: PredictionResult;
+  readonly replayed: PredictionResult[];
+}
+
 export interface LocalSimulator {
   step(input: MovementInput): PredictionWorldState;
   setState(state: PredictionWorldState): void;
@@ -73,6 +78,10 @@ export class PredictionDomain {
   }
 
   reconcile(authoritativeState: PredictionWorldState): PredictionResult {
+    return this.reconcileAndReplay(authoritativeState).authoritative;
+  }
+
+  reconcileAndReplay(authoritativeState: PredictionWorldState): PredictionReplayResult {
     const predicted = this.predictionCache.get(authoritativeState.tickIndex);
     const divergence =
       !predicted ||
@@ -81,20 +90,49 @@ export class PredictionDomain {
 
     if (!divergence) {
       return {
-        tickIndex: authoritativeState.tickIndex,
-        inputApplied: predicted.inputApplied,
-        stateAfter: authoritativeState,
-        confidence: 1,
+        authoritative: {
+          tickIndex: authoritativeState.tickIndex,
+          inputApplied: predicted.inputApplied,
+          stateAfter: authoritativeState,
+          confidence: 1,
+        },
+        replayed: [],
       };
     }
 
     this.simulator.setState(authoritativeState);
-    return {
+    const authoritative: PredictionResult = {
       tickIndex: authoritativeState.tickIndex,
       inputApplied: predicted?.inputApplied ?? { moveX: 0, moveZ: 0, source: "none" },
       stateAfter: authoritativeState,
       confidence: 0,
       divergenceReason: "authoritative_mismatch",
+    };
+    this.predictionCache.set(authoritative.tickIndex, authoritative);
+
+    const replayed: PredictionResult[] = [];
+    const laterTicks = [...this.predictionCache.keys()]
+      .filter((tickIndex) => tickIndex > authoritativeState.tickIndex)
+      .sort((left, right) => left - right);
+
+    for (const tickIndex of laterTicks) {
+      const cached = this.predictionCache.get(tickIndex);
+      if (!cached) continue;
+
+      const replayedState = this.simulator.step(cached.inputApplied);
+      const replayedResult: PredictionResult = {
+        tickIndex: replayedState.tickIndex,
+        inputApplied: cached.inputApplied,
+        stateAfter: replayedState,
+        confidence: 1,
+      };
+      this.predictionCache.set(replayedResult.tickIndex, replayedResult);
+      replayed.push(replayedResult);
+    }
+
+    return {
+      authoritative,
+      replayed,
     };
   }
 

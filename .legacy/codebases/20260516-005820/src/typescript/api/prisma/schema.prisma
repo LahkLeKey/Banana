@@ -1,0 +1,139 @@
+// schema.prisma — v2. NO `url` field on the datasource (Prisma 7 lints reject
+// inline url). DATABASE_URL is wired via prisma.config.ts (spec 008).
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// === Polymorphic API audit log (collapses 5 v1 *ApiCall tables) ===
+model ApiCall {
+    id           BigInt   @id @default(autoincrement())
+    domain       String // banana | batch | ripeness | not-banana | ml
+    route        String
+    statusCode   Int
+    requestJson  String
+    responseJson String
+    createdAt    DateTime @default(now())
+
+    @@index([domain, createdAt])
+}
+
+model BananaCalculation {
+    id         BigInt   @id @default(autoincrement())
+    purchases  Int
+    multiplier Int
+    banana     Int
+    message    String
+    source     String
+    createdAt  DateTime @default(now())
+}
+
+model NotBananaClassification {
+    id                   BigInt   @id @default(autoincrement())
+    classification       String
+    bananaProbability    Float
+    notBananaProbability Float
+    junkConfidence       Float
+    actorCount           Int
+    entityCount          Int
+    requestJson          String
+    responseJson         String
+    source               String
+    createdAt            DateTime @default(now())
+}
+
+// === Model Registry (feature 079) ===
+// Append-only; promotions create a new row, no updates.
+model ModelRelease {
+    id                  BigInt               @id @default(autoincrement())
+    modelName           String // banana | not-banana | ripeness
+    version             String // semver string e.g. "1.4.2"
+    artifactPath        String // content-addressed storage key / path
+    artifactHash        String // sha256 hex of the artifact archive
+    manifestJson        String // full release manifest (training params, metrics, etc.)
+    signature           String // minisign / cosign signature over manifestJson
+    promotedBy          String // operator identifier
+    activeFrom          DateTime             @default(now())
+    deprecatedAt        DateTime?
+    createdAt           DateTime             @default(now())
+    activeModelReleases ActiveModelRelease[]
+
+    @@index([modelName, activeFrom])
+    @@index([modelName, deprecatedAt])
+}
+
+// Tracks the currently active release per model (single-row-per-model view).
+model ActiveModelRelease {
+    modelName String       @id
+    releaseId BigInt
+    release   ModelRelease @relation(fields: [releaseId], references: [id])
+    updatedAt DateTime     @updatedAt
+}
+
+// === Background Jobs (spec #070) ===
+// PostgreSQL-backed durable job queue (no Redis dependency).
+model BackgroundJob {
+    id          String    @id @default(uuid())
+    kind        String // training | evidence-pr | consolidation | custom
+    payload     Json
+    status      String    @default("pending") // pending | running | done | failed
+    attempts    Int       @default(0)
+    maxAttempts Int       @default(3)
+    runAfter    DateTime  @default(now())
+    startedAt   DateTime?
+    finishedAt  DateTime?
+    error       String?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([status, runAfter])
+    @@index([kind, status])
+}
+
+// === Outbound Webhooks (spec #071) ===
+model WebhookSubscriber {
+    id               String                   @id @default(uuid())
+    url              String
+    events           String[] // e.g. ["training.completed", "model.promoted"]
+    signingSecret    String // HMAC-SHA256 signing secret (store hashed in prod)
+    active           Boolean                  @default(true)
+    createdAt        DateTime                 @default(now())
+    deliveryAttempts WebhookDeliveryAttempt[]
+
+    @@index([active])
+}
+
+model WebhookDeliveryAttempt {
+    id           String            @id @default(uuid())
+    subscriberId String
+    subscriber   WebhookSubscriber @relation(fields: [subscriberId], references: [id])
+    event        String
+    payload      Json
+    statusCode   Int?
+    responseBody String?
+    success      Boolean           @default(false)
+    attemptedAt  DateTime          @default(now())
+
+    @@index([subscriberId, attemptedAt])
+    @@index([event, success])
+}
+
+// === Audit Event log (spec #069) ===
+model audit_event {
+    id          String   @id @default(uuid())
+    actor       String?
+    action      String
+    resource    String
+    resource_id String?
+    metadata    Json?
+    ip_address  String?
+    created_at  DateTime @default(now())
+
+    @@index([action])
+    @@index([actor])
+    @@index([created_at])
+}

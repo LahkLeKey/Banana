@@ -1,4 +1,4 @@
-@import "@banana/ui/tokens/web.css";
+@import "../../shared/ui/src/tokens/web.css";
 
 @tailwind base;
 @tailwind components;

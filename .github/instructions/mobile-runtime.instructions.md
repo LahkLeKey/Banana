@@ -14,6 +14,7 @@ applyTo: "{scripts/compose-mobile-emulators-wsl2.sh,scripts/launch-container-cha
 - Keep Android launch deterministic: explicit AVD selection, timeout handling, and clear failure messages when SDK tools are missing.
 - Keep iOS behavior explicit: Ubuntu cannot run Apple iOS Simulator; use iOS-style web preview fallback without claiming native simulator parity.
 - If runtime entry points change, update `.github/ubuntu-wsl2-runtime-contract.md`, `.github/skills/banana-mobile-runtime`, and nearest prompts.
+- For web-preview channels that consume WASM engine assets, preserve the same WASM parallel contract checks used by desktop/web runtime lanes.
 
 ## Shared Frontend Contract
 

@@ -105,9 +105,44 @@
 - [x] T020 [P] Cross-check authority, evidence, and lane ownership consistency across `.specify/specs/052-v3-pure-c-typescript-reset/spec.md`, `.specify/specs/052-v3-pure-c-typescript-reset/plan.md`, `.specify/specs/052-v3-pure-c-typescript-reset/research.md`, `.specify/specs/052-v3-pure-c-typescript-reset/data-model.md`, `.specify/specs/052-v3-pure-c-typescript-reset/contracts/baseline-authority.md`, `.specify/specs/052-v3-pure-c-typescript-reset/contracts/execution-lanes.md`, `.specify/specs/052-v3-pure-c-typescript-reset/codebase-scan.md`, `.specify/specs/052-v3-pure-c-typescript-reset/v3-scope-gate-checklist.md`, `.specify/specs/052-v3-pure-c-typescript-reset/v3-bootstrap-docket.md`, and `.specify/specs/052-v3-pure-c-typescript-reset/quickstart.md`
 - [x] T021 Append the final readiness summary, artifact links, and reviewer notes in `.specify/specs/052-v3-pure-c-typescript-reset/heartbeat-log.md`
 
----
+## Implementation Tasks — Server-Authority WASM Multiplayer (T022+)
 
-## Dependencies & Execution Order
+**Purpose**: Implement the full restore + new-build work identified in the v3-bootstrap-docket.
+
+### Restore — Lane A (Native Engine)
+
+- [x] T022 [P] [US-impl] Restore C engine from `origin/049-arpg-view-actors` into `src/native/engine/`: engine lifecycle (engine.h/engine.c), physics (body/collider/dynamics/world), AI (controller/navigation/perception/state_machine/wildlife_controller), render (camera/material/mesh/renderer/shader/window), world (entity/signals/world), wasm_main.c, engine CMakeLists.txt with EMSCRIPTEN targets
+- [x] T023 [P] [US-impl] Restore WASM build scripts from `origin/049-arpg-view-actors`: `scripts/build-engine-wasm-emsdk.sh`, `scripts/build-engine-wasm.sh`, `scripts/build-wasm.sh`; verify WASM artifact produced by `scripts/build-engine-wasm-emsdk.sh`
+
+### Restore — Lane B (API Routes)
+
+- [x] T024 [P] [US-impl] Restore API routes and plugins from `origin/049-arpg-view-actors`: `src/typescript/api/src/routes/game-session.ts` (WebSocket server-authority), auth middleware, Fastify plugins (rate-limit, feature-flags, audit-log, drift-detection), chat/training/corpus/streaming routes; verify `bun run build` green and WebSocket upgrade on `/game-session` returns 101
+
+### Restore — Lane C (React Web Portal)
+
+- [x] T025 [P] [US-impl] Restore React game portal from `origin/049-arpg-view-actors`: `src/typescript/react/src/pages/GameEnginePage.tsx`, `wasm/WasmViewport.tsx`, `workers/bananaWasmWorker.ts`, `lib/wasmRuntime.ts`, `lib/wasmKernels.ts`, `lib/hooks/useWasmWorker.ts`, `components/GameTelemetry.tsx`, `components/GameWorldMap.tsx`; verify Vite dev renders WASM canvas
+
+### Restore — Lane D (Shared Netcode Domains)
+
+- [x] T026 [P] [US-impl] Restore shared netcode domains from `origin/049-arpg-view-actors`: `src/typescript/shared/ui/src/domains/NetcodeDomain.ts`, `PredictionDomain.ts`, `ReplicationDomain.ts`, `ConnectionManager.ts`, `InputDomain.ts`, `ViewportDomain.ts`; verify build green and prediction/rollback unit tests pass
+
+### New Build — Server-Authority
+
+- [x] T027 [US-impl] Add `engine_tick_serialize()` export to C engine: `src/native/engine/engine_serialize.h` + `engine_serialize.c`; output is JSON snapshot of full world state; unit test verifies snapshot schema round-trips correctly (slice A1)
+- [x] T028 [US-impl] Wire server-side native C engine tick into game-session loop: `src/typescript/api/src/services/nativeEngine.ts` (N-API/FFI binding to `engine_tick_serialize()`); extend `game-session.ts` to call tick per frame, broadcast snapshot to all session WebSocket clients, validate inputs before apply (slice B1 + S1)
+- [x] T029 [P] [US-impl] Add multiplayer UI components to React portal: `src/typescript/react/src/components/PlayerListOverlay.tsx` (in-game player list), `src/typescript/react/src/pages/SessionRoomPage.tsx` (pre-game room selection); wire to session WebSocket (slice C1)
+- [x] T030 [US-impl] Wire PredictionDomain + ReplicationDomain to real server tick snapshots in `src/typescript/shared/ui/src/domains/`: client applies server snapshot, rolls back prediction state, re-simulates from reconcile point; integration test with mock server snapshot stream (slice D1 + S2)
+
+### Overworld Authority + Native Controller Extension
+
+- [x] T031 [US-impl] Enforce single static authoritative room (`overworld`) and remove player-facing room-id entry from `src/typescript/api/src/routes/game-session.ts`, `src/typescript/react/src/pages/SessionRoomPage.tsx`, and `src/typescript/react/src/lib/api.ts`
+- [x] T032 [US-impl] Add authoritative server TPS/lag telemetry to snapshot/status payloads and expose it in in-game overlays via `src/typescript/api/src/routes/game-session.ts`, `src/typescript/react/src/lib/api.ts`, `src/typescript/react/src/components/PlayerListOverlay.tsx`, and `src/typescript/react/src/pages/GameEnginePage.tsx`
+- [x] T033 [US-impl] Expand API gameplay route tests to cover overworld-only joins, roomless status access, and TPS contract fields in `src/typescript/api/src/routes/game-session.test.ts`
+- [x] T034 [US-impl] Add compose runtime channel for overworld validation and log inspection in `docker-compose.yml`, `docker/README.md`, and `.specify/specs/052-v3-pure-c-typescript-reset/quickstart.md`
+- [x] T035 [US-impl] Move `PlayerEntity` into `src/native/engine` as a GUID-rooted base entity with pluggable controller strategy (`human`, AI/NPC, automation) and shared movement/state serialization hooks in `src/native/engine/engine.h`, `src/native/engine/engine.c`, `src/native/engine/engine_serialize.h`, and `src/native/engine/engine_serialize.c`
+- [x] T036 [US-impl] Bridge API session player mappings to native controller instances (human input + AI spawn surfaces) in `src/typescript/api/src/services/nativeEngine.ts` and `src/typescript/api/src/routes/game-session.ts`, with coverage updates in `src/typescript/api/src/routes/game-session.test.ts`
+
+---
 
 ### Stage Dependencies
 

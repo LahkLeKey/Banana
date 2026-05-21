@@ -1,0 +1,33 @@
+{
+  "run_id": "692634eb",
+  "workflow_id": "speckit",
+  "status": "failed",
+  "current_step_index": 0,
+  "current_step_id": "specify",
+  "step_results": {
+    "specify": {
+      "integration": "copilot",
+      "model": null,
+      "options": {},
+      "input": {
+        "args": ".specify/specs/052-v3-pure-c-typescript-reset/spec.md"
+      },
+      "output": {
+        "command": "specify.specify",
+        "integration": "copilot",
+        "model": null,
+        "options": {},
+        "input": {
+          "args": ".specify/specs/052-v3-pure-c-typescript-reset/spec.md"
+        },
+        "exit_code": 130,
+        "stdout": "",
+        "stderr": "Interrupted by user",
+        "dispatched": true
+      },
+      "status": "failed"
+    }
+  },
+  "created_at": "2026-05-16T06:32:20.833422+00:00",
+  "updated_at": "2026-05-16T06:33:29.515788+00:00"
+}

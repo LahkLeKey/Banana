@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "renderer_internal.h"
 #include "material.h"
 #include "mesh.h"
 #include "shader.h"
@@ -82,7 +83,7 @@ static const char *DEFAULT_FRAG =
 
 #ifdef BANANA_ENGINE_HAS_GL
 /* ── Internal mat4 multiply (column-major, A × B → C) ───────────────────── */
-static void r_mat4_mul(const float *A, const float *B, float *C)
+void renderer_mat4_mul(const float *A, const float *B, float *C)
 {
     for (int col = 0; col < 4; col++)
         for (int row = 0; row < 4; row++)
@@ -95,7 +96,7 @@ static void r_mat4_mul(const float *A, const float *B, float *C)
 }
 
 /* ── Translation matrix (column-major) ──────────────────────────────────── */
-static void r_translation(float x, float y, float z, float *m16)
+void renderer_translation(float x, float y, float z, float *m16)
 {
     memset(m16, 0, 64);
     m16[0] = m16[5] = m16[10] = m16[15] = 1.f;
@@ -104,7 +105,7 @@ static void r_translation(float x, float y, float z, float *m16)
     m16[14] = z;
 }
 
-static void r_scale(float x, float y, float z, float *m16)
+void renderer_scale(float x, float y, float z, float *m16)
 {
     memset(m16, 0, 64);
     m16[0] = x;
@@ -113,23 +114,6 @@ static void r_scale(float x, float y, float z, float *m16)
     m16[15] = 1.f;
 }
 #endif
-
-struct Renderer
-{
-    int width;
-    int height;
-    Shader *default_shader;
-    Camera camera;
-    unsigned char *frame_buffer; /* RGBA pixels, width*height*4 */
-#ifdef BANANA_ENGINE_HAS_GL
-    /* FBO used in native mode for pixel readback; unused in WASM (render to canvas) */
-    unsigned int fbo;
-    unsigned int fbo_texture;
-    unsigned int fbo_depth;
-    int use_fbo; /* 1 = native readback, 0 = direct to canvas (WASM) */
-    unsigned int default_tile_texture;
-#endif
-};
 
 #ifdef BANANA_ENGINE_HAS_GL
 static unsigned int renderer_create_fallback_tile_texture(void)
@@ -257,39 +241,6 @@ void renderer_begin_frame(Renderer *r)
 #endif
 }
 
-void renderer_draw_mesh(Renderer *r, struct Mesh *mesh, const float *position,
-                        const float *rotation, const float *scale, const struct Material *material)
-{
-    (void)rotation; /* quaternion → mat4: Phase 2 */
-    (void)scale;    /* non-uniform scale: Phase 2 */
-#ifdef BANANA_ENGINE_HAS_GL
-    shader_bind(r->default_shader);
-
-    /* MVP = ViewProjection × Translation(position) × Scale(scale) */
-    float vp[16], T[16], S[16], TS[16], mvp[16];
-    camera_get_view_projection(&r->camera, vp);
-    r_translation(position[0], position[1], position[2], T);
-    r_scale(scale[0], scale[1], scale[2], S);
-    r_mat4_mul(T, S, TS);
-    r_mat4_mul(vp, TS, mvp);
-
-    shader_set_mat4(r->default_shader, "u_mvp", mvp);
-    shader_set_int(r->default_shader, "u_tile_texture", 0);
-    glActiveTexture(GL_TEXTURE0);
-    if (material->use_texture > 0.5f && r->default_tile_texture)
-        glBindTexture(GL_TEXTURE_2D, r->default_tile_texture);
-    else
-        glBindTexture(GL_TEXTURE_2D, 0);
-    material_apply(material, r->default_shader);
-    mesh_draw(mesh);
-#else
-    (void)r;
-    (void)mesh;
-    (void)position;
-    (void)material;
-#endif
-}
-
 void renderer_end_frame(Renderer *r)
 {
 #ifdef BANANA_ENGINE_HAS_GL
@@ -302,7 +253,12 @@ void renderer_end_frame(Renderer *r)
     /* WASM: canvas already has the rendered output; nothing to do */
 #else
     /* Headless stub: fill with identifiable gradient for test assertions */
-    for (int i = 0; i < r->width * r->height; i++)
+    int pixel_count = r->width * r->height;
+    int i = 0;
+#if defined(BANANA_ENGINE_HAS_OPENMP)
+#pragma omp parallel for schedule(static)
+#endif
+    for (i = 0; i < pixel_count; i++)
     {
         r->frame_buffer[i * 4 + 0] = (unsigned char)(i % 256);
         r->frame_buffer[i * 4 + 1] = 0x42;

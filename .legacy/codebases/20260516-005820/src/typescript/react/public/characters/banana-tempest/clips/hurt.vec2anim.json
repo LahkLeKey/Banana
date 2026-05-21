@@ -1,0 +1,18 @@
+{
+  "kind": "banana-character-clip",
+  "name": "hurt",
+  "fps": 14,
+  "loop": false,
+  "frames": [
+    {"index":0,"bones":{"hips":{"ty":-0.0000},"arm_l":{"rot":-0.00},"arm_r":{"rot":0.00},"leg_l":{"rot":0.00},"leg_r":{"rot":-0.00},"cape":{"rot":2.60}}},
+    {"index":1,"bones":{"hips":{"ty":-0.0386},"arm_l":{"rot":-7.79},"arm_r":{"rot":7.79},"leg_l":{"rot":6.89},"leg_r":{"rot":-6.89},"cape":{"rot":2.95}}},
+    {"index":2,"bones":{"hips":{"ty":-0.0591},"arm_l":{"rot":7.79},"arm_r":{"rot":-7.79},"leg_l":{"rot":2.39},"leg_r":{"rot":-2.39},"cape":{"rot":1.93}}},
+    {"index":3,"bones":{"hips":{"ty":-0.0520},"arm_l":{"rot":0.00},"arm_r":{"rot":-0.00},"leg_l":{"rot":-6.06},"leg_r":{"rot":6.06},"cape":{"rot":0.00}}},
+    {"index":4,"bones":{"hips":{"ty":-0.0205},"arm_l":{"rot":-7.79},"arm_r":{"rot":7.79},"leg_l":{"rot":-4.50},"leg_r":{"rot":4.50},"cape":{"rot":-1.93}}},
+    {"index":5,"bones":{"hips":{"ty":0.0205},"arm_l":{"rot":7.79},"arm_r":{"rot":-7.79},"leg_l":{"rot":4.50},"leg_r":{"rot":-4.50},"cape":{"rot":-2.95}}},
+    {"index":6,"bones":{"hips":{"ty":0.0520},"arm_l":{"rot":0.00},"arm_r":{"rot":-0.00},"leg_l":{"rot":6.06},"leg_r":{"rot":-6.06},"cape":{"rot":-2.60}}},
+    {"index":7,"bones":{"hips":{"ty":0.0591},"arm_l":{"rot":-7.79},"arm_r":{"rot":7.79},"leg_l":{"rot":-2.39},"leg_r":{"rot":2.39},"cape":{"rot":-1.03}}},
+    {"index":8,"bones":{"hips":{"ty":0.0386},"arm_l":{"rot":7.79},"arm_r":{"rot":-7.79},"leg_l":{"rot":-6.89},"leg_r":{"rot":6.89},"cape":{"rot":1.03}}},
+    {"index":9,"bones":{"hips":{"ty":0.0000},"arm_l":{"rot":0.00},"arm_r":{"rot":-0.00},"leg_l":{"rot":-0.00},"leg_r":{"rot":0.00},"cape":{"rot":2.60}}}
+  ]
+}

@@ -1,8 +1,8 @@
 # Specification Quality Checklist: V3 Runtime Baseline Reset
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
-**Created**: 2026-05-16
-**Feature**: [Link to spec.md](../spec.md)
+**Created**: 2026-05-18
+**Feature**: [spec.md](../spec.md)
 
 ## Content Quality
 
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Validation completed on 2026-05-16 against the rewritten spec; no placeholder content or clarification markers remain.
-- The spec is ready for `specify plan`.
+- Validation passed after rewriting the spec around reset-baseline authority, retained gameplay scope, and bounded execution-lane ownership.
+- No clarification markers remain.

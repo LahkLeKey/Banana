@@ -1,0 +1,6 @@
+{
+  "inputs": {
+    "spec": ".specify/specs/052-v3-pure-c-typescript-reset.md",
+    "integration": "copilot"
+  }
+}

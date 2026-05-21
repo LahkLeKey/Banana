@@ -1,0 +1,72 @@
+# Build outputs
+build/
+build-engine/
+out/
+dist/
+
+# Native artifacts
+*.dll
+*.so
+*.so.*
+*.dylib
+*.lib
+*.exp
+*.ilk
+*.map
+*.a
+*.la
+*.lo
+*.o
+*.obj
+*.elf
+
+# Executables and debug symbols
+*.exe
+*.out
+*.app
+*.pdb
+build_ninja/
+*.idb
+*.dSYM/
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+
+# Node/Electron
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Docker
+.docker/
+
+# Local environment
+.env
+
+
+# OS
+.DS_Store
+Thumbs.db
+
+/.artifacts
+/artifacts/*
+!/artifacts/wasm
+/artifacts/wasm/*
+!/artifacts/wasm/**
+/.wiki
+bash.exe.stackdump
+/tests/unit/TestResults
+/scripts/__pycache__
+
+# SBOM outputs (spec #086)
+artifacts/sboms/
+*.pyc
+
+.vercel
+.env*.local

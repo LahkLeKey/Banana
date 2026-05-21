@@ -39,17 +39,28 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── Emscripten resolution ─────────────────────────────────────────────────────
+EMCC_CMD=(emcc)
 if ! command -v emcc &>/dev/null; then
   if [[ -n "${EMSDK_PATH:-}" ]]; then
     # shellcheck disable=SC1091
     source "${EMSDK_PATH}/emsdk_env.sh" >/dev/null 2>&1
+    if command -v emcc &>/dev/null; then
+      EMCC_CMD=(emcc)
+    elif [[ -f "${EMSDK_PATH}/upstream/emscripten/emcc.sh" ]]; then
+      EMCC_CMD=(bash "${EMSDK_PATH}/upstream/emscripten/emcc.sh")
+    elif [[ -f "${EMSDK_PATH}/upstream/emscripten/emcc.py" ]]; then
+      EMCC_CMD=(python "${EMSDK_PATH}/upstream/emscripten/emcc.py")
+    else
+      echo "[build-wasm] ERROR: emcc not found. Install Emscripten or set EMSDK_PATH." >&2
+      exit 1
+    fi
   else
     echo "[build-wasm] ERROR: emcc not found. Install Emscripten or set EMSDK_PATH." >&2
     exit 1
   fi
 fi
 
-EMCC_VERSION=$(emcc --version 2>&1 | head -1)
+EMCC_VERSION=$("${EMCC_CMD[@]}" --version 2>&1 | head -1)
 echo "[build-wasm] Using: ${EMCC_VERSION}"
 
 # ── Source list (DAL-free, spec 257 T003) ────────────────────────────────────
@@ -166,7 +177,7 @@ MANIFEST
 
 # ── Scalar build ──────────────────────────────────────────────────────────────
 echo "[build-wasm] Building scalar variant..."
-emcc \
+"${EMCC_CMD[@]}" \
   "${COMMON_FLAGS[@]}" \
   -s "EXPORT_NAME=BananaWasm" \
   -s "EXPORTED_FUNCTIONS=${SCALAR_EXPORTS_STR}" \
@@ -179,7 +190,7 @@ echo "[build-wasm] Scalar build complete: ${OUT_DIR}/banana-wasm.wasm"
 # ── SIMD build ────────────────────────────────────────────────────────────────
 if [[ "${BUILD_SIMD}" == "1" ]]; then
   echo "[build-wasm] Building SIMD variant (-msimd128)..."
-  emcc \
+  "${EMCC_CMD[@]}" \
     "${COMMON_FLAGS[@]}" \
     -msimd128 \
     -s "EXPORT_NAME=BananaWasmSimd" \
