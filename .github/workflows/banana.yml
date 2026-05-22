@@ -113,8 +113,8 @@ jobs:
 
       - name: Verify wasm artifacts exist
         run: |
-          test -f out/wasm-native/engine/banana_engine.js
-          test -f out/wasm-native/engine/banana_engine.wasm
+          test -f out/wasm/engine.js
+          test -f out/wasm/engine.wasm
 
   monorepo-pass-fail:
     name: Monorepo / Pass-Fail
