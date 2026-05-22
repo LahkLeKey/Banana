@@ -139,6 +139,38 @@ extern "C"
     /* Add resource to player inventory. Returns new count or -1 on error. */
     int engine_player_add_resource(const char *resource_type, int amount);
 
+    /* ── Player Build & Combo Systems ───────────────────────────────────── */
+
+    /* Set player class (0=vanguard, 1=arcanist, 2=ranger). */
+    int engine_player_build_set_class(const char *player_guid, int class_type);
+
+    /* Allocate build points into offense/defense/utility. */
+    int engine_player_build_set_allocations(const char *player_guid,
+                                            int offense_points,
+                                            int defense_points,
+                                            int utility_points);
+
+    /* Equip one gear slot (0=weapon, 1=armor, 2=trinket) with tier and modifiers. */
+    int engine_player_build_equip(const char *player_guid,
+                                  int slot,
+                                  int tier,
+                                  int attack_bonus,
+                                  int defense_bonus,
+                                  int utility_bonus);
+
+    /* Query one build stat by name: "health", "attack", "defense", "utility". */
+    int engine_player_build_get_stat(const char *player_guid, const char *stat_name);
+
+    /* Evaluate a combo and return triggered flag plus bonus outputs. */
+    int engine_player_combo_evaluate(const char *player_guid,
+                                     const char *first_skill,
+                                     const char *second_skill,
+                                     int elapsed_ms,
+                                     int party_size,
+                                     int *out_damage_bonus_pct,
+                                     int *out_mitigation_bonus_pct,
+                                     int *out_party_synergy_bonus_pct);
+
     /* ── Merchant NPC Queries (UI Integration) ──────────────────────────── */
 
     /* Get price for item type at a merchant. */

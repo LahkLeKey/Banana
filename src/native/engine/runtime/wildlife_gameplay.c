@@ -1,5 +1,6 @@
 #include "wildlife_gameplay.h"
 
+#include <stddef.h>
 #include <string.h>
 
 int runtime_wildlife_signal_player_nearby(World *world,

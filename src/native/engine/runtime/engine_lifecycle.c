@@ -2,6 +2,7 @@
 
 #include "terrain_generation.h"
 
+#include <stddef.h>
 #include <string.h>
 
 int runtime_engine_lifecycle_build_terrain(unsigned char *height_grid,
@@ -78,6 +79,7 @@ int runtime_engine_lifecycle_spawn_default_actors(World *world,
         { 4.0f, -1.8f, 0.55f, ENTITY_TYPE_NPC,     0.95f, 1.10f, 0.95f, "wildlife", 1},
         {-2.4f,  2.8f, 0.45f, ENTITY_TYPE_TRIGGER, 0.95f, 1.30f, 0.95f, "quest",    0},
         {-3.7f,  3.6f, 0.35f, ENTITY_TYPE_STATIC,  1.40f, 0.60f, 1.40f, "camp",     0},
+        { 1.8f,  1.6f, 0.42f, ENTITY_TYPE_STATIC,  1.25f, 1.05f, 1.25f, "pbj_pickup", 0},
         { 2.8f,  2.9f, 0.55f, ENTITY_TYPE_NPC,     1.00f, 1.00f, 1.00f, "wildlife", 1},
     };
     int spawned = 0;

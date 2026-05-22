@@ -2,7 +2,7 @@ import type {FastifyInstance} from 'fastify';
 import {randomUUID} from 'node:crypto';
 import type {IncomingMessage} from 'node:http';
 import type {Socket} from 'node:net';
-import {type WebSocket, WebSocketServer} from 'ws';
+import WebSocket, {type RawData, WebSocketServer} from 'ws';
 
 import {type AntiCheatInteropAdapter, createDefaultAntiCheatInteropAdapter,} from '../lib/anti-cheat-interop.ts';
 import {createDefaultNativeEngineService, type NativeEnginePlayerSync, type NativeEngineService, type NativeEngineSnapshot, type NativeEngineSnapshotEntity,} from '../services/nativeEngine.ts';
@@ -77,6 +77,9 @@ type LabeledSnapshot = Omit<NativeEngineSnapshot, 'entities'>&{
   readonly entities: Record<string, LabeledSnapshotEntity>;
 };
 
+type BuildClassType = 0|1|2;
+type BuildGearSlot = 0|1|2;
+
 const sessions = new Map<string, SessionRecord>();
 const MAX_SNAPSHOTS = 64;
 const REALTIME_TICK_MS = 1000 / 30;
@@ -102,6 +105,10 @@ function resolvePlayerId(playerGuidRaw: string|null): string {
 
 function isAxis(value: number): value is - 1|0|1 {
   return value === -1 || value === 0 || value === 1;
+}
+
+function isNonNegativeInteger(value: number): boolean {
+  return Number.isInteger(value) && value >= 0;
 }
 
 function appendSnapshot(session: SessionRecord, snapshot: {
@@ -265,15 +272,17 @@ function pickRealtimeInput(session: SessionRecord): GameInputCommandEnvelope {
     };
   }
 
-  const summed = recentInputs.reduce(
-      (state, input) => ({
-        moveX: state.moveX + input.moveX,
-        moveZ: state.moveZ + input.moveZ,
-        sequence: Math.max(state.sequence, input.sequence),
-        tick: Math.max(state.tick, input.tick),
-        timestamp: Math.max(state.timestamp, input.timestamp),
-      }),
-      {moveX: 0, moveZ: 0, sequence: 0, tick: 0, timestamp: 0});
+  const summed = recentInputs.reduce<{
+    moveX: number; moveZ: number; sequence: number; tick: number;
+    timestamp: number;
+  }>((state, input) => ({
+       moveX: state.moveX + input.moveX,
+       moveZ: state.moveZ + input.moveZ,
+       sequence: Math.max(state.sequence, input.sequence),
+       tick: Math.max(state.tick, input.tick),
+       timestamp: Math.max(state.timestamp, input.timestamp),
+     }),
+     {moveX: 0, moveZ: 0, sequence: 0, tick: 0, timestamp: 0});
 
   return {
     sequence: summed.sequence,
@@ -311,6 +320,34 @@ function buildNativePlayerSyncPayload(session: SessionRecord):
       moveZ,
     };
   });
+}
+
+async function ensureBuildPlayerBound(
+    session: SessionRecord, nativeEngine: NativeEngineService,
+    playerId: string): Promise<void> {
+  const existing = session.players.get(playerId);
+  const record: SessionPlayerRecord = existing ?? {
+    playerId,
+    playerName: `player-${playerId.slice(-6)}`,
+    controllerKind: 'human',
+    lastTick: session.lastTick,
+    lastSequence: session.lastSequence,
+    lastSeenAt: Date.now(),
+    joinedAt: Date.now(),
+    socket: null,
+  };
+  session.players.set(playerId, record);
+
+  await nativeEngine.syncPlayers([
+    {
+      playerId: record.playerId,
+      playerName: record.playerName,
+      controllerKind: record.controllerKind,
+      connected: true,
+      moveX: 0,
+      moveZ: 0,
+    },
+  ]);
 }
 
 function buildSnapshotEnvelope(
@@ -505,11 +542,12 @@ export async function registerGameSessionRoutes(
           return;
         }
 
-        realtimeServer.handleUpgrade(request, socket, head, (ws) => {
+        realtimeServer.handleUpgrade(request, socket, head, (ws: WebSocket) => {
           const now = Date.now();
           const existingPlayer = session.players.get(playerId);
-          if (existingPlayer?.socket?.readyState === WebSocket.OPEN) {
-            existingPlayer.socket.close(4000, 'identity_rebound');
+          const existingSocket = existingPlayer?.socket;
+          if (existingSocket?.readyState === WebSocket.OPEN) {
+            existingSocket.close(4000, 'identity_rebound');
           }
 
           const player: SessionPlayerRecord = existingPlayer ?? {
@@ -548,7 +586,7 @@ export async function registerGameSessionRoutes(
 
           connectRealtimeClient();
 
-          ws.on('message', (buffer) => {
+          ws.on('message', (buffer: RawData) => {
             try {
               const payload = parseRealtimePayload(buffer.toString());
               player.lastSeenAt = Date.now();
@@ -585,7 +623,7 @@ export async function registerGameSessionRoutes(
                 sequence: payload.sequence,
                 tick: payload.tick,
               }));
-            } catch (error) {
+            } catch (error: unknown) {
               ws.send(JSON.stringify({
                 type: 'error',
                 error: 'invalid_realtime_message',
@@ -717,6 +755,178 @@ export async function registerGameSessionRoutes(
     const existed = sessions.delete(sessionId);
     return reply.status(200).send({ended: existed, sessionId});
   });
+
+  app.post('/api/game/session/player/build/class', async (request, reply) => {
+    const body = (request.body ?? {}) as {
+      sessionId?: string;
+      playerGuid?: string;
+      classType?: number;
+    };
+    const sessionId = resolveSessionId(body.sessionId);
+    const playerGuid = (body.playerGuid ?? '').toString().trim().toLowerCase();
+    const classType = Number(body.classType);
+
+    if (!playerGuid || !isGuid(playerGuid) || ![0, 1, 2].includes(classType)) {
+      return reply.status(400).send({error: 'invalid_argument'});
+    }
+
+    const session = getSessionOrReply(sessionId, reply);
+    if (!session) return reply;
+
+    await ensureBuildPlayerBound(session, nativeEngine, playerGuid);
+    await nativeEngine.setPlayerClass(playerGuid, classType as BuildClassType);
+
+    return reply.status(200).send({ok: true, playerGuid, classType});
+  });
+
+  app.post(
+      '/api/game/session/player/build/allocations', async (request, reply) => {
+        const body = (request.body ?? {}) as {
+          sessionId?: string;
+          playerGuid?: string;
+          offensePoints?: number;
+          defensePoints?: number;
+          utilityPoints?: number;
+        };
+        const sessionId = resolveSessionId(body.sessionId);
+        const playerGuid =
+            (body.playerGuid ?? '').toString().trim().toLowerCase();
+        const offensePoints = Number(body.offensePoints ?? 0);
+        const defensePoints = Number(body.defensePoints ?? 0);
+        const utilityPoints = Number(body.utilityPoints ?? 0);
+        const allocationTotal = offensePoints + defensePoints + utilityPoints;
+
+        if (!playerGuid || !isGuid(playerGuid) ||
+            !isNonNegativeInteger(offensePoints) ||
+            !isNonNegativeInteger(defensePoints) ||
+            !isNonNegativeInteger(utilityPoints) || allocationTotal > 20) {
+          return reply.status(400).send({error: 'invalid_argument'});
+        }
+
+        const session = getSessionOrReply(sessionId, reply);
+        if (!session) return reply;
+
+        await ensureBuildPlayerBound(session, nativeEngine, playerGuid);
+        await nativeEngine.setPlayerAllocations(
+            playerGuid, offensePoints, defensePoints, utilityPoints);
+
+        return reply.status(200).send({
+          ok: true,
+          playerGuid,
+          offensePoints,
+          defensePoints,
+          utilityPoints,
+        });
+      });
+
+  app.post('/api/game/session/player/build/equip', async (request, reply) => {
+    const body = (request.body ?? {}) as {
+      sessionId?: string;
+      playerGuid?: string;
+      slot?: number;
+      tier?: number;
+      attackBonus?: number;
+      defenseBonus?: number;
+      utilityBonus?: number;
+    };
+    const sessionId = resolveSessionId(body.sessionId);
+    const playerGuid = (body.playerGuid ?? '').toString().trim().toLowerCase();
+    const slot = Number(body.slot);
+    const tier = Number(body.tier);
+    const attackBonus = Number(body.attackBonus ?? 0);
+    const defenseBonus = Number(body.defenseBonus ?? 0);
+    const utilityBonus = Number(body.utilityBonus ?? 0);
+
+    if (!playerGuid || !isGuid(playerGuid) || ![0, 1, 2].includes(slot) ||
+        !isNonNegativeInteger(tier) || !Number.isInteger(attackBonus) ||
+        !Number.isInteger(defenseBonus) || !Number.isInteger(utilityBonus)) {
+      return reply.status(400).send({error: 'invalid_argument'});
+    }
+
+    const session = getSessionOrReply(sessionId, reply);
+    if (!session) return reply;
+
+    await ensureBuildPlayerBound(session, nativeEngine, playerGuid);
+    await nativeEngine.equipPlayerGear(
+        playerGuid,
+        slot as BuildGearSlot,
+        tier,
+        attackBonus,
+        defenseBonus,
+        utilityBonus,
+    );
+
+    return reply.status(200).send({
+      ok: true,
+      playerGuid,
+      slot,
+      tier,
+      attackBonus,
+      defenseBonus,
+      utilityBonus,
+    });
+  });
+
+  app.get('/api/game/session/player/build/stats', async (request, reply) => {
+    const query = (request.query ?? {}) as {
+      sessionId?: string;
+      playerGuid?: string;
+    };
+    const sessionId = resolveSessionId(query.sessionId);
+    const playerGuid = (query.playerGuid ?? '').toString().trim().toLowerCase();
+
+    if (!playerGuid || !isGuid(playerGuid)) {
+      return reply.status(400).send({error: 'invalid_argument'});
+    }
+
+    const session = getSessionOrReply(sessionId, reply);
+    if (!session) return reply;
+
+    await ensureBuildPlayerBound(session, nativeEngine, playerGuid);
+    const stats = await nativeEngine.getPlayerBuildStats(playerGuid);
+    return reply.status(200).send({playerGuid, stats});
+  });
+
+  app.post(
+      '/api/game/session/player/combo/evaluate', async (request, reply) => {
+        const body = (request.body ?? {}) as {
+          sessionId?: string;
+          playerGuid?: string;
+          firstSkill?: string;
+          secondSkill?: string;
+          elapsedMs?: number;
+          partySize?: number;
+        };
+        const sessionId = resolveSessionId(body.sessionId);
+        const playerGuid =
+            (body.playerGuid ?? '').toString().trim().toLowerCase();
+        const firstSkill = (body.firstSkill ?? '').toString().trim();
+        const secondSkill = (body.secondSkill ?? '').toString().trim();
+        const elapsedMs = Number(body.elapsedMs ?? 0);
+        const partySize = Number(body.partySize ?? 1);
+
+        if (!playerGuid || !isGuid(playerGuid) || !firstSkill || !secondSkill ||
+            !Number.isInteger(elapsedMs) || !Number.isInteger(partySize) ||
+            elapsedMs <= 0 || partySize <= 0) {
+          return reply.status(400).send({error: 'invalid_argument'});
+        }
+
+        const session = getSessionOrReply(sessionId, reply);
+        if (!session) return reply;
+
+        await ensureBuildPlayerBound(session, nativeEngine, playerGuid);
+        const combo = await nativeEngine.evaluatePlayerCombo(
+            playerGuid, firstSkill, secondSkill, elapsedMs, partySize);
+
+        return reply.status(200).send({
+          playerGuid,
+          firstSkill,
+          secondSkill,
+          elapsedMs,
+          partySize,
+          combo,
+        });
+      });
 
   app.post('/api/game/session/heartbeat/transport', async (request, reply) => {
     const body = (request.body ?? {}) as {

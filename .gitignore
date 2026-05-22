@@ -26,3 +26,4 @@ Thumbs.db
 *.tmp
 *.swp
 .idea/
+/artifacts/steam-build/dev-candidate/http-upload

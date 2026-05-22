@@ -1,0 +1,12 @@
+"AppBuild"
+{
+    "AppID" "4767150"
+    "Desc" "Banana Engineer dev-candidate 2026-05-21 21:49:07"
+    "BuildOutput" "C:\\Github\\Banana\\artifacts\\steam-build\\dev-candidate\\steam-pipe\\logs"
+    "ContentRoot" "C:\\Github\\Banana\\artifacts\\steam-build\\dev-candidate\\win-unpacked"
+    "SetLive" "default"
+    "Depots"
+    {
+        "4767151" "C:\\Github\\Banana\\artifacts\\steam-build\\dev-candidate\\steam-pipe\\depots\\depot_build_4767151.vdf"
+    }
+}

@@ -1,5 +1,6 @@
 #include "../engine.h"
 #include "ui.h"
+#include <stddef.h>
 #include <stdint.h>
 
 /* ─────────────────────────────────────────────────────────────────────────

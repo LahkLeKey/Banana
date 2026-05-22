@@ -1,5 +1,7 @@
 #include "controller_runtime.h"
 
+#include <stddef.h>
+
 ControllerInstance *runtime_controller_find_by_id(ControllerInstance **controllers,
                                                   int controller_count,
                                                   uint32_t controller_id)

@@ -24,6 +24,7 @@
       "**/build": true,
       "**/out": true,
       "**/.legacy": false
-    }
+    },
+    "powershell.cwd": "Banana"
   }
 }

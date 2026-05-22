@@ -71,6 +71,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/parallel_model.c
   runtime/physics_abi.c
   runtime/player_api.c
+  runtime/player_builds.c
   runtime/player_motion_host.c
   runtime/player_motion.c
   runtime/player_registry.c
@@ -230,6 +231,7 @@ if(EMSCRIPTEN)
 
   add_executable(banana_engine_wasm
     engine.c
+    engine_serialize.c
     wasm_main.c
     ${ENGINE_RUNTIME_SOURCES}
     ${ENGINE_RENDER_SOURCES}
@@ -258,6 +260,8 @@ if(EMSCRIPTEN)
 
   target_link_options(banana_engine_wasm PRIVATE
     "SHELL:-s WASM=1"
+    "SHELL:-s USE_WEBGL2=1"
+    "SHELL:-s FULL_ES3=1"
     "SHELL:-s EXPORTED_FUNCTIONS=[${WASM_EXPORTS_STR}]"
     "SHELL:-s EXPORTED_RUNTIME_METHODS=[cwrap,ccall,getValue,setValue]"
     "SHELL:-s ALLOW_MEMORY_GROWTH=1"
@@ -270,6 +274,7 @@ if(EMSCRIPTEN)
   )
 
   target_compile_definitions(banana_engine_wasm PRIVATE BANANA_ENGINE_WASM=1)
+  target_compile_definitions(banana_engine_wasm PRIVATE BANANA_ENGINE_HAS_OPENMP=1)
 
   message(STATUS "[engine] WASM build target: banana_engine.wasm")
 endif()
@@ -518,6 +523,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_runtime_player_api_test COMMAND banana_runtime_player_api_test)
 
+  add_executable(banana_runtime_player_builds_integration_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_builds_integration_test.c
+  )
+  target_link_libraries(banana_runtime_player_builds_integration_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_player_builds_integration_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_player_builds_integration_test COMMAND banana_runtime_player_builds_integration_test)
+
   add_executable(banana_runtime_render_material_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_render_material_test.c
   )
@@ -742,6 +761,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
   add_test(NAME banana_player_resources_test COMMAND banana_player_resources_test)
+
+  add_executable(banana_player_builds_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player_builds_test.c
+  )
+  target_link_libraries(banana_player_builds_test PRIVATE banana_engine_core)
+  target_include_directories(banana_player_builds_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_player_builds_test COMMAND banana_player_builds_test)
 
   add_executable(banana_interactive_collection_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/interactive_collection_test.c

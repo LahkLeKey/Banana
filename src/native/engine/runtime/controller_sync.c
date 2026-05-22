@@ -1,7 +1,6 @@
 #include "controller_sync.h"
 #include "interlock.h"
 
-#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 

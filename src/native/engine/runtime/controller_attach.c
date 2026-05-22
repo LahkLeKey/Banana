@@ -1,5 +1,7 @@
 #include "controller_attach.h"
 
+#include <stddef.h>
+
 uint32_t runtime_controller_create_and_register(ControllerInstance **controllers,
                                                 int max_controllers,
                                                 int *inout_controller_count,

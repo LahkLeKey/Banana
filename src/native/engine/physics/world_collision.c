@@ -1,5 +1,6 @@
 #include "world_collision.h"
 
+#include <stddef.h>
 #include <string.h>
 
 void physics_world_resolve_collision_pairs(PhysicsWorld *w, const CollisionList *cols)

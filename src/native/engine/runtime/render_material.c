@@ -41,5 +41,8 @@ Material runtime_render_material_for_actor(const Entity *entity)
     if (entity->type == ENTITY_TYPE_STATIC && strcmp(entity->controller_kind, "camp") == 0)
         return material_solid(0.62f, 0.48f, 0.30f, 1.f);
 
+    if (entity->type == ENTITY_TYPE_STATIC && strcmp(entity->controller_kind, "pbj_pickup") == 0)
+        return material_solid(0.82f, 0.54f, 0.22f, 1.f);
+
     return runtime_render_material_for_entity(entity->type);
 }

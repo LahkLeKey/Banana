@@ -40,7 +40,14 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] Player trust and disclosure alignment verified (store/runtime claims,
+  AI-content disclosure, and system requirements).
+- [ ] Cross-domain contracts mapped for touched layers (native/API/client/runtime)
+  and required docs are queued in-scope.
+- [ ] Quality gates defined with measurable checks for deterministic behavior,
+  integration paths, and failure handling.
+- [ ] Reproducible delivery path identified for target runtime channels and
+  evidence artifacts listed for release validation.
 
 ## Project Structure
 

@@ -70,6 +70,15 @@ export type GameSessionPlayer = {
   controllerKind?: 'human' | 'ai';
 };
 
+export type GameplayBuildStats = {
+  health: number; attack: number; defense: number; utility: number;
+};
+
+export type GameplayComboResult = {
+  triggered: boolean; damageBonusPct: number; mitigationBonusPct: number;
+  partySynergyBonusPct: number;
+};
+
 function createRandomHex(size: number): string {
   const values = new Uint8Array(size);
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
@@ -465,6 +474,93 @@ export async function rejoinGameSession(
     playerName: response.playerName ?? 'player',
     playerGuid,
   };
+}
+
+export async function setPlayerBuildClass(
+    baseUrl: string, sessionId: string, playerGuid: string,
+    classType: 0|1|2): Promise<void> {
+  await requestJson(
+      resolveGameplayApiBaseUrl(baseUrl),
+      '/api/game/session/player/build/class', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({sessionId, playerGuid, classType}),
+      });
+}
+
+export async function setPlayerBuildAllocations(
+    baseUrl: string, sessionId: string, playerGuid: string,
+    offensePoints: number, defensePoints: number,
+    utilityPoints: number): Promise<void> {
+  await requestJson(
+      resolveGameplayApiBaseUrl(baseUrl),
+      '/api/game/session/player/build/allocations', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({
+          sessionId,
+          playerGuid,
+          offensePoints,
+          defensePoints,
+          utilityPoints,
+        }),
+      });
+}
+
+export async function equipPlayerBuildGear(
+    baseUrl: string, sessionId: string, playerGuid: string, slot: 0|1|2,
+    tier: number, attackBonus: number, defenseBonus: number,
+    utilityBonus: number): Promise<void> {
+  await requestJson(
+      resolveGameplayApiBaseUrl(baseUrl),
+      '/api/game/session/player/build/equip', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({
+          sessionId,
+          playerGuid,
+          slot,
+          tier,
+          attackBonus,
+          defenseBonus,
+          utilityBonus,
+        }),
+      });
+}
+
+export async function fetchPlayerBuildStats(
+    baseUrl: string, sessionId: string,
+    playerGuid: string): Promise<GameplayBuildStats> {
+  const query = new URLSearchParams({sessionId, playerGuid});
+  const payload =
+      await requestJson<{playerGuid: string; stats: GameplayBuildStats}>(
+          resolveGameplayApiBaseUrl(baseUrl),
+          `/api/game/session/player/build/stats?${query.toString()}`,
+      );
+  return payload.stats;
+}
+
+export async function evaluatePlayerBuildCombo(
+    baseUrl: string, sessionId: string, playerGuid: string, firstSkill: string,
+    secondSkill: string, elapsedMs: number,
+    partySize: number): Promise<GameplayComboResult> {
+  const payload = await requestJson<{combo: GameplayComboResult}>(
+      resolveGameplayApiBaseUrl(baseUrl),
+      '/api/game/session/player/combo/evaluate',
+      {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({
+          sessionId,
+          playerGuid,
+          firstSkill,
+          secondSkill,
+          elapsedMs,
+          partySize,
+        }),
+      },
+  );
+  return payload.combo;
 }
 
 export async function ingestTelemetryEvent(
