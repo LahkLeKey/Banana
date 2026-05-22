@@ -1,0 +1,96 @@
+name: Steam Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      depot_id:
+        description: "Steam Depot ID (for Banana Engineer build payload)"
+        required: true
+        type: string
+      build_id:
+        description: "Build identifier used for artifacts/steam-build/<build_id>"
+        required: false
+        default: "dev-candidate"
+        type: string
+      branch:
+        description: "Steam branch to set live (default/public, staging, etc.)"
+        required: false
+        default: "default"
+        type: string
+      content_root:
+        description: "Relative path to packaged build content root"
+        required: false
+        default: "artifacts/steam-build/dev-candidate/win-unpacked"
+        type: string
+      build_candidate:
+        description: "Build BananaEngineer.exe before uploading"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: steam-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: SteamPipe upload
+    runs-on: windows-latest
+    env:
+      APP_ID: "4767150"
+      DEPOT_ID: ${{ inputs.depot_id }}
+      BUILD_ID: ${{ inputs.build_id }}
+      BRANCH: ${{ inputs.branch }}
+      CONTENT_ROOT: ${{ inputs.content_root }}
+      BUILD_CANDIDATE: ${{ inputs.build_candidate }}
+      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+      STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+      STEAM_GUARD_CODE: ${{ secrets.STEAM_GUARD_CODE }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Validate required Steam secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${STEAM_USERNAME:-}" ]]; then
+            echo "::error::Missing secret STEAM_USERNAME"
+            exit 1
+          fi
+          if [[ -z "${STEAM_PASSWORD:-}" ]]; then
+            echo "::error::Missing secret STEAM_PASSWORD"
+            exit 1
+          fi
+
+      - name: Install SteamCMD
+        shell: powershell
+        run: |
+          choco install steamcmd --no-progress -y
+
+      - name: Upload Steam build
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/steam-publish-on-demand.sh
+
+      - name: Upload SteamPipe logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: steam-pipe-logs-${{ inputs.build_id }}
+          path: artifacts/steam-build/${{ inputs.build_id }}/steam-pipe/logs
+          if-no-files-found: warn
+
+      - name: Post-publish reminder
+        shell: bash
+        run: |
+          echo "SteamPipe upload completed."
+          echo "If Steamworks shows unpublished app changes, complete Publish tab submission for AppID 4767150."

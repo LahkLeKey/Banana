@@ -5,7 +5,8 @@ void runtime_render_submit_frame(Renderer *renderer,
                                  Mesh *entity_mesh,
                                  int terrain_initialized,
                                  RuntimeTerrainDrawFn terrain_draw,
-                                 RuntimeMaterialResolver resolve_material)
+                                 RuntimeMaterialResolver resolve_material,
+                                 RuntimeMeshResolver resolve_mesh)
 {
     if (!renderer)
         return;
@@ -26,7 +27,16 @@ void runtime_render_submit_frame(Renderer *renderer,
                 continue;
 
             Material material = resolve_material(entity);
-            renderer_draw_mesh(renderer, entity_mesh, entity->position, identity, entity->scale, &material);
+            Mesh *entity_specific_mesh = resolve_mesh ? resolve_mesh(entity, entity_mesh) : entity_mesh;
+            if (!entity_specific_mesh)
+                continue;
+
+            renderer_draw_mesh(renderer,
+                               entity_specific_mesh,
+                               entity->position,
+                               identity,
+                               entity->scale,
+                               &material);
         }
     }
 

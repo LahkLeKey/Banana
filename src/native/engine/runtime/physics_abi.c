@@ -1,5 +1,7 @@
 #include "physics_abi.h"
 
+#include <stddef.h>
+
 void runtime_physics_abi_step(PhysicsWorld *physics_world, float dt)
 {
     if (!physics_world)

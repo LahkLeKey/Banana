@@ -35,6 +35,7 @@
         "zustand": "^4.5.5"
     },
     "devDependencies": {
+        "@types/bun": "latest",
         "@happy-dom/global-registrator": "^15.0.0",
         "@lhci/cli": "^0.15.1",
         "@playwright/test": "^1.44.0",

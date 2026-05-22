@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test';
 import Fastify from 'fastify';
-import WebSocket from 'ws';
+import WebSocket, {type RawData} from 'ws';
 
 import {InMemoryAntiCheatInteropAdapter} from '../lib/anti-cheat-interop.ts';
 import {InMemoryEngineService} from '../services/nativeEngine.ts';
@@ -113,7 +113,7 @@ describe('game session routes', () => {
         }));
       });
 
-      socket.on('message', (raw) => {
+      socket.on('message', (raw: RawData) => {
         const payload = JSON.parse(raw.toString()) as | {type: 'connected'} | {
           type: 'snapshot';
           sessionId: string;
@@ -167,7 +167,7 @@ describe('game session routes', () => {
         resolve();
       });
 
-      socket.on('error', (error) => {
+      socket.on('error', (error: Error) => {
         clearTimeout(timeout);
         reject(error);
       });
@@ -261,6 +261,186 @@ describe('game session routes', () => {
 
         await app.close();
       });
+
+  test(
+      'supports build/class/gear/combo endpoints for a session player',
+      async () => {
+        const app = await createApp();
+
+        const start = await app.inject({
+          method: 'POST',
+          url: '/api/game/session/start',
+          payload: {playerName: 'build-tester'},
+        });
+        expect(start.statusCode).toBe(201);
+        const started = start.json() as {
+          sessionId: string;
+          playerGuid: string
+        };
+
+        const setClass = await app.inject({
+          method: 'POST',
+          url: '/api/game/session/player/build/class',
+          payload: {
+            sessionId: started.sessionId,
+            playerGuid: started.playerGuid,
+            classType: 2,
+          },
+        });
+        expect(setClass.statusCode).toBe(200);
+
+        const setAllocations = await app.inject({
+          method: 'POST',
+          url: '/api/game/session/player/build/allocations',
+          payload: {
+            sessionId: started.sessionId,
+            playerGuid: started.playerGuid,
+            offensePoints: 3,
+            defensePoints: 1,
+            utilityPoints: 2,
+          },
+        });
+        expect(setAllocations.statusCode).toBe(200);
+
+        const equip = await app.inject({
+          method: 'POST',
+          url: '/api/game/session/player/build/equip',
+          payload: {
+            sessionId: started.sessionId,
+            playerGuid: started.playerGuid,
+            slot: 0,
+            tier: 2,
+            attackBonus: 4,
+            defenseBonus: 0,
+            utilityBonus: 0,
+          },
+        });
+        expect(equip.statusCode).toBe(200);
+
+        const stats = await app.inject({
+          method: 'GET',
+          url: `/api/game/session/player/build/stats?sessionId=${
+              encodeURIComponent(started.sessionId)}&playerGuid=${
+              encodeURIComponent(started.playerGuid)}`,
+        });
+        expect(stats.statusCode).toBe(200);
+        const statsPayload = stats.json() as {
+          playerGuid: string;
+          stats: {
+            health: number; attack: number; defense: number; utility: number
+          };
+        };
+        expect(statsPayload.playerGuid).toBe(started.playerGuid);
+        expect(statsPayload.stats.attack).toBeGreaterThan(0);
+
+        const combo = await app.inject({
+          method: 'POST',
+          url: '/api/game/session/player/combo/evaluate',
+          payload: {
+            sessionId: started.sessionId,
+            playerGuid: started.playerGuid,
+            firstSkill: 'snare_shot',
+            secondSkill: 'piercing_volley',
+            elapsedMs: 1000,
+            partySize: 3,
+          },
+        });
+        expect(combo.statusCode).toBe(200);
+        const comboPayload = combo.json() as {
+          combo: {
+            triggered: boolean; damageBonusPct: number;
+            mitigationBonusPct: number;
+            partySynergyBonusPct: number;
+          };
+        };
+        expect(comboPayload.combo.triggered).toBe(true);
+        expect(comboPayload.combo.damageBonusPct).toBeGreaterThan(0);
+        expect(comboPayload.combo.partySynergyBonusPct)
+            .toBeGreaterThanOrEqual(0);
+
+        await app.close();
+      });
+
+  test('rejects invalid build endpoint payloads', async () => {
+    const app = await createApp();
+
+    const start = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/start',
+      payload: {playerName: 'invalid-build-tester'},
+    });
+    expect(start.statusCode).toBe(201);
+    const started = start.json() as {sessionId: string};
+
+    const badClass = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/player/build/class',
+      payload: {
+        sessionId: started.sessionId,
+        playerGuid: 'not-a-guid',
+        classType: 9,
+      },
+    });
+    expect(badClass.statusCode).toBe(400);
+
+    const badCombo = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/player/combo/evaluate',
+      payload: {
+        sessionId: started.sessionId,
+        playerGuid: 'not-a-guid',
+        firstSkill: '',
+        secondSkill: '',
+        elapsedMs: -1,
+        partySize: 0,
+      },
+    });
+    expect(badCombo.statusCode).toBe(400);
+
+    const badAllocations = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/player/build/allocations',
+      payload: {
+        sessionId: started.sessionId,
+        playerGuid: 'c9155c7f-a804-4f62-ae4f-c3db36410f50',
+        offensePoints: 10,
+        defensePoints: 10,
+        utilityPoints: 1,
+      },
+    });
+    expect(badAllocations.statusCode).toBe(400);
+
+    const badEquip = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/player/build/equip',
+      payload: {
+        sessionId: started.sessionId,
+        playerGuid: 'c9155c7f-a804-4f62-ae4f-c3db36410f50',
+        slot: 0,
+        tier: 1.5,
+        attackBonus: 2,
+        defenseBonus: 0,
+        utilityBonus: 0,
+      },
+    });
+    expect(badEquip.statusCode).toBe(400);
+
+    const badComboFractions = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/player/combo/evaluate',
+      payload: {
+        sessionId: started.sessionId,
+        playerGuid: 'c9155c7f-a804-4f62-ae4f-c3db36410f50',
+        firstSkill: 'snare_shot',
+        secondSkill: 'piercing_volley',
+        elapsedMs: 1000.5,
+        partySize: 2,
+      },
+    });
+    expect(badComboFractions.statusCode).toBe(400);
+
+    await app.close();
+  });
 });
 
 describe('game input command invariants', () => {

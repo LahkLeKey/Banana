@@ -129,3 +129,14 @@
 - [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
 - [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
 - [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+
+## Constitution Alignment *(mandatory)*
+
+- **Disclosure Integrity**: List player-facing claims (store text, AI disclosure,
+  platform requirements) that this feature affects and how they remain accurate.
+- **Cross-Domain Contracts**: Identify affected contracts across native, API,
+  client runtime, and orchestration layers.
+- **Quality Gates**: Define measurable validation requirements (unit, integration,
+  end-to-end, or runtime checks) for both success and failure paths.
+- **Delivery Evidence**: Specify which artifacts or logs will prove reproducible
+  behavior on supported runtime channels.

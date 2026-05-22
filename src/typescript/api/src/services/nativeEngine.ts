@@ -1,4 +1,4 @@
-import {dlopen, FFIType, suffix} from 'bun:ffi';
+import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
 import path from 'node:path';
 
 export interface NativeEngineInput {
@@ -35,8 +35,33 @@ export interface NativeEngineSnapshot {
   readonly entities: Record<string, NativeEngineSnapshotEntity>;
 }
 
+export interface NativeEngineBuildStats {
+  readonly health: number;
+  readonly attack: number;
+  readonly defense: number;
+  readonly utility: number;
+}
+
+export interface NativeEngineComboResult {
+  readonly triggered: boolean;
+  readonly damageBonusPct: number;
+  readonly mitigationBonusPct: number;
+  readonly partySynergyBonusPct: number;
+}
+
 export interface NativeEngineService {
   syncPlayers(players: readonly NativeEnginePlayerSync[]): Promise<void>;
+  setPlayerClass(playerId: string, classType: 0|1|2): Promise<void>;
+  setPlayerAllocations(
+      playerId: string, offensePoints: number, defensePoints: number,
+      utilityPoints: number): Promise<void>;
+  equipPlayerGear(
+      playerId: string, slot: 0|1|2, tier: number, attackBonus: number,
+      defenseBonus: number, utilityBonus: number): Promise<void>;
+  getPlayerBuildStats(playerId: string): Promise<NativeEngineBuildStats>;
+  evaluatePlayerCombo(
+      playerId: string, firstSkill: string, secondSkill: string,
+      elapsedMs: number, partySize: number): Promise<NativeEngineComboResult>;
   playerSyncMarkSeen(playerGuid: string, currentTimeMs: bigint): Promise<void>;
   playerSyncUpdateStaleness(currentTimeMs: bigint, staleThresholdMs: bigint):
       Promise<void>;
@@ -55,6 +80,21 @@ type NativeEngineSymbols = {
        active: number) => number;
   engine_player_apply_input:
       (playerGuid: string, moveX: number, moveZ: number) => void;
+  engine_player_build_set_class: (playerGuid: string, classType: number) =>
+      number;
+  engine_player_build_set_allocations:
+      (playerGuid: string, offensePoints: number, defensePoints: number,
+       utilityPoints: number) => number;
+  engine_player_build_equip:
+      (playerGuid: string, slot: number, tier: number, attackBonus: number,
+       defenseBonus: number, utilityBonus: number) => number;
+  engine_player_build_get_stat: (playerGuid: string, statName: string) =>
+      number;
+  engine_player_combo_evaluate:
+      (playerGuid: string, firstSkill: string, secondSkill: string,
+       elapsedMs: number, partySize: number, outDamageBonusPtr: Pointer,
+       outMitigationBonusPtr: Pointer, outPartySynergyBonusPtr: Pointer) =>
+          number;
   engine_player_sync_mark_seen: (playerGuid: string, currentTimeMs: bigint) =>
       void;
   engine_player_sync_update_staleness:
@@ -159,6 +199,42 @@ function createNativeBinding(): NativeEngineSymbols {
           args: [FFIType.cstring, FFIType.f32, FFIType.f32],
           returns: FFIType.void,
         },
+        engine_player_build_set_class: {
+          args: [FFIType.cstring, FFIType.i32],
+          returns: FFIType.i32,
+        },
+        engine_player_build_set_allocations: {
+          args: [FFIType.cstring, FFIType.i32, FFIType.i32, FFIType.i32],
+          returns: FFIType.i32,
+        },
+        engine_player_build_equip: {
+          args: [
+            FFIType.cstring,
+            FFIType.i32,
+            FFIType.i32,
+            FFIType.i32,
+            FFIType.i32,
+            FFIType.i32,
+          ],
+          returns: FFIType.i32,
+        },
+        engine_player_build_get_stat: {
+          args: [FFIType.cstring, FFIType.cstring],
+          returns: FFIType.i32,
+        },
+        engine_player_combo_evaluate: {
+          args: [
+            FFIType.cstring,
+            FFIType.cstring,
+            FFIType.cstring,
+            FFIType.i32,
+            FFIType.i32,
+            FFIType.ptr,
+            FFIType.ptr,
+            FFIType.ptr,
+          ],
+          returns: FFIType.i32,
+        },
         engine_player_sync_mark_seen: {
           args: [FFIType.cstring, FFIType.i64],
           returns: FFIType.void,
@@ -185,7 +261,7 @@ function createNativeBinding(): NativeEngineSymbols {
         },
       });
 
-      return library.symbols as NativeEngineSymbols;
+      return library.symbols as unknown as NativeEngineSymbols;
     } catch (error) {
       lastError = error;
     }
@@ -210,6 +286,90 @@ export class NativeFFIEngineService implements NativeEngineService {
       this.symbols.engine_player_apply_input(
           player.playerId, player.moveX, player.moveZ);
     }
+  }
+
+  public async setPlayerClass(playerId: string, classType: 0|1|2):
+      Promise<void> {
+    await this.ensureReady();
+    const rc = this.symbols.engine_player_build_set_class(playerId, classType);
+    if (rc !== BANANA_OK) {
+      throw new Error(`engine_player_build_set_class failed with status ${rc}`);
+    }
+  }
+
+  public async setPlayerAllocations(
+      playerId: string, offensePoints: number, defensePoints: number,
+      utilityPoints: number): Promise<void> {
+    await this.ensureReady();
+    const rc = this.symbols.engine_player_build_set_allocations(
+        playerId, offensePoints, defensePoints, utilityPoints);
+    if (rc !== BANANA_OK) {
+      throw new Error(
+          `engine_player_build_set_allocations failed with status ${rc}`);
+    }
+  }
+
+  public async equipPlayerGear(
+      playerId: string, slot: 0|1|2, tier: number, attackBonus: number,
+      defenseBonus: number, utilityBonus: number): Promise<void> {
+    await this.ensureReady();
+    const rc = this.symbols.engine_player_build_equip(
+        playerId, slot, tier, attackBonus, defenseBonus, utilityBonus);
+    if (rc !== BANANA_OK) {
+      throw new Error(`engine_player_build_equip failed with status ${rc}`);
+    }
+  }
+
+  public async getPlayerBuildStats(playerId: string):
+      Promise<NativeEngineBuildStats> {
+    await this.ensureReady();
+
+    const health =
+        this.symbols.engine_player_build_get_stat(playerId, 'health');
+    const attack =
+        this.symbols.engine_player_build_get_stat(playerId, 'attack');
+    const defense =
+        this.symbols.engine_player_build_get_stat(playerId, 'defense');
+    const utility =
+        this.symbols.engine_player_build_get_stat(playerId, 'utility');
+
+    if (health < 0 || attack < 0 || defense < 0 || utility < 0) {
+      throw new Error(
+          'engine_player_build_get_stat failed for at least one stat');
+    }
+
+    return {health, attack, defense, utility};
+  }
+
+  public async evaluatePlayerCombo(
+      playerId: string, firstSkill: string, secondSkill: string,
+      elapsedMs: number, partySize: number): Promise<NativeEngineComboResult> {
+    await this.ensureReady();
+
+    const damage = Buffer.alloc(4);
+    const mitigation = Buffer.alloc(4);
+    const partySynergy = Buffer.alloc(4);
+    const triggered = this.symbols.engine_player_combo_evaluate(
+        playerId,
+        firstSkill,
+        secondSkill,
+        elapsedMs,
+        partySize,
+        ptr(damage),
+        ptr(mitigation),
+        ptr(partySynergy),
+    );
+    if (triggered < 0) {
+      throw new Error(
+          `engine_player_combo_evaluate failed with status ${triggered}`);
+    }
+
+    return {
+      triggered: triggered === 1,
+      damageBonusPct: damage.readInt32LE(0),
+      mitigationBonusPct: mitigation.readInt32LE(0),
+      partySynergyBonusPct: partySynergy.readInt32LE(0),
+    };
   }
 
   public async playerSyncMarkSeen(playerGuid: string, currentTimeMs: bigint):
@@ -290,6 +450,7 @@ export class InMemoryEngineService implements NativeEngineService {
     z: number
   }
   >();
+  private readonly buildStats = new Map<string, NativeEngineBuildStats>();
   private nextPlayerEntityId = 3;
 
   public async syncPlayers(players: readonly NativeEnginePlayerSync[]):
@@ -318,7 +479,70 @@ export class InMemoryEngineService implements NativeEngineService {
         x: 0,
         z: 0,
       });
+
+      if (!this.buildStats.has(player.playerId)) {
+        this.buildStats.set(player.playerId, {
+          health: 120,
+          attack: 18,
+          defense: 16,
+          utility: 8,
+        });
+      }
     }
+  }
+
+  public async setPlayerClass(playerId: string, classType: 0|1|2):
+      Promise<void> {
+    const defaults: Record<0|1|2, NativeEngineBuildStats> = {
+      0: {health: 120, attack: 18, defense: 16, utility: 8},
+      1: {health: 90, attack: 24, defense: 8, utility: 18},
+      2: {health: 100, attack: 20, defense: 12, utility: 14},
+    };
+    this.buildStats.set(playerId, defaults[classType]);
+  }
+
+  public async setPlayerAllocations(
+      playerId: string, offensePoints: number, defensePoints: number,
+      utilityPoints: number): Promise<void> {
+    const base = this.buildStats.get(playerId) ??
+        {health: 120, attack: 18, defense: 16, utility: 8};
+    this.buildStats.set(playerId, {
+      health: base.health + defensePoints * 3,
+      attack: base.attack + offensePoints * 2,
+      defense: base.defense + defensePoints * 2,
+      utility: base.utility + utilityPoints * 2,
+    });
+  }
+
+  public async equipPlayerGear(
+      playerId: string, slot: 0|1|2, tier: number, attackBonus: number,
+      defenseBonus: number, utilityBonus: number): Promise<void> {
+    const base = this.buildStats.get(playerId) ??
+        {health: 120, attack: 18, defense: 16, utility: 8};
+    this.buildStats.set(playerId, {
+      ...base,
+      attack: base.attack + attackBonus,
+      defense: base.defense + defenseBonus,
+      utility: base.utility + utilityBonus,
+    });
+  }
+
+  public async getPlayerBuildStats(playerId: string):
+      Promise<NativeEngineBuildStats> {
+    return this.buildStats.get(playerId) ??
+        {health: 120, attack: 18, defense: 16, utility: 8};
+  }
+
+  public async evaluatePlayerCombo(
+      playerId: string, firstSkill: string, secondSkill: string,
+      elapsedMs: number, partySize: number): Promise<NativeEngineComboResult> {
+    const triggered = elapsedMs > 0 && elapsedMs <= 1500;
+    return {
+      triggered,
+      damageBonusPct: triggered ? (partySize > 1 ? 16 : 22) : 0,
+      mitigationBonusPct: triggered ? 8 : 0,
+      partySynergyBonusPct: triggered && partySize > 1 ? 10 : 0,
+    };
   }
 
   public async tickSerialize(input: NativeEngineInput):
@@ -403,6 +627,7 @@ export class InMemoryEngineService implements NativeEngineService {
     this.x = 0;
     this.z = 0;
     this.players.clear();
+    this.buildStats.clear();
     this.nextPlayerEntityId = 3;
   }
 

@@ -5,6 +5,7 @@
 #endif
 
 #include <math.h>
+#include <stddef.h>
 #include <string.h>
 
 static float clampf_local(float v, float lo, float hi)

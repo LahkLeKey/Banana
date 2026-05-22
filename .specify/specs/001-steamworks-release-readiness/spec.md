@@ -1,101 +1,136 @@
-# Feature Specification: Steamworks Release Readiness for Banana Engineer
+# Feature Specification: Class Builds, Gear Upgrades, and Skill Combinations
 
-**Feature Branch**: `feature/steamworks`
+**Feature Branch**: `001-steamworks-release-readiness`
 
 **Created**: 2026-05-21
 
-**Status**: Draft
+**Status**: In Progress (Gameplay Slice Implemented)
 
-**Input**: User description: "Steamworks App Admin release progress, store presence and game build checklist gaps, package pricing state, and target release date constraints"
+**Input**: User description: "Shape your character with class-driven builds, gear upgrades, and skill combinations designed for both solo play and party-based runs."
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Complete Release Blocking Items (Priority: P1)
+### User Story 1 - Build a Class Identity (Priority: P1)
 
-As a release owner, I need a single actionable checklist of all Steamworks blockers so the game can pass Steam review and become eligible for launch.
+As a player, I want to pick a class and make meaningful build choices so my character
+feels distinct in both combat approach and progression.
 
-**Why this priority**: Without resolving blockers, the app cannot be reviewed or released regardless of all other preparation work.
+**Why this priority**: Character identity is the core gameplay loop and is required before
+gear and combo systems can deliver value.
 
-**Independent Test**: Can be tested by reviewing the readiness checklist and confirming each blocker has an explicit owner, status, and completion evidence.
+**Independent Test**: A player can create a character, choose a class path, and verify
+class-specific attributes and available skills differ from other classes.
 
 **Acceptance Scenarios**:
 
-1. **Given** the Steamworks app page shows incomplete Store Presence and Game Build sections, **When** the release owner opens the readiness tracker, **Then** each missing item is listed with a required action and expected completion output.
-2. **Given** a checklist item is completed, **When** it is updated in the tracker, **Then** the item status changes to complete and links to verification evidence.
+1. **Given** a new character, **When** the player selects a class, **Then** the system assigns class-specific starter stats, starting skill set, and build path options.
+2. **Given** two different classes, **When** both enter the same encounter, **Then** class toolkit differences are observable in combat role and effectiveness profile.
 
 ---
 
-### User Story 2 - Submit Correct Review Sequence (Priority: P2)
+### User Story 2 - Progress Through Gear Upgrades (Priority: P2)
 
-As a release owner, I need to submit Store Presence review and Build review in the correct order and state so Valve review cycles are not delayed by preventable omissions.
+As a player, I want gear to provide meaningful upgrades and tradeoffs so progression
+feels rewarding instead of a flat stat increase.
 
-**Why this priority**: Incorrect sequencing causes avoidable re-review delays and directly risks missing the target launch window.
+**Why this priority**: Gear progression is the primary medium-term retention loop and needs
+to reinforce class identity.
 
-**Independent Test**: Can be tested by following a documented sequence and confirming all submission prerequisites are satisfied before each submission.
+**Independent Test**: A player can earn, equip, and compare gear upgrades while seeing
+clear, measurable changes to combat performance and build tradeoffs.
 
 **Acceptance Scenarios**:
 
-1. **Given** all required Store Presence checklist items are complete, **When** the owner performs pre-submit validation, **Then** Store Presence is marked ready for review submission.
-2. **Given** a playable build and depot requirements are complete, **When** build pre-submit validation runs, **Then** the build is marked ready for review submission.
+1. **Given** a player acquires higher-tier gear, **When** the gear is equipped, **Then** derived stats and relevant skill scaling update immediately.
+2. **Given** two gear loadouts for the same class, **When** the player swaps loadouts, **Then** combat outcomes reflect expected tradeoffs such as survivability versus burst damage.
 
 ---
 
-### User Story 3 - Validate Launch Date Eligibility (Priority: P3)
+### User Story 3 - Chain Skills for Solo and Party Runs (Priority: P3)
 
-As a release owner, I need to validate launch constraints (Coming Soon duration and app-credit timing) against the planned release timestamp so we do not schedule an impossible launch date.
+As a player, I want skill combinations that support both solo efficiency and party
+synergy so I can adapt my build to different play contexts.
 
-**Why this priority**: Date constraints can invalidate a planned launch even when checklists are complete.
+**Why this priority**: Skill synergy is the bridge between personal build mastery and
+multiplayer cooperation.
 
-**Independent Test**: Can be tested by comparing configured release date to policy constraints and obtaining an explicit eligible/not-eligible result.
+**Independent Test**: Players can execute combo chains in solo and party scenarios and
+observe distinct outcomes for damage windows, control, and team utility.
 
 **Acceptance Scenarios**:
 
-1. **Given** a planned release datetime, **When** launch eligibility is evaluated, **Then** the system reports whether all Steam launch timing constraints are met.
-2. **Given** one or more timing constraints are unmet, **When** eligibility is evaluated, **Then** the system reports the earliest valid release date.
+1. **Given** a solo run, **When** the player executes a supported skill sequence, **Then** the system applies combo bonuses according to declared sequence rules.
+2. **Given** a party run, **When** players chain compatible skills across classes, **Then** party-wide synergy effects trigger within defined timing windows.
 
 ---
 
 ## Edge Cases
 
-- A checklist item appears complete in one Steamworks panel but remains incomplete in another linked panel.
-- Package pricing exists in draft but is not approved/published for any purchase package.
-- Platform support in Steamworks config diverges from store page declarations.
-- Build review passes but Store Presence review fails and requires another submission cycle.
-- Release date is configured, but Coming Soon visibility has not reached the minimum duration.
+- A player attempts to equip gear that conflicts with class restrictions.
+- A combo sequence input is partially correct but misses the timing window.
+- Party members apply overlapping synergy effects that could stack incorrectly.
+- A solo-optimized build enters party content and risks invalidating encounter balance.
+- Gear level jumps create abrupt power spikes that bypass intended progression pacing.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: The release readiness process MUST maintain a consolidated list of all required Steam Store Presence and Game Build checklist items.
-- **FR-002**: Each checklist item MUST include a status (`not-started`, `in-progress`, `blocked`, `complete`) and owner.
-- **FR-003**: The process MUST track review prerequisites separately for Store Presence and Game Build and prevent marking a section ready when required items are incomplete.
-- **FR-004**: The process MUST track package pricing readiness for at least one purchasable package and indicate whether pricing is approved/published.
-- **FR-005**: The process MUST confirm the uploaded build is playable and aligned with the features and platform support declared on the store page.
-- **FR-006**: The process MUST verify launch eligibility against Steam timing constraints (minimum Coming Soon duration and minimum days since first app-credit purchase).
-- **FR-007**: The process MUST report the earliest valid release date when the configured release date is ineligible.
-- **FR-008**: The process MUST retain evidence references for completed items (for example screenshots, links, or admin panel confirmations).
+- **FR-001**: The system MUST provide at least three distinct class archetypes with unique role identity and class-specific progression paths.
+- **FR-002**: The system MUST allow players to allocate class build choices that materially change skill behavior or combat role.
+- **FR-003**: The system MUST define gear tiers and upgrade paths with predictable stat progression and explicit tradeoffs.
+- **FR-004**: The system MUST recalculate derived stats and affected skill effects immediately after gear equip/upgrade changes.
+- **FR-005**: The system MUST support skill-combo definitions that include sequence order, timing window, and resulting effects.
+- **FR-006**: The system MUST support both solo and party validation paths for combos, including party synergy triggers across classes.
+- **FR-007**: The system MUST surface build and gear impact feedback to players for decision clarity (for example damage, survivability, utility deltas).
+- **FR-008**: The system MUST enforce balance constraints that prevent invalid gear/class combinations and uncontrolled synergy stacking.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Readiness Item**: A required release task with category, owner, status, due date, and evidence links.
-- **Review Submission Gate**: A logical gate for Store Presence or Build submission that is only open when all required items are complete.
-- **Release Constraint**: A date-based launch rule with input dates, validation result, and earliest eligible datetime.
-- **Package Pricing Record**: Package state including visibility, pricing approval status, and discount configuration.
+- **Class Archetype**: A player class with base attributes, role identity, and class-specific skill tree options.
+- **Build Configuration**: A chosen set of class allocations, equipped gear, and selected skill loadout.
+- **Gear Item**: Equipment with slot, tier, modifiers, upgrade level, and compatibility constraints.
+- **Skill Combo Definition**: A rule set describing sequence order, timing windows, and combo outcomes.
+- **Synergy Effect**: A cross-player or cross-skill interaction outcome active under defined conditions.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% of required Store Presence checklist items are tracked with owner and status before Store review submission.
-- **SC-002**: 100% of required Game Build checklist items are tracked with owner and status before Build review submission.
-- **SC-003**: Review submissions are attempted only when all mandatory prerequisites are complete, with zero preventable rejections due to missing checklist items.
-- **SC-004**: Launch eligibility checks correctly identify whether the configured release datetime is valid and provide an earliest valid date when invalid.
-- **SC-005**: At least one package has approved and published pricing before release readiness is marked complete.
+- **SC-001**: At least 90% of test players can identify meaningful gameplay differences between class archetypes within 15 minutes of play.
+- **SC-002**: Gear upgrades produce statistically significant but bounded performance gains across defined tier transitions in test scenarios.
+- **SC-003**: At least 85% of validated combo sequences trigger correctly in both solo and party test runs.
+- **SC-004**: No critical balance defect allows prohibited class/gear combinations or unintended infinite synergy loops in integration tests.
+- **SC-005**: At least 80% of surveyed test players report that build decisions feel clear and impactful.
 
 ## Assumptions
 
-- The current focus is release operations and readiness governance rather than runtime Steamworks SDK integration in game code.
-- Steamworks checklists and policy constraints shown in App Admin are the source of truth for readiness decisions.
-- A release owner role exists and can coordinate required teams for assets, build, pricing, and compliance tasks.
-- Evidence can be captured as links or references to Steamworks admin pages and internal release artifacts.
+- Existing combat, inventory, and encounter systems are available as integration surfaces for this feature.
+- Initial implementation scope targets a stable subset of classes and gear slots before full content expansion.
+- Skill combo timing windows can be represented deterministically across supported runtimes.
+- Party-run validation is available in at least one repeatable multiplayer test environment.
+
+## Constitution Alignment *(mandatory)*
+
+- **Disclosure Integrity**: Player-facing class, gear, and combo behavior claims must match in-game outcomes and public-facing descriptions.
+- **Cross-Domain Contracts**: Any class/gear/combo rule changes must keep native simulation, API payloads, and client rendering behavior aligned.
+- **Quality Gates**: Unit, integration, and multiplayer validation must verify deterministic combo outcomes, compatibility constraints, and balance safeguards.
+- **Delivery Evidence**: Test evidence must include solo and party run logs, build configuration snapshots, and balance validation outputs.
+
+## Implementation Evidence (2026-05-21)
+
+- Native gameplay build/combo runtime implemented and validated through focused C tests.
+- API routes for class, allocations, gear equip, build stats, and combo evaluation implemented with request validation coverage.
+- React UI integration implemented in the overworld Build Lab panel and validated through component and API client tests.
+- Visual runtime verified at `/session-room` and `/game-engine`, including successful interactive Build Lab actions:
+	- class change,
+	- allocation preset apply,
+	- gear equip,
+	- combo evaluation.
+
+### Current Validation Snapshot
+
+- Native focused tests: `ctest --test-dir out/v3-native -C Debug -R "player_builds|runtime_player_builds_integration" --output-on-failure`.
+- API route tests: `bun test src/routes/game-session.test.ts`.
+- React gameplay tests: `bun test src/lib/api.test.ts src/components/game/OverworldHud.test.tsx`.
+- Runtime smoke: API health and visual route verification on local runtime channel.

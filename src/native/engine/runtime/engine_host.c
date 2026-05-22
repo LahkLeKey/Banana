@@ -1,5 +1,7 @@
 #include "engine_host.h"
 
+#include <stddef.h>
+
 void runtime_engine_host_render_frame(Renderer *renderer)
 {
     if (!renderer)

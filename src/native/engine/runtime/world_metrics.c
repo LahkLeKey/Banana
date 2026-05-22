@@ -6,6 +6,8 @@
 
 #include "controller_runtime.h"
 
+#include <stddef.h>
+
 int runtime_world_active_player_count(const World *world)
 {
     int count = 0;

@@ -2,6 +2,8 @@
 
 #include "../render/camera.h"
 
+#include <stddef.h>
+
 void runtime_camera_follow_player(Renderer *renderer,
                                   World *world,
                                   EntityId player_id,

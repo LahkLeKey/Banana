@@ -188,3 +188,15 @@ Mesh *mesh_create_banana_orb_like(int quality)
 {
     return mesh_create_banana_vector(1.35f, 0.60f, 0.55f, 0.20f, quality);
 }
+
+Mesh *mesh_create_peanut_butter_pickup_asset(int quality)
+{
+    int q = quality;
+    if (q < 1)
+        q = 1;
+    if (q > 3)
+        q = 3;
+
+    /* Short, thick jar-like banana derivative so pickup reads distinctly in-scene. */
+    return mesh_create_banana_vector(1.55f, 0.58f, 0.12f, 0.02f, q);
+}

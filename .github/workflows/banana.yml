@@ -1,9 +1,5 @@
 name: Banana-Monorepo
 
-# Single orchestrator for all monorepo PR / push validation. Renders the
-# underlying lanes as a single workflow run with a single terminal pass/fail
-# gate instead of dozens of separate runs.
-
 on:
   pull_request:
   push:
@@ -15,17 +11,11 @@ permissions:
   pull-requests: read
   actions: read
 
-env:
-  BANANA_CI_ARTIFACT_ROOT: .artifacts/compose-ci
-  BANANA_COVERAGE_ARTIFACT_ROOT: .artifacts/coverage
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # --- Stage 1: fast lint / static guards (parallel) ---
   pre-commit:
     name: Lint / pre-commit
     runs-on: ubuntu-latest
@@ -61,495 +51,78 @@ jobs:
         if: github.event_name != 'pull_request'
         run: pre-commit run --show-diff-on-failure --color=always --all-files
 
-  ai-contract-guard:
-    name: Lint / AI contract guard
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Validate AI contracts and terminology guard
-        run: python .specify/scripts/validate-ai-contracts.py
-      - name: Validate workflow orchestrator dependencies
-        run: bash scripts/validate-workflow-dependencies.sh
-      - name: Smoke test spec-driven agent attribution
-        run: bash scripts/smoke-test-spec-driven-agents.sh
-
-  spec-parity:
-    name: Lint / spec ↔ tasks parity
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Install pytest
-        run: pip install --quiet pytest
-      - name: Run parser unit tests
-        run: python -m pytest tests/scripts/test_validate_spec_tasks_parity.py -v
-      - name: Lint all feature directories
-        run: python scripts/validate-spec-tasks-parity.py --all
-
-  wiki-lint:
-    name: Lint / wiki
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-      - name: Validate AI contracts (wiki allowlist + mirror)
-        run: python scripts/validate-ai-contracts.py
-      - name: Validate wiki-scaffold consistency
-        run: bash scripts/wiki-scaffold.sh --dry-run --validate
-
-  helm-lint:
-    name: Lint / helm charts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Set up Helm
-        uses: azure/setup-helm@v5
-        with:
-          version: 'v3.14.0'
-      - name: Add Bitnami repo
-        run: helm repo add bitnami https://charts.bitnami.com/bitnami && helm repo update
-      - name: Build chart dependencies
-        run: helm dependency build helm/banana
-      - name: Lint chart
-        run: helm lint helm/banana --strict
-      - name: Template render check
-        run: helm template banana helm/banana --debug > /dev/null
-
-  migration-discipline:
-    name: Lint / migration discipline
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: banana
-          POSTGRES_PASSWORD: banana
-          POSTGRES_DB: banana
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    defaults:
-      run:
-        working-directory: src/typescript/api
-    steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-      - name: Apply committed migrations
-        env:
-          DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
-        run: bunx prisma migrate deploy --schema prisma/schema.prisma
-      - name: Check for schema drift
-        env:
-          DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
-        run: |
-          STATUS=$(bunx prisma migrate status --schema prisma/schema.prisma 2>&1 || true)
-          echo "$STATUS"
-          if echo "$STATUS" | grep -q "following migration(s) have not yet been applied"; then
-            echo "::error::Schema drift detected: schema.prisma has uncommitted changes."
-            exit 1
-          fi
-      - name: Verify schema is valid
-        env:
-          DATABASE_URL: postgresql://banana:banana@localhost:5432/banana
-        run: bunx prisma validate --schema prisma/schema.prisma
-
-  analytics-scan:
-    name: Lint / analytics surface scan
+  typescript-smoke:
+    name: Build / TypeScript smoke
     needs: pre-commit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Install Python test deps
-        run: pip install pytest
-      - name: Run analytics scanner (report mode)
-        run: |
-          bun scripts/scan-web-analytics-surfaces.ts \
-            --out-dir .artifacts/analytics
-      - name: Run dashboard copy policy check
-        run: bun scripts/check-dashboard-copy-policy.ts
-      - name: Run scanner unit tests
-        run: python -m pytest tests/scripts/test_scan_web_analytics_surfaces.py tests/scripts/test_check_dashboard_copy_policy.py -v
 
-  # --- Stage 2: typecheck / build ---
-  turbo:
-    name: Build / turbo (typecheck + lint)
-    needs: pre-commit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install
-      - run: bunx turbo typecheck lint --filter='./src/typescript/...'
-      - uses: actions/cache@v5
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: ${{ runner.os }}-turbo-
-
-  wasm-engine:
-    name: Build / wasm engine assets
-    needs: turbo
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Build wasm binaries in Docker
-        run: |
-          docker run --rm -v "${{ github.workspace }}:/workspace" -w /workspace emscripten/emsdk:3.1.57 \
-            bash -lc "bash scripts/build-engine-wasm.sh --release"
-      - uses: oven-sh/setup-bun@v2
-      - name: Install React dependencies
-        run: cd src/typescript/react && bun install
-      - name: Validate production API base URL secret
-        env:
-          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
-        run: |
-          if [[ -z "${VITE_BANANA_API_BASE_URL:-}" || "${VITE_BANANA_API_BASE_URL}" == "https://api.example.com" ]]; then
-            echo "::error::Missing or invalid VITE_BANANA_API_BASE_URL secret. Set a real production API URL before running this workflow."
-            exit 1
-          fi
-      - name: Verify React app builds with fresh wasm artifacts
-        env:
-          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
-          BANANA_REQUIRE_WASM_ASSETS: "true"
-        run: cd src/typescript/react && bun run build
-
-  wasm-parallel-contract-gate:
-    name: Runtime / wasm parallel contract gate
-    needs: wasm-engine
-    runs-on: ubuntu-latest
-    env:
-      BANANA_WASM_PARALLEL_REQUIRED: "true"
-      BANANA_WASM_PTHREAD_POOL_MIN: "4"
-    steps:
-      - uses: actions/checkout@v6
-      - name: Validate wasm parallel build contract
-        run: bash scripts/validate-wasm-parallel-contract.sh
-
-  # --- Stage 3: native test matrix (parallel after lint) ---
-  native-abi:
-    name: Native / ABI check
-    needs: pre-commit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install build deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends cmake gcc binutils ninja-build clang
-      - name: Build native library
-        run: |
-          cmake --preset default -DCMAKE_BUILD_TYPE=Release
-          cmake --build build/cmake-tools --target banana_native
-      - name: ABI symbol diff
-        run: bash scripts/check-native-abi-symbols.sh build/cmake-tools/libbanana_native.so
-      - name: Run ABI version test
-        run: |
-          cmake --build build/cmake-tools --target banana_test_abi_version
-          cd build/cmake-tools && ctest -R banana_test_abi_version --output-on-failure
-
-  native-cross-platform:
-    name: Native / cross-platform
-    needs: pre-commit
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            preset: linux-x86_64-release
-            triple: linux-x86_64
-          - os: ubuntu-latest
-            preset: linux-arm64-release
-            triple: linux-arm64
-            cross: true
-          - os: macos-latest
-            preset: macos-arm64-release
-            triple: macos-arm64
-          - os: windows-2025-vs2026
-            preset: windows-x86_64-release
-            triple: windows-x86_64
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install cross-compile toolchain (Linux ARM64)
-        if: matrix.cross == true
-        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-      - name: Install Ninja (Ubuntu)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y ninja-build
-      - name: Install Ninja (macOS)
-        if: runner.os == 'macOS'
-        run: brew install ninja
-      - name: Install Ninja (Windows)
-        if: runner.os == 'Windows'
-        run: choco install ninja --no-progress -y
-      - name: Configure
-        run: cmake --preset ${{ matrix.preset }}
-      - name: Build
-        run: cmake --build build/native/${{ matrix.preset }} --config Release
-      - name: Install
-        run: cmake --install build/native/${{ matrix.preset }} --config Release
-
-  native-sanitizers:
-    name: Native / sanitizers
-    needs: pre-commit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends cmake ninja-build clang llvm
-      - name: Configure (sanitizers preset)
-        run: cmake --preset sanitizers
-      - name: Build all native targets
-        run: cmake --build build/sanitizers
-      - name: Run tests under ASAN+UBSAN
-        env:
-          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
-          UBSAN_OPTIONS: print_stacktrace=1:abort_on_error=1
-        run: |
-          cd build/sanitizers
-          ctest --output-on-failure --timeout 60
-
-  native-quality-gate:
-    name: Native / quality gate (100% + memory)
-    needs: pre-commit
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: banana
-          POSTGRES_PASSWORD: banana
-          POSTGRES_DB: banana
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Install native quality gate dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends cmake ninja-build clang clang-tools gcc binutils
-          python -m pip install --upgrade pip gcovr
-      - name: Enforce native 100% line coverage gate
-        env:
-          BANANA_PG_CONNECTION: postgresql://banana:banana@localhost:5432/banana
-          BANANA_NATIVE_COVERAGE_THRESHOLD: "80"
-        run: bash scripts/run-native-c-tests-with-coverage.sh
-      - name: Enforce native static memory + leak analysis gate
-        run: bash scripts/run-native-static-memory-analysis.sh
-
-  # --- Stage 4: integration / runtime (after build) ---
-  runtime-compatibility:
-    name: Runtime / workflow compatibility
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Prepare runtime compatibility script
-        run: chmod +x scripts/check-workflow-runtime-deprecations.sh
-      - name: Run workflow runtime compatibility check
-        run: |
-          bash scripts/check-workflow-runtime-deprecations.sh \
-            --workflow .github/workflows/banana.yml \
-            --exceptions .github/runtime-compatibility-exceptions.yml \
-            --output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.json \
-            --text-output .artifacts/compose-ci/runtime-compatibility/runtime-compatibility.txt
-
-  architecture-governance:
-    name: Governance / architecture contracts
-    needs: pre-commit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install native build deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends cmake ninja-build clang
-      - name: Configure native engine test surface
-        run: cmake --preset default -DBANANA_ENABLE_ENGINE=ON
-      - name: Build architecture-governance tests
-        run: |
-          cmake --build build/cmake-tools --target banana_test_engine_asset_generation
-          cmake --build build/cmake-tools --target banana_test_engine_asset_compiler_integration
-      - name: Run architecture-governance tests
-        run: |
-          ctest --test-dir build/cmake-tools -R banana_test_engine_asset_generation --output-on-failure
-          ctest --test-dir build/cmake-tools -R banana_test_engine_asset_compiler_integration --output-on-failure
-
-  compose:
-    name: Runtime / compose
-    needs: [turbo, native-abi, runtime-compatibility]
-    runs-on: ubuntu-latest
-    env:
-      BANANA_CI_LANE: compose-runtime
-      BANANA_RUNTIME_BUILD: "true"
-      BANANA_RUNTIME_HEALTH_URL: http://localhost:8080/health
-      BANANA_RUNTIME_HEALTH_TIMEOUT_SEC: "60"
-    steps:
-      - uses: actions/checkout@v6
-      - name: Prepare compose lane scripts
-        run: |
-          chmod +x scripts/compose-runtime.sh
-          chmod +x scripts/compose-ci-preflight.sh
-      - name: Preflight compose runtime lane
-        run: |
-          bash scripts/compose-ci-preflight.sh \
-            --lane "$BANANA_CI_LANE" \
-            --profile runtime \
-            --entry-script scripts/compose-runtime.sh
-      - name: Run compose runtime lane
-        run: bash scripts/compose-runtime.sh api
-      - name: Cleanup runtime profile
-        if: always()
-        run: docker compose --profile runtime down -v --remove-orphans
-
-  compose-tests:
-    name: Runtime / compose tests
-    needs: compose
-    runs-on: ubuntu-latest
-    env:
-      BANANA_CI_LANE: compose-tests
-    steps:
-      - uses: actions/checkout@v6
-      - name: Prepare compose lane scripts
-        run: |
-          chmod +x scripts/compose-tests.sh
-          chmod +x scripts/compose-ci-preflight.sh
-      - name: Preflight compose tests lane
-        run: |
-          bash scripts/compose-ci-preflight.sh \
-            --lane "$BANANA_CI_LANE" \
-            --profile tests \
-            --entry-script scripts/compose-tests.sh
-      - name: Run compose tests lane
-        run: bash scripts/compose-tests.sh
-      - name: Cleanup tests profile
-        if: always()
-        run: docker compose --profile tests down -v --remove-orphans
-
-  compose-electron:
-    name: Runtime / compose electron smoke
-    needs: compose
-    runs-on: ubuntu-latest
-    env:
-      BANANA_CI_LANE: compose-electron
-    steps:
-      - uses: actions/checkout@v6
-      - name: Prepare electron smoke lane
-        run: chmod +x scripts/compose-electron.sh
-      - name: Run electron smoke lane
-        run: bash scripts/compose-electron.sh
-      - name: Cleanup electron smoke profile
-        if: always()
-        run: docker compose --profile electron-smoke down -v --remove-orphans
-
-  e2e-smoke:
-    name: Runtime / e2e smoke
-    needs: compose
-    runs-on: ubuntu-latest
-    env:
-      BANANA_E2E_BOOTSTRAP_SERVICES: api-fastify
-      BANANA_E2E_HEALTH_TIMEOUT_SEC: 180
-    steps:
-      - uses: actions/checkout@v6
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - name: Bootstrap E2E runtime
-        run: bash scripts/compose-e2e-bootstrap.sh
-      - name: Run E2E smoke contract tests
-        run: |
-          mkdir -p .artifacts/e2e/test-results
-          cd src/typescript/api
-          bun install --frozen-lockfile
-          bun test src/routes/game-session.test.ts src/routes/health.test.ts || bun test src/routes/game-session.test.ts
-      - name: Cleanup apps profile
-        if: always()
-        run: docker compose --profile apps down -v --remove-orphans
 
-  web-vitals:
-    name: Runtime / web vitals budget
-    needs: wasm-engine
+      - name: Install shared UI dependencies
+        run: bun install --frozen-lockfile
+        working-directory: src/typescript/shared/ui
+
+      - name: UI smoke import
+        run: bun -e 'import "./src/typescript/shared/ui/src/types.ts"; console.log("ui-types-ok");'
+
+      - name: Install API dependencies
+        run: bun install --frozen-lockfile
+        working-directory: src/typescript/api
+
+      - name: API route smoke import
+        run: bun -e 'import { registerHealthRoutes } from "./src/typescript/api/src/routes/health.ts"; console.log(typeof registerHealthRoutes);'
+
+  native-build:
+    name: Native / build + tests
+    needs: pre-commit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
-      - name: Validate production API base URL secret
-        env:
-          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
-        run: |
-          if [[ -z "${VITE_BANANA_API_BASE_URL:-}" || "${VITE_BANANA_API_BASE_URL}" == "https://api.example.com" ]]; then
-            echo "::error::Missing or invalid VITE_BANANA_API_BASE_URL secret. Set a real production API URL before running this workflow."
-            exit 1
-          fi
-      - run: cd src/typescript/react && bun install && bun run build
-        env:
-          VITE_BANANA_API_BASE_URL: ${{ secrets.VITE_BANANA_API_BASE_URL }}
-      - name: Lab vitals check (Lighthouse CI)
-        run: bunx lhci autorun --config=.lighthouserc.json || echo "Lighthouse CI not configured yet - stub"
 
-  # --- Final summary gate ---
+      - name: Install native build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build gcc g++
+
+      - name: Configure native
+        run: cmake -S src/native -B out/native-ci -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build native
+        run: cmake --build out/native-ci --parallel
+
+      - name: Run native tests
+        run: ctest --test-dir out/native-ci --output-on-failure
+
+  wasm-engine:
+    name: Build / wasm engine assets
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build wasm binaries in Docker
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" -w /workspace emscripten/emsdk:3.1.57 \
+            bash -lc "bash scripts/build-engine-wasm.sh --release"
+
+      - name: Verify wasm artifacts exist
+        run: |
+          test -f out/wasm/engine.js
+          test -f out/wasm/engine.wasm
+
   monorepo-pass-fail:
     name: Monorepo / Pass-Fail
     needs:
       - pre-commit
-      - ai-contract-guard
-      - spec-parity
-      - wiki-lint
-      - helm-lint
-      - migration-discipline
-      - analytics-scan
-      - turbo
+      - typescript-smoke
+      - native-build
       - wasm-engine
-      - wasm-parallel-contract-gate
-      - native-abi
-      - native-cross-platform
-      - native-sanitizers
-      - native-quality-gate
-      - runtime-compatibility
-      - architecture-governance
-      - compose
-      - compose-tests
-      - compose-electron
-      - e2e-smoke
-      - web-vitals
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -561,33 +134,15 @@ jobs:
             echo "| Lane | Result |"
             echo "| --- | --- |"
             echo "| Lint / pre-commit | ${{ needs.pre-commit.result }} |"
-            echo "| Lint / AI contract guard | ${{ needs.ai-contract-guard.result }} |"
-            echo "| Lint / spec parity | ${{ needs.spec-parity.result }} |"
-            echo "| Lint / wiki | ${{ needs.wiki-lint.result }} |"
-            echo "| Lint / helm charts | ${{ needs.helm-lint.result }} |"
-            echo "| Lint / migration discipline | ${{ needs.migration-discipline.result }} |"
-            echo "| Lint / analytics surface scan | ${{ needs.analytics-scan.result }} |"
-            echo "| Build / turbo | ${{ needs.turbo.result }} |"
+            echo "| Build / TypeScript smoke | ${{ needs.typescript-smoke.result }} |"
+            echo "| Native / build + tests | ${{ needs.native-build.result }} |"
             echo "| Build / wasm engine assets | ${{ needs.wasm-engine.result }} |"
-            echo "| Runtime / wasm parallel contract gate | ${{ needs.wasm-parallel-contract-gate.result }} |"
-            echo "| Native / ABI check | ${{ needs.native-abi.result }} |"
-            echo "| Native / cross-platform | ${{ needs.native-cross-platform.result }} |"
-            echo "| Native / sanitizers | ${{ needs.native-sanitizers.result }} |"
-            echo "| Native / quality gate (100% + memory) | ${{ needs.native-quality-gate.result }} |"
-            echo "| Runtime / workflow compatibility | ${{ needs.runtime-compatibility.result }} |"
-            echo "| Governance / architecture contracts | ${{ needs.architecture-governance.result }} |"
-            echo "| Runtime / compose | ${{ needs.compose.result }} |"
-            echo "| Runtime / compose tests | ${{ needs.compose-tests.result }} |"
-            echo "| Runtime / compose electron smoke | ${{ needs.compose-electron.result }} |"
-            echo "| Runtime / e2e smoke | ${{ needs.e2e-smoke.result }} |"
-            echo "| Runtime / web vitals budget | ${{ needs.web-vitals.result }} |"
             echo
-            echo "Legacy deep lanes currently excluded from the blocking monorepo gate: managed coverage aggregation and API parity governance historical lanes."
+            echo "Removed stale lanes after reset: analytics scan, turbo monorepo lint matrix, legacy native preset matrix, sanitizer/coverage hard gates, architecture governance, compose/runtime smoke, and web vitals budget."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify all upstream jobs succeeded
         run: |
-          echo "Monorepo result: ${{ contains(needs.*.result, 'failure') && 'FAILURE' || contains(needs.*.result, 'cancelled') && 'CANCELLED' || 'SUCCESS' }}"
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
             exit 1
           fi

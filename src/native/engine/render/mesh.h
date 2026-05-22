@@ -32,6 +32,7 @@ extern "C"
      * approximating familiar volume families for gameplay composition. */
     Mesh *mesh_create_banana_block_like(int quality);
     Mesh *mesh_create_banana_orb_like(int quality);
+    Mesh *mesh_create_peanut_butter_pickup_asset(int quality);
 
     /* Build a terrain mesh from a deterministic height map (WFC/CA-friendly).
      * heights: row-major [depth][width], each cell is an unsigned elevation value.

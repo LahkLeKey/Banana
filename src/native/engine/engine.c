@@ -15,6 +15,7 @@
 #include "runtime/player_motion.h"
 #include "runtime/player_motion_host.h"
 #include "runtime/player_api.h"
+#include "runtime/player_builds.h"
 #include "runtime/player_registry.h"
 #include "runtime/physics_abi.h"
 #include "runtime/input_contract.h"
@@ -29,6 +30,7 @@
 #include "runtime/world_abi.h"
 #include "runtime/world_telemetry.h"
 #include "runtime/wildlife_gameplay.h"
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -38,6 +40,7 @@ static Renderer *s_renderer = NULL;
 static PhysicsWorld *s_physics = NULL;
 static World *s_world = NULL;
 static Mesh *s_entity_mesh = NULL; /* banana mesh for actors */
+static Mesh *s_pbj_pickup_mesh = NULL;
 static EntityId s_player_id = 0;
 /* Initialization guard */
 static int s_engine_initialized = 0;
@@ -61,6 +64,7 @@ static int s_camera_valid = 0;
 static float s_move_input_x = 0.f;
 static float s_move_input_z = 0.f;
 static int s_merchants_seeded = 0;
+static int s_pbj_pickup_collected = 0;
 
 /* ── Active controller table ─────────────────────────────────────────────── */
 #define BANANA_MAX_ACTIVE_CONTROLLERS 256
@@ -167,14 +171,18 @@ int engine_init(int width, int height)
     {
         s_player_id = world_spawn_entity(s_world, ENTITY_TYPE_PLAYER, 0.f, 0.f, 0.f);
         s_entity_mesh = mesh_create_banana_vector(1.05f, 1.55f, 1.65f, 0.15f, 3);
+        s_pbj_pickup_mesh = mesh_create_peanut_butter_pickup_asset(2);
     }
-    if (!s_entity_mesh)
+    if (!s_entity_mesh || !s_pbj_pickup_mesh)
     {
-        fprintf(stderr, "[engine] entity mesh creation failed\n");
+        fprintf(stderr, "[engine] actor mesh creation failed\n");
         return -1;
     }
     s_viewport_width = width;
     s_viewport_height = height;
+
+    if (player_builds_init() != 0)
+        return -1;
 
     s_terrain_initialized = runtime_engine_lifecycle_build_terrain(&s_terrain_height[0][0],
                                                                    BANANA_TERRAIN_SIZE,
@@ -194,6 +202,7 @@ int engine_init(int width, int height)
     runtime_engine_lifecycle_spawn_default_actors(s_world,
                                                   terrain_sample_height,
                                                   engine_controller_attach);
+    s_pbj_pickup_collected = 0;
 
     fprintf(stdout, "[engine] initialized %dx%d\n", width, height);
     engine_serialize_reset();
@@ -209,6 +218,50 @@ static void tick_phase_gameplay_signals(void)
                                           6.0f);
 }
 
+static void tick_phase_pbj_pickup_collection(void)
+{
+    const float collect_radius = 1.55f;
+    Entity *player = NULL;
+
+    if (s_pbj_pickup_collected || !s_world || !s_player_id)
+        return;
+
+    player = world_get_entity(s_world, s_player_id);
+    if (!player || !player->active)
+        return;
+
+    for (int i = 0; i < s_world->entity_count; i++)
+    {
+        Entity *entity = s_world->entities[i];
+        if (!entity || !entity->active)
+            continue;
+        if (entity->type != ENTITY_TYPE_STATIC)
+            continue;
+        if (strcmp(entity->controller_kind, "pbj_pickup") != 0)
+            continue;
+
+        {
+            float dx = player->position[0] - entity->position[0];
+            float dz = player->position[2] - entity->position[2];
+            float distance = sqrtf(dx * dx + dz * dz);
+            if (distance <= collect_radius)
+            {
+                entity->active = 0;
+                s_pbj_pickup_collected = 1;
+                break;
+            }
+        }
+    }
+}
+
+static void tick_phase_gameplay(void)
+{
+    tick_phase_gameplay_signals();
+    tick_phase_pbj_pickup_collection();
+}
+
+static Mesh *runtime_render_mesh_for_actor(const Entity *entity, Mesh *default_mesh);
+
 static void tick_phase_render_scene(void)
 {
     runtime_render_submit_frame(s_renderer,
@@ -216,7 +269,22 @@ static void tick_phase_render_scene(void)
                                 s_entity_mesh,
                                 s_terrain_initialized,
                                 terrain_draw_runtime,
-                                runtime_render_material_for_actor);
+                                runtime_render_material_for_actor,
+                                runtime_render_mesh_for_actor);
+}
+
+static Mesh *runtime_render_mesh_for_actor(const Entity *entity, Mesh *default_mesh)
+{
+    if (!entity)
+        return default_mesh;
+
+    if (entity->type == ENTITY_TYPE_STATIC && strcmp(entity->controller_kind, "pbj_pickup") == 0)
+    {
+        if (s_pbj_pickup_mesh)
+            return s_pbj_pickup_mesh;
+    }
+
+    return default_mesh;
 }
 
 static const char *engine_player_active_guid(void)
@@ -276,10 +344,9 @@ int engine_tick(float dt)
                                        dt,
                                        update_player_motion,
                                        follow_player_camera,
-                                       NULL,  /* run_gameplay */
+                                       tick_phase_gameplay,
                                        tick_phase_render_scene);
 }
-
 /* ── Shutdown ────────────────────────────────────────────────────────────── */
 void engine_shutdown(void)
 {
@@ -288,6 +355,7 @@ void engine_shutdown(void)
                                                  &s_controller_count);
 
     mesh_destroy(s_entity_mesh);
+    mesh_destroy(s_pbj_pickup_mesh);
     runtime_engine_lifecycle_reset_terrain_chunks(s_terrain_chunks, BANANA_TERRAIN_TOTAL_CHUNKS);
     world_destroy(s_world);
     physics_world_destroy(s_physics);
@@ -295,6 +363,7 @@ void engine_shutdown(void)
     window_destroy(s_window);
 
     s_entity_mesh = NULL;
+    s_pbj_pickup_mesh = NULL;
     s_terrain_initialized = 0;
     s_viewport_width = 0;
     s_viewport_height = 0;
@@ -307,9 +376,11 @@ void engine_shutdown(void)
         npc_merchant_shutdown();
         s_merchants_seeded = 0;
     }
+    player_builds_cleanup();
     runtime_player_registry_reset();
     s_engine_initialized = 0;
     s_camera_valid = 0;
+    s_pbj_pickup_collected = 0;
     engine_serialize_reset();
 
     runtime_engine_host_reset_state(&s_window,
@@ -635,6 +706,77 @@ int engine_player_add_resource(const char *resource_type, int amount)
     }
 
     return 0;
+}
+
+int engine_player_build_set_class(const char *player_guid, int class_type)
+{
+    return player_builds_upsert(player_guid, (BuildClass)class_type);
+}
+
+int engine_player_build_set_allocations(const char *player_guid,
+                                        int offense_points,
+                                        int defense_points,
+                                        int utility_points)
+{
+    return player_builds_set_allocations(player_guid,
+                                         offense_points,
+                                         defense_points,
+                                         utility_points);
+}
+
+int engine_player_build_equip(const char *player_guid,
+                              int slot,
+                              int tier,
+                              int attack_bonus,
+                              int defense_bonus,
+                              int utility_bonus)
+{
+    GearModifier gear;
+    gear.tier = tier;
+    gear.attack_bonus = attack_bonus;
+    gear.defense_bonus = defense_bonus;
+    gear.utility_bonus = utility_bonus;
+    return player_builds_equip(player_guid, (GearSlot)slot, &gear);
+}
+
+int engine_player_build_get_stat(const char *player_guid, const char *stat_name)
+{
+    BuildStats stats;
+    if (!stat_name || player_builds_get_stats(player_guid, &stats) != 0) {
+        return -1;
+    }
+
+    if (strcmp(stat_name, "health") == 0) return stats.health;
+    if (strcmp(stat_name, "attack") == 0) return stats.attack;
+    if (strcmp(stat_name, "defense") == 0) return stats.defense;
+    if (strcmp(stat_name, "utility") == 0) return stats.utility;
+    return -1;
+}
+
+int engine_player_combo_evaluate(const char *player_guid,
+                                 const char *first_skill,
+                                 const char *second_skill,
+                                 int elapsed_ms,
+                                 int party_size,
+                                 int *out_damage_bonus_pct,
+                                 int *out_mitigation_bonus_pct,
+                                 int *out_party_synergy_bonus_pct)
+{
+    ComboOutcome outcome;
+    int result = player_builds_evaluate_combo(player_guid,
+                                              first_skill,
+                                              second_skill,
+                                              elapsed_ms,
+                                              party_size,
+                                              &outcome);
+    if (result < 0) {
+        return -1;
+    }
+
+    if (out_damage_bonus_pct) *out_damage_bonus_pct = outcome.damage_bonus_pct;
+    if (out_mitigation_bonus_pct) *out_mitigation_bonus_pct = outcome.mitigation_bonus_pct;
+    if (out_party_synergy_bonus_pct) *out_party_synergy_bonus_pct = outcome.party_synergy_bonus_pct;
+    return outcome.triggered;
 }
 
 static int engine_player_set_resource_total(const char *resource_type, int target_amount)

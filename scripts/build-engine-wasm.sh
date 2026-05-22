@@ -71,26 +71,14 @@ mkdir -p "$OUT_DIR"
 SOURCES=(
     "$ENGINE_DIR/engine.c"
     "$ENGINE_DIR/engine_serialize.c"
-    "$ENGINE_DIR/render/window.c"
-    "$ENGINE_DIR/render/shader.c"
-    "$ENGINE_DIR/render/mesh.c"
-    "$ENGINE_DIR/render/material.c"
-    "$ENGINE_DIR/render/camera.c"
-    "$ENGINE_DIR/render/renderer.c"
-    "$ENGINE_DIR/physics/body.c"
-    "$ENGINE_DIR/physics/collider.c"
-    "$ENGINE_DIR/physics/dynamics.c"
-    "$ENGINE_DIR/physics/world.c"
-    "$ENGINE_DIR/ai/controller.c"
-    "$ENGINE_DIR/ai/state_machine.c"
-    "$ENGINE_DIR/ai/navigation.c"
-    "$ENGINE_DIR/ai/perception.c"
-    "$ENGINE_DIR/ai/wildlife_controller.c"
-    "$ENGINE_DIR/world/entity.c"
-    "$ENGINE_DIR/world/world.c"
-    "$ENGINE_DIR/world/signals.c"
     "$ENGINE_DIR/wasm_main.c"
+    "$ENGINE_DIR/tools/domain/banana_asset_domain.c"
 )
+
+# Keep this list aligned with the CMake wasm target surfaces.
+while IFS= read -r -d '' source_file; do
+    SOURCES+=("$source_file")
+done < <(find "$ENGINE_DIR/render" "$ENGINE_DIR/physics" "$ENGINE_DIR/ai" "$ENGINE_DIR/world" "$ENGINE_DIR/runtime" -type f -name '*.c' -print0 | sort -z)
 
 # ── Exported WASM functions (callable from JS via Module.ccall / cwrap) ──────
 EXPORTS='["_main","_engine_world_spawn","_engine_controller_attach","_engine_controller_signal","_engine_tick","_engine_set_move_input","_engine_handle_right_click","_engine_handle_right_click_normalized","_engine_get_entity_count","_engine_get_entity_x","_engine_get_entity_z","_engine_get_entity_state"]'
@@ -106,6 +94,7 @@ echo "[build-engine-wasm] Compiling ${#SOURCES[@]} source files…"
     -I "$ENGINE_DIR/ai" \
     -I "$ENGINE_DIR/world" \
     -std=c11 \
+    -DBANANA_ENGINE_HAS_OPENMP=1 \
     $OPT \
     -s WASM=1 \
     -s USE_WEBGL2=1 \

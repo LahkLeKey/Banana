@@ -1,50 +1,108 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: 0.0.0-template -> 1.0.0
+- Modified principles:
+	- Template Principle 1 -> I. Player Trust and Honest Disclosure
+	- Template Principle 2 -> II. Open Source and Community Governance
+	- Template Principle 3 -> III. Cross-Domain Contract Integrity
+	- Template Principle 4 -> IV. Persistent-World Quality Gates
+	- Template Principle 5 -> V. Reproducible Multi-Platform Delivery
+- Added sections:
+	- Product and Platform Constraints
+	- Development Workflow and Release Quality Gates
+- Removed sections:
+	- None
+- Templates requiring updates:
+	- ✅ .specify/templates/plan-template.md
+	- ✅ .specify/templates/spec-template.md
+	- ✅ .specify/templates/tasks-template.md
+	- ⚠ pending .specify/templates/commands/*.md (directory not present in this repo layout)
+- Follow-up TODOs:
+	- None
+-->
+
+# Banana Engineer Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Player Trust and Honest Disclosure
+All player-facing claims MUST be verifiable in-repo before release. Store metadata,
+AI-generated-content disclosures, online-service disclosures, and minimum system
+requirements MUST remain synchronized between implementation, release notes, and
+distribution storefronts.
+Rationale: persistent online titles lose trust quickly when requirements and runtime
+behavior differ from published expectations.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Open Source and Community Governance
+Gameplay systems and delivery changes MUST be developed through transparent,
+reviewable artifacts: specification, plan, tasks, tests, and changelog evidence.
+Changes that impact progression balance, multiplayer fairness, or AI content
+generation paths MUST include explicit reviewer-visible rationale.
+Rationale: Banana Engineer is an open source MMOARPG and depends on community
+confidence in how decisions are made.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Cross-Domain Contract Integrity
+Controller -> service -> pipeline -> native interop contracts MUST remain explicit
+and testable across `src/native`, `src/typescript/api`, and client runtimes.
+Contract changes MUST update the nearest documentation and runtime contracts in the
+same change set.
+Rationale: the project is a multi-language monorepo; silent drift between layers
+causes production regressions and release delays.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Persistent-World Quality Gates
+Every feature MUST define measurable validation for deterministic simulation,
+service/API behavior, and user-facing runtime flows. For multiplayer and
+persistence-sensitive paths, integration or end-to-end validation is mandatory,
+including failure-path assertions.
+Rationale: persistent worlds amplify defects; quality gates must catch regressions
+before release to players.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Reproducible Multi-Platform Delivery
+Official runtime channels MUST be reproducible on the documented Windows + Ubuntu
+WSL2 + container workflow, with explicit environment contracts for native assets,
+API paths, and client launch commands. Release readiness MUST include evidence for
+store requirements (for example controller support declarations and platform notes).
+Rationale: reproducibility across local and CI environments is required for stable
+launch operations.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Product and Platform Constraints
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- The product scope is a 2.5D persistent-world MMOARPG with real-time combat,
+	progression, and community systems.
+- Minimum supported release platform is Windows 10 64-bit or newer.
+- Online and interactive elements MUST disclose third-party integrations used for
+	AI content generation in release materials.
+- Community feedback and open source contribution flow MUST remain first-class input
+	to roadmap and balancing decisions.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow and Release Quality Gates
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- Spec-driven execution is mandatory: `/speckit.specify` -> `/speckit.plan` ->
+	`/speckit.tasks` -> implementation.
+- Each plan MUST pass a constitution check before design and before implementation.
+- Each release-affecting change MUST include scoped tests and evidence artifacts for
+	touched domains (native, API, UI/runtime, or orchestration).
+- Pull requests MUST summarize principle compliance and any explicit exceptions.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes conflicting local process notes.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Amendment process:
+- Propose amendments through a pull request that includes motivation, impact scope,
+	migration or remediation tasks, and template synchronization updates.
+- Approval requires maintainers from affected domains (native, API/runtime,
+	frontend/Electron/mobile) when cross-domain behavior changes.
+
+Versioning policy:
+- MAJOR: removes or redefines a principle in a backward-incompatible way.
+- MINOR: adds a principle or materially expands normative requirements.
+- PATCH: clarifies wording without changing governance intent.
+
+Compliance review expectations:
+- Plan and PR reviews MUST explicitly confirm constitution alignment.
+- Exceptions MUST be time-bound, documented, and linked to follow-up tasks.
+- Release readiness checks MUST include evidence that storefront disclosures and
+	runtime behavior remain aligned.
+
+**Version**: 1.0.0 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-21
