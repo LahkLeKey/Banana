@@ -1,13 +1,7 @@
-import type { InputAggregator } from "./InputDomain";
-import type { InteractionManager } from "./InteractionDomain";
+import type {InputAggregator} from './InputDomain';
 
-export type AntiCheatViolationReason =
-  | "sequence_regression"
-  | "sequence_gap"
-  | "tick_ahead"
-  | "tick_behind"
-  | "clock_skew"
-  | "invalid_axis";
+export type AntiCheatViolationReason =|'sequence_regression'|'sequence_gap'|
+    'tick_ahead'|'tick_behind'|'clock_skew'|'invalid_axis';
 
 export interface NetcodeAntiCheatConfig {
   readonly maxTickLead: number;
@@ -20,13 +14,13 @@ export interface NetcodeAntiCheatConfig {
 export interface AntiCheatStatus {
   readonly violationScore: number;
   readonly flagged: boolean;
-  readonly lastViolationReason: AntiCheatViolationReason | null;
+  readonly lastViolationReason: AntiCheatViolationReason|null;
   readonly lastVerifiedTick: number;
   readonly rollingIntegrityHash: number;
 }
 
 export interface SimulationHeartbeat {
-  readonly layer: "simulation";
+  readonly layer: 'simulation';
   readonly heartbeatSequence: number;
   readonly serverTick: number;
   readonly lastInputSequence: number;
@@ -40,15 +34,15 @@ export interface SimulationHeartbeat {
 export interface InputCommand {
   readonly inputSequence: number;
   readonly tickIndex: number;
-  readonly moveX: -1 | 0 | 1;
-  readonly moveZ: -1 | 0 | 1;
+  readonly moveX: -1|0|1;
+  readonly moveZ: -1|0|1;
   readonly timestamp: number;
 }
 
 export interface TickSnapshot {
   readonly tickIndex: number;
-  readonly moveX: -1 | 0 | 1;
-  readonly moveZ: -1 | 0 | 1;
+  readonly moveX: -1|0|1;
+  readonly moveZ: -1|0|1;
   readonly timestamp: number;
   readonly isAuthoritative: boolean;
 }
@@ -76,7 +70,6 @@ export class NetcodeDomain {
 
   private readonly config: NetcodeDomainConfig;
   private readonly inputAggregator: InputAggregator;
-  private readonly interactionManager: InteractionManager;
   private readonly antiCheatConfig: NetcodeAntiCheatConfig;
   private frameBuffer: NetcodeFrame[] = [];
   private currentTick: number = 0;
@@ -84,19 +77,15 @@ export class NetcodeDomain {
   private acceptedInputSequence: number = 0;
   private acceptedInputTick: number = 0;
   private antiCheatViolationScore: number = 0;
-  private antiCheatLastViolationReason: AntiCheatViolationReason | null = null;
+  private antiCheatLastViolationReason: AntiCheatViolationReason|null = null;
   private rollingIntegrityHash: number = 0;
   private simulationHeartbeatSequence: number = 0;
 
   constructor(
-    config: NetcodeDomainConfig,
-    inputAggregator: InputAggregator,
-    interactionManager: InteractionManager,
-    antiCheatConfig: Partial<NetcodeAntiCheatConfig> = {}
-  ) {
+      config: NetcodeDomainConfig, inputAggregator: InputAggregator,
+      antiCheatConfig: Partial<NetcodeAntiCheatConfig> = {}) {
     this.config = config;
     this.inputAggregator = inputAggregator;
-    this.interactionManager = interactionManager;
     this.antiCheatConfig = {
       ...NetcodeDomain.DEFAULT_ANTI_CHEAT_CONFIG,
       ...antiCheatConfig,
@@ -131,11 +120,10 @@ export class NetcodeDomain {
   }
 
   public ingestClientCommand(
-    command: InputCommand,
-    serverTick: number,
-    receivedAtMs = Date.now()
-  ): boolean {
-    const violation = this.validateClientCommand(command, serverTick, receivedAtMs);
+      command: InputCommand, serverTick: number,
+      receivedAtMs = Date.now()): boolean {
+    const violation =
+        this.validateClientCommand(command, serverTick, receivedAtMs);
     if (violation) {
       this.registerViolation(violation);
       return false;
@@ -159,7 +147,8 @@ export class NetcodeDomain {
     return true;
   }
 
-  public reconcileAuthoritativeState(tick: number, authoritativeState: TickSnapshot): void {
+  public reconcileAuthoritativeState(
+      tick: number, authoritativeState: TickSnapshot): void {
     const frame = this.frameBuffer.find((f) => f.tick === tick);
     if (frame) {
       frame.authoritativeState = authoritativeState;
@@ -167,10 +156,9 @@ export class NetcodeDomain {
   }
 
   private predictState(input: InputCommand): TickSnapshot {
-    const interactionBias = this.interactionManager.getMenuState().visible ? 0 : 0;
     return {
       tickIndex: input.tickIndex,
-      moveX: (input.moveX + interactionBias) as -1 | 0 | 1,
+      moveX: input.moveX,
       moveZ: input.moveZ,
       timestamp: input.timestamp,
       isAuthoritative: false,
@@ -188,7 +176,8 @@ export class NetcodeDomain {
   public getAntiCheatStatus(): AntiCheatStatus {
     return {
       violationScore: this.antiCheatViolationScore,
-      flagged: this.antiCheatViolationScore >= this.antiCheatConfig.maxViolationsBeforeFlag,
+      flagged: this.antiCheatViolationScore >=
+          this.antiCheatConfig.maxViolationsBeforeFlag,
       lastViolationReason: this.antiCheatLastViolationReason,
       lastVerifiedTick: this.acceptedInputTick,
       rollingIntegrityHash: this.rollingIntegrityHash,
@@ -198,54 +187,61 @@ export class NetcodeDomain {
   public createSimulationHeartbeat(serverTick: number): SimulationHeartbeat {
     this.simulationHeartbeatSequence += 1;
     return {
-      layer: "simulation",
+      layer: 'simulation',
       heartbeatSequence: this.simulationHeartbeatSequence,
       serverTick,
       lastInputSequence: this.acceptedInputSequence,
       bufferedFrames: this.frameBuffer.length,
       rollingIntegrityHash: this.rollingIntegrityHash,
       violationScore: this.antiCheatViolationScore,
-      flagged: this.antiCheatViolationScore >= this.antiCheatConfig.maxViolationsBeforeFlag,
+      flagged: this.antiCheatViolationScore >=
+          this.antiCheatConfig.maxViolationsBeforeFlag,
       timestamp: Date.now(),
     };
   }
 
   private validateClientCommand(
-    command: InputCommand,
-    serverTick: number,
-    receivedAtMs: number
-  ): AntiCheatViolationReason | null {
-    if (!this.isAxisValue(command.moveX) || !this.isAxisValue(command.moveZ)) return "invalid_axis";
+      command: InputCommand, serverTick: number,
+      receivedAtMs: number): AntiCheatViolationReason|null {
+    if (!this.isAxisValue(command.moveX) || !this.isAxisValue(command.moveZ))
+      return 'invalid_axis';
 
-    if (command.inputSequence <= this.acceptedInputSequence) return "sequence_regression";
+    if (command.inputSequence <= this.acceptedInputSequence)
+      return 'sequence_regression';
 
     const sequenceGap = command.inputSequence - this.acceptedInputSequence;
-    if (this.acceptedInputSequence > 0 && sequenceGap > this.antiCheatConfig.maxSequenceGap)
-      return "sequence_gap";
+    if (this.acceptedInputSequence > 0 &&
+        sequenceGap > this.antiCheatConfig.maxSequenceGap)
+      return 'sequence_gap';
 
-    if (command.tickIndex - serverTick > this.antiCheatConfig.maxTickLead) return "tick_ahead";
+    if (command.tickIndex - serverTick > this.antiCheatConfig.maxTickLead)
+      return 'tick_ahead';
 
-    if (serverTick - command.tickIndex > this.antiCheatConfig.maxTickLag) return "tick_behind";
+    if (serverTick - command.tickIndex > this.antiCheatConfig.maxTickLag)
+      return 'tick_behind';
 
     const clockSkew = Math.abs(receivedAtMs - command.timestamp);
-    if (clockSkew > this.antiCheatConfig.maxClientClockSkewMs) return "clock_skew";
+    if (clockSkew > this.antiCheatConfig.maxClientClockSkewMs)
+      return 'clock_skew';
 
     return null;
   }
 
   private registerViolation(reason: AntiCheatViolationReason): void {
     this.antiCheatLastViolationReason = reason;
-    this.antiCheatViolationScore += reason === "sequence_gap" ? 2 : 1;
+    this.antiCheatViolationScore += reason === 'sequence_gap' ? 2 : 1;
   }
 
-  private isAxisValue(value: number): value is -1 | 0 | 1 {
+  private isAxisValue(value: number): value is - 1|0|1 {
     return value === -1 || value === 0 || value === 1;
   }
 
   private updateIntegrityHash(command: InputCommand): void {
     const axisMix = (command.moveX + 2) * 7 + (command.moveZ + 2) * 13;
     const timestampMix = command.timestamp & 0xffff;
-    const inputMix = command.inputSequence * 31 + command.tickIndex * 17 + axisMix + timestampMix;
-    this.rollingIntegrityHash = ((this.rollingIntegrityHash * 33) ^ inputMix) >>> 0;
+    const inputMix = command.inputSequence * 31 + command.tickIndex * 17 +
+        axisMix + timestampMix;
+    this.rollingIntegrityHash =
+        ((this.rollingIntegrityHash * 33) ^ inputMix) >>> 0;
   }
 }
