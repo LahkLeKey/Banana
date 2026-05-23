@@ -17,6 +17,23 @@ static const int BANANA_POC_HEIGHT = 720;
 static unsigned char *s_ui_bgra_buffer = NULL;
 static size_t s_ui_bgra_capacity = 0;
 
+typedef enum BananaPocScene
+{
+    BANANA_POC_SCENE_MAIN_MENU = 0,
+    BANANA_POC_SCENE_CHARACTER_SELECT = 1,
+    BANANA_POC_SCENE_WORLD = 2,
+    BANANA_POC_SCENE_LEVEL_EDITOR = 3,
+    BANANA_POC_SCENE_OPTIONS = 4,
+} BananaPocScene;
+
+static int consume_key_press(int vk, int *last_down)
+{
+    int down = (GetAsyncKeyState(vk) & 0x8000) ? 1 : 0;
+    int pressed = down && (!(*last_down));
+    *last_down = down;
+    return pressed;
+}
+
 static float axis_value(int positive_key, int negative_key)
 {
     float axis = 0.0f;
@@ -95,6 +112,7 @@ static HWND find_game_window(void)
 }
 
 static void update_game_hud_title(HWND game_window,
+                                  BananaPocScene scene,
                                   int objective_collected,
                                   int elapsed_seconds,
                                   int objective_timeout_seconds)
@@ -106,7 +124,31 @@ static void update_game_hud_title(HWND game_window,
         remaining_seconds = 0;
     }
 
-    if (objective_collected)
+    if (scene == BANANA_POC_SCENE_MAIN_MENU)
+    {
+        snprintf(title,
+                 sizeof(title),
+                 "Banana DX12 POC | Main Menu | Enter Select");
+    }
+    else if (scene == BANANA_POC_SCENE_CHARACTER_SELECT)
+    {
+        snprintf(title,
+                 sizeof(title),
+                 "Banana DX12 POC | Character Select | Enter Confirm");
+    }
+    else if (scene == BANANA_POC_SCENE_OPTIONS)
+    {
+        snprintf(title,
+                 sizeof(title),
+                 "Banana DX12 POC | Options | Left/Right Toggle");
+    }
+    else if (scene == BANANA_POC_SCENE_LEVEL_EDITOR)
+    {
+        snprintf(title,
+                 sizeof(title),
+                 "Banana DX12 POC | Level Editor | E Apply Height");
+    }
+    else if (objective_collected)
     {
         snprintf(title,
                  sizeof(title),
@@ -256,6 +298,15 @@ static void blit_ui_overlay(HWND game_window,
 }
 
 static void render_ui_overlay(HWND game_window,
+                              BananaPocScene scene,
+                              int main_menu_index,
+                              int character_index,
+                              int class_index,
+                              int option_index,
+                              int auto_target_enabled,
+                              int target_hotkey_enabled,
+                              int telemetry_enabled,
+                              int editor_height,
                               int elapsed_seconds,
                               int objective_timeout_seconds,
                               int objective_collected,
@@ -284,6 +335,24 @@ static void render_ui_overlay(HWND game_window,
     const char *hint_x = "HOLD";
     const char *hint_z = "HOLD";
     const unsigned char *ui_framebuffer = NULL;
+    static const char *k_main_menu_items[] = {
+        "Enter World",
+        "Character Select",
+        "Level Editor",
+        "Options",
+        "Quit",
+    };
+    static const char *k_character_names[] = {
+        "DX12 Pilot",
+        "Vanguard One",
+        "Arcanist Flux",
+        "Ranger Echo",
+    };
+    static const char *k_class_names[] = {
+        "Vanguard",
+        "Arcanist",
+        "Ranger",
+    };
 
     if (!game_window)
     {
@@ -298,6 +367,85 @@ static void render_ui_overlay(HWND game_window,
     if (world_half_span < 1.0f)
     {
         world_half_span = 1.0f;
+    }
+
+    engine_ui_begin_frame();
+
+    if (scene == BANANA_POC_SCENE_MAIN_MENU ||
+        scene == BANANA_POC_SCENE_CHARACTER_SELECT ||
+        scene == BANANA_POC_SCENE_OPTIONS)
+    {
+        engine_ui_panel(170.0f, 90.0f, 940.0f, 530.0f, 0x101822E8u, 2.0f);
+
+        if (scene == BANANA_POC_SCENE_MAIN_MENU)
+        {
+            int i = 0;
+            engine_ui_text(220.0f, 140.0f, "BANANA DX12 POC");
+            engine_ui_text(220.0f, 172.0f, "Main Menu - Use Up/Down, Enter Select");
+            for (i = 0; i < (int)(sizeof(k_main_menu_items) / sizeof(k_main_menu_items[0])); i++)
+            {
+                char item_line[128];
+                snprintf(item_line,
+                         sizeof(item_line),
+                         "%s %s",
+                         (i == main_menu_index) ? ">" : " ",
+                         k_main_menu_items[i]);
+                engine_ui_text(240.0f, 230.0f + ((float)i * 36.0f), item_line);
+            }
+        }
+        else if (scene == BANANA_POC_SCENE_CHARACTER_SELECT)
+        {
+            char character_line[160];
+            char class_line[160];
+            engine_ui_text(220.0f, 140.0f, "Character Select");
+            engine_ui_text(220.0f, 172.0f, "Left/Right change values, Enter to start, Esc to menu");
+
+            snprintf(character_line,
+                     sizeof(character_line),
+                     "Character: %s",
+                     k_character_names[character_index]);
+            snprintf(class_line,
+                     sizeof(class_line),
+                     "Class: %s",
+                     k_class_names[class_index]);
+
+            engine_ui_text(240.0f, 246.0f, character_line);
+            engine_ui_text(240.0f, 286.0f, class_line);
+            engine_ui_text(240.0f, 340.0f, "Press Enter to Enter World");
+        }
+        else if (scene == BANANA_POC_SCENE_OPTIONS)
+        {
+            char option_line_a[160];
+            char option_line_b[160];
+            char option_line_c[160];
+            engine_ui_text(220.0f, 140.0f, "Options");
+            engine_ui_text(220.0f, 172.0f, "Up/Down select option, Left/Right toggle, Esc to menu");
+
+            snprintf(option_line_a,
+                     sizeof(option_line_a),
+                     "%s Auto Startup Target: %s",
+                     option_index == 0 ? ">" : " ",
+                     auto_target_enabled ? "On" : "Off");
+            snprintf(option_line_b,
+                     sizeof(option_line_b),
+                     "%s Target Hotkey (T): %s",
+                     option_index == 1 ? ">" : " ",
+                     target_hotkey_enabled ? "On" : "Off");
+            snprintf(option_line_c,
+                     sizeof(option_line_c),
+                     "%s Telemetry Prints: %s",
+                     option_index == 2 ? ">" : " ",
+                     telemetry_enabled ? "On" : "Off");
+
+            engine_ui_text(240.0f, 246.0f, option_line_a);
+            engine_ui_text(240.0f, 286.0f, option_line_b);
+            engine_ui_text(240.0f, 326.0f, option_line_c);
+        }
+
+        engine_ui_end_frame();
+        ui_framebuffer = engine_ui_get_framebuffer();
+        blit_ui_overlay(game_window, ui_framebuffer, BANANA_POC_WIDTH, BANANA_POC_HEIGHT);
+        return;
     }
 
     has_player = engine_get_player_position(&player_x, &player_z);
@@ -317,14 +465,15 @@ static void render_ui_overlay(HWND game_window,
             hint_z = "W";
     }
 
-    engine_ui_begin_frame();
     engine_ui_panel(12.0f, 12.0f, 760.0f, 94.0f, 0x0A1118C0u, 1.0f);
     engine_ui_panel(12.0f, 112.0f, 420.0f, 92.0f, 0x121E28C0u, 1.0f);
     engine_ui_panel(minimap_x, minimap_y, minimap_w, minimap_h, 0x1A2A22D0u, 1.0f);
 
     snprintf(line_one,
              sizeof(line_one),
-             "BANANA DX12 POC  |  WASD MOVE  |  RIGHT-CLICK MOVE TARGET  |  ESC QUIT");
+             scene == BANANA_POC_SCENE_LEVEL_EDITOR
+                 ? "BANANA DX12 POC  |  LEVEL EDITOR  |  WASD MOVE  |  E APPLY HEIGHT"
+                 : "BANANA DX12 POC  |  WASD MOVE  |  RIGHT-CLICK MOVE TARGET  |  ESC QUIT");
 
     if (startup_smoke_mode)
     {
@@ -392,7 +541,19 @@ static void render_ui_overlay(HWND game_window,
     engine_ui_text(22.0f, 48.0f, line_two);
     engine_ui_text(22.0f, 72.0f, line_three);
     engine_ui_text(22.0f, 124.0f, line_four);
-    engine_ui_text(22.0f, 148.0f, line_five);
+    if (scene == BANANA_POC_SCENE_LEVEL_EDITOR)
+    {
+        char editor_line[160];
+        snprintf(editor_line,
+                 sizeof(editor_line),
+                 "EDITOR HEIGHT=%d  |  [ and ] adjust  |  E apply at player  |  M menu",
+                 editor_height);
+        engine_ui_text(22.0f, 148.0f, editor_line);
+    }
+    else
+    {
+        engine_ui_text(22.0f, 148.0f, line_five);
+    }
     engine_ui_text(minimap_x + 10.0f, minimap_y + 10.0f, "MINIMAP (TERRAIN + ACTORS)");
 
     engine_ui_panel(minimap_x + 10.0f,
@@ -474,9 +635,26 @@ int main(void)
     int startup_smoke_seconds = 0;
     int auto_target_enabled = 1;
     int target_hotkey_enabled = 0;
+    int telemetry_enabled = 1;
+    BananaPocScene scene = BANANA_POC_SCENE_MAIN_MENU;
+    int menu_index = 0;
+    int character_index = 0;
+    int class_index = 0;
+    int options_index = 0;
+    int level_editor_height = 2;
     int exit_code = 0;
     int last_rbutton_down = 0;
     int last_target_hotkey_down = 0;
+    int last_up_down = 0;
+    int last_down_down = 0;
+    int last_left_down = 0;
+    int last_right_down = 0;
+    int last_enter_down = 0;
+    int last_menu_hotkey_down = 0;
+    int last_apply_edit_down = 0;
+    int last_raise_edit_down = 0;
+    int last_lower_edit_down = 0;
+    int last_escape_down = 0;
     int auto_target_injected = 0;
 
     if (!QueryPerformanceFrequency(&frequency) || !QueryPerformanceCounter(&previous_counter))
@@ -486,7 +664,7 @@ int main(void)
     }
 
     printf("[dx12-poc] launching Banana playable prototype\n");
-    printf("[dx12-poc] controls: WASD move, right-click move target, ESC quit\n");
+    printf("[dx12-poc] controls: arrows navigate menus, Enter select, WASD in world, ESC back/quit\n");
     printf("[dx12-poc] backend requested=%s active=%s status=%s\n",
            banana_render_backend_name(banana_render_backend_requested()),
            banana_render_backend_name(banana_render_backend_active()),
@@ -530,9 +708,161 @@ int main(void)
         int objective_collected = 0;
         int tick_result = 0;
 
-        if (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+        if (consume_key_press(VK_ESCAPE, &last_escape_down))
         {
-            break;
+            if (scene == BANANA_POC_SCENE_MAIN_MENU)
+            {
+                break;
+            }
+            scene = BANANA_POC_SCENE_MAIN_MENU;
+            engine_set_move_input(0.0f, 0.0f);
+        }
+
+        if (consume_key_press('M', &last_menu_hotkey_down) &&
+            (scene == BANANA_POC_SCENE_WORLD || scene == BANANA_POC_SCENE_LEVEL_EDITOR))
+        {
+            scene = BANANA_POC_SCENE_MAIN_MENU;
+            engine_set_move_input(0.0f, 0.0f);
+        }
+
+        if (scene == BANANA_POC_SCENE_MAIN_MENU)
+        {
+            if (consume_key_press(VK_UP, &last_up_down) && menu_index > 0)
+                menu_index--;
+            if (consume_key_press(VK_DOWN, &last_down_down) && menu_index < 4)
+                menu_index++;
+            if (consume_key_press(VK_RETURN, &last_enter_down))
+            {
+                if (menu_index == 0)
+                {
+                    static const char *k_character_names[] = {
+                        "DX12 Pilot",
+                        "Vanguard One",
+                        "Arcanist Flux",
+                        "Ranger Echo",
+                    };
+                    if (engine_player_upsert("native-default-player",
+                                             k_character_names[character_index],
+                                             "human",
+                                             1) != 0)
+                    {
+                        (void)engine_player_build_set_class("native-default-player", class_index);
+                    }
+                    scene = BANANA_POC_SCENE_WORLD;
+                }
+                else if (menu_index == 1)
+                {
+                    scene = BANANA_POC_SCENE_CHARACTER_SELECT;
+                }
+                else if (menu_index == 2)
+                {
+                    scene = BANANA_POC_SCENE_LEVEL_EDITOR;
+                }
+                else if (menu_index == 3)
+                {
+                    scene = BANANA_POC_SCENE_OPTIONS;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        else if (scene == BANANA_POC_SCENE_CHARACTER_SELECT)
+        {
+            if (consume_key_press(VK_LEFT, &last_left_down) && character_index > 0)
+                character_index--;
+            if (consume_key_press(VK_RIGHT, &last_right_down) && character_index < 3)
+                character_index++;
+            if (consume_key_press(VK_UP, &last_up_down) && class_index > 0)
+                class_index--;
+            if (consume_key_press(VK_DOWN, &last_down_down) && class_index < 2)
+                class_index++;
+
+            if (consume_key_press(VK_RETURN, &last_enter_down))
+            {
+                static const char *k_character_names[] = {
+                    "DX12 Pilot",
+                    "Vanguard One",
+                    "Arcanist Flux",
+                    "Ranger Echo",
+                };
+                if (engine_player_upsert("native-default-player",
+                                         k_character_names[character_index],
+                                         "human",
+                                         1) == 0)
+                {
+                    fprintf(stderr, "[dx12-poc] character apply failed\n");
+                }
+                else
+                {
+                    (void)engine_player_build_set_class("native-default-player", class_index);
+                    scene = BANANA_POC_SCENE_WORLD;
+                }
+            }
+        }
+        else if (scene == BANANA_POC_SCENE_OPTIONS)
+        {
+            if (consume_key_press(VK_UP, &last_up_down) && options_index > 0)
+                options_index--;
+            if (consume_key_press(VK_DOWN, &last_down_down) && options_index < 2)
+                options_index++;
+
+            if (consume_key_press(VK_LEFT, &last_left_down) ||
+                consume_key_press(VK_RIGHT, &last_right_down) ||
+                consume_key_press(VK_RETURN, &last_enter_down))
+            {
+                if (options_index == 0)
+                    auto_target_enabled = auto_target_enabled ? 0 : 1;
+                else if (options_index == 1)
+                    target_hotkey_enabled = target_hotkey_enabled ? 0 : 1;
+                else
+                    telemetry_enabled = telemetry_enabled ? 0 : 1;
+            }
+        }
+        else if (scene == BANANA_POC_SCENE_LEVEL_EDITOR)
+        {
+            if (consume_key_press(VK_OEM_4, &last_lower_edit_down) && level_editor_height > 0)
+                level_editor_height--;
+            if (consume_key_press(VK_OEM_6, &last_raise_edit_down) && level_editor_height < 3)
+                level_editor_height++;
+            if (consume_key_press('E', &last_apply_edit_down))
+            {
+                float px = 0.0f;
+                float pz = 0.0f;
+                if (engine_get_player_position(&px, &pz))
+                {
+                    float half_span = engine_get_terrain_half_span();
+                    int terrain_size = (int)(half_span * 2.0f + 1.0f);
+                    int ix = (int)roundf(px + half_span);
+                    int iz = (int)roundf(pz + half_span);
+
+                    if (ix < 0)
+                        ix = 0;
+                    if (iz < 0)
+                        iz = 0;
+                    if (ix >= terrain_size)
+                        ix = terrain_size - 1;
+                    if (iz >= terrain_size)
+                        iz = terrain_size - 1;
+
+                    if (engine_terrain_set_height(ix, iz, level_editor_height) != 0)
+                    {
+                        fprintf(stderr,
+                                "[dx12-poc] level-editor apply failed grid=(%d,%d) height=%d\n",
+                                ix,
+                                iz,
+                                level_editor_height);
+                    }
+                    else
+                    {
+                        printf("[dx12-poc] level-editor set grid=(%d,%d) height=%d\n",
+                               ix,
+                               iz,
+                               level_editor_height);
+                    }
+                }
+            }
         }
 
         if (!game_window)
@@ -544,13 +874,14 @@ int main(void)
         {
             objective_collected = engine_get_pbj_pickup_collected();
             update_game_hud_title(game_window,
+                                  scene,
                                   objective_collected,
                                   elapsed_seconds,
                                   objective_timeout_seconds);
             hud_updated_ms = now_ms;
         }
 
-        if (game_window)
+        if (game_window && (scene == BANANA_POC_SCENE_WORLD || scene == BANANA_POC_SCENE_LEVEL_EDITOR))
         {
             int rbutton_down = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) ? 1 : 0;
             if (rbutton_down && !last_rbutton_down)
@@ -589,6 +920,11 @@ int main(void)
                 printf("[dx12-poc] injected startup move target\n");
             }
         }
+        else
+        {
+            last_rbutton_down = 0;
+            last_target_hotkey_down = 0;
+        }
 
         if (startup_smoke_mode && elapsed_seconds >= startup_smoke_seconds)
         {
@@ -596,7 +932,10 @@ int main(void)
             break;
         }
 
-        if (!startup_smoke_mode && objective_timeout_seconds > 0 && elapsed_seconds >= objective_timeout_seconds)
+        if (!startup_smoke_mode &&
+            scene == BANANA_POC_SCENE_WORLD &&
+            objective_timeout_seconds > 0 &&
+            elapsed_seconds >= objective_timeout_seconds)
         {
             fprintf(stderr, "[dx12-poc] objective failed: PBJ pickup timeout\n");
             if (game_window)
@@ -625,7 +964,10 @@ int main(void)
             dt = 0.10f;
         }
 
-        update_keyboard_move_input();
+        if (scene == BANANA_POC_SCENE_WORLD || scene == BANANA_POC_SCENE_LEVEL_EDITOR)
+            update_keyboard_move_input();
+        else
+            engine_set_move_input(0.0f, 0.0f);
 
         tick_result = engine_tick(dt);
         if (tick_result != 0)
@@ -639,25 +981,35 @@ int main(void)
 
         objective_collected = engine_get_pbj_pickup_collected();
         render_ui_overlay(game_window,
+                          scene,
+                          menu_index,
+                          character_index,
+                          class_index,
+                          options_index,
+                          auto_target_enabled,
+                          target_hotkey_enabled,
+                          telemetry_enabled,
+                          level_editor_height,
                           elapsed_seconds,
                           objective_timeout_seconds,
                           objective_collected,
                           startup_smoke_mode);
 
-        if (objective_collected)
+        if (scene == BANANA_POC_SCENE_WORLD && objective_collected)
         {
             printf("[dx12-poc] objective complete: PBJ pickup collected\n");
             if (game_window)
             {
                 update_game_hud_title(game_window,
+                                      scene,
                                       1,
                                       elapsed_seconds,
                                       objective_timeout_seconds);
             }
-            break;
+            scene = BANANA_POC_SCENE_MAIN_MENU;
         }
 
-        if ((now_ms - telemetry_started_ms) >= 1000ULL)
+        if (telemetry_enabled && (now_ms - telemetry_started_ms) >= 1000ULL)
         {
             int entity_count = engine_get_entity_count();
             telemetry_started_ms = now_ms;
