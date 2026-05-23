@@ -1,0 +1,7 @@
+Steam Vendor Escalation Attachment Manifest
+GeneratedAt: 2026-05-22T21:38:44-05:00
+
+1) /c/Github/Banana/artifacts/security/steam-vendor/steam-vendor-incident-evidence-20260522-213843.md
+2) /c/Github/Banana/artifacts/security/steam-vendor/steam-vendor-incident-hashes-20260522-213843.txt
+3) /c/Github/Banana/docs/steam-vendor-incident-brief.md
+4) /c/Github/Banana/docs/wasm-security-remediation.md

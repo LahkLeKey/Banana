@@ -133,10 +133,26 @@
 ## Constitution Alignment *(mandatory)*
 
 - **Disclosure Integrity**: List player-facing claims (store text, AI disclosure,
-  platform requirements) that this feature affects and how they remain accurate.
+  controller support, platform requirements) that this feature affects and how they
+  remain accurate. If the feature changes a public Steam page, link the affected
+  storefront copy contract and describe the exact text/claim that changes.
 - **Cross-Domain Contracts**: Identify affected contracts across native, API,
   client runtime, and orchestration layers.
 - **Quality Gates**: Define measurable validation requirements (unit, integration,
   end-to-end, or runtime checks) for both success and failure paths.
 - **Delivery Evidence**: Specify which artifacts or logs will prove reproducible
-  behavior on supported runtime channels.
+  behavior on supported runtime channels. If the feature affects the store page,
+  include storefront screenshots, disclosure text, asset inventory, and system
+  requirement evidence.
+
+## Storefront & Release Claims *(required when public Steam copy is affected)*
+
+- **Storefront Copy Contract**: Reference the exact contract or checklist entry
+  that defines the public page text for this feature.
+- **AI Disclosure**: State the exact disclosure line to be published or updated.
+- **Controller Support**: State the declared support level and the runtime check
+  used to verify it.
+- **System Requirements**: State the minimum OS/CPU/memory/GPU/network/storage
+  claims and the validation source.
+- **Store Assets**: List the capsule/logo/screenshot assets or the inventory file
+  that proves the page assets are tracked.

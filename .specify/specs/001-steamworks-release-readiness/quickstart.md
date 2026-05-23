@@ -117,6 +117,16 @@ DEPOT_ID=<your_depot_id> STEAM_USERNAME=<steam_partner_username> STEAM_PASSWORD=
 - Add the produced executable to Steam library entry and verify launch path.
 - Execute checklist in `.specify/specs/001-steamworks-release-readiness/checklists/steam-uat-readiness.md`.
 
+## Storefront Copy Target
+
+Use [steam-storefront-copy.md](contracts/steam-storefront-copy.md) as the canonical
+reference for Steam page text, disclosure language, controller support wording,
+and minimum system requirements.
+
+When the store page or gameplay claims change, update the storefront contract and
+the binary contract together so the public page stays aligned with the shipped
+build.
+
 ## Steam Library UAT Helpers
 
 1. Generate a timestamped readiness report and log bundle:
@@ -138,3 +148,10 @@ Optional (if Steam game id is known):
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/steam-library-uat.ps1 -CandidateExe artifacts/steam-build/dev-candidate/win-unpacked/BananaEngineer.exe -SteamGameId <id>
 ```
+
+## Storefront Readiness Workstreams
+
+- Review `checklists/steam-storefront-readiness.md` for the public Steam page lanes.
+- Keep controller support, AI disclosure, system requirements, and capsule assets aligned with `contracts/steam-storefront-copy.md`.
+- Review `contracts/steam-storefront-assets.md` before changing any page image set.
+- Use the storefront checklist as the release gate for the page copy while `steam-uat-readiness.md` remains the gate for the playable build.

@@ -45,7 +45,9 @@
 [SECTION_3_CONTENT]
 <!-- Example: Code review requirements, testing gates, deployment approval process, etc.
 Repository-owned automation MUST use Bash as the default shell. Checked-in .ps1
-scripts are not allowed. -->
+scripts are not allowed. Public Steam copy changes MUST reference a storefront
+contract/checklist and keep AI disclosure, controller support, system requirements,
+and asset inventory aligned. -->
 
 ## Governance
 <!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->

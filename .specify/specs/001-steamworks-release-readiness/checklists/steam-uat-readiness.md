@@ -4,6 +4,7 @@ Target AppID: `4767150`
 
 Note: Steam partner pages are authentication-gated; run launch validation from authenticated Steam client.
 Note: Steamworks currently reports no created builds for AppID 4767150; Steam-library launch UAT is blocked until first build upload + publish.
+Note: Public storefront work is tracked separately in `steam-storefront-readiness.md`.
 
 ## Runtime Access
 
@@ -39,3 +40,9 @@ Note: Steamworks currently reports no created builds for AppID 4767150; Steam-li
 - [ ] Validate launch behavior from Steam library entry point.
 - [ ] Execute UAT matrix against Steam-installed build.
 - [ ] Capture screenshots/video/log evidence for UAT signoff.
+
+## Storefront Follow-up
+
+- [ ] Complete the Steam storefront readiness checklist (`steam-storefront-readiness.md`).
+- [ ] Sync public Steam page copy with the storefront contract.
+- [ ] Sync AI disclosure, controller support, and system requirements with release evidence.

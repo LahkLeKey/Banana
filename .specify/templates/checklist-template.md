@@ -20,17 +20,25 @@
   ============================================================================
 -->
 
+## Storefront Readiness
+
+- [ ] CHK001 Public copy matches the storefront contract or approved revision.
+- [ ] CHK002 AI disclosure text matches the canonical disclosure line.
+- [ ] CHK003 Controller support wording matches actual runtime behavior.
+- [ ] CHK004 Minimum system requirements match the build target.
+- [ ] CHK005 Store assets are tracked in the asset inventory and match the page.
+
 ## [Category 1]
 
-- [ ] CHK001 First checklist item with clear action
-- [ ] CHK002 Second checklist item
-- [ ] CHK003 Third checklist item
+- [ ] CHK006 First checklist item with clear action
+- [ ] CHK007 Second checklist item
+- [ ] CHK008 Third checklist item
 
 ## [Category 2]
 
-- [ ] CHK004 Another category item
-- [ ] CHK005 Item with specific criteria
-- [ ] CHK006 Final item in this category
+- [ ] CHK009 Another category item
+- [ ] CHK010 Item with specific criteria
+- [ ] CHK011 Final item in this category
 
 ## Notes
 
