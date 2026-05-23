@@ -137,6 +137,64 @@ void test_player_update(void)
     terrain_chunks_cleanup();
 }
 
+void test_origin_chunk_has_playable_land(void)
+{
+    terrain_chunks_init(12345, 64);
+
+    const TerrainChunk *chunk = terrain_chunks_get(0, 0);
+    ASSERT_NOT_NULL(chunk, "Origin chunk should exist");
+
+    if (chunk)
+    {
+        int land_tiles = 0;
+        int total_tiles = TERRAIN_CHUNK_SIZE * TERRAIN_CHUNK_SIZE;
+        for (int z = 0; z < TERRAIN_CHUNK_SIZE; z++)
+        {
+            for (int x = 0; x < TERRAIN_CHUNK_SIZE; x++)
+            {
+                if (chunk->biomes[z][x] != BIOME_WATER)
+                    land_tiles++;
+            }
+        }
+
+        ASSERT_EQ(land_tiles > (total_tiles / 2), 1,
+                  "Origin chunk should have majority non-water tiles");
+    }
+
+    terrain_chunks_cleanup();
+}
+
+void test_biome_variety_in_origin_neighborhood(void)
+{
+    terrain_chunks_init(12345, 64);
+
+    const TerrainChunk *chunk = terrain_chunks_get(0, 0);
+    ASSERT_NOT_NULL(chunk, "Origin chunk should exist for biome variety");
+
+    if (chunk)
+    {
+        int seen[BIOME_COUNT] = {0};
+        int unique = 0;
+
+        for (int z = 0; z < TERRAIN_CHUNK_SIZE; z++)
+        {
+            for (int x = 0; x < TERRAIN_CHUNK_SIZE; x++)
+            {
+                int biome = (int)chunk->biomes[z][x];
+                if (biome >= 0 && biome < BIOME_COUNT && !seen[biome])
+                {
+                    seen[biome] = 1;
+                    unique++;
+                }
+            }
+        }
+
+        ASSERT_EQ(unique >= 2, 1, "Origin chunk should contain multiple biome types");
+    }
+
+    terrain_chunks_cleanup();
+}
+
 int main(void)
 {
     printf("=== Terrain Chunks Tests ===\n\n");
@@ -148,6 +206,8 @@ int main(void)
     test_world_to_chunk_conversion();
     test_chunk_to_world_conversion();
     test_player_update();
+    test_origin_chunk_has_playable_land();
+    test_biome_variety_in_origin_neighborhood();
 
     printf("\n=== Results ===\n");
     printf("Passed: %d / %d\n", tests_passed, tests_run);

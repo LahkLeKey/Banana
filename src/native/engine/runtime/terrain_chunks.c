@@ -42,39 +42,82 @@ static uint32_t chunk_hash(int cx, int cz)
     return h;
 }
 
+static float clampf_local(float v, float lo, float hi)
+{
+    if (v < lo)
+        return lo;
+    if (v > hi)
+        return hi;
+    return v;
+}
+
+static float lerpf_local(float a, float b, float t)
+{
+    return a + (b - a) * t;
+}
+
+static float smoothstep_local(float t)
+{
+    t = clampf_local(t, 0.0f, 1.0f);
+    return t * t * (3.0f - (2.0f * t));
+}
+
+static uint32_t hash_noise2_i32(int x, int z, uint32_t salt)
+{
+    uint32_t h = g_terrain_chunks.seed ^ salt;
+    h ^= (uint32_t)x * 374761393U;
+    h ^= (uint32_t)z * 668265263U;
+    h = (h ^ (h >> 13)) * 1274126177U;
+    return h ^ (h >> 16);
+}
+
+static float noise2_world(int world_x, int world_z, int frequency, uint32_t salt)
+{
+    int cell_x = world_x / frequency;
+    int cell_z = world_z / frequency;
+    int frac_x = world_x % frequency;
+    int frac_z = world_z % frequency;
+    float tx = (float)frac_x / (float)frequency;
+    float tz = (float)frac_z / (float)frequency;
+
+    float v00 = (float)(hash_noise2_i32(cell_x, cell_z, salt) & 0xFFFFU) / 65535.0f;
+    float v10 = (float)(hash_noise2_i32(cell_x + 1, cell_z, salt) & 0xFFFFU) / 65535.0f;
+    float v01 = (float)(hash_noise2_i32(cell_x, cell_z + 1, salt) & 0xFFFFU) / 65535.0f;
+    float v11 = (float)(hash_noise2_i32(cell_x + 1, cell_z + 1, salt) & 0xFFFFU) / 65535.0f;
+
+    tx = smoothstep_local(tx);
+    tz = smoothstep_local(tz);
+
+    return lerpf_local(lerpf_local(v00, v10, tx),
+                       lerpf_local(v01, v11, tx),
+                       tz);
+}
+
 /**
  * Procedural heightfield generation for a chunk.
  * Uses simple pseudo-random noise based on chunk hash.
  */
 static void generate_heightfield(int chunk_x, int chunk_z, uint8_t heights[TERRAIN_CHUNK_SIZE][TERRAIN_CHUNK_SIZE])
 {
-    uint32_t base_hash = chunk_hash(chunk_x, chunk_z);
+    const int chunk_world_x = chunk_x * TERRAIN_CHUNK_SIZE;
+    const int chunk_world_z = chunk_z * TERRAIN_CHUNK_SIZE;
 
     for (int z = 0; z < TERRAIN_CHUNK_SIZE; z++)
     {
         for (int x = 0; x < TERRAIN_CHUNK_SIZE; x++)
         {
-            /* Mix hash with local position for variation within chunk */
-            uint32_t h = base_hash;
-            h ^= (uint32_t)(x + z * TERRAIN_CHUNK_SIZE) * 2654435769U;
-
-            /* Simple height gradient: higher in center, lower at edges */
-            int dx = x - TERRAIN_CHUNK_SIZE / 2;
-            int dz = z - TERRAIN_CHUNK_SIZE / 2;
-            int dist_sq = dx * dx + dz * dz;
-
-            /* Base elevation from hash */
-            int base_elev = (int)((h >> 8) & 0xFF);
-
-            /* Blend with distance-based gradient */
-            int max_dist_sq = (TERRAIN_CHUNK_SIZE / 2) * (TERRAIN_CHUNK_SIZE / 2);
-            int gradient = 100 - (dist_sq * 100) / max_dist_sq;
-            if (gradient < 0)
-                gradient = 0;
-
-            int final_height = (base_elev * 60 + gradient * 60) / 120;
-            if (final_height > 255)
-                final_height = 255;
+            int world_x = chunk_world_x + x;
+            int world_z = chunk_world_z + z;
+            float macro_noise = noise2_world(world_x, world_z, 96, 17U);
+            float medium_noise = noise2_world(world_x, world_z, 28, 53U);
+            float detail_noise = noise2_world(world_x, world_z, 8, 131U);
+            float ridged = 1.0f - fabsf((detail_noise * 2.0f) - 1.0f);
+            float radius = sqrtf((float)((world_x * world_x) + (world_z * world_z))) / 300.0f;
+            float origin_bias = 1.0f - smoothstep_local((radius - 0.78f) / 0.56f);
+            float land = (macro_noise * 0.56f) + (medium_noise * 0.22f) + (ridged * 0.18f) +
+                         (origin_bias * 0.30f);
+            float normalized = clampf_local(land, 0.0f, 1.0f);
+            int final_height = (int)(normalized * 255.0f);
 
             heights[z][x] = (uint8_t)final_height;
         }
@@ -87,32 +130,39 @@ static void generate_heightfield(int chunk_x, int chunk_z, uint8_t heights[TERRA
 static void generate_biomes(int chunk_x, int chunk_z, const uint8_t heights[TERRAIN_CHUNK_SIZE][TERRAIN_CHUNK_SIZE],
                              uint8_t biomes[TERRAIN_CHUNK_SIZE][TERRAIN_CHUNK_SIZE])
 {
-    uint32_t base_hash = chunk_hash(chunk_x, chunk_z);
+    const int chunk_world_x = chunk_x * TERRAIN_CHUNK_SIZE;
+    const int chunk_world_z = chunk_z * TERRAIN_CHUNK_SIZE;
 
     for (int z = 0; z < TERRAIN_CHUNK_SIZE; z++)
     {
         for (int x = 0; x < TERRAIN_CHUNK_SIZE; x++)
         {
+            int world_x = chunk_world_x + x;
+            int world_z = chunk_world_z + z;
             uint8_t height = heights[z][x];
+            float humidity = noise2_world(world_x, world_z, 36, 181U);
+            float roughness = noise2_world(world_x, world_z, 18, 227U);
+            float coast = noise2_world(world_x, world_z, 14, 269U);
 
-            /* Biome based on height and position hash */
-            uint32_t h = base_hash;
-            h ^= (uint32_t)(x + z * TERRAIN_CHUNK_SIZE) * 2654435769U;
-
-            if (height < 80)
+            if (height < 62)
             {
-                /* Low areas: plains or water */
-                biomes[z][x] = (h & 1) ? BIOME_PLAINS : BIOME_WATER;
+                biomes[z][x] = BIOME_WATER;
             }
-            else if (height < 150)
+            else if (height < 92)
             {
-                /* Mid areas: forest or plains */
-                biomes[z][x] = (h & 1) ? BIOME_FOREST : BIOME_PLAINS;
+                biomes[z][x] = (coast > 0.52f) ? BIOME_PLAINS : BIOME_WATER;
+            }
+            else if (height < 148)
+            {
+                biomes[z][x] = (humidity > 0.55f) ? BIOME_FOREST : BIOME_PLAINS;
+            }
+            else if (height < 200)
+            {
+                biomes[z][x] = (roughness > 0.60f) ? BIOME_RIDGE : BIOME_HILL;
             }
             else
             {
-                /* High areas: hills or ridges */
-                biomes[z][x] = (h & 1) ? BIOME_RIDGE : BIOME_HILL;
+                biomes[z][x] = BIOME_RIDGE;
             }
         }
     }
