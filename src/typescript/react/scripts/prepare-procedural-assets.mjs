@@ -27,6 +27,11 @@ const generatedSourceDir = resolve(reactRoot, "../../../artifacts/generated-asse
 const generatedPublicDir = resolve(reactRoot, "public/generated-assets");
 
 const requireAssets = process.env.BANANA_REQUIRE_GENERATED_ASSETS === "true";
+const isVercelBuild = process.env.VERCEL === "1";
+const generatedAssetPolicy = (process.env.BANANA_GENERATED_ASSET_POLICY ?? "auto").trim().toLowerCase();
+const compileMode = (process.env.BANANA_GENERATED_ASSET_COMPILE_MODE ??
+  (isVercelBuild ? "skip" : "auto")).trim().toLowerCase();
+const strictMode = requireAssets || generatedAssetPolicy === "strict";
 const seed = process.env.BANANA_GENERATED_ASSET_SEED ?? "20260509";
 const profile = process.env.BANANA_GENERATED_ASSET_PROFILE ?? "default";
 const width = process.env.BANANA_GENERATED_ASSET_WIDTH ?? "48";
@@ -34,10 +39,34 @@ const height = process.env.BANANA_GENERATED_ASSET_HEIGHT ?? "48";
 
 function failOrWarn(message, detail) {
   const rendered = detail ? `${message}: ${detail}` : message;
-  if (requireAssets) {
+  if (strictMode) {
     throw new Error(rendered);
   }
   console.warn(`[prepare-procedural-assets] ${rendered}`);
+}
+
+function resolveCompileMode() {
+  if (["skip", "auto", "force"].includes(compileMode)) {
+    return compileMode;
+  }
+
+  failOrWarn(
+    "invalid BANANA_GENERATED_ASSET_COMPILE_MODE, expected one of skip|auto|force",
+    `received ${compileMode}`
+  );
+  return "auto";
+}
+
+function resolveAssetPolicy() {
+  if (["auto", "strict"].includes(generatedAssetPolicy)) {
+    return generatedAssetPolicy;
+  }
+
+  failOrWarn(
+    "invalid BANANA_GENERATED_ASSET_POLICY, expected one of auto|strict",
+    `received ${generatedAssetPolicy}`
+  );
+  return "auto";
 }
 
 function findCompiler() {
@@ -150,11 +179,25 @@ function main() {
   const binaryName =
     process.platform === "win32" ? "banana_asset_compiler.exe" : "banana_asset_compiler";
   const binaryPath = resolve(compilerBuildDir, binaryName);
+  const policy = resolveAssetPolicy();
+  const mode = resolveCompileMode();
 
-  if (process.env.BANANA_SKIP_GENERATED_ASSET_COMPILE !== "true") {
+  console.log(
+    `[prepare-procedural-assets] policy=${policy} strict=${strictMode} compileMode=${mode} vercel=${isVercelBuild}`
+  );
+
+  if (mode === "skip" || process.env.BANANA_SKIP_GENERATED_ASSET_COMPILE === "true") {
+    console.log("[prepare-procedural-assets] skipping native compiler step");
+    copyToPublic();
+    return;
+  }
+
+  if (mode === "auto" || mode === "force") {
     const compiled = compileBinary(binaryPath);
     if (compiled) {
       runCompiler(binaryPath);
+    } else if (mode === "force") {
+      failOrWarn("compile mode=force requires banana_asset_compiler to build successfully");
     }
   }
 
