@@ -75,6 +75,17 @@ Provide or request the following evidence for incident closure:
 5. Publish authorization and approval event logs.
 6. CDN/cache invalidation timeline for affected assets.
 
+Generate a local infrastructure evidence pack before outreach:
+
+```bash
+bash scripts/generate-steam-vendor-incident-evidence.sh
+```
+
+Output location:
+
+- `artifacts/security/steam-vendor/steam-vendor-incident-evidence-<timestamp>.md`
+- `artifacts/security/steam-vendor/steam-vendor-incident-hashes-<timestamp>.txt`
+
 ## Requested Steam-Side Actions
 
 1. Validate beta branch/depot mapping and access policy for the affected app.

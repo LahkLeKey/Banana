@@ -58,6 +58,7 @@ Use `steam-storefront-copy.md` as the canonical claim target.
 - [ ] Record upload/publish actor timeline and manifest identifiers for incident forensics.
 - [ ] Confirm release communication to vendor uses infra-first framing from `docs/steam-vendor-incident-brief.md`.
 - [ ] Confirm closure criteria from `docs/steam-vendor-incident-brief.md` are met before storefront signoff.
+- [ ] Generate and attach vendor evidence pack via `bash scripts/generate-steam-vendor-incident-evidence.sh`.
 
 ## Signoff Evidence
 
