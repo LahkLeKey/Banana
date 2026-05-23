@@ -908,7 +908,8 @@ export function GameEnginePage() {
       try {
         const mod = await window.BananaEngine({
           canvas,
-          locateFile: (path, prefix) => `${prefix}${path}?v=${engineAssetVersion}`,
+          // Always resolve from local static assets, never script-origin prefixes.
+          locateFile: (path) => `/wasm/${path.replace(/^\/+/, "")}?v=${engineAssetVersion}`,
           printErr: (text) => {
             applyRuntimeFatal(text);
           },
