@@ -3,11 +3,9 @@
 #include "render/backend.h"
 #include "ai/npc_merchant.h"
 #include "ai/wildlife_controller.h"
-#include "ui/ui.h"
 #include "runtime/controller_sync.h"
 #include "runtime/application_service_ports.h"
-#include "runtime/controller_runtime.h"
-#include "runtime/controller_attach.h"
+#include "runtime/engine_aux_abi.h"
 #include "runtime/engine_composition.h"
 #include "runtime/engine_host.h"
 #include "runtime/engine_state.h"
@@ -19,17 +17,17 @@
 #include "runtime/move_target_service.h"
 #include "runtime/player_runtime_service.h"
 #include "runtime/render_material.h"
-#include "runtime/move_target_domain.h"
 #include "runtime/player_motion.h"
 #include "runtime/player_motion_host.h"
 #include "runtime/player_api.h"
-#include "runtime/player_builds.h"
+#include "runtime/player_build_abi.h"
 #include "runtime/merchant_abi.h"
 #include "runtime/merchant_trade_domain.h"
 #include "runtime/player_resource_abi.h"
+#include "runtime/player_sync_abi.h"
 #include "runtime/player_registry.h"
 #include "runtime/physics_abi.h"
-#include "runtime/input_contract.h"
+#include "runtime/input_abi.h"
 #include "runtime/resource_domain.h"
 #include "runtime/render_submit.h"
 #include "runtime/terrain_generation.h"
@@ -39,7 +37,7 @@
 #include "runtime/world_abi.h"
 #include "runtime/world_telemetry.h"
 #include "runtime/wildlife_gameplay.h"
-#include <math.h>
+#include "runtime/ui_abi.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -66,14 +64,9 @@ static const RuntimeApplicationServicePorts *s_service_ports = NULL;
 #define s_terrain_height (s_engine_state.terrain_height)
 #define s_terrain_chunks (s_engine_state.terrain_chunks)
 #define s_terrain_initialized (s_engine_state.terrain_initialized)
-#define s_viewport_width (s_engine_state.viewport_width)
-#define s_viewport_height (s_engine_state.viewport_height)
 #define s_camera_eye (s_engine_state.camera_eye)
 #define s_camera_target (s_engine_state.camera_target)
 #define s_camera_valid (s_engine_state.camera_valid)
-#define s_move_input_x (s_engine_state.move_input_x)
-#define s_move_input_z (s_engine_state.move_input_z)
-#define s_move_target_state (s_engine_state.move_target_state)
 #define s_merchants_seeded (s_engine_state.merchants_seeded)
 #define s_pbj_pickup_collected (s_engine_state.pbj_pickup_collected)
 #define s_controllers (s_engine_state.controllers)
@@ -200,127 +193,129 @@ void engine_terrain_mark_region_dirty(int min_x, int min_z, int max_x, int max_z
 /* Controller ABI */
 uint32_t engine_controller_create(const char *type, float x, float y, float z)
 {
-    return runtime_controller_create_and_register(s_controllers,
-                                                  BANANA_MAX_ACTIVE_CONTROLLERS,
-                                                  &s_controller_count,
-                                                  type,
-                                                  x,
-                                                  y,
-                                                  z);
+    return runtime_engine_aux_controller_create(s_controllers,
+                                                BANANA_MAX_ACTIVE_CONTROLLERS,
+                                                &s_controller_count,
+                                                type,
+                                                x,
+                                                y,
+                                                z);
 }
 
 uint32_t engine_controller_attach(uint32_t entity_id, const char *type)
 {
-    return runtime_controller_attach_to_entity(s_world,
-                                               s_controllers,
-                                               BANANA_MAX_ACTIVE_CONTROLLERS,
-                                               &s_controller_count,
-                                               entity_id,
-                                               type);
+    RuntimeEngineAuxContext context;
+    context.world = s_world;
+    context.controllers = s_controllers;
+    context.controller_count = s_controller_count;
+
+    return runtime_engine_aux_controller_attach(context,
+                                                BANANA_MAX_ACTIVE_CONTROLLERS,
+                                                &s_controller_count,
+                                                entity_id,
+                                                type);
 }
 
 void engine_controller_update(uint32_t id, float dt)
 {
-    runtime_controller_update_by_id(s_controllers, s_controller_count, id, dt);
+    RuntimeEngineAuxContext context;
+    context.world = s_world;
+    context.controllers = s_controllers;
+    context.controller_count = s_controller_count;
+    runtime_engine_aux_controller_update(context, id, dt);
 }
 
 void engine_controller_signal(uint32_t id, const char *sig)
 {
-    runtime_controller_signal_by_id(s_controllers, s_controller_count, id, sig, NULL);
+    RuntimeEngineAuxContext context;
+    context.world = s_world;
+    context.controllers = s_controllers;
+    context.controller_count = s_controller_count;
+    runtime_engine_aux_controller_signal(context, id, sig);
 }
 
 /* Entity query helpers for React telemetry overlay */
 int engine_get_entity_count(void)
 {
-    return runtime_world_entity_count(s_world);
+    return runtime_engine_aux_entity_count(s_world);
 }
 
 float engine_get_entity_x(int idx)
 {
-    return runtime_world_entity_x(s_world, idx);
+    return runtime_engine_aux_entity_x(s_world, idx);
 }
 
 float engine_get_entity_z(int idx)
 {
-    return runtime_world_entity_z(s_world, idx);
+    return runtime_engine_aux_entity_z(s_world, idx);
 }
 
 /* Returns current FSM state index via the bound controller (0 = no controller) */
 int engine_get_entity_state(int idx)
 {
-    return runtime_world_entity_state(s_world, idx, s_controllers, s_controller_count);
+    RuntimeEngineAuxContext context;
+    context.world = s_world;
+    context.controllers = s_controllers;
+    context.controller_count = s_controller_count;
+    return runtime_engine_aux_entity_state(context, idx);
 }
 
 int engine_get_active_player_count(void)
 {
-    return runtime_world_active_player_count(s_world);
+    return runtime_engine_aux_active_player_count(s_world);
 }
 
 int engine_get_parallel_sync_available(void)
 {
-    return runtime_controller_sync_parallel_available();
+    return runtime_engine_aux_parallel_sync_available();
 }
 
 int engine_get_parallel_sync_enabled(void)
 {
-    return runtime_controller_sync_parallel_available();
+    return runtime_engine_aux_parallel_sync_available();
 }
 
 /* ── Debug diagnostics (exported for JavaScript) ───────────────────────── */
 int engine_get_click_count(void)
 {
-    return runtime_input_contract_get_click_count();
+    return runtime_input_abi_get_click_count();
 }
 
 int engine_get_target_reached_count(void)
 {
-    return runtime_input_contract_get_target_reached_count();
+    return runtime_input_abi_get_target_reached_count();
 }
 
 int engine_get_has_move_target(void)
 {
-    return runtime_input_contract_get_has_move_target();
+    return runtime_input_abi_get_has_move_target();
 }
 
 int engine_handle_right_click(float canvas_x, float canvas_y)
 {
-    int accepted = runtime_input_contract_handle_right_click(canvas_x, canvas_y);
-    if (accepted && s_viewport_width > 0 && s_viewport_height > 0)
-    {
-        float normalized_x = (canvas_x / (float)s_viewport_width) * 2.f - 1.f;
-        float normalized_y = 1.f - (canvas_y / (float)s_viewport_height) * 2.f;
-        if (runtime_input_contract_handle_right_click_normalized(normalized_x, normalized_y))
-            runtime_engine_composition_apply_click_input(&s_engine_state,
-                                                         normalized_x,
-                                                         normalized_y,
-                                                         terrain_sample_height);
-    }
-    return accepted;
+    RuntimeInputCanvasPoint canvas;
+    canvas.x = canvas_x;
+    canvas.y = canvas_y;
+
+    return runtime_input_abi_handle_right_click(&s_engine_state,
+                                                canvas,
+                                                terrain_sample_height);
 }
 
 int engine_handle_right_click_normalized(float screen_x, float screen_y)
 {
-    int accepted = runtime_input_contract_handle_right_click_normalized(screen_x, screen_y);
-    if (accepted)
-        runtime_engine_composition_apply_click_input(&s_engine_state,
-                                                     screen_x,
-                                                     screen_y,
-                                                     terrain_sample_height);
-    return accepted;
+    RuntimeScreenNormalizedPoint normalized;
+    normalized.x = screen_x;
+    normalized.y = screen_y;
+
+    return runtime_input_abi_handle_right_click_normalized(&s_engine_state,
+                                                           normalized,
+                                                           terrain_sample_height);
 }
 
 void engine_set_move_input(float input_x, float input_z)
 {
-    runtime_input_contract_sanitize_move_input(input_x,
-                                               input_z,
-                                               &s_move_input_x,
-                                               &s_move_input_z);
-
-    if (fabsf(s_move_input_x) > 1e-4f || fabsf(s_move_input_z) > 1e-4f)
-    {
-        runtime_move_target_clear(&s_move_target_state);
-        runtime_input_contract_set_has_move_target(0);
-    }
+    runtime_input_abi_set_move_input(&s_engine_state, input_x, input_z);
 }
 
 uint32_t engine_player_upsert(const char *player_guid, const char *player_name,
@@ -360,78 +355,64 @@ void engine_player_set_transform(const char *player_guid, float x, float y, floa
 
 void engine_player_sync_mark_seen(const char *player_guid, int64_t current_time_ms)
 {
-    runtime_player_registry_mark_seen(player_guid, current_time_ms);
+    runtime_player_sync_abi_mark_seen(player_guid, current_time_ms);
 }
 
 void engine_player_sync_update_staleness(int64_t current_time_ms, int64_t stale_threshold_ms)
 {
-    runtime_player_registry_update_staleness(current_time_ms, stale_threshold_ms);
+    RuntimePlayerSyncWindow window;
+    window.current_time_ms = current_time_ms;
+    window.stale_threshold_ms = stale_threshold_ms;
+    runtime_player_sync_abi_update_staleness(window);
 }
 
 void engine_player_sync_deactivate_stale(void)
 {
-    runtime_player_registry_deactivate_stale();
+    runtime_player_sync_abi_deactivate_stale();
 }
 
 int engine_player_sync_count_active(void)
 {
-    return runtime_player_registry_count_active();
+    return runtime_player_sync_abi_count_active();
 }
 
 /* ─────────────────────────────────────────────────────────────────
    UI System (Immediate-Mode Native UI)
    ───────────────────────────────────────────────────────────────── */
 
-/* Global UI context (managed by engine) */
-UIContext *g_ui_context = NULL;
-
 int engine_ui_init(int width, int height)
 {
-    if (g_ui_context) {
-        return 0; /* Already initialized */
-    }
-    
-    g_ui_context = ui_context_create(width, height);
-    return g_ui_context ? 0 : -1;
+    return runtime_ui_abi_init(width, height);
 }
 
 void engine_ui_begin_frame(void)
 {
-    if (g_ui_context) {
-        ui_begin_frame(g_ui_context);
-    }
+    runtime_ui_abi_begin_frame();
 }
 
 int engine_ui_inventory_panel(float x, float y)
 {
-    if (!g_ui_context) return 0;
-    return ui_inventory_panel(g_ui_context, x, y);
+    return runtime_ui_abi_inventory_panel(x, y);
 }
 
 int engine_ui_merchant_dialog(float x, float y, int npc_id)
 {
-    if (!g_ui_context) return 0;
-    return ui_merchant_dialog(g_ui_context, x, y, npc_id);
+    return runtime_ui_abi_merchant_dialog(x, y, npc_id);
 }
 
 void engine_ui_end_frame(void)
 {
-    if (g_ui_context) {
-        ui_end_frame(g_ui_context);
-    }
+    runtime_ui_abi_end_frame();
 }
 
 const unsigned char *engine_ui_get_framebuffer(void)
 {
-    return g_ui_context ? ui_get_framebuffer(g_ui_context) : NULL;
+    return runtime_ui_abi_get_framebuffer();
 }
 
 void engine_ui_shutdown(void)
 {
-    if (g_ui_context) {
-        ui_context_destroy(g_ui_context);
-        g_ui_context = NULL;
-    }
+    runtime_ui_abi_shutdown();
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -450,13 +431,7 @@ int engine_player_add_resource(const char *resource_type, int amount)
 
 int engine_player_build_set_class(const char *player_guid, int class_type)
 {
-    BuildClass parsed_class;
-    if (player_builds_parse_class(class_type, &parsed_class) != 0)
-    {
-        return -1;
-    }
-
-    return player_builds_upsert(player_guid, parsed_class);
+    return runtime_player_build_abi_set_class(player_guid, class_type);
 }
 
 int engine_player_build_set_allocations(const char *player_guid,
@@ -464,10 +439,10 @@ int engine_player_build_set_allocations(const char *player_guid,
                                         int defense_points,
                                         int utility_points)
 {
-    return player_builds_set_allocations(player_guid,
-                                         offense_points,
-                                         defense_points,
-                                         utility_points);
+    return runtime_player_build_abi_set_allocations(player_guid,
+                                                    offense_points,
+                                                    defense_points,
+                                                    utility_points);
 }
 
 int engine_player_build_equip(const char *player_guid,
@@ -477,39 +452,17 @@ int engine_player_build_equip(const char *player_guid,
                               int defense_bonus,
                               int utility_bonus)
 {
-    GearSlot parsed_slot;
-    GearModifier gear;
-
-    if (player_builds_parse_gear_slot(slot, &parsed_slot) != 0)
-    {
-        return -1;
-    }
-
-    gear.tier = tier;
-    gear.attack_bonus = attack_bonus;
-    gear.defense_bonus = defense_bonus;
-    gear.utility_bonus = utility_bonus;
-    return player_builds_equip(player_guid, parsed_slot, &gear);
+    return runtime_player_build_abi_equip(player_guid,
+                                          slot,
+                                          tier,
+                                          attack_bonus,
+                                          defense_bonus,
+                                          utility_bonus);
 }
 
 int engine_player_build_get_stat(const char *player_guid, const char *stat_name)
 {
-    BuildStat stat;
-    BuildStats stats;
-    int stat_value = -1;
-
-    if (player_builds_parse_stat_name(stat_name, &stat) != 0 ||
-        player_builds_get_stats(player_guid, &stats) != 0)
-    {
-        return -1;
-    }
-
-    if (player_builds_stat_value(&stats, stat, &stat_value) != 0)
-    {
-        return -1;
-    }
-
-    return stat_value;
+    return runtime_player_build_abi_get_stat(player_guid, stat_name);
 }
 
 int engine_player_combo_evaluate(const char *player_guid,
@@ -521,21 +474,14 @@ int engine_player_combo_evaluate(const char *player_guid,
                                  int *out_mitigation_bonus_pct,
                                  int *out_party_synergy_bonus_pct)
 {
-    ComboOutcome outcome;
-    int result = player_builds_evaluate_combo(player_guid,
-                                              first_skill,
-                                              second_skill,
-                                              elapsed_ms,
-                                              party_size,
-                                              &outcome);
-    if (result < 0) {
-        return -1;
-    }
-
-    if (out_damage_bonus_pct) *out_damage_bonus_pct = outcome.damage_bonus_pct;
-    if (out_mitigation_bonus_pct) *out_mitigation_bonus_pct = outcome.mitigation_bonus_pct;
-    if (out_party_synergy_bonus_pct) *out_party_synergy_bonus_pct = outcome.party_synergy_bonus_pct;
-    return outcome.triggered;
+    return runtime_player_build_abi_evaluate_combo(player_guid,
+                                                   first_skill,
+                                                   second_skill,
+                                                   elapsed_ms,
+                                                   party_size,
+                                                   out_damage_bonus_pct,
+                                                   out_mitigation_bonus_pct,
+                                                   out_party_synergy_bonus_pct);
 }
 
 static int engine_player_get_resource_by_key(RuntimeResourceKey resource_key)

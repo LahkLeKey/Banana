@@ -35,9 +35,6 @@ static int ui_callback_sell_ore(void *user_data) {
     return engine_npc_merchant_trade_sell(npc_id, "ore", 1);
 }
 
-/* Forward declaration: engine.c manages global UI context */
-extern UIContext *g_ui_context;
-
 /* Get UI callback for a specific trade action */
 UICallback ui_get_trade_callback(int trade_action, int npc_id) {
     switch (trade_action) {

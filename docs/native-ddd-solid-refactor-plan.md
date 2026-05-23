@@ -52,10 +52,25 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 
 ## Latest Execution Evidence
 - Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase6-step2.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase6-step3.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase7-step1.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase7-step2.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase7-step3.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase7-step4.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase7-step5.txt`
 
 ### Phase 6: Engine Facade Decomposition (Next Bulk TODOs)
 - [x] Extract merchant ABI orchestration from `engine.c` into a dedicated runtime facade to reduce global-state coupling at the ABI edge.
 - [x] Add runtime facade regression coverage for delegation and guard behavior (`world_ready`, null item, invalid quantity).
 - [x] Extract player/resource ABI wrapper orchestration from `engine.c` into a dedicated runtime facade with typed-key helpers.
 - [x] Add runtime player/resource facade regression coverage for parse guards, key-based mutations, and null-player behavior.
-- [ ] Continue extracting remaining ABI wrapper seams (input diagnostics and auxiliary wrappers) into runtime facades while preserving public C API signatures.
+- [x] Extract input diagnostics and click/move intent wrappers into `runtime/input_abi` with typed canvas and normalized point boundaries.
+- [x] Add runtime input ABI regression coverage for click delegation, viewport normalization, and move-input cancellation guards.
+- [ ] Extract remaining auxiliary wrappers (UI/system and sync helpers) into focused runtime facades while preserving public C API signatures.
+
+### Phase 7: Bulk TODO Plan (Queued)
+- [x] Extract player build/stat wrappers from `engine.c` into `runtime/player_build_abi` with typed stat/key value objects and boundary parsing.
+- [x] Introduce a dedicated `runtime/ui_abi` facade to isolate UI context lifecycle and panel/dialog orchestration from `engine.c` globals.
+- [x] Extract multiplayer sync wrappers into `runtime/player_sync_abi` so player staleness/active-count contracts live behind one facade.
+- [x] Add compile-time ABI guard assertions ensuring public wrapper signatures remain stable while internal facades evolve.
+- [x] Add seam-level regression tests for each new facade and rerun full CTest with archived evidence.

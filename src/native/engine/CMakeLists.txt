@@ -64,12 +64,14 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/controller_attach.c
   runtime/controller_runtime.c
   runtime/controller_sync.c
+  runtime/engine_aux_abi.c
   runtime/engine_composition.c
   runtime/engine_host.c
   runtime/engine_state.c
   runtime/engine_lifecycle.c
   runtime/engine_tick.c
   runtime/gameplay_service.c
+  runtime/input_abi.c
   runtime/input_contract.c
   runtime/input_binding.c
   runtime/merchant_trade_domain.c
@@ -83,9 +85,11 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/parallel_model.c
   runtime/physics_abi.c
   runtime/player_api.c
+  runtime/player_build_abi.c
   runtime/player_builds.c
   runtime/player_runtime_service.c
   runtime/player_resource_abi.c
+  runtime/player_sync_abi.c
   runtime/player_motion_host.c
   runtime/player_motion.c
   runtime/player_registry.c
@@ -98,6 +102,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/resource_domain.c
   runtime/terrain_features.c
   runtime/terrain_generation.c
+  runtime/ui_abi.c
   runtime/terrain_host.c
   runtime/terrain_height.c
   runtime/terrain_mutation.c
@@ -475,6 +480,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_runtime_controller_world_metrics_test COMMAND banana_runtime_controller_world_metrics_test)
 
+  add_executable(banana_runtime_engine_aux_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_engine_aux_abi_test.c
+  )
+  target_link_libraries(banana_runtime_engine_aux_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_engine_aux_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_engine_aux_abi_test COMMAND banana_runtime_engine_aux_abi_test)
+
   add_executable(banana_runtime_telemetry_input_contract_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_telemetry_input_contract_test.c
   )
@@ -487,6 +506,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_runtime_telemetry_input_contract_test COMMAND banana_runtime_telemetry_input_contract_test)
+
+  add_executable(banana_runtime_input_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_input_abi_test.c
+  )
+  target_link_libraries(banana_runtime_input_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_input_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_input_abi_test COMMAND banana_runtime_input_abi_test)
 
   add_executable(banana_engine_input_contract_transition_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_input_contract_transition_test.c
@@ -633,6 +666,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
   add_test(NAME banana_runtime_player_builds_integration_test COMMAND banana_runtime_player_builds_integration_test)
+
+  add_executable(banana_runtime_player_build_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_build_abi_test.c
+  )
+  target_link_libraries(banana_runtime_player_build_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_player_build_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_player_build_abi_test COMMAND banana_runtime_player_build_abi_test)
 
   add_executable(banana_runtime_render_material_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_render_material_test.c
@@ -793,6 +840,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_player_sync_staleness_test COMMAND banana_player_sync_staleness_test)
 
+  add_executable(banana_runtime_player_sync_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_sync_abi_test.c
+  )
+  target_link_libraries(banana_runtime_player_sync_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_player_sync_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_player_sync_abi_test COMMAND banana_runtime_player_sync_abi_test)
+
   add_executable(banana_interactive_objects_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/interactive_objects_test.c
   )
@@ -873,6 +934,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_ui_system_test COMMAND banana_ui_system_test)
 
+  add_executable(banana_runtime_ui_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_ui_abi_test.c
+  )
+  target_link_libraries(banana_runtime_ui_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_ui_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_ui_abi_test COMMAND banana_runtime_ui_abi_test)
+
   add_executable(banana_native_ui_abi_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/native_ui_abi_test.c
   )
@@ -943,6 +1018,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
   add_test(NAME banana_runtime_domain_adapters_test COMMAND banana_runtime_domain_adapters_test)
+
+  add_executable(banana_runtime_compile_guard_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_compile_guard_abi_test.c
+  )
+  target_link_libraries(banana_runtime_compile_guard_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_compile_guard_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_compile_guard_abi_test COMMAND banana_runtime_compile_guard_abi_test)
 
   add_executable(banana_runtime_merchant_service_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_merchant_service_test.c
