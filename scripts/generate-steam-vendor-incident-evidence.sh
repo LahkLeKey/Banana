@@ -71,12 +71,6 @@ GIT_BRANCH="$(git -C "${ROOT_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || ec
 
 {
   echo "label|path|status|size_bytes|sha256"
-  record_artifact "wasm_engine_out_js" "out/wasm/engine.js"
-  record_artifact "wasm_engine_out_wasm" "out/wasm/engine.wasm"
-  record_artifact "wasm_engine_public_js" "src/typescript/react/public/wasm/engine.js"
-  record_artifact "wasm_engine_public_wasm" "src/typescript/react/public/wasm/engine.wasm"
-  record_artifact "wasm_engine_artifact_js" "artifacts/wasm/banana-wasm-engine.js"
-  record_artifact "wasm_engine_artifact_wasm" "artifacts/wasm/banana-wasm-engine.wasm"
   record_generated_assets
 } > "${HASH_FILE}"
 
