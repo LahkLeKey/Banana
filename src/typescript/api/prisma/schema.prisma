@@ -12,7 +12,7 @@ datasource db {
 // === Polymorphic API audit log (collapses 5 v1 *ApiCall tables) ===
 model ApiCall {
     id           BigInt   @id @default(autoincrement())
-    domain       String // banana | batch | ripeness | not-banana | ml
+    domain       String // banana | batch | ripeness | ml
     route        String
     statusCode   Int
     requestJson  String
@@ -32,25 +32,11 @@ model BananaCalculation {
     createdAt  DateTime @default(now())
 }
 
-model NotBananaClassification {
-    id                   BigInt   @id @default(autoincrement())
-    classification       String
-    bananaProbability    Float
-    notBananaProbability Float
-    junkConfidence       Float
-    actorCount           Int
-    entityCount          Int
-    requestJson          String
-    responseJson         String
-    source               String
-    createdAt            DateTime @default(now())
-}
-
 // === Model Registry (feature 079) ===
 // Append-only; promotions create a new row, no updates.
 model ModelRelease {
     id                  BigInt               @id @default(autoincrement())
-    modelName           String // banana | not-banana | ripeness
+    modelName           String // banana | ripeness
     version             String // semver string e.g. "1.4.2"
     artifactPath        String // content-addressed storage key / path
     artifactHash        String // sha256 hex of the artifact archive

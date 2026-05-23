@@ -19,7 +19,6 @@
   "dependencies": {
     "@fastify/helmet": "^13.0.2",
     "@fastify/rate-limit": "^10.0.0",
-    "@prisma/client": "^7.0.0",
     "fastify": "^5.0.0",
     "jose": "^6.2.3",
     "pg-boss": "^12.18.2",
@@ -28,7 +27,6 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@sentry/node": "^10.51.0",
     "@stryker-mutator/core": "^8.0.0",
     "@types/bun": "latest",
     "@types/ws": "^8.18.1",

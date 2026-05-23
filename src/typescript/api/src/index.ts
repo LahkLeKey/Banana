@@ -5,22 +5,9 @@ import helmet from '@fastify/helmet';
 import Fastify from 'fastify';
 
 import {registerChatRoutes} from './domains/chat/routes.ts';
-import {registerNotBananaRoutes} from './domains/not-banana/routes.ts';
-import {registerLabelQueueRoutes} from './domains/training/label-queue.ts';
-import {registerTrainingWorkbenchRoutes} from './domains/training/routes.ts';
-import {registerJobRoutes, startJobQueue} from './jobs/jobs.ts';
-import {registerAuditLogPlugin} from './plugins/audit-log.ts';
 import {registerRateLimitPlugin} from './plugins/rate-limit.ts';
-import {registerAuditRoutes} from './routes/audit.ts';
-import {registerCorpusRoutes} from './routes/corpus.ts';
-import {registerDriftRoutes} from './routes/drift.ts';
 import {registerGameSessionRoutes} from './routes/game-session.ts';
 import {registerHealthRoutes} from './routes/health.ts';
-import {registryRoutes} from './routes/registry.ts';
-import {registerRipenessRoutes} from './routes/ripeness.ts';
-import {registerStreamingChatRoutes} from './routes/streaming-chat.ts';
-import {registerStreamingRoutes} from './routes/streaming.ts';
-import {webhooksRoutes} from './routes/webhooks.ts';
 import {registerWorldRoutes} from './routes/world.ts';
 
 const app = Fastify({logger: true});
@@ -45,9 +32,6 @@ await app.register(helmet, {
 
 // Spec #068 — rate limiting (must register before routes)
 await registerRateLimitPlugin(app);
-
-// Spec #069 — audit log (hooks onResponse, must register before routes)
-await registerAuditLogPlugin(app);
 
 // Spec #126 — BANANA_CORS_ORIGINS: comma-separated list of allowed origins.
 // Defaults to localhost dev servers when the env var is absent.
@@ -76,29 +60,11 @@ app.addHook('onRequest', async (request, reply) => {
 
 await registerHealthRoutes(app);
 await registerGameSessionRoutes(app);
-await registerCorpusRoutes(app);
-await registerRipenessRoutes(app);
-await registerDriftRoutes(app);
-await registerNotBananaRoutes(app);
 await registerChatRoutes(app);
-await registerTrainingWorkbenchRoutes(app);
-await registerLabelQueueRoutes(app);
-await app.register(registryRoutes);
-await app.register(webhooksRoutes);
-await registerJobRoutes(app);
-await registerAuditRoutes(app);
-await registerStreamingRoutes(app);
-await registerStreamingChatRoutes(app);
 await registerWorldRoutes(app);
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? '0.0.0.0';
-
-// Spec #070 — start durable job queue after server is ready
-app.addHook('onReady', async () => {
-  startJobQueue().catch(
-      (err) => app.log.error({err}, 'job queue start failed'));
-});
 
 app.listen({port, host}).catch((err) => {
   app.log.error(err);
