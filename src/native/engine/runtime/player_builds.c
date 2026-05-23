@@ -249,6 +249,89 @@ int player_builds_get_stats(const char *player_guid, BuildStats *out_stats)
     return 0;
 }
 
+int player_builds_parse_class(int class_type, BuildClass *out_class)
+{
+    BuildClass parsed = (BuildClass)class_type;
+
+    if (!out_class || !is_valid_class(parsed))
+    {
+        return -1;
+    }
+
+    *out_class = parsed;
+    return 0;
+}
+
+int player_builds_parse_gear_slot(int slot, GearSlot *out_slot)
+{
+    GearSlot parsed = (GearSlot)slot;
+
+    if (!out_slot || parsed < 0 || parsed >= GEAR_SLOT_COUNT)
+    {
+        return -1;
+    }
+
+    *out_slot = parsed;
+    return 0;
+}
+
+int player_builds_parse_stat_name(const char *stat_name, BuildStat *out_stat)
+{
+    if (!stat_name || !out_stat)
+    {
+        return -1;
+    }
+
+    if (strcmp(stat_name, "health") == 0)
+    {
+        *out_stat = BUILD_STAT_HEALTH;
+        return 0;
+    }
+    if (strcmp(stat_name, "attack") == 0)
+    {
+        *out_stat = BUILD_STAT_ATTACK;
+        return 0;
+    }
+    if (strcmp(stat_name, "defense") == 0)
+    {
+        *out_stat = BUILD_STAT_DEFENSE;
+        return 0;
+    }
+    if (strcmp(stat_name, "utility") == 0)
+    {
+        *out_stat = BUILD_STAT_UTILITY;
+        return 0;
+    }
+
+    return -1;
+}
+
+int player_builds_stat_value(const BuildStats *stats, BuildStat stat, int *out_value)
+{
+    if (!stats || !out_value || stat < 0 || stat >= BUILD_STAT_COUNT)
+    {
+        return -1;
+    }
+
+    switch (stat)
+    {
+    case BUILD_STAT_HEALTH:
+        *out_value = stats->health;
+        return 0;
+    case BUILD_STAT_ATTACK:
+        *out_value = stats->attack;
+        return 0;
+    case BUILD_STAT_DEFENSE:
+        *out_value = stats->defense;
+        return 0;
+    case BUILD_STAT_UTILITY:
+        *out_value = stats->utility;
+        return 0;
+    default:
+        return -1;
+    }
+}
+
 int player_builds_evaluate_combo(const char *player_guid,
                                  const char *first_skill,
                                  const char *second_skill,

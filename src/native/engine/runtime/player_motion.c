@@ -1,4 +1,5 @@
 #include "player_motion.h"
+#include "controller_kind_domain.h"
 
 #if !defined(BANANA_ENGINE_HAS_OPENMP)
 #error "Strict parallel runtime requires OpenMP (BANANA_ENGINE_HAS_OPENMP)."
@@ -6,7 +7,6 @@
 
 #include <math.h>
 #include <stddef.h>
-#include <string.h>
 
 static float clampf_local(float v, float lo, float hi)
 {
@@ -68,7 +68,7 @@ void runtime_player_motion_apply(World *world,
 
         if (!player || !player->active)
             continue;
-        if (strcmp(binding->controller_kind, "human") != 0)
+        if (runtime_controller_kind_parse_or_unknown(binding->controller_kind) != RUNTIME_CONTROLLER_KIND_HUMAN)
             continue;
 
         if (fabsf(move_x) <= 1e-4f && fabsf(move_z) <= 1e-4f)

@@ -1,4 +1,5 @@
 #include "player_registry.h"
+#include "controller_kind_domain.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -18,7 +19,16 @@ static float clampf_local(float v, float lo, float hi)
 
 static int is_controller_ai(const char *controller_kind)
 {
-    return controller_kind && strcmp(controller_kind, "ai") == 0;
+    return runtime_controller_kind_parse_or_unknown(controller_kind) == RUNTIME_CONTROLLER_KIND_AI;
+}
+
+static const char *normalize_controller_kind_or_default_human(const char *controller_kind)
+{
+    RuntimeControllerKind kind = runtime_controller_kind_parse_or_unknown(controller_kind);
+    if (kind == RUNTIME_CONTROLLER_KIND_UNKNOWN)
+        kind = RUNTIME_CONTROLLER_KIND_HUMAN;
+
+    return runtime_controller_kind_name(kind);
 }
 
 void runtime_player_registry_reset(void)
@@ -72,7 +82,9 @@ void runtime_player_registry_add_default(EntityId entity_id,
     if (name)
         strncpy(binding->name, name, sizeof(binding->name) - 1);
     if (controller_kind)
-        strncpy(binding->controller_kind, controller_kind, sizeof(binding->controller_kind) - 1);
+        strncpy(binding->controller_kind,
+                normalize_controller_kind_or_default_human(controller_kind),
+                sizeof(binding->controller_kind) - 1);
 
     binding->entity_id = entity_id;
     binding->active = active ? 1 : 0;
@@ -110,7 +122,7 @@ NativePlayerBinding *runtime_player_registry_upsert(World *world,
             memset(binding, 0, sizeof(*binding));
             strncpy(binding->guid, guid, sizeof(binding->guid) - 1);
             strncpy(binding->controller_kind,
-                    (controller_kind && controller_kind[0] != '\0') ? controller_kind : "human",
+                    normalize_controller_kind_or_default_human(controller_kind),
                     sizeof(binding->controller_kind) - 1);
             binding->entity_id = world_spawn_entity(world, ENTITY_TYPE_PLAYER, x, y, z);
             binding->active = active ? 1 : 0;
@@ -123,7 +135,9 @@ NativePlayerBinding *runtime_player_registry_upsert(World *world,
     if (name && name[0] != '\0')
         strncpy(binding->name, name, sizeof(binding->name) - 1);
     if (controller_kind && controller_kind[0] != '\0')
-        strncpy(binding->controller_kind, controller_kind, sizeof(binding->controller_kind) - 1);
+        strncpy(binding->controller_kind,
+                normalize_controller_kind_or_default_human(controller_kind),
+                sizeof(binding->controller_kind) - 1);
     binding->active = active ? 1 : 0;
 
     entity = world_get_entity(world, binding->entity_id);
@@ -179,7 +193,7 @@ void runtime_player_registry_set_transform(World *world,
     binding = runtime_player_registry_upsert(world,
                                              guid,
                                              NULL,
-                                             "human",
+                                             runtime_controller_kind_name(RUNTIME_CONTROLLER_KIND_HUMAN),
                                              active,
                                              terrain_sample_height,
                                              NULL,
@@ -264,28 +278,30 @@ int runtime_player_registry_count_active(void)
     return active_count;
 }
 
-void runtime_player_registry_add_resource(const char *guid, const char *resource_type, int amount)
+void runtime_player_registry_add_resource_key(const char *guid,
+                                              RuntimeResourceKey resource_key,
+                                              int amount)
 {
-    if (!guid || !resource_type)
+    if (!guid || resource_key < 0 || resource_key >= RUNTIME_RESOURCE_COUNT)
         return;
 
     NativePlayerBinding *binding = runtime_player_registry_find(guid);
     if (!binding)
         return;
 
-    if (strcmp(resource_type, "wood") == 0)
+    if (resource_key == RUNTIME_RESOURCE_WOOD)
     {
         binding->wood_count += amount;
         if (binding->wood_count < 0)
             binding->wood_count = 0;
     }
-    else if (strcmp(resource_type, "ore") == 0)
+    else if (resource_key == RUNTIME_RESOURCE_ORE)
     {
         binding->ore_count += amount;
         if (binding->ore_count < 0)
             binding->ore_count = 0;
     }
-    else if (strcmp(resource_type, "gold") == 0)
+    else if (resource_key == RUNTIME_RESOURCE_GOLD)
     {
         binding->gold_count += amount;
         if (binding->gold_count < 0)
@@ -293,21 +309,40 @@ void runtime_player_registry_add_resource(const char *guid, const char *resource
     }
 }
 
-int runtime_player_registry_get_resource(const char *guid, const char *resource_type)
+int runtime_player_registry_get_resource_key(const char *guid,
+                                             RuntimeResourceKey resource_key)
 {
-    if (!guid || !resource_type)
+    if (!guid || resource_key < 0 || resource_key >= RUNTIME_RESOURCE_COUNT)
         return 0;
 
     NativePlayerBinding *binding = runtime_player_registry_find(guid);
     if (!binding)
         return 0;
 
-    if (strcmp(resource_type, "wood") == 0)
+    if (resource_key == RUNTIME_RESOURCE_WOOD)
         return binding->wood_count;
-    else if (strcmp(resource_type, "ore") == 0)
+    else if (resource_key == RUNTIME_RESOURCE_ORE)
         return binding->ore_count;
-    else if (strcmp(resource_type, "gold") == 0)
+    else if (resource_key == RUNTIME_RESOURCE_GOLD)
         return binding->gold_count;
 
     return 0;
+}
+
+void runtime_player_registry_add_resource(const char *guid, const char *resource_type, int amount)
+{
+    RuntimeResourceKey resource_key;
+    if (runtime_resource_parse_key(resource_type, &resource_key) != 0)
+        return;
+
+    runtime_player_registry_add_resource_key(guid, resource_key, amount);
+}
+
+int runtime_player_registry_get_resource(const char *guid, const char *resource_type)
+{
+    RuntimeResourceKey resource_key;
+    if (runtime_resource_parse_key(resource_type, &resource_key) != 0)
+        return 0;
+
+    return runtime_player_registry_get_resource_key(guid, resource_key);
 }

@@ -1,11 +1,12 @@
 #include "player_api.h"
 #include "player_builds.h"
-
-#include <string.h>
+#include "controller_kind_domain.h"
 
 static BuildClass default_class_for_controller(const char *controller_kind)
 {
-    if (controller_kind && strcmp(controller_kind, "ai") == 0)
+    RuntimeControllerKind kind = runtime_controller_kind_parse_or_unknown(controller_kind);
+
+    if (kind == RUNTIME_CONTROLLER_KIND_AI)
     {
         return BUILD_CLASS_RANGER;
     }

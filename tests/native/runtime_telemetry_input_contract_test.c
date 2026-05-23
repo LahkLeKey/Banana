@@ -62,9 +62,42 @@ int main(void)
         return 1;
     if (!expect_int("has move target", runtime_input_contract_get_has_move_target(), 0))
         return 1;
-    if (!expect_int("right click inert", runtime_input_contract_handle_right_click(10.f, 20.f), 0))
+
+    if (!expect_int("right click accepted", runtime_input_contract_handle_right_click(10.f, 20.f), 1))
         return 1;
-    if (!expect_int("normalized inert", runtime_input_contract_handle_right_click_normalized(0.2f, 0.8f), 0))
+    if (!expect_int("click count incremented", runtime_input_contract_get_click_count(), 1))
+        return 1;
+    if (!expect_int("target flagged", runtime_input_contract_get_has_move_target(), 1))
+        return 1;
+
+    if (!expect_int("normalized accepted", runtime_input_contract_handle_right_click_normalized(0.2f, 0.8f), 1))
+        return 1;
+    if (!expect_int("normalized does not increment click count", runtime_input_contract_get_click_count(), 1))
+        return 1;
+    if (!expect_int("normalized keeps target flag", runtime_input_contract_get_has_move_target(), 1))
+        return 1;
+
+    if (!expect_int("normalized rejects out of range",
+                    runtime_input_contract_handle_right_click_normalized(2.0f, 0.0f),
+                    0))
+        return 1;
+
+    runtime_input_contract_mark_target_reached();
+    if (!expect_int("target reached incremented", runtime_input_contract_get_target_reached_count(), 1))
+        return 1;
+    if (!expect_int("target cleared after reached", runtime_input_contract_get_has_move_target(), 0))
+        return 1;
+
+    runtime_input_contract_set_has_move_target(1);
+    if (!expect_int("explicit target set", runtime_input_contract_get_has_move_target(), 1))
+        return 1;
+
+    runtime_input_contract_reset();
+    if (!expect_int("reset click count", runtime_input_contract_get_click_count(), 0))
+        return 1;
+    if (!expect_int("reset target reached", runtime_input_contract_get_target_reached_count(), 0))
+        return 1;
+    if (!expect_int("reset has move target", runtime_input_contract_get_has_move_target(), 0))
         return 1;
 
     world_destroy(world);

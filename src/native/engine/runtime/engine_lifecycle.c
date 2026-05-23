@@ -1,5 +1,6 @@
 #include "engine_lifecycle.h"
 
+#include "controller_kind_domain.h"
 #include "terrain_generation.h"
 
 #include <stddef.h>
@@ -44,12 +45,14 @@ int runtime_engine_lifecycle_bootstrap_primary_player(World *world,
     player->scale[1] = 0.95f;
     player->scale[2] = 1.10f;
     strncpy(player->player_guid, "native-default-player", sizeof(player->player_guid) - 1);
-    strncpy(player->controller_kind, "human", sizeof(player->controller_kind) - 1);
+    strncpy(player->controller_kind,
+            runtime_controller_kind_name(RUNTIME_CONTROLLER_KIND_HUMAN),
+            sizeof(player->controller_kind) - 1);
 
     runtime_player_registry_add_default(player_id,
                                         "native-default-player",
                                         "native-default",
-                                        "human",
+                                        runtime_controller_kind_name(RUNTIME_CONTROLLER_KIND_HUMAN),
                                         1);
 
     return 1;

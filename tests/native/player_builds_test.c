@@ -123,6 +123,31 @@ static void test_validation_guards(void)
     player_builds_cleanup();
 }
 
+static void test_typed_domain_parsing(void)
+{
+    BuildClass build_class;
+    GearSlot slot;
+    BuildStat stat;
+    BuildStats stats = {150, 24, 18, 11};
+    int value = 0;
+
+    ASSERT_EQ(player_builds_parse_class(BUILD_CLASS_ARCANIST, &build_class), 0, "parse build class");
+    ASSERT_EQ((int)build_class, BUILD_CLASS_ARCANIST, "parsed build class value");
+    ASSERT_EQ(player_builds_parse_class(99, &build_class), -1, "reject invalid class");
+
+    ASSERT_EQ(player_builds_parse_gear_slot(GEAR_SLOT_TRINKET, &slot), 0, "parse gear slot");
+    ASSERT_EQ((int)slot, GEAR_SLOT_TRINKET, "parsed gear slot value");
+    ASSERT_EQ(player_builds_parse_gear_slot(-1, &slot), -1, "reject invalid gear slot");
+
+    ASSERT_EQ(player_builds_parse_stat_name("defense", &stat), 0, "parse defense stat");
+    ASSERT_EQ((int)stat, BUILD_STAT_DEFENSE, "parsed stat enum");
+    ASSERT_EQ(player_builds_parse_stat_name("unknown", &stat), -1, "reject unknown stat");
+
+    ASSERT_EQ(player_builds_stat_value(&stats, BUILD_STAT_ATTACK, &value), 0, "read attack stat");
+    ASSERT_EQ(value, 24, "attack stat value");
+    ASSERT_EQ(player_builds_stat_value(&stats, BUILD_STAT_COUNT, &value), -1, "reject out-of-range stat enum");
+}
+
 int main(void)
 {
     printf("=== Player Builds Tests ===\n\n");
@@ -132,6 +157,7 @@ int main(void)
     test_combo_solo_and_party();
     test_combo_timeout_and_repeat_guard();
     test_validation_guards();
+    test_typed_domain_parsing();
 
     printf("\n=== Results ===\n");
     printf("Passed: %d / %d\n", tests_passed, tests_run);

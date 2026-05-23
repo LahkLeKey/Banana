@@ -1,6 +1,6 @@
 #include "render_material.h"
 
-#include <string.h>
+#include "controller_kind_domain.h"
 
 Material runtime_render_material_for_entity(EntityType type)
 {
@@ -19,29 +19,33 @@ Material runtime_render_material_for_entity(EntityType type)
 
 Material runtime_render_material_for_actor(const Entity *entity)
 {
+    RuntimeControllerKind kind = RUNTIME_CONTROLLER_KIND_UNKNOWN;
+
     if (!entity)
         return runtime_render_material_for_entity((EntityType)99);
 
+    kind = runtime_controller_kind_parse_or_unknown(entity->controller_kind);
+
     if (entity->type == ENTITY_TYPE_NPC)
     {
-        if (strcmp(entity->controller_kind, "merchant") == 0)
+        if (kind == RUNTIME_CONTROLLER_KIND_MERCHANT)
             return material_solid(0.95f, 0.55f, 0.15f, 1.f);
-        if (strcmp(entity->controller_kind, "combat") == 0)
+        if (kind == RUNTIME_CONTROLLER_KIND_COMBAT)
             return material_solid(0.85f, 0.22f, 0.22f, 1.f);
-        if (strcmp(entity->controller_kind, "wildlife") == 0)
+        if (kind == RUNTIME_CONTROLLER_KIND_WILDLIFE)
             return material_solid(0.25f, 0.80f, 0.35f, 1.f);
     }
 
-    if (entity->type == ENTITY_TYPE_DYNAMIC && strcmp(entity->controller_kind, "resource") == 0)
+    if (entity->type == ENTITY_TYPE_DYNAMIC && kind == RUNTIME_CONTROLLER_KIND_RESOURCE)
         return material_solid(0.20f, 0.65f, 0.85f, 1.f);
 
-    if (entity->type == ENTITY_TYPE_TRIGGER && strcmp(entity->controller_kind, "quest") == 0)
+    if (entity->type == ENTITY_TYPE_TRIGGER && kind == RUNTIME_CONTROLLER_KIND_QUEST)
         return material_solid(0.75f, 0.35f, 0.90f, 1.f);
 
-    if (entity->type == ENTITY_TYPE_STATIC && strcmp(entity->controller_kind, "camp") == 0)
+    if (entity->type == ENTITY_TYPE_STATIC && kind == RUNTIME_CONTROLLER_KIND_CAMP)
         return material_solid(0.62f, 0.48f, 0.30f, 1.f);
 
-    if (entity->type == ENTITY_TYPE_STATIC && strcmp(entity->controller_kind, "pbj_pickup") == 0)
+    if (entity->type == ENTITY_TYPE_STATIC && kind == RUNTIME_CONTROLLER_KIND_PBJ_PICKUP)
         return material_solid(0.82f, 0.54f, 0.22f, 1.f);
 
     return runtime_render_material_for_entity(entity->type);

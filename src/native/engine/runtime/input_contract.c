@@ -2,6 +2,10 @@
 
 #include <math.h>
 
+static int s_click_count = 0;
+static int s_target_reached_count = 0;
+static int s_has_move_target = 0;
+
 static float clampf_local(float v, float lo, float hi)
 {
     if (v < lo)
@@ -13,31 +17,57 @@ static float clampf_local(float v, float lo, float hi)
 
 int runtime_input_contract_get_click_count(void)
 {
-    return 0;
+    return s_click_count;
 }
 
 int runtime_input_contract_get_target_reached_count(void)
 {
-    return 0;
+    return s_target_reached_count;
 }
 
 int runtime_input_contract_get_has_move_target(void)
 {
-    return 0;
+    return s_has_move_target;
 }
 
 int runtime_input_contract_handle_right_click(float canvas_x, float canvas_y)
 {
-    (void)canvas_x;
-    (void)canvas_y;
-    return 0;
+    if (!isfinite(canvas_x) || !isfinite(canvas_y))
+        return 0;
+
+    s_click_count += 1;
+    s_has_move_target = 1;
+    return 1;
 }
 
 int runtime_input_contract_handle_right_click_normalized(float screen_x, float screen_y)
 {
-    (void)screen_x;
-    (void)screen_y;
-    return 0;
+    if (!isfinite(screen_x) || !isfinite(screen_y))
+        return 0;
+
+    if (screen_x < -1.f || screen_x > 1.f || screen_y < -1.f || screen_y > 1.f)
+        return 0;
+
+    s_has_move_target = 1;
+    return 1;
+}
+
+void runtime_input_contract_set_has_move_target(int has_move_target)
+{
+    s_has_move_target = has_move_target ? 1 : 0;
+}
+
+void runtime_input_contract_mark_target_reached(void)
+{
+    s_target_reached_count += 1;
+    s_has_move_target = 0;
+}
+
+void runtime_input_contract_reset(void)
+{
+    s_click_count = 0;
+    s_target_reached_count = 0;
+    s_has_move_target = 0;
 }
 
 void runtime_input_contract_sanitize_move_input(float input_x,

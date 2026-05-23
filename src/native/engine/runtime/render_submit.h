@@ -13,6 +13,10 @@ extern "C"
 
     typedef Material (*RuntimeMaterialResolver)(const Entity *entity);
     typedef Mesh *(*RuntimeMeshResolver)(const Entity *entity, Mesh *default_mesh);
+    typedef void (*RuntimeSceneCommandResolver)(const Entity *entity,
+                                                Mesh *resolved_mesh,
+                                                Material resolved_material,
+                                                RendererDrawCommand *out_command);
     typedef void (*RuntimeTerrainDrawFn)(void);
 
     void runtime_render_submit_frame(Renderer *renderer,
@@ -21,7 +25,8 @@ extern "C"
                                      int terrain_initialized,
                                      RuntimeTerrainDrawFn terrain_draw,
                                      RuntimeMaterialResolver resolve_material,
-                                     RuntimeMeshResolver resolve_mesh);
+                                     RuntimeMeshResolver resolve_mesh,
+                                     RuntimeSceneCommandResolver resolve_command);
 
 #ifdef __cplusplus
 }
