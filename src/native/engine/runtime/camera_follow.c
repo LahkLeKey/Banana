@@ -24,21 +24,21 @@ void runtime_camera_follow_player(Renderer *renderer,
     if (!player || !player->active)
         return;
 
-    camera = camera_create(44.f, (float)viewport_width / (float)viewport_height, 0.1f, 1000.f);
+    camera = camera_create(52.f, (float)viewport_width / (float)viewport_height, 0.1f, 1000.f);
     camera_look_at(&camera,
-                   player->position[0] + 7.0f,
-                   player->position[1] + 10.5f,
-                   player->position[2] + 7.0f,
                    player->position[0],
-                   player->position[1] - 0.35f,
+                   player->position[1] + 14.0f,
+                   player->position[2] + 11.0f,
+                   player->position[0],
+                   player->position[1],
                    player->position[2]);
 
-    camera_eye[0] = player->position[0] + 7.0f;
-    camera_eye[1] = player->position[1] + 10.5f;
-    camera_eye[2] = player->position[2] + 7.0f;
+    camera_eye[0] = player->position[0];
+    camera_eye[1] = player->position[1] + 14.0f;
+    camera_eye[2] = player->position[2] + 11.0f;
 
     camera_target[0] = player->position[0];
-    camera_target[1] = player->position[1] - 0.35f;
+    camera_target[1] = player->position[1];
     camera_target[2] = player->position[2];
 
     *camera_valid = 1;

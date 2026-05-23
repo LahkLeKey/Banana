@@ -324,7 +324,7 @@ static void render_ui_overlay(HWND game_window,
 
     snprintf(line_one,
              sizeof(line_one),
-             "BANANA DX12 POC  |  WASD MOVE  |  RIGHT-CLICK/T MOVE TARGET  |  ESC QUIT");
+             "BANANA DX12 POC  |  WASD MOVE  |  RIGHT-CLICK MOVE TARGET  |  ESC QUIT");
 
     if (startup_smoke_mode)
     {
@@ -473,6 +473,7 @@ int main(void)
     int startup_smoke_mode = 0;
     int startup_smoke_seconds = 0;
     int auto_target_enabled = 1;
+    int target_hotkey_enabled = 0;
     int exit_code = 0;
     int last_rbutton_down = 0;
     int last_target_hotkey_down = 0;
@@ -485,7 +486,7 @@ int main(void)
     }
 
     printf("[dx12-poc] launching Banana playable prototype\n");
-    printf("[dx12-poc] controls: WASD move, right-click/T move target, ESC quit\n");
+    printf("[dx12-poc] controls: WASD move, right-click move target, ESC quit\n");
     printf("[dx12-poc] backend requested=%s active=%s status=%s\n",
            banana_render_backend_name(banana_render_backend_requested()),
            banana_render_backend_name(banana_render_backend_active()),
@@ -514,7 +515,8 @@ int main(void)
     startup_smoke_mode = parse_env_flag("BANANA_DX12_POC_AUTOTEST");
     startup_smoke_seconds = parse_env_int("BANANA_DX12_POC_AUTOTEST_SECONDS", 2, 1, 30);
     objective_timeout_seconds = parse_env_int("BANANA_DX12_POC_OBJECTIVE_TIMEOUT_SECONDS", 0, 0, 3600);
-    auto_target_enabled = parse_env_int("BANANA_DX12_POC_AUTO_TARGET", 1, 0, 1);
+    auto_target_enabled = parse_env_int("BANANA_DX12_POC_AUTO_TARGET", 0, 0, 1);
+    target_hotkey_enabled = parse_env_int("BANANA_DX12_POC_ENABLE_TARGET_HOTKEY", 0, 0, 1);
 
     telemetry_started_ms = GetTickCount64();
     hud_updated_ms = telemetry_started_ms;
@@ -567,6 +569,7 @@ int main(void)
             }
             last_rbutton_down = rbutton_down;
 
+            if (target_hotkey_enabled)
             {
                 int hotkey_down = (GetAsyncKeyState('T') & 0x8000) ? 1 : 0;
                 if (hotkey_down && !last_target_hotkey_down)
