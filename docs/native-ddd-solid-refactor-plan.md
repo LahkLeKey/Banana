@@ -51,9 +51,11 @@ Reduce coupling in `src/native/engine` by introducing explicit domain types, sep
 For each TODO slice: keep ABI stable, refactor one seam at a time, build immediately, and add tests before moving to the next seam.
 
 ## Latest Execution Evidence
-- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase6-step1.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase6-step2.txt`
 
 ### Phase 6: Engine Facade Decomposition (Next Bulk TODOs)
 - [x] Extract merchant ABI orchestration from `engine.c` into a dedicated runtime facade to reduce global-state coupling at the ABI edge.
 - [x] Add runtime facade regression coverage for delegation and guard behavior (`world_ready`, null item, invalid quantity).
-- [ ] Continue extracting additional ABI wrapper seams (player/resource and input diagnostics) into runtime facades while preserving public C API signatures.
+- [x] Extract player/resource ABI wrapper orchestration from `engine.c` into a dedicated runtime facade with typed-key helpers.
+- [x] Add runtime player/resource facade regression coverage for parse guards, key-based mutations, and null-player behavior.
+- [ ] Continue extracting remaining ABI wrapper seams (input diagnostics and auxiliary wrappers) into runtime facades while preserving public C API signatures.
