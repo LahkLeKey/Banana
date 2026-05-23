@@ -28,6 +28,15 @@ Use `steam-storefront-copy.md` as the canonical claim target.
 - [ ] Confirm the disclosure does not overstate unimplemented generation paths.
 - [ ] Use the exact current disclosure line documented in the storefront contract.
 
+## Neon Database Management Lane
+
+- [ ] Confirm the open source self-hosted Neon integration matches the release target and the Fly.io deployment channel.
+- [ ] Verify self-hosted Neon project identifiers, database branches, and environment bindings match the release target.
+- [ ] Verify database management flows use the documented self-hosted Neon connection path for the active runtime channel.
+- [ ] Record self-hosted Neon access, migration, and rollback evidence for the release bundle.
+- [ ] Confirm any self-hosted Neon-backed data management claims stay within the shipped operational scope.
+- [ ] Use the exact current self-hosted Neon and Fly.io service language documented in the release contracts.
+
 ## System Requirements Lane
 
 - [ ] Reconcile minimum OS, CPU, memory, GPU, DirectX, network, and storage claims with the build target.
@@ -66,6 +75,7 @@ Use `steam-storefront-copy.md` as the canonical claim target.
 
 - [ ] Capture final store page screenshots after copy and asset updates.
 - [ ] Record the exact AI disclosure text used on the page.
+- [ ] Record the exact Fly.io and self-hosted Neon database management text used in the release evidence.
 - [ ] Record the exact minimum system requirements text used on the page.
 - [ ] Link the completed storefront checklist to the Steam UAT evidence bundle.
 - [ ] Confirm the final store page text is an exact match for the storefront contract or an approved revision.
