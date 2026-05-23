@@ -5,10 +5,9 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "prepare:wasm": "node scripts/prepare-wasm-assets.mjs",
         "prepare:generated-assets": "node scripts/prepare-procedural-assets.mjs",
-        "prepare:assets": "node scripts/prepare-wasm-assets.mjs && node scripts/prepare-procedural-assets.mjs",
-        "build": "node scripts/prepare-wasm-assets.mjs && node scripts/prepare-procedural-assets.mjs && tsc -b && vite build",
+        "prepare:assets": "node scripts/prepare-procedural-assets.mjs",
+        "build": "node scripts/prepare-procedural-assets.mjs && tsc -b && vite build",
         "preview": "vite preview --host 0.0.0.0 --port 5173",
         "test": "node scripts/dedupe-react.mjs && bun test",
         "postinstall": "node scripts/dedupe-react.mjs"

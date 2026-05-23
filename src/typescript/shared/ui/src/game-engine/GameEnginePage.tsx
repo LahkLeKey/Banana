@@ -318,7 +318,7 @@ export function GameEnginePage() {
 
             script.onerror = () => {
                 setStatus("unavailable");
-                setError("engine.js not found. Run: bash scripts/build-engine-wasm.sh (requires Emscripten SDK)");
+                setError("engine.js not found. Web gameplay assets are disabled in Steam DX12 delivery mode.");
             };
 
             script.onload = () => {

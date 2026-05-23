@@ -32,10 +32,6 @@ The post-reset `banana.yml` harness keeps only lanes that map to active build en
 		- `BANANA_GENERATED_ASSET_POLICY=strict`
 		- `BANANA_GENERATED_ASSET_COMPILE_MODE=skip`
 - `Native / build + tests`
-- `Build / wasm engine assets`
-- `Security / WASM penetration tests`
-	- Runs `bun run test:wasm-pentest` in `src/typescript/api`
-	- Publishes a persistent WASM security artifact bundle under `artifacts/ci/wasm-security`
 - `Monorepo / Pass-Fail` (terminal gate)
 
 Add new lanes only when they map to a maintained script/target in this repository.
