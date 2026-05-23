@@ -87,6 +87,20 @@ Generate a complete outreach bundle (evidence + email draft + attachment manifes
 bash scripts/prepare-steam-vendor-escalation-bundle.sh
 ```
 
+To fill the bundle with Steam-side incident facts, pass these environment variables before running the script:
+
+- `STEAM_APP_ID`
+- `STEAM_BETA_BRANCH_NAME`
+- `STEAM_PRODUCTION_BRANCH_NAME`
+- `STEAM_AFFECTED_DEPOT_IDS`
+- `STEAM_INCIDENT_WINDOW_UTC`
+- `STEAM_UPLOAD_ACTOR_IDS`
+- `STEAM_PUBLISH_ACTOR_IDS`
+- `STEAM_APPROVAL_POLICY_OBSERVED`
+- `STEAM_CACHE_INVALIDATION_REQUESTED_AT`
+- `STEAM_CACHE_INVALIDATION_COMPLETED_AT`
+- `STEAM_EDGE_PROPAGATION_NOTES`
+
 Output location:
 
 - `artifacts/security/steam-vendor/steam-vendor-incident-evidence-<timestamp>.md`

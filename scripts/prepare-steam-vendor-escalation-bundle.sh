@@ -8,6 +8,18 @@ TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 EMAIL_FILE="${OUTPUT_DIR}/steam-vendor-escalation-email-${TIMESTAMP}.md"
 ATTACHMENT_FILE="${OUTPUT_DIR}/steam-vendor-attachment-manifest-${TIMESTAMP}.txt"
 
+STEAM_APP_ID="${STEAM_APP_ID:-4767150}"
+STEAM_BETA_BRANCH_NAME="${STEAM_BETA_BRANCH_NAME:-<fill-from-steamworks>}"
+STEAM_PRODUCTION_BRANCH_NAME="${STEAM_PRODUCTION_BRANCH_NAME:-<fill-from-steamworks>}"
+STEAM_AFFECTED_DEPOT_IDS="${STEAM_AFFECTED_DEPOT_IDS:-<fill-from-steamworks>}"
+STEAM_INCIDENT_WINDOW_UTC="${STEAM_INCIDENT_WINDOW_UTC:-<fill-from-steamworks>}"
+STEAM_UPLOAD_ACTOR_IDS="${STEAM_UPLOAD_ACTOR_IDS:-<fill-from-steamworks>}"
+STEAM_PUBLISH_ACTOR_IDS="${STEAM_PUBLISH_ACTOR_IDS:-<fill-from-steamworks>}"
+STEAM_APPROVAL_POLICY_OBSERVED="${STEAM_APPROVAL_POLICY_OBSERVED:-<fill-from-steamworks>}"
+STEAM_CACHE_INVALIDATION_REQUESTED_AT="${STEAM_CACHE_INVALIDATION_REQUESTED_AT:-<fill-from-steamworks>}"
+STEAM_CACHE_INVALIDATION_COMPLETED_AT="${STEAM_CACHE_INVALIDATION_COMPLETED_AT:-<fill-from-steamworks>}"
+STEAM_EDGE_PROPAGATION_NOTES="${STEAM_EDGE_PROPAGATION_NOTES:-<fill-from-steamworks>}"
+
 mkdir -p "${OUTPUT_DIR}"
 
 GEN_OUTPUT="$(bash "${ROOT_DIR}/scripts/generate-steam-vendor-incident-evidence.sh")"
@@ -40,6 +52,19 @@ Summary:
 - Concern: runtime artifact identity may drift across build, upload, and delivery paths.
 - Impact: potential non-approved runtime artifact resolution.
 
+Incident fields:
+- AppID: ${STEAM_APP_ID}
+- Beta branch: ${STEAM_BETA_BRANCH_NAME}
+- Production branch: ${STEAM_PRODUCTION_BRANCH_NAME}
+- Affected depot IDs: ${STEAM_AFFECTED_DEPOT_IDS}
+- Incident window UTC: ${STEAM_INCIDENT_WINDOW_UTC}
+- Upload actor IDs: ${STEAM_UPLOAD_ACTOR_IDS}
+- Publish actor IDs: ${STEAM_PUBLISH_ACTOR_IDS}
+- Approval policy observed: ${STEAM_APPROVAL_POLICY_OBSERVED}
+- Cache invalidation requested at: ${STEAM_CACHE_INVALIDATION_REQUESTED_AT}
+- Cache invalidation completed at: ${STEAM_CACHE_INVALIDATION_COMPLETED_AT}
+- Edge propagation notes: ${STEAM_EDGE_PROPAGATION_NOTES}
+
 Request for vendor-side validation:
 1. Validate beta/production branch and depot isolation for AppID 4767150.
 2. Confirm no cross-branch/depot artifact bleed in the incident window.
@@ -60,6 +85,18 @@ EOF
 {
   echo "Steam Vendor Escalation Attachment Manifest"
   echo "GeneratedAt: $(date -Iseconds)"
+  echo
+  echo "AppID: ${STEAM_APP_ID}"
+  echo "BetaBranchName: ${STEAM_BETA_BRANCH_NAME}"
+  echo "ProductionBranchName: ${STEAM_PRODUCTION_BRANCH_NAME}"
+  echo "AffectedDepotIds: ${STEAM_AFFECTED_DEPOT_IDS}"
+  echo "IncidentWindowUTC: ${STEAM_INCIDENT_WINDOW_UTC}"
+  echo "UploadActorIds: ${STEAM_UPLOAD_ACTOR_IDS}"
+  echo "PublishActorIds: ${STEAM_PUBLISH_ACTOR_IDS}"
+  echo "ApprovalPolicyObserved: ${STEAM_APPROVAL_POLICY_OBSERVED}"
+  echo "CacheInvalidationRequestedAt: ${STEAM_CACHE_INVALIDATION_REQUESTED_AT}"
+  echo "CacheInvalidationCompletedAt: ${STEAM_CACHE_INVALIDATION_COMPLETED_AT}"
+  echo "EdgePropagationNotes: ${STEAM_EDGE_PROPAGATION_NOTES}"
   echo
   echo "1) ${REPORT_FILE}"
   echo "2) ${HASH_FILE}"

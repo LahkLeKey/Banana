@@ -60,6 +60,7 @@ Use `steam-storefront-copy.md` as the canonical claim target.
 - [ ] Confirm closure criteria from `docs/steam-vendor-incident-brief.md` are met before storefront signoff.
 - [ ] Generate and attach vendor evidence pack via `bash scripts/generate-steam-vendor-incident-evidence.sh`.
 - [ ] Generate outreach bundle via `bash scripts/prepare-steam-vendor-escalation-bundle.sh` and use the generated email draft plus attachment manifest.
+- [ ] Fill the outreach bundle with Steam-side incident facts before sending it to vendor security.
 
 ## Signoff Evidence
 
