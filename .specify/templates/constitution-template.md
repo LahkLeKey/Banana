@@ -43,7 +43,9 @@
 <!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
 
 [SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+<!-- Example: Code review requirements, testing gates, deployment approval process, etc.
+Repository-owned automation MUST use Bash as the default shell. Checked-in .ps1
+scripts are not allowed. -->
 
 ## Governance
 <!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->

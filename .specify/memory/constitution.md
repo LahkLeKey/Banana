@@ -77,6 +77,12 @@ store requirements (for example controller support declarations and platform not
 Rationale: reproducibility across local and CI environments is required for stable
 launch operations.
 
+Repository-local shell automation MUST be Bash-first and Bash-authored. Checked-in
+PowerShell scripts are prohibited; if a workflow needs a script in-repo, it MUST be
+implemented as a `bash` script and invoked through the documented Bash entry point.
+PowerShell may appear only in external operator instructions when a third-party tool
+requires it and no repository script is introduced.
+
 ## Product and Platform Constraints
 
 - The product scope is a 2.5D persistent-world MMOARPG with real-time combat,
@@ -98,6 +104,8 @@ launch operations.
 - Each release-affecting change MUST include scoped tests and evidence artifacts for
 	touched domains (native, API, UI/runtime, or orchestration).
 - Pull requests MUST summarize principle compliance and any explicit exceptions.
+- Repository-owned automation MUST use Bash (`#!/usr/bin/env bash`) as the default
+	shell. Checked-in `.ps1` scripts are not allowed in this repository.
 
 ## Governance
 
@@ -120,4 +128,4 @@ Compliance review expectations:
 - Release readiness checks MUST include evidence that storefront disclosures and
 	runtime behavior remain aligned.
 
-**Version**: 1.1.0 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-22
+**Version**: 1.2.0 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-22
