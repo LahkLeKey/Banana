@@ -6,6 +6,7 @@ import Fastify from 'fastify';
 
 import {registerChatRoutes} from './domains/chat/routes.ts';
 import {registerRateLimitPlugin} from './plugins/rate-limit.ts';
+import {registerAuthRoutes} from './routes/auth.ts';
 import {registerGameSessionRoutes} from './routes/game-session.ts';
 import {registerHealthRoutes} from './routes/health.ts';
 import {registerWorldRoutes} from './routes/world.ts';
@@ -59,6 +60,7 @@ app.addHook('onRequest', async (request, reply) => {
 });
 
 await registerHealthRoutes(app);
+await registerAuthRoutes(app);
 await registerGameSessionRoutes(app);
 await registerChatRoutes(app);
 await registerWorldRoutes(app);

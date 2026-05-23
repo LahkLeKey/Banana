@@ -1,15 +1,16 @@
-# Banana Engine — Native C → WASM
+# Banana Engine — Native C Runtime
 
-This directory contains the domain-contract game engine: a pure-C runtime compiled to
-WebAssembly via Emscripten and consumed by the React frontend.
+This directory contains the domain-contract game engine implemented in pure C.
+Current delivery focus is the Steam Windows desktop client (DirectX12 runtime
+integration path), with web usage limited to marketing/account surfaces.
 
 ## Module map
 
 ```
 engine/
-├── engine.h / engine.c        ← singleton lifecycle + WASM ABI entry points
-├── wasm_main.c                ← Emscripten entry point, spawns initial NPCs
-├── CMakeLists.txt             ← dual-target: native test binary + WASM bundle
+├── engine.h / engine.c        ← singleton lifecycle + runtime ABI entry points
+├── wasm_main.c                ← legacy Emscripten entry point (not an active deliverable)
+├── CMakeLists.txt             ← native targets; legacy Emscripten target retained for history
 │
 ├── render/
 │   ├── window.h / window.c    ← context creation (triple-path: WASM / GLFW / headless)
@@ -41,7 +42,6 @@ engine/
 | Target | Requirement |
 |--------|-------------|
 | Native tests | CMake ≥ 3.21, C compiler (GCC/Clang/MSVC) |
-| WASM bundle  | [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) (`emcc` in `PATH`) |
 
 ### Native test binary
 
@@ -51,16 +51,10 @@ cmake --build build --target banana_test_engine_domain_contracts
 ./build/tests/native/engine/banana_test_engine_domain_contracts
 ```
 
-### WASM bundle (requires emcc)
+### Delivery note
 
-```bash
-bash scripts/build-engine-wasm.sh
-# Outputs:
-#   out/wasm/engine.js   (Emscripten JS glue)
-#   out/wasm/engine.wasm (binary module)
-#   src/typescript/react/public/wasm/engine.js   (copied for dev server)
-#   src/typescript/react/public/wasm/engine.wasm (copied for dev server)
-```
+WASM/WebAssembly assets are not part of the active Steam DX12 release path.
+Treat any remaining Emscripten sources/targets as legacy compatibility material.
 
 ## AI controller architecture
 
@@ -87,18 +81,17 @@ controller_system_signal_type(sys, "wildlife", "death", NULL);
 3. Call `<name>_controller_register()` from `engine_init()` in `engine.c`.
 4. Add the `.c` file to `ENGINE_AI_SOURCES` in `CMakeLists.txt`.
 
-## Runtime path
+## Runtime path (desktop-focused)
 
 ```
-React (GameEnginePage.tsx)
-  └─ loads /wasm/engine.js via <script>
-       └─ BananaEngine module (MODULARIZE=1)
-            ├─ _engine_init()      ← called once
-            └─ _engine_tick(dt)    ← called each rAF frame
-                 ├─ physics_step()
-                 ├─ engine_world_tick()
-                 ├─ controller_system_update()
-                 └─ render all entities
+Desktop shell (Steam Windows client)
+  └─ initializes native runtime
+       ├─ engine_init()
+       └─ engine_tick(dt)
+            ├─ physics_step()
+            ├─ engine_world_tick()
+            ├─ controller_system_update()
+            └─ render all entities
 ```
 
 The React page reads entity positions each frame through:
