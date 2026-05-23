@@ -81,10 +81,18 @@ Generate a local infrastructure evidence pack before outreach:
 bash scripts/generate-steam-vendor-incident-evidence.sh
 ```
 
+Generate a complete outreach bundle (evidence + email draft + attachment manifest):
+
+```bash
+bash scripts/prepare-steam-vendor-escalation-bundle.sh
+```
+
 Output location:
 
 - `artifacts/security/steam-vendor/steam-vendor-incident-evidence-<timestamp>.md`
 - `artifacts/security/steam-vendor/steam-vendor-incident-hashes-<timestamp>.txt`
+- `artifacts/security/steam-vendor/steam-vendor-escalation-email-<timestamp>.md`
+- `artifacts/security/steam-vendor/steam-vendor-attachment-manifest-<timestamp>.txt`
 
 ## Requested Steam-Side Actions
 
