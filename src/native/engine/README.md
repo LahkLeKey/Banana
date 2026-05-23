@@ -13,12 +13,14 @@ engine/
 ├── CMakeLists.txt             ← native targets; legacy Emscripten target retained for history
 │
 ├── render/
-│   ├── window.h / window.c    ← context creation (triple-path: WASM / GLFW / headless)
-│   ├── shader.h / shader.c    ← GLSL compile + link
-│   ├── mesh.h / mesh.c        ← vertex buffer builders (banana-derived profiles, terrain)
+│   ├── backend.h / backend.c  ← backend selection (`glfw`, `dx12`, `headless`, `wasm`)
+│   ├── backend_dx12.h / .c    ← DX12 probe + runtime (swapchain, depth, fences, telemetry)
+│   ├── window.h / window.c    ← window/event abstraction (Win32 + GLFW + headless)
+│   ├── shader.h / shader.c    ← GLSL compile + link (legacy path while DX12 draw migration completes)
+│   ├── mesh.h / mesh.c        ← vertex buffer builders (banana-derived profiles, terrain data)
 │   ├── material.h             ← Material struct (color[3])
 │   ├── camera.h / camera.c    ← perspective + view/projection matrices
-│   └── renderer.h / renderer.c← FBO render loop, MVP transforms
+│   └── renderer.h / renderer.c← render lifecycle + backend runtime bridge
 │
 ├── physics/
 │   ├── body.h / body.c        ← RigidBody struct, velocity integration
@@ -91,8 +93,45 @@ Desktop shell (Steam Windows client)
             ├─ physics_step()
             ├─ engine_world_tick()
             ├─ controller_system_update()
-            └─ render all entities
+            └─ render + present
 ```
+
+## Domain boundaries (DDD-oriented)
+
+Runtime responsibilities are split by domain service modules rather than one
+monolithic `engine.c` control block:
+
+- `runtime/engine_lifecycle.*`: bootstrap/teardown orchestration.
+- `runtime/engine_tick.*`: tick pipeline execution and phase ordering.
+- `runtime/input_contract.*`: click/move intent contract and sanitization.
+- `runtime/move_target_domain.*`: strongly-typed click-target state and steering decisions.
+- `runtime/render_submit.*` + `RendererDrawCommand`: typed scene command
+  submission seam so domain render intent is backend-agnostic.
+- `runtime/player_*.*`, `runtime/terrain_*.*`, `runtime/world_*.*`: bounded
+  contexts for player, terrain, and world behaviors.
+
+This keeps high-level orchestration in `engine.c` while moving domain rules into
+testable, single-purpose modules.
+
+## DX12 runtime contract (current)
+
+- Windows default backend is `dx12` (see `BANANA_RENDER_BACKEND` in CMake).
+- Runtime initializes: factory, adapter, device, queue, swapchain, RTV heap,
+  DSV heap, depth target, command allocator/list, fence/event.
+- Frame flow:
+  1. `banana_dx12_runtime_begin_frame`: reset allocator/list, transition backbuffer,
+     bind RTV/DSV, clear color + depth.
+  2. Scene submit (currently minimal while GL draw migration is in progress).
+  3. `banana_dx12_runtime_end_frame`: transition to present, execute command list,
+     `Present(interval)`, fence wait, advance frame index.
+- Present mode is configurable with environment variables:
+  - `BANANA_DX12_PRESENT_INTERVAL` (`0` immediate, `1` vsync)
+  - `BANANA_DX12_VSYNC` fallback (`0`/`1`)
+- Device-loss handling attempts swapchain recreation on
+  `DXGI_ERROR_DEVICE_REMOVED`/`DXGI_ERROR_DEVICE_RESET` during resize/present.
+- Telemetry surface:
+  - `banana_dx12_runtime_telemetry()`
+  - `banana_dx12_runtime_frames_presented()`
 
 The React page reads entity positions each frame through:
 
@@ -108,8 +147,10 @@ for the frame-time chart.
 
 ## Testing
 
-Tests live in `tests/native/engine/test_engine_domain_contracts.c` and are compiled into
-`banana_test_engine_domain_contracts`.  All tests run in headless mode (no GL context)
-via stub implementations.
+Native tests live under `tests/native/*.c` and are registered as individual CTest
+targets. Key new coverage includes:
 
-Current status: **26/26 passing**.
+- `banana_engine_dx12_runtime_smoke_test`
+- `banana_runtime_move_target_domain_test`
+- `banana_engine_click_to_move_target_test`
+- `banana_engine_input_contract_transition_test`

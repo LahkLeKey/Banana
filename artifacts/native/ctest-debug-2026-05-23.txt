@@ -1,0 +1,111 @@
+Test project C:/Github/Banana/out/v3-native
+      Start  1: banana_engine_serialize_test
+ 1/53 Test  #1: banana_engine_serialize_test ....................   Passed    0.55 sec
+      Start  2: banana_runtime_terrain_mutation_test
+ 2/53 Test  #2: banana_runtime_terrain_mutation_test ............   Passed    0.01 sec
+      Start  3: banana_runtime_terrain_generation_test
+ 3/53 Test  #3: banana_runtime_terrain_generation_test ..........   Passed    0.01 sec
+      Start  4: banana_collider_broad_phase_test
+ 4/53 Test  #4: banana_collider_broad_phase_test ................   Passed    0.01 sec
+      Start  5: banana_physics_raycast_test
+ 5/53 Test  #5: banana_physics_raycast_test .....................   Passed    0.01 sec
+      Start  6: banana_render_mesh_terrain_test
+ 6/53 Test  #6: banana_render_mesh_terrain_test .................   Passed    0.01 sec
+      Start  7: banana_controller_system_dispatch_test
+ 7/53 Test  #7: banana_controller_system_dispatch_test ..........   Passed    0.01 sec
+      Start  8: banana_render_headless_frame_test
+ 8/53 Test  #8: banana_render_headless_frame_test ...............   Passed    0.01 sec
+      Start  9: banana_world_query_nearby_test
+ 9/53 Test  #9: banana_world_query_nearby_test ..................   Passed    0.01 sec
+      Start 10: banana_runtime_math_helpers_test
+10/53 Test #10: banana_runtime_math_helpers_test ................   Passed    0.01 sec
+      Start 11: banana_runtime_controller_world_metrics_test
+11/53 Test #11: banana_runtime_controller_world_metrics_test ....   Passed    0.01 sec
+      Start 12: banana_runtime_telemetry_input_contract_test
+12/53 Test #12: banana_runtime_telemetry_input_contract_test ....   Passed    0.01 sec
+      Start 13: banana_engine_input_contract_transition_test
+13/53 Test #13: banana_engine_input_contract_transition_test ....   Passed    0.01 sec
+      Start 14: banana_engine_click_to_move_target_test
+14/53 Test #14: banana_engine_click_to_move_target_test .........   Passed    0.51 sec
+      Start 15: banana_engine_dx12_runtime_smoke_test
+15/53 Test #15: banana_engine_dx12_runtime_smoke_test ...........   Passed    0.53 sec
+      Start 16: banana_runtime_physics_world_abi_test
+16/53 Test #16: banana_runtime_physics_world_abi_test ...........   Passed    0.01 sec
+      Start 17: banana_runtime_engine_lifecycle_test
+17/53 Test #17: banana_runtime_engine_lifecycle_test ............   Passed    0.02 sec
+      Start 18: banana_runtime_controller_attach_test
+18/53 Test #18: banana_runtime_controller_attach_test ...........   Passed    0.01 sec
+      Start 19: banana_runtime_engine_tick_test
+19/53 Test #19: banana_runtime_engine_tick_test .................   Passed    0.07 sec
+      Start 20: banana_runtime_move_target_domain_test
+20/53 Test #20: banana_runtime_move_target_domain_test ..........   Passed    0.01 sec
+      Start 21: banana_runtime_terrain_host_test
+21/53 Test #21: banana_runtime_terrain_host_test ................   Passed    0.01 sec
+      Start 22: banana_runtime_player_api_test
+22/53 Test #22: banana_runtime_player_api_test ..................   Passed    0.01 sec
+      Start 23: banana_runtime_player_builds_integration_test
+23/53 Test #23: banana_runtime_player_builds_integration_test ...   Passed    0.01 sec
+      Start 24: banana_runtime_render_material_test
+24/53 Test #24: banana_runtime_render_material_test .............   Passed    0.01 sec
+      Start 25: banana_runtime_player_motion_host_test
+25/53 Test #25: banana_runtime_player_motion_host_test ..........   Passed    0.01 sec
+      Start 26: banana_runtime_engine_host_test
+26/53 Test #26: banana_runtime_engine_host_test .................   Passed    0.01 sec
+      Start 27: banana_runtime_engine_state_test
+27/53 Test #27: banana_runtime_engine_state_test ................   Passed    0.01 sec
+      Start 28: banana_runtime_controller_kind_domain_test
+28/53 Test #28: banana_runtime_controller_kind_domain_test ......   Passed    0.01 sec
+      Start 29: banana_runtime_application_service_ports_test
+29/53 Test #29: banana_runtime_application_service_ports_test ...   Passed    0.01 sec
+      Start 30: banana_runtime_interlock_test
+30/53 Test #30: banana_runtime_interlock_test ...................   Passed    0.01 sec
+      Start 31: banana_runtime_parallel_amdahl_test
+31/53 Test #31: banana_runtime_parallel_amdahl_test .............   Passed    0.01 sec
+      Start 32: banana_runtime_parallel_contract_test
+32/53 Test #32: banana_runtime_parallel_contract_test ...........   Passed    0.01 sec
+      Start 33: banana_runtime_controller_sync_strict_test
+33/53 Test #33: banana_runtime_controller_sync_strict_test ......   Passed    0.01 sec
+      Start 34: banana_runtime_controller_sync_map_test
+34/53 Test #34: banana_runtime_controller_sync_map_test .........   Passed    0.01 sec
+      Start 35: banana_player_sync_staleness_test
+35/53 Test #35: banana_player_sync_staleness_test ...............   Passed    0.01 sec
+      Start 36: banana_interactive_objects_test
+36/53 Test #36: banana_interactive_objects_test .................   Passed    0.01 sec
+      Start 37: banana_npc_merchant_test
+37/53 Test #37: banana_npc_merchant_test ........................   Passed    0.01 sec
+      Start 38: banana_engine_merchant_trade_test
+38/53 Test #38: banana_engine_merchant_trade_test ...............   Passed    0.52 sec
+      Start 39: banana_engine_typed_abi_validation_test
+39/53 Test #39: banana_engine_typed_abi_validation_test .........   Passed    0.53 sec
+      Start 40: banana_terrain_features_test
+40/53 Test #40: banana_terrain_features_test ....................   Passed    0.01 sec
+      Start 41: banana_ui_system_test
+41/53 Test #41: banana_ui_system_test ...........................   Passed    0.02 sec
+      Start 42: banana_native_ui_abi_test
+42/53 Test #42: banana_native_ui_abi_test .......................   Passed    0.01 sec
+      Start 43: banana_input_binding_test
+43/53 Test #43: banana_input_binding_test .......................   Passed    0.01 sec
+      Start 44: banana_terrain_chunks_test
+44/53 Test #44: banana_terrain_chunks_test ......................   Passed    0.01 sec
+      Start 45: banana_player_resources_test
+45/53 Test #45: banana_player_resources_test ....................   Passed    0.01 sec
+      Start 46: banana_runtime_domain_adapters_test
+46/53 Test #46: banana_runtime_domain_adapters_test .............   Passed    0.01 sec
+      Start 47: banana_runtime_merchant_service_test
+47/53 Test #47: banana_runtime_merchant_service_test ............   Passed    0.01 sec
+      Start 48: banana_runtime_gameplay_service_test
+48/53 Test #48: banana_runtime_gameplay_service_test ............   Passed    0.01 sec
+      Start 49: banana_player_builds_test
+49/53 Test #49: banana_player_builds_test .......................   Passed    0.01 sec
+      Start 50: banana_interactive_collection_test
+50/53 Test #50: banana_interactive_collection_test ..............   Passed    0.01 sec
+      Start 51: banana_interactive_object_spawner_test
+51/53 Test #51: banana_interactive_object_spawner_test ..........   Passed    0.01 sec
+      Start 52: banana_chunk_stream_packet_test
+52/53 Test #52: banana_chunk_stream_packet_test .................   Passed    0.01 sec
+      Start 53: banana_actor_mesh_registry_test
+53/53 Test #53: banana_actor_mesh_registry_test .................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 53
+
+Total Test time (real) =   3.25 sec

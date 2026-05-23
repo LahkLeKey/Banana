@@ -2,7 +2,9 @@
 #define BANANA_ENGINE_RENDERER_INTERNAL_H
 
 #include "renderer.h"
-#include "shader.h"
+
+struct Shader;
+typedef struct Shader Shader;
 
 struct Renderer
 {

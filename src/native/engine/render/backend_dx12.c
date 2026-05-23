@@ -88,6 +88,8 @@ typedef struct BananaDx12Runtime
     UINT present_interval;
     UINT64 frame_counter;
     UINT64 frames_presented;
+    UINT64 scene_draw_calls_total;
+    UINT scene_draw_calls_frame;
     HRESULT last_present_result;
     int command_list_recording;
 } BananaDx12Runtime;
@@ -118,13 +120,15 @@ static void banana_dx12_runtime_update_telemetry(void)
 {
     snprintf(s_dx12_telemetry,
              sizeof(s_dx12_telemetry),
-             "status=%s active=%d size=%dx%d frame=%llu presented=%llu interval=%u hr=0x%08lx",
+             "status=%s active=%d size=%dx%d frame=%llu presented=%llu draws_frame=%u draws_total=%llu interval=%u hr=0x%08lx",
              s_dx12_runtime.status ? s_dx12_runtime.status : "unknown",
              s_dx12_runtime.active,
              s_dx12_runtime.width,
              s_dx12_runtime.height,
              (unsigned long long)s_dx12_runtime.frame_counter,
              (unsigned long long)s_dx12_runtime.frames_presented,
+             s_dx12_runtime.scene_draw_calls_frame,
+             (unsigned long long)s_dx12_runtime.scene_draw_calls_total,
              s_dx12_runtime.present_interval,
              (unsigned long)s_dx12_runtime.last_present_result);
 }
@@ -615,6 +619,11 @@ unsigned long long banana_dx12_runtime_frames_presented(void)
     return (unsigned long long)s_dx12_runtime.frames_presented;
 }
 
+unsigned int banana_dx12_runtime_scene_draw_calls(void)
+{
+    return (unsigned int)s_dx12_runtime.scene_draw_calls_frame;
+}
+
 int banana_dx12_runtime_init(void *native_window, int width, int height)
 {
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
@@ -976,6 +985,7 @@ int banana_dx12_runtime_begin_frame(float clear_r, float clear_g, float clear_b,
                                                     NULL);
 
     s_dx12_runtime.command_list_recording = 1;
+    s_dx12_runtime.scene_draw_calls_frame = 0;
     s_dx12_runtime.frame_counter += 1;
     s_dx12_runtime.status = "dx12-frame-recording";
     banana_dx12_runtime_update_telemetry();
@@ -1064,5 +1074,26 @@ void banana_dx12_runtime_shutdown(void)
     banana_dx12_runtime_release_all();
 #else
     banana_dx12_runtime_update_telemetry();
+#endif
+}
+
+void banana_dx12_runtime_submit_scene_draw(const float *position,
+                                           const float *scale,
+                                           int uses_texture)
+{
+#if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
+    (void)position;
+    (void)scale;
+    (void)uses_texture;
+
+    if (!s_dx12_runtime.active || !s_dx12_runtime.command_list_recording)
+        return;
+
+    s_dx12_runtime.scene_draw_calls_frame += 1;
+    s_dx12_runtime.scene_draw_calls_total += 1;
+#else
+    (void)position;
+    (void)scale;
+    (void)uses_texture;
 #endif
 }

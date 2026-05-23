@@ -5,27 +5,34 @@
 #include "ai/wildlife_controller.h"
 #include "ui/ui.h"
 #include "runtime/controller_sync.h"
+#include "runtime/application_service_ports.h"
 #include "runtime/controller_runtime.h"
 #include "runtime/controller_attach.h"
+#include "runtime/engine_composition.h"
 #include "runtime/engine_host.h"
+#include "runtime/engine_state.h"
 #include "runtime/engine_lifecycle.h"
 #include "runtime/engine_tick.h"
+#include "runtime/gameplay_service.h"
 #include "runtime/camera_follow.h"
 #include "runtime/camera_basis.h"
+#include "runtime/move_target_service.h"
+#include "runtime/player_runtime_service.h"
 #include "runtime/render_material.h"
 #include "runtime/move_target_domain.h"
 #include "runtime/player_motion.h"
 #include "runtime/player_motion_host.h"
 #include "runtime/player_api.h"
 #include "runtime/player_builds.h"
+#include "runtime/merchant_abi.h"
+#include "runtime/merchant_trade_domain.h"
+#include "runtime/player_resource_abi.h"
 #include "runtime/player_registry.h"
 #include "runtime/physics_abi.h"
 #include "runtime/input_contract.h"
+#include "runtime/resource_domain.h"
 #include "runtime/render_submit.h"
 #include "runtime/terrain_generation.h"
-#include "runtime/terrain_height.h"
-#include "runtime/terrain_host.h"
-#include "runtime/terrain_mutation.h"
 #include "runtime/terrain_runtime.h"
 #include "runtime/tick_phases.h"
 #include "runtime/world_metrics.h"
@@ -36,472 +43,66 @@
 #include <stdio.h>
 #include <string.h>
 
-/* ── Global singletons ────────────────────────────────────────────────────── */
-static Window *s_window = NULL;
-static Renderer *s_renderer = NULL;
-static PhysicsWorld *s_physics = NULL;
-static World *s_world = NULL;
-static Mesh *s_entity_mesh = NULL; /* banana mesh for actors */
-static Mesh *s_pbj_pickup_mesh = NULL;
-static EntityId s_player_id = 0;
-/* Initialization guard */
-static int s_engine_initialized = 0;
-/* Terrain is chunked so WFC/CA updates can rebuild only dirty regions. */
+/* ── Engine runtime aggregate ─────────────────────────────────────────────── */
+static EngineRuntimeState s_engine_state;
+static const RuntimeApplicationServicePorts *s_service_ports = NULL;
 
-#define BANANA_TERRAIN_SIZE 18
-#define BANANA_TERRAIN_MAX_LAYERS 4
-#define BANANA_TERRAIN_CHUNK_SIZE 6
-#define BANANA_TERRAIN_CHUNK_COLS (BANANA_TERRAIN_SIZE / BANANA_TERRAIN_CHUNK_SIZE)
-#define BANANA_TERRAIN_CHUNK_ROWS (BANANA_TERRAIN_SIZE / BANANA_TERRAIN_CHUNK_SIZE)
-#define BANANA_TERRAIN_TOTAL_CHUNKS (BANANA_TERRAIN_CHUNK_COLS * BANANA_TERRAIN_CHUNK_ROWS)
+#define BANANA_TERRAIN_SIZE BANANA_ENGINE_TERRAIN_SIZE
+#define BANANA_TERRAIN_MAX_LAYERS BANANA_ENGINE_TERRAIN_MAX_LAYERS
+#define BANANA_TERRAIN_CHUNK_SIZE BANANA_ENGINE_TERRAIN_CHUNK_SIZE
+#define BANANA_TERRAIN_CHUNK_COLS BANANA_ENGINE_TERRAIN_CHUNK_COLS
+#define BANANA_TERRAIN_CHUNK_ROWS BANANA_ENGINE_TERRAIN_CHUNK_ROWS
+#define BANANA_TERRAIN_TOTAL_CHUNKS BANANA_ENGINE_TERRAIN_TOTAL_CHUNKS
+#define BANANA_MAX_ACTIVE_CONTROLLERS BANANA_ENGINE_MAX_ACTIVE_CONTROLLERS
 
-static unsigned char s_terrain_height[BANANA_TERRAIN_SIZE][BANANA_TERRAIN_SIZE];
-static RuntimeTerrainChunk s_terrain_chunks[BANANA_TERRAIN_TOTAL_CHUNKS];
-static int s_terrain_initialized = 0;
-static int s_viewport_width = 0;
-static int s_viewport_height = 0;
-static float s_camera_eye[3] = {0.f, 0.f, 0.f};
-static float s_camera_target[3] = {0.f, 0.f, 0.f};
-static int s_camera_valid = 0;
-static float s_move_input_x = 0.f;
-static float s_move_input_z = 0.f;
-static RuntimeMoveTargetState s_move_target_state = {0};
-static int s_merchants_seeded = 0;
-static int s_pbj_pickup_collected = 0;
-
-/* ── Active controller table ─────────────────────────────────────────────── */
-#define BANANA_MAX_ACTIVE_CONTROLLERS 256
-static ControllerInstance *s_controllers[BANANA_MAX_ACTIVE_CONTROLLERS];
-static int s_controller_count = 0;
+#define s_window (s_engine_state.window)
+#define s_renderer (s_engine_state.renderer)
+#define s_physics (s_engine_state.physics)
+#define s_world (s_engine_state.world)
+#define s_entity_mesh (s_engine_state.entity_mesh)
+#define s_pbj_pickup_mesh (s_engine_state.pbj_pickup_mesh)
+#define s_player_id (s_engine_state.player_id)
+#define s_engine_initialized (s_engine_state.engine_initialized)
+#define s_terrain_height (s_engine_state.terrain_height)
+#define s_terrain_chunks (s_engine_state.terrain_chunks)
+#define s_terrain_initialized (s_engine_state.terrain_initialized)
+#define s_viewport_width (s_engine_state.viewport_width)
+#define s_viewport_height (s_engine_state.viewport_height)
+#define s_camera_eye (s_engine_state.camera_eye)
+#define s_camera_target (s_engine_state.camera_target)
+#define s_camera_valid (s_engine_state.camera_valid)
+#define s_move_input_x (s_engine_state.move_input_x)
+#define s_move_input_z (s_engine_state.move_input_z)
+#define s_move_target_state (s_engine_state.move_target_state)
+#define s_merchants_seeded (s_engine_state.merchants_seeded)
+#define s_pbj_pickup_collected (s_engine_state.pbj_pickup_collected)
+#define s_controllers (s_engine_state.controllers)
+#define s_controller_count (s_engine_state.controller_count)
 
 /* ── Deterministic terrain generation/rendering (C-owned) ───────────────── */
 
-static void terrain_mark_chunk_dirty(int chunk_x, int chunk_z)
-{
-    runtime_terrain_host_mark_chunk_dirty(s_terrain_chunks,
-                                          BANANA_TERRAIN_CHUNK_COLS,
-                                          BANANA_TERRAIN_CHUNK_ROWS,
-                                          chunk_x,
-                                          chunk_z);
-}
-
-static int terrain_rebuild_dirty_chunks_runtime(int max_chunks)
-{
-    return runtime_terrain_host_rebuild_dirty(&s_terrain_height[0][0],
-                                              BANANA_TERRAIN_SIZE,
-                                              BANANA_TERRAIN_CHUNK_SIZE,
-                                              s_terrain_chunks,
-                                              BANANA_TERRAIN_CHUNK_COLS,
-                                              BANANA_TERRAIN_CHUNK_ROWS,
-                                              max_chunks);
-}
-
 static float terrain_sample_height(float x, float z);
-
-static void terrain_draw_runtime(void)
-{
-    runtime_terrain_draw(s_renderer,
-                         s_terrain_chunks,
-                         s_terrain_initialized,
-                         BANANA_TERRAIN_SIZE,
-                         BANANA_TERRAIN_CHUNK_SIZE,
-                         BANANA_TERRAIN_CHUNK_COLS,
-                         BANANA_TERRAIN_CHUNK_ROWS);
-}
 
 static float terrain_sample_height(float x, float z)
 {
-    return runtime_terrain_sample_height(&s_terrain_height[0][0],
-                                         BANANA_TERRAIN_SIZE,
-                                         x,
-                                         z,
-                                         0.48f,
-                                         -1.45f);
-}
+    if (!s_service_ports || !s_service_ports->terrain.sample_height)
+        return 0.f;
 
-/* Banana raycast contract: map normalized screen input into a terrain-ground
- * world-space target on the island for click-to-move behavior. */
-static int banana_raycast_click_to_world_target(float normalized_x,
-                                                float normalized_y,
-                                                float *out_target_x,
-                                                float *out_target_z)
-{
-    float forward[3] = {0.f, 0.f, 0.f};
-    float right[3] = {0.f, 0.f, 0.f};
-    float up[3] = {0.f, 1.f, 0.f};
-    float world_up[3] = {0.f, 1.f, 0.f};
-    float dir[3] = {0.f, 0.f, 0.f};
-    const float fov_radians = 44.f * (3.14159265358979323846f / 180.f);
-    const float tan_half_fov = tanf(fov_radians * 0.5f);
-    const float island_span = (float)(BANANA_TERRAIN_SIZE - 1) * 0.5f;
-    float aspect = 1.f;
-    float ground_y = 0.f;
-    float t = 0.f;
-    float target_x = 0.f;
-    float target_z = 0.f;
-
-    if (!out_target_x || !out_target_z || !s_camera_valid || s_viewport_height <= 0)
-        return 0;
-
-    forward[0] = s_camera_target[0] - s_camera_eye[0];
-    forward[1] = s_camera_target[1] - s_camera_eye[1];
-    forward[2] = s_camera_target[2] - s_camera_eye[2];
-    {
-        float forward_len = sqrtf(forward[0] * forward[0] +
-                                  forward[1] * forward[1] +
-                                  forward[2] * forward[2]);
-        if (forward_len <= 1e-6f)
-            return 0;
-        forward[0] /= forward_len;
-        forward[1] /= forward_len;
-        forward[2] /= forward_len;
-    }
-
-    right[0] = forward[1] * world_up[2] - forward[2] * world_up[1];
-    right[1] = forward[2] * world_up[0] - forward[0] * world_up[2];
-    right[2] = forward[0] * world_up[1] - forward[1] * world_up[0];
-    {
-        float right_len = sqrtf(right[0] * right[0] + right[1] * right[1] + right[2] * right[2]);
-        if (right_len <= 1e-6f)
-            return 0;
-        right[0] /= right_len;
-        right[1] /= right_len;
-        right[2] /= right_len;
-    }
-
-    up[0] = right[1] * forward[2] - right[2] * forward[1];
-    up[1] = right[2] * forward[0] - right[0] * forward[2];
-    up[2] = right[0] * forward[1] - right[1] * forward[0];
-    {
-        float up_len = sqrtf(up[0] * up[0] + up[1] * up[1] + up[2] * up[2]);
-        if (up_len <= 1e-6f)
-            return 0;
-        up[0] /= up_len;
-        up[1] /= up_len;
-        up[2] /= up_len;
-    }
-
-    if (up[1] <= 1e-4f)
-        return 0;
-
-    aspect = (float)s_viewport_width / (float)s_viewport_height;
-    dir[0] = forward[0] + right[0] * normalized_x * aspect * tan_half_fov + up[0] * normalized_y * tan_half_fov;
-    dir[1] = forward[1] + right[1] * normalized_x * aspect * tan_half_fov + up[1] * normalized_y * tan_half_fov;
-    dir[2] = forward[2] + right[2] * normalized_x * aspect * tan_half_fov + up[2] * normalized_y * tan_half_fov;
-
-    {
-        float dir_len = sqrtf(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]);
-        if (dir_len <= 1e-6f)
-            return 0;
-        dir[0] /= dir_len;
-        dir[1] /= dir_len;
-        dir[2] /= dir_len;
-    }
-
-    if (fabsf(dir[1]) <= 1e-6f)
-        return 0;
-
-    ground_y = terrain_sample_height(s_camera_target[0], s_camera_target[2]);
-    t = (ground_y - s_camera_eye[1]) / dir[1];
-    if (t <= 0.f)
-        return 0;
-
-    target_x = s_camera_eye[0] + dir[0] * t;
-    target_z = s_camera_eye[2] + dir[2] * t;
-
-    {
-        int i = 0;
-        for (i = 0; i < 2; i++)
-        {
-            ground_y = terrain_sample_height(target_x, target_z);
-            t = (ground_y - s_camera_eye[1]) / dir[1];
-            if (t <= 0.f)
-                break;
-            target_x = s_camera_eye[0] + dir[0] * t;
-            target_z = s_camera_eye[2] + dir[2] * t;
-        }
-    }
-
-    if (target_x < -island_span)
-        target_x = -island_span;
-    if (target_x > island_span)
-        target_x = island_span;
-    if (target_z < -island_span)
-        target_z = -island_span;
-    if (target_z > island_span)
-        target_z = island_span;
-
-    *out_target_x = target_x;
-    *out_target_z = target_z;
-    return 1;
-}
-
-static void update_player_motion(float dt)
-{
-    float move_x = s_move_input_x;
-    float move_z = s_move_input_z;
-
-    if (s_move_target_state.has_target && s_world && s_player_id)
-    {
-        Entity *player = world_get_entity(s_world, s_player_id);
-        if (player && player->active)
-        {
-            RuntimeMoveTargetSteering steering = {0};
-            if (runtime_move_target_compute_steering(&s_move_target_state,
-                                                     player->position,
-                                                     s_camera_eye,
-                                                     s_camera_target,
-                                                     s_camera_valid,
-                                                     0.35f,
-                                                     &steering) &&
-                steering.reached_target)
-            {
-                runtime_move_target_clear(&s_move_target_state);
-                runtime_input_contract_mark_target_reached();
-                move_x = 0.f;
-                move_z = 0.f;
-            }
-            else
-            {
-                move_x = steering.move_x;
-                move_z = steering.move_z;
-                runtime_input_contract_set_has_move_target(steering.has_target);
-            }
-        }
-        else
-        {
-            runtime_move_target_clear(&s_move_target_state);
-            runtime_input_contract_set_has_move_target(0);
-        }
-    }
-
-    runtime_player_motion_tick(s_world,
-                               s_player_id,
-                               move_x,
-                               move_z,
-                               s_camera_eye,
-                               s_camera_target,
-                               s_camera_valid,
-                               5.5f,
-                               dt,
-                               (float)(BANANA_TERRAIN_SIZE - 1) * 0.5f,
-                               terrain_sample_height);
-
-    s_move_input_x = move_x;
-    s_move_input_z = move_z;
-}
-
-static void follow_player_camera(void)
-{
-    runtime_camera_follow_player(s_renderer,
-                                 s_world,
-                                 s_player_id,
-                                 s_viewport_width,
-                                 s_viewport_height,
-                                 s_camera_eye,
-                                 s_camera_target,
-                                 &s_camera_valid);
-}
-
-static void apply_click_move_input(float normalized_x, float normalized_y)
-{
-    float target_x = 0.f;
-    float target_z = 0.f;
-    if (banana_raycast_click_to_world_target(normalized_x, normalized_y, &target_x, &target_z))
-    {
-    RuntimeMoveTargetPoint target = {target_x, target_z};
-    if (runtime_move_target_set(&s_move_target_state, target))
-    {
-        runtime_input_contract_set_has_move_target(1);
-        fprintf(stdout,
-            "[engine] banana-raycast target set x=%.2f z=%.2f from normalized=(%.2f, %.2f)\n",
-            target_x,
-            target_z,
-            normalized_x,
-            normalized_y);
-    }
-    else
-    {
-        runtime_move_target_clear(&s_move_target_state);
-        runtime_input_contract_set_has_move_target(0);
-        fprintf(stderr,
-            "[engine] banana-raycast rejected invalid target from normalized=(%.2f, %.2f)\n",
-            normalized_x,
-            normalized_y);
-    }
-    }
-    else
-    {
-    runtime_move_target_clear(&s_move_target_state);
-        runtime_input_contract_set_has_move_target(0);
-        fprintf(stderr,
-                "[engine] banana-raycast failed for normalized=(%.2f, %.2f)\n",
-                normalized_x,
-                normalized_y);
-    }
+    return s_service_ports->terrain.sample_height(&s_engine_state, x, z);
 }
 
 /* ── Init ────────────────────────────────────────────────────────────────── */
 int engine_init(int width, int height)
 {
-    BananaRenderBackend requested_backend = BANANA_RENDER_BACKEND_UNKNOWN;
-    BananaRenderBackend active_backend = BANANA_RENDER_BACKEND_UNKNOWN;
-
-    /* Idempotent: only initialize once */
-    if (s_engine_initialized)
-        return 0;
-    s_engine_initialized = 1;
-
-    requested_backend = banana_render_backend_requested();
-    active_backend = banana_render_backend_active();
-
-    fprintf(stdout,
-            "[engine] render backend requested=%s active=%s status=%s\n",
-            banana_render_backend_name(requested_backend),
-            banana_render_backend_name(active_backend),
-            banana_render_backend_status());
-    if (requested_backend != active_backend)
-    {
-        fprintf(stderr,
-                "[engine] render backend fallback engaged for '%s'\n",
-                banana_render_backend_name(requested_backend));
-    }
-
-    /* Register built-in controller types */
-    wildlife_controller_register();
-
-    s_window = window_create(width, height, "Banana Engine");
-    if (!s_window)
-    {
-        fprintf(stderr, "[engine] window_create failed\n");
-        return -1;
-    }
-    s_renderer = renderer_create(width, height);
-    if (!s_renderer)
-    {
-        fprintf(stderr, "[engine] renderer_create failed\n");
-        return -1;
-    }
-    renderer_attach_native_window(s_renderer, window_get_native_handle(s_window));
-    s_physics = physics_world_create();
-    s_world = world_create();
-    {
-        s_player_id = world_spawn_entity(s_world, ENTITY_TYPE_PLAYER, 0.f, 0.f, 0.f);
-        s_entity_mesh = mesh_create_banana_vector(1.05f, 1.55f, 1.65f, 0.15f, 3);
-        s_pbj_pickup_mesh = mesh_create_peanut_butter_pickup_asset(2);
-    }
-    if (!s_entity_mesh || !s_pbj_pickup_mesh)
-    {
-        fprintf(stderr, "[engine] actor mesh creation failed\n");
-        return -1;
-    }
-    s_viewport_width = width;
-    s_viewport_height = height;
-
-    if (player_builds_init() != 0)
+    s_service_ports = runtime_application_service_ports();
+    if (!s_service_ports)
         return -1;
 
-    s_terrain_initialized = runtime_engine_lifecycle_build_terrain(&s_terrain_height[0][0],
-                                                                   BANANA_TERRAIN_SIZE,
-                                                                   BANANA_TERRAIN_MAX_LAYERS,
-                                                                   BANANA_TERRAIN_CHUNK_SIZE,
-                                                                   s_terrain_chunks,
-                                                                   BANANA_TERRAIN_CHUNK_COLS,
-                                                                   BANANA_TERRAIN_CHUNK_ROWS);
-    if (!s_terrain_initialized)
-        return -1;
-
-    if (!runtime_engine_lifecycle_bootstrap_primary_player(s_world,
-                                                            s_player_id,
-                                                            terrain_sample_height))
-        return -1;
-
-    runtime_engine_lifecycle_spawn_default_actors(s_world,
-                                                  terrain_sample_height,
-                                                  engine_controller_attach);
-    s_pbj_pickup_collected = 0;
-
-    fprintf(stdout, "[engine] initialized %dx%d\n", width, height);
-    engine_serialize_reset();
-    return 0;
-}
-
-static void tick_phase_gameplay_signals(void)
-{
-    runtime_wildlife_signal_player_nearby(s_world,
-                                          s_controllers,
-                                          s_controller_count,
-                                          s_player_id,
-                                          6.0f);
-}
-
-static void tick_phase_pbj_pickup_collection(void)
-{
-    const float collect_radius = 1.55f;
-    Entity *player = NULL;
-
-    if (s_pbj_pickup_collected || !s_world || !s_player_id)
-        return;
-
-    player = world_get_entity(s_world, s_player_id);
-    if (!player || !player->active)
-        return;
-
-    for (int i = 0; i < s_world->entity_count; i++)
-    {
-        Entity *entity = s_world->entities[i];
-        if (!entity || !entity->active)
-            continue;
-        if (entity->type != ENTITY_TYPE_STATIC)
-            continue;
-        if (strcmp(entity->controller_kind, "pbj_pickup") != 0)
-            continue;
-
-        {
-            float dx = player->position[0] - entity->position[0];
-            float dz = player->position[2] - entity->position[2];
-            float distance = sqrtf(dx * dx + dz * dz);
-            if (distance <= collect_radius)
-            {
-                entity->active = 0;
-                s_pbj_pickup_collected = 1;
-                break;
-            }
-        }
-    }
-}
-
-static void tick_phase_gameplay(void)
-{
-    tick_phase_gameplay_signals();
-    tick_phase_pbj_pickup_collection();
-}
-
-static Mesh *runtime_render_mesh_for_actor(const Entity *entity, Mesh *default_mesh);
-
-static void tick_phase_render_scene(void)
-{
-    runtime_render_submit_frame(s_renderer,
-                                s_world,
-                                s_entity_mesh,
-                                s_terrain_initialized,
-                                terrain_draw_runtime,
-                                runtime_render_material_for_actor,
-                                runtime_render_mesh_for_actor);
-}
-
-static Mesh *runtime_render_mesh_for_actor(const Entity *entity, Mesh *default_mesh)
-{
-    if (!entity)
-        return default_mesh;
-
-    if (entity->type == ENTITY_TYPE_STATIC && strcmp(entity->controller_kind, "pbj_pickup") == 0)
-    {
-        if (s_pbj_pickup_mesh)
-            return s_pbj_pickup_mesh;
-    }
-
-    return default_mesh;
+    return runtime_engine_composition_init(&s_engine_state,
+                                           width,
+                                           height,
+                                           terrain_sample_height,
+                                           engine_controller_attach);
 }
 
 static const char *engine_player_active_guid(void)
@@ -523,101 +124,17 @@ static const char *engine_player_active_guid(void)
     return player_guid;
 }
 
-static int engine_seed_default_merchant_if_needed(int npc_id)
-{
-    if (npc_id < 0) {
-        return -1;
-    }
-
-    if (!s_merchants_seeded) {
-        npc_merchant_init();
-        s_merchants_seeded = 1;
-    }
-
-    while (npc_merchant_count() <= npc_id) {
-        int merchant_id = npc_merchant_register(npc_merchant_count(), 0.0f, 0.0f, 500);
-        if (merchant_id < 0) {
-            return -1;
-        }
-        npc_merchant_add_inventory_item(merchant_id, "wood", 100, 200, 5);
-        npc_merchant_add_inventory_item(merchant_id, "ore", 50, 100, 15);
-    }
-
-    return 0;
-}
-
 /* ── Tick ────────────────────────────────────────────────────────────────── */
 int engine_tick(float dt)
 {
-    return runtime_engine_tick_execute(s_window,
-                                       s_renderer,
-                                       s_physics,
-                                       s_world,
-                                       &s_viewport_width,
-                                       &s_viewport_height,
-                                       terrain_rebuild_dirty_chunks_runtime,
-                                       s_controllers,
-                                       s_controller_count,
-                                       dt,
-                                       update_player_motion,
-                                       follow_player_camera,
-                                       apply_click_move_input,
-                                       tick_phase_gameplay,
-                                       tick_phase_render_scene);
+    return runtime_engine_composition_tick(&s_engine_state,
+                                           dt,
+                                           terrain_sample_height);
 }
 /* ── Shutdown ────────────────────────────────────────────────────────────── */
 void engine_shutdown(void)
 {
-    runtime_engine_lifecycle_destroy_controllers(s_controllers,
-                                                 BANANA_MAX_ACTIVE_CONTROLLERS,
-                                                 &s_controller_count);
-
-    mesh_destroy(s_entity_mesh);
-    mesh_destroy(s_pbj_pickup_mesh);
-    runtime_engine_lifecycle_reset_terrain_chunks(s_terrain_chunks, BANANA_TERRAIN_TOTAL_CHUNKS);
-    world_destroy(s_world);
-    physics_world_destroy(s_physics);
-    renderer_destroy(s_renderer);
-    window_destroy(s_window);
-
-    s_entity_mesh = NULL;
-    s_pbj_pickup_mesh = NULL;
-    s_terrain_initialized = 0;
-    s_viewport_width = 0;
-    s_viewport_height = 0;
-    s_window = NULL;
-    s_renderer = NULL;
-    s_physics = NULL;
-    s_world = NULL;
-    s_player_id = 0;
-    if (s_merchants_seeded) {
-        npc_merchant_shutdown();
-        s_merchants_seeded = 0;
-    }
-    player_builds_cleanup();
-    runtime_player_registry_reset();
-    s_engine_initialized = 0;
-    s_camera_valid = 0;
-    s_pbj_pickup_collected = 0;
-    runtime_move_target_reset(&s_move_target_state);
-    runtime_input_contract_reset();
-    engine_serialize_reset();
-
-    runtime_engine_host_reset_state(&s_window,
-                                    &s_renderer,
-                                    &s_physics,
-                                    &s_world,
-                                    &s_entity_mesh,
-                                    &s_player_id,
-                                    &s_terrain_initialized,
-                                    &s_viewport_width,
-                                    &s_viewport_height,
-                                    &s_engine_initialized,
-                                    &s_camera_valid,
-                                    &s_move_input_x,
-                                    &s_move_input_z);
-
-    fprintf(stdout, "[engine] shutdown complete\n");
+    runtime_engine_composition_shutdown(&s_engine_state);
 }
 
 /* ── WASM ABI — backed by singletons above ──────────────────────────────── */
@@ -662,25 +179,22 @@ void engine_world_tick(float dt)
 /* Terrain ABI */
 int engine_terrain_set_height(int x, int z, int elevation)
 {
-    return runtime_terrain_set_height(&s_terrain_height[0][0],
-                                      BANANA_TERRAIN_SIZE,
-                                      BANANA_TERRAIN_MAX_LAYERS,
-                                      BANANA_TERRAIN_CHUNK_SIZE,
-                                      x,
-                                      z,
-                                      elevation,
-                                      terrain_mark_chunk_dirty);
+    if (!s_service_ports || !s_service_ports->terrain.set_height)
+        return -1;
+
+    return s_service_ports->terrain.set_height(&s_engine_state, x, z, elevation);
 }
 
 void engine_terrain_mark_region_dirty(int min_x, int min_z, int max_x, int max_z)
 {
-    runtime_terrain_mark_region_dirty(BANANA_TERRAIN_SIZE,
-                                      BANANA_TERRAIN_CHUNK_SIZE,
-                                      min_x,
-                                      min_z,
-                                      max_x,
-                                      max_z,
-                                      terrain_mark_chunk_dirty);
+    if (!s_service_ports || !s_service_ports->terrain.mark_region_dirty)
+        return;
+
+    s_service_ports->terrain.mark_region_dirty(&s_engine_state,
+                                               min_x,
+                                               min_z,
+                                               max_x,
+                                               max_z);
 }
 
 /* Controller ABI */
@@ -776,7 +290,10 @@ int engine_handle_right_click(float canvas_x, float canvas_y)
         float normalized_x = (canvas_x / (float)s_viewport_width) * 2.f - 1.f;
         float normalized_y = 1.f - (canvas_y / (float)s_viewport_height) * 2.f;
         if (runtime_input_contract_handle_right_click_normalized(normalized_x, normalized_y))
-            apply_click_move_input(normalized_x, normalized_y);
+            runtime_engine_composition_apply_click_input(&s_engine_state,
+                                                         normalized_x,
+                                                         normalized_y,
+                                                         terrain_sample_height);
     }
     return accepted;
 }
@@ -785,7 +302,10 @@ int engine_handle_right_click_normalized(float screen_x, float screen_y)
 {
     int accepted = runtime_input_contract_handle_right_click_normalized(screen_x, screen_y);
     if (accepted)
-        apply_click_move_input(screen_x, screen_y);
+        runtime_engine_composition_apply_click_input(&s_engine_state,
+                                                     screen_x,
+                                                     screen_y,
+                                                     terrain_sample_height);
     return accepted;
 }
 
@@ -920,34 +440,23 @@ void engine_ui_shutdown(void)
 
 int engine_player_get_resource(const char *resource_type)
 {
-    if (!resource_type) return 0;
-
-    const char *player_guid = engine_player_active_guid();
-
-    if (player_guid) {
-        return runtime_player_registry_get_resource(player_guid, resource_type);
-    }
-
-    return 0;
+    return runtime_player_resource_abi_get(engine_player_active_guid(), resource_type);
 }
 
 int engine_player_add_resource(const char *resource_type, int amount)
 {
-    if (!resource_type) return 0;
-
-    const char *player_guid = engine_player_active_guid();
-
-    if (player_guid) {
-        runtime_player_registry_add_resource(player_guid, resource_type, amount);
-        return runtime_player_registry_get_resource(player_guid, resource_type);
-    }
-
-    return 0;
+    return runtime_player_resource_abi_add(engine_player_active_guid(), resource_type, amount);
 }
 
 int engine_player_build_set_class(const char *player_guid, int class_type)
 {
-    return player_builds_upsert(player_guid, (BuildClass)class_type);
+    BuildClass parsed_class;
+    if (player_builds_parse_class(class_type, &parsed_class) != 0)
+    {
+        return -1;
+    }
+
+    return player_builds_upsert(player_guid, parsed_class);
 }
 
 int engine_player_build_set_allocations(const char *player_guid,
@@ -968,26 +477,39 @@ int engine_player_build_equip(const char *player_guid,
                               int defense_bonus,
                               int utility_bonus)
 {
+    GearSlot parsed_slot;
     GearModifier gear;
+
+    if (player_builds_parse_gear_slot(slot, &parsed_slot) != 0)
+    {
+        return -1;
+    }
+
     gear.tier = tier;
     gear.attack_bonus = attack_bonus;
     gear.defense_bonus = defense_bonus;
     gear.utility_bonus = utility_bonus;
-    return player_builds_equip(player_guid, (GearSlot)slot, &gear);
+    return player_builds_equip(player_guid, parsed_slot, &gear);
 }
 
 int engine_player_build_get_stat(const char *player_guid, const char *stat_name)
 {
+    BuildStat stat;
     BuildStats stats;
-    if (!stat_name || player_builds_get_stats(player_guid, &stats) != 0) {
+    int stat_value = -1;
+
+    if (player_builds_parse_stat_name(stat_name, &stat) != 0 ||
+        player_builds_get_stats(player_guid, &stats) != 0)
+    {
         return -1;
     }
 
-    if (strcmp(stat_name, "health") == 0) return stats.health;
-    if (strcmp(stat_name, "attack") == 0) return stats.attack;
-    if (strcmp(stat_name, "defense") == 0) return stats.defense;
-    if (strcmp(stat_name, "utility") == 0) return stats.utility;
-    return -1;
+    if (player_builds_stat_value(&stats, stat, &stat_value) != 0)
+    {
+        return -1;
+    }
+
+    return stat_value;
 }
 
 int engine_player_combo_evaluate(const char *player_guid,
@@ -1016,10 +538,24 @@ int engine_player_combo_evaluate(const char *player_guid,
     return outcome.triggered;
 }
 
-static int engine_player_set_resource_total(const char *resource_type, int target_amount)
+static int engine_player_get_resource_by_key(RuntimeResourceKey resource_key)
 {
-    int current = engine_player_get_resource(resource_type);
-    return engine_player_add_resource(resource_type, target_amount - current);
+    return runtime_player_resource_abi_get_by_key(engine_player_active_guid(),
+                                                  resource_key);
+}
+
+static int engine_player_set_resource_total_by_key(RuntimeResourceKey resource_key, int target_amount)
+{
+    return runtime_player_resource_abi_set_total_by_key(engine_player_active_guid(),
+                                                        resource_key,
+                                                        target_amount);
+}
+
+static int engine_player_add_resource_by_key(RuntimeResourceKey resource_key, int amount)
+{
+    return runtime_player_resource_abi_add_by_key(engine_player_active_guid(),
+                                                  resource_key,
+                                                  amount);
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -1028,65 +564,42 @@ static int engine_player_set_resource_total(const char *resource_type, int targe
 
 int engine_npc_merchant_get_price(int npc_id, const char *item_type)
 {
-    /* Query merchant pricing via npc_merchant module */
-    if (!item_type || engine_seed_default_merchant_if_needed(npc_id) != 0) return 0;
-
-    int stock = 0;
-    int price = 0;
-    if (npc_merchant_get_item_price(npc_id, item_type, &stock, &price) == 0) {
-        return price;
-    }
-
-    return 0;
+    return runtime_merchant_abi_get_price(s_service_ports,
+                                          npc_id,
+                                          item_type,
+                                          &s_merchants_seeded);
 }
 
 int engine_npc_merchant_trade_buy(int npc_id, const char *item_type, int quantity)
 {
-    if (!s_world || !item_type || quantity <= 0) return -1;
-    if (engine_seed_default_merchant_if_needed(npc_id) != 0) return -1;
+    RuntimeMerchantResourceGateway resource_gateway;
 
-    int player_gold = engine_player_get_resource("gold");
-    MerchantTradeResult result = npc_merchant_trade_buy(npc_id, item_type, quantity, &player_gold);
-    if (result == MERCHANT_TRADE_INSUFFICIENT_GOLD) {
-        return -2;
-    }
-    if (result == MERCHANT_TRADE_INSUFFICIENT_STOCK) {
-        return -3;
-    }
-    if (result != MERCHANT_TRADE_OK) {
-        return -1;
-    }
+    resource_gateway.get = engine_player_get_resource_by_key;
+    resource_gateway.set_total = engine_player_set_resource_total_by_key;
+    resource_gateway.add = engine_player_add_resource_by_key;
 
-    engine_player_set_resource_total("gold", player_gold);
-    engine_player_add_resource(item_type, quantity);
-
-    return 0; /* Success */
+    return runtime_merchant_abi_trade_buy(s_service_ports,
+                                          s_world != NULL,
+                                          npc_id,
+                                          item_type,
+                                          quantity,
+                                          &s_merchants_seeded,
+                                          resource_gateway);
 }
 
 int engine_npc_merchant_trade_sell(int npc_id, const char *item_type, int quantity)
 {
-    if (!s_world || !item_type || quantity <= 0) return -1;
-    if (engine_seed_default_merchant_if_needed(npc_id) != 0) return -1;
+    RuntimeMerchantResourceGateway resource_gateway;
 
-    int player_amount = engine_player_get_resource(item_type);
-    if (player_amount < quantity) {
-        return -2;
-    }
+    resource_gateway.get = engine_player_get_resource_by_key;
+    resource_gateway.set_total = engine_player_set_resource_total_by_key;
+    resource_gateway.add = engine_player_add_resource_by_key;
 
-    int player_gold = engine_player_get_resource("gold");
-    MerchantTradeResult result = npc_merchant_trade_sell(npc_id, item_type, quantity, &player_gold);
-    if (result == MERCHANT_TRADE_INSUFFICIENT_STOCK) {
-        return -3;
-    }
-    if (result == MERCHANT_TRADE_INSUFFICIENT_GOLD) {
-        return -4;
-    }
-    if (result != MERCHANT_TRADE_OK) {
-        return -1;
-    }
-
-    engine_player_add_resource(item_type, -quantity);
-    engine_player_set_resource_total("gold", player_gold);
-
-    return 0; /* Success */
+    return runtime_merchant_abi_trade_sell(s_service_ports,
+                                           s_world != NULL,
+                                           npc_id,
+                                           item_type,
+                                           quantity,
+                                           &s_merchants_seeded,
+                                           resource_gateway);
 }

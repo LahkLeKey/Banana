@@ -2,6 +2,7 @@
 #define BANANA_ENGINE_RUNTIME_PLAYER_REGISTRY_H
 
 #include "../world/world.h"
+#include "resource_domain.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -80,6 +81,15 @@ extern "C"
     /**
      * Resource inventory management APIs
      */
+
+    /* Add resource to player inventory using typed resource keys. */
+    void runtime_player_registry_add_resource_key(const char *guid,
+                                                  RuntimeResourceKey resource_key,
+                                                  int amount);
+
+    /* Get resource count from player inventory using typed resource keys. */
+    int runtime_player_registry_get_resource_key(const char *guid,
+                                                 RuntimeResourceKey resource_key);
     
     /* Add resource to player inventory */
     void runtime_player_registry_add_resource(const char *guid, const char *resource_type, int amount);

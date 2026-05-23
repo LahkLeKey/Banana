@@ -3,7 +3,6 @@
 #include "backend_dx12.h"
 #include "material.h"
 #include "mesh.h"
-#include "shader.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,6 +48,7 @@ static const char *DEFAULT_FRAG =
 #elif defined(BANANA_ENGINE_HAS_GLFW)
 #define BANANA_ENGINE_HAS_GL 1
 #include <GL/gl.h>
+#include "shader.h"
 
 static const char *DEFAULT_VERT = "#version 330 core\n"
                                   "layout(location=0) in vec3 a_pos;\n"
@@ -81,6 +81,10 @@ static const char *DEFAULT_FRAG =
     "  frag_color = vec4(base_color * diff, 1.0);\n"
     "}\n";
 #endif /* platform */
+
+#ifdef __EMSCRIPTEN__
+#include "shader.h"
+#endif
 
 #ifdef BANANA_ENGINE_HAS_GL
 /* ── Internal mat4 multiply (column-major, A × B → C) ───────────────────── */
@@ -220,7 +224,7 @@ Renderer *renderer_create(int width, int height)
     glViewport(0, 0, width, height);
     glEnable(GL_DEPTH_TEST);
 #else
-    r->default_shader = shader_create(NULL, NULL);
+    r->default_shader = NULL;
 #endif
     return r;
 }
@@ -328,7 +332,9 @@ void renderer_destroy(Renderer *r)
 {
     if (!r)
         return;
+#ifdef BANANA_ENGINE_HAS_GL
     shader_destroy(r->default_shader);
+#endif
     free(r->frame_buffer);
 #ifdef BANANA_ENGINE_HAS_GLFW
     glDeleteFramebuffers(1, &r->fbo);

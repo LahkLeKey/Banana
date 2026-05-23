@@ -37,6 +37,15 @@ typedef struct
     int utility;
 } BuildStats;
 
+typedef enum
+{
+    BUILD_STAT_HEALTH = 0,
+    BUILD_STAT_ATTACK = 1,
+    BUILD_STAT_DEFENSE = 2,
+    BUILD_STAT_UTILITY = 3,
+    BUILD_STAT_COUNT = 4
+} BuildStat;
+
 typedef struct
 {
     int triggered;
@@ -52,6 +61,11 @@ int player_builds_upsert(const char *player_guid, BuildClass class_type);
 int player_builds_set_allocations(const char *player_guid, int offense_points, int defense_points, int utility_points);
 int player_builds_equip(const char *player_guid, GearSlot slot, const GearModifier *gear);
 int player_builds_get_stats(const char *player_guid, BuildStats *out_stats);
+
+int player_builds_parse_class(int class_type, BuildClass *out_class);
+int player_builds_parse_gear_slot(int slot, GearSlot *out_slot);
+int player_builds_parse_stat_name(const char *stat_name, BuildStat *out_stat);
+int player_builds_stat_value(const BuildStats *stats, BuildStat stat, int *out_value);
 
 int player_builds_evaluate_combo(const char *player_guid,
                                  const char *first_skill,
