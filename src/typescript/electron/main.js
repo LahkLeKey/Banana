@@ -10,7 +10,7 @@ function resolveStartUrl() {
 	if (configured.length > 0) {
 		return configured;
 	}
-	return "http://localhost:5173/session-room";
+	return "http://localhost:5173/game-engine";
 }
 
 function createWindow() {
@@ -25,6 +25,7 @@ function createWindow() {
 			contextIsolation: true,
 			nodeIntegration: false,
 			sandbox: true,
+			preload: path.join(__dirname, "preload.cjs"),
 			devTools: true,
 		},
 	});

@@ -9,6 +9,8 @@ export type {EngineStatus, RadialDirection,} from './components/GameEngineTypes'
 export {computeMoveAxes, getDirectionFromTouch, isMovementKey, MOVEMENT_KEYS, RADIAL_CONFIG,} from './components/GameEngineTypes';
 export type {RetryButtonProps} from './components/RetryButton';
 export {RETRY_BUTTON_COPY, RetryButton} from './components/RetryButton';
+export type {NativeUiFrame, NativeUiHostKind, NativeUiMarshalInput, NativeUiSurface,} from './native/NativeUiAbi';
+export {marshalNativeUiFrame} from './native/NativeUiAbi';
 export type {Tokens} from './tokens';
 export {tokens} from './tokens';
 

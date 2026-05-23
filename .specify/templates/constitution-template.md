@@ -28,6 +28,11 @@
 [PRINCIPLE_5_DESCRIPTION]
 <!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
 
+### [PRINCIPLE_6_NAME]
+<!-- Example: VI. Compatibility -->
+[PRINCIPLE_6_DESCRIPTION]
+<!-- Example: Keep wrappers thin; marshal through a single boundary; Avoid app-local business logic in host shells -->
+
 ## [SECTION_2_NAME]
 <!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
 
@@ -38,7 +43,9 @@
 <!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
 
 [SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+<!-- Example: Code review requirements, testing gates, deployment approval process, etc.
+Repository-owned automation MUST use Bash as the default shell. Checked-in .ps1
+scripts are not allowed. -->
 
 ## Governance
 <!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->

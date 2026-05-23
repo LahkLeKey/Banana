@@ -720,6 +720,21 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_ui_system_test COMMAND banana_ui_system_test)
 
+  add_executable(banana_native_ui_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/native_ui_abi_test.c
+  )
+  target_include_directories(banana_native_ui_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+  )
+  if(MSVC)
+    target_compile_options(banana_native_ui_abi_test PRIVATE /W3)
+  else()
+    target_compile_options(banana_native_ui_abi_test PRIVATE
+      -std=c11 -O2 -Wall -Wextra -Wpedantic
+    )
+  endif()
+  add_test(NAME banana_native_ui_abi_test COMMAND banana_native_ui_abi_test)
+
   add_executable(banana_input_binding_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/input_binding_test.c
   )
