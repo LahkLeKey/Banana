@@ -9,7 +9,8 @@
     "build": "bun build src/index.ts --target=bun --outdir=dist",
     "parity:inventory": "bash ../../scripts/validate-api-parity-governance.sh --inventory-only",
     "parity:validate": "bash ../../scripts/validate-api-parity-governance.sh --strict",
-    "test": "bun test"
+    "test": "bun test",
+    "test:wasm-pentest": "bun test wasm/engine-binding.security.test.ts wasm/engine-binding.pentest.test.ts"
   },
   "dependencies": {
     "@fastify/helmet": "^13.0.2",

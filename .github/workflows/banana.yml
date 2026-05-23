@@ -116,6 +116,71 @@ jobs:
           test -f out/wasm/engine.js
           test -f out/wasm/engine.wasm
 
+  wasm-pentest:
+    name: Security / WASM penetration tests
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install API dependencies
+        run: bun install --frozen-lockfile
+        working-directory: src/typescript/api
+
+      - name: Run WASM penetration suite
+        id: wasm_pentest_run
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/ci/wasm-security
+          bun run test:wasm-pentest 2>&1 | tee artifacts/ci/wasm-security/wasm-pentest-output.txt
+        working-directory: src/typescript/api
+
+      - name: Generate WASM security report
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/ci/wasm-security
+          OUTPUT_FILE="artifacts/ci/wasm-security/wasm-pentest-output.txt"
+          REPORT_FILE="artifacts/ci/wasm-security/wasm-pentest-report.md"
+
+          passed_tests=$(grep -Eo '[0-9]+ pass' "$OUTPUT_FILE" | awk '{sum+=$1} END {print sum+0}')
+          failed_tests=$(grep -Eo '[0-9]+ fail' "$OUTPUT_FILE" | awk '{sum+=$1} END {print sum+0}')
+
+          {
+            echo "# WASM Security Report"
+            echo
+            echo "- Workflow: ${{ github.workflow }}"
+            echo "- Run ID: ${{ github.run_id }}"
+            echo "- Ref: ${{ github.ref }}"
+            echo "- Commit: ${{ github.sha }}"
+            echo "- Job Result: ${{ steps.wasm_pentest_run.outcome }}"
+            echo "- Passed Tests: ${passed_tests}"
+            echo "- Failed Tests: ${failed_tests}"
+            echo
+            echo "## Test Command"
+            echo
+            echo "\`bun run test:wasm-pentest\`"
+            echo
+            echo "## Raw Output"
+            echo
+            echo '```text'
+            cat "$OUTPUT_FILE"
+            echo '```'
+          } > "$REPORT_FILE"
+
+      - name: Upload WASM security artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-security-report-${{ github.run_id }}
+          path: artifacts/ci/wasm-security
+          if-no-files-found: error
+
   monorepo-pass-fail:
     name: Monorepo / Pass-Fail
     needs:
@@ -123,6 +188,7 @@ jobs:
       - typescript-smoke
       - native-build
       - wasm-engine
+      - wasm-pentest
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -137,6 +203,7 @@ jobs:
             echo "| Build / TypeScript smoke | ${{ needs.typescript-smoke.result }} |"
             echo "| Native / build + tests | ${{ needs.native-build.result }} |"
             echo "| Build / wasm engine assets | ${{ needs.wasm-engine.result }} |"
+            echo "| Security / WASM penetration tests | ${{ needs.wasm-pentest.result }} |"
             echo
             echo "Removed stale lanes after reset: analytics scan, turbo monorepo lint matrix, legacy native preset matrix, sanitizer/coverage hard gates, architecture governance, compose/runtime smoke, and web vitals budget."
           } >> "$GITHUB_STEP_SUMMARY"
