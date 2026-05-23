@@ -42,6 +42,9 @@ extern "C"
     /* Resize internal buffers (call on window resize). */
     void renderer_resize(Renderer *r, int width, int height);
 
+    /* Attach the native window handle used by backend-specific runtime paths. */
+    void renderer_attach_native_window(Renderer *r, void *native_window);
+
     void renderer_destroy(Renderer *r);
 
     /* ── WASM ABI exports (called from game loop) ─────────────────────────────── */

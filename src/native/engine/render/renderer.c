@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "renderer_internal.h"
+#include "backend_dx12.h"
 #include "material.h"
 #include "mesh.h"
 #include "shader.h"
@@ -224,6 +225,18 @@ Renderer *renderer_create(int width, int height)
     return r;
 }
 
+void renderer_attach_native_window(Renderer *r, void *native_window)
+{
+#ifdef BANANA_ENGINE_RENDER_BACKEND_DX12
+    if (!r)
+        return;
+    r->dx12_runtime_active = banana_dx12_runtime_init(native_window, r->width, r->height);
+#else
+    (void)r;
+    (void)native_window;
+#endif
+}
+
 void renderer_set_camera(Renderer *r, const Camera *cam)
 {
     r->camera = *cam;
@@ -237,7 +250,15 @@ void renderer_begin_frame(Renderer *r)
     glClearColor(0.12f, 0.24f, 0.42f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #else
-    (void)r;
+#ifdef BANANA_ENGINE_RENDER_BACKEND_DX12
+    if (r->dx12_runtime_active)
+    {
+        if (!banana_dx12_runtime_begin_frame(0.12f, 0.24f, 0.42f, 1.f))
+        {
+            r->dx12_runtime_active = 0;
+        }
+    }
+#endif
 #endif
 }
 
@@ -252,6 +273,17 @@ void renderer_end_frame(Renderer *r)
     }
     /* WASM: canvas already has the rendered output; nothing to do */
 #else
+/* DX12 runtime is optional in this non-GL build path; headless readback remains
+ * available for tests and ABI consumers. */
+#ifdef BANANA_ENGINE_RENDER_BACKEND_DX12
+    if (r->dx12_runtime_active)
+    {
+        if (!banana_dx12_runtime_end_frame())
+        {
+            r->dx12_runtime_active = 0;
+        }
+    }
+#endif
     /* Headless stub: fill with identifiable gradient for test assertions */
     int pixel_count = r->width * r->height;
     int i = 0;
@@ -281,6 +313,14 @@ void renderer_resize(Renderer *r, int width, int height)
     r->frame_buffer = realloc(r->frame_buffer, (size_t)width * height * 4);
 #ifdef BANANA_ENGINE_HAS_GL
     glViewport(0, 0, width, height);
+#elif defined(BANANA_ENGINE_RENDER_BACKEND_DX12)
+    if (r->dx12_runtime_active)
+    {
+        if (!banana_dx12_runtime_resize(width, height))
+        {
+            r->dx12_runtime_active = 0;
+        }
+    }
 #endif
 }
 
@@ -298,6 +338,10 @@ void renderer_destroy(Renderer *r)
 #ifdef BANANA_ENGINE_HAS_GL
     if (r->default_tile_texture)
         glDeleteTextures(1, &r->default_tile_texture);
+#endif
+#ifdef BANANA_ENGINE_RENDER_BACKEND_DX12
+    if (r->dx12_runtime_active)
+        banana_dx12_runtime_shutdown();
 #endif
     free(r);
 }

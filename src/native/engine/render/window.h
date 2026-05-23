@@ -30,6 +30,9 @@ extern "C"
     /* Retrieve current input-space dimensions (CSS pixels on Web/WASM). */
     void window_get_input_size(Window *w, int *width, int *height);
 
+    /* Retrieve platform-native window handle (HWND/GLFWwindow/etc) when available. */
+    void *window_get_native_handle(Window *w);
+
     /* Destroy the window and its OpenGL context. */
     void window_destroy(Window *w);
 

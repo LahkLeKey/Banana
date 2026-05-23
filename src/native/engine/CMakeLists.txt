@@ -5,6 +5,8 @@ cmake_minimum_required(VERSION 3.20)
 # ─────────────────────────────────────────────────────────────────────────────
 
 set(ENGINE_RENDER_SOURCES
+  render/backend.c
+  render/backend_dx12.c
   render/window.c
   render/shader.c
   render/mesh.c
@@ -67,6 +69,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/input_binding.c
   runtime/interactive_objects.c
   runtime/interlock.c
+  runtime/move_target_domain.c
   runtime/parallel_contract.c
   runtime/parallel_model.c
   runtime/physics_abi.c
@@ -106,6 +109,16 @@ add_library(banana_engine_core STATIC
   ${ENGINE_WORLD_SOURCES}
   ${ENGINE_UI_SOURCES}
 )
+
+if(WIN32)
+  set(BANANA_RENDER_BACKEND_DEFAULT "dx12")
+else()
+  set(BANANA_RENDER_BACKEND_DEFAULT "glfw")
+endif()
+
+set(BANANA_RENDER_BACKEND "${BANANA_RENDER_BACKEND_DEFAULT}" CACHE STRING
+  "Native renderer backend: glfw or dx12")
+set_property(CACHE BANANA_RENDER_BACKEND PROPERTY STRINGS glfw dx12)
 
 target_include_directories(banana_engine_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -157,19 +170,37 @@ if(NOT EMSCRIPTEN)
     )
   endif()
 
-  find_package(OpenGL QUIET)
-  find_package(glfw3 QUIET)
+  if(BANANA_RENDER_BACKEND STREQUAL "dx12")
+    target_compile_definitions(banana_engine_core PUBLIC BANANA_ENGINE_RENDER_BACKEND_DX12=1)
+    if(WIN32)
+      target_compile_definitions(banana_engine_core PUBLIC BANANA_ENGINE_HAS_DX12=1)
+      target_link_libraries(banana_engine_core PUBLIC
+        d3d12
+        dxgi
+        dxguid
+      )
+      message(STATUS "[engine] Native rendering backend requested: DX12 (runtime probe enabled)")
+    else()
+      message(WARNING "[engine] DX12 backend requested on non-Windows host; stub renderer path will be used")
+    endif()
+  elseif(BANANA_RENDER_BACKEND STREQUAL "glfw")
+    target_compile_definitions(banana_engine_core PUBLIC BANANA_ENGINE_RENDER_BACKEND_GLFW=1)
+    find_package(OpenGL QUIET)
+    find_package(glfw3 QUIET)
 
-  if(OpenGL_FOUND AND glfw3_FOUND)
-    target_link_libraries(banana_engine_core PUBLIC
-      OpenGL::GL
-      glfw
-    )
-    target_compile_definitions(banana_engine_core PUBLIC BANANA_ENGINE_HAS_GLFW=1)
-    message(STATUS "[engine] Native rendering: OpenGL + GLFW enabled")
+    if(OpenGL_FOUND AND glfw3_FOUND)
+      target_link_libraries(banana_engine_core PUBLIC
+        OpenGL::GL
+        glfw
+      )
+      target_compile_definitions(banana_engine_core PUBLIC BANANA_ENGINE_HAS_GLFW=1)
+      message(STATUS "[engine] Native rendering backend active: OpenGL + GLFW")
+    else()
+      message(WARNING "[engine] OpenGL or GLFW not found — rendering stubs will be used")
+      target_compile_definitions(banana_engine_core PUBLIC BANANA_ENGINE_STUB_RENDER=1)
+    endif()
   else()
-    message(WARNING "[engine] OpenGL or GLFW not found — rendering stubs will be used")
-    target_compile_definitions(banana_engine_core PUBLIC BANANA_ENGINE_STUB_RENDER=1)
+    message(FATAL_ERROR "[engine] Unknown BANANA_RENDER_BACKEND='${BANANA_RENDER_BACKEND}'. Expected 'glfw' or 'dx12'.")
   endif()
 
   if(UNIX)
@@ -445,6 +476,46 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_runtime_telemetry_input_contract_test COMMAND banana_runtime_telemetry_input_contract_test)
 
+  add_executable(banana_engine_input_contract_transition_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_input_contract_transition_test.c
+  )
+  target_link_libraries(banana_engine_input_contract_transition_test PRIVATE banana_engine_core)
+  target_include_directories(banana_engine_input_contract_transition_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+  )
+  add_test(NAME banana_engine_input_contract_transition_test COMMAND banana_engine_input_contract_transition_test)
+
+  add_executable(banana_engine_click_to_move_target_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_click_to_move_target_test.c
+  )
+  target_link_libraries(banana_engine_click_to_move_target_test PRIVATE banana_engine_core)
+  target_include_directories(banana_engine_click_to_move_target_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+  )
+  add_test(NAME banana_engine_click_to_move_target_test COMMAND banana_engine_click_to_move_target_test)
+
+  add_executable(banana_engine_dx12_runtime_smoke_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_dx12_runtime_smoke_test.c
+  )
+  target_link_libraries(banana_engine_dx12_runtime_smoke_test PRIVATE banana_engine_core)
+  target_include_directories(banana_engine_dx12_runtime_smoke_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_engine_dx12_runtime_smoke_test COMMAND banana_engine_dx12_runtime_smoke_test)
+
   add_executable(banana_runtime_physics_world_abi_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_physics_world_abi_test.c
   )
@@ -496,6 +567,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_runtime_engine_tick_test COMMAND banana_runtime_engine_tick_test)
+
+  add_executable(banana_runtime_move_target_domain_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_move_target_domain_test.c
+  )
+  target_link_libraries(banana_runtime_move_target_domain_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_move_target_domain_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_move_target_domain_test COMMAND banana_runtime_move_target_domain_test)
 
   add_executable(banana_runtime_terrain_host_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_terrain_host_test.c

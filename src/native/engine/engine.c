@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "engine_serialize.h"
+#include "render/backend.h"
 #include "ai/npc_merchant.h"
 #include "ai/wildlife_controller.h"
 #include "ui/ui.h"
@@ -12,6 +13,7 @@
 #include "runtime/camera_follow.h"
 #include "runtime/camera_basis.h"
 #include "runtime/render_material.h"
+#include "runtime/move_target_domain.h"
 #include "runtime/player_motion.h"
 #include "runtime/player_motion_host.h"
 #include "runtime/player_api.h"
@@ -63,6 +65,7 @@ static float s_camera_target[3] = {0.f, 0.f, 0.f};
 static int s_camera_valid = 0;
 static float s_move_input_x = 0.f;
 static float s_move_input_z = 0.f;
+static RuntimeMoveTargetState s_move_target_state = {0};
 static int s_merchants_seeded = 0;
 static int s_pbj_pickup_collected = 0;
 
@@ -116,12 +119,166 @@ static float terrain_sample_height(float x, float z)
                                          -1.45f);
 }
 
+/* Banana raycast contract: map normalized screen input into a terrain-ground
+ * world-space target on the island for click-to-move behavior. */
+static int banana_raycast_click_to_world_target(float normalized_x,
+                                                float normalized_y,
+                                                float *out_target_x,
+                                                float *out_target_z)
+{
+    float forward[3] = {0.f, 0.f, 0.f};
+    float right[3] = {0.f, 0.f, 0.f};
+    float up[3] = {0.f, 1.f, 0.f};
+    float world_up[3] = {0.f, 1.f, 0.f};
+    float dir[3] = {0.f, 0.f, 0.f};
+    const float fov_radians = 44.f * (3.14159265358979323846f / 180.f);
+    const float tan_half_fov = tanf(fov_radians * 0.5f);
+    const float island_span = (float)(BANANA_TERRAIN_SIZE - 1) * 0.5f;
+    float aspect = 1.f;
+    float ground_y = 0.f;
+    float t = 0.f;
+    float target_x = 0.f;
+    float target_z = 0.f;
+
+    if (!out_target_x || !out_target_z || !s_camera_valid || s_viewport_height <= 0)
+        return 0;
+
+    forward[0] = s_camera_target[0] - s_camera_eye[0];
+    forward[1] = s_camera_target[1] - s_camera_eye[1];
+    forward[2] = s_camera_target[2] - s_camera_eye[2];
+    {
+        float forward_len = sqrtf(forward[0] * forward[0] +
+                                  forward[1] * forward[1] +
+                                  forward[2] * forward[2]);
+        if (forward_len <= 1e-6f)
+            return 0;
+        forward[0] /= forward_len;
+        forward[1] /= forward_len;
+        forward[2] /= forward_len;
+    }
+
+    right[0] = forward[1] * world_up[2] - forward[2] * world_up[1];
+    right[1] = forward[2] * world_up[0] - forward[0] * world_up[2];
+    right[2] = forward[0] * world_up[1] - forward[1] * world_up[0];
+    {
+        float right_len = sqrtf(right[0] * right[0] + right[1] * right[1] + right[2] * right[2]);
+        if (right_len <= 1e-6f)
+            return 0;
+        right[0] /= right_len;
+        right[1] /= right_len;
+        right[2] /= right_len;
+    }
+
+    up[0] = right[1] * forward[2] - right[2] * forward[1];
+    up[1] = right[2] * forward[0] - right[0] * forward[2];
+    up[2] = right[0] * forward[1] - right[1] * forward[0];
+    {
+        float up_len = sqrtf(up[0] * up[0] + up[1] * up[1] + up[2] * up[2]);
+        if (up_len <= 1e-6f)
+            return 0;
+        up[0] /= up_len;
+        up[1] /= up_len;
+        up[2] /= up_len;
+    }
+
+    if (up[1] <= 1e-4f)
+        return 0;
+
+    aspect = (float)s_viewport_width / (float)s_viewport_height;
+    dir[0] = forward[0] + right[0] * normalized_x * aspect * tan_half_fov + up[0] * normalized_y * tan_half_fov;
+    dir[1] = forward[1] + right[1] * normalized_x * aspect * tan_half_fov + up[1] * normalized_y * tan_half_fov;
+    dir[2] = forward[2] + right[2] * normalized_x * aspect * tan_half_fov + up[2] * normalized_y * tan_half_fov;
+
+    {
+        float dir_len = sqrtf(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]);
+        if (dir_len <= 1e-6f)
+            return 0;
+        dir[0] /= dir_len;
+        dir[1] /= dir_len;
+        dir[2] /= dir_len;
+    }
+
+    if (fabsf(dir[1]) <= 1e-6f)
+        return 0;
+
+    ground_y = terrain_sample_height(s_camera_target[0], s_camera_target[2]);
+    t = (ground_y - s_camera_eye[1]) / dir[1];
+    if (t <= 0.f)
+        return 0;
+
+    target_x = s_camera_eye[0] + dir[0] * t;
+    target_z = s_camera_eye[2] + dir[2] * t;
+
+    {
+        int i = 0;
+        for (i = 0; i < 2; i++)
+        {
+            ground_y = terrain_sample_height(target_x, target_z);
+            t = (ground_y - s_camera_eye[1]) / dir[1];
+            if (t <= 0.f)
+                break;
+            target_x = s_camera_eye[0] + dir[0] * t;
+            target_z = s_camera_eye[2] + dir[2] * t;
+        }
+    }
+
+    if (target_x < -island_span)
+        target_x = -island_span;
+    if (target_x > island_span)
+        target_x = island_span;
+    if (target_z < -island_span)
+        target_z = -island_span;
+    if (target_z > island_span)
+        target_z = island_span;
+
+    *out_target_x = target_x;
+    *out_target_z = target_z;
+    return 1;
+}
+
 static void update_player_motion(float dt)
 {
+    float move_x = s_move_input_x;
+    float move_z = s_move_input_z;
+
+    if (s_move_target_state.has_target && s_world && s_player_id)
+    {
+        Entity *player = world_get_entity(s_world, s_player_id);
+        if (player && player->active)
+        {
+            RuntimeMoveTargetSteering steering = {0};
+            if (runtime_move_target_compute_steering(&s_move_target_state,
+                                                     player->position,
+                                                     s_camera_eye,
+                                                     s_camera_target,
+                                                     s_camera_valid,
+                                                     0.35f,
+                                                     &steering) &&
+                steering.reached_target)
+            {
+                runtime_move_target_clear(&s_move_target_state);
+                runtime_input_contract_mark_target_reached();
+                move_x = 0.f;
+                move_z = 0.f;
+            }
+            else
+            {
+                move_x = steering.move_x;
+                move_z = steering.move_z;
+                runtime_input_contract_set_has_move_target(steering.has_target);
+            }
+        }
+        else
+        {
+            runtime_move_target_clear(&s_move_target_state);
+            runtime_input_contract_set_has_move_target(0);
+        }
+    }
+
     runtime_player_motion_tick(s_world,
                                s_player_id,
-                               s_move_input_x,
-                               s_move_input_z,
+                               move_x,
+                               move_z,
                                s_camera_eye,
                                s_camera_target,
                                s_camera_valid,
@@ -129,6 +286,9 @@ static void update_player_motion(float dt)
                                dt,
                                (float)(BANANA_TERRAIN_SIZE - 1) * 0.5f,
                                terrain_sample_height);
+
+    s_move_input_x = move_x;
+    s_move_input_z = move_z;
 }
 
 static void follow_player_camera(void)
@@ -143,13 +303,69 @@ static void follow_player_camera(void)
                                  &s_camera_valid);
 }
 
+static void apply_click_move_input(float normalized_x, float normalized_y)
+{
+    float target_x = 0.f;
+    float target_z = 0.f;
+    if (banana_raycast_click_to_world_target(normalized_x, normalized_y, &target_x, &target_z))
+    {
+    RuntimeMoveTargetPoint target = {target_x, target_z};
+    if (runtime_move_target_set(&s_move_target_state, target))
+    {
+        runtime_input_contract_set_has_move_target(1);
+        fprintf(stdout,
+            "[engine] banana-raycast target set x=%.2f z=%.2f from normalized=(%.2f, %.2f)\n",
+            target_x,
+            target_z,
+            normalized_x,
+            normalized_y);
+    }
+    else
+    {
+        runtime_move_target_clear(&s_move_target_state);
+        runtime_input_contract_set_has_move_target(0);
+        fprintf(stderr,
+            "[engine] banana-raycast rejected invalid target from normalized=(%.2f, %.2f)\n",
+            normalized_x,
+            normalized_y);
+    }
+    }
+    else
+    {
+    runtime_move_target_clear(&s_move_target_state);
+        runtime_input_contract_set_has_move_target(0);
+        fprintf(stderr,
+                "[engine] banana-raycast failed for normalized=(%.2f, %.2f)\n",
+                normalized_x,
+                normalized_y);
+    }
+}
+
 /* ── Init ────────────────────────────────────────────────────────────────── */
 int engine_init(int width, int height)
 {
+    BananaRenderBackend requested_backend = BANANA_RENDER_BACKEND_UNKNOWN;
+    BananaRenderBackend active_backend = BANANA_RENDER_BACKEND_UNKNOWN;
+
     /* Idempotent: only initialize once */
     if (s_engine_initialized)
         return 0;
     s_engine_initialized = 1;
+
+    requested_backend = banana_render_backend_requested();
+    active_backend = banana_render_backend_active();
+
+    fprintf(stdout,
+            "[engine] render backend requested=%s active=%s status=%s\n",
+            banana_render_backend_name(requested_backend),
+            banana_render_backend_name(active_backend),
+            banana_render_backend_status());
+    if (requested_backend != active_backend)
+    {
+        fprintf(stderr,
+                "[engine] render backend fallback engaged for '%s'\n",
+                banana_render_backend_name(requested_backend));
+    }
 
     /* Register built-in controller types */
     wildlife_controller_register();
@@ -166,6 +382,7 @@ int engine_init(int width, int height)
         fprintf(stderr, "[engine] renderer_create failed\n");
         return -1;
     }
+    renderer_attach_native_window(s_renderer, window_get_native_handle(s_window));
     s_physics = physics_world_create();
     s_world = world_create();
     {
@@ -344,6 +561,7 @@ int engine_tick(float dt)
                                        dt,
                                        update_player_motion,
                                        follow_player_camera,
+                                       apply_click_move_input,
                                        tick_phase_gameplay,
                                        tick_phase_render_scene);
 }
@@ -381,6 +599,8 @@ void engine_shutdown(void)
     s_engine_initialized = 0;
     s_camera_valid = 0;
     s_pbj_pickup_collected = 0;
+    runtime_move_target_reset(&s_move_target_state);
+    runtime_input_contract_reset();
     engine_serialize_reset();
 
     runtime_engine_host_reset_state(&s_window,
@@ -550,12 +770,23 @@ int engine_get_has_move_target(void)
 
 int engine_handle_right_click(float canvas_x, float canvas_y)
 {
-    return runtime_input_contract_handle_right_click(canvas_x, canvas_y);
+    int accepted = runtime_input_contract_handle_right_click(canvas_x, canvas_y);
+    if (accepted && s_viewport_width > 0 && s_viewport_height > 0)
+    {
+        float normalized_x = (canvas_x / (float)s_viewport_width) * 2.f - 1.f;
+        float normalized_y = 1.f - (canvas_y / (float)s_viewport_height) * 2.f;
+        if (runtime_input_contract_handle_right_click_normalized(normalized_x, normalized_y))
+            apply_click_move_input(normalized_x, normalized_y);
+    }
+    return accepted;
 }
 
 int engine_handle_right_click_normalized(float screen_x, float screen_y)
 {
-    return runtime_input_contract_handle_right_click_normalized(screen_x, screen_y);
+    int accepted = runtime_input_contract_handle_right_click_normalized(screen_x, screen_y);
+    if (accepted)
+        apply_click_move_input(screen_x, screen_y);
+    return accepted;
 }
 
 void engine_set_move_input(float input_x, float input_z)
@@ -564,6 +795,12 @@ void engine_set_move_input(float input_x, float input_z)
                                                input_z,
                                                &s_move_input_x,
                                                &s_move_input_z);
+
+    if (fabsf(s_move_input_x) > 1e-4f || fabsf(s_move_input_z) > 1e-4f)
+    {
+        runtime_move_target_clear(&s_move_target_state);
+        runtime_input_contract_set_has_move_target(0);
+    }
 }
 
 uint32_t engine_player_upsert(const char *player_guid, const char *player_name,

@@ -8,6 +8,7 @@ struct Renderer
 {
     int width;
     int height;
+    int dx12_runtime_active;
     Shader *default_shader;
     Camera camera;
     unsigned char *frame_buffer;

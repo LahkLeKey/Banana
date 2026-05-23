@@ -17,6 +17,7 @@
 #include "physics/dynamics.h"
 #include "physics/world.h"
 #include "render/camera.h"
+#include "render/backend.h"
 #include "render/material.h"
 #include "render/mesh.h"
 #include "render/renderer.h"

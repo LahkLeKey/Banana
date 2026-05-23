@@ -13,6 +13,10 @@ extern "C"
     int runtime_input_contract_handle_right_click(float canvas_x, float canvas_y);
     int runtime_input_contract_handle_right_click_normalized(float screen_x, float screen_y);
 
+    void runtime_input_contract_set_has_move_target(int has_move_target);
+    void runtime_input_contract_mark_target_reached(void);
+    void runtime_input_contract_reset(void);
+
     void runtime_input_contract_sanitize_move_input(float input_x,
                                                     float input_z,
                                                     float *out_move_x,

@@ -81,6 +81,7 @@ int main(void)
                                                 update_cb,
                                                 follow_cb,
                                                 NULL,
+                                                NULL,
                                                 render_cb),
                     -1))
         return 1;
@@ -99,6 +100,7 @@ int main(void)
                                                 update_cb,
                                                 follow_cb,
                                                 NULL,
+                                                NULL,
                                                 render_cb),
                     -1))
         return 1;
@@ -116,6 +118,7 @@ int main(void)
                                                 1.0f / 60.0f,
                                                 update_cb,
                                                 follow_cb,
+                                                NULL,
                                                 NULL,
                                                 render_cb),
                     0))

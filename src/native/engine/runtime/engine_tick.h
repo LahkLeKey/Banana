@@ -16,6 +16,7 @@ extern "C"
     typedef void (*RuntimeTickUpdateFn)(float dt);
     typedef void (*RuntimeTickVoidFn)(void);
     typedef void (*RuntimeTickGameplayFn)(void);
+    typedef void (*RuntimeTickClickInputFn)(float normalized_x, float normalized_y);
 
     int runtime_engine_tick_execute(Window *window,
                                     Renderer *renderer,
@@ -29,6 +30,7 @@ extern "C"
                                     float dt,
                                     RuntimeTickUpdateFn update_player_motion,
                                     RuntimeTickVoidFn follow_player_camera,
+                                    RuntimeTickClickInputFn apply_click_input,
                                     RuntimeTickGameplayFn run_gameplay,
                                     RuntimeTickVoidFn render_scene);
 
