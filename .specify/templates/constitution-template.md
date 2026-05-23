@@ -28,6 +28,11 @@
 [PRINCIPLE_5_DESCRIPTION]
 <!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
 
+### [PRINCIPLE_6_NAME]
+<!-- Example: VI. Compatibility -->
+[PRINCIPLE_6_DESCRIPTION]
+<!-- Example: Keep wrappers thin; marshal through a single boundary; Avoid app-local business logic in host shells -->
+
 ## [SECTION_2_NAME]
 <!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
 

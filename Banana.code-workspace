@@ -1,19 +1,17 @@
 {
   "folders": [
-    { "path": "." },
-    { "path": "src" },
-    { "path": "src/native" },
-    { "path": "src/typescript" },
-    { "path": "src/typescript/api" },
-    { "path": "src/typescript/react" },
-    { "path": "src/typescript/electron" },
-    { "path": "src/typescript/react-native" },
-    { "path": "src/typescript/shared/ui" },
-    { "path": "tests" },
-    { "path": "scripts" },
-    { "path": "data" },
-    { "path": "docker" },
-    { "path": ".specify/specs" }
+    { "name": "Root", "path": "." },
+    { "name": "Native Engine", "path": "src/native" },
+    { "name": "Shared UI Contract", "path": "src/typescript/shared/ui" },
+    { "name": "API Domain", "path": "src/typescript/api" },
+    { "name": "React Shell", "path": "src/typescript/react" },
+    { "name": "Electron Shell", "path": "src/typescript/electron" },
+    { "name": "React Native Shell", "path": "src/typescript/react-native" },
+    { "name": "Tests", "path": "tests" },
+    { "name": "Scripts", "path": "scripts" },
+    { "name": "Data", "path": "data" },
+    { "name": "Docker", "path": "docker" },
+    { "name": "Specs", "path": ".specify/specs" }
   ],
   "settings": {
     "terminal.integrated.cwd": "${workspaceFolder}",

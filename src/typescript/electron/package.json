@@ -18,6 +18,7 @@
         "productName": "BananaEngineer",
         "files": [
             "main.js",
+            "preload.cjs",
             "package.json"
         ],
         "asar": true,
