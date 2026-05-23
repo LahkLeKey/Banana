@@ -13,6 +13,7 @@ export type {NativeUiFrame, NativeUiHostKind, NativeUiMarshalInput, NativeUiSurf
 export {marshalNativeUiFrame} from './native/NativeUiAbi';
 export type {Tokens} from './tokens';
 export {tokens} from './tokens';
+export type {ChatMessage, ChatSession, EnsembleVerdict, RipenessResult, TrainingAuditEvent, TrainingLane, TrainingRunRequest, TrainingRunResult,} from './types';
 
 export * from './domains/ConnectionManager';
 export * from './domains/GameEngineUIService';

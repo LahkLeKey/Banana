@@ -4,6 +4,9 @@
 
 Define the minimum packaging and launch contract for a Banana playable binary that can be started from the Steam library and used for UAT.
 
+This contract is paired with [steam-storefront-copy.md](steam-storefront-copy.md),
+which holds the current storefront copy target and disclosure requirements.
+
 ## Contract Version
 
 - Version: 0.1

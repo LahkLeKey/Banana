@@ -157,6 +157,9 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Verify player-facing disclosure and requirement alignment for release notes/store metadata
+- [ ] TXXX Verify storefront copy contract updates for any public Steam page claim changes
+- [ ] TXXX [P] Update storefront asset inventory and screenshot evidence when page assets change
+- [ ] TXXX [P] Confirm controller support and system requirements match the current storefront contract
 - [ ] TXXX [P] Capture runtime evidence artifacts for supported launch channels
 - [ ] TXXX Run quickstart.md validation
 

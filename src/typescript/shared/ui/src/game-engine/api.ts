@@ -110,7 +110,11 @@ export function resolveRuntimePlayerGuid(): string {
 }
 
 function resolveElectronBridge(): ElectronBridge|undefined {
-  return typeof window !== 'undefined' ? window.banana : undefined;
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  return (window as Window & {banana?: ElectronBridge}).banana;
 }
 
 function resolveViteApiBaseUrl(): string {

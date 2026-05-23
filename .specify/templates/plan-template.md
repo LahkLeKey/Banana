@@ -41,13 +41,16 @@
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 - [ ] Player trust and disclosure alignment verified (store/runtime claims,
-  AI-content disclosure, and system requirements).
+  AI-content disclosure, controller support, and system requirements).
+- [ ] Storefront governance artifacts identified when public Steam copy is
+  affected (storefront copy contract, asset inventory, and storefront checklist).
 - [ ] Cross-domain contracts mapped for touched layers (native/API/client/runtime)
   and required docs are queued in-scope.
 - [ ] Quality gates defined with measurable checks for deterministic behavior,
   integration paths, and failure handling.
 - [ ] Reproducible delivery path identified for target runtime channels and
-  evidence artifacts listed for release validation.
+  evidence artifacts listed for release validation, including storefront
+  screenshots or text evidence when applicable.
 
 ## Project Structure
 
@@ -109,6 +112,14 @@ ios/ or android/
 
 **Structure Decision**: [Document the selected structure and reference the real
 directories captured above]
+
+## Storefront Deliverables *(required when public Steam copy is affected)*
+
+- `contracts/steam-storefront-copy.md` — canonical public claim target.
+- `contracts/steam-storefront-assets.md` — inventory of current page assets.
+- `checklists/steam-storefront-readiness.md` — storefront release checklist.
+- `checklists/steam-uat-readiness.md` — playable build readiness checklist.
+- `quickstart.md` — runtime, Steam UAT, and storefront validation entry point.
 
 ## Complexity Tracking
 

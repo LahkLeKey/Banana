@@ -32,4 +32,4 @@
 ## Notes
 
 - Initial checklist pass completed during first draft creation.
-- Feature is ready for `specify plan`.
+- Feature is ready for the plan workflow.

@@ -1,0 +1,19 @@
+Steam Vendor Escalation Attachment Manifest
+GeneratedAt: 2026-05-22T22:40:48-05:00
+
+AppID: 4767150
+BetaBranchName: <fill-from-steamworks>
+ProductionBranchName: <fill-from-steamworks>
+AffectedDepotIds: <fill-from-steamworks>
+IncidentWindowUTC: <fill-from-steamworks>
+UploadActorIds: <fill-from-steamworks>
+PublishActorIds: <fill-from-steamworks>
+ApprovalPolicyObserved: <fill-from-steamworks>
+CacheInvalidationRequestedAt: <fill-from-steamworks>
+CacheInvalidationCompletedAt: <fill-from-steamworks>
+EdgePropagationNotes: <fill-from-steamworks>
+
+1) /c/Github/Banana/artifacts/security/steam-vendor/steam-vendor-incident-evidence-20260522-224047.md
+2) /c/Github/Banana/artifacts/security/steam-vendor/steam-vendor-incident-hashes-20260522-224047.txt
+3) /c/Github/Banana/docs/steam-vendor-incident-brief.md
+4) /c/Github/Banana/docs/wasm-security-remediation.md

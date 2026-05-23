@@ -53,7 +53,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Goal
 
-Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `specify tasks` has successfully produced a complete `tasks.md`.
+Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after the tasks workflow has successfully produced a complete `tasks.md`.
 
 ## Operating Constraints
 
@@ -197,7 +197,7 @@ At end of report, output a concise Next Actions block:
 
 - If CRITICAL issues exist: Recommend resolving before `specify implement`
 - If only LOW/MEDIUM: User may proceed, but provide improvement suggestions
-- Provide explicit command suggestions: e.g., "Run specify specify with refinement", "Run specify plan to adjust architecture", "Manually edit tasks.md to add coverage for 'performance-metrics'"
+- Provide explicit workflow suggestions: e.g., "Run the feature workflow with refinement", "Run the plan workflow to adjust architecture", "Manually edit tasks.md to add coverage for 'performance-metrics'"
 
 ### 8. Offer Remediation
 
