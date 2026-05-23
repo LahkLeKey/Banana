@@ -58,6 +58,15 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase7-step3.txt`
 - Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase7-step4.txt`
 - Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase7-step5.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase8-step1.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase8-step2.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase8-step3.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase9-step1.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase9-step2.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase9-step4.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase10-step1.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase10-step2.txt`
+- Full native CTest output artifact: `artifacts/native/ctest-debug-2026-05-23-phase11-step1.txt`
 
 ### Phase 6: Engine Facade Decomposition (Next Bulk TODOs)
 - [x] Extract merchant ABI orchestration from `engine.c` into a dedicated runtime facade to reduce global-state coupling at the ABI edge.
@@ -66,7 +75,7 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Add runtime player/resource facade regression coverage for parse guards, key-based mutations, and null-player behavior.
 - [x] Extract input diagnostics and click/move intent wrappers into `runtime/input_abi` with typed canvas and normalized point boundaries.
 - [x] Add runtime input ABI regression coverage for click delegation, viewport normalization, and move-input cancellation guards.
-- [ ] Extract remaining auxiliary wrappers (UI/system and sync helpers) into focused runtime facades while preserving public C API signatures.
+- [x] Extract remaining auxiliary wrappers (UI/system and sync helpers) into focused runtime facades while preserving public C API signatures.
 
 ### Phase 7: Bulk TODO Plan (Queued)
 - [x] Extract player build/stat wrappers from `engine.c` into `runtime/player_build_abi` with typed stat/key value objects and boundary parsing.
@@ -74,3 +83,34 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Extract multiplayer sync wrappers into `runtime/player_sync_abi` so player staleness/active-count contracts live behind one facade.
 - [x] Add compile-time ABI guard assertions ensuring public wrapper signatures remain stable while internal facades evolve.
 - [x] Add seam-level regression tests for each new facade and rerun full CTest with archived evidence.
+
+### Phase 8: Auxiliary Wrapper Decomposition (Queued)
+- [x] Extract controller orchestration and world-telemetry wrappers into `runtime/engine_aux_abi` to reduce `engine.c` dispatch coupling.
+- [x] Add focused seam test for auxiliary ABI wrapper behavior and ensure explicit pass/fail output in terminal feedback.
+- [x] Extract terrain service-port guards into `runtime/terrain_abi` to keep `engine.c` free of service-pointer branching.
+- [x] Extract active-player resolution and resource gateway assembly from `engine.c` into a dedicated runtime gateway helper.
+- [x] Rerun focused + full native CTest and publish phase8-step3 evidence.
+
+### Phase 9: Bulk TODO Plan (Queued)
+- [x] Introduce typed `RuntimeEngineContext` builders (single constructor) to remove repeated context assembly blocks in `engine.c`.
+- [x] Add compile-time ABI guard assertions for terrain and player gateway service-port function pointer signatures.
+- [x] Move residual merchant/player resource wrapper glue from `engine.c` into explicit runtime adapter modules.
+- [x] Add end-to-end seam test validating merchant trade calls through the new player gateway helper.
+
+### Phase 10: Bulk TODO Plan (Queued)
+- [x] Introduce typed adapter context tokens to remove temporary module-level trade state in `runtime/player_merchant_adapter`.
+- [x] Add compile-time layout/sentinel guards for adapter-local context and gateway composition invariants.
+- [x] Split merchant query ABI (`get_price`) from mutation ABI (`trade_buy`/`trade_sell`) into separate explicit runtime use-case facades.
+- [x] Add concurrency-focused seam tests that prove per-call gateway isolation under repeated buy/sell sequences.
+
+### Phase 11: Bulk TODO Plan (Planned)
+- [x] Split merchant query ABI (`get_price`) from mutation ABI (`trade_buy`/`trade_sell`) into dedicated runtime facades (`merchant_query_abi` and `merchant_trade_abi`) while keeping exported engine wrapper signatures stable.
+- [x] Route `player_merchant_adapter` through the new trade-only facade so mutation flows are isolated from pricing concerns.
+- [x] Add seam tests covering price-query isolation, world-ready guards for trade flows, and null-port behavior for each facade.
+- [x] Add concurrency-focused seam tests proving per-call gateway isolation under repeated interleaved buy/sell sequences.
+- [x] Run focused native tests (`runtime_compile_guard_abi`, `runtime_player_merchant_adapter`, `runtime_merchant_query_abi`, `runtime_merchant_trade_abi`) then full CTest sweep and archive artifacts.
+
+### Phase 12: Legacy Compatibility Retirement (In Progress)
+- [x] Remove `runtime/merchant_abi` compatibility wrapper after all production callers migrate to query/trade facades.
+- [x] Remove obsolete `runtime_merchant_abi_test` target and source after facade seam tests supersede wrapper coverage.
+- [ ] Run focused + full native CTest sweep and archive evidence for compatibility retirement.

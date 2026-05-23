@@ -74,8 +74,9 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/input_abi.c
   runtime/input_contract.c
   runtime/input_binding.c
+  runtime/merchant_query_abi.c
+  runtime/merchant_trade_abi.c
   runtime/merchant_trade_domain.c
-  runtime/merchant_abi.c
   runtime/merchant_service.c
   runtime/interactive_objects.c
   runtime/interlock.c
@@ -85,7 +86,9 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/parallel_model.c
   runtime/physics_abi.c
   runtime/player_api.c
+  runtime/player_merchant_adapter.c
   runtime/player_build_abi.c
+  runtime/player_gateway_abi.c
   runtime/player_builds.c
   runtime/player_runtime_service.c
   runtime/player_resource_abi.c
@@ -101,6 +104,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/render_submit.c
   runtime/resource_domain.c
   runtime/terrain_features.c
+  runtime/terrain_abi.c
   runtime/terrain_generation.c
   runtime/ui_abi.c
   runtime/terrain_host.c
@@ -195,6 +199,7 @@ if(NOT EMSCRIPTEN)
         d3d12
         dxgi
         dxguid
+        d3dcompiler
       )
       message(STATUS "[engine] Native rendering backend requested: DX12 (runtime probe enabled)")
     else()
@@ -222,6 +227,33 @@ if(NOT EMSCRIPTEN)
 
   if(UNIX)
     target_link_libraries(banana_engine_core PUBLIC m)
+  endif()
+
+  if(WIN32)
+    add_executable(banana_engine_win32_dx12_poc
+      win32_dx12_poc/main.c
+    )
+
+    target_link_libraries(banana_engine_win32_dx12_poc PRIVATE
+      banana_engine_core
+    )
+
+    if(WIN32)
+      target_link_libraries(banana_engine_win32_dx12_poc PRIVATE msimg32)
+    endif()
+
+    target_include_directories(banana_engine_win32_dx12_poc PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+    if(MSVC)
+      target_compile_options(banana_engine_win32_dx12_poc PRIVATE /W3)
+      target_compile_definitions(banana_engine_win32_dx12_poc PRIVATE _CRT_SECURE_NO_WARNINGS)
+    else()
+      target_compile_options(banana_engine_win32_dx12_poc PRIVATE
+        -std=c11 -O2 -Wall -Wextra -Wpedantic
+      )
+    endif()
   endif()
 
   find_package(OpenMP QUIET)
@@ -561,6 +593,14 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_engine_dx12_runtime_smoke_test COMMAND banana_engine_dx12_runtime_smoke_test)
 
+  if(WIN32)
+    add_test(NAME banana_engine_win32_dx12_poc_startup_smoke COMMAND banana_engine_win32_dx12_poc)
+    set_tests_properties(banana_engine_win32_dx12_poc_startup_smoke PROPERTIES
+      ENVIRONMENT "BANANA_DX12_POC_AUTOTEST=1;BANANA_DX12_POC_AUTOTEST_SECONDS=2"
+      TIMEOUT 10
+    )
+  endif()
+
   add_executable(banana_runtime_physics_world_abi_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_physics_world_abi_test.c
   )
@@ -640,6 +680,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_runtime_terrain_host_test COMMAND banana_runtime_terrain_host_test)
 
+  add_executable(banana_runtime_terrain_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_terrain_abi_test.c
+  )
+  target_link_libraries(banana_runtime_terrain_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_terrain_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_terrain_abi_test COMMAND banana_runtime_terrain_abi_test)
+
   add_executable(banana_runtime_player_api_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_api_test.c
   )
@@ -652,6 +706,34 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_runtime_player_api_test COMMAND banana_runtime_player_api_test)
+
+  add_executable(banana_runtime_player_gateway_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_gateway_abi_test.c
+  )
+  target_link_libraries(banana_runtime_player_gateway_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_player_gateway_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_player_gateway_abi_test COMMAND banana_runtime_player_gateway_abi_test)
+
+  add_executable(banana_runtime_player_merchant_adapter_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_merchant_adapter_test.c
+  )
+  target_link_libraries(banana_runtime_player_merchant_adapter_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_player_merchant_adapter_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_player_merchant_adapter_test COMMAND banana_runtime_player_merchant_adapter_test)
 
   add_executable(banana_runtime_player_builds_integration_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_builds_integration_test.c
@@ -1047,11 +1129,11 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_runtime_merchant_service_test COMMAND banana_runtime_merchant_service_test)
 
-  add_executable(banana_runtime_merchant_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_merchant_abi_test.c
+  add_executable(banana_runtime_merchant_query_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_merchant_query_abi_test.c
   )
-  target_link_libraries(banana_runtime_merchant_abi_test PRIVATE banana_engine_core)
-  target_include_directories(banana_runtime_merchant_abi_test PRIVATE
+  target_link_libraries(banana_runtime_merchant_query_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_merchant_query_abi_test PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/render
     ${CMAKE_CURRENT_SOURCE_DIR}/physics
@@ -1059,7 +1141,21 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
-  add_test(NAME banana_runtime_merchant_abi_test COMMAND banana_runtime_merchant_abi_test)
+  add_test(NAME banana_runtime_merchant_query_abi_test COMMAND banana_runtime_merchant_query_abi_test)
+
+  add_executable(banana_runtime_merchant_trade_abi_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_merchant_trade_abi_test.c
+  )
+  target_link_libraries(banana_runtime_merchant_trade_abi_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_merchant_trade_abi_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_merchant_trade_abi_test COMMAND banana_runtime_merchant_trade_abi_test)
 
   add_executable(banana_runtime_player_resource_abi_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_resource_abi_test.c

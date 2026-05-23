@@ -16,8 +16,9 @@ static int expect_int(const char *label, int actual, int expected)
     return 0;
 }
 
-static int get_resource(RuntimeResourceKey key)
+static int get_resource(void *context, RuntimeResourceKey key)
 {
+    (void)context;
     if (key == RUNTIME_RESOURCE_GOLD)
         return g_gold;
     if (key == RUNTIME_RESOURCE_WOOD)
@@ -28,8 +29,11 @@ static int get_resource(RuntimeResourceKey key)
     return 0;
 }
 
-static int set_resource_total(RuntimeResourceKey key, int target_amount)
+static int set_resource_total(void *context,
+                              RuntimeResourceKey key,
+                              int target_amount)
 {
+    (void)context;
     if (key == RUNTIME_RESOURCE_GOLD)
     {
         g_gold = target_amount;
@@ -39,8 +43,11 @@ static int set_resource_total(RuntimeResourceKey key, int target_amount)
     return 0;
 }
 
-static int add_resource(RuntimeResourceKey key, int amount)
+static int add_resource(void *context,
+                        RuntimeResourceKey key,
+                        int amount)
 {
+    (void)context;
     if (key == RUNTIME_RESOURCE_WOOD)
     {
         g_wood += amount;
@@ -74,6 +81,7 @@ int main(void)
     int price = 0;
     RuntimeMerchantResourceGateway gateway = {0};
 
+    gateway.context = NULL;
     gateway.get = get_resource;
     gateway.set_total = set_resource_total;
     gateway.add = add_resource;

@@ -10,8 +10,16 @@ import {registerAuthRoutes} from './routes/auth.ts';
 import {registerGameSessionRoutes} from './routes/game-session.ts';
 import {registerHealthRoutes} from './routes/health.ts';
 import {registerWorldRoutes} from './routes/world.ts';
+import {bootstrapDatabaseRuntime} from './services/databaseRuntime.ts';
 
 const app = Fastify({logger: true});
+
+const databaseRuntime = bootstrapDatabaseRuntime();
+app.log.info(
+    {
+      databaseRuntime,
+    },
+    'database runtime initialized');
 
 // Feature 100 — CSP + security headers via @fastify/helmet
 await app.register(helmet, {

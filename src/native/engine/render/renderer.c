@@ -235,6 +235,20 @@ void renderer_attach_native_window(Renderer *r, void *native_window)
     if (!r)
         return;
     r->dx12_runtime_active = banana_dx12_runtime_init(native_window, r->width, r->height);
+    if (!r->dx12_runtime_active)
+    {
+        fprintf(stderr,
+                "[engine/renderer] dx12 runtime attach failed native_window=%p telemetry=%s\n",
+                native_window,
+                banana_dx12_runtime_telemetry());
+    }
+    else
+    {
+        fprintf(stdout,
+                "[engine/renderer] dx12 runtime attach ok native_window=%p telemetry=%s\n",
+                native_window,
+                banana_dx12_runtime_telemetry());
+    }
 #else
     (void)r;
     (void)native_window;

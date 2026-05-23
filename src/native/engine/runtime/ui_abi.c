@@ -37,6 +37,27 @@ int runtime_ui_abi_merchant_dialog(float x, float y, int npc_id)
     return ui_merchant_dialog(s_ui_context, x, y, npc_id);
 }
 
+void runtime_ui_abi_panel(float x,
+                          float y,
+                          float width,
+                          float height,
+                          unsigned int fill_rgba,
+                          float border_width)
+{
+    if (!s_ui_context)
+        return;
+
+    ui_panel(s_ui_context, x, y, width, height, fill_rgba, border_width);
+}
+
+void runtime_ui_abi_text(float x, float y, const char *text)
+{
+    if (!s_ui_context || !text)
+        return;
+
+    ui_text(s_ui_context, x, y, text);
+}
+
 void runtime_ui_abi_end_frame(void)
 {
     if (!s_ui_context)

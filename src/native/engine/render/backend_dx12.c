@@ -4,11 +4,26 @@
 #define COBJMACROS
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include <windows.h>
 #include <d3d12.h>
+#include <d3dcompiler.h>
 #include <dxgi1_6.h>
 
 #define BANANA_DX12_BACK_BUFFER_COUNT 2
+#define BANANA_DX12_DEBUG_MAX_VERTICES 24576
+
+typedef struct BananaDx12DebugVertex
+{
+    float x;
+    float y;
+    float z;
+    float r;
+    float g;
+    float b;
+    float a;
+} BananaDx12DebugVertex;
 
 static const char *BANANA_DX12_PROBE_WINDOW_CLASS = "BananaDx12ProbeWindow";
 
@@ -92,6 +107,14 @@ typedef struct BananaDx12Runtime
     UINT scene_draw_calls_frame;
     HRESULT last_present_result;
     int command_list_recording;
+    ID3D12RootSignature *scene_root_signature;
+    ID3D12PipelineState *scene_pipeline_state;
+    ID3D12Resource *scene_vertex_buffer;
+    D3D12_VERTEX_BUFFER_VIEW scene_vertex_buffer_view;
+    BananaDx12DebugVertex *scene_vertex_data;
+    UINT scene_vertex_count;
+    UINT scene_vertex_capacity;
+    int scene_pipeline_ready;
 } BananaDx12Runtime;
 
 static BananaDx12Runtime s_dx12_runtime = {0};
@@ -140,6 +163,688 @@ static void banana_dx12_runtime_release_depth_target(void)
         ID3D12Resource_Release(s_dx12_runtime.depth_stencil);
         s_dx12_runtime.depth_stencil = NULL;
     }
+}
+
+static float banana_dx12_clampf(float value, float min_value, float max_value)
+{
+    if (value < min_value)
+    {
+        return min_value;
+    }
+    if (value > max_value)
+    {
+        return max_value;
+    }
+    return value;
+}
+
+static float banana_dx12_vec3_dot(float ax, float ay, float az,
+                                  float bx, float by, float bz)
+{
+    return (ax * bx) + (ay * by) + (az * bz);
+}
+
+static void banana_dx12_vec3_cross(float ax, float ay, float az,
+                                   float bx, float by, float bz,
+                                   float *out_x, float *out_y, float *out_z)
+{
+    *out_x = (ay * bz) - (az * by);
+    *out_y = (az * bx) - (ax * bz);
+    *out_z = (ax * by) - (ay * bx);
+}
+
+static void banana_dx12_vec3_normalize(float *x, float *y, float *z)
+{
+    float length = sqrtf((*x * *x) + (*y * *y) + (*z * *z));
+    if (length <= 0.00001f)
+    {
+        *x = 0.0f;
+        *y = 1.0f;
+        *z = 0.0f;
+        return;
+    }
+
+    *x /= length;
+    *y /= length;
+    *z /= length;
+}
+
+static void banana_dx12_project_world_to_clip(float wx,
+                                               float wy,
+                                               float wz,
+                                               float *out_x,
+                                               float *out_y,
+                                               float *out_z,
+                                               float *out_view_depth)
+{
+    const float camera_x = 16.0f;
+    const float camera_y = 14.0f;
+    const float camera_z = -16.0f;
+    const float target_x = 0.0f;
+    const float target_y = 0.0f;
+    const float target_z = 0.0f;
+    const float world_up_x = 0.0f;
+    const float world_up_y = 1.0f;
+    const float world_up_z = 0.0f;
+    float forward_x = target_x - camera_x;
+    float forward_y = target_y - camera_y;
+    float forward_z = target_z - camera_z;
+    float right_x = 0.0f;
+    float right_y = 0.0f;
+    float right_z = 0.0f;
+    float up_x = 0.0f;
+    float up_y = 1.0f;
+    float up_z = 0.0f;
+    float dx = wx - camera_x;
+    float dy = wy - camera_y;
+    float dz = wz - camera_z;
+    float view_x = 0.0f;
+    float view_y = 0.0f;
+    float view_z = 0.0f;
+    float perspective = 1.0f;
+
+    banana_dx12_vec3_normalize(&forward_x, &forward_y, &forward_z);
+    banana_dx12_vec3_cross(forward_x,
+                           forward_y,
+                           forward_z,
+                           world_up_x,
+                           world_up_y,
+                           world_up_z,
+                           &right_x,
+                           &right_y,
+                           &right_z);
+    banana_dx12_vec3_normalize(&right_x, &right_y, &right_z);
+    banana_dx12_vec3_cross(right_x,
+                           right_y,
+                           right_z,
+                           forward_x,
+                           forward_y,
+                           forward_z,
+                           &up_x,
+                           &up_y,
+                           &up_z);
+    banana_dx12_vec3_normalize(&up_x, &up_y, &up_z);
+
+    view_x = banana_dx12_vec3_dot(dx, dy, dz, right_x, right_y, right_z);
+    view_y = banana_dx12_vec3_dot(dx, dy, dz, up_x, up_y, up_z);
+    view_z = banana_dx12_vec3_dot(dx, dy, dz, forward_x, forward_y, forward_z);
+    if (view_z < 0.01f)
+    {
+        view_z = 0.01f;
+    }
+
+    perspective = 1.0f / (1.0f + (view_z * 0.030f));
+
+    *out_x = banana_dx12_clampf(view_x * 0.110f * perspective, -1.25f, 1.25f);
+    *out_y = banana_dx12_clampf(view_y * 0.165f * perspective, -1.25f, 1.25f);
+    *out_z = banana_dx12_clampf(0.04f + (view_z * 0.0115f), 0.02f, 0.98f);
+    if (out_view_depth)
+    {
+        *out_view_depth = view_z;
+    }
+}
+
+static void banana_dx12_runtime_release_scene_pipeline(void)
+{
+    if (s_dx12_runtime.scene_vertex_buffer)
+    {
+        ID3D12Resource_Unmap(s_dx12_runtime.scene_vertex_buffer, 0, NULL);
+        ID3D12Resource_Release(s_dx12_runtime.scene_vertex_buffer);
+        s_dx12_runtime.scene_vertex_buffer = NULL;
+    }
+    s_dx12_runtime.scene_vertex_data = NULL;
+    s_dx12_runtime.scene_vertex_count = 0;
+    s_dx12_runtime.scene_vertex_capacity = 0;
+
+    if (s_dx12_runtime.scene_pipeline_state)
+    {
+        ID3D12PipelineState_Release(s_dx12_runtime.scene_pipeline_state);
+        s_dx12_runtime.scene_pipeline_state = NULL;
+    }
+    if (s_dx12_runtime.scene_root_signature)
+    {
+        ID3D12RootSignature_Release(s_dx12_runtime.scene_root_signature);
+        s_dx12_runtime.scene_root_signature = NULL;
+    }
+
+    ZeroMemory(&s_dx12_runtime.scene_vertex_buffer_view,
+               sizeof(s_dx12_runtime.scene_vertex_buffer_view));
+    s_dx12_runtime.scene_pipeline_ready = 0;
+}
+
+static int banana_dx12_runtime_push_quad(float center_x,
+                                         float center_y,
+                                         float half_width,
+                                         float half_height,
+                                         float z,
+                                         float r,
+                                         float g,
+                                         float b,
+                                         float a)
+{
+    BananaDx12DebugVertex *v = NULL;
+
+    if (!s_dx12_runtime.scene_vertex_data)
+    {
+        return 0;
+    }
+    if ((s_dx12_runtime.scene_vertex_count + 6u) > s_dx12_runtime.scene_vertex_capacity)
+    {
+        return 0;
+    }
+
+    v = &s_dx12_runtime.scene_vertex_data[s_dx12_runtime.scene_vertex_count];
+
+    v[0].x = center_x - half_width;
+    v[0].y = center_y - half_height;
+    v[0].z = z;
+    v[0].r = r;
+    v[0].g = g;
+    v[0].b = b;
+    v[0].a = a;
+
+    v[1].x = center_x - half_width;
+    v[1].y = center_y + half_height;
+    v[1].z = z;
+    v[1].r = r;
+    v[1].g = g;
+    v[1].b = b;
+    v[1].a = a;
+
+    v[2].x = center_x + half_width;
+    v[2].y = center_y + half_height;
+    v[2].z = z;
+    v[2].r = r;
+    v[2].g = g;
+    v[2].b = b;
+    v[2].a = a;
+
+    v[3] = v[0];
+    v[4] = v[2];
+
+    v[5].x = center_x + half_width;
+    v[5].y = center_y - half_height;
+    v[5].z = z;
+    v[5].r = r;
+    v[5].g = g;
+    v[5].b = b;
+    v[5].a = a;
+
+    s_dx12_runtime.scene_vertex_count += 6u;
+    return 1;
+}
+
+static int banana_dx12_runtime_push_triangle(float x0,
+                                             float y0,
+                                             float z0,
+                                             float x1,
+                                             float y1,
+                                             float z1,
+                                             float x2,
+                                             float y2,
+                                             float z2,
+                                             float r,
+                                             float g,
+                                             float b,
+                                             float a)
+{
+    BananaDx12DebugVertex *v = NULL;
+    if (!s_dx12_runtime.scene_vertex_data)
+    {
+        return 0;
+    }
+    if ((s_dx12_runtime.scene_vertex_count + 3u) > s_dx12_runtime.scene_vertex_capacity)
+    {
+        return 0;
+    }
+
+    v = &s_dx12_runtime.scene_vertex_data[s_dx12_runtime.scene_vertex_count];
+    v[0].x = x0;
+    v[0].y = y0;
+    v[0].z = z0;
+    v[0].r = r;
+    v[0].g = g;
+    v[0].b = b;
+    v[0].a = a;
+
+    v[1].x = x1;
+    v[1].y = y1;
+    v[1].z = z1;
+    v[1].r = r;
+    v[1].g = g;
+    v[1].b = b;
+    v[1].a = a;
+
+    v[2].x = x2;
+    v[2].y = y2;
+    v[2].z = z2;
+    v[2].r = r;
+    v[2].g = g;
+    v[2].b = b;
+    v[2].a = a;
+
+    s_dx12_runtime.scene_vertex_count += 3u;
+    return 1;
+}
+
+static int banana_dx12_runtime_push_mesh(const Mesh *mesh,
+                                         const float *position,
+                                         const float *scale,
+                                         int uses_texture,
+                                         float color_r,
+                                         float color_g,
+                                         float color_b,
+                                         float color_a)
+{
+    const float *vertices = NULL;
+    const unsigned int *indices = NULL;
+    int vertex_count = 0;
+    int index_count = 0;
+    int i = 0;
+    float light_x = 0.38f;
+    float light_y = 0.84f;
+    float light_z = -0.39f;
+
+    banana_dx12_vec3_normalize(&light_x, &light_y, &light_z);
+
+    if (!mesh || !position || !scale)
+    {
+        return 0;
+    }
+
+    vertices = mesh_get_vertices(mesh);
+    indices = mesh_get_indices(mesh);
+    vertex_count = mesh_get_vertex_count(mesh);
+    index_count = mesh_get_index_count(mesh);
+
+    if (!vertices || !indices || vertex_count <= 0 || index_count < 3)
+    {
+        return 0;
+    }
+
+    for (i = 0; i + 2 < index_count; i += 3)
+    {
+        unsigned int i0 = indices[i + 0];
+        unsigned int i1 = indices[i + 1];
+        unsigned int i2 = indices[i + 2];
+        const float *v0 = NULL;
+        const float *v1 = NULL;
+        const float *v2 = NULL;
+        float wx0;
+        float wy0;
+        float wz0;
+        float wx1;
+        float wy1;
+        float wz1;
+        float wx2;
+        float wy2;
+        float wz2;
+        float sx0;
+        float sy0;
+        float sz0;
+        float sx1;
+        float sy1;
+        float sz1;
+        float sx2;
+        float sy2;
+        float sz2;
+        float depth0 = 0.0f;
+        float depth1 = 0.0f;
+        float depth2 = 0.0f;
+        float nx = 0.0f;
+        float ny = 1.0f;
+        float nz = 0.0f;
+        float ndotl = 0.55f;
+        float avg_height = 0.0f;
+        float avg_depth = 0.0f;
+        float terrain_tint = 1.0f;
+        float height_tint = 1.0f;
+        float depth_fade = 1.0f;
+        float shaded_r = color_r;
+        float shaded_g = color_g;
+        float shaded_b = color_b;
+
+        if (i0 >= (unsigned int)vertex_count ||
+            i1 >= (unsigned int)vertex_count ||
+            i2 >= (unsigned int)vertex_count)
+        {
+            continue;
+        }
+
+        v0 = &vertices[i0 * 8u];
+        v1 = &vertices[i1 * 8u];
+        v2 = &vertices[i2 * 8u];
+
+        wx0 = position[0] + (v0[0] * scale[0]);
+        wy0 = position[1] + (v0[1] * scale[1]);
+        wz0 = position[2] + (v0[2] * scale[2]);
+        wx1 = position[0] + (v1[0] * scale[0]);
+        wy1 = position[1] + (v1[1] * scale[1]);
+        wz1 = position[2] + (v1[2] * scale[2]);
+        wx2 = position[0] + (v2[0] * scale[0]);
+        wy2 = position[1] + (v2[1] * scale[1]);
+        wz2 = position[2] + (v2[2] * scale[2]);
+
+        banana_dx12_project_world_to_clip(wx0, wy0, wz0, &sx0, &sy0, &sz0, &depth0);
+        banana_dx12_project_world_to_clip(wx1, wy1, wz1, &sx1, &sy1, &sz1, &depth1);
+        banana_dx12_project_world_to_clip(wx2, wy2, wz2, &sx2, &sy2, &sz2, &depth2);
+
+        nx = (v0[3] + v1[3] + v2[3]) / 3.0f;
+        ny = (v0[4] + v1[4] + v2[4]) / 3.0f;
+        nz = (v0[5] + v1[5] + v2[5]) / 3.0f;
+        banana_dx12_vec3_normalize(&nx, &ny, &nz);
+        ndotl = banana_dx12_vec3_dot(nx, ny, nz, light_x, light_y, light_z);
+        ndotl = banana_dx12_clampf((ndotl * 0.55f) + 0.45f, 0.25f, 1.0f);
+
+        avg_height = (wy0 + wy1 + wy2) / 3.0f;
+        avg_depth = (depth0 + depth1 + depth2) / 3.0f;
+        height_tint = banana_dx12_clampf(0.82f + (avg_height * 0.06f), 0.55f, 1.18f);
+        depth_fade = banana_dx12_clampf(1.10f - (avg_depth * 0.018f), 0.58f, 1.04f);
+
+        if (uses_texture)
+        {
+            terrain_tint = banana_dx12_clampf(0.80f + ((ny + 1.0f) * 0.10f), 0.72f, 1.05f);
+            shaded_r = color_r * 0.72f * terrain_tint;
+            shaded_g = color_g * 1.05f * terrain_tint;
+            shaded_b = color_b * 0.72f * terrain_tint;
+        }
+        else
+        {
+            terrain_tint = banana_dx12_clampf(0.95f + (ny * 0.08f), 0.80f, 1.12f);
+            shaded_r = color_r * terrain_tint;
+            shaded_g = color_g * terrain_tint;
+            shaded_b = color_b * terrain_tint;
+        }
+
+        shaded_r = banana_dx12_clampf(shaded_r * ndotl * height_tint * depth_fade, 0.08f, 1.0f);
+        shaded_g = banana_dx12_clampf(shaded_g * ndotl * height_tint * depth_fade, 0.08f, 1.0f);
+        shaded_b = banana_dx12_clampf(shaded_b * ndotl * height_tint * depth_fade, 0.08f, 1.0f);
+
+        if (!banana_dx12_runtime_push_triangle(sx0,
+                                               sy0,
+                                               sz0,
+                                               sx1,
+                                               sy1,
+                                               sz1,
+                                               sx2,
+                                               sy2,
+                                               sz2,
+                                               shaded_r,
+                                               shaded_g,
+                                               shaded_b,
+                                               color_a))
+        {
+            break;
+        }
+    }
+
+    return 1;
+}
+
+static int banana_dx12_runtime_create_scene_pipeline(void)
+{
+    static const char *vertex_shader_source =
+        "struct VSInput { float3 pos : POSITION; float4 col : COLOR; };\n"
+        "struct PSInput { float4 pos : SV_POSITION; float4 col : COLOR; };\n"
+        "PSInput main(VSInput input) {\n"
+        "  PSInput output;\n"
+        "  output.pos = float4(input.pos, 1.0);\n"
+        "  output.col = input.col;\n"
+        "  return output;\n"
+        "}\n";
+    static const char *pixel_shader_source =
+        "struct PSInput { float4 pos : SV_POSITION; float4 col : COLOR; };\n"
+        "float4 main(PSInput input) : SV_TARGET {\n"
+        "  return input.col;\n"
+        "}\n";
+
+    ID3DBlob *vertex_shader_blob = NULL;
+    ID3DBlob *pixel_shader_blob = NULL;
+    ID3DBlob *root_signature_blob = NULL;
+    ID3DBlob *error_blob = NULL;
+    D3D12_ROOT_SIGNATURE_DESC root_signature_desc;
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc;
+    D3D12_INPUT_ELEMENT_DESC input_layout[2];
+    D3D12_HEAP_PROPERTIES heap_props;
+    D3D12_RESOURCE_DESC resource_desc;
+    D3D12_RASTERIZER_DESC rasterizer_desc;
+    D3D12_BLEND_DESC blend_desc;
+    D3D12_DEPTH_STENCIL_DESC depth_stencil_desc;
+    D3D12_SHADER_BYTECODE vs;
+    D3D12_SHADER_BYTECODE ps;
+    HRESULT result;
+
+    if (!s_dx12_runtime.device)
+    {
+        return 0;
+    }
+
+    banana_dx12_runtime_release_scene_pipeline();
+
+    result = D3DCompile(vertex_shader_source,
+                        strlen(vertex_shader_source),
+                        "banana_dx12_debug_vs",
+                        NULL,
+                        NULL,
+                        "main",
+                        "vs_5_0",
+                        0,
+                        0,
+                        &vertex_shader_blob,
+                        &error_blob);
+    if (FAILED(result) || !vertex_shader_blob)
+    {
+        if (error_blob)
+        {
+            error_blob->lpVtbl->Release(error_blob);
+        }
+        return 0;
+    }
+    if (error_blob)
+    {
+        error_blob->lpVtbl->Release(error_blob);
+        error_blob = NULL;
+    }
+
+    result = D3DCompile(pixel_shader_source,
+                        strlen(pixel_shader_source),
+                        "banana_dx12_debug_ps",
+                        NULL,
+                        NULL,
+                        "main",
+                        "ps_5_0",
+                        0,
+                        0,
+                        &pixel_shader_blob,
+                        &error_blob);
+    if (FAILED(result) || !pixel_shader_blob)
+    {
+        if (error_blob)
+        {
+            error_blob->lpVtbl->Release(error_blob);
+        }
+        vertex_shader_blob->lpVtbl->Release(vertex_shader_blob);
+        return 0;
+    }
+    if (error_blob)
+    {
+        error_blob->lpVtbl->Release(error_blob);
+        error_blob = NULL;
+    }
+
+    ZeroMemory(&root_signature_desc, sizeof(root_signature_desc));
+    root_signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+    result = D3D12SerializeRootSignature(&root_signature_desc,
+                                         D3D_ROOT_SIGNATURE_VERSION_1,
+                                         &root_signature_blob,
+                                         &error_blob);
+    if (FAILED(result) || !root_signature_blob)
+    {
+        if (error_blob)
+        {
+            error_blob->lpVtbl->Release(error_blob);
+        }
+        vertex_shader_blob->lpVtbl->Release(vertex_shader_blob);
+        pixel_shader_blob->lpVtbl->Release(pixel_shader_blob);
+        return 0;
+    }
+    if (error_blob)
+    {
+        error_blob->lpVtbl->Release(error_blob);
+        error_blob = NULL;
+    }
+
+    result = ID3D12Device_CreateRootSignature(s_dx12_runtime.device,
+                                              0,
+                                              root_signature_blob->lpVtbl->GetBufferPointer(root_signature_blob),
+                                              root_signature_blob->lpVtbl->GetBufferSize(root_signature_blob),
+                                              &IID_ID3D12RootSignature,
+                                              (void **)&s_dx12_runtime.scene_root_signature);
+    root_signature_blob->lpVtbl->Release(root_signature_blob);
+    if (FAILED(result) || !s_dx12_runtime.scene_root_signature)
+    {
+        vertex_shader_blob->lpVtbl->Release(vertex_shader_blob);
+        pixel_shader_blob->lpVtbl->Release(pixel_shader_blob);
+        return 0;
+    }
+
+    ZeroMemory(input_layout, sizeof(input_layout));
+    input_layout[0].SemanticName = "POSITION";
+    input_layout[0].SemanticIndex = 0;
+    input_layout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    input_layout[0].InputSlot = 0;
+    input_layout[0].AlignedByteOffset = 0;
+    input_layout[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+    input_layout[0].InstanceDataStepRate = 0;
+    input_layout[1].SemanticName = "COLOR";
+    input_layout[1].SemanticIndex = 0;
+    input_layout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    input_layout[1].InputSlot = 0;
+    input_layout[1].AlignedByteOffset = 12;
+    input_layout[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+    input_layout[1].InstanceDataStepRate = 0;
+
+    ZeroMemory(&rasterizer_desc, sizeof(rasterizer_desc));
+    rasterizer_desc.FillMode = D3D12_FILL_MODE_SOLID;
+    rasterizer_desc.CullMode = D3D12_CULL_MODE_NONE;
+    rasterizer_desc.FrontCounterClockwise = FALSE;
+    rasterizer_desc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+    rasterizer_desc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+    rasterizer_desc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+    rasterizer_desc.DepthClipEnable = TRUE;
+    rasterizer_desc.MultisampleEnable = FALSE;
+    rasterizer_desc.AntialiasedLineEnable = FALSE;
+    rasterizer_desc.ForcedSampleCount = 0;
+    rasterizer_desc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+    ZeroMemory(&blend_desc, sizeof(blend_desc));
+    blend_desc.AlphaToCoverageEnable = FALSE;
+    blend_desc.IndependentBlendEnable = FALSE;
+    blend_desc.RenderTarget[0].BlendEnable = FALSE;
+    blend_desc.RenderTarget[0].LogicOpEnable = FALSE;
+    blend_desc.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+    blend_desc.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
+    blend_desc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+    blend_desc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+    blend_desc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+    blend_desc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    blend_desc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
+    blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+    ZeroMemory(&depth_stencil_desc, sizeof(depth_stencil_desc));
+    depth_stencil_desc.DepthEnable = FALSE;
+    depth_stencil_desc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    depth_stencil_desc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    depth_stencil_desc.StencilEnable = FALSE;
+
+    ZeroMemory(&pso_desc, sizeof(pso_desc));
+    vs.pShaderBytecode = vertex_shader_blob->lpVtbl->GetBufferPointer(vertex_shader_blob);
+    vs.BytecodeLength = vertex_shader_blob->lpVtbl->GetBufferSize(vertex_shader_blob);
+    ps.pShaderBytecode = pixel_shader_blob->lpVtbl->GetBufferPointer(pixel_shader_blob);
+    ps.BytecodeLength = pixel_shader_blob->lpVtbl->GetBufferSize(pixel_shader_blob);
+    pso_desc.pRootSignature = s_dx12_runtime.scene_root_signature;
+    pso_desc.VS = vs;
+    pso_desc.PS = ps;
+    pso_desc.BlendState = blend_desc;
+    pso_desc.SampleMask = UINT_MAX;
+    pso_desc.RasterizerState = rasterizer_desc;
+    pso_desc.DepthStencilState = depth_stencil_desc;
+    pso_desc.InputLayout.pInputElementDescs = input_layout;
+    pso_desc.InputLayout.NumElements = 2;
+    pso_desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+    pso_desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    pso_desc.NumRenderTargets = 1;
+    pso_desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    pso_desc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+    pso_desc.SampleDesc.Count = 1;
+    pso_desc.SampleDesc.Quality = 0;
+
+    result = ID3D12Device_CreateGraphicsPipelineState(s_dx12_runtime.device,
+                                                      &pso_desc,
+                                                      &IID_ID3D12PipelineState,
+                                                      (void **)&s_dx12_runtime.scene_pipeline_state);
+    vertex_shader_blob->lpVtbl->Release(vertex_shader_blob);
+    pixel_shader_blob->lpVtbl->Release(pixel_shader_blob);
+    if (FAILED(result) || !s_dx12_runtime.scene_pipeline_state)
+    {
+        banana_dx12_runtime_release_scene_pipeline();
+        return 0;
+    }
+
+    ZeroMemory(&heap_props, sizeof(heap_props));
+    heap_props.Type = D3D12_HEAP_TYPE_UPLOAD;
+    heap_props.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heap_props.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    heap_props.CreationNodeMask = 1;
+    heap_props.VisibleNodeMask = 1;
+
+    ZeroMemory(&resource_desc, sizeof(resource_desc));
+    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resource_desc.Alignment = 0;
+    resource_desc.Width = (UINT64)(sizeof(BananaDx12DebugVertex) * BANANA_DX12_DEBUG_MAX_VERTICES);
+    resource_desc.Height = 1;
+    resource_desc.DepthOrArraySize = 1;
+    resource_desc.MipLevels = 1;
+    resource_desc.Format = DXGI_FORMAT_UNKNOWN;
+    resource_desc.SampleDesc.Count = 1;
+    resource_desc.SampleDesc.Quality = 0;
+    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    result = ID3D12Device_CreateCommittedResource(s_dx12_runtime.device,
+                                                  &heap_props,
+                                                  D3D12_HEAP_FLAG_NONE,
+                                                  &resource_desc,
+                                                  D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                  NULL,
+                                                  &IID_ID3D12Resource,
+                                                  (void **)&s_dx12_runtime.scene_vertex_buffer);
+    if (FAILED(result) || !s_dx12_runtime.scene_vertex_buffer)
+    {
+        banana_dx12_runtime_release_scene_pipeline();
+        return 0;
+    }
+
+    result = ID3D12Resource_Map(s_dx12_runtime.scene_vertex_buffer,
+                                0,
+                                NULL,
+                                (void **)&s_dx12_runtime.scene_vertex_data);
+    if (FAILED(result) || !s_dx12_runtime.scene_vertex_data)
+    {
+        banana_dx12_runtime_release_scene_pipeline();
+        return 0;
+    }
+
+    s_dx12_runtime.scene_vertex_buffer_view.BufferLocation =
+        ID3D12Resource_GetGPUVirtualAddress(s_dx12_runtime.scene_vertex_buffer);
+    s_dx12_runtime.scene_vertex_buffer_view.StrideInBytes = sizeof(BananaDx12DebugVertex);
+    s_dx12_runtime.scene_vertex_buffer_view.SizeInBytes =
+        (UINT)(sizeof(BananaDx12DebugVertex) * BANANA_DX12_DEBUG_MAX_VERTICES);
+    s_dx12_runtime.scene_vertex_capacity = BANANA_DX12_DEBUG_MAX_VERTICES;
+    s_dx12_runtime.scene_vertex_count = 0;
+    s_dx12_runtime.scene_pipeline_ready = 1;
+    return 1;
 }
 
 static void banana_dx12_runtime_release_swapchain_buffers(void)
@@ -366,6 +1071,7 @@ static void banana_dx12_runtime_release_all(void)
         ID3D12GraphicsCommandList_Release(s_dx12_runtime.command_list);
         s_dx12_runtime.command_list = NULL;
     }
+    banana_dx12_runtime_release_scene_pipeline();
     if (s_dx12_runtime.command_allocator)
     {
         ID3D12CommandAllocator_Release(s_dx12_runtime.command_allocator);
@@ -414,7 +1120,18 @@ static void banana_dx12_runtime_release_all(void)
     s_dx12_runtime.window = NULL;
     s_dx12_runtime.owns_window = 0;
 
-    banana_dx12_runtime_reset_state();
+    s_dx12_runtime.active = 0;
+    s_dx12_runtime.width = 0;
+    s_dx12_runtime.height = 0;
+    s_dx12_runtime.frame_index = 0;
+    s_dx12_runtime.fence_value = 0;
+    s_dx12_runtime.command_list_recording = 0;
+    s_dx12_runtime.scene_draw_calls_frame = 0;
+    s_dx12_runtime.scene_draw_calls_total = 0;
+    s_dx12_runtime.frame_counter = 0;
+    s_dx12_runtime.frames_presented = 0;
+    s_dx12_runtime.last_present_result = S_OK;
+    banana_dx12_runtime_update_telemetry();
 }
 
 static IDXGIAdapter1 *banana_dx12_find_hardware_adapter(IDXGIFactory4 *factory)
@@ -777,9 +1494,7 @@ int banana_dx12_runtime_init(void *native_window, int width, int height)
     }
     if (!banana_dx12_runtime_create_depth_target())
     {
-        s_dx12_runtime.status = "dx12-depth-target-create-failed";
-        banana_dx12_runtime_release_all();
-        return 0;
+        s_dx12_runtime.status = "dx12-depth-target-unavailable";
     }
 
     result = ID3D12Device_CreateCommandAllocator(s_dx12_runtime.device,
@@ -830,8 +1545,18 @@ int banana_dx12_runtime_init(void *native_window, int width, int height)
 
     s_dx12_runtime.width = width;
     s_dx12_runtime.height = height;
+
+    if (!banana_dx12_runtime_create_scene_pipeline())
+    {
+        s_dx12_runtime.scene_pipeline_ready = 0;
+        s_dx12_runtime.status = "dx12-runtime-ready-no-scene-pipeline";
+    }
+    else
+    {
+        s_dx12_runtime.status = "dx12-runtime-ready";
+    }
+
     s_dx12_runtime.active = 1;
-    s_dx12_runtime.status = "dx12-runtime-ready";
     banana_dx12_runtime_update_telemetry();
     return 1;
 #else
@@ -894,9 +1619,7 @@ int banana_dx12_runtime_resize(int width, int height)
     }
     if (!banana_dx12_runtime_create_depth_target())
     {
-        s_dx12_runtime.status = "dx12-depth-target-resize-failed";
-        banana_dx12_runtime_update_telemetry();
-        return 0;
+        s_dx12_runtime.status = "dx12-depth-target-unavailable";
     }
     s_dx12_runtime.status = "dx12-runtime-ready";
     banana_dx12_runtime_update_telemetry();
@@ -919,7 +1642,7 @@ int banana_dx12_runtime_begin_frame(float clear_r, float clear_g, float clear_b,
     float color[4] = {clear_r, clear_g, clear_b, clear_a};
 
     if (!s_dx12_runtime.active || !s_dx12_runtime.command_allocator || !s_dx12_runtime.command_list ||
-        !s_dx12_runtime.render_targets[s_dx12_runtime.frame_index] || !s_dx12_runtime.depth_stencil)
+        !s_dx12_runtime.render_targets[s_dx12_runtime.frame_index])
     {
         return 0;
     }
@@ -949,8 +1672,7 @@ int banana_dx12_runtime_begin_frame(float clear_r, float clear_g, float clear_b,
     ID3D12DescriptorHeap_GetCPUDescriptorHandleForHeapStart(s_dx12_runtime.rtv_heap,
                                                             &rtv_handle);
     rtv_handle.ptr += ((SIZE_T)s_dx12_runtime.frame_index * s_dx12_runtime.rtv_descriptor_size);
-    ID3D12DescriptorHeap_GetCPUDescriptorHandleForHeapStart(s_dx12_runtime.dsv_heap,
-                                                            &dsv_handle);
+    ZeroMemory(&dsv_handle, sizeof(dsv_handle));
 
     viewport.TopLeftX = 0.0f;
     viewport.TopLeftY = 0.0f;
@@ -969,24 +1691,28 @@ int banana_dx12_runtime_begin_frame(float clear_r, float clear_g, float clear_b,
                                                  1,
                                                  &rtv_handle,
                                                  FALSE,
-                                                 &dsv_handle);
+                                                 NULL);
 
     ID3D12GraphicsCommandList_ClearRenderTargetView(s_dx12_runtime.command_list,
                                                     rtv_handle,
                                                     color,
                                                     0,
                                                     NULL);
-    ID3D12GraphicsCommandList_ClearDepthStencilView(s_dx12_runtime.command_list,
-                                                    dsv_handle,
-                                                    D3D12_CLEAR_FLAG_DEPTH,
-                                                    1.0f,
-                                                    0,
-                                                    0,
-                                                    NULL);
-
     s_dx12_runtime.command_list_recording = 1;
     s_dx12_runtime.scene_draw_calls_frame = 0;
+    s_dx12_runtime.scene_vertex_count = 0;
     s_dx12_runtime.frame_counter += 1;
+
+    banana_dx12_runtime_push_quad(0.0f,
+                                  0.0f,
+                                  0.92f,
+                                  0.92f,
+                                  0.90f,
+                                  0.34f,
+                                  0.56f,
+                                  0.22f,
+                                  1.0f);
+
     s_dx12_runtime.status = "dx12-frame-recording";
     banana_dx12_runtime_update_telemetry();
     return 1;
@@ -1008,6 +1734,25 @@ int banana_dx12_runtime_end_frame(void)
     if (!s_dx12_runtime.active || !s_dx12_runtime.swap_chain || !s_dx12_runtime.command_list_recording)
     {
         return 0;
+    }
+
+    if (s_dx12_runtime.scene_pipeline_ready && s_dx12_runtime.scene_vertex_count > 0)
+    {
+        ID3D12GraphicsCommandList_SetGraphicsRootSignature(s_dx12_runtime.command_list,
+                                                           s_dx12_runtime.scene_root_signature);
+        ID3D12GraphicsCommandList_SetPipelineState(s_dx12_runtime.command_list,
+                                                   s_dx12_runtime.scene_pipeline_state);
+        ID3D12GraphicsCommandList_IASetPrimitiveTopology(s_dx12_runtime.command_list,
+                                                         D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        ID3D12GraphicsCommandList_IASetVertexBuffers(s_dx12_runtime.command_list,
+                                                     0,
+                                                     1,
+                                                     &s_dx12_runtime.scene_vertex_buffer_view);
+        ID3D12GraphicsCommandList_DrawInstanced(s_dx12_runtime.command_list,
+                                                s_dx12_runtime.scene_vertex_count,
+                                                1,
+                                                0,
+                                                0);
     }
 
     ZeroMemory(&transition_to_present, sizeof(transition_to_present));
@@ -1077,23 +1822,72 @@ void banana_dx12_runtime_shutdown(void)
 #endif
 }
 
-void banana_dx12_runtime_submit_scene_draw(const float *position,
+void banana_dx12_runtime_submit_scene_draw(const Mesh *mesh,
+                                           const float *position,
                                            const float *scale,
-                                           int uses_texture)
+                                           int uses_texture,
+                                           float color_r,
+                                           float color_g,
+                                           float color_b)
 {
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
-    (void)position;
-    (void)scale;
-    (void)uses_texture;
+    float world_span = 24.0f;
+    float ndc_x = 0.0f;
+    float ndc_y = 0.0f;
+    float half_width = 0.030f;
+    float half_height = 0.030f;
+    float r = uses_texture ? 0.95f : 0.35f;
+    float g = uses_texture ? 0.34f : 0.88f;
+    float b = uses_texture ? 0.20f : 0.96f;
 
     if (!s_dx12_runtime.active || !s_dx12_runtime.command_list_recording)
         return;
 
+    if (!position || !scale)
+        return;
+
+    if (!s_dx12_runtime.scene_pipeline_ready)
+        return;
+
+    r = banana_dx12_clampf(color_r, 0.15f, 1.0f);
+    g = banana_dx12_clampf(color_g, 0.15f, 1.0f);
+    b = banana_dx12_clampf(color_b, 0.15f, 1.0f);
+
+    if (banana_dx12_runtime_push_mesh(mesh, position, scale, uses_texture, r, g, b, 1.0f))
+    {
+        s_dx12_runtime.scene_draw_calls_frame += 1;
+        s_dx12_runtime.scene_draw_calls_total += 1;
+        return;
+    }
+
+    ndc_x = banana_dx12_clampf(position[0] / world_span, -1.0f, 1.0f);
+    ndc_y = banana_dx12_clampf(-position[2] / world_span, -1.0f, 1.0f);
+
+    half_width = banana_dx12_clampf(scale[0] / 16.0f, 0.018f, 0.080f);
+    half_height = banana_dx12_clampf(scale[2] / 16.0f, 0.018f, 0.080f);
+
+    if (!banana_dx12_runtime_push_quad(ndc_x,
+                                       ndc_y,
+                                       half_width,
+                                       half_height,
+                                       0.20f,
+                                       r,
+                                       g,
+                                       b,
+                                       1.0f))
+    {
+        return;
+    }
+
     s_dx12_runtime.scene_draw_calls_frame += 1;
     s_dx12_runtime.scene_draw_calls_total += 1;
 #else
+    (void)mesh;
     (void)position;
     (void)scale;
     (void)uses_texture;
+    (void)color_r;
+    (void)color_g;
+    (void)color_b;
 #endif
 }

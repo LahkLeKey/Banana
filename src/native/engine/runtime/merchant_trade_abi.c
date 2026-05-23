@@ -1,22 +1,6 @@
-#include "merchant_abi.h"
+#include "merchant_trade_abi.h"
 
-int runtime_merchant_abi_get_price(const RuntimeApplicationServicePorts *ports,
-                                   int npc_id,
-                                   const char *item_type,
-                                   int *inout_seeded)
-{
-    int price = 0;
-
-    if (!ports || !ports->merchant.get_price || !item_type)
-        return 0;
-
-    if (ports->merchant.get_price(npc_id, item_type, inout_seeded, &price) != 0)
-        return 0;
-
-    return price;
-}
-
-int runtime_merchant_abi_trade_buy(const RuntimeApplicationServicePorts *ports,
+int runtime_merchant_trade_abi_buy(const RuntimeApplicationServicePorts *ports,
                                    int world_ready,
                                    int npc_id,
                                    const char *item_type,
@@ -34,7 +18,7 @@ int runtime_merchant_abi_trade_buy(const RuntimeApplicationServicePorts *ports,
                                      resource_gateway);
 }
 
-int runtime_merchant_abi_trade_sell(const RuntimeApplicationServicePorts *ports,
+int runtime_merchant_trade_abi_sell(const RuntimeApplicationServicePorts *ports,
                                     int world_ready,
                                     int npc_id,
                                     const char *item_type,

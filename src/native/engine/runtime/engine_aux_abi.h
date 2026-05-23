@@ -16,6 +16,10 @@ extern "C"
         int controller_count;
     } RuntimeEngineAuxContext;
 
+    RuntimeEngineAuxContext runtime_engine_aux_context(World *world,
+                                                       ControllerInstance **controllers,
+                                                       int controller_count);
+
     uint32_t runtime_engine_aux_controller_create(ControllerInstance **controllers,
                                                   int max_active_controllers,
                                                   int *inout_controller_count,

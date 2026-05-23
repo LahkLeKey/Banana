@@ -6,6 +6,17 @@
 #include "world_metrics.h"
 #include "world_telemetry.h"
 
+RuntimeEngineAuxContext runtime_engine_aux_context(World *world,
+                                                   ControllerInstance **controllers,
+                                                   int controller_count)
+{
+    RuntimeEngineAuxContext context;
+    context.world = world;
+    context.controllers = controllers;
+    context.controller_count = controller_count;
+    return context;
+}
+
 uint32_t runtime_engine_aux_controller_create(ControllerInstance **controllers,
                                               int max_active_controllers,
                                               int *inout_controller_count,

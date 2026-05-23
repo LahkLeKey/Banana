@@ -5,7 +5,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_DIR="${ROOT_DIR}/src/typescript/api"
 APP_NAME="${FLY_APP_NAME:-banana-api}"
-DATABASE_URL_VALUE="${NEON_DATABASE_URL:-}"
+
+source "${ROOT_DIR}/scripts/lib/database-env-aliases.sh"
 
 if ! command -v fly >/dev/null 2>&1; then
   echo "[fly-deploy] ERROR: fly CLI is required but not installed or not on PATH." >&2
@@ -14,10 +15,11 @@ fi
 
 cd "${API_DIR}"
 
-if [[ -z "${DATABASE_URL_VALUE}" ]]; then
-  echo "[fly-deploy] ERROR: NEON_DATABASE_URL is required for the database cutover." >&2
+if ! banana_require_database_aliases "fly-deploy"; then
   exit 1
 fi
+
+DATABASE_URL_VALUE="${NEON_DATABASE_URL}"
 
 echo "[fly-deploy] applying self-hosted Neon database secrets"
 fly secrets set -a "${APP_NAME}" \

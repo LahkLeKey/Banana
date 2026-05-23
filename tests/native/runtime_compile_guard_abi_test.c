@@ -1,14 +1,73 @@
 #include "runtime/controller_kind_domain.h"
 #include "runtime/input_abi.h"
 #include "runtime/move_target_service.h"
+#include "runtime/player_gateway_abi.h"
 #include "runtime/player_build_abi.h"
 #include "runtime/player_builds.h"
+#include "runtime/merchant_query_abi.h"
+#include "runtime/merchant_trade_abi.h"
 #include "runtime/player_sync_abi.h"
 #include "runtime/resource_domain.h"
+#include "runtime/terrain_abi.h"
 
+#include <stddef.h>
 #include <stdio.h>
 
 #define ABI_COMPILE_ASSERT(name, expr) typedef char abi_compile_assert_##name[(expr) ? 1 : -1]
+
+typedef float (*RuntimeTerrainPortSampleHeightFn)(const EngineRuntimeState *state,
+                                                  float x,
+                                                  float z);
+typedef int (*RuntimeTerrainPortSetHeightFn)(EngineRuntimeState *state,
+                                             int x,
+                                             int z,
+                                             int elevation);
+typedef void (*RuntimeTerrainPortMarkRegionDirtyFn)(EngineRuntimeState *state,
+                                                    int min_x,
+                                                    int min_z,
+                                                    int max_x,
+                                                    int max_z);
+
+typedef float (*RuntimeTerrainAbiSampleFn)(const RuntimeApplicationServicePorts *ports,
+                                           const EngineRuntimeState *state,
+                                           float x,
+                                           float z);
+typedef int (*RuntimeTerrainAbiSetHeightFn)(const RuntimeApplicationServicePorts *ports,
+                                            EngineRuntimeState *state,
+                                            int x,
+                                            int z,
+                                            int elevation);
+typedef void (*RuntimeTerrainAbiMarkRegionDirtyFn)(const RuntimeApplicationServicePorts *ports,
+                                                   EngineRuntimeState *state,
+                                                   int min_x,
+                                                   int min_z,
+                                                   int max_x,
+                                                   int max_z);
+
+typedef const char *(*RuntimePlayerGatewayActiveGuidFn)(EntityId active_player_id);
+typedef RuntimeMerchantResourceGateway (*RuntimePlayerGatewayBuilderFn)(
+    RuntimeMerchantGetResourceByKeyFn get,
+    RuntimeMerchantSetResourceTotalByKeyFn set_total,
+    RuntimeMerchantAddResourceByKeyFn add,
+    void *context);
+typedef int (*RuntimeMerchantQueryAbiGetPriceFn)(const RuntimeApplicationServicePorts *ports,
+                                                 int npc_id,
+                                                 const char *item_type,
+                                                 int *inout_seeded);
+typedef int (*RuntimeMerchantTradeAbiBuyFn)(const RuntimeApplicationServicePorts *ports,
+                                            int world_ready,
+                                            int npc_id,
+                                            const char *item_type,
+                                            int quantity,
+                                            int *inout_seeded,
+                                            RuntimeMerchantResourceGateway resource_gateway);
+typedef int (*RuntimeMerchantTradeAbiSellFn)(const RuntimeApplicationServicePorts *ports,
+                                             int world_ready,
+                                             int npc_id,
+                                             const char *item_type,
+                                             int quantity,
+                                             int *inout_seeded,
+                                             RuntimeMerchantResourceGateway resource_gateway);
 
 ABI_COMPILE_ASSERT(controller_kind_unknown_index,
                    RUNTIME_CONTROLLER_KIND_UNKNOWN == 0);
@@ -76,6 +135,51 @@ ABI_COMPILE_ASSERT(viewport_size_layout_wh,
                    sizeof(RuntimeViewportSize) == sizeof(int) * 2);
 ABI_COMPILE_ASSERT(player_sync_window_layout,
                    sizeof(RuntimePlayerSyncWindow) == sizeof(int64_t) * 2);
+
+ABI_COMPILE_ASSERT(terrain_port_sample_signature,
+                   sizeof(((RuntimeTerrainServicePort *)0)->sample_height) == sizeof(RuntimeTerrainPortSampleHeightFn));
+ABI_COMPILE_ASSERT(terrain_port_set_height_signature,
+                   sizeof(((RuntimeTerrainServicePort *)0)->set_height) == sizeof(RuntimeTerrainPortSetHeightFn));
+ABI_COMPILE_ASSERT(terrain_port_mark_region_dirty_signature,
+                   sizeof(((RuntimeTerrainServicePort *)0)->mark_region_dirty) == sizeof(RuntimeTerrainPortMarkRegionDirtyFn));
+
+ABI_COMPILE_ASSERT(terrain_abi_sample_signature,
+                   sizeof(&runtime_terrain_abi_sample_height) == sizeof(RuntimeTerrainAbiSampleFn));
+ABI_COMPILE_ASSERT(terrain_abi_set_height_signature,
+                   sizeof(&runtime_terrain_abi_set_height) == sizeof(RuntimeTerrainAbiSetHeightFn));
+ABI_COMPILE_ASSERT(terrain_abi_mark_region_dirty_signature,
+                   sizeof(&runtime_terrain_abi_mark_region_dirty) == sizeof(RuntimeTerrainAbiMarkRegionDirtyFn));
+
+ABI_COMPILE_ASSERT(player_gateway_resource_get_signature,
+                   sizeof(((RuntimeMerchantResourceGateway *)0)->get) == sizeof(RuntimeMerchantGetResourceByKeyFn));
+ABI_COMPILE_ASSERT(player_gateway_resource_set_signature,
+                   sizeof(((RuntimeMerchantResourceGateway *)0)->set_total) == sizeof(RuntimeMerchantSetResourceTotalByKeyFn));
+ABI_COMPILE_ASSERT(player_gateway_resource_add_signature,
+                   sizeof(((RuntimeMerchantResourceGateway *)0)->add) == sizeof(RuntimeMerchantAddResourceByKeyFn));
+ABI_COMPILE_ASSERT(player_gateway_layout_context_first,
+                   offsetof(RuntimeMerchantResourceGateway, context) == 0);
+ABI_COMPILE_ASSERT(player_gateway_layout_get_after_context,
+                   offsetof(RuntimeMerchantResourceGateway, get) > offsetof(RuntimeMerchantResourceGateway, context));
+ABI_COMPILE_ASSERT(player_gateway_layout_set_after_get,
+                   offsetof(RuntimeMerchantResourceGateway, set_total) > offsetof(RuntimeMerchantResourceGateway, get));
+ABI_COMPILE_ASSERT(player_gateway_layout_add_after_set,
+                   offsetof(RuntimeMerchantResourceGateway, add) > offsetof(RuntimeMerchantResourceGateway, set_total));
+ABI_COMPILE_ASSERT(player_gateway_layout_min_size,
+                   sizeof(RuntimeMerchantResourceGateway) >= sizeof(void *) +
+                                                            sizeof(RuntimeMerchantGetResourceByKeyFn) +
+                                                            sizeof(RuntimeMerchantSetResourceTotalByKeyFn) +
+                                                            sizeof(RuntimeMerchantAddResourceByKeyFn));
+
+ABI_COMPILE_ASSERT(player_gateway_active_guid_signature,
+                   sizeof(&runtime_player_gateway_active_guid) == sizeof(RuntimePlayerGatewayActiveGuidFn));
+ABI_COMPILE_ASSERT(player_gateway_builder_signature,
+                   sizeof(&runtime_player_gateway_resource_gateway) == sizeof(RuntimePlayerGatewayBuilderFn));
+ABI_COMPILE_ASSERT(merchant_query_abi_get_price_signature,
+                   sizeof(&runtime_merchant_query_abi_get_price) == sizeof(RuntimeMerchantQueryAbiGetPriceFn));
+ABI_COMPILE_ASSERT(merchant_trade_abi_buy_signature,
+                   sizeof(&runtime_merchant_trade_abi_buy) == sizeof(RuntimeMerchantTradeAbiBuyFn));
+ABI_COMPILE_ASSERT(merchant_trade_abi_sell_signature,
+                   sizeof(&runtime_merchant_trade_abi_sell) == sizeof(RuntimeMerchantTradeAbiSellFn));
 
 int main(void)
 {
