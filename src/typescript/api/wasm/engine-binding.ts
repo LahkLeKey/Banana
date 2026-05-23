@@ -34,17 +34,18 @@ export async function initializeEngine(
   options: EngineBindingOptions = {}
 ): Promise<BananaEngineModule> {
   const { scriptUrl = "/wasm/engine.js", canvasId = "canvas", timeoutMs = 10_000 } = options;
+  const resolvedScriptUrl = resolveTrustedEngineScriptUrl(scriptUrl);
 
   /* ── 1. Inject script tag ─────────────────────────────────────────────── */
-  const existing = document.querySelector<HTMLScriptElement>(`script[src="${scriptUrl}"]`);
+  const existing = document.querySelector<HTMLScriptElement>(`script[src="${resolvedScriptUrl}"]`);
 
   if (!existing) {
     await new Promise<void>((resolve, reject) => {
       const el = document.createElement("script");
-      el.src = scriptUrl;
+      el.src = resolvedScriptUrl;
       el.async = true;
       el.onload = () => resolve();
-      el.onerror = () => reject(new Error(`Failed to load engine script: ${scriptUrl}`));
+      el.onerror = () => reject(new Error(`Failed to load engine script: ${resolvedScriptUrl}`));
       document.head.appendChild(el);
     });
   }
@@ -104,4 +105,26 @@ async function waitForModule(globalName: string, timeoutMs: number): Promise<unk
 
 function sleep(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
+}
+
+function resolveTrustedEngineScriptUrl(rawUrl: string): string {
+  const candidate = rawUrl.trim();
+  if (candidate.length === 0) {
+    throw new Error("Engine script URL cannot be empty.");
+  }
+
+  const parsed = new URL(candidate, window.location.origin);
+  if (parsed.origin !== window.location.origin) {
+    throw new Error(
+      `Engine script URL must be same-origin. Received origin "${parsed.origin}" while app origin is "${window.location.origin}".`
+    );
+  }
+
+  if (!parsed.pathname.startsWith("/wasm/") || !parsed.pathname.endsWith("engine.js")) {
+    throw new Error(
+      `Engine script URL must target /wasm/engine.js on the same origin. Received path "${parsed.pathname}".`
+    );
+  }
+
+  return `${parsed.pathname}${parsed.search}${parsed.hash}`;
 }

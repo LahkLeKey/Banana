@@ -5,11 +5,49 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+
+function isAllowedRendererUrl(rawUrl) {
+	if (typeof rawUrl !== "string" || rawUrl.trim().length === 0) {
+		return false;
+	}
+
+	let parsed;
+	try {
+		parsed = new URL(rawUrl);
+	} catch {
+		return false;
+	}
+
+	if (parsed.protocol === "file:") {
+		return true;
+	}
+
+	if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+		if (!LOOPBACK_HOSTS.has(parsed.hostname.toLowerCase())) {
+			return false;
+		}
+		if (parsed.username || parsed.password) {
+			return false;
+		}
+		return true;
+	}
+
+	return false;
+}
+
 function resolveStartUrl() {
 	const configured = (process.env.BANANA_DESKTOP_START_URL ?? "").trim();
-	if (configured.length > 0) {
+	if (configured.length > 0 && isAllowedRendererUrl(configured)) {
 		return configured;
 	}
+
+	if (configured.length > 0) {
+		console.error(
+			`[security] Rejected BANANA_DESKTOP_START_URL; only file:// or loopback http(s) URLs are allowed. Received: ${configured}`
+		);
+	}
+
 	return "http://localhost:5173/game-engine";
 }
 
@@ -33,8 +71,20 @@ function createWindow() {
 	const startUrl = resolveStartUrl();
 	void window.loadURL(startUrl);
 
+	window.webContents.on("will-navigate", (event, url) => {
+		if (!isAllowedRendererUrl(url)) {
+			event.preventDefault();
+			console.error(`[security] Blocked navigation to disallowed URL: ${url}`);
+		}
+	});
+
 	window.webContents.setWindowOpenHandler(({ url }) => {
-		void shell.openExternal(url);
+		if (isAllowedRendererUrl(url)) {
+			void shell.openExternal(url);
+			return { action: "deny" };
+		}
+
+		console.error(`[security] Blocked window.open target: ${url}`);
 		return { action: "deny" };
 	});
 
