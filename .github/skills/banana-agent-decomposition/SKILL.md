@@ -12,7 +12,7 @@ Use this skill when a Banana request is broad, crosses subdomains, or would be s
 
 1. Start from the touched paths, contracts, and phase of work: plan, implement, validate, review, or debug.
 2. Prefer the narrowest helper agent that clearly owns the files and risks.
-3. Route banana-vs-not-banana product work (training + inference contract + simple frontend flow) to `banana-classifier-agent` before broad orchestration.
+3. Route server-authoritative gameplay contract work to `native-c-agent` + `api-domain-agent` before broad orchestration.
 4. Use a parent domain agent only when two or more helpers in the same domain must move together.
 5. Use `banana-sdlc` only for multi-phase or multi-domain orchestration.
 6. Make handoffs explicit: helper name, owned files, acceptance criteria, and validation surface.
@@ -29,19 +29,12 @@ Use this skill when a Banana request is broad, crosses subdomains, or would be s
 
 - Helper matrix: [helper-matrix.md](./helper-matrix.md)
 - Discovery skill: [../banana-discovery/SKILL.md](../banana-discovery/SKILL.md)
-## Native ML Domain Contract (2026-04)
+## Native Engine Contract (2026-04)
 
-- During planning, review, and triage, ensure ML changes stay inside `src/native/core/domain/ml/{shared,regression,binary,transformer}` and `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
-- Require explicit confirmation that public contracts in `src/native/core/domain/banana_ml_models.h` and `src/native/wrapper/banana_wrapper.h` remain stable unless a breaking change is approved.
-- When ML files move, require coordinated `CMakeLists.txt` updates for `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES`.
+- During planning, review, and triage, keep gameplay and simulation changes inside `src/native/engine` and coordinated API interop layers.
+- Require explicit confirmation that public contracts in `src/native/wrapper/banana_wrapper.h` remain stable unless a breaking change is approved.
+- When native files move, require coordinated `CMakeLists.txt` updates for native source lists and build targets.
 - Route implementation to native helpers (`native-core-agent`, `native-wrapper-agent`, `native-c-agent`) and require native build plus `ctest` evidence.
-
-## Not-Banana Training Contract (2026-04)
-
-- Treat `data/not-banana/corpus.json`, `scripts/train-not-banana-model.py`, and `.github/workflows/train-not-banana-model.yml` as one coordinated contract.
-- Require drift checks whenever vocabulary or classifier logic changes across native and API layers.
-- Ensure downstream behavior stays aligned in `src/native/core/domain/banana_not_banana.c` and `src/typescript/api/src/domains/not-banana/routes.ts`.
-- Flag missing training validation, stale artifacts, or undocumented threshold shifts as release risk.
 
 ## Shared Frontend Contract
 

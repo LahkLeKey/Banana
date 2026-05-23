@@ -30,23 +30,15 @@
 - `native-c-agent`: coordinate when core, DAL, and wrapper all move together
 - `api-domain-agent`: coordinate when pipeline and interop or data access move together
 - `react-agent`: coordinate React plus Electron or broader frontend work
-- `banana-classifier-agent`: coordinate banana-vs-not-banana product slices across training, native inference, API contract, and simple frontend UX
 - `infrastructure-agent`: coordinate compose/runtime and workflow changes together
 - `integration-agent`: validate across helpers and separate environment failures from product defects
 - `banana-sdlc`: orchestrate multi-domain, multi-phase work
-## Native ML Domain Contract (2026-04)
+## Native Engine Contract (2026-04)
 
-- During planning, review, and triage, ensure ML changes stay inside `src/native/core/domain/ml/{shared,regression,binary,transformer}` and `src/native/wrapper/domain/ml/{shared,regression,binary,transformer}`.
-- Require explicit confirmation that public contracts in `src/native/core/domain/banana_ml_models.h` and `src/native/wrapper/banana_wrapper.h` remain stable unless a breaking change is approved.
-- When ML files move, require coordinated `CMakeLists.txt` updates for `BANANA_CORE_SOURCES` and `BANANA_WRAPPER_SOURCES`.
+- During planning, review, and triage, keep gameplay and simulation changes inside `src/native/engine` and coordinated API interop layers.
+- Require explicit confirmation that public contracts in `src/native/wrapper/banana_wrapper.h` remain stable unless a breaking change is approved.
+- When native files move, require coordinated `CMakeLists.txt` updates for native source lists and build targets.
 - Route implementation to native helpers (`native-core-agent`, `native-wrapper-agent`, `native-c-agent`) and require native build plus `ctest` evidence.
-
-## Not-Banana Training Contract (2026-04)
-
-- Treat `data/not-banana/corpus.json`, `scripts/train-not-banana-model.py`, and `.github/workflows/train-not-banana-model.yml` as one coordinated contract.
-- Require drift checks whenever vocabulary or classifier logic changes across native and API layers.
-- Ensure downstream behavior stays aligned in `src/native/core/domain/banana_not_banana.c` and `src/typescript/api/src/domains/not-banana/routes.ts`.
-- Flag missing training validation, stale artifacts, or undocumented threshold shifts as release risk.
 
 ## Shared Frontend Contract
 

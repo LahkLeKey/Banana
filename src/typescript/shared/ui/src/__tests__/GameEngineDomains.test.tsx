@@ -2,10 +2,8 @@
 
 import { describe, expect, test } from "bun:test";
 import {
-  createOutcome,
   GameEngineUIService,
   InputAggregator,
-  InteractionManager,
   ViewportSizer,
 } from "@banana/ui";
 
@@ -57,56 +55,6 @@ describe("InputAggregator — DDD Input Domain", () => {
   });
 });
 
-describe("InteractionManager — DDD Interaction Domain", () => {
-  test("executes registered action handler", () => {
-    const manager = new InteractionManager([{ label: "Test", actionId: "test-action" }]);
-    let handlerCalled = false;
-
-    manager.registerActionHandler("test-action", (actionId, x, y) => {
-      handlerCalled = true;
-      return createOutcome(actionId, x, y, true, "Action executed");
-    });
-
-    manager.openMenu(100, 100, 1280, 720);
-    const outcome = manager.executeAction("test-action");
-
-    expect(handlerCalled).toBe(true);
-    expect(outcome.success).toBe(true);
-  });
-
-  test("closes menu after action execution", () => {
-    const manager = new InteractionManager([]);
-    manager.registerActionHandler("test", (id, x, y) => createOutcome(id, x, y, true, "OK"));
-
-    manager.openMenu(100, 100, 1280, 720);
-    expect(manager.getMenuState().visible).toBe(true);
-
-    manager.executeAction("test");
-    expect(manager.getMenuState().visible).toBe(false);
-  });
-
-  test("handles missing action handler gracefully", () => {
-    const manager = new InteractionManager([]);
-    manager.openMenu(100, 100, 1280, 720);
-
-    const outcome = manager.executeAction("missing-action");
-    expect(outcome.success).toBe(false);
-    expect(outcome.message).toContain("not registered");
-  });
-
-  test("clamps menu position within viewport", () => {
-    const manager = new InteractionManager([]);
-
-    // Try to open menu at far right-bottom (should be clamped)
-    manager.openMenu(1200, 900, 1280, 720);
-    const state = manager.getMenuState();
-
-    // Should be clamped within bounds
-    expect(state.x).toBeLessThanOrEqual(1280 - 220 - 8);
-    expect(state.y).toBeLessThanOrEqual(720 - 140 - 8);
-  });
-});
-
 describe("ViewportSizer — DDD Viewport Domain", () => {
   test("provides interface for viewport size and coordinate normalization", () => {
     const sizer = new ViewportSizer();
@@ -127,10 +75,9 @@ describe("GameEngineUIService — DDD Application Service", () => {
       getBoundingClientRect: () => ({ width: 1280, height: 720, left: 0, top: 0 }),
     } as any;
 
-    const service = new GameEngineUIService(mockElement, [{ label: "Test", actionId: "test" }]);
+    const service = new GameEngineUIService(mockElement);
 
     expect(service.getInputAggregator()).toBeDefined();
-    expect(service.getInteractionManager()).toBeDefined();
     expect(service.getViewportSizer()).toBeDefined();
   });
 
@@ -142,9 +89,6 @@ describe("GameEngineUIService — DDD Application Service", () => {
     expect(typeof service.onStateChange).toBe("function");
     expect(typeof service.getState).toBe("function");
     expect(typeof service.setEngineStatus).toBe("function");
-    expect(typeof service.executeMenuAction).toBe("function");
-    expect(typeof service.openContextMenu).toBe("function");
-    expect(typeof service.closeContextMenu).toBe("function");
     expect(typeof service.clearInput).toBe("function");
     expect(typeof service.checkViewportChange).toBe("function");
   });
