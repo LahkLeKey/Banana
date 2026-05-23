@@ -38,7 +38,7 @@ canonical storefront surface.
 ## Exact Current Store Page Strings
 
 - AI generated content disclosure: Machine Learning, Homebrew, Open Source MIT
-- Third-party service disclosure line: Open Source API Deployed on Fly.io
+- Third-party service disclosure line: Open Source API Deployed on Fly.io with self-hosted Neon-backed database integration
 - Controller support line: Partial Controller Support
 - Online content line: In-game chat, Online interactivity
 - Minimum OS line: Windows 10 64-bit or newer
@@ -52,7 +52,7 @@ canonical storefront surface.
 ## Required Disclosure Targets
 
 - AI-generated content disclosure target: Machine Learning, Homebrew, Open Source MIT
-- Third-party service disclosure target: Open Source API Deployed on Fly.io
+- Third-party service disclosure target: Open Source API Deployed on Fly.io with self-hosted Neon-backed database integration
 - Controller support target: Partial Controller Support
 - Online content target: In-game chat, Online interactivity
 
