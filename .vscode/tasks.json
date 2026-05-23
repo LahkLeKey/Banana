@@ -95,6 +95,36 @@
       "options": {
         "cwd": "${workspaceFolder}"
       }
+    },
+    {
+      "label": "Runtime: up (native neon integration compose)",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "compose",
+        "--profile",
+        "integration",
+        "up",
+        "--build",
+        "native-neon-integration"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "Runtime: down (native neon integration compose)",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "compose",
+        "--profile",
+        "integration",
+        "down"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
     }
   ]
 }

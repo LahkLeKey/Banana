@@ -23,6 +23,9 @@ int runtime_engine_tick_execute(Window *window,
         return -1;
 
     window_poll_events(window);
+    if (!window_is_open(window))
+        return 1;
+
     {
         float click_x = 0.f;
         float click_y = 0.f;

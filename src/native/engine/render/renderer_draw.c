@@ -41,9 +41,13 @@ void renderer_draw_command(Renderer *r, const RendererDrawCommand *command)
     mesh_draw(command->mesh);
 #else
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12)
-    banana_dx12_runtime_submit_scene_draw(command->position,
+    banana_dx12_runtime_submit_scene_draw(command->mesh,
+                                          command->position,
                                           command->scale,
-                                          command->material.use_texture > 0.5f ? 1 : 0);
+                                          command->material.use_texture > 0.5f ? 1 : 0,
+                                          command->material.color[0],
+                                          command->material.color[1],
+                                          command->material.color[2]);
 #else
     (void)command;
 #endif

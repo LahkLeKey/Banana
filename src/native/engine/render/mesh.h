@@ -44,6 +44,11 @@ extern "C"
     /* Issue a draw call (VAO bind + glDrawElements). Shader must be bound. */
     void mesh_draw(Mesh *m);
 
+    int mesh_get_vertex_count(const Mesh *m);
+    const float *mesh_get_vertices(const Mesh *m);
+    int mesh_get_index_count(const Mesh *m);
+    const unsigned int *mesh_get_indices(const Mesh *m);
+
     void mesh_destroy(Mesh *m);
 
 #ifdef __cplusplus

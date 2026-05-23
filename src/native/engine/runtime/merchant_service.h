@@ -8,14 +8,18 @@ extern "C"
 {
 #endif
 
-    typedef int (*RuntimeMerchantGetResourceByKeyFn)(RuntimeResourceKey resource_key);
-    typedef int (*RuntimeMerchantSetResourceTotalByKeyFn)(RuntimeResourceKey resource_key,
+    typedef int (*RuntimeMerchantGetResourceByKeyFn)(void *context,
+                                                     RuntimeResourceKey resource_key);
+    typedef int (*RuntimeMerchantSetResourceTotalByKeyFn)(void *context,
+                                                          RuntimeResourceKey resource_key,
                                                           int target_amount);
-    typedef int (*RuntimeMerchantAddResourceByKeyFn)(RuntimeResourceKey resource_key,
+    typedef int (*RuntimeMerchantAddResourceByKeyFn)(void *context,
+                                                     RuntimeResourceKey resource_key,
                                                      int amount);
 
     typedef struct RuntimeMerchantResourceGateway
     {
+        void *context;
         RuntimeMerchantGetResourceByKeyFn get;
         RuntimeMerchantSetResourceTotalByKeyFn set_total;
         RuntimeMerchantAddResourceByKeyFn add;

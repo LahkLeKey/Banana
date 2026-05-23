@@ -101,6 +101,7 @@ extern "C"
     int engine_get_click_count(void);
     int engine_get_target_reached_count(void);
     int engine_get_has_move_target(void);
+    int engine_get_pbj_pickup_collected(void);
     int engine_handle_right_click(float canvas_x, float canvas_y);
     int engine_handle_right_click_normalized(float screen_x, float screen_y);
 
@@ -122,6 +123,17 @@ extern "C"
     /* Draw merchant trade dialog for NPC. */
     int engine_ui_merchant_dialog(float x, float y, int npc_id);
 
+    /* Draw a UI panel rectangle in the native immediate-mode UI framebuffer. */
+    void engine_ui_panel(float x,
+                         float y,
+                         float width,
+                         float height,
+                         unsigned int fill_rgba,
+                         float border_width);
+
+    /* Draw text in the native immediate-mode UI framebuffer. */
+    void engine_ui_text(float x, float y, const char *text);
+
     /* End UI frame: render all queued elements to framebuffer. */
     void engine_ui_end_frame(void);
 
@@ -139,6 +151,12 @@ extern "C"
 
     /* Add resource to player inventory. Returns new count or -1 on error. */
     int engine_player_add_resource(const char *resource_type, int amount);
+
+    /* Query current player world-space x/z position. Returns 1 on success. */
+    int engine_get_player_position(float *out_x, float *out_z);
+
+    /* Query active PBJ pickup world-space x/z position. Returns 1 on success. */
+    int engine_get_pbj_pickup_position(float *out_x, float *out_z);
 
     /* ── Player Build & Combo Systems ───────────────────────────────────── */
 

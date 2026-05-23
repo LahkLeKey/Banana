@@ -5,8 +5,19 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NATIVE_BUILD_DIR="${ROOT_DIR}/out/v3-native"
 STEAM_BINARY_PATH="${1:-}"
+source "${ROOT_DIR}/scripts/lib/database-env-aliases.sh"
+
+sync_database_aliases() {
+  if ! banana_sync_database_aliases; then
+    echo "[steam-uat] DB aliases not set (continuing with in-memory/non-DB flows where applicable)"
+    return
+  fi
+
+  echo "[steam-uat] DB aliases synced from authoritative source"
+}
 
 echo "[steam-uat] root: ${ROOT_DIR}"
+sync_database_aliases
 
 run_step() {
   local label="$1"

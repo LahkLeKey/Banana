@@ -16,14 +16,16 @@
 #include "runtime/camera_basis.h"
 #include "runtime/move_target_service.h"
 #include "runtime/player_runtime_service.h"
+#include "runtime/player_gateway_abi.h"
 #include "runtime/render_material.h"
 #include "runtime/player_motion.h"
 #include "runtime/player_motion_host.h"
 #include "runtime/player_api.h"
 #include "runtime/player_build_abi.h"
-#include "runtime/merchant_abi.h"
+#include "runtime/merchant_query_abi.h"
 #include "runtime/merchant_trade_domain.h"
 #include "runtime/player_resource_abi.h"
+#include "runtime/player_merchant_adapter.h"
 #include "runtime/player_sync_abi.h"
 #include "runtime/player_registry.h"
 #include "runtime/physics_abi.h"
@@ -31,6 +33,7 @@
 #include "runtime/resource_domain.h"
 #include "runtime/render_submit.h"
 #include "runtime/terrain_generation.h"
+#include "runtime/terrain_abi.h"
 #include "runtime/terrain_runtime.h"
 #include "runtime/tick_phases.h"
 #include "runtime/world_metrics.h"
@@ -78,10 +81,10 @@ static float terrain_sample_height(float x, float z);
 
 static float terrain_sample_height(float x, float z)
 {
-    if (!s_service_ports || !s_service_ports->terrain.sample_height)
-        return 0.f;
-
-    return s_service_ports->terrain.sample_height(&s_engine_state, x, z);
+    return runtime_terrain_abi_sample_height(s_service_ports,
+                                             &s_engine_state,
+                                             x,
+                                             z);
 }
 
 /* ── Init ────────────────────────────────────────────────────────────────── */
@@ -96,25 +99,6 @@ int engine_init(int width, int height)
                                            height,
                                            terrain_sample_height,
                                            engine_controller_attach);
-}
-
-static const char *engine_player_active_guid(void)
-{
-    const char *player_guid = NULL;
-    int binding_count = runtime_player_registry_count();
-    for (int i = 0; i < binding_count; i++) {
-        NativePlayerBinding *binding = runtime_player_registry_get(i);
-        if (!binding || !binding->guid[0]) {
-            continue;
-        }
-        if (binding->entity_id == s_player_id) {
-            return binding->guid;
-        }
-        if (!player_guid) {
-            player_guid = binding->guid;
-        }
-    }
-    return player_guid;
 }
 
 /* ── Tick ────────────────────────────────────────────────────────────────── */
@@ -172,22 +156,21 @@ void engine_world_tick(float dt)
 /* Terrain ABI */
 int engine_terrain_set_height(int x, int z, int elevation)
 {
-    if (!s_service_ports || !s_service_ports->terrain.set_height)
-        return -1;
-
-    return s_service_ports->terrain.set_height(&s_engine_state, x, z, elevation);
+    return runtime_terrain_abi_set_height(s_service_ports,
+                                          &s_engine_state,
+                                          x,
+                                          z,
+                                          elevation);
 }
 
 void engine_terrain_mark_region_dirty(int min_x, int min_z, int max_x, int max_z)
 {
-    if (!s_service_ports || !s_service_ports->terrain.mark_region_dirty)
-        return;
-
-    s_service_ports->terrain.mark_region_dirty(&s_engine_state,
-                                               min_x,
-                                               min_z,
-                                               max_x,
-                                               max_z);
+    runtime_terrain_abi_mark_region_dirty(s_service_ports,
+                                          &s_engine_state,
+                                          min_x,
+                                          min_z,
+                                          max_x,
+                                          max_z);
 }
 
 /* Controller ABI */
@@ -204,10 +187,9 @@ uint32_t engine_controller_create(const char *type, float x, float y, float z)
 
 uint32_t engine_controller_attach(uint32_t entity_id, const char *type)
 {
-    RuntimeEngineAuxContext context;
-    context.world = s_world;
-    context.controllers = s_controllers;
-    context.controller_count = s_controller_count;
+    RuntimeEngineAuxContext context = runtime_engine_aux_context(s_world,
+                                                                 s_controllers,
+                                                                 s_controller_count);
 
     return runtime_engine_aux_controller_attach(context,
                                                 BANANA_MAX_ACTIVE_CONTROLLERS,
@@ -218,19 +200,17 @@ uint32_t engine_controller_attach(uint32_t entity_id, const char *type)
 
 void engine_controller_update(uint32_t id, float dt)
 {
-    RuntimeEngineAuxContext context;
-    context.world = s_world;
-    context.controllers = s_controllers;
-    context.controller_count = s_controller_count;
+    RuntimeEngineAuxContext context = runtime_engine_aux_context(s_world,
+                                                                 s_controllers,
+                                                                 s_controller_count);
     runtime_engine_aux_controller_update(context, id, dt);
 }
 
 void engine_controller_signal(uint32_t id, const char *sig)
 {
-    RuntimeEngineAuxContext context;
-    context.world = s_world;
-    context.controllers = s_controllers;
-    context.controller_count = s_controller_count;
+    RuntimeEngineAuxContext context = runtime_engine_aux_context(s_world,
+                                                                 s_controllers,
+                                                                 s_controller_count);
     runtime_engine_aux_controller_signal(context, id, sig);
 }
 
@@ -253,10 +233,9 @@ float engine_get_entity_z(int idx)
 /* Returns current FSM state index via the bound controller (0 = no controller) */
 int engine_get_entity_state(int idx)
 {
-    RuntimeEngineAuxContext context;
-    context.world = s_world;
-    context.controllers = s_controllers;
-    context.controller_count = s_controller_count;
+    RuntimeEngineAuxContext context = runtime_engine_aux_context(s_world,
+                                                                 s_controllers,
+                                                                 s_controller_count);
     return runtime_engine_aux_entity_state(context, idx);
 }
 
@@ -289,6 +268,11 @@ int engine_get_target_reached_count(void)
 int engine_get_has_move_target(void)
 {
     return runtime_input_abi_get_has_move_target();
+}
+
+int engine_get_pbj_pickup_collected(void)
+{
+    return s_pbj_pickup_collected ? 1 : 0;
 }
 
 int engine_handle_right_click(float canvas_x, float canvas_y)
@@ -400,6 +384,21 @@ int engine_ui_merchant_dialog(float x, float y, int npc_id)
     return runtime_ui_abi_merchant_dialog(x, y, npc_id);
 }
 
+void engine_ui_panel(float x,
+                     float y,
+                     float width,
+                     float height,
+                     unsigned int fill_rgba,
+                     float border_width)
+{
+    runtime_ui_abi_panel(x, y, width, height, fill_rgba, border_width);
+}
+
+void engine_ui_text(float x, float y, const char *text)
+{
+    runtime_ui_abi_text(x, y, text);
+}
+
 void engine_ui_end_frame(void)
 {
     runtime_ui_abi_end_frame();
@@ -421,12 +420,55 @@ void engine_ui_shutdown(void)
 
 int engine_player_get_resource(const char *resource_type)
 {
-    return runtime_player_resource_abi_get(engine_player_active_guid(), resource_type);
+    return runtime_player_merchant_adapter_get_resource(resource_type, s_player_id);
 }
 
 int engine_player_add_resource(const char *resource_type, int amount)
 {
-    return runtime_player_resource_abi_add(engine_player_active_guid(), resource_type, amount);
+    return runtime_player_merchant_adapter_add_resource(resource_type,
+                                                        amount,
+                                                        s_player_id);
+}
+
+int engine_get_player_position(float *out_x, float *out_z)
+{
+    Entity *player = NULL;
+
+    if (!s_world || !s_player_id || !out_x || !out_z)
+        return 0;
+
+    player = world_get_entity(s_world, s_player_id);
+    if (!player || !player->active)
+        return 0;
+
+    *out_x = player->position[0];
+    *out_z = player->position[2];
+    return 1;
+}
+
+int engine_get_pbj_pickup_position(float *out_x, float *out_z)
+{
+    int i = 0;
+
+    if (!s_world || !out_x || !out_z)
+        return 0;
+
+    for (i = 0; i < s_world->entity_count; i++)
+    {
+        Entity *entity = s_world->entities[i];
+        if (!entity || !entity->active)
+            continue;
+        if (entity->type != ENTITY_TYPE_STATIC)
+            continue;
+        if (strcmp(entity->controller_kind, "pbj_pickup") != 0)
+            continue;
+
+        *out_x = entity->position[0];
+        *out_z = entity->position[2];
+        return 1;
+    }
+
+    return 0;
 }
 
 int engine_player_build_set_class(const char *player_guid, int class_type)
@@ -484,68 +526,36 @@ int engine_player_combo_evaluate(const char *player_guid,
                                                    out_party_synergy_bonus_pct);
 }
 
-static int engine_player_get_resource_by_key(RuntimeResourceKey resource_key)
-{
-    return runtime_player_resource_abi_get_by_key(engine_player_active_guid(),
-                                                  resource_key);
-}
-
-static int engine_player_set_resource_total_by_key(RuntimeResourceKey resource_key, int target_amount)
-{
-    return runtime_player_resource_abi_set_total_by_key(engine_player_active_guid(),
-                                                        resource_key,
-                                                        target_amount);
-}
-
-static int engine_player_add_resource_by_key(RuntimeResourceKey resource_key, int amount)
-{
-    return runtime_player_resource_abi_add_by_key(engine_player_active_guid(),
-                                                  resource_key,
-                                                  amount);
-}
-
 /* ─────────────────────────────────────────────────────────────────
    Merchant NPC Queries (UI Integration)
    ───────────────────────────────────────────────────────────────── */
 
 int engine_npc_merchant_get_price(int npc_id, const char *item_type)
 {
-    return runtime_merchant_abi_get_price(s_service_ports,
-                                          npc_id,
-                                          item_type,
-                                          &s_merchants_seeded);
+    return runtime_merchant_query_abi_get_price(s_service_ports,
+                                                npc_id,
+                                                item_type,
+                                                &s_merchants_seeded);
 }
 
 int engine_npc_merchant_trade_buy(int npc_id, const char *item_type, int quantity)
 {
-    RuntimeMerchantResourceGateway resource_gateway;
-
-    resource_gateway.get = engine_player_get_resource_by_key;
-    resource_gateway.set_total = engine_player_set_resource_total_by_key;
-    resource_gateway.add = engine_player_add_resource_by_key;
-
-    return runtime_merchant_abi_trade_buy(s_service_ports,
-                                          s_world != NULL,
-                                          npc_id,
-                                          item_type,
-                                          quantity,
-                                          &s_merchants_seeded,
-                                          resource_gateway);
+    return runtime_player_merchant_adapter_trade_buy(s_service_ports,
+                                                     s_world != NULL,
+                                                     npc_id,
+                                                     item_type,
+                                                     quantity,
+                                                     &s_merchants_seeded,
+                                                     s_player_id);
 }
 
 int engine_npc_merchant_trade_sell(int npc_id, const char *item_type, int quantity)
 {
-    RuntimeMerchantResourceGateway resource_gateway;
-
-    resource_gateway.get = engine_player_get_resource_by_key;
-    resource_gateway.set_total = engine_player_set_resource_total_by_key;
-    resource_gateway.add = engine_player_add_resource_by_key;
-
-    return runtime_merchant_abi_trade_sell(s_service_ports,
-                                           s_world != NULL,
-                                           npc_id,
-                                           item_type,
-                                           quantity,
-                                           &s_merchants_seeded,
-                                           resource_gateway);
+    return runtime_player_merchant_adapter_trade_sell(s_service_ports,
+                                                      s_world != NULL,
+                                                      npc_id,
+                                                      item_type,
+                                                      quantity,
+                                                      &s_merchants_seeded,
+                                                      s_player_id);
 }

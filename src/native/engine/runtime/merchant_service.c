@@ -77,7 +77,8 @@ int runtime_merchant_service_trade_buy(int npc_id,
     if (runtime_resource_parse_key(item_type, &item_key) != 0)
         return -1;
 
-    player_gold = resource_gateway.get(RUNTIME_RESOURCE_GOLD);
+    player_gold = resource_gateway.get(resource_gateway.context,
+                                       RUNTIME_RESOURCE_GOLD);
     result = npc_merchant_trade_buy(npc_id,
                                     runtime_resource_key_name(item_key),
                                     quantity,
@@ -86,8 +87,10 @@ int runtime_merchant_service_trade_buy(int npc_id,
     if (mapped_status != 0)
         return mapped_status;
 
-    resource_gateway.set_total(RUNTIME_RESOURCE_GOLD, player_gold);
-    resource_gateway.add(item_key, quantity);
+    resource_gateway.set_total(resource_gateway.context,
+                               RUNTIME_RESOURCE_GOLD,
+                               player_gold);
+    resource_gateway.add(resource_gateway.context, item_key, quantity);
     return 0;
 }
 
@@ -113,11 +116,12 @@ int runtime_merchant_service_trade_sell(int npc_id,
     if (runtime_resource_parse_key(item_type, &item_key) != 0)
         return -1;
 
-    player_amount = resource_gateway.get(item_key);
+    player_amount = resource_gateway.get(resource_gateway.context, item_key);
     if (player_amount < quantity)
         return -2;
 
-    player_gold = resource_gateway.get(RUNTIME_RESOURCE_GOLD);
+    player_gold = resource_gateway.get(resource_gateway.context,
+                                       RUNTIME_RESOURCE_GOLD);
     result = npc_merchant_trade_sell(npc_id,
                                      runtime_resource_key_name(item_key),
                                      quantity,
@@ -126,7 +130,9 @@ int runtime_merchant_service_trade_sell(int npc_id,
     if (mapped_status != 0)
         return mapped_status;
 
-    resource_gateway.add(item_key, -quantity);
-    resource_gateway.set_total(RUNTIME_RESOURCE_GOLD, player_gold);
+    resource_gateway.add(resource_gateway.context, item_key, -quantity);
+    resource_gateway.set_total(resource_gateway.context,
+                               RUNTIME_RESOURCE_GOLD,
+                               player_gold);
     return 0;
 }

@@ -85,9 +85,11 @@ int main(void)
 
     npc_id = world_spawn_entity(world, ENTITY_TYPE_NPC, 4.f, 0.f, 5.f);
 
-    context.world = world;
-    context.controllers = controllers;
-    context.controller_count = controller_count;
+    context = runtime_engine_aux_context(world, controllers, controller_count);
+    if (!expect_int("context world", context.world == world ? 1 : 0, 1))
+        return 1;
+    if (!expect_int("context controller array", context.controllers == controllers ? 1 : 0, 1))
+        return 1;
 
     attached_id = runtime_engine_aux_controller_attach(context,
                                                        8,
@@ -97,7 +99,7 @@ int main(void)
     if (!expect_int("controller attached", attached_id != 0 ? 1 : 0, 1))
         return 1;
 
-    context.controller_count = controller_count;
+    context = runtime_engine_aux_context(world, controllers, controller_count);
 
     if (!expect_int("update controller", runtime_engine_aux_controller_update(context, created_id, 1.f / 60.f), 1))
         return 1;

@@ -1,5 +1,7 @@
 import {randomUUID} from 'node:crypto';
 
+import {resolveAuthoritativeDatabaseUrl} from './databaseRuntime.ts';
+
 export type AuthSessionInsert = {
   steamId: string; tokenHash: string; expiresAt: Date;
   sessionId?: string;
@@ -23,10 +25,7 @@ type PostgresPoolLike = {
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 function resolveDatabaseUrl(): string {
-  return (
-      process.env.NEON_DATABASE_URL?.trim() ||
-      process.env.DATABASE_URL?.trim() ||
-      process.env.BANANA_PG_CONNECTION?.trim() || '');
+  return resolveAuthoritativeDatabaseUrl(process.env).url;
 }
 
 function shouldUseStrictMode(): boolean {

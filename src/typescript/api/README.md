@@ -63,3 +63,50 @@ checks.
 Session persistence uses Neon/PostgreSQL when `NEON_DATABASE_URL` (or
 `DATABASE_URL` / `BANANA_PG_CONNECTION`) is present, with a memory fallback for
 local/non-strict development.
+
+## Authoritative Neon Runtime Contract
+
+The API now resolves a single authoritative database URL at startup in this
+order:
+
+1. `NEON_DATABASE_URL`
+2. `DATABASE_URL`
+3. `BANANA_PG_CONNECTION`
+
+When any one of these is present, startup syncs all three env aliases to the
+same value so route/services/native integrations use one consistent Neon
+endpoint.
+
+Optional runtime controls:
+
+- `BANANA_NATIVE_PGBOUNCER_ENABLED`:
+	set to `false` to skip native PgBouncer auto-configuration.
+- `BANANA_NATIVE_PGBOUNCER_MODE`:
+	defaults to `transaction`.
+- `BANANA_NATIVE_PGBOUNCER_POOL_SIZE`:
+	defaults to `20`.
+- `BANANA_NEON_STRICT`:
+	set to `true` to fail startup when Neon/native PgBouncer bootstrap is
+	unavailable.
+
+## Native-To-Neon Integration Test
+
+Run the dedicated integration lane from this package (or call the script
+directly from repo root):
+
+```bash
+cd src/typescript/api
+NEON_DATABASE_URL="postgres://..." bun run test:integration:native-neon
+```
+
+What this lane validates:
+
+- Builds native with `BANANA_ENABLE_POSTGRES=ON`.
+- Boots API database runtime with strict native PgBouncer configuration.
+- Executes a real SQL probe (`SELECT 1`) against the configured Neon URL.
+
+Optional flake-control env vars for CI/cold-start scenarios:
+
+- `BANANA_NEON_TEST_RETRY_ATTEMPTS` (default `3`)
+- `BANANA_NEON_TEST_RETRY_DELAY_MS` (default `1500`, linear backoff)
+- `BANANA_NEON_CONNECT_TIMEOUT_MS` (default `8000`)
