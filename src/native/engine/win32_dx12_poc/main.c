@@ -271,7 +271,7 @@ static void render_ui_overlay(HWND game_window,
     float player_z = 0.0f;
     float target_x = 0.0f;
     float target_z = 0.0f;
-    float world_half_span = 24.0f;
+    float world_half_span = engine_get_terrain_half_span();
     float minimap_x = 988.0f;
     float minimap_y = 520.0f;
     float minimap_w = 280.0f;
@@ -293,6 +293,11 @@ static void render_ui_overlay(HWND game_window,
     if (remaining_seconds < 0)
     {
         remaining_seconds = 0;
+    }
+
+    if (world_half_span < 1.0f)
+    {
+        world_half_span = 1.0f;
     }
 
     has_player = engine_get_player_position(&player_x, &player_z);

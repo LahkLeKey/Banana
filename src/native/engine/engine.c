@@ -471,6 +471,11 @@ int engine_get_pbj_pickup_position(float *out_x, float *out_z)
     return 0;
 }
 
+float engine_get_terrain_half_span(void)
+{
+    return ((float)BANANA_TERRAIN_SIZE - 1.0f) * 0.5f;
+}
+
 int engine_player_build_set_class(const char *player_guid, int class_type)
 {
     return runtime_player_build_abi_set_class(player_guid, class_type);
