@@ -54,6 +54,32 @@ export type ApiRootResponse = {
   endpoints?: {health?: string; swagger?: string};
 };
 
+export type PlayerAccountResponse = {
+  playerId: string;
+  accountStatus: string;
+  profile: Record<string, unknown>;
+  version: number;
+  updatedAt: string;
+};
+
+export type PlayerInsightsResponse = {
+  playerId: string;
+  sessionSummary: {
+    changeEvents: number;
+    latestAction: string|null;
+  };
+  progressionSummary: {
+    xp: number;
+    level: number;
+  };
+  inventoryTrendSummary: {
+    distinctItems: number;
+    totalQuantity: number;
+  };
+  noData: boolean;
+  freshnessTimestamp: string;
+};
+
 export const GAME_SESSION_STORAGE_KEY = 'banana-game-session';
 export const GAME_PLAYER_GUID_STORAGE_KEY = 'banana-player-guid';
 export const GAME_RUNTIME_PLAYER_GUID_STORAGE_KEY =
@@ -425,11 +451,22 @@ async function parseApiError(response: Response): Promise<string> {
 
 async function requestJson<T>(
     baseUrl: string, path: string, init?: RequestInit): Promise<T> {
+  if (typeof window !== 'undefined' && path.startsWith('/operator/')) {
+    throw new Error(
+        'Operator endpoints are disabled in the public website client.');
+  }
+
   const response = await fetch(`${baseUrl}${path}`, init);
   if (!response.ok) {
     throw new Error(await parseApiError(response));
   }
   return (await response.json()) as T;
+}
+
+function withBearerAuth(token: string): Record<string, string> {
+  return {
+    authorization: `Bearer ${token}`,
+  };
 }
 
 export async function fetchBananaSummary(baseUrl: string):
@@ -451,6 +488,22 @@ export async function fetchApiHealth(baseUrl: string):
 
 export async function fetchApiRoot(baseUrl: string): Promise<ApiRootResponse> {
   return requestJson<ApiRootResponse>(baseUrl, '/');
+}
+
+export async function fetchPlayerAccount(
+    baseUrl: string, token: string): Promise<PlayerAccountResponse> {
+  return requestJson<PlayerAccountResponse>(baseUrl, '/v1/player/account', {
+    method: 'GET',
+    headers: withBearerAuth(token),
+  });
+}
+
+export async function fetchPlayerInsights(
+    baseUrl: string, token: string): Promise<PlayerInsightsResponse> {
+  return requestJson<PlayerInsightsResponse>(baseUrl, '/v1/player/insights', {
+    method: 'GET',
+    headers: withBearerAuth(token),
+  });
 }
 
 export async function startGameSession(

@@ -25,4 +25,5 @@ export * from './domains/ReplicationDomain';
 export * from './domains/ViewportDomain';
 export {LoginPage} from './auth/LoginPage';
 export {BANANA_AUTH_STEAM_ID_STORAGE_KEY, BANANA_AUTH_TOKEN_STORAGE_KEY, buildSteamAuthStartUrl, clearStoredAuthSession, hasStoredAuthSession, parseAuthCallbackHash, readStoredAuthSession, resolveLoginReturnToUrl, storeAuthSession,} from './auth/session';
+export {logoutAuthSession, validateAuthSession} from './auth/session';
 export {GameEnginePage} from './game-engine/GameEnginePage';
