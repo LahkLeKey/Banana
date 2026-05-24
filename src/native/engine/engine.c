@@ -35,7 +35,7 @@
 #include "runtime/terrain_generation.h"
 #include "runtime/terrain_abi.h"
 #include "runtime/terrain_runtime.h"
-#include "runtime/tick_phases.h"
+#include "runtime/tick/tick_phases.h"
 #include "runtime/world_metrics.h"
 #include "runtime/world_abi.h"
 #include "runtime/world_telemetry.h"

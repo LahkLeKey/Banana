@@ -1,9 +1,9 @@
 #include "runtime_tick_orchestration.h"
 
-#include "../tick_budget_policy.h"
-#include "../tick_input_phase.h"
-#include "../tick_post_phase.h"
-#include "../tick_phases.h"
+#include "../tick/tick_budget_policy.h"
+#include "../tick/tick_input_phase.h"
+#include "../tick/tick_post_phase.h"
+#include "../tick/tick_phases.h"
 
 int runtime_tick_orchestration_execute(Window *window,
                                        Renderer *renderer,

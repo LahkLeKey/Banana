@@ -7,8 +7,8 @@ cmake_minimum_required(VERSION 3.20)
 set(ENGINE_RENDER_SOURCES
   render/backend.c
   render/backend_dx12.c
-  render/backend_dx12_diagnostics.c
-  render/backend_dx12_projection_policy.c
+  render/dx12/backend_dx12_diagnostics.c
+  render/dx12/backend_dx12_projection_policy.c
   render/window.c
   render/shader.c
   render/mesh.c
@@ -121,10 +121,10 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/terrain_mutation.c
   runtime/terrain_runtime.c
   runtime/terrain_chunks.c
-  runtime/tick_input_phase.c
-  runtime/tick_post_phase.c
-  runtime/tick_budget_policy.c
-  runtime/tick_phases.c
+  runtime/tick/tick_input_phase.c
+  runtime/tick/tick_post_phase.c
+  runtime/tick/tick_budget_policy.c
+  runtime/tick/tick_phases.c
   runtime/world_abi.c
   runtime/world_metrics.c
   runtime/world_telemetry.c
@@ -609,7 +609,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_engine_click_to_move_target_test COMMAND banana_engine_click_to_move_target_test)
 
   add_executable(banana_engine_dx12_runtime_smoke_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_dx12_runtime_smoke_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/engine_dx12_runtime_smoke_test.c
   )
   target_link_libraries(banana_engine_dx12_runtime_smoke_test PRIVATE banana_engine_core)
   target_include_directories(banana_engine_dx12_runtime_smoke_test PRIVATE
@@ -630,7 +630,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     )
 
     add_executable(banana_dx12_scene_overlay_frame_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_scene_overlay_frame_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_scene_overlay_frame_test.c
       win32_dx12_poc/scene_overlay.c
     )
     target_link_libraries(banana_dx12_scene_overlay_frame_test PRIVATE banana_engine_core)
@@ -646,7 +646,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     add_test(NAME banana_dx12_scene_overlay_frame_test COMMAND banana_dx12_scene_overlay_frame_test)
 
     add_executable(banana_dx12_projection_policy_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_projection_policy_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_projection_policy_test.c
     )
     target_link_libraries(banana_dx12_projection_policy_test PRIVATE banana_engine_core)
     target_include_directories(banana_dx12_projection_policy_test PRIVATE
@@ -669,7 +669,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     add_test(NAME banana_dx12_objective_policy_test COMMAND banana_dx12_objective_policy_test)
 
     add_executable(banana_dx12_scene_flow_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_scene_flow_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_scene_flow_test.c
       win32_dx12_poc/scene_flow.c
     )
     target_include_directories(banana_dx12_scene_flow_test PRIVATE
@@ -741,7 +741,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_controller_attach_test COMMAND banana_runtime_controller_attach_test)
 
   add_executable(banana_runtime_engine_tick_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_engine_tick_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_engine_tick_test.c
   )
   target_link_libraries(banana_runtime_engine_tick_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_engine_tick_test PRIVATE
@@ -754,7 +754,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_engine_tick_test COMMAND banana_runtime_engine_tick_test)
 
   add_executable(banana_runtime_tick_budget_policy_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_tick_budget_policy_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_budget_policy_test.c
   )
   target_link_libraries(banana_runtime_tick_budget_policy_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_tick_budget_policy_test PRIVATE
@@ -768,7 +768,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_tick_budget_policy_test COMMAND banana_runtime_tick_budget_policy_test)
 
   add_executable(banana_runtime_tick_input_phase_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_tick_input_phase_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_input_phase_test.c
   )
   target_link_libraries(banana_runtime_tick_input_phase_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_tick_input_phase_test PRIVATE
@@ -782,7 +782,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_tick_input_phase_test COMMAND banana_runtime_tick_input_phase_test)
 
   add_executable(banana_runtime_tick_post_phase_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_tick_post_phase_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_post_phase_test.c
   )
   target_link_libraries(banana_runtime_tick_post_phase_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_tick_post_phase_test PRIVATE
@@ -1272,7 +1272,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_compile_guard_abi_test COMMAND banana_runtime_compile_guard_abi_test)
 
   add_executable(banana_runtime_architecture_dependency_guard_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_architecture_dependency_guard_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/architecture/runtime_architecture_dependency_guard_test.c
   )
   target_include_directories(banana_runtime_architecture_dependency_guard_test PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}

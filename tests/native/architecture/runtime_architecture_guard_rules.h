@@ -117,7 +117,7 @@ static const FileRule kRuntimeArchitectureGuardRules[] = {
         2,
     },
     {
-        "render/backend_dx12_diagnostics.c",
+        "render/dx12/backend_dx12_diagnostics.c",
         "dx12 diagnostics helper must stay render/runtime boundary agnostic",
         {"runtime/orchestration/", "../runtime/orchestration/", "win32_dx12_poc/"},
         3,

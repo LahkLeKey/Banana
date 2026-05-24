@@ -90,6 +90,11 @@ Before closing the feature, confirm all of the following:
 - FR-008: Validate by adding focused assertions/rules without removing existing tests.
 - FR-010: Validate by confirming no gameplay or rendering feature redesign in touched files.
 
+Focused test locations follow subdomain folders:
+- Runtime tick: `tests/native/runtime/tick/`
+- DX12 render diagnostics/policies: `tests/native/render/dx12/`
+- Architecture guards: `tests/native/architecture/`
+
 ## Evidence Paths
 
 - `artifacts/native/005-us1-runtime-tick.txt`

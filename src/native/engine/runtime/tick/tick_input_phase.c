@@ -1,7 +1,7 @@
 #include "tick_input_phase.h"
 
-#include "input_click_policy.h"
-#include "input_contract.h"
+#include "../input_click_policy.h"
+#include "../input_contract.h"
 
 int runtime_tick_input_phase_dispatch(void *context,
                                       RuntimeTickInputClickFn apply_click_input,

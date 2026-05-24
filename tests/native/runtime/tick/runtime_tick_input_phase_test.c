@@ -1,4 +1,4 @@
-#include "runtime/tick_input_phase.h"
+#include "runtime/tick/tick_input_phase.h"
 #include "runtime/input_contract.h"
 
 #include <stdio.h>

@@ -6,7 +6,7 @@
 #include "../render/renderer.h"
 #include "../render/window.h"
 #include "../world/world.h"
-#include "tick_phases.h"
+#include "tick/tick_phases.h"
 
 #ifdef __cplusplus
 extern "C"

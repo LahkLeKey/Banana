@@ -1,6 +1,6 @@
 #include "backend_dx12.h"
-#include "backend_dx12_diagnostics.h"
-#include "backend_dx12_projection_policy.h"
+#include "dx12/backend_dx12_diagnostics.h"
+#include "dx12/backend_dx12_projection_policy.h"
 
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
 #define COBJMACROS

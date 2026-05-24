@@ -42,15 +42,15 @@
 
 > **NOTE: Write these tests first, confirm they fail for the new seam expectations, then implement the refactor.**
 
-- [x] T007 [P] [US1] Extend tests/native/runtime_engine_tick_test.c with failing assertions for phase ordering, callback delegation, and behavior parity around runtime_engine_tick_execute
-- [ ] T008 [P] [US1] Extend tests/native/runtime_tick_input_phase_test.c with failing seam coverage for right-click polling, input normalization delegation, and null-guard behavior
-- [ ] T009 [P] [US1] Extend tests/native/runtime_tick_post_phase_test.c with failing seam coverage for controller sync, camera follow, and render dispatch ordering
+- [x] T007 [P] [US1] Extend tests/native/runtime/tick/runtime_engine_tick_test.c with failing assertions for phase ordering, callback delegation, and behavior parity around runtime_engine_tick_execute
+- [ ] T008 [P] [US1] Extend tests/native/runtime/tick/runtime_tick_input_phase_test.c with failing seam coverage for right-click polling, input normalization delegation, and null-guard behavior
+- [ ] T009 [P] [US1] Extend tests/native/runtime/tick/runtime_tick_post_phase_test.c with failing seam coverage for controller sync, camera follow, and render dispatch ordering
 
 ### Implementation for User Story 1
 
 - [x] T010 [US1] Create src/native/engine/runtime/orchestration/runtime_tick_orchestration.c to own ordered runtime tick sequencing declared in src/native/engine/runtime/orchestration/runtime_tick_orchestration.h
 - [x] T011 [US1] Refactor src/native/engine/runtime/engine_tick.c into a thin ABI-stable adapter that delegates sequencing to src/native/engine/runtime/orchestration/runtime_tick_orchestration.c
-- [ ] T012 [P] [US1] Move any remaining reusable phase helpers out of src/native/engine/runtime/engine_tick.c into src/native/engine/runtime/tick_phases.c and src/native/engine/runtime/tick_phases.h instead of re-growing the adapter
+- [ ] T012 [P] [US1] Move any remaining reusable phase helpers out of src/native/engine/runtime/engine_tick.c into src/native/engine/runtime/tick/tick_phases.c and src/native/engine/runtime/tick/tick_phases.h instead of re-growing the adapter
 - [x] T013 [US1] Update src/native/engine/CMakeLists.txt to compile src/native/engine/runtime/orchestration/runtime_tick_orchestration.c and keep the focused runtime tick test targets registered
 - [ ] T014 [US1] Capture focused runtime tick validation evidence in artifacts/native/005-us1-runtime-tick.txt after running the User Story 1 targets from out/v3-native
 
@@ -68,15 +68,15 @@
 
 > **NOTE: Write these tests first, confirm they fail for the new diagnostics-boundary expectations, then implement the refactor.**
 
-- [x] T015 [P] [US2] Extend tests/native/engine_dx12_runtime_smoke_test.c with failing assertions for explicit diagnostic ownership, status reporting, and failure-surface parity
-- [ ] T016 [P] [US2] Extend tests/native/dx12_projection_policy_test.c with failing coverage for projection-policy diagnostics boundaries and fallback reporting
-- [ ] T017 [P] [US2] Extend tests/native/dx12_scene_flow_test.c and tests/native/dx12_scene_overlay_frame_test.c with failing diagnostics-boundary coverage for scene flow and overlay reporting
+- [x] T015 [P] [US2] Extend tests/native/render/dx12/engine_dx12_runtime_smoke_test.c with failing assertions for explicit diagnostic ownership, status reporting, and failure-surface parity
+- [ ] T016 [P] [US2] Extend tests/native/render/dx12/dx12_projection_policy_test.c with failing coverage for projection-policy diagnostics boundaries and fallback reporting
+- [ ] T017 [P] [US2] Extend tests/native/render/dx12/dx12_scene_flow_test.c and tests/native/render/dx12/dx12_scene_overlay_frame_test.c with failing diagnostics-boundary coverage for scene flow and overlay reporting
 
 ### Implementation for User Story 2
 
-- [x] T018 [US2] Create src/native/engine/render/backend_dx12_diagnostics.c and src/native/engine/render/backend_dx12_diagnostics.h to isolate DX12/backend telemetry formatting and diagnostic state transitions
-- [x] T019 [US2] Refactor src/native/engine/render/backend_dx12.c to delegate diagnostic ownership to src/native/engine/render/backend_dx12_diagnostics.c without changing src/native/engine/render/backend_dx12.h
-- [x] T020 [US2] Update src/native/engine/CMakeLists.txt to compile src/native/engine/render/backend_dx12_diagnostics.c and keep the DX12-focused test targets registered
+- [x] T018 [US2] Create src/native/engine/render/dx12/backend_dx12_diagnostics.c and src/native/engine/render/dx12/backend_dx12_diagnostics.h to isolate DX12/backend telemetry formatting and diagnostic state transitions
+- [x] T019 [US2] Refactor src/native/engine/render/backend_dx12.c to delegate diagnostic ownership to src/native/engine/render/dx12/backend_dx12_diagnostics.c without changing src/native/engine/render/backend_dx12.h
+- [x] T020 [US2] Update src/native/engine/CMakeLists.txt to compile src/native/engine/render/dx12/backend_dx12_diagnostics.c and keep the DX12-focused test targets registered
 - [x] T021 [US2] Capture focused DX12 diagnostics validation evidence in artifacts/native/005-us2-dx12-diagnostics.txt after running the User Story 2 targets from out/v3-native
 
 **Checkpoint**: DX12/backend diagnostics are isolated to explicit render-owned seams and the focused diagnostics tests pass.
@@ -93,12 +93,12 @@
 
 > **NOTE: Write these guard expansions first, confirm they fail against the missing rules, then wire the final modularized layout.**
 
-- [x] T022 [P] [US3] Extend tests/native/runtime_architecture_dependency_guard_test.c with failing rules for src/native/engine/runtime/orchestration/runtime_tick_orchestration.c and src/native/engine/render/backend_dx12_diagnostics.c dependency direction
-- [x] T023 [P] [US3] Create tests/native/runtime_architecture_guard_rules.h to keep expanded runtime/render rule tables explicit, reviewable, and small enough for future PR-sized updates
+- [x] T022 [P] [US3] Extend tests/native/architecture/runtime_architecture_dependency_guard_test.c with failing rules for src/native/engine/runtime/orchestration/runtime_tick_orchestration.c and src/native/engine/render/dx12/backend_dx12_diagnostics.c dependency direction
+- [x] T023 [P] [US3] Create tests/native/architecture/runtime_architecture_guard_rules.h to keep expanded runtime/render rule tables explicit, reviewable, and small enough for future PR-sized updates
 
 ### Implementation for User Story 3
 
-- [x] T024 [US3] Refactor tests/native/runtime_architecture_dependency_guard_test.c to load the expanded rule set from tests/native/runtime_architecture_guard_rules.h and cover the new runtime tick and DX12 diagnostics seams
+- [x] T024 [US3] Refactor tests/native/architecture/runtime_architecture_dependency_guard_test.c to load the expanded rule set from tests/native/architecture/runtime_architecture_guard_rules.h and cover the new runtime tick and DX12 diagnostics seams
 - [x] T025 [US3] Update .specify/specs/005-native-runtime-render-modularization/checklists/concern-split-checklist.md with final split evidence and explicit exceptions for any intentionally large runtime/render files
 - [x] T026 [US3] Capture architecture guard validation evidence in artifacts/native/005-us3-architecture-guards.txt after running banana_runtime_architecture_dependency_guard_test and the guard-adjacent focused native targets from out/v3-native
 
@@ -155,9 +155,9 @@
 
 ```bash
 # Write the focused runtime tick tests first:
-Task: "Extend tests/native/runtime_engine_tick_test.c with failing assertions for phase ordering, callback delegation, and behavior parity around runtime_engine_tick_execute"
-Task: "Extend tests/native/runtime_tick_input_phase_test.c with failing seam coverage for right-click polling, input normalization delegation, and null-guard behavior"
-Task: "Extend tests/native/runtime_tick_post_phase_test.c with failing seam coverage for controller sync, camera follow, and render dispatch ordering"
+Task: "Extend tests/native/runtime/tick/runtime_engine_tick_test.c with failing assertions for phase ordering, callback delegation, and behavior parity around runtime_engine_tick_execute"
+Task: "Extend tests/native/runtime/tick/runtime_tick_input_phase_test.c with failing seam coverage for right-click polling, input normalization delegation, and null-guard behavior"
+Task: "Extend tests/native/runtime/tick/runtime_tick_post_phase_test.c with failing seam coverage for controller sync, camera follow, and render dispatch ordering"
 ```
 
 ---
@@ -166,9 +166,9 @@ Task: "Extend tests/native/runtime_tick_post_phase_test.c with failing seam cove
 
 ```bash
 # Expand the DX12 diagnostics tests together before implementation:
-Task: "Extend tests/native/engine_dx12_runtime_smoke_test.c with failing assertions for explicit diagnostic ownership, status reporting, and failure-surface parity"
-Task: "Extend tests/native/dx12_projection_policy_test.c with failing coverage for projection-policy diagnostics boundaries and fallback reporting"
-Task: "Extend tests/native/dx12_scene_flow_test.c and tests/native/dx12_scene_overlay_frame_test.c with failing diagnostics-boundary coverage for scene flow and overlay reporting"
+Task: "Extend tests/native/render/dx12/engine_dx12_runtime_smoke_test.c with failing assertions for explicit diagnostic ownership, status reporting, and failure-surface parity"
+Task: "Extend tests/native/render/dx12/dx12_projection_policy_test.c with failing coverage for projection-policy diagnostics boundaries and fallback reporting"
+Task: "Extend tests/native/render/dx12/dx12_scene_flow_test.c and tests/native/render/dx12/dx12_scene_overlay_frame_test.c with failing diagnostics-boundary coverage for scene flow and overlay reporting"
 ```
 
 ---
@@ -177,8 +177,8 @@ Task: "Extend tests/native/dx12_scene_flow_test.c and tests/native/dx12_scene_ov
 
 ```bash
 # Split architecture-guard preparation from final enforcement wiring:
-Task: "Extend tests/native/runtime_architecture_dependency_guard_test.c with failing rules for runtime tick orchestration and DX12 diagnostics dependency direction"
-Task: "Create tests/native/runtime_architecture_guard_rules.h to keep expanded runtime/render rule tables explicit, reviewable, and small enough for future PR-sized updates"
+Task: "Extend tests/native/architecture/runtime_architecture_dependency_guard_test.c with failing rules for runtime tick orchestration and DX12 diagnostics dependency direction"
+Task: "Create tests/native/architecture/runtime_architecture_guard_rules.h to keep expanded runtime/render rule tables explicit, reviewable, and small enough for future PR-sized updates"
 ```
 
 ---

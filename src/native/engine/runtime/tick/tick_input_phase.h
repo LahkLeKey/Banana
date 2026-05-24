@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_TICK_INPUT_PHASE_H
 #define BANANA_ENGINE_RUNTIME_TICK_INPUT_PHASE_H
 
-#include "../render/window.h"
+#include "../../render/window.h"
 
 #ifdef __cplusplus
 extern "C"
