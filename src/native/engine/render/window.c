@@ -217,6 +217,10 @@ static LRESULT CALLBACK window_dx12_proc(HWND hwnd, UINT message, WPARAM w_param
             window->right_click_y = (float)(short)HIWORD(l_param);
         }
         return 0;
+    case WM_SETCURSOR:
+        /* Always show a normal pointer in gameplay/runtime windows. */
+        SetCursor(LoadCursor(NULL, IDC_ARROW));
+        return TRUE;
     case WM_CLOSE:
         if (window)
             window->open = 0;
@@ -261,6 +265,7 @@ Window *window_create(int width, int height, const char *title)
     window_class.style = CS_HREDRAW | CS_VREDRAW;
     window_class.lpfnWndProc = window_dx12_proc;
     window_class.hInstance = instance;
+    window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
     window_class.lpszClassName = BANANA_DX12_WINDOW_CLASS;
     if (!RegisterClassA(&window_class) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
     {

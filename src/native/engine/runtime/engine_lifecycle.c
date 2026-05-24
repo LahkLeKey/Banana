@@ -18,6 +18,35 @@ static float runtime_spawn_jitter(unsigned int seed)
     return (((float)(seed & 0xFFu) / 255.0f) - 0.5f) * 2.4f;
 }
 
+/* Sample center + footprint corners and return the highest ground point.
+   This avoids actor corners clipping out of sloped terrain near map edges. */
+static float runtime_spawn_sample_max_ground(RuntimeTerrainSampleFn terrain_sample_height,
+                                             float x,
+                                             float z,
+                                             float sx,
+                                             float sz)
+{
+    float half_x = sx * 0.5f;
+    float half_z = sz * 0.5f;
+    float max_h = terrain_sample_height(x, z);
+    float h = 0.0f;
+
+    h = terrain_sample_height(x - half_x, z - half_z);
+    if (h > max_h)
+        max_h = h;
+    h = terrain_sample_height(x + half_x, z - half_z);
+    if (h > max_h)
+        max_h = h;
+    h = terrain_sample_height(x - half_x, z + half_z);
+    if (h > max_h)
+        max_h = h;
+    h = terrain_sample_height(x + half_x, z + half_z);
+    if (h > max_h)
+        max_h = h;
+
+    return max_h;
+}
+
 int runtime_engine_lifecycle_build_terrain(unsigned char *height_grid,
                                            int terrain_size,
                                            int terrain_max_layers,
@@ -93,7 +122,8 @@ int runtime_engine_lifecycle_spawn_default_actors(World *world,
         { 0.66f, -0.42f, 0.55f, ENTITY_TYPE_NPC,     1.05f, 1.05f, 1.05f, "combat",   1},
         { 0.82f, -0.06f, 0.55f, ENTITY_TYPE_NPC,     0.95f, 1.10f, 0.95f, "wildlife", 1},
         {-0.56f,  0.66f, 0.45f, ENTITY_TYPE_TRIGGER, 0.95f, 1.30f, 0.95f, "quest",    0},
-        {-0.82f,  0.78f, 0.35f, ENTITY_TYPE_STATIC,  1.40f, 0.60f, 1.40f, "camp",     0},
+        /* Camp scaffold prop: keep it visibly above terrain so it does not read as a buried box. */
+        {-0.82f,  0.78f, 0.72f, ENTITY_TYPE_STATIC,  1.20f, 0.90f, 1.20f, "camp",     0},
         { 0.22f,  0.18f, 0.42f, ENTITY_TYPE_STATIC,  1.25f, 1.05f, 1.25f, "pbj_pickup", 0},
         { 0.88f,  0.62f, 0.55f, ENTITY_TYPE_NPC,     1.00f, 1.00f, 1.00f, "wildlife", 1},
     };
@@ -110,7 +140,12 @@ int runtime_engine_lifecycle_spawn_default_actors(World *world,
         unsigned int hash = runtime_spawn_hash((unsigned int)(i + 1));
         float x = (archetype->x * spread_radius) + runtime_spawn_jitter(hash);
         float z = (archetype->z * spread_radius) + runtime_spawn_jitter(hash >> 8);
-        float y = terrain_sample_height(x, z) + archetype->y_offset;
+        float base_ground = runtime_spawn_sample_max_ground(terrain_sample_height,
+                                    x,
+                                    z,
+                                    archetype->sx,
+                                    archetype->sz);
+        float y = base_ground + archetype->y_offset;
         EntityId actor_id = world_spawn_entity(world, archetype->type, x, y, z);
         Entity *actor = world_get_entity(world, actor_id);
         if (actor)

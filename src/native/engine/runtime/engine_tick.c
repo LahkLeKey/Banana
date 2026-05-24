@@ -13,6 +13,7 @@ int runtime_engine_tick_execute(Window *window,
                                 ControllerInstance **controllers,
                                 int controller_count,
                                 float dt,
+                                void *context,
                                 RuntimeTickUpdateFn update_player_motion,
                                 RuntimeTickVoidFn follow_player_camera,
                                 RuntimeTickClickInputFn apply_click_input,
@@ -45,7 +46,7 @@ int runtime_engine_tick_execute(Window *window,
                 normalized_y = 1.f - (click_y / (float)input_height) * 2.f;
                 runtime_input_contract_handle_right_click_normalized(normalized_x, normalized_y);
                 if (apply_click_input)
-                    apply_click_input(normalized_x, normalized_y);
+                    apply_click_input(context, normalized_x, normalized_y);
             }
         }
     }
@@ -53,21 +54,22 @@ int runtime_engine_tick_execute(Window *window,
     world_tick(world, dt);
 
     if (update_player_motion)
-        update_player_motion(dt);
-    if (follow_player_camera)
-        follow_player_camera();
+        update_player_motion(context, dt);
 
     runtime_phase_viewport_resize(window, renderer, viewport_width, viewport_height);
-    if (runtime_phase_terrain_budget(terrain_rebuild, 2) != 0)
+    if (runtime_phase_terrain_budget(context, terrain_rebuild, 2) != 0)
         return -1;
 
     if (run_gameplay)
-        run_gameplay();
+        run_gameplay(context);
 
     runtime_sync_controller_positions(world, controllers, controller_count, dt);
 
+    if (follow_player_camera)
+        follow_player_camera(context);
+
     if (render_scene)
-        render_scene();
+        render_scene(context);
 
     return 0;
 }

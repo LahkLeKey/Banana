@@ -114,3 +114,11 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Remove `runtime/merchant_abi` compatibility wrapper after all production callers migrate to query/trade facades.
 - [x] Remove obsolete `runtime_merchant_abi_test` target and source after facade seam tests supersede wrapper coverage.
 - [ ] Run focused + full native CTest sweep and archive evidence for compatibility retirement.
+
+### Phase 13: Runtime Orchestration Decoupling (In Progress)
+- [x] Remove hidden per-tick orchestration globals in `runtime/engine_composition.c` by introducing explicit context-passing callbacks through `runtime/engine_tick` and `runtime/tick_phases`.
+- [x] Introduce bounded-context orchestration modules (`runtime/orchestration/player_tick`, `runtime/orchestration/terrain_tick`, `runtime/orchestration/render_tick`) and migrate composition callbacks from monolithic `engine_composition.c`.
+- [x] Split camera policy from camera application: `runtime/camera_follow_policy` computes target eye/target, while render adapter applies camera state to backend.
+- [x] Isolate DX12 fallback projection policy from backend transport (`backend_dx12_projection_policy`), including explicit tests for camera-centered fallback quads.
+- [x] Move win32 POC objective logic behind a dedicated gameplay objective policy service to avoid ad-hoc scene transitions in `win32_dx12_poc/main.c`.
+- [ ] Add architecture guard tests enforcing dependency direction: orchestration -> domain services -> render/infra adapters (never reverse).

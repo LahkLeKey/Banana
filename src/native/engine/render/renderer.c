@@ -257,7 +257,21 @@ void renderer_attach_native_window(Renderer *r, void *native_window)
 
 void renderer_set_camera(Renderer *r, const Camera *cam)
 {
+    if (!r || !cam)
+        return;
+
     r->camera = *cam;
+
+#ifdef BANANA_ENGINE_RENDER_BACKEND_DX12
+    if (r->dx12_runtime_active)
+    {
+        banana_dx12_runtime_set_camera(r->camera.position,
+                                       r->camera.target,
+                                       r->camera.up,
+                                       r->camera.fov_degrees,
+                                       r->camera.aspect);
+    }
+#endif
 }
 
 void renderer_begin_frame(Renderer *r)

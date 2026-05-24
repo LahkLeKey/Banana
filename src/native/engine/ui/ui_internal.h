@@ -34,7 +34,7 @@ typedef struct {
         } button;
 
         struct {
-            const char *text;
+            char text[256];
         } text;
 
         struct {

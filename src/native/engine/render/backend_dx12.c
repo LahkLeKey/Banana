@@ -1,4 +1,5 @@
 #include "backend_dx12.h"
+#include "backend_dx12_projection_policy.h"
 
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
 #define COBJMACROS
@@ -6,13 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stddef.h>
 #include <windows.h>
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <dxgi1_6.h>
 
 #define BANANA_DX12_BACK_BUFFER_COUNT 2
-#define BANANA_DX12_DEBUG_MAX_VERTICES 24576
+#define BANANA_DX12_DEBUG_MAX_VERTICES 262144
 
 typedef struct BananaDx12DebugVertex
 {
@@ -115,6 +117,20 @@ typedef struct BananaDx12Runtime
     UINT scene_vertex_count;
     UINT scene_vertex_capacity;
     int scene_pipeline_ready;
+    unsigned char *ui_overlay_rgba;
+    size_t ui_overlay_capacity;
+    int ui_overlay_width;
+    int ui_overlay_height;
+    int ui_overlay_dirty;
+    unsigned int ui_overlay_quads_last;
+    unsigned int ui_overlay_rows_last;
+    unsigned int ui_overlay_vertices_last;
+    float camera_eye[3];
+    float camera_target[3];
+    float camera_up[3];
+    float camera_fov_degrees;
+    float camera_aspect;
+    int camera_valid;
 } BananaDx12Runtime;
 
 static BananaDx12Runtime s_dx12_runtime = {0};
@@ -154,6 +170,15 @@ static void banana_dx12_runtime_update_telemetry(void)
              (unsigned long long)s_dx12_runtime.scene_draw_calls_total,
              s_dx12_runtime.present_interval,
              (unsigned long)s_dx12_runtime.last_present_result);
+    snprintf(s_dx12_telemetry + strlen(s_dx12_telemetry),
+             sizeof(s_dx12_telemetry) - strlen(s_dx12_telemetry),
+             " ui=%dx%d dirty=%d rows=%u quads=%u verts=%u",
+             s_dx12_runtime.ui_overlay_width,
+             s_dx12_runtime.ui_overlay_height,
+             s_dx12_runtime.ui_overlay_dirty,
+             s_dx12_runtime.ui_overlay_rows_last,
+             s_dx12_runtime.ui_overlay_quads_last,
+             s_dx12_runtime.ui_overlay_vertices_last);
 }
 
 static void banana_dx12_runtime_release_depth_target(void)
@@ -217,71 +242,29 @@ static void banana_dx12_project_world_to_clip(float wx,
                                                float *out_z,
                                                float *out_view_depth)
 {
-    const float camera_x = 16.0f;
-    const float camera_y = 14.0f;
-    const float camera_z = -16.0f;
-    const float target_x = 0.0f;
-    const float target_y = 0.0f;
-    const float target_z = 0.0f;
-    const float world_up_x = 0.0f;
-    const float world_up_y = 1.0f;
-    const float world_up_z = 0.0f;
-    float forward_x = target_x - camera_x;
-    float forward_y = target_y - camera_y;
-    float forward_z = target_z - camera_z;
-    float right_x = 0.0f;
-    float right_y = 0.0f;
-    float right_z = 0.0f;
-    float up_x = 0.0f;
-    float up_y = 1.0f;
-    float up_z = 0.0f;
-    float dx = wx - camera_x;
-    float dy = wy - camera_y;
-    float dz = wz - camera_z;
-    float view_x = 0.0f;
-    float view_y = 0.0f;
-    float view_z = 0.0f;
-    float perspective = 1.0f;
+    BananaDx12ProjectionCamera camera = {0};
 
-    banana_dx12_vec3_normalize(&forward_x, &forward_y, &forward_z);
-    banana_dx12_vec3_cross(forward_x,
-                           forward_y,
-                           forward_z,
-                           world_up_x,
-                           world_up_y,
-                           world_up_z,
-                           &right_x,
-                           &right_y,
-                           &right_z);
-    banana_dx12_vec3_normalize(&right_x, &right_y, &right_z);
-    banana_dx12_vec3_cross(right_x,
-                           right_y,
-                           right_z,
-                           forward_x,
-                           forward_y,
-                           forward_z,
-                           &up_x,
-                           &up_y,
-                           &up_z);
-    banana_dx12_vec3_normalize(&up_x, &up_y, &up_z);
+    camera.eye[0] = s_dx12_runtime.camera_eye[0];
+    camera.eye[1] = s_dx12_runtime.camera_eye[1];
+    camera.eye[2] = s_dx12_runtime.camera_eye[2];
+    camera.target[0] = s_dx12_runtime.camera_target[0];
+    camera.target[1] = s_dx12_runtime.camera_target[1];
+    camera.target[2] = s_dx12_runtime.camera_target[2];
+    camera.up[0] = s_dx12_runtime.camera_up[0];
+    camera.up[1] = s_dx12_runtime.camera_up[1];
+    camera.up[2] = s_dx12_runtime.camera_up[2];
+    camera.fov_degrees = s_dx12_runtime.camera_fov_degrees;
+    camera.aspect = s_dx12_runtime.camera_aspect;
+    camera.valid = s_dx12_runtime.camera_valid;
 
-    view_x = banana_dx12_vec3_dot(dx, dy, dz, right_x, right_y, right_z);
-    view_y = banana_dx12_vec3_dot(dx, dy, dz, up_x, up_y, up_z);
-    view_z = banana_dx12_vec3_dot(dx, dy, dz, forward_x, forward_y, forward_z);
-    if (view_z < 0.01f)
-    {
-        view_z = 0.01f;
-    }
-
-    perspective = 1.0f / (1.0f + (view_z * 0.030f));
-
-    *out_x = banana_dx12_clampf(view_x * 0.110f * perspective, -1.25f, 1.25f);
-    *out_y = banana_dx12_clampf(view_y * 0.165f * perspective, -1.25f, 1.25f);
-    *out_z = banana_dx12_clampf(0.04f + (view_z * 0.0115f), 0.02f, 0.98f);
-    if (out_view_depth)
-    {
-        *out_view_depth = view_z;
-    }
+    banana_dx12_projection_world_to_clip(&camera,
+                                         wx,
+                                         wy,
+                                         wz,
+                                         out_x,
+                                         out_y,
+                                         out_z,
+                                         out_view_depth);
 }
 
 static void banana_dx12_runtime_release_scene_pipeline(void)
@@ -425,6 +408,126 @@ static int banana_dx12_runtime_push_triangle(float x0,
 
     s_dx12_runtime.scene_vertex_count += 3u;
     return 1;
+}
+
+static int banana_dx12_runtime_ensure_ui_overlay_capacity(size_t required)
+{
+    unsigned char *resized = NULL;
+
+    if (required == 0)
+        return 1;
+
+    if (s_dx12_runtime.ui_overlay_capacity >= required && s_dx12_runtime.ui_overlay_rgba)
+        return 1;
+
+    resized = (unsigned char *)realloc(s_dx12_runtime.ui_overlay_rgba, required);
+    if (!resized)
+        return 0;
+
+    s_dx12_runtime.ui_overlay_rgba = resized;
+    s_dx12_runtime.ui_overlay_capacity = required;
+    return 1;
+}
+
+static void banana_dx12_runtime_append_ui_overlay_vertices(void)
+{
+    int width = s_dx12_runtime.ui_overlay_width;
+    int height = s_dx12_runtime.ui_overlay_height;
+    int y = 0;
+    unsigned int row_count = 0;
+    unsigned int quad_count = 0;
+    unsigned int vertices_before = s_dx12_runtime.scene_vertex_count;
+
+    if (!s_dx12_runtime.ui_overlay_dirty ||
+        !s_dx12_runtime.ui_overlay_rgba ||
+        width <= 0 ||
+        height <= 0)
+    {
+        s_dx12_runtime.ui_overlay_rows_last = 0;
+        s_dx12_runtime.ui_overlay_quads_last = 0;
+        s_dx12_runtime.ui_overlay_vertices_last = 0;
+        return;
+    }
+
+    for (y = 0; y < height; y++)
+    {
+        int x = 0;
+        int row_has_overlay = 0;
+        while (x < width)
+        {
+            size_t pixel_index = ((size_t)y * (size_t)width + (size_t)x) * 4u;
+            const unsigned char *p = &s_dx12_runtime.ui_overlay_rgba[pixel_index];
+            unsigned char r = p[0];
+            unsigned char g = p[1];
+            unsigned char b = p[2];
+            unsigned char a = p[3];
+            int run_end = x + 1;
+            float left = 0.0f;
+            float right = 0.0f;
+            float top = 0.0f;
+            float bottom = 0.0f;
+            float center_x = 0.0f;
+            float center_y = 0.0f;
+            float half_width = 0.0f;
+            float half_height = 0.0f;
+
+            if (a == 0)
+            {
+                x++;
+                continue;
+            }
+
+            while (run_end < width)
+            {
+                size_t run_idx = ((size_t)y * (size_t)width + (size_t)run_end) * 4u;
+                const unsigned char *rp = &s_dx12_runtime.ui_overlay_rgba[run_idx];
+                if (rp[0] != r || rp[1] != g || rp[2] != b || rp[3] != a)
+                    break;
+                run_end++;
+            }
+
+            left = (((float)x / (float)width) * 2.0f) - 1.0f;
+            right = (((float)run_end / (float)width) * 2.0f) - 1.0f;
+            top = 1.0f - (((float)y / (float)height) * 2.0f);
+            bottom = 1.0f - (((float)(y + 1) / (float)height) * 2.0f);
+
+            center_x = (left + right) * 0.5f;
+            center_y = (top + bottom) * 0.5f;
+            half_width = (right - left) * 0.5f;
+            half_height = (top - bottom) * 0.5f;
+
+            if (!banana_dx12_runtime_push_quad(center_x,
+                                               center_y,
+                                               half_width,
+                                               half_height,
+                                               0.01f,
+                                               (float)r / 255.0f,
+                                               (float)g / 255.0f,
+                                               (float)b / 255.0f,
+                                               (float)a / 255.0f))
+            {
+                s_dx12_runtime.ui_overlay_rows_last = row_count;
+                s_dx12_runtime.ui_overlay_quads_last = quad_count;
+                s_dx12_runtime.ui_overlay_vertices_last = s_dx12_runtime.scene_vertex_count - vertices_before;
+                s_dx12_runtime.ui_overlay_dirty = 0;
+                return;
+            }
+
+            row_has_overlay = 1;
+            quad_count++;
+
+            run_end = run_end < (x + 1) ? (x + 1) : run_end;
+            x = run_end;
+        }
+
+        if (row_has_overlay)
+            row_count++;
+    }
+
+    s_dx12_runtime.ui_overlay_rows_last = row_count;
+    s_dx12_runtime.ui_overlay_quads_last = quad_count;
+    s_dx12_runtime.ui_overlay_vertices_last = s_dx12_runtime.scene_vertex_count - vertices_before;
+    s_dx12_runtime.ui_overlay_dirty = 0;
 }
 
 static int banana_dx12_runtime_push_mesh(const Mesh *mesh,
@@ -741,13 +844,13 @@ static int banana_dx12_runtime_create_scene_pipeline(void)
     ZeroMemory(&blend_desc, sizeof(blend_desc));
     blend_desc.AlphaToCoverageEnable = FALSE;
     blend_desc.IndependentBlendEnable = FALSE;
-    blend_desc.RenderTarget[0].BlendEnable = FALSE;
+    blend_desc.RenderTarget[0].BlendEnable = TRUE;
     blend_desc.RenderTarget[0].LogicOpEnable = FALSE;
-    blend_desc.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-    blend_desc.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
+    blend_desc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+    blend_desc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
     blend_desc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
     blend_desc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-    blend_desc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+    blend_desc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
     blend_desc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
     blend_desc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
     blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
@@ -1131,6 +1234,15 @@ static void banana_dx12_runtime_release_all(void)
     s_dx12_runtime.frame_counter = 0;
     s_dx12_runtime.frames_presented = 0;
     s_dx12_runtime.last_present_result = S_OK;
+    free(s_dx12_runtime.ui_overlay_rgba);
+    s_dx12_runtime.ui_overlay_rgba = NULL;
+    s_dx12_runtime.ui_overlay_capacity = 0;
+    s_dx12_runtime.ui_overlay_width = 0;
+    s_dx12_runtime.ui_overlay_height = 0;
+    s_dx12_runtime.ui_overlay_dirty = 0;
+    s_dx12_runtime.ui_overlay_rows_last = 0;
+    s_dx12_runtime.ui_overlay_quads_last = 0;
+    s_dx12_runtime.ui_overlay_vertices_last = 0;
     banana_dx12_runtime_update_telemetry();
 }
 
@@ -1736,6 +1848,8 @@ int banana_dx12_runtime_end_frame(void)
         return 0;
     }
 
+    banana_dx12_runtime_append_ui_overlay_vertices();
+
     if (s_dx12_runtime.scene_pipeline_ready && s_dx12_runtime.scene_vertex_count > 0)
     {
         ID3D12GraphicsCommandList_SetGraphicsRootSignature(s_dx12_runtime.command_list,
@@ -1813,6 +1927,71 @@ int banana_dx12_runtime_end_frame(void)
 #endif
 }
 
+void banana_dx12_runtime_set_ui_overlay(const unsigned char *rgba,
+                                        int width,
+                                        int height)
+{
+#if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
+    size_t required = 0;
+
+    if (!rgba || width <= 0 || height <= 0)
+    {
+        s_dx12_runtime.ui_overlay_width = 0;
+        s_dx12_runtime.ui_overlay_height = 0;
+        s_dx12_runtime.ui_overlay_dirty = 0;
+        return;
+    }
+
+    required = (size_t)width * (size_t)height * 4u;
+    if (!banana_dx12_runtime_ensure_ui_overlay_capacity(required))
+        return;
+
+    memcpy(s_dx12_runtime.ui_overlay_rgba, rgba, required);
+    s_dx12_runtime.ui_overlay_width = width;
+    s_dx12_runtime.ui_overlay_height = height;
+    s_dx12_runtime.ui_overlay_dirty = 1;
+    banana_dx12_runtime_update_telemetry();
+#else
+    (void)rgba;
+    (void)width;
+    (void)height;
+#endif
+}
+
+void banana_dx12_runtime_set_camera(const float *eye,
+                                    const float *target,
+                                    const float *up,
+                                    float fov_degrees,
+                                    float aspect)
+{
+#if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
+    if (!eye || !target || !up)
+    {
+        s_dx12_runtime.camera_valid = 0;
+        return;
+    }
+
+    s_dx12_runtime.camera_eye[0] = eye[0];
+    s_dx12_runtime.camera_eye[1] = eye[1];
+    s_dx12_runtime.camera_eye[2] = eye[2];
+    s_dx12_runtime.camera_target[0] = target[0];
+    s_dx12_runtime.camera_target[1] = target[1];
+    s_dx12_runtime.camera_target[2] = target[2];
+    s_dx12_runtime.camera_up[0] = up[0];
+    s_dx12_runtime.camera_up[1] = up[1];
+    s_dx12_runtime.camera_up[2] = up[2];
+    s_dx12_runtime.camera_fov_degrees = fov_degrees;
+    s_dx12_runtime.camera_aspect = aspect;
+    s_dx12_runtime.camera_valid = 1;
+#else
+    (void)eye;
+    (void)target;
+    (void)up;
+    (void)fov_degrees;
+    (void)aspect;
+#endif
+}
+
 void banana_dx12_runtime_shutdown(void)
 {
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
@@ -1831,9 +2010,10 @@ void banana_dx12_runtime_submit_scene_draw(const Mesh *mesh,
                                            float color_b)
 {
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
-    float world_span = 24.0f;
     float ndc_x = 0.0f;
     float ndc_y = 0.0f;
+    float ndc_z = 0.20f;
+    float view_depth = 0.0f;
     float half_width = 0.030f;
     float half_height = 0.030f;
     float r = uses_texture ? 0.95f : 0.35f;
@@ -1860,17 +2040,22 @@ void banana_dx12_runtime_submit_scene_draw(const Mesh *mesh,
         return;
     }
 
-    ndc_x = banana_dx12_clampf(position[0] / world_span, -1.0f, 1.0f);
-    ndc_y = banana_dx12_clampf(-position[2] / world_span, -1.0f, 1.0f);
+    banana_dx12_project_world_to_clip(position[0],
+                                      position[1] + (scale[1] * 0.50f),
+                                      position[2],
+                                      &ndc_x,
+                                      &ndc_y,
+                                      &ndc_z,
+                                      &view_depth);
 
-    half_width = banana_dx12_clampf(scale[0] / 16.0f, 0.018f, 0.080f);
-    half_height = banana_dx12_clampf(scale[2] / 16.0f, 0.018f, 0.080f);
+    half_width = banana_dx12_clampf(scale[0] / (6.0f + (view_depth * 0.36f)), 0.014f, 0.080f);
+    half_height = banana_dx12_clampf(scale[2] / (6.0f + (view_depth * 0.36f)), 0.014f, 0.080f);
 
     if (!banana_dx12_runtime_push_quad(ndc_x,
                                        ndc_y,
                                        half_width,
                                        half_height,
-                                       0.20f,
+                                       ndc_z,
                                        r,
                                        g,
                                        b,

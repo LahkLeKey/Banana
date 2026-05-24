@@ -2,6 +2,8 @@
 
 #include "application_service_ports.h"
 
+#include "orchestration/runtime_tick_orchestration.h"
+
 #include "../ai/npc_merchant.h"
 #include "../ai/wildlife_controller.h"
 #include "../render/backend.h"
@@ -9,7 +11,6 @@
 #include "engine_serialize.h"
 #include "engine_lifecycle.h"
 #include "engine_tick.h"
-#include "gameplay_service.h"
 #include "input_contract.h"
 #include "player_builds.h"
 #include "player_registry.h"
@@ -17,66 +18,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-static EngineRuntimeState *s_active_state = NULL;
-static RuntimeTerrainSampleHeightFn s_active_sample_height = NULL;
 static const RuntimeApplicationServicePorts *s_service_ports = NULL;
-
-static int terrain_rebuild_dirty_chunks_runtime(int max_chunks)
-{
-    if (!s_active_state || !s_service_ports || !s_service_ports->terrain.rebuild_dirty_chunks)
-        return 0;
-
-    return s_service_ports->terrain.rebuild_dirty_chunks(s_active_state, max_chunks);
-}
-
-static void update_player_motion(float dt)
-{
-    if (!s_active_state || !s_active_sample_height || !s_service_ports || !s_service_ports->player.update_motion)
-        return;
-
-    s_service_ports->player.update_motion(s_active_state, dt, s_active_sample_height);
-}
-
-static void follow_player_camera(void)
-{
-    if (!s_active_state || !s_service_ports || !s_service_ports->player.follow_camera)
-        return;
-
-    s_service_ports->player.follow_camera(s_active_state);
-}
-
-static void apply_click_move_input(float normalized_x, float normalized_y)
-{
-    if (!s_active_state || !s_active_sample_height || !s_service_ports || !s_service_ports->player.apply_click_input)
-        return;
-
-    s_service_ports->player.apply_click_input(s_active_state,
-                                              normalized_x,
-                                              normalized_y,
-                                              s_active_sample_height);
-}
-
-static void tick_phase_gameplay(void)
-{
-    if (!s_active_state)
-        return;
-
-    runtime_gameplay_service_tick(s_active_state->world,
-                                  s_active_state->controllers,
-                                  s_active_state->controller_count,
-                                  s_active_state->player_id,
-                                  &s_active_state->pbj_pickup_collected,
-                                  6.0f,
-                                  1.55f);
-}
-
-static void tick_phase_render_scene(void)
-{
-    if (!s_active_state || !s_service_ports || !s_service_ports->render.submit_scene)
-        return;
-
-    s_service_ports->render.submit_scene(s_active_state);
-}
 
 int runtime_engine_composition_init(EngineRuntimeState *state,
                                     int width,
@@ -178,12 +120,15 @@ int runtime_engine_composition_tick(EngineRuntimeState *state,
                                     RuntimeTerrainSampleHeightFn sample_height)
 {
     int result = 0;
+    RuntimeTickOrchestrationContext context = {0};
 
     if (!state || !sample_height)
         return -1;
 
-    s_active_state = state;
-    s_active_sample_height = sample_height;
+    context.state = state;
+    context.sample_height = sample_height;
+
+    context.service_ports = s_service_ports;
 
     result = runtime_engine_tick_execute(state->window,
                                          state->renderer,
@@ -191,18 +136,16 @@ int runtime_engine_composition_tick(EngineRuntimeState *state,
                                          state->world,
                                          &state->viewport_width,
                                          &state->viewport_height,
-                                         terrain_rebuild_dirty_chunks_runtime,
+                                         runtime_tick_orchestration_rebuild_dirty_chunks,
                                          state->controllers,
                                          state->controller_count,
                                          dt,
-                                         update_player_motion,
-                                         follow_player_camera,
-                                         apply_click_move_input,
-                                         tick_phase_gameplay,
-                                         tick_phase_render_scene);
-
-    s_active_sample_height = NULL;
-    s_active_state = NULL;
+                                         &context,
+                                         runtime_tick_orchestration_update_player_motion,
+                                         runtime_tick_orchestration_follow_player_camera,
+                                         runtime_tick_orchestration_apply_click_move_input,
+                                         runtime_tick_orchestration_gameplay,
+                                         runtime_tick_orchestration_render_scene);
     return result;
 }
 

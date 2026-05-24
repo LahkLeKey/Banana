@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Banana: Native DX12 POC",
+      "name": "Banana: Native DX12 POC (Ctrl+F5 No Debug)",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/out/v3-native/engine/Debug/banana_engine_win32_dx12_poc.exe",
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "Native: build (v3)",
-      "console": "integratedTerminal"
+      "console": "externalTerminal"
     },
     {
       "name": "Banana: Native DX12 POC (Autotest 5s)",
@@ -17,7 +17,7 @@
       "program": "${workspaceFolder}/out/v3-native/engine/Debug/banana_engine_win32_dx12_poc.exe",
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "Native: build (v3)",
-      "console": "integratedTerminal",
+      "console": "externalTerminal",
       "environment": [
         {
           "name": "BANANA_DX12_POC_AUTOTEST",
@@ -31,7 +31,7 @@
     },
     {
       "name": "Banana: Overworld (Compose + Browser)",
-      "type": "pwa-msedge",
+      "type": "msedge",
       "request": "launch",
       "url": "http://localhost:5173/session-room",
       "webRoot": "${workspaceFolder}/src/typescript/react",
@@ -40,7 +40,7 @@
     },
     {
       "name": "Banana: Overworld (Attach Browser Only)",
-      "type": "pwa-msedge",
+      "type": "msedge",
       "request": "launch",
       "url": "http://localhost:5173/session-room",
       "webRoot": "${workspaceFolder}/src/typescript/react"
