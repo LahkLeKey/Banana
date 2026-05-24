@@ -1,23 +1,14 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 1.1.0
+- Version change: 1.2.0 -> 1.3.0
 - Modified principles:
-	- Template Principle 1 -> I. Native UI ABI Wrapper and Marshaling
-	- Template Principle 2 -> II. Player Trust and Honest Disclosure
-	- Template Principle 3 -> III. Open Source and Community Governance
 	- Template Principle 4 -> IV. Cross-Domain Contract Integrity
-	- Template Principle 5 -> V. Persistent-World Quality Gates
-	- Template Principle 6 -> VI. Reproducible Multi-Platform Delivery
 - Added sections:
-	- Product and Platform Constraints
-	- Development Workflow and Release Quality Gates
+	- None
 - Removed sections:
 	- None
 - Templates requiring updates:
-	- ✅ .specify/templates/plan-template.md
-	- ✅ .specify/templates/spec-template.md
-	- ✅ .specify/templates/tasks-template.md
-	- ⚠ pending .specify/templates/commands/*.md (directory not present in this repo layout)
+	- None
 - Follow-up TODOs:
 	- None
 -->
@@ -58,8 +49,14 @@ Controller -> service -> pipeline -> native interop contracts MUST remain explic
 and testable across `src/native`, `src/typescript/api`, and client runtimes.
 Contract changes MUST update the nearest documentation and runtime contracts in the
 same change set.
+Native runtime/render implementation files MUST trend toward small,
+single-responsibility units. `CMakeLists.txt` is the only standing large-file
+exception. Any other native implementation file that remains large MUST record an
+owner, a reason, and a follow-up split slice in the governing Spec Kit artifacts
+or the native refactor ledger.
 Rationale: the project is a multi-language monorepo; silent drift between layers
-causes production regressions and release delays.
+causes production regressions and release delays, and oversized native files blur
+ownership boundaries that should stay explicit.
 
 ### V. Persistent-World Quality Gates
 Every feature MUST define measurable validation for deterministic simulation,
@@ -128,4 +125,4 @@ Compliance review expectations:
 - Release readiness checks MUST include evidence that storefront disclosures and
 	runtime behavior remain aligned.
 
-**Version**: 1.2.0 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-22
+**Version**: 1.3.0 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-24

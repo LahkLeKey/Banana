@@ -1,0 +1,25 @@
+Feature: 005-native-runtime-render-modularization
+Slice: User Story 2 - DX12 diagnostics ownership
+Date: 2026-05-24
+
+Changes:
+- Extracted probe-state and runtime-telemetry ownership into render/backend_dx12_diagnostics.c
+- Kept public DX12 API stable in render/backend_dx12.h
+- Delegated backend status and runtime telemetry accessors from render/backend_dx12.c
+- Strengthened engine_dx12_runtime_smoke_test with status/telemetry assertions
+- Extended architecture guard coverage for backend_dx12_diagnostics.c and to forbid legacy diagnostic state in backend_dx12.c
+
+Validation commands:
+1. cmake --build out/v3-native --config Debug
+2. ctest --test-dir out/v3-native -C Debug -R "banana_engine_dx12_runtime_smoke_test|banana_runtime_architecture_dependency_guard_test|banana_dx12_projection_policy_test" --output-on-failure
+3. ctest --test-dir out/v3-native -C Debug -R "banana_dx12_scene_flow_test|banana_dx12_scene_overlay_frame_test" --output-on-failure
+
+Validation results:
+- banana_engine_dx12_runtime_smoke_test: passed
+- banana_dx12_projection_policy_test: passed
+- banana_dx12_scene_flow_test: passed
+- banana_dx12_scene_overlay_frame_test: passed
+- banana_runtime_architecture_dependency_guard_test: passed
+
+Notes:
+- No editor diagnostics remained in backend_dx12.c, backend_dx12_diagnostics.c, backend_dx12_diagnostics.h, engine_dx12_runtime_smoke_test.c, runtime_architecture_dependency_guard_test.c, or src/native/engine/CMakeLists.txt after the slice landed.

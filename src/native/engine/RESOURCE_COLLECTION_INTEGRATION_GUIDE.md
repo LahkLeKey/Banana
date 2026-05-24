@@ -204,12 +204,12 @@ When connecting to TypeScript API layer:
 
 ## Related Files
 
-- **Implementation**: `src/native/engine/runtime/player_resources.{h,c}`
-- **Implementation**: `src/native/engine/runtime/interactive_collection.{h,c}`
-- **Implementation**: `src/native/engine/runtime/interactive_object_spawner.{h,c}`
+- **Implementation**: `src/native/engine/runtime/player/player_resources.{h,c}`
+- **Implementation**: `src/native/engine/runtime/interaction/collection/interactive_collection.{h,c}`
+- **Implementation**: `src/native/engine/runtime/interaction/spawner/interactive_object_spawner.{h,c}`
 - **Tests**: `tests/native/player_resources_test.c` (28 tests)
-- **Tests**: `tests/native/interactive_collection_test.c` (26 tests)
-- **Tests**: `tests/native/interactive_object_spawner_test.c` (14 tests)
-- **Existing Systems**: `src/native/engine/runtime/input_binding.{h,c}`
-- **Existing Systems**: `src/native/engine/runtime/terrain_chunks.{h,c}`
+- **Tests**: `tests/native/runtime/interaction/collection/interactive_collection_test.c` (26 tests)
+- **Tests**: `tests/native/runtime/interaction/spawner/interactive_object_spawner_test.c` (14 tests)
+- **Existing Systems**: `src/native/engine/runtime/input/binding/input_binding.{h,c}`
+- **Existing Systems**: `src/native/engine/runtime/terrain/terrain_chunks.{h,c}`
 

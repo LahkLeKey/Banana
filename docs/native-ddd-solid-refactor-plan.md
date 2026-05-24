@@ -121,4 +121,23 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Split camera policy from camera application: `runtime/camera_follow_policy` computes target eye/target, while render adapter applies camera state to backend.
 - [x] Isolate DX12 fallback projection policy from backend transport (`backend_dx12_projection_policy`), including explicit tests for camera-centered fallback quads.
 - [x] Move win32 POC objective logic behind a dedicated gameplay objective policy service to avoid ad-hoc scene transitions in `win32_dx12_poc/main.c`.
-- [ ] Add architecture guard tests enforcing dependency direction: orchestration -> domain services -> render/infra adapters (never reverse).
+- [x] Add architecture guard tests enforcing dependency direction: orchestration -> domain services -> render/infra adapters (never reverse).
+- [x] Remove hidden service-port module state in `runtime/engine_composition.c` by storing ports in `EngineRuntimeState` and wiring orchestration through explicit context.
+- [x] Extract right-click normalization from `runtime/engine_tick.c` into `runtime/input_click_policy` with focused policy tests and guardrails.
+- [x] Extract terrain rebuild chunk budget from `runtime/engine_tick.c` into `runtime/tick_budget_policy` with configurable clamp rules and focused tests.
+- [x] Extract right-click polling/dispatch from `runtime/engine_tick.c` into `runtime/tick_input_phase` so tick orchestration no longer owns input event plumbing.
+- [x] Extract post-gameplay controller sync + camera follow + render dispatch from `runtime/engine_tick.c` into `runtime/tick_post_phase`.
+- [x] Extract full runtime tick sequencing into `runtime/orchestration/runtime_tick_orchestration.c` so `runtime/engine_tick.c` remains a thin ABI-stable adapter.
+- [x] Extract DX12 probe/telemetry diagnostic ownership into `render/backend_dx12_diagnostics` so `render/backend_dx12.c` can focus on transport/runtime behavior.
+
+### Phase 14: Feature 005 Governance And Modularization Ledger
+- [x] Activate `.specify/specs/005-native-runtime-render-modularization/` as the governing feature for ongoing native runtime/render modularization.
+- [x] Treat `.specify/specs/005-native-runtime-render-modularization/tasks.md` as the dependency-ordered execution ledger for remaining runtime/render concern splits.
+- [x] Enforce the constitution rule that native implementation files should stay small and single-responsibility, with `CMakeLists.txt` as the only standing large-file exception.
+- [x] Capture feature-005 evidence artifacts under `artifacts/native/005-*.txt` as the remaining architecture-guard slices land.
+
+## Latest Feature 005 Evidence
+- Focused DX12 diagnostics validation artifact: `artifacts/native/005-us2-dx12-diagnostics.txt`
+- Focused runtime tick validation artifact: `artifacts/native/005-us1-runtime-tick.txt`
+- Focused architecture guard validation artifact: `artifacts/native/005-us3-architecture-guards.txt`
+- Final focused modularization suite artifact: `artifacts/native/005-final-focused-suite.txt`

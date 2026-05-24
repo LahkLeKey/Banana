@@ -3,44 +3,44 @@
 #include "render/backend.h"
 #include "ai/npc_merchant.h"
 #include "ai/wildlife_controller.h"
-#include "runtime/controller_sync.h"
-#include "runtime/application_service_ports.h"
-#include "runtime/engine_aux_abi.h"
-#include "runtime/engine_composition.h"
-#include "runtime/engine_host.h"
-#include "runtime/engine_state.h"
-#include "runtime/engine_lifecycle.h"
-#include "runtime/engine_tick.h"
-#include "runtime/gameplay_service.h"
-#include "runtime/camera_follow.h"
-#include "runtime/camera_basis.h"
-#include "runtime/move_target_service.h"
-#include "runtime/player_runtime_service.h"
-#include "runtime/player_gateway_abi.h"
-#include "runtime/render_material.h"
-#include "runtime/player_motion.h"
-#include "runtime/player_motion_host.h"
-#include "runtime/player_api.h"
-#include "runtime/player_build_abi.h"
-#include "runtime/merchant_query_abi.h"
-#include "runtime/merchant_trade_domain.h"
-#include "runtime/player_resource_abi.h"
-#include "runtime/player_merchant_adapter.h"
-#include "runtime/player_sync_abi.h"
-#include "runtime/player_registry.h"
-#include "runtime/physics_abi.h"
-#include "runtime/input_abi.h"
-#include "runtime/resource_domain.h"
-#include "runtime/render_submit.h"
-#include "runtime/terrain_generation.h"
-#include "runtime/terrain_abi.h"
-#include "runtime/terrain_runtime.h"
-#include "runtime/tick_phases.h"
-#include "runtime/world_metrics.h"
-#include "runtime/world_abi.h"
-#include "runtime/world_telemetry.h"
-#include "runtime/wildlife_gameplay.h"
-#include "runtime/ui_abi.h"
+#include "runtime/controller/sync/controller_sync.h"
+#include "runtime/engine/application_service_ports.h"
+#include "runtime/engine/engine_aux_abi.h"
+#include "runtime/engine/engine_composition.h"
+#include "runtime/engine/engine_host.h"
+#include "runtime/engine/engine_state.h"
+#include "runtime/engine/engine_lifecycle.h"
+#include "runtime/engine/engine_tick.h"
+#include "runtime/engine/gameplay_service.h"
+#include "runtime/camera/follow/camera_follow.h"
+#include "runtime/camera/basis/camera_basis.h"
+#include "runtime/input/move_target/move_target_service.h"
+#include "runtime/player/player_runtime_service.h"
+#include "runtime/player/player_gateway_abi.h"
+#include "runtime/render/material/render_material.h"
+#include "runtime/player/player_motion.h"
+#include "runtime/player/player_motion_host.h"
+#include "runtime/player/player_api.h"
+#include "runtime/player/player_build_abi.h"
+#include "runtime/merchant/query/merchant_query_abi.h"
+#include "runtime/merchant/trade/merchant_trade_domain.h"
+#include "runtime/player/player_resource_abi.h"
+#include "runtime/player/player_merchant_adapter.h"
+#include "runtime/player/player_sync_abi.h"
+#include "runtime/player/player_registry.h"
+#include "runtime/abi/physics/physics_abi.h"
+#include "runtime/input/abi/input_abi.h"
+#include "runtime/resource/resource_domain.h"
+#include "runtime/render/submit/render_submit.h"
+#include "runtime/terrain/terrain_generation.h"
+#include "runtime/terrain/terrain_abi.h"
+#include "runtime/terrain/terrain_runtime.h"
+#include "runtime/tick/tick_phases.h"
+#include "runtime/world/world_metrics.h"
+#include "runtime/world/world_abi.h"
+#include "runtime/world/world_telemetry.h"
+#include "runtime/wildlife/wildlife_gameplay.h"
+#include "runtime/abi/ui/ui_abi.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -299,7 +299,22 @@ int engine_handle_right_click_normalized(float screen_x, float screen_y)
 
 void engine_set_move_input(float input_x, float input_z)
 {
-    runtime_input_abi_set_move_input(&s_engine_state, input_x, input_z);
+    float basis_forward[3] = {0.f, 0.f, -1.f};
+    float basis_right[3] = {1.f, 0.f, 0.f};
+    float local_x = input_x;
+    float local_z = input_z;
+
+    /* Public API uses world-space intent; runtime consumes local move input. */
+    (void)runtime_camera_compute_ground_basis(s_camera_eye,
+                                              s_camera_target,
+                                              s_camera_valid,
+                                              basis_forward,
+                                              basis_right);
+
+    local_x = (input_x * basis_right[0]) + (input_z * basis_right[2]);
+    local_z = (input_x * basis_forward[0]) + (input_z * basis_forward[2]);
+
+    runtime_input_abi_set_move_input(&s_engine_state, local_x, local_z);
 }
 
 uint32_t engine_player_upsert(const char *player_guid, const char *player_name,
