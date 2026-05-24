@@ -502,7 +502,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_world_query_nearby_test COMMAND banana_world_query_nearby_test)
 
   add_executable(banana_runtime_math_helpers_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_math_helpers_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/camera/runtime_math_helpers_test.c
   )
   target_link_libraries(banana_runtime_math_helpers_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_math_helpers_test PRIVATE
@@ -796,7 +796,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_tick_post_phase_test COMMAND banana_runtime_tick_post_phase_test)
 
   add_executable(banana_runtime_camera_follow_policy_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_camera_follow_policy_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/camera/runtime_camera_follow_policy_test.c
   )
   target_link_libraries(banana_runtime_camera_follow_policy_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_camera_follow_policy_test PRIVATE
@@ -810,7 +810,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_camera_follow_policy_test COMMAND banana_runtime_camera_follow_policy_test)
 
   add_executable(banana_runtime_move_target_domain_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_move_target_domain_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/input/runtime_move_target_domain_test.c
   )
   target_link_libraries(banana_runtime_move_target_domain_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_move_target_domain_test PRIVATE
@@ -1001,7 +1001,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_application_service_ports_test COMMAND banana_runtime_application_service_ports_test)
 
   add_executable(banana_runtime_interlock_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_interlock_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/runtime_interlock_test.c
   )
   target_link_libraries(banana_runtime_interlock_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_interlock_test PRIVATE
@@ -1014,7 +1014,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_interlock_test COMMAND banana_runtime_interlock_test)
 
   add_executable(banana_runtime_parallel_amdahl_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_parallel_amdahl_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/runtime_parallel_amdahl_test.c
   )
   target_link_libraries(banana_runtime_parallel_amdahl_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_parallel_amdahl_test PRIVATE
@@ -1027,7 +1027,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_parallel_amdahl_test COMMAND banana_runtime_parallel_amdahl_test)
 
   add_executable(banana_runtime_parallel_contract_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_parallel_contract_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/runtime_parallel_contract_test.c
   )
   target_link_libraries(banana_runtime_parallel_contract_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_parallel_contract_test PRIVATE
