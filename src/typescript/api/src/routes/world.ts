@@ -8,7 +8,7 @@
  */
 
 import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
-import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
+import type {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import path from 'node:path';
 
 /**

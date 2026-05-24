@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'bun:test';
 
 import {bootstrapDatabaseRuntime, resolveAuthoritativeDatabaseUrl, syncDatabaseUrlAliases,} from './databaseRuntime.ts';
+import type {NativePgBouncerBridge} from './nativePgBouncer.ts';
 
 describe('database runtime contract', () => {
   it('prefers NEON_DATABASE_URL as authoritative source', () => {
@@ -45,7 +46,7 @@ describe('database runtime contract', () => {
              throw new Error('should not configure when unavailable');
            },
            health: () => ({available: false, enabled: false}),
-         }),
+         } as unknown as NativePgBouncerBridge),
        });
 
        expect(status.authoritativeUrlPresent).toBe(true);

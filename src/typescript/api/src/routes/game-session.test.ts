@@ -619,7 +619,7 @@ describe('game session routes', () => {
     });
 
     expect(response.statusCode).toBe(401);
-    expect(response.json()).toEqual({error: 'steam_auth_required'});
+    expect(response.json() as unknown).toEqual({error: 'steam_auth_required'});
     await app.close();
   });
 

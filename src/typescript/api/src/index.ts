@@ -5,14 +5,14 @@ import helmet from '@fastify/helmet';
 import Fastify from 'fastify';
 
 import {registerChatRoutes} from './domains/chat/routes.ts';
-import {assertRouteOwnershipCoverage} from './lib/domainOwnership.ts';
+import {assertRouteOwnershipCoverage} from './lib/domainOwnership';
 import {registerFastifyErrorMapper} from './lib/errors/fastifyErrorMapper.ts';
-import {registerRequestContextMiddleware} from './middleware/requestContext.ts';
+import {registerRequestContextMiddleware} from './middleware/requestContext';
 import {registerRateLimitPlugin} from './plugins/rate-limit.ts';
 import {registerAuthRoutes} from './routes/auth.ts';
 import {registerGameSessionRoutes} from './routes/game-session.ts';
 import {registerHealthRoutes} from './routes/health.ts';
-import {registerV1GameplayRoutes} from './routes/v1/gameplay.ts';
+import {registerV1GameplayRoutes} from './routes/v1/gameplay';
 import {registerV1PlayerRoutes} from './routes/v1/player.ts';
 import {registerWorldRoutes} from './routes/world.ts';
 import {bootstrapDatabaseRuntime} from './services/databaseRuntime.ts';
