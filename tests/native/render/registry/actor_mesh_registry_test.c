@@ -28,6 +28,25 @@ static int tests_passed = 0;
         }                                                                                      \
     } while (0)
 
+#define ASSERT_FLOAT_EQ(actual, expected, tolerance, msg)                                      \
+    do                                                                                         \
+    {                                                                                          \
+        tests_run++;                                                                           \
+        float _actual = (float)(actual);                                                      \
+        float _expected = (float)(expected);                                                  \
+        float _delta = _actual - _expected;                                                   \
+        if (_delta < 0.0f)                                                                     \
+            _delta = -_delta;                                                                  \
+        if (_delta <= (tolerance))                                                             \
+        {                                                                                      \
+            tests_passed++;                                                                    \
+        }                                                                                      \
+        else                                                                                   \
+        {                                                                                      \
+            printf("FAIL: %s (expected %.3f, got %.3f)\n", msg, (double)_expected, (double)_actual); \
+        }                                                                                      \
+    } while (0)
+
 #define ASSERT_NULL(ptr, msg)                                                                  \
     do                                                                                         \
     {                                                                                          \
@@ -121,7 +140,7 @@ void test_register_multiple_lods(void)
     if (entry)
     {
         ASSERT_EQ(entry->lod_count, 3, "LOD count should be 3");
-        ASSERT_EQ(entry->scale, 1.2f, "Scale should be 1.2");
+        ASSERT_FLOAT_EQ(entry->scale, 1.2f, 0.001f, "Scale should be 1.2");
         ASSERT_EQ(entry->flags & ACTOR_FLAG_MOBILE, ACTOR_FLAG_MOBILE,
                   "Should have MOBILE flag");
     }

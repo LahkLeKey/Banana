@@ -1,6 +1,6 @@
 #include "render_material.h"
 
-#include "../controller/controller_kind_domain.h"
+#include "../../controller/controller_kind_domain.h"
 
 Material runtime_render_material_for_entity(EntityType type)
 {

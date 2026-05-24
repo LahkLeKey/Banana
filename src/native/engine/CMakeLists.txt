@@ -109,8 +109,8 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/interaction/interactive_collection.c
   runtime/interaction/interactive_object_spawner.c
   runtime/chunk/chunk_stream_packet.c
-  runtime/render/render_material.c
-  runtime/render/render_submit.c
+  runtime/render/material/render_material.c
+  runtime/render/submit/render_submit.c
   runtime/resource/resource_domain.c
   runtime/terrain/terrain_features.c
   runtime/terrain/terrain_abi.c
@@ -450,7 +450,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_physics_raycast_test COMMAND banana_physics_raycast_test)
 
   add_executable(banana_render_mesh_terrain_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/render_mesh_terrain_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/runtime/render_mesh_terrain_test.c
   )
   target_link_libraries(banana_render_mesh_terrain_test PRIVATE banana_engine_core)
   target_include_directories(banana_render_mesh_terrain_test PRIVATE
@@ -476,7 +476,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_controller_system_dispatch_test COMMAND banana_controller_system_dispatch_test)
 
   add_executable(banana_render_headless_frame_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/render_headless_frame_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/runtime/render_headless_frame_test.c
   )
   target_link_libraries(banana_render_headless_frame_test PRIVATE banana_engine_core)
   target_include_directories(banana_render_headless_frame_test PRIVATE
@@ -1414,7 +1414,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_chunk_stream_packet_test COMMAND banana_chunk_stream_packet_test)
 
   add_executable(banana_actor_mesh_registry_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/actor_mesh_registry_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/registry/actor_mesh_registry_test.c
   )
   target_link_libraries(banana_actor_mesh_registry_test PRIVATE banana_engine_core)
   target_include_directories(banana_actor_mesh_registry_test PRIVATE
