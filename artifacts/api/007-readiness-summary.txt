@@ -1,0 +1,33 @@
+[readiness-summary] 2026-05-24T00:00:00Z
+feature=.specify/specs/007-api-mmo-recenter
+branch=feature/steam-login-persistent-world
+
+status=green-with-env-caveat
+
+checks:
+- api-suite: pass (15 pass, 0 fail)
+  command: cd /c/Github/Banana/src/typescript/api && bun test src/routes/v1 src/integration src/lib/contracts/v1/contracts.test.ts src/services/databaseRuntime.source-of-record.test.ts
+- parity-strict: pass
+  command: cd /c/Github/Banana && bash scripts/validate-api-parity-governance.sh --strict
+
+evidence-files:
+- artifacts/api/007-us1-session-orchestration.txt
+- artifacts/api/007-us2-cross-channel-consistency.txt
+- artifacts/api/007-us3-player-insights.txt
+- artifacts/api/007-versioned-contract-registration.txt
+- artifacts/api/007-idempotency-failure-injection.txt
+- artifacts/api/007-fly-health.txt
+- artifacts/api/007-neon-connectivity.txt
+- artifacts/api/007-rollback-readiness.txt
+
+not-run-or-partial:
+- neon-live-connectivity: not-run (no NEON_DATABASE_URL provided in environment during evidence capture)
+  source: artifacts/api/007-neon-connectivity.txt
+
+notes:
+- strict parity inventory currently maps:
+  /v1/gameplay -> gameplay-session-orchestration
+  /v1/player/account -> player-identity-account
+  /v1/player/progression -> progression-inventory
+  /v1/player/inventory -> progression-inventory
+  /v1/player/insights -> player-insights-web

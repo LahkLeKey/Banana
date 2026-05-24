@@ -16,6 +16,22 @@ cd src/typescript/api
 BANANA_ENGINE_ADAPTER=inmemory HOST=0.0.0.0 PORT=8081 bun run dev
 ```
 
+## Feature 007 API surfaces
+
+Versioned MMO recenter routes are registered under:
+
+- `/v1/gameplay/*` for authoritative gameplay session orchestration.
+- `/v1/player/*` for player-facing account/progression/inventory surfaces.
+
+Validation commands:
+
+```bash
+cd src/typescript/api
+bun test src/routes/v1/gameplay.contract.test.ts src/routes/v1/gameplay.lifecycle.contract.test.ts src/routes/v1/player.account.contract.test.ts src/routes/v1/player.progression-inventory.contract.test.ts src/routes/v1/player.insights.contract.test.ts
+bun test src/integration/player-cross-channel-parity.integration.test.ts src/integration/player-insights-usability.integration.test.ts
+bash ../../../scripts/validate-api-parity-governance.sh --strict
+```
+
 ## Fly.io deployment
 
 Use `scripts/deploy-api-fly.sh` from the repo root. The helper targets the
@@ -26,6 +42,15 @@ existing Fly app `banana-api` and requires this database URL input:
 The helper treats `NEON_DATABASE_URL` as the replacement database connection
 for the Fly deployment and syncs it into `NEON_DATABASE_URL`, `DATABASE_URL`,
 and `BANANA_PG_CONNECTION` before running `fly deploy`.
+
+Release-readiness guards enforced by the deploy helper:
+
+- strict parity governance check (`scripts/validate-api-parity-governance.sh --strict`)
+- required `fly.toml` health probe path (`/health`)
+- required `fly.toml` internal port (`8081`)
+
+If you intentionally need to bypass parity validation for local emergency smoke,
+set `BANANA_FLY_SKIP_PARITY_GATE=true` before running deploy.
 
 `NEON_DATABASE_URL` is stored in Vercel as a sensitive project secret for the
 `banana` project. To rotate it later, add the new value with `vercel env add`
@@ -52,6 +77,13 @@ provided.
 
 The deployed service listens on port `8081` and serves `/health` for Fly health
 checks.
+
+Rollback reference:
+
+```bash
+fly releases -a banana-api
+fly releases rollback <version> -a banana-api
+```
 
 ## Auth/session endpoints
 

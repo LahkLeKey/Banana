@@ -1,0 +1,12 @@
+[rollback-readiness] 2026-05-24T20:40:47Z
+rollback-command=fly releases rollback <version> -a banana-api
+ VERSION │ STATUS   │ DESCRIPTION │ USER                │ DATE              
+ v8      │ complete │ Release     │ lahklekey@gmail.com │ May 23 2026 05:13 
+ v7      │ complete │ Release     │ lahklekey@gmail.com │ May 21 2026 04:40 
+ v6      │ complete │ Release     │ lahklekey@gmail.com │ May 21 2026 04:37 
+ v5      │ complete │ Release     │ lahklekey@gmail.com │ May 3 2026 06:40  
+ v4      │ complete │ Release     │ lahklekey@gmail.com │ May 3 2026 06:28  
+ v3      │ complete │ Release     │ lahklekey@gmail.com │ May 3 2026 04:53  
+ v2      │ complete │ Release     │ lahklekey@gmail.com │ May 3 2026 04:53  
+ v1      │ complete │ Release     │ lahklekey@gmail.com │ May 3 2026 04:17  
+
