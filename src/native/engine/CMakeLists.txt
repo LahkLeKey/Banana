@@ -77,6 +77,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine_tick.c
   runtime/gameplay_service.c
   runtime/input_abi.c
+  runtime/input_click_policy.c
   runtime/input_contract.c
   runtime/input_binding.c
   runtime/merchant_query_abi.c
@@ -560,6 +561,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
   add_test(NAME banana_runtime_input_abi_test COMMAND banana_runtime_input_abi_test)
+
+  add_executable(banana_runtime_input_click_policy_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_input_click_policy_test.c
+  )
+  target_link_libraries(banana_runtime_input_click_policy_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_input_click_policy_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_input_click_policy_test COMMAND banana_runtime_input_click_policy_test)
 
   add_executable(banana_engine_input_contract_transition_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_input_contract_transition_test.c

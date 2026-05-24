@@ -123,3 +123,4 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Move win32 POC objective logic behind a dedicated gameplay objective policy service to avoid ad-hoc scene transitions in `win32_dx12_poc/main.c`.
 - [x] Add architecture guard tests enforcing dependency direction: orchestration -> domain services -> render/infra adapters (never reverse).
 - [x] Remove hidden service-port module state in `runtime/engine_composition.c` by storing ports in `EngineRuntimeState` and wiring orchestration through explicit context.
+- [x] Extract right-click normalization from `runtime/engine_tick.c` into `runtime/input_click_policy` with focused policy tests and guardrails.

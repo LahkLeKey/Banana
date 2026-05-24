@@ -1,6 +1,7 @@
 #include "engine_tick.h"
 
 #include "controller_sync.h"
+#include "input_click_policy.h"
 #include "input_contract.h"
 
 int runtime_engine_tick_execute(Window *window,
@@ -40,10 +41,13 @@ int runtime_engine_tick_execute(Window *window,
             runtime_input_contract_handle_right_click(click_x, click_y);
 
             window_get_input_size(window, &input_width, &input_height);
-            if (input_width > 0 && input_height > 0)
+            if (runtime_input_click_policy_normalize(click_x,
+                                                     click_y,
+                                                     input_width,
+                                                     input_height,
+                                                     &normalized_x,
+                                                     &normalized_y))
             {
-                normalized_x = (click_x / (float)input_width) * 2.f - 1.f;
-                normalized_y = 1.f - (click_y / (float)input_height) * 2.f;
                 runtime_input_contract_handle_right_click_normalized(normalized_x, normalized_y);
                 if (apply_click_input)
                     apply_click_input(context, normalized_x, normalized_y);

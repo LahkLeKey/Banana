@@ -176,6 +176,13 @@ int main(void)
             1,
         },
         {
+            "runtime/engine_tick.c",
+            "tick orchestration should delegate click normalization policy",
+            {"(click_x / (float)input_width) * 2.f - 1.f",
+             "1.f - (click_y / (float)input_height) * 2.f"},
+            2,
+        },
+        {
             "render/backend_dx12.c",
             "render adapters must not depend on orchestration",
             {"runtime/orchestration/", "../runtime/orchestration/"},

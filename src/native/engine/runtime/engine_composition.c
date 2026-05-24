@@ -8,7 +8,7 @@
 #include "../ai/wildlife_controller.h"
 #include "../render/backend.h"
 #include "../ui/ui.h"
-#include "engine_serialize.h"
+#include "../engine_serialize.h"
 #include "engine_lifecycle.h"
 #include "engine_tick.h"
 #include "input_contract.h"
