@@ -1,4 +1,4 @@
-#include "runtime/merchant_trade_abi.h"
+#include "runtime/merchant/merchant_trade_abi.h"
 
 #include <stdio.h>
 

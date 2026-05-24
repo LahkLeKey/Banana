@@ -1,4 +1,4 @@
-#include "runtime/merchant_query_abi.h"
+#include "runtime/merchant/merchant_query_abi.h"
 
 #include <stdio.h>
 

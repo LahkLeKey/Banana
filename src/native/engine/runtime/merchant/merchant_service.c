@@ -1,9 +1,9 @@
 #include "merchant_service.h"
 
 #include "merchant_trade_domain.h"
-#include "resource_domain.h"
+#include "../resource_domain.h"
 
-#include "../ai/npc_merchant.h"
+#include "../../ai/npc_merchant.h"
 
 static int runtime_merchant_seed_default_if_needed(int npc_id, int *inout_seeded)
 {

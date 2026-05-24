@@ -1,4 +1,4 @@
-#include "runtime/merchant_service.h"
+#include "runtime/merchant/merchant_service.h"
 #include "runtime/resource_domain.h"
 
 #include <stdio.h>

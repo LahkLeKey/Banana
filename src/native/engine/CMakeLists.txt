@@ -83,10 +83,10 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/input_click_policy.c
   runtime/input_contract.c
   runtime/input_binding.c
-  runtime/merchant_query_abi.c
-  runtime/merchant_trade_abi.c
-  runtime/merchant_trade_domain.c
-  runtime/merchant_service.c
+  runtime/merchant/merchant_query_abi.c
+  runtime/merchant/merchant_trade_abi.c
+  runtime/merchant/merchant_trade_domain.c
+  runtime/merchant/merchant_service.c
   runtime/interactive_objects.c
   runtime/interlock.c
   runtime/move_target_service.c
@@ -1288,7 +1288,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_architecture_dependency_guard_test COMMAND banana_runtime_architecture_dependency_guard_test)
 
   add_executable(banana_runtime_merchant_service_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_merchant_service_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/runtime_merchant_service_test.c
   )
   target_link_libraries(banana_runtime_merchant_service_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_merchant_service_test PRIVATE
@@ -1302,7 +1302,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_merchant_service_test COMMAND banana_runtime_merchant_service_test)
 
   add_executable(banana_runtime_merchant_query_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_merchant_query_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/runtime_merchant_query_abi_test.c
   )
   target_link_libraries(banana_runtime_merchant_query_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_merchant_query_abi_test PRIVATE
@@ -1316,7 +1316,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_merchant_query_abi_test COMMAND banana_runtime_merchant_query_abi_test)
 
   add_executable(banana_runtime_merchant_trade_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_merchant_trade_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/runtime_merchant_trade_abi_test.c
   )
   target_link_libraries(banana_runtime_merchant_trade_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_merchant_trade_abi_test PRIVATE

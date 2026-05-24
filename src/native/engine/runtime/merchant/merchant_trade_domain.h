@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_MERCHANT_TRADE_DOMAIN_H
 #define BANANA_ENGINE_RUNTIME_MERCHANT_TRADE_DOMAIN_H
 
-#include "../ai/npc_merchant.h"
+#include "../../ai/npc_merchant.h"
 
 #ifdef __cplusplus
 extern "C"
