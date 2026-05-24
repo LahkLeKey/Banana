@@ -1,7 +1,7 @@
 #include "input_abi.h"
 
 #include "input_contract.h"
-#include "../move_target_domain.h"
+#include "move_target_domain.h"
 
 #include <math.h>
 

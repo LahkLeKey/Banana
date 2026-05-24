@@ -89,8 +89,8 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/merchant/merchant_service.c
   runtime/interactive_objects.c
   runtime/interlock.c
-  runtime/move_target_service.c
-  runtime/move_target_domain.c
+  runtime/input/move_target_service.c
+  runtime/input/move_target_domain.c
   runtime/parallel_contract.c
   runtime/parallel_model.c
   runtime/physics_abi.c

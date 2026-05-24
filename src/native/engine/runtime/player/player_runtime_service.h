@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_PLAYER_RUNTIME_SERVICE_H
 #define BANANA_ENGINE_RUNTIME_PLAYER_RUNTIME_SERVICE_H
 
-#include "../move_target_domain.h"
+#include "../input/move_target_domain.h"
 #include "player_motion.h"
 
 #include "../../render/renderer.h"

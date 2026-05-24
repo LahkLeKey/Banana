@@ -1,6 +1,6 @@
 #include "move_target_service.h"
 
-#include "input/input_contract.h"
+#include "input_contract.h"
 
 #include <math.h>
 #include <stdio.h>

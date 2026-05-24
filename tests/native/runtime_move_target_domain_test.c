@@ -1,5 +1,5 @@
-#include "runtime/move_target_domain.h"
-#include "runtime/move_target_service.h"
+#include "runtime/input/move_target_domain.h"
+#include "runtime/input/move_target_service.h"
 #include "runtime/input/input_contract.h"
 
 #include <stdio.h>

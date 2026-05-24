@@ -14,7 +14,7 @@
 #include "runtime/engine/gameplay_service.h"
 #include "runtime/camera_follow.h"
 #include "runtime/camera_basis.h"
-#include "runtime/move_target_service.h"
+#include "runtime/input/move_target_service.h"
 #include "runtime/player/player_runtime_service.h"
 #include "runtime/player/player_gateway_abi.h"
 #include "runtime/render/render_material.h"

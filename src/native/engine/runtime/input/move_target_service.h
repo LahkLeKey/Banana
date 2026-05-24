@@ -2,7 +2,7 @@
 #define BANANA_ENGINE_RUNTIME_MOVE_TARGET_SERVICE_H
 
 #include "move_target_domain.h"
-#include "player/player_motion.h"
+#include "../player/player_motion.h"
 
 #ifdef __cplusplus
 extern "C"
