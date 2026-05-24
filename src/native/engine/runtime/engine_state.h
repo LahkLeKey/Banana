@@ -23,6 +23,8 @@ extern "C"
 #define BANANA_ENGINE_TERRAIN_TOTAL_CHUNKS (BANANA_ENGINE_TERRAIN_CHUNK_COLS * BANANA_ENGINE_TERRAIN_CHUNK_ROWS)
 #define BANANA_ENGINE_MAX_ACTIVE_CONTROLLERS 256
 
+struct RuntimeApplicationServicePorts;
+
 typedef struct EngineRuntimeState
 {
     Window *window;
@@ -45,6 +47,7 @@ typedef struct EngineRuntimeState
     RuntimeMoveTargetState move_target_state;
     int merchants_seeded;
     int pbj_pickup_collected;
+    const struct RuntimeApplicationServicePorts *service_ports;
 
     unsigned char terrain_height[BANANA_ENGINE_TERRAIN_SIZE][BANANA_ENGINE_TERRAIN_SIZE];
     RuntimeTerrainChunk terrain_chunks[BANANA_ENGINE_TERRAIN_TOTAL_CHUNKS];

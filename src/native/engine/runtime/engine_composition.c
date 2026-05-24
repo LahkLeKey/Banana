@@ -18,8 +18,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-static const RuntimeApplicationServicePorts *s_service_ports = NULL;
-
 int runtime_engine_composition_init(EngineRuntimeState *state,
                                     int width,
                                     int height,
@@ -32,8 +30,8 @@ int runtime_engine_composition_init(EngineRuntimeState *state,
     if (!state || !sample_height || !attach_controller)
         return -1;
 
-    s_service_ports = runtime_application_service_ports();
-    if (!s_service_ports)
+    state->service_ports = runtime_application_service_ports();
+    if (!state->service_ports)
         return -1;
 
     if (state->engine_initialized)
@@ -128,7 +126,7 @@ int runtime_engine_composition_tick(EngineRuntimeState *state,
     context.state = state;
     context.sample_height = sample_height;
 
-    context.service_ports = s_service_ports;
+    context.service_ports = state->service_ports;
 
     result = runtime_engine_tick_execute(state->window,
                                          state->renderer,
@@ -184,11 +182,11 @@ void runtime_engine_composition_apply_click_input(EngineRuntimeState *state,
                                                   float normalized_y,
                                                   RuntimeTerrainSampleHeightFn sample_height)
 {
-    if (!state || !sample_height || !s_service_ports || !s_service_ports->player.apply_click_input)
+    if (!state || !sample_height || !state->service_ports || !state->service_ports->player.apply_click_input)
         return;
 
-    s_service_ports->player.apply_click_input(state,
-                                              normalized_x,
-                                              normalized_y,
-                                              sample_height);
+    state->service_ports->player.apply_click_input(state,
+                                                   normalized_x,
+                                                   normalized_y,
+                                                   sample_height);
 }

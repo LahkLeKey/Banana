@@ -170,6 +170,12 @@ int main(void)
             1,
         },
         {
+            "runtime/engine_composition.c",
+            "composition should keep service ports in explicit state, not hidden globals",
+            {"static const RuntimeApplicationServicePorts *s_service_ports"},
+            1,
+        },
+        {
             "render/backend_dx12.c",
             "render adapters must not depend on orchestration",
             {"runtime/orchestration/", "../runtime/orchestration/"},
