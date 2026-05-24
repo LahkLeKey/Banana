@@ -195,6 +195,12 @@ int main(void)
             1,
         },
         {
+            "runtime/engine_tick.c",
+            "tick orchestration should delegate post-gameplay sequencing to tick post phase",
+            {"runtime_sync_controller_positions("},
+            1,
+        },
+        {
             "render/backend_dx12.c",
             "render adapters must not depend on orchestration",
             {"runtime/orchestration/", "../runtime/orchestration/"},

@@ -1,8 +1,8 @@
 #include "engine_tick.h"
 
-#include "controller_sync.h"
 #include "tick_budget_policy.h"
 #include "tick_input_phase.h"
+#include "tick_post_phase.h"
 
 int runtime_engine_tick_execute(Window *window,
                                 Renderer *renderer,
@@ -44,13 +44,13 @@ int runtime_engine_tick_execute(Window *window,
     if (run_gameplay)
         run_gameplay(context);
 
-    runtime_sync_controller_positions(world, controllers, controller_count, dt);
-
-    if (follow_player_camera)
-        follow_player_camera(context);
-
-    if (render_scene)
-        render_scene(context);
+    runtime_tick_post_phase_execute(world,
+                                    controllers,
+                                    controller_count,
+                                    dt,
+                                    context,
+                                    follow_player_camera,
+                                    render_scene);
 
     return 0;
 }
