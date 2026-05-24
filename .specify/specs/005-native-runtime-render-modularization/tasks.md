@@ -94,13 +94,13 @@
 > **NOTE: Write these guard expansions first, confirm they fail against the missing rules, then wire the final modularized layout.**
 
 - [x] T022 [P] [US3] Extend tests/native/runtime_architecture_dependency_guard_test.c with failing rules for src/native/engine/runtime/orchestration/runtime_tick_orchestration.c and src/native/engine/render/backend_dx12_diagnostics.c dependency direction
-- [ ] T023 [P] [US3] Create tests/native/runtime_architecture_guard_rules.h to keep expanded runtime/render rule tables explicit, reviewable, and small enough for future PR-sized updates
+- [x] T023 [P] [US3] Create tests/native/runtime_architecture_guard_rules.h to keep expanded runtime/render rule tables explicit, reviewable, and small enough for future PR-sized updates
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Refactor tests/native/runtime_architecture_dependency_guard_test.c to load the expanded rule set from tests/native/runtime_architecture_guard_rules.h and cover the new runtime tick and DX12 diagnostics seams
-- [ ] T025 [US3] Update .specify/specs/005-native-runtime-render-modularization/checklists/concern-split-checklist.md with final split evidence and explicit exceptions for any intentionally large runtime/render files
-- [ ] T026 [US3] Capture architecture guard validation evidence in artifacts/native/005-us3-architecture-guards.txt after running banana_runtime_architecture_dependency_guard_test and the guard-adjacent focused native targets from out/v3-native
+- [x] T024 [US3] Refactor tests/native/runtime_architecture_dependency_guard_test.c to load the expanded rule set from tests/native/runtime_architecture_guard_rules.h and cover the new runtime tick and DX12 diagnostics seams
+- [x] T025 [US3] Update .specify/specs/005-native-runtime-render-modularization/checklists/concern-split-checklist.md with final split evidence and explicit exceptions for any intentionally large runtime/render files
+- [x] T026 [US3] Capture architecture guard validation evidence in artifacts/native/005-us3-architecture-guards.txt after running banana_runtime_architecture_dependency_guard_test and the guard-adjacent focused native targets from out/v3-native
 
 **Checkpoint**: Architecture guards enforce the intended dependency direction and the concern-split checklist records the resulting file decomposition evidence.
 
@@ -110,9 +110,9 @@
 
 **Purpose**: Close the loop on constitution evidence, task traceability, and final focused validation.
 
-- [ ] T027 [P] Update .specify/specs/005-native-runtime-render-modularization/plan.md and .specify/specs/005-native-runtime-render-modularization/quickstart.md with completed constitution-alignment notes, evidence paths, and task traceability back to FR-001 through FR-010 and SC-001 through SC-005
-- [ ] T028 [P] Update docs/native-ddd-solid-refactor-plan.md with the completed phase summary and links to artifacts/native/005-us1-runtime-tick.txt, artifacts/native/005-us2-dx12-diagnostics.txt, and artifacts/native/005-us3-architecture-guards.txt
-- [ ] T029 Run the final focused native modularization sweep and capture artifacts/native/005-final-focused-suite.txt from the out/v3-native CTest targets covering runtime tick, DX12 diagnostics, and architecture guards
+- [x] T027 [P] Update .specify/specs/005-native-runtime-render-modularization/plan.md and .specify/specs/005-native-runtime-render-modularization/quickstart.md with completed constitution-alignment notes, evidence paths, and task traceability back to FR-001 through FR-010 and SC-001 through SC-005
+- [x] T028 [P] Update docs/native-ddd-solid-refactor-plan.md with the completed phase summary and links to artifacts/native/005-us1-runtime-tick.txt, artifacts/native/005-us2-dx12-diagnostics.txt, and artifacts/native/005-us3-architecture-guards.txt
+- [x] T029 Run the final focused native modularization sweep and capture artifacts/native/005-final-focused-suite.txt from the out/v3-native CTest targets covering runtime tick, DX12 diagnostics, and architecture guards
 
 ---
 

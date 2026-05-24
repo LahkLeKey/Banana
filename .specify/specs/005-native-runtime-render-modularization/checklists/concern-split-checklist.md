@@ -20,8 +20,8 @@ Use this checklist to prove feature 005 keeps native runtime/render files small,
 |------|-----------------|---------------|----------|-------------------|
 | `src/native/engine/runtime/engine_tick.c` | Tick coordination | Reduced to thin coordinator | Input, budget, and post phases extracted | Continue via US1 orchestration adapter tasks |
 | `src/native/engine/runtime/engine_composition.c` | Composition root wiring | Reduced to thinner coordinator | Explicit service-port state wiring extracted | Continue slimming via S1 |
-| `src/native/engine/render/backend_dx12.c` | DX12 backend transport + diagnostics | Temporary exception | Projection policy extracted; diagnostics still partially local | Split via US2 / T018-T021 |
-| `src/native/engine/win32_dx12_poc/main.c` | POC host shell | Temporary exception | Objective and scene policies extracted | Split via S4 |
+| `src/native/engine/render/backend_dx12.c` | DX12 backend transport | Reduced to transport-focused coordinator | Projection policy and diagnostics ownership extracted | Continue monitoring via architecture guard rules |
+| `src/native/engine/win32_dx12_poc/main.c` | POC host shell | Temporary exception | Objective and scene policies extracted | Continue split via S4 / future feature slices |
 | `src/native/engine/render/renderer.c` | Backend-agnostic render coordination | Monitor | No active exception yet | Reassess after DX12 diagnostics split |
 | `src/native/engine/CMakeLists.txt` | Native target orchestration | Allowed exception | Explicitly permitted by constitution 1.3.0 | No action required unless structure becomes unclear |
 
@@ -39,3 +39,8 @@ For each touched file, record one outcome:
 - `artifacts/native/005-us2-dx12-diagnostics.txt`
 - `artifacts/native/005-us3-architecture-guards.txt`
 - `artifacts/native/005-final-focused-suite.txt`
+
+## Explicit Exceptions
+
+- `src/native/engine/CMakeLists.txt`: standing allowed large-file exception by constitution rule.
+- `src/native/engine/win32_dx12_poc/main.c`: temporary large-file exception while residual POC shell wiring is migrated to dedicated scene/runtime helpers.

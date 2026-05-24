@@ -1,0 +1,22 @@
+Feature: 005-native-runtime-render-modularization
+Slice: Final focused modularization suite
+Date: 2026-05-24
+
+Command:
+1. cmake --build out/v3-native --config Debug
+2. ctest --test-dir out/v3-native -C Debug -R "banana_runtime_engine_tick_test|banana_runtime_tick_input_phase_test|banana_runtime_tick_budget_policy_test|banana_runtime_tick_post_phase_test|banana_engine_dx12_runtime_smoke_test|banana_dx12_projection_policy_test|banana_dx12_scene_flow_test|banana_dx12_scene_overlay_frame_test|banana_runtime_architecture_dependency_guard_test" --output-on-failure
+
+Results:
+- banana_engine_dx12_runtime_smoke_test: passed
+- banana_dx12_scene_overlay_frame_test: passed
+- banana_dx12_projection_policy_test: passed
+- banana_dx12_scene_flow_test: passed
+- banana_runtime_engine_tick_test: passed
+- banana_runtime_tick_budget_policy_test: passed
+- banana_runtime_tick_input_phase_test: passed
+- banana_runtime_tick_post_phase_test: passed
+- banana_runtime_architecture_dependency_guard_test: passed
+
+Summary:
+- 9 tests passed, 0 failed.
+- Runtime tick decomposition, DX12 diagnostics decomposition, and architecture direction guards remained green in one combined focused run.

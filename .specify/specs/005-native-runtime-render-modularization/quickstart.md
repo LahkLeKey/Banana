@@ -80,3 +80,19 @@ Before closing the feature, confirm all of the following:
 2. The architecture guard covers any newly introduced runtime/render seam.
 3. DX12 smoke and projection checks are still green after backend or POC changes.
 4. The concern-split evidence for each touched oversized file is recorded in feature artifacts.
+
+## Requirement Traceability
+
+- FR-001 / FR-004 / FR-005 / FR-009: Validate through runtime tick focused tests and concern-split checklist updates.
+- FR-002 / FR-003: Validate through ABI-stable code edits and focused behavior-parity suites.
+- FR-006: Validate through DX12 diagnostics-focused suites and helper-boundary extraction.
+- FR-007: Validate through architecture dependency guard test and rule-table updates.
+- FR-008: Validate by adding focused assertions/rules without removing existing tests.
+- FR-010: Validate by confirming no gameplay or rendering feature redesign in touched files.
+
+## Evidence Paths
+
+- `artifacts/native/005-us1-runtime-tick.txt`
+- `artifacts/native/005-us2-dx12-diagnostics.txt`
+- `artifacts/native/005-us3-architecture-guards.txt`
+- `artifacts/native/005-final-focused-suite.txt`

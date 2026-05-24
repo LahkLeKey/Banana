@@ -134,7 +134,10 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Activate `.specify/specs/005-native-runtime-render-modularization/` as the governing feature for ongoing native runtime/render modularization.
 - [x] Treat `.specify/specs/005-native-runtime-render-modularization/tasks.md` as the dependency-ordered execution ledger for remaining runtime/render concern splits.
 - [x] Enforce the constitution rule that native implementation files should stay small and single-responsibility, with `CMakeLists.txt` as the only standing large-file exception.
-- [ ] Capture feature-005 evidence artifacts under `artifacts/native/005-*.txt` as the remaining architecture-guard slices land.
+- [x] Capture feature-005 evidence artifacts under `artifacts/native/005-*.txt` as the remaining architecture-guard slices land.
 
 ## Latest Feature 005 Evidence
 - Focused DX12 diagnostics validation artifact: `artifacts/native/005-us2-dx12-diagnostics.txt`
+- Focused runtime tick validation artifact: `artifacts/native/005-us1-runtime-tick.txt`
+- Focused architecture guard validation artifact: `artifacts/native/005-us3-architecture-guards.txt`
+- Final focused modularization suite artifact: `artifacts/native/005-final-focused-suite.txt`

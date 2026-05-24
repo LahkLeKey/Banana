@@ -147,3 +147,22 @@ The initial exception candidates identified during planning are `src/native/engi
 ## Complexity Tracking
 
 No constitution violations or exceptional complexity justifications are required at planning time.
+
+## Traceability And Evidence (Feature 005)
+
+### Requirements coverage map
+
+- FR-001, FR-004, FR-005, FR-009: satisfied by runtime tick decomposition seams and concern-split checklist evidence.
+- FR-002, FR-003: satisfied by ABI-preserving refactor scope and focused parity validation targets.
+- FR-006: satisfied by DX12 diagnostics ownership extraction to explicit helper boundary.
+- FR-007: satisfied by expanded architecture dependency guards and dedicated guard-rule table.
+- FR-008: satisfied by additive focused test assertions and guard expansions.
+- FR-010: maintained by limiting changes to runtime/render internal modularization only.
+
+### Success criteria coverage map
+
+- SC-001: covered by focused runtime tick and DX12 diagnostics suites in `artifacts/native/005-us1-runtime-tick.txt`, `artifacts/native/005-us2-dx12-diagnostics.txt`, and `artifacts/native/005-final-focused-suite.txt`.
+- SC-002: covered by architecture guard expansions and validation evidence in `artifacts/native/005-us3-architecture-guards.txt` and `artifacts/native/005-final-focused-suite.txt`.
+- SC-003: covered by concern-split checklist updates in `.specify/specs/005-native-runtime-render-modularization/checklists/concern-split-checklist.md`.
+- SC-004: covered by preserving public include ABI surfaces while validating focused native suites.
+- SC-005: covered by unchanged gameplay/render feature scope and architecture-only refactor slices.
