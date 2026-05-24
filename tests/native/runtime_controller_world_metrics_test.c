@@ -1,6 +1,6 @@
 #include "ai/controller.h"
 #include "runtime/controller_runtime.h"
-#include "runtime/world_metrics.h"
+#include "runtime/world/world_metrics.h"
 #include "world/world.h"
 
 #include <stdio.h>

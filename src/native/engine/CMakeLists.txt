@@ -125,9 +125,9 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/tick/tick_post_phase.c
   runtime/tick/tick_budget_policy.c
   runtime/tick/tick_phases.c
-  runtime/world_abi.c
-  runtime/world_metrics.c
-  runtime/world_telemetry.c
+  runtime/world/world_abi.c
+  runtime/world/world_metrics.c
+  runtime/world/world_telemetry.c
   runtime/wildlife_gameplay.c
   tools/domain/banana_asset_domain.c
 )

@@ -3,8 +3,8 @@
 #include "controller_attach.h"
 #include "controller_runtime.h"
 #include "controller_sync.h"
-#include "world_metrics.h"
-#include "world_telemetry.h"
+#include "world/world_metrics.h"
+#include "world/world_telemetry.h"
 
 RuntimeEngineAuxContext runtime_engine_aux_context(World *world,
                                                    ControllerInstance **controllers,

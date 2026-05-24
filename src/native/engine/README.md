@@ -107,7 +107,7 @@ monolithic `engine.c` control block:
 - `runtime/move_target_domain.*`: strongly-typed click-target state and steering decisions.
 - `runtime/render_submit.*` + `RendererDrawCommand`: typed scene command
   submission seam so domain render intent is backend-agnostic.
-- `runtime/player/player_*.*`, `runtime/terrain_*.*`, `runtime/world_*.*`: bounded
+- `runtime/player/player_*.*`, `runtime/terrain_*.*`, `runtime/world/world_*.*`: bounded
   contexts for player, terrain, and world behaviors.
 
 This keeps high-level orchestration in `engine.c` while moving domain rules into

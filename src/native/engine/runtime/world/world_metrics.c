@@ -4,7 +4,7 @@
 #error "Strict parallel runtime requires OpenMP (BANANA_ENGINE_HAS_OPENMP)."
 #endif
 
-#include "controller_runtime.h"
+#include "../controller_runtime.h"
 
 #include <stddef.h>
 

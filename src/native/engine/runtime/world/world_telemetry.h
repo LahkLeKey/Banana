@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_WORLD_TELEMETRY_H
 #define BANANA_ENGINE_RUNTIME_WORLD_TELEMETRY_H
 
-#include "../world/world.h"
+#include "../../world/world.h"
 
 #ifdef __cplusplus
 extern "C"

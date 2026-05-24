@@ -1,5 +1,5 @@
 #include "runtime/input_contract.h"
-#include "runtime/world_telemetry.h"
+#include "runtime/world/world_telemetry.h"
 #include "world/world.h"
 
 #include <math.h>

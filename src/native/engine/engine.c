@@ -36,9 +36,9 @@
 #include "runtime/terrain_abi.h"
 #include "runtime/terrain_runtime.h"
 #include "runtime/tick/tick_phases.h"
-#include "runtime/world_metrics.h"
-#include "runtime/world_abi.h"
-#include "runtime/world_telemetry.h"
+#include "runtime/world/world_metrics.h"
+#include "runtime/world/world_abi.h"
+#include "runtime/world/world_telemetry.h"
 #include "runtime/wildlife_gameplay.h"
 #include "runtime/ui_abi.h"
 #include <stdio.h>

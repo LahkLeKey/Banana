@@ -21,7 +21,7 @@ static const RuntimeParallelBudget kRuntimeParallelBudgets[] = {
     {"runtime.terrain_generation.samples", "src/native/engine/runtime/terrain_generation.c", 73, 0.43},
     {"runtime.terrain_runtime.sample", "src/native/engine/runtime/terrain_runtime.c", 61, 0.44},
     {"runtime.terrain_runtime.rebuild", "src/native/engine/runtime/terrain_runtime.c", 86, 0.52},
-    {"runtime.world_metrics.active_count", "src/native/engine/runtime/world_metrics.c", 17, 0.36},
+    {"runtime.world_metrics.active_count", "src/native/engine/runtime/world/world_metrics.c", 17, 0.36},
 };
 
 const RuntimeParallelBudget *runtime_parallel_contract_entries(int *count)
