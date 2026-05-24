@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, it, mock} from 'bun:test';
 import Fastify from 'fastify';
+import type {FastifyInstance} from 'fastify';
 
 import {registerAuthRoutes} from './auth.ts';
 
@@ -16,7 +17,7 @@ function extractTokenFromLocation(location: string): string {
   return token;
 }
 
-async function issueSteamToken(app: Fastify.FastifyInstance): Promise<string> {
+async function issueSteamToken(app: FastifyInstance): Promise<string> {
   const fetchMock = mock(async () => {
     return new Response(
         'ns:http://specs.openid.net/auth/2.0\nis_valid:true\n', {
