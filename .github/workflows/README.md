@@ -27,6 +27,7 @@ triage one unified graph and one pass/fail summary.
 The post-reset `banana.yml` harness keeps only lanes that map to active build entry points:
 
 - `Lint / pre-commit`
+- `Security / secret scans` (Gitleaks scan over the repository using the main harness)
 - `Build / TypeScript smoke`
 	- Includes strict procedural generated-asset contract verification via `src/typescript/react/scripts/prepare-procedural-assets.mjs` with:
 		- `BANANA_GENERATED_ASSET_POLICY=strict`

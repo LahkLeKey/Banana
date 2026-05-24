@@ -6,6 +6,7 @@ import {resetGameplaySessionStore} from '../../domains/gameplay-session-orchestr
 import {resetPlayerAccountStore} from '../../domains/player-identity-account/state/accountStore.ts';
 import {resetPlayerTruthStore} from '../../domains/progression-inventory/state/playerTruthStore.ts';
 import {registerFastifyErrorMapper} from '../../lib/errors/fastifyErrorMapper.ts';
+import {signToken} from '../../middleware/auth.ts';
 import {registerRequestContextMiddleware} from '../../middleware/requestContext.ts';
 
 import {registerV1PlayerRoutes} from './player.ts';
@@ -53,6 +54,29 @@ describe('v1 player insights contract', () => {
         expect(typeof payload.sessionSummary).toBe('object');
         expect(typeof payload.progressionSummary).toBe('object');
         expect(typeof payload.inventoryTrendSummary).toBe('object');
+
+        await app.close();
+      });
+
+  test(
+      'authorizes bearer tokens with steam subject for insights access',
+      async () => {
+        const app = await createApp();
+        process.env.BANANA_JWT_SECRET = 'test-secret-banana-jwt-1234';
+        const token =
+            await signToken({sub: 'steam:76561198000000000', role: 'viewer'});
+
+        const response = await app.inject({
+          method: 'GET',
+          url: '/v1/player/insights',
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        });
+
+        expect(response.statusCode).toBe(200);
+        const payload = response.json() as {playerId: string};
+        expect(payload.playerId).toBe('76561198000000000');
 
         await app.close();
       });

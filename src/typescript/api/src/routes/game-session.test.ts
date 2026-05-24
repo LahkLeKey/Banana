@@ -1,8 +1,11 @@
 import {describe, expect, test} from 'bun:test';
 import Fastify from 'fastify';
+import {createHash} from 'node:crypto';
 import WebSocket, {type RawData} from 'ws';
 
 import {InMemoryAntiCheatInteropAdapter} from '../lib/anti-cheat-interop.ts';
+import {signToken} from '../middleware/auth.ts';
+import {__resetAuthSessionStoreForTests, deriveDefaultSessionExpiry, getAuthSessionStore} from '../services/authSessionStore.ts';
 import {InMemoryEngineService} from '../services/nativeEngine.ts';
 
 import {__resetGameSessionStateForTests, registerGameSessionRoutes, validateInputCommandEnvelope,} from './game-session.ts';
@@ -10,19 +13,41 @@ import {__resetGameSessionStateForTests, registerGameSessionRoutes, validateInpu
 async function createApp() {
   const app = Fastify({logger: false});
   __resetGameSessionStateForTests();
+  __resetAuthSessionStoreForTests();
   await registerGameSessionRoutes(
       app, new InMemoryAntiCheatInteropAdapter(), new InMemoryEngineService());
   await app.ready();
   return app;
 }
 
+async function issueSteamAuth(steamId = '76561198000000000') {
+  process.env.BANANA_JWT_SECRET =
+      process.env.BANANA_JWT_SECRET ?? 'test-secret';
+  const token = await signToken({sub: `steam:${steamId}`, role: 'viewer'});
+  const store = await getAuthSessionStore();
+  await store.upsertSteamUser(steamId);
+  await store.createSession({
+    steamId,
+    tokenHash: createHash('sha256').update(token).digest('hex'),
+    expiresAt: deriveDefaultSessionExpiry(),
+  });
+
+  return {
+    steamId,
+    token,
+    headers: {authorization: `Bearer ${token}`},
+  };
+}
+
 describe('game session routes', () => {
   test('starts and rejoins the static overworld session', async () => {
     const app = await createApp();
+    const auth = await issueSteamAuth();
 
     const start = await app.inject({
       method: 'POST',
       url: '/api/game/session/start',
+      headers: auth.headers,
       payload: {playerName: 'tester'},
     });
 
@@ -31,14 +56,17 @@ describe('game session routes', () => {
       sessionId: string;
       token: string;
       mode: string;
+      steamId: string;
     };
     expect(started.sessionId).toBe('overworld');
     expect(started.token).toBe('gst_overworld');
     expect(started.mode).toBe('overworld');
+    expect(started.steamId).toBe(auth.steamId);
 
     const rejoin = await app.inject({
       method: 'POST',
       url: '/api/game/session/rejoin',
+      headers: auth.headers,
       payload: {},
     });
 
@@ -55,10 +83,12 @@ describe('game session routes', () => {
 
   test('accepts websocket connections on /game-session', async () => {
     const app = await createApp();
+    const auth = await issueSteamAuth();
 
     const start = await app.inject({
       method: 'POST',
       url: '/api/game/session/start',
+      headers: auth.headers,
       payload: {playerName: 'ws-tester'},
     });
     expect(start.statusCode).toBe(201);
@@ -69,7 +99,7 @@ describe('game session routes', () => {
         `ws://${url.hostname}:${url.port}/game-session?playerName=ws-tester`;
 
     await new Promise<void>((resolve, reject) => {
-      const socket = new WebSocket(wsUrl);
+      const socket = new WebSocket(wsUrl, {headers: auth.headers});
       socket.on('open', () => {
         socket.close();
         resolve();
@@ -82,10 +112,12 @@ describe('game session routes', () => {
 
   test('broadcasts authoritative snapshots to websocket clients', async () => {
     const app = await createApp();
+    const auth = await issueSteamAuth();
 
     const start = await app.inject({
       method: 'POST',
       url: '/api/game/session/start',
+      headers: auth.headers,
       payload: {playerName: 'snapshot-tester'},
     });
     const started = start.json() as {sessionId: string};
@@ -100,7 +132,7 @@ describe('game session routes', () => {
       const timeout = setTimeout(() => {
         reject(new Error('timed out waiting for snapshot broadcast'));
       }, 5000);
-      const socket = new WebSocket(wsUrl);
+      const socket = new WebSocket(wsUrl, {headers: auth.headers});
 
       socket.on('open', () => {
         socket.send(JSON.stringify({
@@ -180,10 +212,12 @@ describe('game session routes', () => {
       'records transport/session/integrity heartbeats and persists anti-cheat snapshots',
       async () => {
         const app = await createApp();
+        const auth = await issueSteamAuth();
 
         const start = await app.inject({
           method: 'POST',
           url: '/api/game/session/start',
+          headers: auth.headers,
           payload: {playerName: 'heartbeat-tester'},
         });
         expect(start.statusCode).toBe(201);
@@ -192,6 +226,7 @@ describe('game session routes', () => {
         const transportHb = await app.inject({
           method: 'POST',
           url: '/api/game/session/heartbeat/transport',
+          headers: auth.headers,
           payload: {sessionId: started.sessionId, heartbeatSequence: 1},
         });
         expect(transportHb.statusCode).toBe(202);
@@ -199,6 +234,7 @@ describe('game session routes', () => {
         const usermodeHb = await app.inject({
           method: 'POST',
           url: '/api/game/session/heartbeat/usermode',
+          headers: auth.headers,
           payload: {
             sessionId: started.sessionId,
             heartbeatSequence: 2,
@@ -214,6 +250,7 @@ describe('game session routes', () => {
         const driverHb = await app.inject({
           method: 'POST',
           url: '/api/game/session/heartbeat/driver',
+          headers: auth.headers,
           payload: {
             sessionId: started.sessionId,
             heartbeatSequence: 3,
@@ -227,6 +264,7 @@ describe('game session routes', () => {
         const status = await app.inject({
           method: 'GET',
           url: '/api/game/session/status',
+          headers: auth.headers,
         });
         expect(status.statusCode).toBe(200);
         const payload = status.json() as {
@@ -264,10 +302,12 @@ describe('game session routes', () => {
 
   test('exposes world stats for web tools', async () => {
     const app = await createApp();
+    const auth = await issueSteamAuth();
 
     const start = await app.inject({
       method: 'POST',
       url: '/api/game/session/start',
+      headers: auth.headers,
       payload: {playerName: 'stats-tester'},
     });
     expect(start.statusCode).toBe(201);
@@ -275,6 +315,7 @@ describe('game session routes', () => {
     const stats = await app.inject({
       method: 'GET',
       url: '/api/game/tools/world/stats',
+      headers: auth.headers,
     });
     expect(stats.statusCode).toBe(200);
 
@@ -302,39 +343,40 @@ describe('game session routes', () => {
 
   test('dispatches server workflow events to websocket clients', async () => {
     const app = await createApp();
+    const auth = await issueSteamAuth();
 
     const start = await app.inject({
       method: 'POST',
       url: '/api/game/session/start',
+      headers: auth.headers,
       payload: {playerName: 'workflow-tester'},
     });
     expect(start.statusCode).toBe(201);
 
     const listenAddress = await app.listen({port: 0, host: '127.0.0.1'});
     const httpUrl = new URL(listenAddress);
-    const wsUrl =
-        `ws://${httpUrl.hostname}:${httpUrl.port}/game-session?playerName=workflow-tester`;
+    const wsUrl = `ws://${httpUrl.hostname}:${
+        httpUrl.port}/game-session?playerName=workflow-tester`;
 
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('timed out waiting for server workflow event'));
       }, 5000);
 
-      const socket = new WebSocket(wsUrl);
+      const socket = new WebSocket(wsUrl, {headers: auth.headers});
 
       socket.on('message', async (raw: RawData) => {
-        const payload = JSON.parse(raw.toString()) as
-            | {type: 'connected'}
-            | {
-                type: 'server_workflow';
-                sessionId: string;
-                workflow: {workflowName: string; issuedBy: string};
-              };
+        const payload = JSON.parse(raw.toString()) as | {type: 'connected'} | {
+          type: 'server_workflow';
+          sessionId: string;
+          workflow: {workflowName: string; issuedBy: string};
+        };
 
         if (payload.type === 'connected') {
           const dispatch = await app.inject({
             method: 'POST',
             url: '/api/game/tools/workflows/dispatch',
+            headers: auth.headers,
             payload: {
               workflowName: 'double_xp_weekend',
               issuedBy: 'ops-console',
@@ -364,6 +406,7 @@ describe('game session routes', () => {
     const stats = await app.inject({
       method: 'GET',
       url: '/api/game/tools/world/stats',
+      headers: auth.headers,
     });
     expect(stats.statusCode).toBe(200);
     const statsPayload = stats.json() as {workflows: {totalEvents: number}};
@@ -376,10 +419,12 @@ describe('game session routes', () => {
       'supports build/class/gear/combo endpoints for a session player',
       async () => {
         const app = await createApp();
+        const auth = await issueSteamAuth();
 
         const start = await app.inject({
           method: 'POST',
           url: '/api/game/session/start',
+          headers: auth.headers,
           payload: {playerName: 'build-tester'},
         });
         expect(start.statusCode).toBe(201);
@@ -391,6 +436,7 @@ describe('game session routes', () => {
         const setClass = await app.inject({
           method: 'POST',
           url: '/api/game/session/player/build/class',
+          headers: auth.headers,
           payload: {
             sessionId: started.sessionId,
             playerGuid: started.playerGuid,
@@ -402,6 +448,7 @@ describe('game session routes', () => {
         const setAllocations = await app.inject({
           method: 'POST',
           url: '/api/game/session/player/build/allocations',
+          headers: auth.headers,
           payload: {
             sessionId: started.sessionId,
             playerGuid: started.playerGuid,
@@ -415,6 +462,7 @@ describe('game session routes', () => {
         const equip = await app.inject({
           method: 'POST',
           url: '/api/game/session/player/build/equip',
+          headers: auth.headers,
           payload: {
             sessionId: started.sessionId,
             playerGuid: started.playerGuid,
@@ -432,6 +480,7 @@ describe('game session routes', () => {
           url: `/api/game/session/player/build/stats?sessionId=${
               encodeURIComponent(started.sessionId)}&playerGuid=${
               encodeURIComponent(started.playerGuid)}`,
+          headers: auth.headers,
         });
         expect(stats.statusCode).toBe(200);
         const statsPayload = stats.json() as {
@@ -446,6 +495,7 @@ describe('game session routes', () => {
         const combo = await app.inject({
           method: 'POST',
           url: '/api/game/session/player/combo/evaluate',
+          headers: auth.headers,
           payload: {
             sessionId: started.sessionId,
             playerGuid: started.playerGuid,
@@ -473,10 +523,12 @@ describe('game session routes', () => {
 
   test('rejects invalid build endpoint payloads', async () => {
     const app = await createApp();
+    const auth = await issueSteamAuth();
 
     const start = await app.inject({
       method: 'POST',
       url: '/api/game/session/start',
+      headers: auth.headers,
       payload: {playerName: 'invalid-build-tester'},
     });
     expect(start.statusCode).toBe(201);
@@ -485,6 +537,7 @@ describe('game session routes', () => {
     const badClass = await app.inject({
       method: 'POST',
       url: '/api/game/session/player/build/class',
+      headers: auth.headers,
       payload: {
         sessionId: started.sessionId,
         playerGuid: 'not-a-guid',
@@ -496,6 +549,7 @@ describe('game session routes', () => {
     const badCombo = await app.inject({
       method: 'POST',
       url: '/api/game/session/player/combo/evaluate',
+      headers: auth.headers,
       payload: {
         sessionId: started.sessionId,
         playerGuid: 'not-a-guid',
@@ -510,6 +564,7 @@ describe('game session routes', () => {
     const badAllocations = await app.inject({
       method: 'POST',
       url: '/api/game/session/player/build/allocations',
+      headers: auth.headers,
       payload: {
         sessionId: started.sessionId,
         playerGuid: 'c9155c7f-a804-4f62-ae4f-c3db36410f50',
@@ -523,6 +578,7 @@ describe('game session routes', () => {
     const badEquip = await app.inject({
       method: 'POST',
       url: '/api/game/session/player/build/equip',
+      headers: auth.headers,
       payload: {
         sessionId: started.sessionId,
         playerGuid: 'c9155c7f-a804-4f62-ae4f-c3db36410f50',
@@ -538,6 +594,7 @@ describe('game session routes', () => {
     const badComboFractions = await app.inject({
       method: 'POST',
       url: '/api/game/session/player/combo/evaluate',
+      headers: auth.headers,
       payload: {
         sessionId: started.sessionId,
         playerGuid: 'c9155c7f-a804-4f62-ae4f-c3db36410f50',
@@ -548,6 +605,61 @@ describe('game session routes', () => {
       },
     });
     expect(badComboFractions.statusCode).toBe(400);
+
+    await app.close();
+  });
+
+  test('requires steam auth for gameplay session start', async () => {
+    const app = await createApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/start',
+      payload: {playerName: 'unauthenticated'},
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'steam_auth_required'});
+    await app.close();
+  });
+
+  test('returns steam-account gameplay overview', async () => {
+    const app = await createApp();
+    const auth = await issueSteamAuth('76561198000012345');
+
+    const start = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/start',
+      headers: auth.headers,
+      payload: {playerName: 'account-tester'},
+    });
+    expect(start.statusCode).toBe(201);
+
+    const overview = await app.inject({
+      method: 'GET',
+      url: '/api/game/account/overview',
+      headers: auth.headers,
+    });
+
+    expect(overview.statusCode).toBe(200);
+    const payload = overview.json() as {
+      steamId: string;
+      playerGuid: string;
+      sessionId: string;
+      buildStats:
+          {health: number; attack: number; defense: number; utility: number};
+      world: {entityCount: number};
+      mode: string;
+    };
+
+    expect(payload.steamId).toBe('76561198000012345');
+    expect(payload.sessionId).toBe('overworld');
+    expect(payload.playerGuid)
+        .toMatch(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(payload.buildStats.health).toBeGreaterThan(0);
+    expect(payload.world.entityCount).toBeGreaterThanOrEqual(0);
+    expect(payload.mode).toBe('overworld');
 
     await app.close();
   });

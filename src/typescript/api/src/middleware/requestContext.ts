@@ -1,6 +1,8 @@
 import type {FastifyInstance, FastifyRequest} from 'fastify';
 import {randomUUID} from 'node:crypto';
 
+import {verifyToken} from './auth.ts';
+
 export type RequestActorScope = {
   actorId: string; actorType: 'player' | 'system' | 'unknown';
 };
@@ -16,21 +18,49 @@ declare module 'fastify' {
   }
 }
 
-function parseActorScope(request: FastifyRequest): RequestActorScope {
+function parseBearerToken(authHeader: string): string|null {
+  if (!authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.slice(7).trim();
+  return token.length > 0 ? token : null;
+}
+
+function resolveActorIdFromSubject(subject: string): string {
+  if (subject.startsWith('steam:')) {
+    return subject.slice(6);
+  }
+
+  return subject;
+}
+
+async function parseActorScope(request: FastifyRequest):
+    Promise<RequestActorScope> {
   const actorIdHeader = (request.headers['x-actor-id'] ?? '').toString().trim();
   if (actorIdHeader.length > 0) {
     return {actorId: actorIdHeader, actorType: 'player'};
   }
 
   const authHeader = (request.headers.authorization ?? '').toString();
-  if (authHeader.startsWith('Bearer ')) {
-    return {actorId: 'bearer-subject', actorType: 'player'};
+  const bearerToken = parseBearerToken(authHeader);
+  if (bearerToken) {
+    try {
+      const claims = await verifyToken(bearerToken);
+      const actorId = resolveActorIdFromSubject(claims.sub);
+      if (actorId.length > 0) {
+        return {actorId, actorType: 'player'};
+      }
+    } catch {
+      return {actorId: 'anonymous', actorType: 'unknown'};
+    }
   }
 
   return {actorId: 'anonymous', actorType: 'unknown'};
 }
 
-export function buildRequestContext(request: FastifyRequest): RequestContext {
+export async function buildRequestContext(request: FastifyRequest):
+    Promise<RequestContext> {
   const correlationHeader =
       (request.headers['x-correlation-id'] ?? '').toString().trim();
   const idempotencyHeader =
@@ -38,7 +68,7 @@ export function buildRequestContext(request: FastifyRequest): RequestContext {
 
   return {
     correlationId: correlationHeader || randomUUID(),
-    actorScope: parseActorScope(request),
+    actorScope: await parseActorScope(request),
     idempotencyKey: idempotencyHeader || null,
   };
 }
@@ -46,6 +76,6 @@ export function buildRequestContext(request: FastifyRequest): RequestContext {
 export async function registerRequestContextMiddleware(app: FastifyInstance):
     Promise<void> {
   app.addHook('onRequest', async (request, _reply) => {
-    request.requestContext = buildRequestContext(request);
+    request.requestContext = await buildRequestContext(request);
   });
 }

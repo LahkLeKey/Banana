@@ -1,10 +1,12 @@
 import type {FastifyInstance} from 'fastify';
-import {randomUUID} from 'node:crypto';
+import {createHash, randomUUID} from 'node:crypto';
 import type {IncomingMessage} from 'node:http';
 import type {Socket} from 'node:net';
 import WebSocket, {type RawData, WebSocketServer} from 'ws';
 
 import {type AntiCheatInteropAdapter, createDefaultAntiCheatInteropAdapter,} from '../lib/anti-cheat-interop.ts';
+import {verifyToken} from '../middleware/auth.ts';
+import {getAuthSessionStore} from '../services/authSessionStore.ts';
 import {createDefaultNativeEngineService, type NativeEnginePlayerSync, type NativeEngineService, type NativeEngineSnapshot, type NativeEngineSnapshotEntity,} from '../services/nativeEngine.ts';
 
 export interface GameInputCommandEnvelope {
@@ -111,6 +113,98 @@ function resolvePlayerId(playerGuidRaw: string|null): string {
   return isGuid(normalized) ? normalized : makePlayerId();
 }
 
+function parseBearerToken(authHeaderRaw: string|undefined): string|null {
+  const authHeader = (authHeaderRaw ?? '').trim();
+  if (!authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.slice(7).trim();
+  return token.length > 0 ? token : null;
+}
+
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+function resolveSteamIdFromSubject(subjectRaw: string|undefined): string|null {
+  const subject = (subjectRaw ?? '').trim();
+  if (!subject.startsWith('steam:')) {
+    return null;
+  }
+
+  const steamId = subject.slice(6).trim();
+  return /^\d+$/.test(steamId) ? steamId : null;
+}
+
+function derivePlayerGuidFromSteamId(steamId: string): string {
+  const hex = createHash('sha256').update(`steam:${steamId}`).digest('hex');
+  const chars = hex.slice(0, 32).split('');
+
+  chars[12] = '4';
+  const variant = parseInt(chars[16] ?? '0', 16);
+  chars[16] = ((variant & 0x3) | 0x8).toString(16);
+
+  const part1 = chars.slice(0, 8).join('');
+  const part2 = chars.slice(8, 12).join('');
+  const part3 = chars.slice(12, 16).join('');
+  const part4 = chars.slice(16, 20).join('');
+  const part5 = chars.slice(20, 32).join('');
+  return `${part1}-${part2}-${part3}-${part4}-${part5}`;
+}
+
+async function resolveAuthenticatedSteamIdentity(
+    authorizationHeader: string|undefined,
+    authStore: Awaited<ReturnType<typeof getAuthSessionStore>>):
+    Promise<{steamId: string; token: string;}|null> {
+  const token = parseBearerToken(authorizationHeader);
+  if (!token) {
+    return null;
+  }
+
+  let claims: Awaited<ReturnType<typeof verifyToken>>;
+  try {
+    claims = await verifyToken(token);
+  } catch {
+    return null;
+  }
+
+  const steamId = resolveSteamIdFromSubject(claims.sub);
+  if (!steamId) {
+    return null;
+  }
+
+  const active = await authStore.touchActiveSessionByTokenHash(
+      hashToken(token), new Date());
+  if (!active) {
+    return null;
+  }
+
+  return {steamId, token};
+}
+
+async function requireAuthenticatedSteamRequest(
+    request: {headers: {authorization?: string|string[]}}, reply: {
+      status:
+          (code: number) => {
+            send: (body: unknown) => unknown
+          }
+    },
+    authStore: Awaited<ReturnType<typeof getAuthSessionStore>>):
+    Promise<{steamId: string; token: string;}|null> {
+  const authorization = Array.isArray(request.headers.authorization) ?
+      request.headers.authorization[0] :
+      request.headers.authorization;
+  const identity =
+      await resolveAuthenticatedSteamIdentity(authorization, authStore);
+  if (!identity) {
+    reply.status(401).send({error: 'steam_auth_required'});
+    return null;
+  }
+
+  return identity;
+}
+
 function isAxis(value: number): value is - 1|0|1 {
   return value === -1 || value === 0 || value === 1;
 }
@@ -129,15 +223,11 @@ function appendSnapshot(session: SessionRecord, snapshot: {
   }
 }
 
-function appendWorkflowEvent(
-    session: SessionRecord,
-    event: {
-      workflowId: string;
-      workflowName: string;
-      issuedBy: string;
-      patch: Record<string, unknown>;
-      createdAt: number;
-    }): void {
+function appendWorkflowEvent(session: SessionRecord, event: {
+  workflowId: string; workflowName: string; issuedBy: string;
+  patch: Record<string, unknown>;
+  createdAt: number;
+}): void {
   session.workflowEvents.push(event);
   if (session.workflowEvents.length > MAX_WORKFLOW_EVENTS) {
     session.workflowEvents.shift();
@@ -432,11 +522,10 @@ function buildWorldStatsEnvelope(session: SessionRecord) {
       lastSequence: session.lastSequence,
     },
     players: {
-      connected: Array.from(session.players.values())
-                     .filter(
-                         (player) =>
-                             player.socket?.readyState === WebSocket.OPEN)
-                     .length,
+      connected:
+          Array.from(session.players.values())
+              .filter((player) => player.socket?.readyState === WebSocket.OPEN)
+              .length,
       total: session.players.size,
       roster: listPlayers(session),
     },
@@ -563,154 +652,180 @@ export async function registerGameSessionRoutes(
         createDefaultAntiCheatInteropAdapter(),
     nativeEngine: NativeEngineService =
         createDefaultNativeEngineService()): Promise<void> {
+  const authStore = await getAuthSessionStore();
   const realtimeServer = new WebSocketServer({noServer: true});
 
   const upgradeHandler =
       (request: IncomingMessage, socket: Socket, head: Buffer) => {
-        const requestUrl = new URL(request.url ?? '/', 'http://localhost');
-        if (requestUrl.pathname !== '/game-session') {
-          return;
-        }
-
-        const sessionId =
-            resolveSessionId(requestUrl.searchParams.get('sessionId') ?? '');
-        const playerName =
-            requestUrl.searchParams.get('playerName')?.trim() ?? '';
-        const playerId =
-            resolvePlayerId(requestUrl.searchParams.get('playerGuid'));
-        const controllerKind =
-            requestUrl.searchParams.get('controllerKind') === 'ai' ? 'ai' :
-                                                                     'human';
-
-        if (!sessionId || !playerName) {
-          rejectUpgrade(
-              socket, 400, JSON.stringify({error: 'invalid_argument'}));
-          return;
-        }
-
-        const session = sessions.get(sessionId);
-        if (!session) {
-          rejectUpgrade(
-              socket, 404, JSON.stringify({error: 'session_not_found'}));
-          return;
-        }
-
-        if (activeRealtimeSessionId && activeRealtimeSessionId !== sessionId) {
-          rejectUpgrade(socket, 409, JSON.stringify({
-            error: 'session_busy',
-            detail:
-                'Only one authoritative realtime session may be active at a time.',
-          }));
-          return;
-        }
-
-        realtimeServer.handleUpgrade(request, socket, head, (ws: WebSocket) => {
-          const now = Date.now();
-          const existingPlayer = session.players.get(playerId);
-          const existingSocket = existingPlayer?.socket;
-          if (existingSocket?.readyState === WebSocket.OPEN) {
-            existingSocket.close(4000, 'identity_rebound');
+        void (async () => {
+          const authorization =
+              typeof request.headers.authorization === 'string' ?
+              request.headers.authorization :
+              undefined;
+          const identity =
+              await resolveAuthenticatedSteamIdentity(authorization, authStore);
+          if (!identity) {
+            rejectUpgrade(
+                socket, 401, JSON.stringify({error: 'steam_auth_required'}));
+            return;
           }
 
-          const player: SessionPlayerRecord = existingPlayer ?? {
-            playerId,
-            playerName,
-            controllerKind,
-            lastTick: session.lastTick,
-            lastSequence: session.lastSequence,
-            lastSeenAt: now,
-            joinedAt: now,
-            socket: null,
-          };
+          const requestUrl = new URL(request.url ?? '/', 'http://localhost');
+          if (requestUrl.pathname !== '/game-session') {
+            return;
+          }
 
-          player.playerName = playerName;
-          player.controllerKind = controllerKind;
-          player.lastSeenAt = now;
-          player.socket = ws;
+          const sessionId =
+              resolveSessionId(requestUrl.searchParams.get('sessionId') ?? '');
+          const playerName =
+              requestUrl.searchParams.get('playerName')?.trim() ?? '';
+          const playerId = derivePlayerGuidFromSteamId(identity.steamId);
+          const controllerKind =
+              requestUrl.searchParams.get('controllerKind') === 'ai' ? 'ai' :
+                                                                       'human';
 
-          session.players.set(playerId, player);
-          activeRealtimeSessionId = sessionId;
+          if (!sessionId || !playerName) {
+            rejectUpgrade(
+                socket, 400, JSON.stringify({error: 'invalid_argument'}));
+            return;
+          }
 
-          const connectRealtimeClient = () => {
-            startRealtimeLoop(session, nativeEngine);
-            ws.send(JSON.stringify({
-              type: 'connected',
-              sessionId,
-              playerId,
-              players: listPlayers(session),
+          const session = sessions.get(sessionId);
+          if (!session) {
+            rejectUpgrade(
+                socket, 404, JSON.stringify({error: 'session_not_found'}));
+            return;
+          }
+
+          if (activeRealtimeSessionId &&
+              activeRealtimeSessionId !== sessionId) {
+            rejectUpgrade(socket, 409, JSON.stringify({
+              error: 'session_busy',
+              detail:
+                  'Only one authoritative realtime session may be active at a time.',
             }));
+            return;
+          }
 
-            if (session.lastSnapshot) {
-              ws.send(JSON.stringify(
-                  buildSnapshotEnvelope(session, session.lastSnapshot)));
-            }
-          };
+          realtimeServer.handleUpgrade(
+              request, socket, head, (ws: WebSocket) => {
+                const now = Date.now();
+                const existingPlayer = session.players.get(playerId);
+                const existingSocket = existingPlayer?.socket;
+                if (existingSocket?.readyState === WebSocket.OPEN) {
+                  existingSocket.close(4000, 'identity_rebound');
+                }
 
-          connectRealtimeClient();
+                const player: SessionPlayerRecord = existingPlayer ?? {
+                  playerId,
+                  playerName,
+                  controllerKind,
+                  lastTick: session.lastTick,
+                  lastSequence: session.lastSequence,
+                  lastSeenAt: now,
+                  joinedAt: now,
+                  socket: null,
+                };
 
-          ws.on('message', (buffer: RawData) => {
-            try {
-              const payload = parseRealtimePayload(buffer.toString());
-              player.lastSeenAt = Date.now();
+                player.playerName = playerName;
+                player.controllerKind = controllerKind;
+                player.lastSeenAt = now;
+                player.socket = ws;
 
-              if (payload.type === 'ping') {
-                ws.send(JSON.stringify({type: 'pong', ts: Date.now()}));
-                return;
-              }
+                session.players.set(playerId, player);
+                activeRealtimeSessionId = sessionId;
 
-              const validation = validateInputCommandEnvelope(payload, {
-                sequence: player.lastSequence,
-                tick: player.lastTick,
+                const connectRealtimeClient = () => {
+                  startRealtimeLoop(session, nativeEngine);
+                  ws.send(JSON.stringify({
+                    type: 'connected',
+                    sessionId,
+                    playerId,
+                    players: listPlayers(session),
+                  }));
+
+                  if (session.lastSnapshot) {
+                    ws.send(JSON.stringify(
+                        buildSnapshotEnvelope(session, session.lastSnapshot)));
+                  }
+                };
+
+                connectRealtimeClient();
+
+                ws.on('message', (buffer: RawData) => {
+                  try {
+                    const payload = parseRealtimePayload(buffer.toString());
+                    player.lastSeenAt = Date.now();
+
+                    if (payload.type === 'ping') {
+                      ws.send(JSON.stringify({type: 'pong', ts: Date.now()}));
+                      return;
+                    }
+
+                    const validation = validateInputCommandEnvelope(payload, {
+                      sequence: player.lastSequence,
+                      tick: player.lastTick,
+                    });
+
+                    if (!validation.ok) {
+                      ws.send(JSON.stringify({
+                        type: 'error',
+                        error: 'invalid_input',
+                        detail: validation.reason,
+                        expectedSequence: player.lastSequence,
+                        expectedTick: player.lastTick,
+                      }));
+                      return;
+                    }
+
+                    player.lastSequence = payload.sequence;
+                    player.lastTick = payload.tick;
+                    session.latestInputs.set(player.playerId, payload);
+                    session.lastSequence =
+                        Math.max(session.lastSequence, payload.sequence);
+                    session.lastTick = Math.max(session.lastTick, payload.tick);
+                    ws.send(JSON.stringify({
+                      type: 'ack',
+                      sequence: payload.sequence,
+                      tick: payload.tick,
+                    }));
+                  } catch (error: unknown) {
+                    ws.send(JSON.stringify({
+                      type: 'error',
+                      error: 'invalid_realtime_message',
+                      detail: error instanceof Error ? error.message :
+                                                       String(error),
+                    }));
+                  }
+                });
+
+                ws.on('close', () => {
+                  session.latestInputs.delete(player.playerId);
+                  if (player.socket === ws) {
+                    player.socket = null;
+                    player.lastSeenAt = Date.now();
+                  }
+                  cleanupRealtimeLoop(session);
+                  const hasConnectedPlayers =
+                      Array.from(session.players.values())
+                          .some(
+                              (candidate) => candidate.socket?.readyState ===
+                                  WebSocket.OPEN);
+                  if (hasConnectedPlayers) {
+                    activeRealtimeSessionId = session.sessionId;
+                    startRealtimeLoop(session, nativeEngine);
+                  }
+                });
               });
-
-              if (!validation.ok) {
-                ws.send(JSON.stringify({
-                  type: 'error',
-                  error: 'invalid_input',
-                  detail: validation.reason,
-                  expectedSequence: player.lastSequence,
-                  expectedTick: player.lastTick,
-                }));
-                return;
-              }
-
-              player.lastSequence = payload.sequence;
-              player.lastTick = payload.tick;
-              session.latestInputs.set(player.playerId, payload);
-              session.lastSequence =
-                  Math.max(session.lastSequence, payload.sequence);
-              session.lastTick = Math.max(session.lastTick, payload.tick);
-              ws.send(JSON.stringify({
-                type: 'ack',
-                sequence: payload.sequence,
-                tick: payload.tick,
-              }));
-            } catch (error: unknown) {
-              ws.send(JSON.stringify({
-                type: 'error',
-                error: 'invalid_realtime_message',
+        })().catch((error) => {
+          rejectUpgrade(
+              socket,
+              500,
+              JSON.stringify({
+                error: 'websocket_upgrade_failed',
                 detail: error instanceof Error ? error.message : String(error),
-              }));
-            }
-          });
-
-          ws.on('close', () => {
-            session.latestInputs.delete(player.playerId);
-            if (player.socket === ws) {
-              player.socket = null;
-              player.lastSeenAt = Date.now();
-            }
-            cleanupRealtimeLoop(session);
-            const hasConnectedPlayers =
-                Array.from(session.players.values())
-                    .some(
-                        (candidate) =>
-                            candidate.socket?.readyState === WebSocket.OPEN);
-            if (hasConnectedPlayers) {
-              activeRealtimeSessionId = session.sessionId;
-              startRealtimeLoop(session, nativeEngine);
-            }
-          });
+              }),
+          );
         });
       };
 
@@ -732,13 +847,19 @@ export async function registerGameSessionRoutes(
   });
 
   app.post('/api/game/session/start', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {
       playerName?: string;
       playerGuid?: string
     };
     const playerName =
         (body.playerName ?? 'player').toString().trim() || 'player';
-    const playerGuid = resolvePlayerId(body.playerGuid ?? null);
+    const playerGuid = derivePlayerGuidFromSteamId(identity.steamId);
 
     const {session, created} = await ensureOverworldSession(
         antiCheatAdapter, nativeEngine, playerName);
@@ -749,6 +870,7 @@ export async function registerGameSessionRoutes(
       token: session.token,
       playerName,
       playerGuid,
+      steamId: identity.steamId,
       worldState: {
         tick: session.lastTick,
         timestamp: Date.now(),
@@ -762,13 +884,19 @@ export async function registerGameSessionRoutes(
   });
 
   app.post('/api/game/session/rejoin', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {
       sessionId?: string;
       playerGuid?: string;
       playerName?: string;
     };
     const sessionId = resolveSessionId(body.sessionId);
-    const playerGuid = resolvePlayerId(body.playerGuid ?? null);
+    const playerGuid = derivePlayerGuidFromSteamId(identity.steamId);
 
     const {session} = await ensureOverworldSession(
         antiCheatAdapter, nativeEngine, body.playerName ?? 'player');
@@ -779,6 +907,7 @@ export async function registerGameSessionRoutes(
       sessionId: session.sessionId,
       token: session.token,
       playerGuid,
+      steamId: identity.steamId,
       replayCursor: {
         lastTick: session.lastTick,
         lastSequence: session.lastSequence,
@@ -798,6 +927,12 @@ export async function registerGameSessionRoutes(
   });
 
   app.post('/api/game/session/end', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {sessionId?: string};
     const sessionId = (body.sessionId ?? '').toString().trim();
     if (!sessionId) {
@@ -819,16 +954,22 @@ export async function registerGameSessionRoutes(
   });
 
   app.post('/api/game/session/player/build/class', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {
       sessionId?: string;
       playerGuid?: string;
       classType?: number;
     };
     const sessionId = resolveSessionId(body.sessionId);
-    const playerGuid = (body.playerGuid ?? '').toString().trim().toLowerCase();
+    const playerGuid = derivePlayerGuidFromSteamId(identity.steamId);
     const classType = Number(body.classType);
 
-    if (!playerGuid || !isGuid(playerGuid) || ![0, 1, 2].includes(classType)) {
+    if (!isGuid(playerGuid) || ![0, 1, 2].includes(classType)) {
       return reply.status(400).send({error: 'invalid_argument'});
     }
 
@@ -843,6 +984,12 @@ export async function registerGameSessionRoutes(
 
   app.post(
       '/api/game/session/player/build/allocations', async (request, reply) => {
+        const identity =
+            await requireAuthenticatedSteamRequest(request, reply, authStore);
+        if (!identity) {
+          return reply;
+        }
+
         const body = (request.body ?? {}) as {
           sessionId?: string;
           playerGuid?: string;
@@ -851,15 +998,13 @@ export async function registerGameSessionRoutes(
           utilityPoints?: number;
         };
         const sessionId = resolveSessionId(body.sessionId);
-        const playerGuid =
-            (body.playerGuid ?? '').toString().trim().toLowerCase();
+        const playerGuid = derivePlayerGuidFromSteamId(identity.steamId);
         const offensePoints = Number(body.offensePoints ?? 0);
         const defensePoints = Number(body.defensePoints ?? 0);
         const utilityPoints = Number(body.utilityPoints ?? 0);
         const allocationTotal = offensePoints + defensePoints + utilityPoints;
 
-        if (!playerGuid || !isGuid(playerGuid) ||
-            !isNonNegativeInteger(offensePoints) ||
+        if (!isGuid(playerGuid) || !isNonNegativeInteger(offensePoints) ||
             !isNonNegativeInteger(defensePoints) ||
             !isNonNegativeInteger(utilityPoints) || allocationTotal > 20) {
           return reply.status(400).send({error: 'invalid_argument'});
@@ -882,6 +1027,12 @@ export async function registerGameSessionRoutes(
       });
 
   app.post('/api/game/session/player/build/equip', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {
       sessionId?: string;
       playerGuid?: string;
@@ -892,14 +1043,14 @@ export async function registerGameSessionRoutes(
       utilityBonus?: number;
     };
     const sessionId = resolveSessionId(body.sessionId);
-    const playerGuid = (body.playerGuid ?? '').toString().trim().toLowerCase();
+    const playerGuid = derivePlayerGuidFromSteamId(identity.steamId);
     const slot = Number(body.slot);
     const tier = Number(body.tier);
     const attackBonus = Number(body.attackBonus ?? 0);
     const defenseBonus = Number(body.defenseBonus ?? 0);
     const utilityBonus = Number(body.utilityBonus ?? 0);
 
-    if (!playerGuid || !isGuid(playerGuid) || ![0, 1, 2].includes(slot) ||
+    if (!isGuid(playerGuid) || ![0, 1, 2].includes(slot) ||
         !isNonNegativeInteger(tier) || !Number.isInteger(attackBonus) ||
         !Number.isInteger(defenseBonus) || !Number.isInteger(utilityBonus)) {
       return reply.status(400).send({error: 'invalid_argument'});
@@ -930,14 +1081,20 @@ export async function registerGameSessionRoutes(
   });
 
   app.get('/api/game/session/player/build/stats', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const query = (request.query ?? {}) as {
       sessionId?: string;
       playerGuid?: string;
     };
     const sessionId = resolveSessionId(query.sessionId);
-    const playerGuid = (query.playerGuid ?? '').toString().trim().toLowerCase();
+    const playerGuid = derivePlayerGuidFromSteamId(identity.steamId);
 
-    if (!playerGuid || !isGuid(playerGuid)) {
+    if (!isGuid(playerGuid)) {
       return reply.status(400).send({error: 'invalid_argument'});
     }
 
@@ -951,6 +1108,12 @@ export async function registerGameSessionRoutes(
 
   app.post(
       '/api/game/session/player/combo/evaluate', async (request, reply) => {
+        const identity =
+            await requireAuthenticatedSteamRequest(request, reply, authStore);
+        if (!identity) {
+          return reply;
+        }
+
         const body = (request.body ?? {}) as {
           sessionId?: string;
           playerGuid?: string;
@@ -960,14 +1123,13 @@ export async function registerGameSessionRoutes(
           partySize?: number;
         };
         const sessionId = resolveSessionId(body.sessionId);
-        const playerGuid =
-            (body.playerGuid ?? '').toString().trim().toLowerCase();
+        const playerGuid = derivePlayerGuidFromSteamId(identity.steamId);
         const firstSkill = (body.firstSkill ?? '').toString().trim();
         const secondSkill = (body.secondSkill ?? '').toString().trim();
         const elapsedMs = Number(body.elapsedMs ?? 0);
         const partySize = Number(body.partySize ?? 1);
 
-        if (!playerGuid || !isGuid(playerGuid) || !firstSkill || !secondSkill ||
+        if (!isGuid(playerGuid) || !firstSkill || !secondSkill ||
             !Number.isInteger(elapsedMs) || !Number.isInteger(partySize) ||
             elapsedMs <= 0 || partySize <= 0) {
           return reply.status(400).send({error: 'invalid_argument'});
@@ -991,6 +1153,12 @@ export async function registerGameSessionRoutes(
       });
 
   app.post('/api/game/session/heartbeat/transport', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {
       sessionId?: string;
       heartbeatSequence?: number;
@@ -1012,6 +1180,12 @@ export async function registerGameSessionRoutes(
   });
 
   app.post('/api/game/session/heartbeat/usermode', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {
       sessionId?: string;
       heartbeatSequence?: number;
@@ -1065,6 +1239,12 @@ export async function registerGameSessionRoutes(
   });
 
   app.post('/api/game/session/heartbeat/driver', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {
       sessionId?: string;
       heartbeatSequence?: number;
@@ -1108,6 +1288,12 @@ export async function registerGameSessionRoutes(
   });
 
   app.get('/api/game/session/status', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const sessionId =
         resolveSessionId((request.query as {sessionId?: string}).sessionId);
 
@@ -1141,6 +1327,12 @@ export async function registerGameSessionRoutes(
   });
 
   app.get('/api/game/tools/world/stats', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const sessionId =
         resolveSessionId((request.query as {sessionId?: string}).sessionId);
 
@@ -1153,6 +1345,12 @@ export async function registerGameSessionRoutes(
   });
 
   app.post('/api/game/tools/workflows/dispatch', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
     const body = (request.body ?? {}) as {
       sessionId?: string;
       workflowId?: string;
@@ -1167,9 +1365,8 @@ export async function registerGameSessionRoutes(
       return reply.status(400).send({error: 'invalid_argument'});
     }
 
-    const patch = typeof body.patch === 'object' && body.patch !== null ?
-        body.patch :
-        {};
+    const patch =
+        typeof body.patch === 'object' && body.patch !== null ? body.patch : {};
 
     const session = getSessionOrReply(sessionId, reply);
     if (!session) return reply;
@@ -1177,7 +1374,9 @@ export async function registerGameSessionRoutes(
     const event = {
       workflowId: (body.workflowId ?? '').toString().trim() || randomUUID(),
       workflowName,
-      issuedBy: (body.issuedBy ?? 'server').toString().trim() || 'server',
+      issuedBy:
+          (body.issuedBy ?? `steam:${identity.steamId}`).toString().trim() ||
+          `steam:${identity.steamId}`,
       patch,
       createdAt: Date.now(),
     };
@@ -1190,6 +1389,43 @@ export async function registerGameSessionRoutes(
     });
 
     return reply.status(202).send({accepted: true, workflow: event});
+  });
+
+  app.get('/api/game/account/overview', async (request, reply) => {
+    const identity =
+        await requireAuthenticatedSteamRequest(request, reply, authStore);
+    if (!identity) {
+      return reply;
+    }
+
+    const {session} = await ensureOverworldSession(
+        antiCheatAdapter, nativeEngine, `steam-${identity.steamId.slice(-4)}`);
+    const playerGuid = derivePlayerGuidFromSteamId(identity.steamId);
+    await ensureBuildPlayerBound(session, nativeEngine, playerGuid);
+    const buildStats = await nativeEngine.getPlayerBuildStats(playerGuid);
+    const antiCheat =
+        await antiCheatAdapter.getSessionStatus(session.sessionId);
+
+    return reply.status(200).send({
+      steamId: identity.steamId,
+      playerGuid,
+      sessionId: session.sessionId,
+      buildStats,
+      replayCursor: {
+        lastTick: session.lastTick,
+        lastSequence: session.lastSequence,
+      },
+      antiCheat,
+      world: {
+        entityCount: Object.keys(session.lastSnapshot?.entities ?? {}).length,
+        lastSnapshotTick: session.lastSnapshot?.tick ?? session.lastTick,
+      },
+      workflows: {
+        totalEvents: session.workflowEvents.length,
+        recent: session.workflowEvents.slice(-10),
+      },
+      mode: 'overworld',
+    });
   });
 
   app.get('/api/game/realtime', async (request, reply) => {

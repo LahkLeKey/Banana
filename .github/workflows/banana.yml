@@ -80,6 +80,20 @@ jobs:
         if: github.event_name != 'pull_request'
         run: pre-commit run --show-diff-on-failure --color=always --all-files
 
+  secret-scans:
+    name: Security / secret scans
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --config .gitleaks.toml --no-banner --redact
+
   typescript-smoke:
     name: Build / TypeScript smoke
     needs: pre-commit
@@ -205,6 +219,7 @@ jobs:
     name: Monorepo / Pass-Fail
     needs:
       - pre-commit
+      - secret-scans
       - typescript-smoke
       - native-build
       - native-neon-integration
@@ -219,6 +234,7 @@ jobs:
             echo "| Lane | Result |"
             echo "| --- | --- |"
             echo "| Lint / pre-commit | ${{ needs.pre-commit.result }} |"
+            echo "| Security / secret scans | ${{ needs.secret-scans.result }} |"
             echo "| Build / TypeScript smoke | ${{ needs.typescript-smoke.result }} |"
             echo "| Native / build + tests | ${{ needs.native-build.result }} |"
             echo "| Native / Neon integration | ${{ needs.native-neon-integration.result }} |"

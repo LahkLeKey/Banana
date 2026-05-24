@@ -43,5 +43,5 @@
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read .specify/specs/005-native-runtime-render-modularization/plan.md
+shell commands, and other important information, read .specify/specs/007-api-mmo-recenter/plan.md
 <!-- SPECKIT END -->
