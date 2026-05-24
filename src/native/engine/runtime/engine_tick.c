@@ -1,8 +1,6 @@
 #include "engine_tick.h"
 
-#include "tick_budget_policy.h"
-#include "tick_input_phase.h"
-#include "tick_post_phase.h"
+#include "orchestration/runtime_tick_orchestration.h"
 
 int runtime_engine_tick_execute(Window *window,
                                 Renderer *renderer,
@@ -21,36 +19,20 @@ int runtime_engine_tick_execute(Window *window,
                                 RuntimeTickGameplayFn run_gameplay,
                                 RuntimeTickVoidFn render_scene)
 {
-    if (!window)
-        return -1;
-
-    window_poll_events(window);
-    if (!window_is_open(window))
-        return 1;
-
-    runtime_tick_input_phase_process(window, context, apply_click_input);
-    physics_world_step(physics_world, dt);
-    world_tick(world, dt);
-
-    if (update_player_motion)
-        update_player_motion(context, dt);
-
-    runtime_phase_viewport_resize(window, renderer, viewport_width, viewport_height);
-    if (runtime_phase_terrain_budget(context,
-                                     terrain_rebuild,
-                                     runtime_tick_budget_policy_terrain_chunks_per_tick()) != 0)
-        return -1;
-
-    if (run_gameplay)
-        run_gameplay(context);
-
-    runtime_tick_post_phase_execute(world,
-                                    controllers,
-                                    controller_count,
-                                    dt,
-                                    context,
-                                    follow_player_camera,
-                                    render_scene);
-
-    return 0;
+    return runtime_tick_orchestration_execute(window,
+                                              renderer,
+                                              physics_world,
+                                              world,
+                                              viewport_width,
+                                              viewport_height,
+                                              terrain_rebuild,
+                                              controllers,
+                                              controller_count,
+                                              dt,
+                                              context,
+                                              update_player_motion,
+                                              follow_player_camera,
+                                              apply_click_input,
+                                              run_gameplay,
+                                              render_scene);
 }

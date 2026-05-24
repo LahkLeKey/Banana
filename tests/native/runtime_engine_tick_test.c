@@ -6,6 +6,11 @@ static int s_update_calls = 0;
 static int s_follow_calls = 0;
 static int s_gameplay_calls = 0;
 static int s_render_calls = 0;
+static int s_update_order = 0;
+static int s_gameplay_order = 0;
+static int s_follow_order = 0;
+static int s_render_order = 0;
+static int s_order_step = 0;
 
 static int rebuild_ok(void *context, int max_chunks)
 {
@@ -26,24 +31,32 @@ static void update_cb(void *context, float dt)
     (void)context;
     (void)dt;
     s_update_calls += 1;
+    s_order_step += 1;
+    s_update_order = s_order_step;
 }
 
 static void follow_cb(void *context)
 {
     (void)context;
     s_follow_calls += 1;
+    s_order_step += 1;
+    s_follow_order = s_order_step;
 }
 
 static void gameplay_cb(void *context)
 {
     (void)context;
     s_gameplay_calls += 1;
+    s_order_step += 1;
+    s_gameplay_order = s_order_step;
 }
 
 static void render_cb(void *context)
 {
     (void)context;
     s_render_calls += 1;
+    s_order_step += 1;
+    s_render_order = s_order_step;
 }
 
 static int expect_int(const char *label, int actual, int expected)
@@ -128,16 +141,24 @@ int main(void)
                                                 update_cb,
                                                 follow_cb,
                                                 NULL,
-                                                NULL,
+                                                gameplay_cb,
                                                 render_cb),
                     0))
         return 1;
 
     if (!expect_int("update called", s_update_calls > 0 ? 1 : 0, 1))
         return 1;
+    if (!expect_int("gameplay called", s_gameplay_calls > 0 ? 1 : 0, 1))
+        return 1;
     if (!expect_int("follow called", s_follow_calls > 0 ? 1 : 0, 1))
         return 1;
     if (!expect_int("render called", s_render_calls > 0 ? 1 : 0, 1))
+        return 1;
+    if (!expect_int("update before gameplay", s_update_order < s_gameplay_order ? 1 : 0, 1))
+        return 1;
+    if (!expect_int("gameplay before follow", s_gameplay_order < s_follow_order ? 1 : 0, 1))
+        return 1;
+    if (!expect_int("follow before render", s_follow_order < s_render_order ? 1 : 0, 1))
         return 1;
 
     world_destroy(world);

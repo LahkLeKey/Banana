@@ -59,6 +59,7 @@ set(ENGINE_UI_SOURCES
 
 set(ENGINE_RUNTIME_SOURCES
   runtime/application_service_ports.c
+  runtime/orchestration/runtime_tick_orchestration.c
   runtime/orchestration/player_tick_orchestration.c
   runtime/orchestration/render_tick_orchestration.c
   runtime/orchestration/terrain_tick_orchestration.c
@@ -75,6 +76,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine_state.c
   runtime/engine_lifecycle.c
   runtime/engine_tick.c
+  # Feature 005: keep extracted tick/runtime modularization seams grouped here.
   runtime/gameplay_service.c
   runtime/input_abi.c
   runtime/input_click_policy.c

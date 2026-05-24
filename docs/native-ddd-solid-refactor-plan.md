@@ -127,3 +127,9 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Extract terrain rebuild chunk budget from `runtime/engine_tick.c` into `runtime/tick_budget_policy` with configurable clamp rules and focused tests.
 - [x] Extract right-click polling/dispatch from `runtime/engine_tick.c` into `runtime/tick_input_phase` so tick orchestration no longer owns input event plumbing.
 - [x] Extract post-gameplay controller sync + camera follow + render dispatch from `runtime/engine_tick.c` into `runtime/tick_post_phase`.
+
+### Phase 14: Feature 005 Governance And Modularization Ledger
+- [x] Activate `.specify/specs/005-native-runtime-render-modularization/` as the governing feature for ongoing native runtime/render modularization.
+- [x] Treat `.specify/specs/005-native-runtime-render-modularization/tasks.md` as the dependency-ordered execution ledger for remaining runtime/render concern splits.
+- [x] Enforce the constitution rule that native implementation files should stay small and single-responsibility, with `CMakeLists.txt` as the only standing large-file exception.
+- [ ] Capture feature-005 evidence artifacts under `artifacts/native/005-*.txt` as the remaining DX12 diagnostics and architecture-guard slices land.

@@ -201,6 +201,15 @@ int main(void)
             1,
         },
         {
+            "runtime/engine_tick.c",
+            "engine tick adapter should delegate sequencing to runtime tick orchestration",
+            {"runtime_tick_input_phase_process(",
+             "runtime_phase_viewport_resize(",
+             "runtime_phase_terrain_budget(",
+             "runtime_tick_post_phase_execute("},
+            4,
+        },
+        {
             "render/backend_dx12.c",
             "render adapters must not depend on orchestration",
             {"runtime/orchestration/", "../runtime/orchestration/"},
