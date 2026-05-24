@@ -1,4 +1,4 @@
-#include "runtime/camera_basis.h"
+#include "runtime/camera/camera_basis.h"
 #include "runtime/terrain/terrain_height.h"
 
 #include <math.h>

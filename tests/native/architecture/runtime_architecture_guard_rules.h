@@ -35,7 +35,7 @@ static const FileRule kRuntimeArchitectureGuardRules[] = {
         2,
     },
     {
-        "runtime/camera_follow_policy.c",
+        "runtime/camera/camera_follow_policy.c",
         "domain services must not depend on orchestration",
         {"orchestration/"},
         1,

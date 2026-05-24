@@ -2,7 +2,7 @@
 
 #include "camera_follow_policy.h"
 
-#include "../render/camera.h"
+#include "../../render/camera.h"
 
 #include <stddef.h>
 

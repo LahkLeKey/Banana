@@ -65,9 +65,9 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/orchestration/tick/render_tick_orchestration.c
   runtime/orchestration/tick/terrain_tick_orchestration.c
   runtime/controller/controller_kind_domain.c
-  runtime/camera_basis.c
-  runtime/camera_follow.c
-  runtime/camera_follow_policy.c
+  runtime/camera/camera_basis.c
+  runtime/camera/camera_follow.c
+  runtime/camera/camera_follow_policy.c
   runtime/controller/controller_attach.c
   runtime/controller/controller_runtime.c
   runtime/controller/controller_sync.c
