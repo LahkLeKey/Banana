@@ -1,4 +1,4 @@
-#include "runtime/controller_sync.h"
+#include "runtime/controller/controller_sync.h"
 
 #include <stdio.h>
 

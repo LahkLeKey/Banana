@@ -64,13 +64,13 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/orchestration/player_tick_orchestration.c
   runtime/orchestration/render_tick_orchestration.c
   runtime/orchestration/terrain_tick_orchestration.c
-  runtime/controller_kind_domain.c
+  runtime/controller/controller_kind_domain.c
   runtime/camera_basis.c
   runtime/camera_follow.c
   runtime/camera_follow_policy.c
-  runtime/controller_attach.c
-  runtime/controller_runtime.c
-  runtime/controller_sync.c
+  runtime/controller/controller_attach.c
+  runtime/controller/controller_runtime.c
+  runtime/controller/controller_sync.c
   runtime/engine_aux_abi.c
   runtime/engine_composition.c
   runtime/engine_host.c

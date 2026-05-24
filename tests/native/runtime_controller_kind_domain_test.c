@@ -1,4 +1,4 @@
-#include "runtime/controller_kind_domain.h"
+#include "runtime/controller/controller_kind_domain.h"
 
 #include <stdio.h>
 #include <string.h>
