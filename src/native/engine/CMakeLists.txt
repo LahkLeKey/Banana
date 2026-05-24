@@ -1208,6 +1208,22 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   )
   add_test(NAME banana_runtime_compile_guard_abi_test COMMAND banana_runtime_compile_guard_abi_test)
 
+  add_executable(banana_runtime_architecture_dependency_guard_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_architecture_dependency_guard_test.c
+  )
+  target_include_directories(banana_runtime_architecture_dependency_guard_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  target_compile_definitions(banana_runtime_architecture_dependency_guard_test PRIVATE
+    BANANA_ENGINE_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}"
+  )
+  add_test(NAME banana_runtime_architecture_dependency_guard_test COMMAND banana_runtime_architecture_dependency_guard_test)
+
   add_executable(banana_runtime_merchant_service_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_merchant_service_test.c
   )

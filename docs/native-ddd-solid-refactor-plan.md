@@ -121,4 +121,4 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Split camera policy from camera application: `runtime/camera_follow_policy` computes target eye/target, while render adapter applies camera state to backend.
 - [x] Isolate DX12 fallback projection policy from backend transport (`backend_dx12_projection_policy`), including explicit tests for camera-centered fallback quads.
 - [x] Move win32 POC objective logic behind a dedicated gameplay objective policy service to avoid ad-hoc scene transitions in `win32_dx12_poc/main.c`.
-- [ ] Add architecture guard tests enforcing dependency direction: orchestration -> domain services -> render/infra adapters (never reverse).
+- [x] Add architecture guard tests enforcing dependency direction: orchestration -> domain services -> render/infra adapters (never reverse).
