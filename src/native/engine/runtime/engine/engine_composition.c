@@ -2,7 +2,7 @@
 
 #include "application_service_ports.h"
 
-#include "../orchestration/runtime_tick_orchestration.h"
+#include "../orchestration/tick/runtime_tick_orchestration.h"
 
 #include "../../ai/npc_merchant.h"
 #include "../../ai/wildlife_controller.h"

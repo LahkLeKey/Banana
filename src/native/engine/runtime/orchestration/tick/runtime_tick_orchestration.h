@@ -1,8 +1,8 @@
 #ifndef BANANA_ENGINE_RUNTIME_ORCHESTRATION_RUNTIME_TICK_ORCHESTRATION_H
 #define BANANA_ENGINE_RUNTIME_ORCHESTRATION_RUNTIME_TICK_ORCHESTRATION_H
 
-#include "../engine/application_service_ports.h"
-#include "../engine/engine_tick.h"
+#include "../../engine/application_service_ports.h"
+#include "../../engine/engine_tick.h"
 
 #ifdef __cplusplus
 extern "C"

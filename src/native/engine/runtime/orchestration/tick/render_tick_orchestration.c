@@ -1,6 +1,6 @@
 #include "runtime_tick_orchestration.h"
 
-#include "../engine/gameplay_service.h"
+#include "../../engine/gameplay_service.h"
 
 void runtime_tick_orchestration_gameplay(void *context)
 {

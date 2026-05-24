@@ -60,10 +60,10 @@ set(ENGINE_UI_SOURCES
 
 set(ENGINE_RUNTIME_SOURCES
   runtime/engine/application_service_ports.c
-  runtime/orchestration/runtime_tick_orchestration.c
-  runtime/orchestration/player_tick_orchestration.c
-  runtime/orchestration/render_tick_orchestration.c
-  runtime/orchestration/terrain_tick_orchestration.c
+  runtime/orchestration/tick/runtime_tick_orchestration.c
+  runtime/orchestration/tick/player_tick_orchestration.c
+  runtime/orchestration/tick/render_tick_orchestration.c
+  runtime/orchestration/tick/terrain_tick_orchestration.c
   runtime/controller/controller_kind_domain.c
   runtime/camera_basis.c
   runtime/camera_follow.c

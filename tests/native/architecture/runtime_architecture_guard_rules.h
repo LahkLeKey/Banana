@@ -11,25 +11,25 @@ typedef struct FileRule
 
 static const FileRule kRuntimeArchitectureGuardRules[] = {
     {
-        "runtime/orchestration/player_tick_orchestration.c",
+        "runtime/orchestration/tick/player_tick_orchestration.c",
         "orchestration must not depend on render/ui adapters",
         {"#include \"../render/", "#include \"../../render/", "#include \"../ui/", "#include \"../../ui/"},
         4,
     },
     {
-        "runtime/orchestration/render_tick_orchestration.c",
+        "runtime/orchestration/tick/render_tick_orchestration.c",
         "orchestration must not depend on render/ui adapters",
         {"#include \"../render/", "#include \"../../render/", "#include \"../ui/", "#include \"../../ui/"},
         4,
     },
     {
-        "runtime/orchestration/terrain_tick_orchestration.c",
+        "runtime/orchestration/tick/terrain_tick_orchestration.c",
         "orchestration must not depend on render/ui adapters",
         {"#include \"../render/", "#include \"../../render/", "#include \"../ui/", "#include \"../../ui/"},
         4,
     },
     {
-        "runtime/orchestration/runtime_tick_orchestration.h",
+        "runtime/orchestration/tick/runtime_tick_orchestration.h",
         "orchestration contracts must stay render-agnostic",
         {"#include \"../render/", "#include \"../../render/"},
         2,
