@@ -11,7 +11,7 @@
 #include "../../engine_serialize.h"
 #include "engine_lifecycle.h"
 #include "engine_tick.h"
-#include "../input/input_contract.h"
+#include "../input/contract/input_contract.h"
 #include "../player/player_builds.h"
 #include "../player/player_registry.h"
 

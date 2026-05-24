@@ -47,7 +47,7 @@ static const FileRule kRuntimeArchitectureGuardRules[] = {
         1,
     },
     {
-        "runtime/input/move_target_service.c",
+        "runtime/input/move_target/move_target_service.c",
         "domain services must not depend on orchestration",
         {"orchestration/"},
         1,

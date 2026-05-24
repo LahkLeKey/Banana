@@ -2,7 +2,7 @@
 #define BANANA_ENGINE_RUNTIME_APPLICATION_SERVICE_PORTS_H
 
 #include "engine_state.h"
-#include "../merchant/merchant_service.h"
+#include "../merchant/service/merchant_service.h"
 #include "../player/player_motion.h"
 
 #ifdef __cplusplus

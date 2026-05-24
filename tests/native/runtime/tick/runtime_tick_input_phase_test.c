@@ -1,5 +1,5 @@
 #include "runtime/tick/tick_input_phase.h"
-#include "runtime/input/input_contract.h"
+#include "runtime/input/contract/input_contract.h"
 
 #include <stdio.h>
 

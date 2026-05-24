@@ -5,7 +5,7 @@
  * Tests event dispatch, callback registration, and routing.
  */
 
-#include "input/input_binding.h"
+#include "runtime/input/binding/input_binding.h"
 #include <stdio.h>
 #include <string.h>
 

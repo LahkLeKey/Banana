@@ -7,7 +7,7 @@
 #include "../../render/renderer.h"
 #include "../../render/window.h"
 #include "../../world/world.h"
-#include "../input/move_target_domain.h"
+#include "../input/move_target/move_target_domain.h"
 #include "../terrain/terrain_runtime.h"
 
 #ifdef __cplusplus

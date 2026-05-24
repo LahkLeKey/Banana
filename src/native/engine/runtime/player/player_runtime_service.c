@@ -1,7 +1,7 @@
 #include "player_runtime_service.h"
 
 #include "../camera/follow/camera_follow.h"
-#include "../input/input_contract.h"
+#include "../input/contract/input_contract.h"
 #include "player_motion_host.h"
 
 void runtime_player_runtime_update_motion(World *world,

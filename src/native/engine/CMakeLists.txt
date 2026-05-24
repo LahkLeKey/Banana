@@ -79,18 +79,18 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/engine_tick.c
   # Feature 005: keep extracted tick/runtime modularization seams grouped here.
   runtime/engine/gameplay_service.c
-  runtime/input/input_abi.c
-  runtime/input/input_click_policy.c
-  runtime/input/input_contract.c
-  runtime/input/input_binding.c
-  runtime/merchant/merchant_query_abi.c
-  runtime/merchant/merchant_trade_abi.c
-  runtime/merchant/merchant_trade_domain.c
-  runtime/merchant/merchant_service.c
-  runtime/interaction/interactive_objects.c
+   runtime/input/abi/input_abi.c
+   runtime/input/click/input_click_policy.c
+   runtime/input/contract/input_contract.c
+   runtime/input/binding/input_binding.c
+   runtime/merchant/query/merchant_query_abi.c
+   runtime/merchant/trade/merchant_trade_abi.c
+   runtime/merchant/trade/merchant_trade_domain.c
+   runtime/merchant/service/merchant_service.c
+   runtime/interaction/objects/interactive_objects.c
   runtime/parallel/interlock/interlock.c
-  runtime/input/move_target_service.c
-  runtime/input/move_target_domain.c
+   runtime/input/move_target/move_target_service.c
+   runtime/input/move_target/move_target_domain.c
   runtime/parallel/contract/parallel_contract.c
   runtime/parallel/model/parallel_model.c
   runtime/abi/physics/physics_abi.c
@@ -106,8 +106,8 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/player/player_motion.c
   runtime/player/player_registry.c
   runtime/player/player_resources.c
-  runtime/interaction/interactive_collection.c
-  runtime/interaction/interactive_object_spawner.c
+   runtime/interaction/collection/interactive_collection.c
+   runtime/interaction/spawner/interactive_object_spawner.c
   runtime/chunk/chunk_stream_packet.c
   runtime/render/material/render_material.c
   runtime/render/submit/render_submit.c
@@ -542,7 +542,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_engine_aux_abi_test COMMAND banana_runtime_engine_aux_abi_test)
 
   add_executable(banana_runtime_telemetry_input_contract_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/input/runtime_telemetry_input_contract_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/input/contract/runtime_telemetry_input_contract_test.c
   )
   target_link_libraries(banana_runtime_telemetry_input_contract_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_telemetry_input_contract_test PRIVATE
@@ -569,7 +569,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_input_abi_test COMMAND banana_runtime_input_abi_test)
 
   add_executable(banana_runtime_input_click_policy_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/input/runtime_input_click_policy_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/input/click/runtime_input_click_policy_test.c
   )
   target_link_libraries(banana_runtime_input_click_policy_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_input_click_policy_test PRIVATE
@@ -810,7 +810,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_camera_follow_policy_test COMMAND banana_runtime_camera_follow_policy_test)
 
   add_executable(banana_runtime_move_target_domain_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/input/runtime_move_target_domain_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/input/move_target/runtime_move_target_domain_test.c
   )
   target_link_libraries(banana_runtime_move_target_domain_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_move_target_domain_test PRIVATE
@@ -1093,7 +1093,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_player_sync_abi_test COMMAND banana_runtime_player_sync_abi_test)
 
   add_executable(banana_interactive_objects_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/interactive_objects_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/objects/interactive_objects_test.c
   )
   target_link_libraries(banana_interactive_objects_test PRIVATE banana_engine_core)
   target_include_directories(banana_interactive_objects_test PRIVATE
@@ -1288,7 +1288,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_architecture_dependency_guard_test COMMAND banana_runtime_architecture_dependency_guard_test)
 
   add_executable(banana_runtime_merchant_service_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/runtime_merchant_service_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/service/runtime_merchant_service_test.c
   )
   target_link_libraries(banana_runtime_merchant_service_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_merchant_service_test PRIVATE
@@ -1302,7 +1302,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_merchant_service_test COMMAND banana_runtime_merchant_service_test)
 
   add_executable(banana_runtime_merchant_query_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/runtime_merchant_query_abi_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/query/runtime_merchant_query_abi_test.c
   )
   target_link_libraries(banana_runtime_merchant_query_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_merchant_query_abi_test PRIVATE
@@ -1316,7 +1316,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_merchant_query_abi_test COMMAND banana_runtime_merchant_query_abi_test)
 
   add_executable(banana_runtime_merchant_trade_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/runtime_merchant_trade_abi_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/merchant/trade/runtime_merchant_trade_abi_test.c
   )
   target_link_libraries(banana_runtime_merchant_trade_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_merchant_trade_abi_test PRIVATE
@@ -1372,7 +1372,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_player_builds_test COMMAND banana_player_builds_test)
 
   add_executable(banana_interactive_collection_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/interactive_collection_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/collection/interactive_collection_test.c
   )
   target_link_libraries(banana_interactive_collection_test PRIVATE banana_engine_core)
   target_include_directories(banana_interactive_collection_test PRIVATE
@@ -1386,7 +1386,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_interactive_collection_test COMMAND banana_interactive_collection_test)
 
   add_executable(banana_interactive_object_spawner_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/interactive_object_spawner_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/spawner/interactive_object_spawner_test.c
   )
   target_link_libraries(banana_interactive_object_spawner_test PRIVATE banana_engine_core)
   target_include_directories(banana_interactive_object_spawner_test PRIVATE
