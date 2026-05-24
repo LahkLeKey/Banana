@@ -1,11 +1,11 @@
 #ifndef BANANA_ENGINE_RUNTIME_ENGINE_HOST_H
 #define BANANA_ENGINE_RUNTIME_ENGINE_HOST_H
 
-#include "../physics/world.h"
-#include "../render/mesh.h"
-#include "../render/renderer.h"
-#include "../render/window.h"
-#include "../world/world.h"
+#include "../../physics/world.h"
+#include "../../render/mesh.h"
+#include "../../render/renderer.h"
+#include "../../render/window.h"
+#include "../../world/world.h"
 
 #ifdef __cplusplus
 extern "C"

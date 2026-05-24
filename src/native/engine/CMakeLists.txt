@@ -59,7 +59,7 @@ set(ENGINE_UI_SOURCES
 )
 
 set(ENGINE_RUNTIME_SOURCES
-  runtime/application_service_ports.c
+  runtime/engine/application_service_ports.c
   runtime/orchestration/runtime_tick_orchestration.c
   runtime/orchestration/player_tick_orchestration.c
   runtime/orchestration/render_tick_orchestration.c
@@ -71,14 +71,14 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/controller/controller_attach.c
   runtime/controller/controller_runtime.c
   runtime/controller/controller_sync.c
-  runtime/engine_aux_abi.c
-  runtime/engine_composition.c
-  runtime/engine_host.c
-  runtime/engine_state.c
-  runtime/engine_lifecycle.c
-  runtime/engine_tick.c
+  runtime/engine/engine_aux_abi.c
+  runtime/engine/engine_composition.c
+  runtime/engine/engine_host.c
+  runtime/engine/engine_state.c
+  runtime/engine/engine_lifecycle.c
+  runtime/engine/engine_tick.c
   # Feature 005: keep extracted tick/runtime modularization seams grouped here.
-  runtime/gameplay_service.c
+  runtime/engine/gameplay_service.c
   runtime/input/input_abi.c
   runtime/input/input_click_policy.c
   runtime/input/input_contract.c

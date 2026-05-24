@@ -1,8 +1,8 @@
 #ifndef BANANA_ENGINE_RUNTIME_ENGINE_AUX_ABI_H
 #define BANANA_ENGINE_RUNTIME_ENGINE_AUX_ABI_H
 
-#include "../ai/controller.h"
-#include "../world/world.h"
+#include "../../ai/controller.h"
+#include "../../world/world.h"
 
 #ifdef __cplusplus
 extern "C"

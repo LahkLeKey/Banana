@@ -2,18 +2,18 @@
 
 #include "application_service_ports.h"
 
-#include "orchestration/runtime_tick_orchestration.h"
+#include "../orchestration/runtime_tick_orchestration.h"
 
-#include "../ai/npc_merchant.h"
-#include "../ai/wildlife_controller.h"
-#include "../render/backend.h"
-#include "../ui/ui.h"
-#include "../engine_serialize.h"
+#include "../../ai/npc_merchant.h"
+#include "../../ai/wildlife_controller.h"
+#include "../../render/backend.h"
+#include "../../ui/ui.h"
+#include "../../engine_serialize.h"
 #include "engine_lifecycle.h"
 #include "engine_tick.h"
-#include "input/input_contract.h"
-#include "player/player_builds.h"
-#include "player/player_registry.h"
+#include "../input/input_contract.h"
+#include "../player/player_builds.h"
+#include "../player/player_registry.h"
 
 #include <stddef.h>
 #include <stdio.h>

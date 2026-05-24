@@ -1,7 +1,7 @@
 #include "engine_lifecycle.h"
 
-#include "controller/controller_kind_domain.h"
-#include "terrain/terrain_generation.h"
+#include "../controller/controller_kind_domain.h"
+#include "../terrain/terrain_generation.h"
 
 #include <stddef.h>
 #include <string.h>
