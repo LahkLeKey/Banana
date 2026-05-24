@@ -385,7 +385,7 @@ endif()
 
 if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_executable(banana_engine_serialize_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_serialize_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine/engine_serialize_test.c
   )
   target_link_libraries(banana_engine_serialize_test PRIVATE banana_engine_core)
   target_include_directories(banana_engine_serialize_test PRIVATE
@@ -424,7 +424,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_terrain_generation_test COMMAND banana_runtime_terrain_generation_test)
 
   add_executable(banana_collider_broad_phase_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/collider_broad_phase_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/physics/collider_broad_phase_test.c
   )
   target_link_libraries(banana_collider_broad_phase_test PRIVATE banana_engine_core)
   target_include_directories(banana_collider_broad_phase_test PRIVATE
@@ -437,7 +437,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_collider_broad_phase_test COMMAND banana_collider_broad_phase_test)
 
   add_executable(banana_physics_raycast_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/physics_raycast_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/physics/physics_raycast_test.c
   )
   target_link_libraries(banana_physics_raycast_test PRIVATE banana_engine_core)
   target_include_directories(banana_physics_raycast_test PRIVATE
@@ -450,7 +450,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_physics_raycast_test COMMAND banana_physics_raycast_test)
 
   add_executable(banana_render_mesh_terrain_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render_mesh_terrain_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/render_mesh_terrain_test.c
   )
   target_link_libraries(banana_render_mesh_terrain_test PRIVATE banana_engine_core)
   target_include_directories(banana_render_mesh_terrain_test PRIVATE
@@ -463,7 +463,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_render_mesh_terrain_test COMMAND banana_render_mesh_terrain_test)
 
   add_executable(banana_controller_system_dispatch_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/controller_system_dispatch_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/ai/controller_system_dispatch_test.c
   )
   target_link_libraries(banana_controller_system_dispatch_test PRIVATE banana_engine_core)
   target_include_directories(banana_controller_system_dispatch_test PRIVATE
@@ -476,7 +476,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_controller_system_dispatch_test COMMAND banana_controller_system_dispatch_test)
 
   add_executable(banana_render_headless_frame_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render_headless_frame_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/render_headless_frame_test.c
   )
   target_link_libraries(banana_render_headless_frame_test PRIVATE banana_engine_core)
   target_include_directories(banana_render_headless_frame_test PRIVATE
@@ -489,7 +489,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_render_headless_frame_test COMMAND banana_render_headless_frame_test)
 
   add_executable(banana_world_query_nearby_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/world_query_nearby_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/world/world_query_nearby_test.c
   )
   target_link_libraries(banana_world_query_nearby_test PRIVATE banana_engine_core)
   target_include_directories(banana_world_query_nearby_test PRIVATE
@@ -583,7 +583,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_input_click_policy_test COMMAND banana_runtime_input_click_policy_test)
 
   add_executable(banana_engine_input_contract_transition_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_input_contract_transition_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine/engine_input_contract_transition_test.c
   )
   target_link_libraries(banana_engine_input_contract_transition_test PRIVATE banana_engine_core)
   target_include_directories(banana_engine_input_contract_transition_test PRIVATE
@@ -596,7 +596,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_engine_input_contract_transition_test COMMAND banana_engine_input_contract_transition_test)
 
   add_executable(banana_engine_click_to_move_target_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_click_to_move_target_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine/engine_click_to_move_target_test.c
   )
   target_link_libraries(banana_engine_click_to_move_target_test PRIVATE banana_engine_core)
   target_include_directories(banana_engine_click_to_move_target_test PRIVATE
@@ -659,7 +659,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     add_test(NAME banana_dx12_projection_policy_test COMMAND banana_dx12_projection_policy_test)
 
     add_executable(banana_dx12_objective_policy_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_objective_policy_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_objective_policy_test.c
       win32_dx12_poc/objective_policy.c
     )
     target_include_directories(banana_dx12_objective_policy_test PRIVATE
@@ -679,7 +679,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     add_test(NAME banana_dx12_scene_flow_test COMMAND banana_dx12_scene_flow_test)
 
     add_executable(banana_dx12_gameplay_lane_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_gameplay_lane_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_gameplay_lane_test.c
       win32_dx12_poc/scene_flow.c
     )
     target_link_libraries(banana_dx12_gameplay_lane_test PRIVATE banana_engine_core)
@@ -690,7 +690,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     add_test(NAME banana_dx12_gameplay_lane_test COMMAND banana_dx12_gameplay_lane_test)
 
     add_executable(banana_dx12_gameplay_click_lane_test
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_gameplay_click_lane_test.c
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_gameplay_click_lane_test.c
       win32_dx12_poc/scene_flow.c
     )
     target_link_libraries(banana_dx12_gameplay_click_lane_test PRIVATE banana_engine_core)
@@ -1066,7 +1066,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_controller_sync_map_test COMMAND banana_runtime_controller_sync_map_test)
 
   add_executable(banana_player_sync_staleness_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player_sync_staleness_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player/player_sync_staleness_test.c
   )
   target_link_libraries(banana_player_sync_staleness_test PRIVATE banana_engine_core)
   target_include_directories(banana_player_sync_staleness_test PRIVATE
@@ -1106,7 +1106,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_interactive_objects_test COMMAND banana_interactive_objects_test)
 
   add_executable(banana_npc_merchant_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/npc_merchant_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/merchant/npc_merchant_test.c
   )
   target_link_libraries(banana_npc_merchant_test PRIVATE banana_engine_core)
   target_include_directories(banana_npc_merchant_test PRIVATE
@@ -1119,7 +1119,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_npc_merchant_test COMMAND banana_npc_merchant_test)
 
   add_executable(banana_engine_merchant_trade_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_merchant_trade_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine/engine_merchant_trade_test.c
   )
   target_link_libraries(banana_engine_merchant_trade_test PRIVATE banana_engine_core)
   target_include_directories(banana_engine_merchant_trade_test PRIVATE
@@ -1132,7 +1132,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_engine_merchant_trade_test COMMAND banana_engine_merchant_trade_test)
 
   add_executable(banana_engine_typed_abi_validation_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine_typed_abi_validation_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine/engine_typed_abi_validation_test.c
   )
   target_link_libraries(banana_engine_typed_abi_validation_test PRIVATE banana_engine_core)
   target_include_directories(banana_engine_typed_abi_validation_test PRIVATE
@@ -1146,7 +1146,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_engine_typed_abi_validation_test COMMAND banana_engine_typed_abi_validation_test)
 
   add_executable(banana_terrain_features_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/terrain_features_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/terrain/terrain_features_test.c
   )
   target_link_libraries(banana_terrain_features_test PRIVATE banana_engine_core)
   target_include_directories(banana_terrain_features_test PRIVATE
@@ -1159,7 +1159,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_terrain_features_test COMMAND banana_terrain_features_test)
 
   add_executable(banana_ui_system_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/ui_system_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/ui/ui_system_test.c
   )
   target_link_libraries(banana_ui_system_test PRIVATE banana_engine_core)
   target_include_directories(banana_ui_system_test PRIVATE
@@ -1187,7 +1187,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_ui_abi_test COMMAND banana_runtime_ui_abi_test)
 
   add_executable(banana_native_ui_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/native_ui_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/ui/native_ui_abi_test.c
   )
   target_include_directories(banana_native_ui_abi_test PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../include
@@ -1202,7 +1202,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_native_ui_abi_test COMMAND banana_native_ui_abi_test)
 
   add_executable(banana_input_binding_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/input_binding_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/input/input_binding_test.c
   )
   target_link_libraries(banana_input_binding_test PRIVATE banana_engine_core)
   target_include_directories(banana_input_binding_test PRIVATE
@@ -1216,7 +1216,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_input_binding_test COMMAND banana_input_binding_test)
 
   add_executable(banana_terrain_chunks_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/terrain_chunks_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/terrain/terrain_chunks_test.c
   )
   target_link_libraries(banana_terrain_chunks_test PRIVATE banana_engine_core)
   target_include_directories(banana_terrain_chunks_test PRIVATE
@@ -1230,7 +1230,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_terrain_chunks_test COMMAND banana_terrain_chunks_test)
 
   add_executable(banana_player_resources_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player_resources_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player/player_resources_test.c
   )
   target_link_libraries(banana_player_resources_test PRIVATE banana_engine_core)
   target_include_directories(banana_player_resources_test PRIVATE
@@ -1358,7 +1358,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_gameplay_service_test COMMAND banana_runtime_gameplay_service_test)
 
   add_executable(banana_player_builds_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player_builds_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player/player_builds_test.c
   )
   target_link_libraries(banana_player_builds_test PRIVATE banana_engine_core)
   target_include_directories(banana_player_builds_test PRIVATE
@@ -1414,7 +1414,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_chunk_stream_packet_test COMMAND banana_chunk_stream_packet_test)
 
   add_executable(banana_actor_mesh_registry_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/actor_mesh_registry_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/actor_mesh_registry_test.c
   )
   target_link_libraries(banana_actor_mesh_registry_test PRIVATE banana_engine_core)
   target_include_directories(banana_actor_mesh_registry_test PRIVATE
