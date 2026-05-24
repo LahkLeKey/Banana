@@ -108,7 +108,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/player/player_resources.c
   runtime/interaction/interactive_collection.c
   runtime/interaction/interactive_object_spawner.c
-  runtime/chunk_stream_packet.c
+  runtime/chunk/chunk_stream_packet.c
   runtime/render/render_material.c
   runtime/render/render_submit.c
   runtime/resource/resource_domain.c
@@ -1400,7 +1400,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_interactive_object_spawner_test COMMAND banana_interactive_object_spawner_test)
 
   add_executable(banana_chunk_stream_packet_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/chunk_stream_packet_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/chunk/chunk_stream_packet_test.c
   )
   target_link_libraries(banana_chunk_stream_packet_test PRIVATE banana_engine_core)
   target_include_directories(banana_chunk_stream_packet_test PRIVATE

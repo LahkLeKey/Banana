@@ -3,7 +3,7 @@
  * @brief Unit tests for chunk stream packet serialization
  */
 
-#include "chunk_stream_packet.h"
+#include "runtime/chunk/chunk_stream_packet.h"
 #include "terrain/terrain_chunks.h"
 #include <stdio.h>
 #include <string.h>
@@ -22,7 +22,10 @@ static int tests_passed = 0;
         }                                                                                      \
         else                                                                                   \
         {                                                                                      \
-            printf("FAIL: %s (expected %d, got %d)\n", msg, expected, actual);                \
+            printf("FAIL: %s (expected %lld, got %lld)\n",                                  \
+                   msg,                                                                         \
+                   (long long)(expected),                                                       \
+                   (long long)(actual));                                                        \
         }                                                                                      \
     } while (0)
 

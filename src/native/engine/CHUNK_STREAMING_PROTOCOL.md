@@ -305,7 +305,7 @@ render_chunk(&received);
 
 ## Related Files
 
-- **Implementation**: `src/native/engine/runtime/chunk_stream_packet.{h,c}`
-- **Tests**: `tests/native/chunk_stream_packet_test.c` (33/33 passing)
+- **Implementation**: `src/native/engine/runtime/chunk/chunk_stream_packet.{h,c}`
+- **Tests**: `tests/native/runtime/chunk/chunk_stream_packet_test.c` (33/33 passing)
 - **Integration Guide**: `RESOURCE_COLLECTION_INTEGRATION_GUIDE.md`
 

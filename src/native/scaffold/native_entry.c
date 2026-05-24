@@ -1,5 +1,5 @@
 #include "banana_native_v3.h"
-#include "runtime/chunk_stream_packet.h"
+#include "runtime/chunk/chunk_stream_packet.h"
 #include "runtime/terrain/terrain_chunks.h"
 
 #include <stdio.h>
