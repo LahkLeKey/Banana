@@ -1,5 +1,5 @@
-#include "runtime/player_api.h"
-#include "runtime/player_builds.h"
+#include "runtime/player/player_api.h"
+#include "runtime/player/player_builds.h"
 
 #include <stdio.h>
 

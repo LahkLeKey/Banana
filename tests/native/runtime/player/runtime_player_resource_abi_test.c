@@ -1,5 +1,5 @@
-#include "runtime/player_resource_abi.h"
-#include "runtime/player_registry.h"
+#include "runtime/player/player_resource_abi.h"
+#include "runtime/player/player_registry.h"
 
 #include <stdio.h>
 

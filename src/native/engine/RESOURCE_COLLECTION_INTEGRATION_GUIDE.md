@@ -204,7 +204,7 @@ When connecting to TypeScript API layer:
 
 ## Related Files
 
-- **Implementation**: `src/native/engine/runtime/player_resources.{h,c}`
+- **Implementation**: `src/native/engine/runtime/player/player_resources.{h,c}`
 - **Implementation**: `src/native/engine/runtime/interactive_collection.{h,c}`
 - **Implementation**: `src/native/engine/runtime/interactive_object_spawner.{h,c}`
 - **Tests**: `tests/native/player_resources_test.c` (28 tests)

@@ -94,18 +94,18 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/parallel_contract.c
   runtime/parallel_model.c
   runtime/physics_abi.c
-  runtime/player_api.c
-  runtime/player_merchant_adapter.c
-  runtime/player_build_abi.c
-  runtime/player_gateway_abi.c
-  runtime/player_builds.c
-  runtime/player_runtime_service.c
-  runtime/player_resource_abi.c
-  runtime/player_sync_abi.c
-  runtime/player_motion_host.c
-  runtime/player_motion.c
-  runtime/player_registry.c
-  runtime/player_resources.c
+  runtime/player/player_api.c
+  runtime/player/player_merchant_adapter.c
+  runtime/player/player_build_abi.c
+  runtime/player/player_gateway_abi.c
+  runtime/player/player_builds.c
+  runtime/player/player_runtime_service.c
+  runtime/player/player_resource_abi.c
+  runtime/player/player_sync_abi.c
+  runtime/player/player_motion_host.c
+  runtime/player/player_motion.c
+  runtime/player/player_registry.c
+  runtime/player/player_resources.c
   runtime/interactive_collection.c
   runtime/interactive_object_spawner.c
   runtime/chunk_stream_packet.c
@@ -851,7 +851,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_terrain_abi_test COMMAND banana_runtime_terrain_abi_test)
 
   add_executable(banana_runtime_player_api_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_api_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_api_test.c
   )
   target_link_libraries(banana_runtime_player_api_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_player_api_test PRIVATE
@@ -864,7 +864,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_player_api_test COMMAND banana_runtime_player_api_test)
 
   add_executable(banana_runtime_player_gateway_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_gateway_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_gateway_abi_test.c
   )
   target_link_libraries(banana_runtime_player_gateway_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_player_gateway_abi_test PRIVATE
@@ -878,7 +878,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_player_gateway_abi_test COMMAND banana_runtime_player_gateway_abi_test)
 
   add_executable(banana_runtime_player_merchant_adapter_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_merchant_adapter_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_merchant_adapter_test.c
   )
   target_link_libraries(banana_runtime_player_merchant_adapter_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_player_merchant_adapter_test PRIVATE
@@ -892,7 +892,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_player_merchant_adapter_test COMMAND banana_runtime_player_merchant_adapter_test)
 
   add_executable(banana_runtime_player_builds_integration_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_builds_integration_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_builds_integration_test.c
   )
   target_link_libraries(banana_runtime_player_builds_integration_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_player_builds_integration_test PRIVATE
@@ -906,7 +906,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_player_builds_integration_test COMMAND banana_runtime_player_builds_integration_test)
 
   add_executable(banana_runtime_player_build_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_build_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_build_abi_test.c
   )
   target_link_libraries(banana_runtime_player_build_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_player_build_abi_test PRIVATE
@@ -933,7 +933,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_render_material_test COMMAND banana_runtime_render_material_test)
 
   add_executable(banana_runtime_player_motion_host_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_motion_host_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_motion_host_test.c
   )
   target_link_libraries(banana_runtime_player_motion_host_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_player_motion_host_test PRIVATE
@@ -1079,7 +1079,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_player_sync_staleness_test COMMAND banana_player_sync_staleness_test)
 
   add_executable(banana_runtime_player_sync_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_sync_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_sync_abi_test.c
   )
   target_link_libraries(banana_runtime_player_sync_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_player_sync_abi_test PRIVATE
@@ -1330,7 +1330,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_merchant_trade_abi_test COMMAND banana_runtime_merchant_trade_abi_test)
 
   add_executable(banana_runtime_player_resource_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_player_resource_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_resource_abi_test.c
   )
   target_link_libraries(banana_runtime_player_resource_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_player_resource_abi_test PRIVATE

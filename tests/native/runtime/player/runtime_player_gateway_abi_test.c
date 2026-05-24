@@ -1,9 +1,9 @@
-#include "runtime/player_gateway_abi.h"
+#include "runtime/player/player_gateway_abi.h"
 
 #include <stdio.h>
 #include <string.h>
 
-#include "runtime/player_registry.h"
+#include "runtime/player/player_registry.h"
 #include "world/world.h"
 
 static int expect_int(const char *label, int actual, int expected)

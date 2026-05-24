@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_PLAYER_RESOURCE_ABI_H
 #define BANANA_ENGINE_RUNTIME_PLAYER_RESOURCE_ABI_H
 
-#include "resource_domain.h"
+#include "../resource_domain.h"
 
 #ifdef __cplusplus
 extern "C"

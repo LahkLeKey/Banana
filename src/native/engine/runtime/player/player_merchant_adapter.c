@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-#include "merchant/merchant_trade_abi.h"
+#include "../merchant/merchant_trade_abi.h"
 #include "player_gateway_abi.h"
 #include "player_resource_abi.h"
 

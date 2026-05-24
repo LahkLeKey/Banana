@@ -16,7 +16,7 @@ void runtime_player_motion_tick(World *world,
 {
     NativePlayerBinding *bindings[BANANA_MAX_NATIVE_PLAYERS] = {0};
     int binding_count = runtime_player_registry_count();
-    float forward[3] = {0.f, 0.f, 1.f};
+    float forward[3] = {0.f, 0.f, -1.f};
     float right[3] = {1.f, 0.f, 0.f};
     int i = 0;
 

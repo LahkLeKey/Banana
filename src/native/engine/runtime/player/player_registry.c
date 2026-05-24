@@ -1,5 +1,5 @@
 #include "player_registry.h"
-#include "controller_kind_domain.h"
+#include "../controller_kind_domain.h"
 
 #include <math.h>
 #include <stddef.h>

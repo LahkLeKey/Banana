@@ -12,8 +12,8 @@
 #include "engine_lifecycle.h"
 #include "engine_tick.h"
 #include "input_contract.h"
-#include "player_builds.h"
-#include "player_registry.h"
+#include "player/player_builds.h"
+#include "player/player_registry.h"
 
 #include <stddef.h>
 #include <stdio.h>

@@ -1,11 +1,11 @@
 #ifndef BANANA_ENGINE_RUNTIME_PLAYER_RUNTIME_SERVICE_H
 #define BANANA_ENGINE_RUNTIME_PLAYER_RUNTIME_SERVICE_H
 
-#include "move_target_domain.h"
+#include "../move_target_domain.h"
 #include "player_motion.h"
 
-#include "../render/renderer.h"
-#include "../world/world.h"
+#include "../../render/renderer.h"
+#include "../../world/world.h"
 
 #ifdef __cplusplus
 extern "C"

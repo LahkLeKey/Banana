@@ -3,7 +3,7 @@
  * @brief Unit tests for player resources system
  */
 
-#include "player_resources.h"
+#include "runtime/player/player_resources.h"
 #include <stdio.h>
 #include <string.h>
 

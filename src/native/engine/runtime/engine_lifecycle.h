@@ -3,7 +3,7 @@
 
 #include "../ai/controller.h"
 #include "../world/world.h"
-#include "player_registry.h"
+#include "player/player_registry.h"
 #include "terrain_runtime.h"
 
 #ifdef __cplusplus

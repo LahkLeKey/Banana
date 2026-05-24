@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_PLAYER_GATEWAY_ABI_H
 #define BANANA_ENGINE_RUNTIME_PLAYER_GATEWAY_ABI_H
 
-#include "merchant/merchant_service.h"
+#include "../merchant/merchant_service.h"
 #include "player_registry.h"
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 #include "player_motion.h"
-#include "controller_kind_domain.h"
+#include "../controller_kind_domain.h"
 
 #if !defined(BANANA_ENGINE_HAS_OPENMP)
 #error "Strict parallel runtime requires OpenMP (BANANA_ENGINE_HAS_OPENMP)."

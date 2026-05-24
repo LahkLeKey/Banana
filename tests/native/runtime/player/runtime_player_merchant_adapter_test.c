@@ -1,9 +1,9 @@
-#include "runtime/player_merchant_adapter.h"
+#include "runtime/player/player_merchant_adapter.h"
 
 #include <stdio.h>
 
-#include "runtime/player_resource_abi.h"
-#include "runtime/player_registry.h"
+#include "runtime/player/player_resource_abi.h"
+#include "runtime/player/player_registry.h"
 
 typedef struct TradeProbe
 {
