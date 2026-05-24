@@ -1,6 +1,6 @@
 #include "gameplay_service.h"
 
-#include "../wildlife_gameplay.h"
+#include "../wildlife/wildlife_gameplay.h"
 
 #include <math.h>
 #include <string.h>

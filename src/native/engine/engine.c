@@ -30,7 +30,7 @@
 #include "runtime/player/player_registry.h"
 #include "runtime/physics_abi.h"
 #include "runtime/input/input_abi.h"
-#include "runtime/resource_domain.h"
+#include "runtime/resource/resource_domain.h"
 #include "runtime/render/render_submit.h"
 #include "runtime/terrain/terrain_generation.h"
 #include "runtime/terrain/terrain_abi.h"
@@ -39,7 +39,7 @@
 #include "runtime/world/world_metrics.h"
 #include "runtime/world/world_abi.h"
 #include "runtime/world/world_telemetry.h"
-#include "runtime/wildlife_gameplay.h"
+#include "runtime/wildlife/wildlife_gameplay.h"
 #include "runtime/ui_abi.h"
 #include <stdio.h>
 #include <string.h>

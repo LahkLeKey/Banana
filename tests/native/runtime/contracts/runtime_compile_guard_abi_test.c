@@ -7,7 +7,7 @@
 #include "runtime/merchant/merchant_query_abi.h"
 #include "runtime/merchant/merchant_trade_abi.h"
 #include "runtime/player/player_sync_abi.h"
-#include "runtime/resource_domain.h"
+#include "runtime/resource/resource_domain.h"
 #include "runtime/terrain/terrain_abi.h"
 
 #include <stddef.h>

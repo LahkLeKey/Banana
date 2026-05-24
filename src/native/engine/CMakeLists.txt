@@ -111,7 +111,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/chunk_stream_packet.c
   runtime/render/render_material.c
   runtime/render/render_submit.c
-  runtime/resource_domain.c
+  runtime/resource/resource_domain.c
   runtime/terrain/terrain_features.c
   runtime/terrain/terrain_abi.c
   runtime/terrain/terrain_generation.c
@@ -128,7 +128,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/world/world_abi.c
   runtime/world/world_metrics.c
   runtime/world/world_telemetry.c
-  runtime/wildlife_gameplay.c
+  runtime/wildlife/wildlife_gameplay.c
   tools/domain/banana_asset_domain.c
 )
 
@@ -1244,7 +1244,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_player_resources_test COMMAND banana_player_resources_test)
 
   add_executable(banana_runtime_domain_adapters_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_domain_adapters_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/contracts/runtime_domain_adapters_test.c
   )
   target_link_libraries(banana_runtime_domain_adapters_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_domain_adapters_test PRIVATE
@@ -1258,7 +1258,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_domain_adapters_test COMMAND banana_runtime_domain_adapters_test)
 
   add_executable(banana_runtime_compile_guard_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_compile_guard_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/contracts/runtime_compile_guard_abi_test.c
   )
   target_link_libraries(banana_runtime_compile_guard_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_compile_guard_abi_test PRIVATE

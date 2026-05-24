@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_MERCHANT_SERVICE_H
 #define BANANA_ENGINE_RUNTIME_MERCHANT_SERVICE_H
 
-#include "../resource_domain.h"
+#include "../resource/resource_domain.h"
 
 #ifdef __cplusplus
 extern "C"

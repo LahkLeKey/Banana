@@ -1,5 +1,5 @@
 #include "runtime/merchant/merchant_service.h"
-#include "runtime/resource_domain.h"
+#include "runtime/resource/resource_domain.h"
 
 #include <stdio.h>
 

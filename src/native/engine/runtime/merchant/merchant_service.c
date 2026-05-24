@@ -1,7 +1,7 @@
 #include "merchant_service.h"
 
 #include "merchant_trade_domain.h"
-#include "../resource_domain.h"
+#include "../resource/resource_domain.h"
 
 #include "../../ai/npc_merchant.h"
 
