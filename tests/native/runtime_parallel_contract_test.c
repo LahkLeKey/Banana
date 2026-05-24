@@ -1,5 +1,5 @@
-#include "runtime/parallel_contract.h"
-#include "runtime/parallel_model.h"
+#include "runtime/parallel/parallel_contract.h"
+#include "runtime/parallel/parallel_model.h"
 
 #include <stdio.h>
 
