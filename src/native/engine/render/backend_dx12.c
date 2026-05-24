@@ -1430,10 +1430,12 @@ int banana_dx12_backend_is_available(void)
 
 const char *banana_dx12_backend_status(void)
 {
+#if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
     if (s_dx12_runtime.active)
     {
         return s_dx12_runtime.status;
     }
+#endif
     banana_dx12_probe_once();
     return s_dx12_probe_status;
 }

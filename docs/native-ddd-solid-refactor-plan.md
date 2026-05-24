@@ -125,3 +125,4 @@ For each TODO slice: keep ABI stable, refactor one seam at a time, build immedia
 - [x] Remove hidden service-port module state in `runtime/engine_composition.c` by storing ports in `EngineRuntimeState` and wiring orchestration through explicit context.
 - [x] Extract right-click normalization from `runtime/engine_tick.c` into `runtime/input_click_policy` with focused policy tests and guardrails.
 - [x] Extract terrain rebuild chunk budget from `runtime/engine_tick.c` into `runtime/tick_budget_policy` with configurable clamp rules and focused tests.
+- [x] Extract right-click polling/dispatch from `runtime/engine_tick.c` into `runtime/tick_input_phase` so tick orchestration no longer owns input event plumbing.

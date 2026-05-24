@@ -1,9 +1,8 @@
 #include "engine_tick.h"
 
 #include "controller_sync.h"
-#include "input_click_policy.h"
-#include "input_contract.h"
 #include "tick_budget_policy.h"
+#include "tick_input_phase.h"
 
 int runtime_engine_tick_execute(Window *window,
                                 Renderer *renderer,
@@ -29,32 +28,7 @@ int runtime_engine_tick_execute(Window *window,
     if (!window_is_open(window))
         return 1;
 
-    {
-        float click_x = 0.f;
-        float click_y = 0.f;
-        if (window_take_right_click(window, &click_x, &click_y))
-        {
-            int input_width = 0;
-            int input_height = 0;
-            float normalized_x = 0.f;
-            float normalized_y = 0.f;
-
-            runtime_input_contract_handle_right_click(click_x, click_y);
-
-            window_get_input_size(window, &input_width, &input_height);
-            if (runtime_input_click_policy_normalize(click_x,
-                                                     click_y,
-                                                     input_width,
-                                                     input_height,
-                                                     &normalized_x,
-                                                     &normalized_y))
-            {
-                runtime_input_contract_handle_right_click_normalized(normalized_x, normalized_y);
-                if (apply_click_input)
-                    apply_click_input(context, normalized_x, normalized_y);
-            }
-        }
-    }
+    runtime_tick_input_phase_process(window, context, apply_click_input);
     physics_world_step(physics_world, dt);
     world_tick(world, dt);
 

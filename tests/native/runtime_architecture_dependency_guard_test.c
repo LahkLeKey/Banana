@@ -189,6 +189,12 @@ int main(void)
             1,
         },
         {
+            "runtime/engine_tick.c",
+            "tick orchestration should delegate right-click polling to tick input phase",
+            {"window_take_right_click("},
+            1,
+        },
+        {
             "render/backend_dx12.c",
             "render adapters must not depend on orchestration",
             {"runtime/orchestration/", "../runtime/orchestration/"},
