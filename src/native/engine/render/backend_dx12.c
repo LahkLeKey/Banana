@@ -1,6 +1,8 @@
 #include "backend_dx12.h"
 #include "backend_dx12_projection_policy.h"
 
+static char s_dx12_telemetry[256] = "dx12-runtime-inactive";
+
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
 #define COBJMACROS
 #include <stdio.h>
@@ -134,7 +136,6 @@ typedef struct BananaDx12Runtime
 } BananaDx12Runtime;
 
 static BananaDx12Runtime s_dx12_runtime = {0};
-static char s_dx12_telemetry[256] = "dx12-runtime-inactive";
 
 static int banana_dx12_runtime_read_present_interval(void)
 {
@@ -1439,18 +1440,30 @@ const char *banana_dx12_backend_status(void)
 
 const char *banana_dx12_runtime_telemetry(void)
 {
+#if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
     banana_dx12_runtime_update_telemetry();
     return s_dx12_telemetry;
+#else
+    return "status=dx12-runtime-unavailable active=0";
+#endif
 }
 
 unsigned long long banana_dx12_runtime_frames_presented(void)
 {
+#if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
     return (unsigned long long)s_dx12_runtime.frames_presented;
+#else
+    return 0ull;
+#endif
 }
 
 unsigned int banana_dx12_runtime_scene_draw_calls(void)
 {
+#if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
     return (unsigned int)s_dx12_runtime.scene_draw_calls_frame;
+#else
+    return 0u;
+#endif
 }
 
 int banana_dx12_runtime_init(void *native_window, int width, int height)

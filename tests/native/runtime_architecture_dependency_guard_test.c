@@ -183,6 +183,12 @@ int main(void)
             2,
         },
         {
+            "runtime/engine_tick.c",
+            "tick orchestration should delegate terrain budget policy",
+            {"runtime_phase_terrain_budget(context, terrain_rebuild, 2)"},
+            1,
+        },
+        {
             "render/backend_dx12.c",
             "render adapters must not depend on orchestration",
             {"runtime/orchestration/", "../runtime/orchestration/"},

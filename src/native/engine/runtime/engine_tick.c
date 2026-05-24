@@ -3,6 +3,7 @@
 #include "controller_sync.h"
 #include "input_click_policy.h"
 #include "input_contract.h"
+#include "tick_budget_policy.h"
 
 int runtime_engine_tick_execute(Window *window,
                                 Renderer *renderer,
@@ -61,7 +62,9 @@ int runtime_engine_tick_execute(Window *window,
         update_player_motion(context, dt);
 
     runtime_phase_viewport_resize(window, renderer, viewport_width, viewport_height);
-    if (runtime_phase_terrain_budget(context, terrain_rebuild, 2) != 0)
+    if (runtime_phase_terrain_budget(context,
+                                     terrain_rebuild,
+                                     runtime_tick_budget_policy_terrain_chunks_per_tick()) != 0)
         return -1;
 
     if (run_gameplay)

@@ -118,6 +118,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/terrain_mutation.c
   runtime/terrain_runtime.c
   runtime/terrain_chunks.c
+  runtime/tick_budget_policy.c
   runtime/tick_phases.c
   runtime/world_abi.c
   runtime/world_metrics.c
@@ -746,6 +747,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_runtime_engine_tick_test COMMAND banana_runtime_engine_tick_test)
+
+  add_executable(banana_runtime_tick_budget_policy_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_tick_budget_policy_test.c
+  )
+  target_link_libraries(banana_runtime_tick_budget_policy_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_budget_policy_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_budget_policy_test COMMAND banana_runtime_tick_budget_policy_test)
 
   add_executable(banana_runtime_camera_follow_policy_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_camera_follow_policy_test.c
