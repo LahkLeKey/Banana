@@ -1,6 +1,6 @@
 #include "ui_abi.h"
 
-#include "../ui/ui.h"
+#include "../../ui/ui.h"
 
 static UIContext *s_ui_context = NULL;
 

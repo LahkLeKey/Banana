@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_PHYSICS_ABI_H
 #define BANANA_ENGINE_RUNTIME_PHYSICS_ABI_H
 
-#include "../physics/world.h"
+#include "../../physics/world.h"
 
 #ifdef __cplusplus
 extern "C"

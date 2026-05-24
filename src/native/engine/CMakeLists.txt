@@ -93,7 +93,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/input/move_target_domain.c
   runtime/parallel/parallel_contract.c
   runtime/parallel/parallel_model.c
-  runtime/physics_abi.c
+  runtime/abi/physics_abi.c
   runtime/player/player_api.c
   runtime/player/player_merchant_adapter.c
   runtime/player/player_build_abi.c
@@ -115,7 +115,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/terrain/terrain_features.c
   runtime/terrain/terrain_abi.c
   runtime/terrain/terrain_generation.c
-  runtime/ui_abi.c
+  runtime/abi/ui_abi.c
   runtime/terrain/terrain_host.c
   runtime/terrain/terrain_height.c
   runtime/terrain/terrain_mutation.c
@@ -702,7 +702,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   endif()
 
   add_executable(banana_runtime_physics_world_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_physics_world_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/abi/runtime_physics_world_abi_test.c
   )
   target_link_libraries(banana_runtime_physics_world_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_physics_world_abi_test PRIVATE
@@ -1173,7 +1173,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_ui_system_test COMMAND banana_ui_system_test)
 
   add_executable(banana_runtime_ui_abi_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_ui_abi_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/abi/runtime_ui_abi_test.c
   )
   target_link_libraries(banana_runtime_ui_abi_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_ui_abi_test PRIVATE
