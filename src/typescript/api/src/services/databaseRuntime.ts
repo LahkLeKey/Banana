@@ -84,6 +84,23 @@ function shouldUseStrictBootstrap(env: NodeJS.ProcessEnv): boolean {
   return trim(env.BANANA_NEON_STRICT) === 'true';
 }
 
+function resolveConfiguredAliases(env: NodeJS.ProcessEnv): string[] {
+  return [
+    trim(env.NEON_DATABASE_URL),
+    trim(env.DATABASE_URL),
+    trim(env.BANANA_PG_CONNECTION),
+  ].filter(Boolean);
+}
+
+function hasConflictingAliases(env: NodeJS.ProcessEnv): boolean {
+  const configured = resolveConfiguredAliases(env);
+  if (configured.length <= 1) {
+    return false;
+  }
+  const first = configured[0];
+  return configured.some((value) => value !== first);
+}
+
 function resolveNativePoolMode(env: NodeJS.ProcessEnv): string {
   return trim(env.BANANA_NATIVE_PGBOUNCER_MODE) || DEFAULT_NATIVE_POOL_MODE;
 }
@@ -103,7 +120,16 @@ export function bootstrapDatabaseRuntime(
   const bridgeFactory =
       options.bridgeFactory ?? createDefaultNativePgBouncerBridge;
 
+  if (hasConflictingAliases(env)) {
+    throw new Error(
+        'Conflicting source-of-record aliases detected: NEON_DATABASE_URL, DATABASE_URL, and BANANA_PG_CONNECTION must match.');
+  }
+
   const aliasResult = syncDatabaseUrlAliases(env);
+  if (!aliasResult.authoritativeUrl && shouldUseStrictBootstrap(env)) {
+    throw new Error(
+        'No authoritative database URL found while BANANA_NEON_STRICT=true.');
+  }
   const status: DatabaseRuntimeStatus = {
     authoritativeUrlPresent: aliasResult.authoritativeUrl.length > 0,
     source: aliasResult.source,

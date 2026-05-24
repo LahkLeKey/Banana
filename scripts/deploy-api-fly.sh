@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_DIR="${ROOT_DIR}/src/typescript/api"
 APP_NAME="${FLY_APP_NAME:-banana-api}"
+SKIP_PARITY_GATE="${BANANA_FLY_SKIP_PARITY_GATE:-false}"
 
 source "${ROOT_DIR}/scripts/lib/database-env-aliases.sh"
 
@@ -14,6 +15,26 @@ if ! command -v fly >/dev/null 2>&1; then
 fi
 
 cd "${API_DIR}"
+
+if [[ "${SKIP_PARITY_GATE}" != "true" ]]; then
+  if ! command -v bun >/dev/null 2>&1; then
+    echo "[fly-deploy] ERROR: bun is required for parity validation. Set BANANA_FLY_SKIP_PARITY_GATE=true to bypass." >&2
+    exit 1
+  fi
+
+  echo "[fly-deploy] running strict API parity governance gate"
+  bash "${ROOT_DIR}/scripts/validate-api-parity-governance.sh" --strict
+fi
+
+if ! grep -q "path = \"/health\"" fly.toml; then
+  echo "[fly-deploy] ERROR: fly.toml must include /health checks before deploy." >&2
+  exit 1
+fi
+
+if ! grep -q "internal_port = 8081" fly.toml; then
+  echo "[fly-deploy] ERROR: fly.toml must expose internal_port = 8081." >&2
+  exit 1
+fi
 
 if ! banana_require_database_aliases "fly-deploy"; then
   exit 1
@@ -29,3 +50,6 @@ fly secrets set -a "${APP_NAME}" \
 
 echo "[fly-deploy] deploying ${APP_NAME} from ${API_DIR}"
 fly deploy -a "${APP_NAME}" --config fly.toml
+
+echo "[fly-deploy] readiness contract complete"
+echo "[fly-deploy] rollback hint: fly releases -a ${APP_NAME} && fly releases rollback <version> -a ${APP_NAME}"

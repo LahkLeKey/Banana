@@ -12,6 +12,7 @@ kill_timeout = "5s"
   BANANA_ENGINE_ADAPTER = "inmemory"
   BANANA_CORS_ORIGINS = "https://banana.engineer,http://localhost:5173,http://127.0.0.1:5173"
   NODE_ENV = "production"
+  BANANA_NEON_STRICT = "true"
 
 [http_service]
   internal_port = 8081

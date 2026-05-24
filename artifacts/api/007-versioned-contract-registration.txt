@@ -1,0 +1,7 @@
+[parity] route ownership inventory
+- /v1/gameplay -> gameplay-session-orchestration
+- /v1/player/account -> player-identity-account
+- /v1/player/progression -> progression-inventory
+- /v1/player/inventory -> progression-inventory
+- /v1/player/insights -> player-insights-web
+[parity] validation complete

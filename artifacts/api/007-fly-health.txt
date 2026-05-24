@@ -1,0 +1,13 @@
+[fly-health] 2026-05-24T20:40:44Z
+fly-cli=present
+[1mApp[0m
+ Name     │ banana-api                                       
+ Owner    │ personal                                         
+ Hostname │ banana-api.fly.dev                               
+ Image    │ banana-api:deployment-01KS9M0DN1E89BRE20VY9GW8JH 
+
+[1mMachines[0m
+ PROCESS │ ID             │ VERSION │ REGION │ STATE   │ ROLE │ CHECKS             │ LAST UPDATED         
+ app     │ 68324edf309e68 │ 8       │ iad    │ stopped │      │ 1 total, 1 warning │ 2026-05-23T05:13:20Z 
+ app     │ 781e044b962708 │ 8       │ iad    │ stopped │      │ 1 total, 1 warning │ 2026-05-24T19:19:58Z 
+

@@ -123,6 +123,13 @@ jobs:
       - name: API route smoke import
         run: bun -e 'import { registerHealthRoutes } from "./src/typescript/api/src/routes/health.ts"; console.log(typeof registerHealthRoutes);'
 
+      - name: API strict contract drift gate
+        run: bash scripts/validate-api-parity-governance.sh --strict
+
+      - name: API source-of-record runtime gate
+        run: bun test src/services/databaseRuntime.source-of-record.test.ts
+        working-directory: src/typescript/api
+
       - name: Verify procedural generated assets contract (strict, no native compile)
         run: bun scripts/prepare-procedural-assets.mjs
         working-directory: src/typescript/react

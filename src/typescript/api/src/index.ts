@@ -5,10 +5,15 @@ import helmet from '@fastify/helmet';
 import Fastify from 'fastify';
 
 import {registerChatRoutes} from './domains/chat/routes.ts';
+import {assertRouteOwnershipCoverage} from './lib/domainOwnership.ts';
+import {registerFastifyErrorMapper} from './lib/errors/fastifyErrorMapper.ts';
+import {registerRequestContextMiddleware} from './middleware/requestContext.ts';
 import {registerRateLimitPlugin} from './plugins/rate-limit.ts';
 import {registerAuthRoutes} from './routes/auth.ts';
 import {registerGameSessionRoutes} from './routes/game-session.ts';
 import {registerHealthRoutes} from './routes/health.ts';
+import {registerV1GameplayRoutes} from './routes/v1/gameplay.ts';
+import {registerV1PlayerRoutes} from './routes/v1/player.ts';
 import {registerWorldRoutes} from './routes/world.ts';
 import {bootstrapDatabaseRuntime} from './services/databaseRuntime.ts';
 
@@ -41,6 +46,8 @@ await app.register(helmet, {
 
 // Spec #068 — rate limiting (must register before routes)
 await registerRateLimitPlugin(app);
+await registerRequestContextMiddleware(app);
+registerFastifyErrorMapper(app);
 
 // Spec #126 — BANANA_CORS_ORIGINS: comma-separated list of allowed origins.
 // Defaults to localhost dev servers when the env var is absent.
@@ -72,6 +79,10 @@ await registerAuthRoutes(app);
 await registerGameSessionRoutes(app);
 await registerChatRoutes(app);
 await registerWorldRoutes(app);
+await registerV1GameplayRoutes(app);
+await registerV1PlayerRoutes(app);
+
+assertRouteOwnershipCoverage(app.printRoutes({commonPrefix: false}));
 
 const port = Number(process.env.PORT ?? 8081);
 const host = process.env.HOST ?? '0.0.0.0';
