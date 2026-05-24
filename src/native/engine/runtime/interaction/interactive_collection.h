@@ -10,8 +10,8 @@
 #ifndef BANANA_ENGINE_INTERACTIVE_COLLECTION_H
 #define BANANA_ENGINE_INTERACTIVE_COLLECTION_H
 
-#include "player/player_resources.h"
-#include "input/input_binding.h"
+#include "../player/player_resources.h"
+#include "../input/input_binding.h"
 
 #include <stdint.h>
 

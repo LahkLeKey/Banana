@@ -87,7 +87,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/merchant/merchant_trade_abi.c
   runtime/merchant/merchant_trade_domain.c
   runtime/merchant/merchant_service.c
-  runtime/interactive_objects.c
+  runtime/interaction/interactive_objects.c
   runtime/parallel/interlock.c
   runtime/input/move_target_service.c
   runtime/input/move_target_domain.c
@@ -106,8 +106,8 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/player/player_motion.c
   runtime/player/player_registry.c
   runtime/player/player_resources.c
-  runtime/interactive_collection.c
-  runtime/interactive_object_spawner.c
+  runtime/interaction/interactive_collection.c
+  runtime/interaction/interactive_object_spawner.c
   runtime/chunk_stream_packet.c
   runtime/render/render_material.c
   runtime/render/render_submit.c
@@ -1093,7 +1093,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_player_sync_abi_test COMMAND banana_runtime_player_sync_abi_test)
 
   add_executable(banana_interactive_objects_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/interactive_objects_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/interactive_objects_test.c
   )
   target_link_libraries(banana_interactive_objects_test PRIVATE banana_engine_core)
   target_include_directories(banana_interactive_objects_test PRIVATE
@@ -1372,7 +1372,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_player_builds_test COMMAND banana_player_builds_test)
 
   add_executable(banana_interactive_collection_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/interactive_collection_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/interactive_collection_test.c
   )
   target_link_libraries(banana_interactive_collection_test PRIVATE banana_engine_core)
   target_include_directories(banana_interactive_collection_test PRIVATE
@@ -1386,7 +1386,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_interactive_collection_test COMMAND banana_interactive_collection_test)
 
   add_executable(banana_interactive_object_spawner_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/interactive_object_spawner_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/interaction/interactive_object_spawner_test.c
   )
   target_link_libraries(banana_interactive_object_spawner_test PRIVATE banana_engine_core)
   target_include_directories(banana_interactive_object_spawner_test PRIVATE

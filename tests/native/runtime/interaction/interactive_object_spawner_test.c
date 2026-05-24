@@ -3,7 +3,7 @@
  * @brief Unit tests for interactive object spawner system
  */
 
-#include "interactive_object_spawner.h"
+#include "runtime/interaction/interactive_object_spawner.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>

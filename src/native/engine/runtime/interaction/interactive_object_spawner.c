@@ -4,7 +4,7 @@
  */
 
 #include "interactive_object_spawner.h"
-#include "terrain/terrain_chunks.h"
+#include "../terrain/terrain_chunks.h"
 
 #include <stdlib.h>
 #include <string.h>

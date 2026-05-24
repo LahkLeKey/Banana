@@ -10,7 +10,7 @@
 #ifndef BANANA_ENGINE_INTERACTIVE_OBJECT_SPAWNER_H
 #define BANANA_ENGINE_INTERACTIVE_OBJECT_SPAWNER_H
 
-#include "terrain/terrain_chunks.h"
+#include "../terrain/terrain_chunks.h"
 #include "interactive_collection.h"
 
 #include <stdint.h>

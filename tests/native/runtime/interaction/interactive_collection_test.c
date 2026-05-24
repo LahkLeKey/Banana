@@ -3,7 +3,7 @@
  * @brief Unit tests for interactive object collection system
  */
 
-#include "interactive_collection.h"
+#include "runtime/interaction/interactive_collection.h"
 #include <stdio.h>
 #include <string.h>
 

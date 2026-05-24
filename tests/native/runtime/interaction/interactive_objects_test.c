@@ -3,7 +3,7 @@
  * @brief Unit tests for interactive object system
  */
 
-#include "runtime/interactive_objects.h"
+#include "runtime/interaction/interactive_objects.h"
 
 #include <assert.h>
 #include <stdio.h>
