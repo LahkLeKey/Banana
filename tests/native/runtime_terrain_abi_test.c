@@ -1,4 +1,4 @@
-#include "runtime/terrain_abi.h"
+#include "runtime/terrain/terrain_abi.h"
 
 #include <stdio.h>
 #include <string.h>

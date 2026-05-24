@@ -3,7 +3,7 @@
  * @brief Unit tests for terrain chunk system
  */
 
-#include "terrain_chunks.h"
+#include "terrain/terrain_chunks.h"
 #include <stdio.h>
 #include <string.h>
 

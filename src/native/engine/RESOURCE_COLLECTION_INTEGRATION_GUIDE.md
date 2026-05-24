@@ -211,5 +211,5 @@ When connecting to TypeScript API layer:
 - **Tests**: `tests/native/interactive_collection_test.c` (26 tests)
 - **Tests**: `tests/native/interactive_object_spawner_test.c` (14 tests)
 - **Existing Systems**: `src/native/engine/runtime/input_binding.{h,c}`
-- **Existing Systems**: `src/native/engine/runtime/terrain_chunks.{h,c}`
+- **Existing Systems**: `src/native/engine/runtime/terrain/terrain_chunks.{h,c}`
 

@@ -8,7 +8,7 @@
 #include "runtime/merchant/merchant_trade_abi.h"
 #include "runtime/player/player_sync_abi.h"
 #include "runtime/resource_domain.h"
-#include "runtime/terrain_abi.h"
+#include "runtime/terrain/terrain_abi.h"
 
 #include <stddef.h>
 #include <stdio.h>

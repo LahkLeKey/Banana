@@ -112,15 +112,15 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/render_material.c
   runtime/render_submit.c
   runtime/resource_domain.c
-  runtime/terrain_features.c
-  runtime/terrain_abi.c
-  runtime/terrain_generation.c
+  runtime/terrain/terrain_features.c
+  runtime/terrain/terrain_abi.c
+  runtime/terrain/terrain_generation.c
   runtime/ui_abi.c
-  runtime/terrain_host.c
-  runtime/terrain_height.c
-  runtime/terrain_mutation.c
-  runtime/terrain_runtime.c
-  runtime/terrain_chunks.c
+  runtime/terrain/terrain_host.c
+  runtime/terrain/terrain_height.c
+  runtime/terrain/terrain_mutation.c
+  runtime/terrain/terrain_runtime.c
+  runtime/terrain/terrain_chunks.c
   runtime/tick/tick_input_phase.c
   runtime/tick/tick_post_phase.c
   runtime/tick/tick_budget_policy.c

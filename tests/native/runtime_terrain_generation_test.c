@@ -1,4 +1,4 @@
-#include "runtime/terrain_generation.h"
+#include "runtime/terrain/terrain_generation.h"
 
 #include <stdio.h>
 #include <string.h>

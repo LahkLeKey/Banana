@@ -18,9 +18,9 @@ static const RuntimeParallelBudget kRuntimeParallelBudgets[] = {
     {"tools.asset.wfc.entropy", "src/native/engine/tools/domain/banana_asset_wfc.c", 107, 0.63},
     {"tools.asset.wfc.propagate", "src/native/engine/tools/domain/banana_asset_wfc.c", 141, 0.63},
     {"runtime.player_motion.integrate", "src/native/engine/runtime/player/player_motion.c", 52, 0.47},
-    {"runtime.terrain_generation.samples", "src/native/engine/runtime/terrain_generation.c", 73, 0.43},
-    {"runtime.terrain_runtime.sample", "src/native/engine/runtime/terrain_runtime.c", 61, 0.44},
-    {"runtime.terrain_runtime.rebuild", "src/native/engine/runtime/terrain_runtime.c", 86, 0.52},
+    {"runtime.terrain_generation.samples", "src/native/engine/runtime/terrain/terrain_generation.c", 73, 0.43},
+    {"runtime.terrain_runtime.sample", "src/native/engine/runtime/terrain/terrain_runtime.c", 61, 0.44},
+    {"runtime.terrain_runtime.rebuild", "src/native/engine/runtime/terrain/terrain_runtime.c", 86, 0.52},
     {"runtime.world_metrics.active_count", "src/native/engine/runtime/world/world_metrics.c", 17, 0.36},
 };
 

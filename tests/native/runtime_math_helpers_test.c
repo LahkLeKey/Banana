@@ -1,5 +1,5 @@
 #include "runtime/camera_basis.h"
-#include "runtime/terrain_height.h"
+#include "runtime/terrain/terrain_height.h"
 
 #include <math.h>
 #include <stdio.h>

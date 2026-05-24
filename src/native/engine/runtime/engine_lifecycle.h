@@ -4,7 +4,7 @@
 #include "../ai/controller.h"
 #include "../world/world.h"
 #include "player/player_registry.h"
-#include "terrain_runtime.h"
+#include "terrain/terrain_runtime.h"
 
 #ifdef __cplusplus
 extern "C"

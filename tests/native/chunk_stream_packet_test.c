@@ -4,7 +4,7 @@
  */
 
 #include "chunk_stream_packet.h"
-#include "terrain_chunks.h"
+#include "terrain/terrain_chunks.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

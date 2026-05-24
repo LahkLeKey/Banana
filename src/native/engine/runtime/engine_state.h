@@ -8,7 +8,7 @@
 #include "../render/window.h"
 #include "../world/world.h"
 #include "move_target_domain.h"
-#include "terrain_runtime.h"
+#include "terrain/terrain_runtime.h"
 
 #ifdef __cplusplus
 extern "C"

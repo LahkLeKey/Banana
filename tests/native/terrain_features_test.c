@@ -3,7 +3,7 @@
  * @brief Unit tests for terrain feature system
  */
 
-#include "runtime/terrain_features.h"
+#include "runtime/terrain/terrain_features.h"
 
 #include <assert.h>
 #include <stdio.h>

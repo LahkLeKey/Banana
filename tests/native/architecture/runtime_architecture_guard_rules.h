@@ -59,7 +59,7 @@ static const FileRule kRuntimeArchitectureGuardRules[] = {
         1,
     },
     {
-        "runtime/terrain_runtime.c",
+        "runtime/terrain/terrain_runtime.c",
         "domain services must not depend on orchestration",
         {"orchestration/"},
         1,

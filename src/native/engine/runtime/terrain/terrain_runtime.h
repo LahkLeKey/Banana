@@ -1,9 +1,9 @@
 #ifndef BANANA_ENGINE_RUNTIME_TERRAIN_RUNTIME_H
 #define BANANA_ENGINE_RUNTIME_TERRAIN_RUNTIME_H
 
-#include "../render/material.h"
-#include "../render/mesh.h"
-#include "../render/renderer.h"
+#include "../../render/material.h"
+#include "../../render/mesh.h"
+#include "../../render/renderer.h"
 
 #ifdef __cplusplus
 extern "C"

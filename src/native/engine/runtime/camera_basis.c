@@ -16,9 +16,11 @@ int runtime_camera_compute_ground_basis(const float *camera_eye,
     if (!forward || !right)
         return 0;
 
+    if (!camera_eye || !camera_target || !camera_valid)
+        return 0;
+
     (void)camera_eye;
     (void)camera_target;
-    (void)camera_valid;
 
     vec3_set(forward, 0.f, 0.f, -1.f);
     vec3_set(right, 1.f, 0.f, 0.f);

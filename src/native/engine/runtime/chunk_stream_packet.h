@@ -14,7 +14,7 @@
 #ifndef BANANA_ENGINE_CHUNK_STREAM_PACKET_H
 #define BANANA_ENGINE_CHUNK_STREAM_PACKET_H
 
-#include "terrain_chunks.h"
+#include "terrain/terrain_chunks.h"
 #include <stdint.h>
 #include <stddef.h>
 
