@@ -299,7 +299,22 @@ int engine_handle_right_click_normalized(float screen_x, float screen_y)
 
 void engine_set_move_input(float input_x, float input_z)
 {
-    runtime_input_abi_set_move_input(&s_engine_state, input_x, input_z);
+    float basis_forward[3] = {0.f, 0.f, -1.f};
+    float basis_right[3] = {1.f, 0.f, 0.f};
+    float local_x = input_x;
+    float local_z = input_z;
+
+    /* Public API uses world-space intent; runtime consumes local move input. */
+    (void)runtime_camera_compute_ground_basis(s_camera_eye,
+                                              s_camera_target,
+                                              s_camera_valid,
+                                              basis_forward,
+                                              basis_right);
+
+    local_x = (input_x * basis_right[0]) + (input_z * basis_right[2]);
+    local_z = (input_x * basis_forward[0]) + (input_z * basis_forward[2]);
+
+    runtime_input_abi_set_move_input(&s_engine_state, local_x, local_z);
 }
 
 uint32_t engine_player_upsert(const char *player_guid, const char *player_name,

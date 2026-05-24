@@ -1,5 +1,6 @@
 #include "player_motion_host.h"
 
+#include "../camera/camera_basis.h"
 #include "player_registry.h"
 
 void runtime_player_motion_tick(World *world,
@@ -23,9 +24,11 @@ void runtime_player_motion_tick(World *world,
     if (!world)
         return;
 
-    (void)camera_eye;
-    (void)camera_target;
-    (void)camera_valid;
+    (void)runtime_camera_compute_ground_basis(camera_eye,
+                                              camera_target,
+                                              camera_valid,
+                                              forward,
+                                              right);
 
     if (binding_count > BANANA_MAX_NATIVE_PLAYERS)
         binding_count = BANANA_MAX_NATIVE_PLAYERS;

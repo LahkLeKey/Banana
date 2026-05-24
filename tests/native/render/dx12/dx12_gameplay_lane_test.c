@@ -1,5 +1,5 @@
-#include "../../../src/native/engine/engine.h"
-#include "../../../src/native/engine/win32_dx12_poc/scene_flow.h"
+#include "../../../../src/native/engine/engine.h"
+#include "../../../../src/native/engine/win32_dx12_poc/scene_flow.h"
 
 #include <stdio.h>
 #include <stdlib.h>

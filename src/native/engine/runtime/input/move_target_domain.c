@@ -1,5 +1,6 @@
 #include "move_target_domain.h"
 
+#include "../camera/camera_basis.h"
 #include "input_contract.h"
 
 #include <math.h>
@@ -51,6 +52,10 @@ int runtime_move_target_compute_steering(const RuntimeMoveTargetState *state,
     float distance = 0.f;
     float world_dir_x = 0.f;
     float world_dir_z = 0.f;
+    float basis_forward[3] = {0.f, 0.f, -1.f};
+    float basis_right[3] = {1.f, 0.f, 0.f};
+    float local_move_x = 0.f;
+    float local_move_z = 0.f;
 
     if (!out_steering)
         return 0;
@@ -77,12 +82,18 @@ int runtime_move_target_compute_steering(const RuntimeMoveTargetState *state,
     world_dir_x = dx / distance;
     world_dir_z = dz / distance;
 
-    (void)camera_eye;
-    (void)camera_target;
-    (void)camera_valid;
+    /* Align auto-move steering with the same camera-relative basis used by motion tick. */
+    (void)runtime_camera_compute_ground_basis(camera_eye,
+                                              camera_target,
+                                              camera_valid,
+                                              basis_forward,
+                                              basis_right);
 
-    out_steering->move_x = world_dir_x;
-    out_steering->move_z = world_dir_z;
+    local_move_x = (world_dir_x * basis_right[0]) + (world_dir_z * basis_right[2]);
+    local_move_z = (world_dir_x * basis_forward[0]) + (world_dir_z * basis_forward[2]);
+
+    out_steering->move_x = local_move_x;
+    out_steering->move_z = local_move_z;
     runtime_input_contract_sanitize_move_input(out_steering->move_x,
                                                out_steering->move_z,
                                                &out_steering->move_x,
