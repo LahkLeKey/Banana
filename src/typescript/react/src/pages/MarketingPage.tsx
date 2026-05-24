@@ -75,6 +75,23 @@ export function MarketingPage() {
                     >
                         Steam account login
                     </a>
+                    <a
+                        href="/download"
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "14px 18px",
+                            borderRadius: 14,
+                            border: "1px solid rgba(16, 185, 129, 0.4)",
+                            color: "#bbf7d0",
+                            textDecoration: "none",
+                            fontWeight: 700,
+                            background: "rgba(6, 78, 59, 0.35)",
+                        }}
+                    >
+                        View account and gameplay stats
+                    </a>
                 </div>
             </section>
         </main>
