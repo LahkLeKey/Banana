@@ -1,4 +1,4 @@
-#include "runtime/parallel/interlock.h"
+#include "runtime/parallel/interlock/interlock.h"
 
 #include <stdio.h>
 

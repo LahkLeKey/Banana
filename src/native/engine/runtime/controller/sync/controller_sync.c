@@ -1,5 +1,5 @@
 #include "controller_sync.h"
-#include "../../parallel/interlock.h"
+#include "../../parallel/interlock/interlock.h"
 
 #include <stdio.h>
 #include <stdlib.h>

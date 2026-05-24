@@ -1,4 +1,4 @@
-#include "runtime/parallel/parallel_model.h"
+#include "runtime/parallel/model/parallel_model.h"
 
 #include <math.h>
 #include <stdio.h>

@@ -88,11 +88,11 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/merchant/merchant_trade_domain.c
   runtime/merchant/merchant_service.c
   runtime/interaction/interactive_objects.c
-  runtime/parallel/interlock.c
+  runtime/parallel/interlock/interlock.c
   runtime/input/move_target_service.c
   runtime/input/move_target_domain.c
-  runtime/parallel/parallel_contract.c
-  runtime/parallel/parallel_model.c
+  runtime/parallel/contract/parallel_contract.c
+  runtime/parallel/model/parallel_model.c
   runtime/abi/physics/physics_abi.c
   runtime/player/player_api.c
   runtime/player/player_merchant_adapter.c
@@ -1001,7 +1001,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_application_service_ports_test COMMAND banana_runtime_application_service_ports_test)
 
   add_executable(banana_runtime_interlock_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/runtime_interlock_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/interlock/runtime_interlock_test.c
   )
   target_link_libraries(banana_runtime_interlock_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_interlock_test PRIVATE
@@ -1014,7 +1014,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_interlock_test COMMAND banana_runtime_interlock_test)
 
   add_executable(banana_runtime_parallel_amdahl_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/runtime_parallel_amdahl_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/model/runtime_parallel_amdahl_test.c
   )
   target_link_libraries(banana_runtime_parallel_amdahl_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_parallel_amdahl_test PRIVATE
@@ -1027,7 +1027,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_parallel_amdahl_test COMMAND banana_runtime_parallel_amdahl_test)
 
   add_executable(banana_runtime_parallel_contract_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/runtime_parallel_contract_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/parallel/contract/runtime_parallel_contract_test.c
   )
   target_link_libraries(banana_runtime_parallel_contract_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_parallel_contract_test PRIVATE
