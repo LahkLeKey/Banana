@@ -1,6 +1,6 @@
 #include "player_runtime_service.h"
 
-#include "../camera/camera_follow.h"
+#include "../camera/follow/camera_follow.h"
 #include "../input/input_contract.h"
 #include "player_motion_host.h"
 

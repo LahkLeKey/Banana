@@ -1,4 +1,4 @@
-#include "runtime/camera/camera_follow_policy.h"
+#include "runtime/camera/follow/camera_follow_policy.h"
 
 #include <math.h>
 #include <stdio.h>

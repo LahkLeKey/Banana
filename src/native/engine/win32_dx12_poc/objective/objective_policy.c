@@ -1,4 +1,4 @@
-#include "objective_policy.h"
+#include "../objective_policy.h"
 
 void banana_poc_objective_policy_init(BananaPocObjectivePolicy *policy,
                                       int base_timeout_seconds)

@@ -5,57 +5,57 @@ cmake_minimum_required(VERSION 3.20)
 # ─────────────────────────────────────────────────────────────────────────────
 
 set(ENGINE_RENDER_SOURCES
-  render/backend.c
-  render/backend_dx12.c
+  render/backend/backend.c
+  render/backend/backend_dx12.c
   render/dx12/backend_dx12_diagnostics.c
   render/dx12/backend_dx12_projection_policy.c
-  render/window.c
-  render/shader.c
-  render/mesh.c
-  render/mesh_banana.c
-  render/mesh_terrain.c
-  render/material.c
-  render/camera.c
-  render/renderer.c
-  render/renderer_draw.c
-  render/actor_mesh_registry.c
+  render/window/window.c
+  render/shader/shader.c
+  render/mesh/mesh.c
+  render/mesh/mesh_banana.c
+  render/mesh/mesh_terrain.c
+  render/material/material.c
+  render/camera/camera.c
+  render/renderer/renderer.c
+  render/renderer/renderer_draw.c
+  render/registry/actor_mesh_registry.c
 )
 
 set(ENGINE_PHYSICS_SOURCES
-  physics/body.c
-  physics/collider_broad_phase.c
-  physics/collider_narrow_phase.c
-  physics/collider_resolve.c
-  physics/dynamics.c
-  physics/raycast.c
-  physics/world_collision.c
-  physics/world.c
+  physics/body/body.c
+  physics/collider/collider_broad_phase.c
+  physics/collider/collider_narrow_phase.c
+  physics/collider/collider_resolve.c
+  physics/dynamics/dynamics.c
+  physics/raycast/raycast.c
+  physics/world/world_collision.c
+  physics/world/world.c
 )
 
 set(ENGINE_AI_SOURCES
-  ai/controller.c
-  ai/controller_system_dispatch.c
-  ai/controller_system_lifecycle.c
-  ai/navigation.c
-  ai/npc_merchant.c
-  ai/perception.c
-  ai/state_machine.c
-  ai/wildlife_controller.c
+  ai/controller/controller.c
+  ai/controller/controller_system_dispatch.c
+  ai/controller/controller_system_lifecycle.c
+  ai/navigation/navigation.c
+  ai/npc/npc_merchant.c
+  ai/perception/perception.c
+  ai/state/state_machine.c
+  ai/wildlife/wildlife_controller.c
 )
 
 set(ENGINE_WORLD_SOURCES
-  world/entity.c
-  world/world_query.c
-  world/world.c
-  world/signals.c
+  world/entity/entity.c
+  world/query/world_query.c
+  world/core/world.c
+  world/signals/signals.c
 )
 
 set(ENGINE_UI_SOURCES
-  ui/ui.c
-  ui/ui_render.c
-  ui/ui_inventory.c
-  ui/ui_merchant.c
-  ui/ui_callback_bindings.c
+  ui/core/ui.c
+  ui/render/ui_render.c
+  ui/inventory/ui_inventory.c
+  ui/merchant/ui_merchant.c
+  ui/callbacks/ui_callback_bindings.c
 )
 
 set(ENGINE_RUNTIME_SOURCES
@@ -65,9 +65,9 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/orchestration/tick/render_tick_orchestration.c
   runtime/orchestration/tick/terrain_tick_orchestration.c
   runtime/controller/controller_kind_domain.c
-  runtime/camera/camera_basis.c
-  runtime/camera/camera_follow.c
-  runtime/camera/camera_follow_policy.c
+  runtime/camera/basis/camera_basis.c
+  runtime/camera/follow/camera_follow.c
+  runtime/camera/follow/camera_follow_policy.c
   runtime/controller/controller_attach.c
   runtime/controller/controller_runtime.c
   runtime/controller/controller_sync.c
@@ -243,10 +243,10 @@ if(NOT EMSCRIPTEN)
 
   if(WIN32)
     add_executable(banana_engine_win32_dx12_poc
-      win32_dx12_poc/main.c
-      win32_dx12_poc/objective_policy.c
-      win32_dx12_poc/scene_overlay.c
-      win32_dx12_poc/scene_flow.c
+      win32_dx12_poc/app/main.c
+      win32_dx12_poc/objective/objective_policy.c
+      win32_dx12_poc/overlay/scene_overlay.c
+      win32_dx12_poc/scene/scene_flow.c
     )
 
     target_link_libraries(banana_engine_win32_dx12_poc PRIVATE
@@ -502,7 +502,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_world_query_nearby_test COMMAND banana_world_query_nearby_test)
 
   add_executable(banana_runtime_math_helpers_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/camera/runtime_math_helpers_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/camera/basis/runtime_math_helpers_test.c
   )
   target_link_libraries(banana_runtime_math_helpers_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_math_helpers_test PRIVATE
@@ -631,7 +631,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
 
     add_executable(banana_dx12_scene_overlay_frame_test
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_scene_overlay_frame_test.c
-      win32_dx12_poc/scene_overlay.c
+      win32_dx12_poc/overlay/scene_overlay.c
     )
     target_link_libraries(banana_dx12_scene_overlay_frame_test PRIVATE banana_engine_core)
     target_include_directories(banana_dx12_scene_overlay_frame_test PRIVATE
@@ -660,7 +660,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
 
     add_executable(banana_dx12_objective_policy_test
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_objective_policy_test.c
-      win32_dx12_poc/objective_policy.c
+      win32_dx12_poc/objective/objective_policy.c
     )
     target_include_directories(banana_dx12_objective_policy_test PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}
@@ -670,7 +670,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
 
     add_executable(banana_dx12_scene_flow_test
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_scene_flow_test.c
-      win32_dx12_poc/scene_flow.c
+      win32_dx12_poc/scene/scene_flow.c
     )
     target_include_directories(banana_dx12_scene_flow_test PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}
@@ -680,7 +680,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
 
     add_executable(banana_dx12_gameplay_lane_test
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_gameplay_lane_test.c
-      win32_dx12_poc/scene_flow.c
+      win32_dx12_poc/scene/scene_flow.c
     )
     target_link_libraries(banana_dx12_gameplay_lane_test PRIVATE banana_engine_core)
     target_include_directories(banana_dx12_gameplay_lane_test PRIVATE
@@ -691,7 +691,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
 
     add_executable(banana_dx12_gameplay_click_lane_test
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/dx12_gameplay_click_lane_test.c
-      win32_dx12_poc/scene_flow.c
+      win32_dx12_poc/scene/scene_flow.c
     )
     target_link_libraries(banana_dx12_gameplay_click_lane_test PRIVATE banana_engine_core)
     target_include_directories(banana_dx12_gameplay_click_lane_test PRIVATE
@@ -796,7 +796,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_tick_post_phase_test COMMAND banana_runtime_tick_post_phase_test)
 
   add_executable(banana_runtime_camera_follow_policy_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/camera/runtime_camera_follow_policy_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/camera/follow/runtime_camera_follow_policy_test.c
   )
   target_link_libraries(banana_runtime_camera_follow_policy_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_camera_follow_policy_test PRIVATE

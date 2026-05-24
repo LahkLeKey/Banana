@@ -1,4 +1,4 @@
-#include "world.h"
+#include "../world.h"
 
 #include <string.h>
 

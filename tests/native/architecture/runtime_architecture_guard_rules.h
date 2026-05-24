@@ -35,7 +35,7 @@ static const FileRule kRuntimeArchitectureGuardRules[] = {
         2,
     },
     {
-        "runtime/camera/camera_follow_policy.c",
+        "runtime/camera/follow/camera_follow_policy.c",
         "domain services must not depend on orchestration",
         {"orchestration/"},
         1,
@@ -105,13 +105,13 @@ static const FileRule kRuntimeArchitectureGuardRules[] = {
         4,
     },
     {
-        "render/backend_dx12.c",
+        "render/backend/backend_dx12.c",
         "dx12 backend should delegate diagnostic state ownership to helper module",
         {"static char s_dx12_telemetry[", "static int s_dx12_probe_state", "static const char *s_dx12_probe_status"},
         3,
     },
     {
-        "render/backend_dx12.c",
+        "render/backend/backend_dx12.c",
         "render adapters must not depend on orchestration",
         {"runtime/orchestration/", "../runtime/orchestration/"},
         2,
@@ -123,13 +123,13 @@ static const FileRule kRuntimeArchitectureGuardRules[] = {
         3,
     },
     {
-        "render/renderer.c",
+        "render/renderer/renderer.c",
         "render adapters must not depend on orchestration",
         {"runtime/orchestration/", "../runtime/orchestration/"},
         2,
     },
     {
-        "render/window.c",
+        "render/window/window.c",
         "render adapters must not depend on orchestration",
         {"runtime/orchestration/", "../runtime/orchestration/"},
         2,

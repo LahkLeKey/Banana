@@ -1,5 +1,5 @@
-#include "world.h"
-#include "signals.h"
+#include "../world.h"
+#include "../signals.h"
 #include <stdlib.h>
 #include <string.h>
 

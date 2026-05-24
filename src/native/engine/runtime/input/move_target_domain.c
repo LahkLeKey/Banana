@@ -1,6 +1,6 @@
 #include "move_target_domain.h"
 
-#include "../camera/camera_basis.h"
+#include "../camera/basis/camera_basis.h"
 #include "input_contract.h"
 
 #include <math.h>

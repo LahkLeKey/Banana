@@ -1,8 +1,8 @@
 #ifndef BANANA_ENGINE_RUNTIME_CAMERA_FOLLOW_H
 #define BANANA_ENGINE_RUNTIME_CAMERA_FOLLOW_H
 
-#include "../../render/renderer.h"
-#include "../../world/world.h"
+#include "../../../render/renderer.h"
+#include "../../../world/world.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -1,6 +1,6 @@
 #include "signals.h"
 #include "../ai/controller.h"
-#include "world.h"
+#include "../world.h"
 #include <stdio.h>
 #include <string.h>
 

@@ -1,6 +1,6 @@
-#include "scene_overlay.h"
+#include "../scene_overlay.h"
 
-#include "../engine.h"
+#include "../../engine.h"
 
 #include <stdio.h>
 #include <string.h>
