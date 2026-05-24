@@ -158,6 +158,9 @@ extern "C"
     /* Query active PBJ pickup world-space x/z position. Returns 1 on success. */
     int engine_get_pbj_pickup_position(float *out_x, float *out_z);
 
+    /* Query world half-span used for terrain-space mapping (centered at origin). */
+    float engine_get_terrain_half_span(void);
+
     /* ── Player Build & Combo Systems ───────────────────────────────────── */
 
     /* Set player class (0=vanguard, 1=arcanist, 2=ranger). */

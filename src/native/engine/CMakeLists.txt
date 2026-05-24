@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.20)
 set(ENGINE_RENDER_SOURCES
   render/backend.c
   render/backend_dx12.c
+  render/backend_dx12_projection_policy.c
   render/window.c
   render/shader.c
   render/mesh.c
@@ -58,9 +59,13 @@ set(ENGINE_UI_SOURCES
 
 set(ENGINE_RUNTIME_SOURCES
   runtime/application_service_ports.c
+  runtime/orchestration/player_tick_orchestration.c
+  runtime/orchestration/render_tick_orchestration.c
+  runtime/orchestration/terrain_tick_orchestration.c
   runtime/controller_kind_domain.c
   runtime/camera_basis.c
   runtime/camera_follow.c
+  runtime/camera_follow_policy.c
   runtime/controller_attach.c
   runtime/controller_runtime.c
   runtime/controller_sync.c
@@ -232,6 +237,9 @@ if(NOT EMSCRIPTEN)
   if(WIN32)
     add_executable(banana_engine_win32_dx12_poc
       win32_dx12_poc/main.c
+      win32_dx12_poc/objective_policy.c
+      win32_dx12_poc/scene_overlay.c
+      win32_dx12_poc/scene_flow.c
     )
 
     target_link_libraries(banana_engine_win32_dx12_poc PRIVATE
@@ -599,6 +607,77 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
       ENVIRONMENT "BANANA_DX12_POC_AUTOTEST=1;BANANA_DX12_POC_AUTOTEST_SECONDS=2"
       TIMEOUT 10
     )
+
+    add_executable(banana_dx12_scene_overlay_frame_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_scene_overlay_frame_test.c
+      win32_dx12_poc/scene_overlay.c
+    )
+    target_link_libraries(banana_dx12_scene_overlay_frame_test PRIVATE banana_engine_core)
+    target_include_directories(banana_dx12_scene_overlay_frame_test PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/render
+      ${CMAKE_CURRENT_SOURCE_DIR}/physics
+      ${CMAKE_CURRENT_SOURCE_DIR}/ai
+      ${CMAKE_CURRENT_SOURCE_DIR}/world
+      ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+      ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+    )
+    add_test(NAME banana_dx12_scene_overlay_frame_test COMMAND banana_dx12_scene_overlay_frame_test)
+
+    add_executable(banana_dx12_projection_policy_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_projection_policy_test.c
+    )
+    target_link_libraries(banana_dx12_projection_policy_test PRIVATE banana_engine_core)
+    target_include_directories(banana_dx12_projection_policy_test PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/render
+      ${CMAKE_CURRENT_SOURCE_DIR}/physics
+      ${CMAKE_CURRENT_SOURCE_DIR}/ai
+      ${CMAKE_CURRENT_SOURCE_DIR}/world
+    )
+    add_test(NAME banana_dx12_projection_policy_test COMMAND banana_dx12_projection_policy_test)
+
+    add_executable(banana_dx12_objective_policy_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_objective_policy_test.c
+      win32_dx12_poc/objective_policy.c
+    )
+    target_include_directories(banana_dx12_objective_policy_test PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+    )
+    add_test(NAME banana_dx12_objective_policy_test COMMAND banana_dx12_objective_policy_test)
+
+    add_executable(banana_dx12_scene_flow_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_scene_flow_test.c
+      win32_dx12_poc/scene_flow.c
+    )
+    target_include_directories(banana_dx12_scene_flow_test PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+    )
+    add_test(NAME banana_dx12_scene_flow_test COMMAND banana_dx12_scene_flow_test)
+
+    add_executable(banana_dx12_gameplay_lane_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_gameplay_lane_test.c
+      win32_dx12_poc/scene_flow.c
+    )
+    target_link_libraries(banana_dx12_gameplay_lane_test PRIVATE banana_engine_core)
+    target_include_directories(banana_dx12_gameplay_lane_test PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+    )
+    add_test(NAME banana_dx12_gameplay_lane_test COMMAND banana_dx12_gameplay_lane_test)
+
+    add_executable(banana_dx12_gameplay_click_lane_test
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/dx12_gameplay_click_lane_test.c
+      win32_dx12_poc/scene_flow.c
+    )
+    target_link_libraries(banana_dx12_gameplay_click_lane_test PRIVATE banana_engine_core)
+    target_include_directories(banana_dx12_gameplay_click_lane_test PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+    )
+    add_test(NAME banana_dx12_gameplay_click_lane_test COMMAND banana_dx12_gameplay_click_lane_test)
   endif()
 
   add_executable(banana_runtime_physics_world_abi_test
@@ -652,6 +731,20 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_runtime_engine_tick_test COMMAND banana_runtime_engine_tick_test)
+
+  add_executable(banana_runtime_camera_follow_policy_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_camera_follow_policy_test.c
+  )
+  target_link_libraries(banana_runtime_camera_follow_policy_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_camera_follow_policy_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_camera_follow_policy_test COMMAND banana_runtime_camera_follow_policy_test)
 
   add_executable(banana_runtime_move_target_domain_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime_move_target_domain_test.c

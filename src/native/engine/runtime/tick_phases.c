@@ -20,11 +20,12 @@ void runtime_phase_viewport_resize(Window *window,
     }
 }
 
-int runtime_phase_terrain_budget(RuntimeTerrainRebuildFn rebuild_dirty_chunks,
+int runtime_phase_terrain_budget(void *context,
+                                 RuntimeTerrainRebuildFn rebuild_dirty_chunks,
                                  int max_chunks)
 {
     if (!rebuild_dirty_chunks)
         return -1;
 
-    return rebuild_dirty_chunks(max_chunks) ? 0 : -1;
+    return rebuild_dirty_chunks(context, max_chunks) ? 0 : -1;
 }

@@ -7,36 +7,42 @@ static int s_follow_calls = 0;
 static int s_gameplay_calls = 0;
 static int s_render_calls = 0;
 
-static int rebuild_ok(int max_chunks)
+static int rebuild_ok(void *context, int max_chunks)
 {
+    (void)context;
     (void)max_chunks;
     return 1;
 }
 
-static int rebuild_fail(int max_chunks)
+static int rebuild_fail(void *context, int max_chunks)
 {
+    (void)context;
     (void)max_chunks;
     return 0;
 }
 
-static void update_cb(float dt)
+static void update_cb(void *context, float dt)
 {
+    (void)context;
     (void)dt;
     s_update_calls += 1;
 }
 
-static void follow_cb(void)
+static void follow_cb(void *context)
 {
+    (void)context;
     s_follow_calls += 1;
 }
 
-static void gameplay_cb(void)
+static void gameplay_cb(void *context)
 {
+    (void)context;
     s_gameplay_calls += 1;
 }
 
-static void render_cb(void)
+static void render_cb(void *context)
 {
+    (void)context;
     s_render_calls += 1;
 }
 
@@ -78,6 +84,7 @@ int main(void)
                                                 NULL,
                                                 0,
                                                 1.0f / 60.0f,
+                                                NULL,
                                                 update_cb,
                                                 follow_cb,
                                                 NULL,
@@ -97,6 +104,7 @@ int main(void)
                                                 NULL,
                                                 0,
                                                 1.0f / 60.0f,
+                                                NULL,
                                                 update_cb,
                                                 follow_cb,
                                                 NULL,
@@ -116,6 +124,7 @@ int main(void)
                                                 NULL,
                                                 0,
                                                 1.0f / 60.0f,
+                                                NULL,
                                                 update_cb,
                                                 follow_cb,
                                                 NULL,

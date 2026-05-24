@@ -1,5 +1,6 @@
 #include "runtime/engine_lifecycle.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -87,6 +88,26 @@ int main(void)
         return 1;
     if (!expect_true("entity count after actors", world->entity_count == 10))
         return 1;
+
+    {
+        int saw_wide_spawn = 0;
+        for (int i = 1; i < world->entity_count; i++)
+        {
+            Entity *entity = world->entities[i];
+            if (!entity)
+                continue;
+            float radial = sqrtf((entity->position[0] * entity->position[0]) +
+                                 (entity->position[2] * entity->position[2]));
+            if (radial > 10.0f)
+            {
+                saw_wide_spawn = 1;
+                break;
+            }
+        }
+
+        if (!expect_true("actors distributed beyond starter zone", saw_wide_spawn == 1))
+            return 1;
+    }
 
     controllers[0] = (ControllerInstance *)calloc(1, sizeof(ControllerInstance));
     controllers[1] = (ControllerInstance *)calloc(1, sizeof(ControllerInstance));

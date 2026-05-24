@@ -153,7 +153,8 @@ void ui_text(UIContext *ctx, float x, float y, const char *text) {
     elem->type = UI_ELEM_TEXT;
     elem->x = x;
     elem->y = y;
-    elem->data.text.text = text;
+    strncpy(elem->data.text.text, text, sizeof(elem->data.text.text) - 1);
+    elem->data.text.text[sizeof(elem->data.text.text) - 1] = '\0';
 }
 
 int ui_text_field(UIContext *ctx, float x, float y, float width, float height,

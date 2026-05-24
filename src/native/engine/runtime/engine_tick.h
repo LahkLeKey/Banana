@@ -13,10 +13,10 @@ extern "C"
 {
 #endif
 
-    typedef void (*RuntimeTickUpdateFn)(float dt);
-    typedef void (*RuntimeTickVoidFn)(void);
-    typedef void (*RuntimeTickGameplayFn)(void);
-    typedef void (*RuntimeTickClickInputFn)(float normalized_x, float normalized_y);
+    typedef void (*RuntimeTickUpdateFn)(void *context, float dt);
+    typedef void (*RuntimeTickVoidFn)(void *context);
+    typedef void (*RuntimeTickGameplayFn)(void *context);
+    typedef void (*RuntimeTickClickInputFn)(void *context, float normalized_x, float normalized_y);
 
     int runtime_engine_tick_execute(Window *window,
                                     Renderer *renderer,
@@ -28,6 +28,7 @@ extern "C"
                                     ControllerInstance **controllers,
                                     int controller_count,
                                     float dt,
+                                    void *context,
                                     RuntimeTickUpdateFn update_player_motion,
                                     RuntimeTickVoidFn follow_player_camera,
                                     RuntimeTickClickInputFn apply_click_input,

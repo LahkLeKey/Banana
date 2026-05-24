@@ -9,14 +9,15 @@ extern "C"
 {
 #endif
 
-    typedef int (*RuntimeTerrainRebuildFn)(int max_chunks);
+    typedef int (*RuntimeTerrainRebuildFn)(void *context, int max_chunks);
 
     void runtime_phase_viewport_resize(Window *window,
                                        Renderer *renderer,
                                        int *viewport_width,
                                        int *viewport_height);
 
-    int runtime_phase_terrain_budget(RuntimeTerrainRebuildFn rebuild_dirty_chunks,
+    int runtime_phase_terrain_budget(void *context,
+                                     RuntimeTerrainRebuildFn rebuild_dirty_chunks,
                                      int max_chunks);
 
 #ifdef __cplusplus

@@ -1,5 +1,7 @@
 #include "camera_follow.h"
 
+#include "camera_follow_policy.h"
+
 #include "../render/camera.h"
 
 #include <stddef.h>
@@ -15,6 +17,7 @@ void runtime_camera_follow_player(Renderer *renderer,
 {
     Entity *player = NULL;
     Camera camera = {0};
+    RuntimeCameraFollowPose pose = {0};
 
     if (!renderer || !world || !player_id || viewport_width <= 0 || viewport_height <= 0 ||
         !camera_eye || !camera_target || !camera_valid)
@@ -24,22 +27,31 @@ void runtime_camera_follow_player(Renderer *renderer,
     if (!player || !player->active)
         return;
 
-    camera = camera_create(44.f, (float)viewport_width / (float)viewport_height, 0.1f, 1000.f);
+    if (!runtime_camera_follow_policy_compute(player->position,
+                                              viewport_width,
+                                              viewport_height,
+                                              &pose))
+        return;
+
+    camera = camera_create(pose.fov_degrees,
+                           pose.aspect,
+                           pose.near_plane,
+                           pose.far_plane);
     camera_look_at(&camera,
-                   player->position[0] + 7.0f,
-                   player->position[1] + 10.5f,
-                   player->position[2] + 7.0f,
-                   player->position[0],
-                   player->position[1] - 0.35f,
-                   player->position[2]);
+                   pose.eye[0],
+                   pose.eye[1],
+                   pose.eye[2],
+                   pose.target[0],
+                   pose.target[1],
+                   pose.target[2]);
 
-    camera_eye[0] = player->position[0] + 7.0f;
-    camera_eye[1] = player->position[1] + 10.5f;
-    camera_eye[2] = player->position[2] + 7.0f;
+    camera_eye[0] = pose.eye[0];
+    camera_eye[1] = pose.eye[1];
+    camera_eye[2] = pose.eye[2];
 
-    camera_target[0] = player->position[0];
-    camera_target[1] = player->position[1] - 0.35f;
-    camera_target[2] = player->position[2];
+    camera_target[0] = pose.target[0];
+    camera_target[1] = pose.target[1];
+    camera_target[2] = pose.target[2];
 
     *camera_valid = 1;
     renderer_set_camera(renderer, &camera);

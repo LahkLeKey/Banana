@@ -186,12 +186,28 @@ static void runtime_render_command_for_actor(const Entity *entity,
                                              Material resolved_material,
                                              RendererDrawCommand *out_command)
 {
+    float render_y = 0.0f;
+
     if (!entity || !resolved_mesh || !out_command)
         return;
 
     out_command->mesh = resolved_mesh;
     out_command->position[0] = entity->position[0];
-    out_command->position[1] = entity->position[1];
+    render_y = entity->position[1];
+
+    /* Keep non-player actors visibly above terrain even if runtime state drifts below slopes.
+       This prevents "green box corners" from poking through terrain edges. */
+    if (s_mutation_state && entity->type != ENTITY_TYPE_PLAYER)
+    {
+        float ground_y = terrain_sample_height_port(s_mutation_state,
+                                                    entity->position[0],
+                                                    entity->position[2]);
+        float min_visual_y = ground_y + (entity->scale[1] * 0.45f) + 0.12f;
+        if (render_y < min_visual_y)
+            render_y = min_visual_y;
+    }
+
+    out_command->position[1] = render_y;
     out_command->position[2] = entity->position[2];
     out_command->rotation[0] = 0.f;
     out_command->rotation[1] = 0.f;

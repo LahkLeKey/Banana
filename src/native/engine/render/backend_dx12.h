@@ -25,6 +25,14 @@ extern "C"
                                                float color_r,
                                                float color_g,
                                                float color_b);
+    void banana_dx12_runtime_set_camera(const float *eye,
+                                        const float *target,
+                                        const float *up,
+                                        float fov_degrees,
+                                        float aspect);
+    void banana_dx12_runtime_set_ui_overlay(const unsigned char *rgba,
+                                            int width,
+                                            int height);
     int banana_dx12_runtime_end_frame(void);
     void banana_dx12_runtime_shutdown(void);
 

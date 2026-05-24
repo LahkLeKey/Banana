@@ -1,6 +1,5 @@
 #include "move_target_domain.h"
 
-#include "camera_basis.h"
 #include "input_contract.h"
 
 #include <math.h>
@@ -47,8 +46,6 @@ int runtime_move_target_compute_steering(const RuntimeMoveTargetState *state,
                                          float arrival_threshold,
                                          RuntimeMoveTargetSteering *out_steering)
 {
-    float forward[3] = {0.f, 0.f, -1.f};
-    float right[3] = {1.f, 0.f, 0.f};
     float dx = 0.f;
     float dz = 0.f;
     float distance = 0.f;
@@ -80,14 +77,12 @@ int runtime_move_target_compute_steering(const RuntimeMoveTargetState *state,
     world_dir_x = dx / distance;
     world_dir_z = dz / distance;
 
-    runtime_camera_compute_ground_basis(camera_eye,
-                                       camera_target,
-                                       camera_valid,
-                                       forward,
-                                       right);
+    (void)camera_eye;
+    (void)camera_target;
+    (void)camera_valid;
 
-    out_steering->move_x = world_dir_x * right[0] + world_dir_z * right[2];
-    out_steering->move_z = world_dir_x * forward[0] + world_dir_z * forward[2];
+    out_steering->move_x = world_dir_x;
+    out_steering->move_z = world_dir_z;
     runtime_input_contract_sanitize_move_input(out_steering->move_x,
                                                out_steering->move_z,
                                                &out_steering->move_x,
