@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.20)
 set(ENGINE_RENDER_SOURCES
   render/backend.c
   render/backend_dx12.c
+  render/backend_dx12_diagnostics.c
   render/backend_dx12_projection_policy.c
   render/window.c
   render/shader.c

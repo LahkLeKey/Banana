@@ -68,16 +68,16 @@
 
 > **NOTE: Write these tests first, confirm they fail for the new diagnostics-boundary expectations, then implement the refactor.**
 
-- [ ] T015 [P] [US2] Extend tests/native/engine_dx12_runtime_smoke_test.c with failing assertions for explicit diagnostic ownership, status reporting, and failure-surface parity
+- [x] T015 [P] [US2] Extend tests/native/engine_dx12_runtime_smoke_test.c with failing assertions for explicit diagnostic ownership, status reporting, and failure-surface parity
 - [ ] T016 [P] [US2] Extend tests/native/dx12_projection_policy_test.c with failing coverage for projection-policy diagnostics boundaries and fallback reporting
 - [ ] T017 [P] [US2] Extend tests/native/dx12_scene_flow_test.c and tests/native/dx12_scene_overlay_frame_test.c with failing diagnostics-boundary coverage for scene flow and overlay reporting
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Create src/native/engine/render/backend_dx12_diagnostics.c and src/native/engine/render/backend_dx12_diagnostics.h to isolate DX12/backend telemetry formatting and diagnostic state transitions
-- [ ] T019 [US2] Refactor src/native/engine/render/backend_dx12.c to delegate diagnostic ownership to src/native/engine/render/backend_dx12_diagnostics.c without changing src/native/engine/render/backend_dx12.h
-- [ ] T020 [US2] Update src/native/engine/CMakeLists.txt to compile src/native/engine/render/backend_dx12_diagnostics.c and keep the DX12-focused test targets registered
-- [ ] T021 [US2] Capture focused DX12 diagnostics validation evidence in artifacts/native/005-us2-dx12-diagnostics.txt after running the User Story 2 targets from out/v3-native
+- [x] T018 [US2] Create src/native/engine/render/backend_dx12_diagnostics.c and src/native/engine/render/backend_dx12_diagnostics.h to isolate DX12/backend telemetry formatting and diagnostic state transitions
+- [x] T019 [US2] Refactor src/native/engine/render/backend_dx12.c to delegate diagnostic ownership to src/native/engine/render/backend_dx12_diagnostics.c without changing src/native/engine/render/backend_dx12.h
+- [x] T020 [US2] Update src/native/engine/CMakeLists.txt to compile src/native/engine/render/backend_dx12_diagnostics.c and keep the DX12-focused test targets registered
+- [x] T021 [US2] Capture focused DX12 diagnostics validation evidence in artifacts/native/005-us2-dx12-diagnostics.txt after running the User Story 2 targets from out/v3-native
 
 **Checkpoint**: DX12/backend diagnostics are isolated to explicit render-owned seams and the focused diagnostics tests pass.
 
@@ -93,7 +93,7 @@
 
 > **NOTE: Write these guard expansions first, confirm they fail against the missing rules, then wire the final modularized layout.**
 
-- [ ] T022 [P] [US3] Extend tests/native/runtime_architecture_dependency_guard_test.c with failing rules for src/native/engine/runtime/orchestration/runtime_tick_orchestration.c and src/native/engine/render/backend_dx12_diagnostics.c dependency direction
+- [x] T022 [P] [US3] Extend tests/native/runtime_architecture_dependency_guard_test.c with failing rules for src/native/engine/runtime/orchestration/runtime_tick_orchestration.c and src/native/engine/render/backend_dx12_diagnostics.c dependency direction
 - [ ] T023 [P] [US3] Create tests/native/runtime_architecture_guard_rules.h to keep expanded runtime/render rule tables explicit, reviewable, and small enough for future PR-sized updates
 
 ### Implementation for User Story 3

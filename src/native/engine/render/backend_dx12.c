@@ -1,7 +1,6 @@
 #include "backend_dx12.h"
+#include "backend_dx12_diagnostics.h"
 #include "backend_dx12_projection_policy.h"
-
-static char s_dx12_telemetry[256] = "dx12-runtime-inactive";
 
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
 #define COBJMACROS
@@ -137,6 +136,30 @@ typedef struct BananaDx12Runtime
 
 static BananaDx12Runtime s_dx12_runtime = {0};
 
+static BananaDx12DiagnosticsSnapshot banana_dx12_runtime_diagnostics_snapshot(void)
+{
+    BananaDx12DiagnosticsSnapshot snapshot;
+
+    snapshot.status = s_dx12_runtime.status;
+    snapshot.active = s_dx12_runtime.active;
+    snapshot.width = s_dx12_runtime.width;
+    snapshot.height = s_dx12_runtime.height;
+    snapshot.frame_counter = (unsigned long long)s_dx12_runtime.frame_counter;
+    snapshot.frames_presented = (unsigned long long)s_dx12_runtime.frames_presented;
+    snapshot.scene_draw_calls_frame = s_dx12_runtime.scene_draw_calls_frame;
+    snapshot.scene_draw_calls_total = (unsigned long long)s_dx12_runtime.scene_draw_calls_total;
+    snapshot.present_interval = s_dx12_runtime.present_interval;
+    snapshot.last_present_result = (unsigned long)s_dx12_runtime.last_present_result;
+    snapshot.ui_overlay_width = s_dx12_runtime.ui_overlay_width;
+    snapshot.ui_overlay_height = s_dx12_runtime.ui_overlay_height;
+    snapshot.ui_overlay_dirty = s_dx12_runtime.ui_overlay_dirty;
+    snapshot.ui_overlay_rows_last = s_dx12_runtime.ui_overlay_rows_last;
+    snapshot.ui_overlay_quads_last = s_dx12_runtime.ui_overlay_quads_last;
+    snapshot.ui_overlay_vertices_last = s_dx12_runtime.ui_overlay_vertices_last;
+
+    return snapshot;
+}
+
 static int banana_dx12_runtime_read_present_interval(void)
 {
     const char *present_interval_env = getenv("BANANA_DX12_PRESENT_INTERVAL");
@@ -158,28 +181,8 @@ static int banana_dx12_runtime_read_present_interval(void)
 
 static void banana_dx12_runtime_update_telemetry(void)
 {
-    snprintf(s_dx12_telemetry,
-             sizeof(s_dx12_telemetry),
-             "status=%s active=%d size=%dx%d frame=%llu presented=%llu draws_frame=%u draws_total=%llu interval=%u hr=0x%08lx",
-             s_dx12_runtime.status ? s_dx12_runtime.status : "unknown",
-             s_dx12_runtime.active,
-             s_dx12_runtime.width,
-             s_dx12_runtime.height,
-             (unsigned long long)s_dx12_runtime.frame_counter,
-             (unsigned long long)s_dx12_runtime.frames_presented,
-             s_dx12_runtime.scene_draw_calls_frame,
-             (unsigned long long)s_dx12_runtime.scene_draw_calls_total,
-             s_dx12_runtime.present_interval,
-             (unsigned long)s_dx12_runtime.last_present_result);
-    snprintf(s_dx12_telemetry + strlen(s_dx12_telemetry),
-             sizeof(s_dx12_telemetry) - strlen(s_dx12_telemetry),
-             " ui=%dx%d dirty=%d rows=%u quads=%u verts=%u",
-             s_dx12_runtime.ui_overlay_width,
-             s_dx12_runtime.ui_overlay_height,
-             s_dx12_runtime.ui_overlay_dirty,
-             s_dx12_runtime.ui_overlay_rows_last,
-             s_dx12_runtime.ui_overlay_quads_last,
-             s_dx12_runtime.ui_overlay_vertices_last);
+    BananaDx12DiagnosticsSnapshot snapshot = banana_dx12_runtime_diagnostics_snapshot();
+    (void)banana_dx12_diagnostics_runtime_telemetry(&snapshot);
 }
 
 static void banana_dx12_runtime_release_depth_target(void)
@@ -1279,29 +1282,19 @@ static IDXGIAdapter1 *banana_dx12_find_hardware_adapter(IDXGIFactory4 *factory)
 }
 #endif
 
-enum
-{
-    BANANA_DX12_PROBE_UNKNOWN = 0,
-    BANANA_DX12_PROBE_AVAILABLE = 1,
-    BANANA_DX12_PROBE_UNAVAILABLE = 2,
-};
-
-static int s_dx12_probe_state = BANANA_DX12_PROBE_UNKNOWN;
-static const char *s_dx12_probe_status = "dx12-not-probed";
-
 static void banana_dx12_probe_once(void)
 {
-    if (s_dx12_probe_state != BANANA_DX12_PROBE_UNKNOWN)
+    if (banana_dx12_diagnostics_probe_state() != BANANA_DX12_DIAGNOSTICS_PROBE_UNKNOWN)
     {
         return;
     }
 
 #if !defined(BANANA_ENGINE_RENDER_BACKEND_DX12)
-    s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-    s_dx12_probe_status = "dx12-not-requested";
+    banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                            "dx12-not-requested");
 #elif !defined(_WIN32)
-    s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-    s_dx12_probe_status = "dx12-non-windows-host";
+    banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                            "dx12-non-windows-host");
 #else
     HINSTANCE instance = GetModuleHandleA(NULL);
     WNDCLASSA window_class;
@@ -1317,14 +1310,14 @@ static void banana_dx12_probe_once(void)
 
     if (!instance)
     {
-        s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-        s_dx12_probe_status = "dx12-instance-unavailable";
+        banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                                "dx12-instance-unavailable");
         return;
     }
     if (!banana_dx12_create_probe_window(instance, &window_class, &window))
     {
-        s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-        s_dx12_probe_status = "dx12-window-create-failed";
+        banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                                "dx12-window-create-failed");
         return;
     }
 
@@ -1333,16 +1326,16 @@ static void banana_dx12_probe_once(void)
                                 (void **)&factory);
     if (FAILED(result) || !factory)
     {
-        s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-        s_dx12_probe_status = "dx12-factory-create-failed";
+        banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                                "dx12-factory-create-failed");
         goto cleanup;
     }
 
     adapter = banana_dx12_find_hardware_adapter(factory);
     if (!adapter)
     {
-        s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-        s_dx12_probe_status = "dx12-adapter-not-found";
+        banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                                "dx12-adapter-not-found");
         goto cleanup;
     }
 
@@ -1352,8 +1345,8 @@ static void banana_dx12_probe_once(void)
                                (void **)&device);
     if (FAILED(result) || !device)
     {
-        s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-        s_dx12_probe_status = "dx12-device-create-failed";
+        banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                                "dx12-device-create-failed");
         goto cleanup;
     }
 
@@ -1369,8 +1362,8 @@ static void banana_dx12_probe_once(void)
                                              (void **)&command_queue);
     if (FAILED(result) || !command_queue)
     {
-        s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-        s_dx12_probe_status = "dx12-command-queue-create-failed";
+        banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                                "dx12-command-queue-create-failed");
         goto cleanup;
     }
 
@@ -1397,14 +1390,14 @@ static void banana_dx12_probe_once(void)
                                                   &swap_chain);
     if (FAILED(result) || !swap_chain)
     {
-        s_dx12_probe_state = BANANA_DX12_PROBE_UNAVAILABLE;
-        s_dx12_probe_status = "dx12-swap-chain-create-failed";
+        banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_UNAVAILABLE,
+                                                "dx12-swap-chain-create-failed");
         goto cleanup;
     }
 
     IDXGIFactory4_MakeWindowAssociation(factory, window, DXGI_MWA_NO_ALT_ENTER);
-    s_dx12_probe_state = BANANA_DX12_PROBE_AVAILABLE;
-    s_dx12_probe_status = "dx12-bootstrap-ready";
+    banana_dx12_diagnostics_set_probe_state(BANANA_DX12_DIAGNOSTICS_PROBE_AVAILABLE,
+                                            "dx12-bootstrap-ready");
 
 cleanup:
     if (swap_chain)
@@ -1425,7 +1418,7 @@ cleanup:
 int banana_dx12_backend_is_available(void)
 {
     banana_dx12_probe_once();
-    return s_dx12_probe_state == BANANA_DX12_PROBE_AVAILABLE;
+    return banana_dx12_diagnostics_probe_state() == BANANA_DX12_DIAGNOSTICS_PROBE_AVAILABLE;
 }
 
 const char *banana_dx12_backend_status(void)
@@ -1437,16 +1430,16 @@ const char *banana_dx12_backend_status(void)
     }
 #endif
     banana_dx12_probe_once();
-    return s_dx12_probe_status;
+    return banana_dx12_diagnostics_probe_status();
 }
 
 const char *banana_dx12_runtime_telemetry(void)
 {
 #if defined(BANANA_ENGINE_RENDER_BACKEND_DX12) && defined(_WIN32)
-    banana_dx12_runtime_update_telemetry();
-    return s_dx12_telemetry;
+    BananaDx12DiagnosticsSnapshot snapshot = banana_dx12_runtime_diagnostics_snapshot();
+    return banana_dx12_diagnostics_runtime_telemetry(&snapshot);
 #else
-    return "status=dx12-runtime-unavailable active=0";
+    return banana_dx12_diagnostics_runtime_unavailable_telemetry();
 #endif
 }
 

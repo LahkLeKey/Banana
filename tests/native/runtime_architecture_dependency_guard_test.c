@@ -211,9 +211,21 @@ int main(void)
         },
         {
             "render/backend_dx12.c",
+            "dx12 backend should delegate diagnostic state ownership to helper module",
+            {"static char s_dx12_telemetry[", "static int s_dx12_probe_state", "static const char *s_dx12_probe_status"},
+            3,
+        },
+        {
+            "render/backend_dx12.c",
             "render adapters must not depend on orchestration",
             {"runtime/orchestration/", "../runtime/orchestration/"},
             2,
+        },
+        {
+            "render/backend_dx12_diagnostics.c",
+            "dx12 diagnostics helper must stay render/runtime boundary agnostic",
+            {"runtime/orchestration/", "../runtime/orchestration/", "win32_dx12_poc/"},
+            3,
         },
         {
             "render/renderer.c",
