@@ -262,6 +262,116 @@ describe('game session routes', () => {
         await app.close();
       });
 
+  test('exposes world stats for web tools', async () => {
+    const app = await createApp();
+
+    const start = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/start',
+      payload: {playerName: 'stats-tester'},
+    });
+    expect(start.statusCode).toBe(201);
+
+    const stats = await app.inject({
+      method: 'GET',
+      url: '/api/game/tools/world/stats',
+    });
+    expect(stats.statusCode).toBe(200);
+
+    const payload = stats.json() as {
+      sessionId: string;
+      players: {connected: number; total: number};
+      world: {entityCount: number};
+      server: {targetTps: number; currentTps: number};
+      workflows: {totalEvents: number; recent: Array<unknown>};
+      mode: string;
+    };
+
+    expect(payload.sessionId).toBe('overworld');
+    expect(payload.mode).toBe('overworld');
+    expect(payload.players.total).toBeGreaterThanOrEqual(0);
+    expect(payload.players.connected).toBeGreaterThanOrEqual(0);
+    expect(payload.world.entityCount).toBeGreaterThanOrEqual(0);
+    expect(payload.server.targetTps).toBeGreaterThan(0);
+    expect(payload.server.currentTps).toBeGreaterThan(0);
+    expect(payload.workflows.totalEvents).toBe(0);
+    expect(payload.workflows.recent.length).toBe(0);
+
+    await app.close();
+  });
+
+  test('dispatches server workflow events to websocket clients', async () => {
+    const app = await createApp();
+
+    const start = await app.inject({
+      method: 'POST',
+      url: '/api/game/session/start',
+      payload: {playerName: 'workflow-tester'},
+    });
+    expect(start.statusCode).toBe(201);
+
+    const listenAddress = await app.listen({port: 0, host: '127.0.0.1'});
+    const httpUrl = new URL(listenAddress);
+    const wsUrl =
+        `ws://${httpUrl.hostname}:${httpUrl.port}/game-session?playerName=workflow-tester`;
+
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('timed out waiting for server workflow event'));
+      }, 5000);
+
+      const socket = new WebSocket(wsUrl);
+
+      socket.on('message', async (raw: RawData) => {
+        const payload = JSON.parse(raw.toString()) as
+            | {type: 'connected'}
+            | {
+                type: 'server_workflow';
+                sessionId: string;
+                workflow: {workflowName: string; issuedBy: string};
+              };
+
+        if (payload.type === 'connected') {
+          const dispatch = await app.inject({
+            method: 'POST',
+            url: '/api/game/tools/workflows/dispatch',
+            payload: {
+              workflowName: 'double_xp_weekend',
+              issuedBy: 'ops-console',
+              patch: {xpMultiplier: 2},
+            },
+          });
+          expect(dispatch.statusCode).toBe(202);
+          return;
+        }
+
+        expect(payload.type).toBe('server_workflow');
+        expect(payload.sessionId).toBe('overworld');
+        expect(payload.workflow.workflowName).toBe('double_xp_weekend');
+        expect(payload.workflow.issuedBy).toBe('ops-console');
+
+        clearTimeout(timeout);
+        socket.close();
+        resolve();
+      });
+
+      socket.on('error', (error: Error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+    });
+
+    const stats = await app.inject({
+      method: 'GET',
+      url: '/api/game/tools/world/stats',
+    });
+    expect(stats.statusCode).toBe(200);
+    const statsPayload = stats.json() as {workflows: {totalEvents: number}};
+    expect(statsPayload.workflows.totalEvents).toBeGreaterThanOrEqual(1);
+
+    await app.close();
+  });
+
   test(
       'supports build/class/gear/combo endpoints for a session player',
       async () => {

@@ -59,6 +59,13 @@ type SessionRecord = {
   };
   realtimeLoop: ReturnType<typeof setInterval> | null;
   tickInFlight: boolean;
+  readonly workflowEvents: Array<{
+    workflowId: string;
+    workflowName: string;
+    issuedBy: string;
+    patch: Record<string, unknown>;
+    createdAt: number;
+  }>;
 };
 
 type RealtimeClientPayload =|({
@@ -86,6 +93,7 @@ const REALTIME_TICK_MS = 1000 / 30;
 const OVERWORLD_SESSION_ID = 'overworld';
 const OVERWORLD_SESSION_TOKEN = 'gst_overworld';
 const METRICS_WINDOW_SIZE = 120;
+const MAX_WORKFLOW_EVENTS = 64;
 
 let activeRealtimeSessionId: string|null = null;
 
@@ -118,6 +126,21 @@ function appendSnapshot(session: SessionRecord, snapshot: {
   session.antiCheatSnapshots.push(snapshot);
   if (session.antiCheatSnapshots.length > MAX_SNAPSHOTS) {
     session.antiCheatSnapshots.shift();
+  }
+}
+
+function appendWorkflowEvent(
+    session: SessionRecord,
+    event: {
+      workflowId: string;
+      workflowName: string;
+      issuedBy: string;
+      patch: Record<string, unknown>;
+      createdAt: number;
+    }): void {
+  session.workflowEvents.push(event);
+  if (session.workflowEvents.length > MAX_WORKFLOW_EVENTS) {
+    session.workflowEvents.shift();
   }
 }
 
@@ -187,6 +210,7 @@ async function ensureOverworldSession(
     serverMetrics: makeServerMetrics(),
     realtimeLoop: null,
     tickInFlight: false,
+    workflowEvents: [],
   };
 
   await antiCheatAdapter.resetSession(OVERWORLD_SESSION_ID);
@@ -395,6 +419,44 @@ function buildSnapshotEnvelope(
       averageTickMs: session.serverMetrics.averageTickMs,
       lagMs: session.serverMetrics.lagMs,
       lastTickAt: session.serverMetrics.lastTickAt,
+    },
+  };
+}
+
+function buildWorldStatsEnvelope(session: SessionRecord) {
+  return {
+    sessionId: session.sessionId,
+    mode: 'overworld' as const,
+    replayCursor: {
+      lastTick: session.lastTick,
+      lastSequence: session.lastSequence,
+    },
+    players: {
+      connected: Array.from(session.players.values())
+                     .filter(
+                         (player) =>
+                             player.socket?.readyState === WebSocket.OPEN)
+                     .length,
+      total: session.players.size,
+      roster: listPlayers(session),
+    },
+    world: {
+      entityCount: Object.keys(session.lastSnapshot?.entities ?? {}).length,
+      lastSnapshotTick: session.lastSnapshot?.tick ?? session.lastTick,
+      lastSnapshotTimestamp:
+          session.lastSnapshot?.timestamp ?? session.serverMetrics.lastTickAt,
+    },
+    server: {
+      targetTps: session.serverMetrics.targetTps,
+      currentTps: session.serverMetrics.currentTps,
+      averageTickMs: session.serverMetrics.averageTickMs,
+      lagMs: session.serverMetrics.lagMs,
+      lastTickAt: session.serverMetrics.lastTickAt,
+      tickInFlight: session.tickInFlight,
+    },
+    workflows: {
+      totalEvents: session.workflowEvents.length,
+      recent: session.workflowEvents.slice(-10),
     },
   };
 }
@@ -1064,6 +1126,7 @@ export async function registerGameSessionRoutes(
       heartbeatLayers: session.heartbeatLayers,
       antiCheat,
       antiCheatSnapshots: session.antiCheatSnapshots,
+      workflowEvents: session.workflowEvents,
       players: listPlayers(session),
       worldState: session.lastSnapshot,
       server: {
@@ -1075,6 +1138,58 @@ export async function registerGameSessionRoutes(
       },
       mode: 'overworld',
     });
+  });
+
+  app.get('/api/game/tools/world/stats', async (request, reply) => {
+    const sessionId =
+        resolveSessionId((request.query as {sessionId?: string}).sessionId);
+
+    const session = sessions.get(sessionId);
+    if (!session) {
+      return reply.status(404).send({error: 'session_not_found'});
+    }
+
+    return reply.status(200).send(buildWorldStatsEnvelope(session));
+  });
+
+  app.post('/api/game/tools/workflows/dispatch', async (request, reply) => {
+    const body = (request.body ?? {}) as {
+      sessionId?: string;
+      workflowId?: string;
+      workflowName?: string;
+      issuedBy?: string;
+      patch?: Record<string, unknown>;
+    };
+
+    const sessionId = resolveSessionId(body.sessionId);
+    const workflowName = (body.workflowName ?? '').toString().trim();
+    if (!workflowName) {
+      return reply.status(400).send({error: 'invalid_argument'});
+    }
+
+    const patch = typeof body.patch === 'object' && body.patch !== null ?
+        body.patch :
+        {};
+
+    const session = getSessionOrReply(sessionId, reply);
+    if (!session) return reply;
+
+    const event = {
+      workflowId: (body.workflowId ?? '').toString().trim() || randomUUID(),
+      workflowName,
+      issuedBy: (body.issuedBy ?? 'server').toString().trim() || 'server',
+      patch,
+      createdAt: Date.now(),
+    };
+
+    appendWorkflowEvent(session, event);
+    broadcastJson(session, {
+      type: 'server_workflow',
+      sessionId: session.sessionId,
+      workflow: event,
+    });
+
+    return reply.status(202).send({accepted: true, workflow: event});
   });
 
   app.get('/api/game/realtime', async (request, reply) => {
