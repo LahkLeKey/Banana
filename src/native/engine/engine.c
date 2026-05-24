@@ -3,7 +3,7 @@
 #include "render/backend.h"
 #include "ai/npc_merchant.h"
 #include "ai/wildlife_controller.h"
-#include "runtime/controller/controller_sync.h"
+#include "runtime/controller/sync/controller_sync.h"
 #include "runtime/engine/application_service_ports.h"
 #include "runtime/engine/engine_aux_abi.h"
 #include "runtime/engine/engine_composition.h"

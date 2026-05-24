@@ -1,4 +1,4 @@
-#include "runtime/controller/controller_kind_domain.h"
+#include "runtime/controller/kind/controller_kind_domain.h"
 #include "runtime/input/input_abi.h"
 #include "runtime/input/move_target_service.h"
 #include "runtime/player/player_gateway_abi.h"

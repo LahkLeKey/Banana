@@ -1,8 +1,8 @@
 #ifndef BANANA_ENGINE_RUNTIME_CONTROLLER_SYNC_H
 #define BANANA_ENGINE_RUNTIME_CONTROLLER_SYNC_H
 
-#include "../ai/controller.h"
-#include "../world/world.h"
+#include "../../../ai/controller.h"
+#include "../../../world/world.h"
 
 
 #ifdef __cplusplus

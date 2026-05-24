@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_CONTROLLER_RUNTIME_H
 #define BANANA_ENGINE_RUNTIME_CONTROLLER_RUNTIME_H
 
-#include "../ai/controller.h"
+#include "../../../ai/controller.h"
 
 #ifdef __cplusplus
 extern "C"

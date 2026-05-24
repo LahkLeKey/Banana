@@ -1,8 +1,8 @@
 #include "engine_aux_abi.h"
 
-#include "../controller/controller_attach.h"
-#include "../controller/controller_runtime.h"
-#include "../controller/controller_sync.h"
+#include "../controller/attach/controller_attach.h"
+#include "../controller/runtime/controller_runtime.h"
+#include "../controller/sync/controller_sync.h"
 #include "../world/world_metrics.h"
 #include "../world/world_telemetry.h"
 

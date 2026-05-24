@@ -64,13 +64,13 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/orchestration/tick/player_tick_orchestration.c
   runtime/orchestration/tick/render_tick_orchestration.c
   runtime/orchestration/tick/terrain_tick_orchestration.c
-  runtime/controller/controller_kind_domain.c
+  runtime/controller/kind/controller_kind_domain.c
   runtime/camera/basis/camera_basis.c
   runtime/camera/follow/camera_follow.c
   runtime/camera/follow/camera_follow_policy.c
-  runtime/controller/controller_attach.c
-  runtime/controller/controller_runtime.c
-  runtime/controller/controller_sync.c
+  runtime/controller/attach/controller_attach.c
+  runtime/controller/runtime/controller_runtime.c
+  runtime/controller/sync/controller_sync.c
   runtime/engine/engine_aux_abi.c
   runtime/engine/engine_composition.c
   runtime/engine/engine_host.c
@@ -515,7 +515,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_math_helpers_test COMMAND banana_runtime_math_helpers_test)
 
   add_executable(banana_runtime_controller_world_metrics_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/runtime_controller_world_metrics_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/runtime/runtime_controller_world_metrics_test.c
   )
   target_link_libraries(banana_runtime_controller_world_metrics_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_controller_world_metrics_test PRIVATE
@@ -728,7 +728,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_engine_lifecycle_test COMMAND banana_runtime_engine_lifecycle_test)
 
   add_executable(banana_runtime_controller_attach_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/runtime_controller_attach_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/attach/runtime_controller_attach_test.c
   )
   target_link_libraries(banana_runtime_controller_attach_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_controller_attach_test PRIVATE
@@ -973,7 +973,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_engine_state_test COMMAND banana_runtime_engine_state_test)
 
   add_executable(banana_runtime_controller_kind_domain_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/runtime_controller_kind_domain_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/kind/runtime_controller_kind_domain_test.c
   )
   target_link_libraries(banana_runtime_controller_kind_domain_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_controller_kind_domain_test PRIVATE
@@ -1040,7 +1040,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_parallel_contract_test COMMAND banana_runtime_parallel_contract_test)
 
   add_executable(banana_runtime_controller_sync_strict_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/runtime_controller_sync_strict_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/sync/runtime_controller_sync_strict_test.c
   )
   target_link_libraries(banana_runtime_controller_sync_strict_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_controller_sync_strict_test PRIVATE
@@ -1053,7 +1053,7 @@ if(BUILD_TESTING AND NOT EMSCRIPTEN)
   add_test(NAME banana_runtime_controller_sync_strict_test COMMAND banana_runtime_controller_sync_strict_test)
 
   add_executable(banana_runtime_controller_sync_map_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/runtime_controller_sync_map_test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/sync/runtime_controller_sync_map_test.c
   )
   target_link_libraries(banana_runtime_controller_sync_map_test PRIVATE banana_engine_core)
   target_include_directories(banana_runtime_controller_sync_map_test PRIVATE

@@ -1,6 +1,6 @@
 #include "tick_post_phase.h"
 
-#include "../controller/controller_sync.h"
+#include "../controller/sync/controller_sync.h"
 
 void runtime_tick_post_phase_execute(World *world,
                                      ControllerInstance **controllers,
