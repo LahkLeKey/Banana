@@ -13,7 +13,7 @@ static const RuntimeParallelBudget kRuntimeParallelBudgets[] = {
     {"render.mesh_terrain.vertices", "src/native/engine/render/mesh_terrain.c", 30, 0.55},
     {"render.mesh_terrain.normals", "src/native/engine/render/mesh_terrain.c", 74, 0.55},
     {"render.renderer.instance_upload", "src/native/engine/render/renderer.c", 259, 0.64},
-    {"runtime.physics_abi.sync", "src/native/engine/runtime/abi/physics_abi.c", 39, 0.48},
+    {"runtime.physics_abi.sync", "src/native/engine/runtime/abi/physics/physics_abi.c", 39, 0.48},
     {"tools.asset.cellular.step", "src/native/engine/tools/domain/banana_asset_cellular.c", 41, 0.60},
     {"tools.asset.wfc.entropy", "src/native/engine/tools/domain/banana_asset_wfc.c", 107, 0.63},
     {"tools.asset.wfc.propagate", "src/native/engine/tools/domain/banana_asset_wfc.c", 141, 0.63},

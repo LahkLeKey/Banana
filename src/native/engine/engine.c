@@ -28,7 +28,7 @@
 #include "runtime/player/player_merchant_adapter.h"
 #include "runtime/player/player_sync_abi.h"
 #include "runtime/player/player_registry.h"
-#include "runtime/abi/physics_abi.h"
+#include "runtime/abi/physics/physics_abi.h"
 #include "runtime/input/input_abi.h"
 #include "runtime/resource/resource_domain.h"
 #include "runtime/render/submit/render_submit.h"
@@ -40,7 +40,7 @@
 #include "runtime/world/world_abi.h"
 #include "runtime/world/world_telemetry.h"
 #include "runtime/wildlife/wildlife_gameplay.h"
-#include "runtime/abi/ui_abi.h"
+#include "runtime/abi/ui/ui_abi.h"
 #include <stdio.h>
 #include <string.h>
 
