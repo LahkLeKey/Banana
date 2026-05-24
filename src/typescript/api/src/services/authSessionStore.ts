@@ -37,7 +37,25 @@ function shouldDisableSsl(databaseUrl: string): boolean {
     return true;
   }
 
-  if (databaseUrl.includes('localhost') || databaseUrl.includes('127.0.0.1')) {
+  const normalized = databaseUrl.trim().toLowerCase();
+  if (normalized.includes('localhost') || normalized.includes('127.0.0.1') ||
+      normalized.includes('.flycast') || normalized.includes('.internal')) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(databaseUrl);
+    const sslMode =
+        (parsed.searchParams.get('sslmode') ?? '').trim().toLowerCase();
+    if (sslMode === 'disable' || sslMode === 'allow') {
+      return true;
+    }
+  } catch {
+    // Keep default SSL posture when the URL cannot be parsed.
+  }
+
+  if (normalized.startsWith('postgresql://localhost') ||
+      normalized.startsWith('postgres://localhost')) {
     return true;
   }
 
