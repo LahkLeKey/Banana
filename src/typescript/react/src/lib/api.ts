@@ -55,27 +55,16 @@ export type ApiRootResponse = {
 };
 
 export type PlayerAccountResponse = {
-  playerId: string;
-  accountStatus: string;
-  profile: Record<string, unknown>;
+  playerId: string; accountStatus: string; profile: Record<string, unknown>;
   version: number;
   updatedAt: string;
 };
 
 export type PlayerInsightsResponse = {
   playerId: string;
-  sessionSummary: {
-    changeEvents: number;
-    latestAction: string|null;
-  };
-  progressionSummary: {
-    xp: number;
-    level: number;
-  };
-  inventoryTrendSummary: {
-    distinctItems: number;
-    totalQuantity: number;
-  };
+  sessionSummary: {changeEvents: number; latestAction: string | null;};
+  progressionSummary: {xp: number; level: number;};
+  inventoryTrendSummary: {distinctItems: number; totalQuantity: number;};
   noData: boolean;
   freshnessTimestamp: string;
 };
