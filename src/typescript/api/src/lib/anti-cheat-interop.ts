@@ -1,5 +1,5 @@
-import { dlopen, FFIType, ptr, suffix } from "bun:ffi";
-import path from "node:path";
+import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
+import path from 'node:path';
 
 export interface AntiCheatScoreResult {
   readonly score: number;
@@ -27,45 +27,34 @@ export interface DriverHeartbeatInput {
 
 export interface AntiCheatInteropAdapter {
   resetSession(sessionId: string): Promise<void>;
-  submitUsermodeHeartbeat(input: UsermodeHeartbeatInput): Promise<AntiCheatScoreResult>;
-  submitDriverTelemetry(input: DriverHeartbeatInput): Promise<AntiCheatScoreResult>;
+  submitUsermodeHeartbeat(input: UsermodeHeartbeatInput):
+      Promise<AntiCheatScoreResult>;
+  submitDriverTelemetry(input: DriverHeartbeatInput):
+      Promise<AntiCheatScoreResult>;
   getSessionStatus(sessionId: string): Promise<AntiCheatScoreResult>;
 }
 
 const BANANA_OK = 0;
 
 type NativeAntiCheatSymbols = {
-  banana_anticheat_reset_session: (sessionIdPtr: bigint) => number;
-  banana_anticheat_submit_usermode_heartbeat: (
-    sessionIdPtr: bigint,
-    heartbeatSequence: number,
-    simulationTick: number,
-    debuggerPresent: number,
-    codeIntegrityViolations: number,
-    memoryMapAnomalies: number,
-    timingAnomalies: number,
-    outScorePtr: bigint,
-    outFlaggedPtr: bigint
-  ) => number;
-  banana_anticheat_submit_driver_telemetry: (
-    sessionIdPtr: bigint,
-    heartbeatSequence: number,
-    suspiciousRing12DriverCount: number,
-    unsignedDriverCount: number,
-    hiddenModuleCount: number,
-    outScorePtr: bigint,
-    outFlaggedPtr: bigint
-  ) => number;
-  banana_anticheat_get_session_status: (
-    sessionIdPtr: bigint,
-    outScorePtr: bigint,
-    outFlaggedPtr: bigint,
-    outIntegrityHashPtr: bigint
-  ) => number;
+  banana_anticheat_reset_session: (sessionIdPtr: Pointer) => number;
+  banana_anticheat_submit_usermode_heartbeat:
+      (sessionIdPtr: Pointer, heartbeatSequence: number, simulationTick: number,
+       debuggerPresent: number, codeIntegrityViolations: number,
+       memoryMapAnomalies: number, timingAnomalies: number,
+       outScorePtr: Pointer, outFlaggedPtr: Pointer) => number;
+  banana_anticheat_submit_driver_telemetry:
+      (sessionIdPtr: Pointer, heartbeatSequence: number,
+       suspiciousRing12DriverCount: number, unsignedDriverCount: number,
+       hiddenModuleCount: number, outScorePtr: Pointer,
+       outFlaggedPtr: Pointer) => number;
+  banana_anticheat_get_session_status:
+      (sessionIdPtr: Pointer, outScorePtr: Pointer, outFlaggedPtr: Pointer,
+       outIntegrityHashPtr: Pointer) => number;
 };
 
-function cStringPtr(value: string): bigint {
-  return ptr(Buffer.from(`${value}\0`, "utf8"));
+function cStringPtr(value: string): Pointer {
+  return ptr(Buffer.from(`${value}\0`, 'utf8'));
 }
 
 function boolToInt(value: boolean): number {
@@ -90,18 +79,18 @@ function resolveNativeLibraryCandidates(): string[] {
     }
   }
 
-  const repoRoot = path.resolve(process.cwd(), "../../..");
+  const repoRoot = path.resolve(process.cwd(), '../../..');
   const fallbackDirs = [
-    "out/native/bin",
-    "build/native/bin",
-    "build/native",
-    "build/native/Debug",
-    "build/native/Release",
-    "build/cmake-tools",
-    "build/Release",
-    "build/sanitizers",
-    "build/native-static-analysis",
-    "out/native-anticheat-check/Release",
+    'out/native/bin',
+    'build/native/bin',
+    'build/native',
+    'build/native/Debug',
+    'build/native/Release',
+    'build/cmake-tools',
+    'build/Release',
+    'build/sanitizers',
+    'build/native-static-analysis',
+    'out/native-anticheat-check/Release',
   ];
   for (const name of names) {
     for (const dir of fallbackDirs) {
@@ -154,17 +143,15 @@ function createNativeBinding(): NativeAntiCheatSymbols {
           returns: FFIType.i32,
         },
       });
-      return symbols.symbols as NativeAntiCheatSymbols;
+      return symbols.symbols as unknown as NativeAntiCheatSymbols;
     } catch (error) {
       lastError = error;
     }
   }
 
   throw new Error(
-    `Unable to load Banana native library for anti-cheat FFI. Candidates: ${candidates.join(
-      ", "
-    )}. Last error: ${String(lastError)}`
-  );
+      `Unable to load Banana native library for anti-cheat FFI. Candidates: ${
+          candidates.join(', ')}. Last error: ${String(lastError)}`);
 }
 
 function assertStatus(operation: string, statusCode: number): void {
@@ -173,29 +160,27 @@ function assertStatus(operation: string, statusCode: number): void {
   }
 }
 
-export class NativeFFIAntiCheatInteropAdapter implements AntiCheatInteropAdapter {
+export class NativeFFIAntiCheatInteropAdapter implements
+    AntiCheatInteropAdapter {
   private readonly symbols = createNativeBinding();
 
   async resetSession(sessionId: string): Promise<void> {
-    const statusCode = this.symbols.banana_anticheat_reset_session(cStringPtr(sessionId));
-    assertStatus("banana_anticheat_reset_session", statusCode);
+    const statusCode =
+        this.symbols.banana_anticheat_reset_session(cStringPtr(sessionId));
+    assertStatus('banana_anticheat_reset_session', statusCode);
   }
 
-  async submitUsermodeHeartbeat(input: UsermodeHeartbeatInput): Promise<AntiCheatScoreResult> {
+  async submitUsermodeHeartbeat(input: UsermodeHeartbeatInput):
+      Promise<AntiCheatScoreResult> {
     const score = new Int32Array(1);
     const flagged = new Int32Array(1);
     const statusCode = this.symbols.banana_anticheat_submit_usermode_heartbeat(
-      cStringPtr(input.sessionId),
-      input.heartbeatSequence >>> 0,
-      input.simulationTick >>> 0,
-      boolToInt(input.debuggerPresent),
-      ensureNonNegative(input.codeIntegrityViolations),
-      ensureNonNegative(input.memoryMapAnomalies),
-      ensureNonNegative(input.timingAnomalies),
-      ptr(score),
-      ptr(flagged)
-    );
-    assertStatus("banana_anticheat_submit_usermode_heartbeat", statusCode);
+        cStringPtr(input.sessionId), input.heartbeatSequence >>> 0,
+        input.simulationTick >>> 0, boolToInt(input.debuggerPresent),
+        ensureNonNegative(input.codeIntegrityViolations),
+        ensureNonNegative(input.memoryMapAnomalies),
+        ensureNonNegative(input.timingAnomalies), ptr(score), ptr(flagged));
+    assertStatus('banana_anticheat_submit_usermode_heartbeat', statusCode);
 
     const status = await this.getSessionStatus(input.sessionId);
     return {
@@ -205,19 +190,16 @@ export class NativeFFIAntiCheatInteropAdapter implements AntiCheatInteropAdapter
     };
   }
 
-  async submitDriverTelemetry(input: DriverHeartbeatInput): Promise<AntiCheatScoreResult> {
+  async submitDriverTelemetry(input: DriverHeartbeatInput):
+      Promise<AntiCheatScoreResult> {
     const score = new Int32Array(1);
     const flagged = new Int32Array(1);
     const statusCode = this.symbols.banana_anticheat_submit_driver_telemetry(
-      cStringPtr(input.sessionId),
-      input.heartbeatSequence >>> 0,
-      ensureNonNegative(input.suspiciousRing12DriverCount),
-      ensureNonNegative(input.unsignedDriverCount),
-      ensureNonNegative(input.hiddenModuleCount),
-      ptr(score),
-      ptr(flagged)
-    );
-    assertStatus("banana_anticheat_submit_driver_telemetry", statusCode);
+        cStringPtr(input.sessionId), input.heartbeatSequence >>> 0,
+        ensureNonNegative(input.suspiciousRing12DriverCount),
+        ensureNonNegative(input.unsignedDriverCount),
+        ensureNonNegative(input.hiddenModuleCount), ptr(score), ptr(flagged));
+    assertStatus('banana_anticheat_submit_driver_telemetry', statusCode);
 
     const status = await this.getSessionStatus(input.sessionId);
     return {
@@ -232,12 +214,8 @@ export class NativeFFIAntiCheatInteropAdapter implements AntiCheatInteropAdapter
     const flagged = new Int32Array(1);
     const integrityHash = new Uint32Array(1);
     const statusCode = this.symbols.banana_anticheat_get_session_status(
-      cStringPtr(sessionId),
-      ptr(score),
-      ptr(flagged),
-      ptr(integrityHash)
-    );
-    assertStatus("banana_anticheat_get_session_status", statusCode);
+        cStringPtr(sessionId), ptr(score), ptr(flagged), ptr(integrityHash));
+    assertStatus('banana_anticheat_get_session_status', statusCode);
     return {
       score: score[0],
       flagged: flagged[0] !== 0,
@@ -247,9 +225,7 @@ export class NativeFFIAntiCheatInteropAdapter implements AntiCheatInteropAdapter
 }
 
 type AntiCheatState = {
-  score: number;
-  flagged: boolean;
-  integrityHash: number;
+  score: number; flagged: boolean; integrityHash: number;
   lastUsermodeHeartbeat: number;
   lastDriverHeartbeat: number;
   lastSimulationTick: number;
@@ -274,7 +250,8 @@ function ensureNonNegative(value: number): number {
   return Math.floor(value);
 }
 
-export class InMemoryAntiCheatInteropAdapter implements AntiCheatInteropAdapter {
+export class InMemoryAntiCheatInteropAdapter implements
+    AntiCheatInteropAdapter {
   private readonly sessions = new Map<string, AntiCheatState>();
 
   async resetSession(sessionId: string): Promise<void> {
@@ -288,16 +265,16 @@ export class InMemoryAntiCheatInteropAdapter implements AntiCheatInteropAdapter 
     });
   }
 
-  async submitUsermodeHeartbeat(input: UsermodeHeartbeatInput): Promise<AntiCheatScoreResult> {
+  async submitUsermodeHeartbeat(input: UsermodeHeartbeatInput):
+      Promise<AntiCheatScoreResult> {
     const state = this.ensureSession(input.sessionId);
 
     let delta = 0;
     if (input.heartbeatSequence <= state.lastUsermodeHeartbeat) {
       delta += 2;
     } else if (
-      state.lastUsermodeHeartbeat > 0 &&
-      input.heartbeatSequence - state.lastUsermodeHeartbeat > 8
-    ) {
+        state.lastUsermodeHeartbeat > 0 &&
+        input.heartbeatSequence - state.lastUsermodeHeartbeat > 8) {
       delta += 1;
     }
 
@@ -329,12 +306,11 @@ export class InMemoryAntiCheatInteropAdapter implements AntiCheatInteropAdapter 
     state.integrityHash = mixHash(state.integrityHash, input.heartbeatSequence);
     state.integrityHash = mixHash(state.integrityHash, input.simulationTick);
     state.integrityHash = mixHash(
-      state.integrityHash,
-      (input.debuggerPresent ? 1 : 0) +
-        ensureNonNegative(input.codeIntegrityViolations) * 5 +
-        ensureNonNegative(input.memoryMapAnomalies) * 7 +
-        ensureNonNegative(input.timingAnomalies) * 11
-    );
+        state.integrityHash,
+        (input.debuggerPresent ? 1 : 0) +
+            ensureNonNegative(input.codeIntegrityViolations) * 5 +
+            ensureNonNegative(input.memoryMapAnomalies) * 7 +
+            ensureNonNegative(input.timingAnomalies) * 11);
 
     return {
       score: state.score,
@@ -343,16 +319,16 @@ export class InMemoryAntiCheatInteropAdapter implements AntiCheatInteropAdapter 
     };
   }
 
-  async submitDriverTelemetry(input: DriverHeartbeatInput): Promise<AntiCheatScoreResult> {
+  async submitDriverTelemetry(input: DriverHeartbeatInput):
+      Promise<AntiCheatScoreResult> {
     const state = this.ensureSession(input.sessionId);
 
     let delta = 0;
     if (input.heartbeatSequence <= state.lastDriverHeartbeat) {
       delta += 2;
     } else if (
-      state.lastDriverHeartbeat > 0 &&
-      input.heartbeatSequence - state.lastDriverHeartbeat > 8
-    ) {
+        state.lastDriverHeartbeat > 0 &&
+        input.heartbeatSequence - state.lastDriverHeartbeat > 8) {
       delta += 1;
     }
 
@@ -375,11 +351,10 @@ export class InMemoryAntiCheatInteropAdapter implements AntiCheatInteropAdapter 
 
     state.integrityHash = mixHash(state.integrityHash, input.heartbeatSequence);
     state.integrityHash = mixHash(
-      state.integrityHash,
-      ensureNonNegative(input.suspiciousRing12DriverCount) * 13 +
-        ensureNonNegative(input.unsignedDriverCount) * 17 +
-        ensureNonNegative(input.hiddenModuleCount) * 19
-    );
+        state.integrityHash,
+        ensureNonNegative(input.suspiciousRing12DriverCount) * 13 +
+            ensureNonNegative(input.unsignedDriverCount) * 17 +
+            ensureNonNegative(input.hiddenModuleCount) * 19);
 
     return {
       score: state.score,
@@ -414,18 +389,20 @@ export class InMemoryAntiCheatInteropAdapter implements AntiCheatInteropAdapter 
   }
 }
 
-export function createDefaultAntiCheatInteropAdapter(): AntiCheatInteropAdapter {
-  const adapterMode = (process.env.BANANA_ANTICHEAT_ADAPTER ?? "ffi").toLowerCase();
-  const requireNative = process.env.BANANA_ANTICHEAT_REQUIRE_NATIVE === "true";
+export function createDefaultAntiCheatInteropAdapter():
+    AntiCheatInteropAdapter {
+  const adapterMode =
+      (process.env.BANANA_ANTICHEAT_ADAPTER ?? 'ffi').toLowerCase();
+  const requireNative = process.env.BANANA_ANTICHEAT_REQUIRE_NATIVE === 'true';
 
-  if (adapterMode === "inmemory") {
+  if (adapterMode === 'inmemory') {
     return new InMemoryAntiCheatInteropAdapter();
   }
 
   try {
     return new NativeFFIAntiCheatInteropAdapter();
   } catch (error) {
-    if (adapterMode === "ffi-only" || requireNative) {
+    if (adapterMode === 'ffi-only' || requireNative) {
       throw error;
     }
     return new InMemoryAntiCheatInteropAdapter();
