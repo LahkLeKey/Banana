@@ -2,8 +2,8 @@
 
 #include "../move_target_service.h"
 #include "../player/player_runtime_service.h"
-#include "../render_material.h"
-#include "../render_submit.h"
+#include "../render/render_material.h"
+#include "../render/render_submit.h"
 #include "../terrain/terrain_height.h"
 #include "../terrain/terrain_host.h"
 #include "../terrain/terrain_mutation.h"

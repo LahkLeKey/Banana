@@ -109,8 +109,8 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/interactive_collection.c
   runtime/interactive_object_spawner.c
   runtime/chunk_stream_packet.c
-  runtime/render_material.c
-  runtime/render_submit.c
+  runtime/render/render_material.c
+  runtime/render/render_submit.c
   runtime/resource_domain.c
   runtime/terrain/terrain_features.c
   runtime/terrain/terrain_abi.c
