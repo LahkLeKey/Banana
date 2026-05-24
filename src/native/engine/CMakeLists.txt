@@ -79,10 +79,10 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine_tick.c
   # Feature 005: keep extracted tick/runtime modularization seams grouped here.
   runtime/gameplay_service.c
-  runtime/input_abi.c
-  runtime/input_click_policy.c
-  runtime/input_contract.c
-  runtime/input_binding.c
+  runtime/input/input_abi.c
+  runtime/input/input_click_policy.c
+  runtime/input/input_contract.c
+  runtime/input/input_binding.c
   runtime/merchant/merchant_query_abi.c
   runtime/merchant/merchant_trade_abi.c
   runtime/merchant/merchant_trade_domain.c

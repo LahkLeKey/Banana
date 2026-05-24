@@ -103,7 +103,7 @@ monolithic `engine.c` control block:
 
 - `runtime/engine_lifecycle.*`: bootstrap/teardown orchestration.
 - `runtime/engine_tick.*`: tick pipeline execution and phase ordering.
-- `runtime/input_contract.*`: click/move intent contract and sanitization.
+- `runtime/input/input_contract.*`: click/move intent contract and sanitization.
 - `runtime/move_target_domain.*`: strongly-typed click-target state and steering decisions.
 - `runtime/render_submit.*` + `RendererDrawCommand`: typed scene command
   submission seam so domain render intent is backend-agnostic.

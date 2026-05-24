@@ -1,6 +1,6 @@
 #include "runtime/engine_state.h"
-#include "runtime/input_abi.h"
-#include "runtime/input_contract.h"
+#include "runtime/input/input_abi.h"
+#include "runtime/input/input_contract.h"
 
 #include <math.h>
 #include <stdio.h>

@@ -6,7 +6,7 @@
  */
 
 #include "input_binding.h"
-#include "../ai/controller.h"
+#include "../../ai/controller.h"
 
 #include <stdlib.h>
 #include <string.h>

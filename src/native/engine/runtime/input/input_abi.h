@@ -1,9 +1,9 @@
 #ifndef BANANA_ENGINE_RUNTIME_INPUT_ABI_H
 #define BANANA_ENGINE_RUNTIME_INPUT_ABI_H
 
-#include "engine_composition.h"
-#include "engine_state.h"
-#include "move_target_service.h"
+#include "../engine_composition.h"
+#include "../engine_state.h"
+#include "../move_target_service.h"
 
 #ifdef __cplusplus
 extern "C"

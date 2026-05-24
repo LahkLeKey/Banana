@@ -1,6 +1,6 @@
 #include "move_target_domain.h"
 
-#include "input_contract.h"
+#include "input/input_contract.h"
 
 #include <math.h>
 

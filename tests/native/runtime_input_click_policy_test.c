@@ -1,4 +1,4 @@
-#include "runtime/input_click_policy.h"
+#include "runtime/input/input_click_policy.h"
 
 #include <math.h>
 #include <stdio.h>

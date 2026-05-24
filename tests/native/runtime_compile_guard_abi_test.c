@@ -1,5 +1,5 @@
 #include "runtime/controller/controller_kind_domain.h"
-#include "runtime/input_abi.h"
+#include "runtime/input/input_abi.h"
 #include "runtime/move_target_service.h"
 #include "runtime/player/player_gateway_abi.h"
 #include "runtime/player/player_build_abi.h"

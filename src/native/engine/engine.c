@@ -29,7 +29,7 @@
 #include "runtime/player/player_sync_abi.h"
 #include "runtime/player/player_registry.h"
 #include "runtime/physics_abi.h"
-#include "runtime/input_abi.h"
+#include "runtime/input/input_abi.h"
 #include "runtime/resource_domain.h"
 #include "runtime/render_submit.h"
 #include "runtime/terrain/terrain_generation.h"

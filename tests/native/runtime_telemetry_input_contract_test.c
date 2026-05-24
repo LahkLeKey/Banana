@@ -1,4 +1,4 @@
-#include "runtime/input_contract.h"
+#include "runtime/input/input_contract.h"
 #include "runtime/world/world_telemetry.h"
 #include "world/world.h"
 
