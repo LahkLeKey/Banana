@@ -1,12 +1,19 @@
 import {GAME_SESSION_STORAGE_KEY, type GameSessionBootstrap, rejoinGameSession, resolveApiBaseResolutionError, resolveApiBaseUrl, resolveRuntimePlayerGuid, startGameSession,} from './api';
+import {readStoredAuthSession} from '../auth/session';
 
 export type SessionBootstrapResult = {
   bootstrap: GameSessionBootstrap|null; error: string | null;
 };
 
-export async function ensureGameSessionBootstrap():
+export type SessionBootstrapOptions = {
+  playerName?: string;
+};
+
+export async function ensureGameSessionBootstrap(
+    options: SessionBootstrapOptions = {}):
     Promise<SessionBootstrapResult> {
   const runtimePlayerGuid = resolveRuntimePlayerGuid();
+  const authSession = readStoredAuthSession();
 
   try {
     const stored = sessionStorage.getItem(GAME_SESSION_STORAGE_KEY);
@@ -34,13 +41,26 @@ export async function ensureGameSessionBootstrap():
   }
 
   const apiBaseUrl = resolveApiBaseUrl();
+  if (!authSession?.token) {
+    return {
+      bootstrap: null,
+      error: 'Steam login required. Sign in before launching the game client.',
+    };
+  }
+
+  const requestedPlayerName = (options.playerName ?? '').trim();
+  const fallbackPlayerName = requestedPlayerName ||
+      (authSession.steamId?.trim() ?
+           `steam-${authSession.steamId.trim().slice(-4)}` :
+           'player');
 
   try {
-    const rejoined = await rejoinGameSession(apiBaseUrl, runtimePlayerGuid);
+    const rejoined = await rejoinGameSession(
+        apiBaseUrl, runtimePlayerGuid, authSession.token);
     const normalized = {
       ...rejoined,
       playerGuid: runtimePlayerGuid,
-      playerName: rejoined.playerName || 'player',
+      playerName: rejoined.playerName || fallbackPlayerName,
     };
     sessionStorage.setItem(
         GAME_SESSION_STORAGE_KEY, JSON.stringify(normalized));
@@ -51,11 +71,13 @@ export async function ensureGameSessionBootstrap():
 
   try {
     const created =
-        await startGameSession(apiBaseUrl, 'player', runtimePlayerGuid);
+        await startGameSession(
+            apiBaseUrl, fallbackPlayerName, runtimePlayerGuid,
+            authSession.token);
     const normalized = {
       ...created,
       playerGuid: runtimePlayerGuid,
-      playerName: created.playerName || 'player',
+      playerName: created.playerName || fallbackPlayerName,
     };
     sessionStorage.setItem(
         GAME_SESSION_STORAGE_KEY, JSON.stringify(normalized));
