@@ -88,15 +88,12 @@ src/typescript/api/
 src/typescript/react/
 └── src/
 
-src/typescript/electron/
-└── main.js and renderer integration points
-
 tests/native/
 tests/
 ```
 
 **Structure Decision**: Cross-domain implementation through existing native engine,
-API, and client runtime layers, with gameplay rules centered in native simulation
+API, and frontend session-management layers, with gameplay rules centered in native simulation
 and surfaced through API/client contracts.
 
 ## Complexity Tracking

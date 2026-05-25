@@ -1,4 +1,6 @@
 #include "banana_native_v3.h"
+#include "runtime/engine/engine_aux_abi.h"
+#include "runtime/engine/engine_host.h"
 #include "runtime/chunk/chunk_stream_packet.h"
 #include "runtime/terrain/terrain_chunks.h"
 
@@ -162,6 +164,57 @@ void banana_native_v3_world_cleanup(void)
 
 	terrain_chunks_cleanup();
 	s_world_initialized = 0;
+}
+
+int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
+										 banana_launch_gate_policy *out_policy)
+{
+	const char *resolved_mode_label = runtime_engine_host_launch_gate_mode_label_for(mode_label);
+	return runtime_engine_aux_launch_gate_policy_resolve(resolved_mode_label, out_policy);
+}
+
+int banana_native_v3_launch_gate_decide(const char *mode_label,
+								 int has_steam_identity,
+								 int account_linked,
+								 int account_in_good_standing,
+								 int verification_fresh,
+								 int verification_available,
+								 banana_native_v3_launch_gate_decision *out_decision)
+{
+	banana_launch_gate_policy policy;
+	banana_launch_gate_reason_code reason_code = BANANA_LAUNCH_GATE_REASON_UNKNOWN_MODE;
+	const char *resolved_mode_label = runtime_engine_host_launch_gate_mode_label_for(mode_label);
+	int allow = 0;
+
+	if (!out_decision)
+		return -1;
+
+	if (runtime_engine_aux_launch_gate_policy_resolve(resolved_mode_label, &policy) != 0)
+	{
+		out_decision->allow = 0;
+		out_decision->reason_code = BANANA_LAUNCH_GATE_REASON_UNKNOWN_MODE;
+		out_decision->is_remediable = 0;
+		out_decision->reserved = 0;
+		return 0;
+	}
+
+	if (runtime_engine_aux_launch_gate_decide(&policy,
+									  has_steam_identity,
+									  account_linked,
+									  account_in_good_standing,
+									  verification_fresh,
+									  verification_available,
+									  &reason_code,
+									  &allow) != 0)
+	{
+		return -1;
+	}
+
+	out_decision->allow = (int32_t)allow;
+	out_decision->reason_code = reason_code;
+	out_decision->is_remediable = (int32_t)runtime_engine_aux_launch_gate_reason_is_remediable(reason_code);
+	out_decision->reserved = 0;
+	return 0;
 }
 
 void banana_native_v3_ui_frame_reset(banana_native_ui_frame *frame)

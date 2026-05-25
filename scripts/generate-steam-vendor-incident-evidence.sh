@@ -109,7 +109,7 @@ GIT_BRANCH="$(git -C "${ROOT_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || ec
   echo "5. Closure checks"
   echo "- Branch/depot isolation verified with evidence."
   echo "- Hash parity confirmed between build/upload/delivery."
-  echo "- Unapproved WASM artifact load path is not reproducible."
+  echo "- Unapproved runtime artifact load path is not reproducible."
   echo
   echo "## Next Actions"
   echo

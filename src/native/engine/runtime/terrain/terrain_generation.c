@@ -5,6 +5,7 @@
 #endif
 
 #include <math.h>
+#include <string.h>
 
 #include "../tools/domain/banana_asset_domain.h"
 
@@ -13,6 +14,13 @@ static unsigned int runtime_terrain_hash(unsigned int x, unsigned int z)
     unsigned int n = x * 374761393u + z * 668265263u + 20260509u;
     n = (n ^ (n >> 13)) * 1274126177u;
     return n ^ (n >> 16);
+}
+
+static unsigned int runtime_terrain_hash_seeded(unsigned int x,
+                                                unsigned int z,
+                                                unsigned int seed)
+{
+    return runtime_terrain_hash(x ^ (seed * 2246822519u), z ^ (seed * 3266489917u));
 }
 
 static float clampf_local(float v, float lo, float hi)
@@ -65,6 +73,38 @@ static float runtime_terrain_noise2(unsigned int x,
                        tz);
 }
 
+static float runtime_terrain_noise2_seeded(unsigned int x,
+                                           unsigned int z,
+                                           unsigned int frequency,
+                                           unsigned int salt,
+                                           unsigned int seed)
+{
+    unsigned int cell_x = x / frequency;
+    unsigned int cell_z = z / frequency;
+    unsigned int frac_x = x % frequency;
+    unsigned int frac_z = z % frequency;
+    float tx = (float)frac_x / (float)frequency;
+    float tz = (float)frac_z / (float)frequency;
+    unsigned int seeded_salt = salt ^ (seed * 747796405u);
+
+    unsigned int h00 = runtime_terrain_hash_seeded(cell_x + seeded_salt, cell_z + seeded_salt, seed);
+    unsigned int h10 = runtime_terrain_hash_seeded(cell_x + 1u + seeded_salt, cell_z + seeded_salt, seed);
+    unsigned int h01 = runtime_terrain_hash_seeded(cell_x + seeded_salt, cell_z + 1u + seeded_salt, seed);
+    unsigned int h11 = runtime_terrain_hash_seeded(cell_x + 1u + seeded_salt, cell_z + 1u + seeded_salt, seed);
+
+    float v00 = (float)(h00 & 0xFFFFu) / 65535.0f;
+    float v10 = (float)(h10 & 0xFFFFu) / 65535.0f;
+    float v01 = (float)(h01 & 0xFFFFu) / 65535.0f;
+    float v11 = (float)(h11 & 0xFFFFu) / 65535.0f;
+
+    tx = smoothstep_local(tx);
+    tz = smoothstep_local(tz);
+
+    return lerpf_local(lerpf_local(v00, v10, tx),
+                       lerpf_local(v01, v11, tx),
+                       tz);
+}
+
 static int runtime_layer_from_asset_elevation(int asset_elevation,
                                               int min_asset_elevation,
                                               int max_asset_elevation,
@@ -86,9 +126,10 @@ static int runtime_layer_from_asset_elevation(int asset_elevation,
     return normalized;
 }
 
-int runtime_terrain_generate_island(unsigned char *height_grid,
-                                    int terrain_size,
-                                    int terrain_max_layers)
+static int runtime_terrain_generate_island_seeded(unsigned char *height_grid,
+                                                  int terrain_size,
+                                                  int terrain_max_layers,
+                                                  unsigned int generation_seed)
 {
     const banana_tile_def_t *defs = banana_tile_defs();
     int min_asset_elevation = defs[0].elevation_base;
@@ -116,12 +157,22 @@ int runtime_terrain_generate_island(unsigned char *height_grid,
         {
             int z = idx / terrain_size;
             int x = idx % terrain_size;
-            uint32_t rng_state = runtime_terrain_hash((unsigned int)x, (unsigned int)z);
+            uint32_t rng_state = runtime_terrain_hash_seeded((unsigned int)x,
+                                                             (unsigned int)z,
+                                                             generation_seed);
             float dx = ((float)x - center) / max_dist;
             float dz = ((float)z - center) / max_dist;
             float dist = sqrtf(dx * dx + dz * dz);
-            float continental = runtime_terrain_noise2((unsigned int)x, (unsigned int)z, 9u, 13u);
-            float detail = runtime_terrain_noise2((unsigned int)x, (unsigned int)z, 3u, 97u);
+            float continental = runtime_terrain_noise2_seeded((unsigned int)x,
+                                                              (unsigned int)z,
+                                                              9u,
+                                                              13u,
+                                                              generation_seed);
+            float detail = runtime_terrain_noise2_seeded((unsigned int)x,
+                                                         (unsigned int)z,
+                                                         3u,
+                                                         97u,
+                                                         generation_seed);
             float ridged = 1.0f - fabsf((detail * 2.0f) - 1.0f);
             float macro_shape = 1.0f - smoothstep_local((dist - 0.78f) / 0.42f);
             float land = (continental * 0.62f) + (ridged * 0.28f) + (macro_shape * 0.34f);
@@ -149,4 +200,139 @@ int runtime_terrain_generate_island(unsigned char *height_grid,
     }
 
     return 1;
+}
+
+int runtime_terrain_generate_island(unsigned char *height_grid,
+                                    int terrain_size,
+                                    int terrain_max_layers)
+{
+    return runtime_terrain_generate_island_seeded(height_grid,
+                                                  terrain_size,
+                                                  terrain_max_layers,
+                                                  1337u);
+}
+
+static unsigned int runtime_seed_hash_string(unsigned int seed, const char *text)
+{
+    const unsigned char *cursor = (const unsigned char *)(text ? text : "");
+    unsigned int hash = seed;
+
+    while (*cursor != '\0')
+    {
+        hash ^= (unsigned int)(*cursor);
+        hash *= 16777619u;
+        cursor++;
+    }
+
+    return hash;
+}
+
+unsigned int runtime_terrain_derive_world_seed(const char *world_id,
+                                               const char *lane_id,
+                                               unsigned int partition_epoch)
+{
+    const char *normalized_world_id = (world_id && world_id[0] != '\0') ? world_id : "default-world";
+    const char *normalized_lane_id = (lane_id && lane_id[0] != '\0') ? lane_id : "default-lane";
+    unsigned int seed = 2166136261u;
+
+    seed = runtime_seed_hash_string(seed, normalized_world_id);
+    seed ^= 0x9e3779b9u;
+    seed *= 16777619u;
+
+    seed = runtime_seed_hash_string(seed, normalized_lane_id);
+    seed ^= partition_epoch;
+    seed *= 16777619u;
+
+    if (seed == 0u)
+        seed = 1u;
+
+    return seed;
+}
+
+unsigned int runtime_terrain_generation_input_fingerprint(
+    const char *world_id,
+    const char *lane_id,
+    unsigned int partition_epoch,
+    int chunk_x,
+    int chunk_z,
+    const char *generation_contract_version,
+    unsigned int retry_attempt)
+{
+    unsigned int hash = 2166136261u;
+    const char *contract_version = generation_contract_version ? generation_contract_version
+                                                               : RUNTIME_TERRAIN_GENERATION_CONTRACT_V1;
+
+    hash = runtime_seed_hash_string(hash, world_id ? world_id : "");
+    hash ^= (unsigned int)chunk_x;
+    hash *= 16777619u;
+    hash = runtime_seed_hash_string(hash, lane_id ? lane_id : "");
+    hash ^= (unsigned int)chunk_z;
+    hash *= 16777619u;
+    hash ^= partition_epoch;
+    hash *= 16777619u;
+    hash = runtime_seed_hash_string(hash, contract_version);
+    hash ^= retry_attempt;
+    hash *= 16777619u;
+
+    if (hash == 0u)
+        hash = 1u;
+    return hash;
+}
+
+int runtime_terrain_generate_unexplored_contract(
+    unsigned char *height_grid,
+    int terrain_size,
+    int terrain_max_layers,
+    const char *world_id,
+    const char *lane_id,
+    unsigned int partition_epoch,
+    int chunk_x,
+    int chunk_z,
+    const char *generation_contract_version,
+    unsigned int retry_attempt,
+    int inject_failure_code,
+    unsigned int *out_generation_input_fingerprint)
+{
+    unsigned int world_seed = 0u;
+    unsigned int generation_seed = 0u;
+    const char *contract_version = generation_contract_version ? generation_contract_version
+                                                               : RUNTIME_TERRAIN_GENERATION_CONTRACT_V1;
+
+    if (!height_grid || !world_id || !lane_id || !out_generation_input_fingerprint ||
+        world_id[0] == '\0' || lane_id[0] == '\0')
+    {
+        return RUNTIME_TERRAIN_GENERATION_STATUS_INVALID_AREA_IDENTITY;
+    }
+
+    if (strcmp(contract_version, RUNTIME_TERRAIN_GENERATION_CONTRACT_V1) != 0)
+        return RUNTIME_TERRAIN_GENERATION_STATUS_CONTRACT_VERSION_UNSUPPORTED;
+
+    *out_generation_input_fingerprint = runtime_terrain_generation_input_fingerprint(
+        world_id,
+        lane_id,
+        partition_epoch,
+        chunk_x,
+        chunk_z,
+        contract_version,
+        retry_attempt);
+
+    if (inject_failure_code != 0)
+        return inject_failure_code;
+
+    world_seed = runtime_terrain_derive_world_seed(world_id, lane_id, partition_epoch);
+    generation_seed = runtime_terrain_hash_seeded((unsigned int)(chunk_x + 4096),
+                                                  (unsigned int)(chunk_z + 4096),
+                                                  world_seed ^ *out_generation_input_fingerprint);
+    generation_seed ^= (retry_attempt * 2246822519u);
+    generation_seed ^= world_seed;
+
+    if (!runtime_terrain_generate_island_seeded(height_grid,
+                                                terrain_size,
+                                                terrain_max_layers,
+                                                generation_seed))
+    {
+        return RUNTIME_TERRAIN_GENERATION_STATUS_DEPENDENCY_UNAVAILABLE;
+    }
+
+    return RUNTIME_TERRAIN_GENERATION_STATUS_OK;
 }

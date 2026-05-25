@@ -4,7 +4,7 @@
 import helmet from '@fastify/helmet';
 import Fastify from 'fastify';
 
-import {registerChatRoutes} from './domains/chat/routes.ts';
+import {bootstrapPersistentWorldOrchestrationDomain} from './domains/persistent-world-orchestration/index.ts';
 import {assertRouteOwnershipCoverage} from './lib/domainOwnership';
 import {registerFastifyErrorMapper} from './lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from './middleware/requestContext';
@@ -40,14 +40,16 @@ await app.register(helmet, {
       upgradeInsecureRequests: [],
     },
   },
-  crossOriginEmbedderPolicy:
-      false,  // disabled to allow iframe embeds in Electron
+  crossOriginEmbedderPolicy: false,  // disabled to allow iframe embeds
 });
 
 // Spec #068 — rate limiting (must register before routes)
 await registerRateLimitPlugin(app);
 await registerRequestContextMiddleware(app);
 registerFastifyErrorMapper(app);
+
+const persistentWorldOrchestrationDomain =
+    bootstrapPersistentWorldOrchestrationDomain(app);
 
 // Spec #126 — BANANA_CORS_ORIGINS: comma-separated list of allowed origins.
 // Defaults to localhost dev servers when the env var is absent.
@@ -77,8 +79,7 @@ app.addHook('onRequest', async (request, reply) => {
 await registerHealthRoutes(app);
 await registerAuthRoutes(app);
 await registerGameSessionRoutes(app);
-await registerChatRoutes(app);
-await registerWorldRoutes(app);
+await registerWorldRoutes(app, {persistentWorldOrchestrationDomain});
 await registerV1GameplayRoutes(app);
 await registerV1PlayerRoutes(app);
 

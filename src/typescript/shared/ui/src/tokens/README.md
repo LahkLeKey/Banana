@@ -1,7 +1,7 @@
 # Tokens (slice 026)
 
 This folder is the single source of truth for Banana design tokens
-across web (React + Electron) and React Native.
+across web frontend surfaces.
 
 ## Files
 

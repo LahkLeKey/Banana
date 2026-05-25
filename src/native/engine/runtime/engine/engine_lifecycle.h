@@ -2,6 +2,7 @@
 #define BANANA_ENGINE_RUNTIME_ENGINE_LIFECYCLE_H
 
 #include "../../ai/controller.h"
+#include "engine_state.h"
 #include "../../world/world.h"
 #include "../player/player_registry.h"
 #include "../terrain/terrain_runtime.h"
@@ -28,6 +29,8 @@ extern "C"
     int runtime_engine_lifecycle_spawn_default_actors(World *world,
                                                       RuntimeTerrainSampleFn terrain_sample_height,
                                                       RuntimeAttachControllerFn attach_controller);
+
+    int runtime_engine_lifecycle_preflight_launch_gate(EngineRuntimeState *state);
 
     void runtime_engine_lifecycle_destroy_controllers(ControllerInstance **controllers,
                                                       int max_controllers,

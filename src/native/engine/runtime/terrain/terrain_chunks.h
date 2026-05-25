@@ -49,9 +49,19 @@ extern "C"
         uint8_t heights[TERRAIN_CHUNK_SIZE][TERRAIN_CHUNK_SIZE];  /* Elevation 0-255 */
         uint8_t biomes[TERRAIN_CHUNK_SIZE][TERRAIN_CHUNK_SIZE];   /* BiomeType */
         int64_t generation_tick;         /* Server tick when generated */
+        uint64_t generation_fingerprint; /* Deterministic terrain+biome fingerprint */
+        uint64_t boundary_hash;          /* Deterministic seam/boundary hash */
         int version;                     /* For cache invalidation */
         int is_dirty;                    /* Needs rebuild */
     } TerrainChunk;
+
+    typedef struct
+    {
+        int chunk_x;
+        int chunk_z;
+        int partition_x;
+        int partition_z;
+    } TerrainChunkPartitionTuple;
 
     /**
      * Chunk cache entry
@@ -90,6 +100,25 @@ extern "C"
      */
     int terrain_chunks_update_for_players(const float (*player_positions)[2], int player_count,
                                           int chunk_radius);
+
+    uint64_t terrain_chunks_area_identity_hash(const char *world_id,
+                                               const char *lane_id,
+                                               int chunk_x,
+                                               int chunk_z,
+                                               uint32_t partition_epoch);
+
+    int terrain_chunks_partition_tuple_from_world(float world_x,
+                                                  float world_z,
+                                                  int partition_span_chunks,
+                                                  TerrainChunkPartitionTuple *out_tuple);
+
+    int terrain_chunks_collect_adjacency_order(int chunk_x,
+                                               int chunk_z,
+                                               int radius,
+                                               int (*out_coords)[2],
+                                               int max_coords);
+
+    uint64_t terrain_chunks_compute_boundary_hash(const TerrainChunk *chunk);
 
     /**
      * Get the chunk coordinates for a world position.

@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { hasStoredAuthSession } from "@banana/ui";
-import { GameEnginePage } from "../pages/GameEnginePage";
 import { LoginPage } from "../pages/LoginPage";
 import { MarketingPage } from "../pages/MarketingPage";
 import { PlayerPortalPage } from "../pages/PlayerPortalPage";
@@ -17,10 +16,6 @@ export const router = createBrowserRouter([
   {
     path: "/session-room",
     element: hasStoredAuthSession() ? <SessionRoomPage /> : <Navigate to="/login" replace />,
-  },
-  {
-    path: "/game-engine",
-    element: hasStoredAuthSession() ? <GameEnginePage /> : <Navigate to="/login" replace />,
   },
   { path: "*", element: <Navigate to="/" replace /> },
 ]);

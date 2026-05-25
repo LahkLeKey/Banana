@@ -1,0 +1,237 @@
+{
+    "nation": "banana-archipelago",
+    "sourceDocument": "docs/banana-archipelago-worldbuilding.md",
+    "generatorVersion": "county-static-v1",
+    "profileVersion": "banana-archipelago-region-baseline-v1",
+    "regions": [
+        {
+            "regionId": "stem-territories",
+            "countyAnchor": "port-koba",
+            "counties": [
+                "port-koba",
+                "ashen-reef",
+                "minari-gulf",
+                "south-stem"
+            ],
+            "climate": "tropical",
+            "relief": "island-chain",
+            "hazard": [
+                "volcanic"
+            ],
+            "economy": [
+                "agriculture",
+                "fishing"
+            ],
+            "density": "medium",
+            "infrastructure": [
+                "freight-port",
+                "naval-base",
+                "ferry-node"
+            ]
+        },
+        {
+            "regionId": "sun-coast",
+            "countyAnchor": "goldwave",
+            "counties": [
+                "goldwave",
+                "citrine-bay",
+                "lowleaf",
+                "haruna-coast"
+            ],
+            "climate": "warm-temperate",
+            "relief": "lowland",
+            "hazard": [
+                "cyclone"
+            ],
+            "economy": [
+                "agriculture",
+                "fishing",
+                "energy"
+            ],
+            "density": "dense",
+            "infrastructure": [
+                "freight-port",
+                "rail-hub"
+            ]
+        },
+        {
+            "regionId": "metro-banana",
+            "countyAnchor": "neo-musa",
+            "counties": [
+                "neo-musa",
+                "central-peel",
+                "kiro-district",
+                "east-arc"
+            ],
+            "climate": "warm-temperate",
+            "relief": "lowland",
+            "hazard": [
+                "seismic"
+            ],
+            "economy": [
+                "finance",
+                "manufacturing"
+            ],
+            "density": "megacity",
+            "infrastructure": [
+                "rail-hub",
+                "freight-port",
+                "tunnel-corridor"
+            ]
+        },
+        {
+            "regionId": "central-crescent",
+            "countyAnchor": "yelora",
+            "counties": [
+                "yelora",
+                "crescent-vale",
+                "old-peel",
+                "nami-basin"
+            ],
+            "climate": "temperate",
+            "relief": "basin",
+            "hazard": [
+                "landslide"
+            ],
+            "economy": [
+                "culture",
+                "agriculture",
+                "education"
+            ],
+            "density": "dense",
+            "infrastructure": [
+                "rail-hub",
+                "tunnel-corridor"
+            ]
+        },
+        {
+            "regionId": "iron-spine",
+            "countyAnchor": "spinehold",
+            "counties": [
+                "spinehold",
+                "black-ridge",
+                "north-forge",
+                "rail-pass"
+            ],
+            "climate": "alpine",
+            "relief": "ridge",
+            "hazard": [
+                "landslide"
+            ],
+            "economy": [
+                "mining",
+                "manufacturing",
+                "energy"
+            ],
+            "density": "medium",
+            "infrastructure": [
+                "dam-network",
+                "tunnel-corridor",
+                "rail-hub"
+            ]
+        },
+        {
+            "regionId": "golden-hook",
+            "countyAnchor": "hookport",
+            "counties": [
+                "hookport",
+                "gale-bay",
+                "amber-reach",
+                "cliffwater"
+            ],
+            "climate": "subarctic",
+            "relief": "cliff-coast",
+            "hazard": [
+                "cyclone"
+            ],
+            "economy": [
+                "fishing",
+                "shipbuilding"
+            ],
+            "density": "medium",
+            "infrastructure": [
+                "freight-port",
+                "rail-hub",
+                "naval-base"
+            ]
+        },
+        {
+            "regionId": "north-crown",
+            "countyAnchor": "frostmere",
+            "counties": [
+                "frostmere",
+                "white-pine",
+                "crown-plateau",
+                "elk-valley"
+            ],
+            "climate": "subarctic",
+            "relief": "plateau",
+            "hazard": [
+                "blizzard"
+            ],
+            "economy": [
+                "energy",
+                "fishing"
+            ],
+            "density": "sparse",
+            "infrastructure": [
+                "rail-hub",
+                "dam-network"
+            ]
+        },
+        {
+            "regionId": "frost-peel",
+            "countyAnchor": "icehook",
+            "counties": [
+                "icehook",
+                "outer-peel",
+                "north-watch"
+            ],
+            "climate": "polar-maritime",
+            "relief": "island-chain",
+            "hazard": [
+                "blizzard",
+                "rough-sea"
+            ],
+            "economy": [
+                "research",
+                "military",
+                "fishing"
+            ],
+            "density": "sparse",
+            "infrastructure": [
+                "ferry-node",
+                "naval-base"
+            ]
+        }
+    ],
+    "bananaLines": [
+        {
+            "routeId": "banana-mainline",
+            "stops": [
+                "stem-territories",
+                "sun-coast",
+                "metro-banana",
+                "central-crescent",
+                "golden-hook",
+                "north-crown"
+            ]
+        },
+        {
+            "routeId": "banana-spine-freight",
+            "stops": [
+                "sun-coast",
+                "metro-banana",
+                "iron-spine",
+                "golden-hook"
+            ]
+        },
+        {
+            "routeId": "banana-frost-ferry",
+            "stops": [
+                "north-crown",
+                "frost-peel"
+            ]
+        }
+    ]
+}

@@ -8,44 +8,7 @@
 #include <string.h>
 
 /* ── GL platform detection ───────────────────────────────────────────────── */
-#ifdef __EMSCRIPTEN__
-#define BANANA_ENGINE_HAS_GL 1
-#include <GLES3/gl3.h>
-#include <emscripten.h>
-
-static const char *DEFAULT_VERT = "#version 300 es\n"
-                                  "in vec3 a_pos;\n"
-                                  "in vec3 a_normal;\n"
-                                  "in vec2 a_uv;\n"
-                                  "uniform mat4 u_mvp;\n"
-                                  "out vec3 v_normal;\n"
-                                  "out vec2 v_uv;\n"
-                                  "void main() {\n"
-                                  "  v_normal = a_normal;\n"
-                                  "  v_uv = a_uv;\n"
-                                  "  gl_Position = u_mvp * vec4(a_pos, 1.0);\n"
-                                  "}\n";
-
-static const char *DEFAULT_FRAG =
-    "#version 300 es\n"
-    "precision mediump float;\n"
-    "in vec3 v_normal;\n"
-    "in vec2 v_uv;\n"
-    "uniform vec3 u_color;\n"
-    "uniform float u_use_texture;\n"
-    "uniform float u_uv_scale;\n"
-    "uniform sampler2D u_tile_texture;\n"
-    "out vec4 frag_color;\n"
-    "void main() {\n"
-    "  vec3 base_color = u_color;\n"
-    "  if (u_use_texture > 0.5) {\n"
-    "    base_color *= texture(u_tile_texture, v_uv * u_uv_scale).rgb;\n"
-    "  }\n"
-    "  float diff = max(dot(normalize(v_normal), vec3(0.5,1.0,0.5)), 0.15);\n"
-    "  frag_color = vec4(base_color * diff, 1.0);\n"
-    "}\n";
-
-#elif defined(BANANA_ENGINE_HAS_GLFW)
+#if defined(BANANA_ENGINE_HAS_GLFW)
 #define BANANA_ENGINE_HAS_GL 1
 #include <GL/gl.h>
 #include "shader.h"
@@ -81,10 +44,6 @@ static const char *DEFAULT_FRAG =
     "  frag_color = vec4(base_color * diff, 1.0);\n"
     "}\n";
 #endif /* platform */
-
-#ifdef __EMSCRIPTEN__
-#include "shader.h"
-#endif
 
 #ifdef BANANA_ENGINE_HAS_GL
 /* ── Internal mat4 multiply (column-major, A × B → C) ───────────────────── */
@@ -138,39 +97,6 @@ static unsigned int renderer_create_fallback_tile_texture(void)
 }
 #endif
 
-#ifdef __EMSCRIPTEN__
-/* clang-format off */
-EM_JS(void, renderer_load_default_tile_texture_async, (unsigned int texture_id), {
-    if (typeof Module === "undefined") {
-        return;
-    }
-    if (Module.__bananaSplashTextureRequested) {
-        return;
-    }
-    Module.__bananaSplashTextureRequested = true;
-
-    const gl = (typeof GLctx !== "undefined" && GLctx) ? GLctx : Module.ctx;
-    const texture = (typeof GL !== "undefined" && GL.textures) ? GL.textures[texture_id] : null;
-    if (!gl || !texture) {
-        return;
-    }
-
-    const image = new Image();
-    image.onload = () => {
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.generateMipmap(gl.TEXTURE_2D);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-    };
-    image.src = "/splash.png";
-});
-/* clang-format on */
-#endif
 
 #ifdef BANANA_ENGINE_HAS_GL
 
@@ -210,17 +136,9 @@ Renderer *renderer_create(int width, int height)
 #ifdef BANANA_ENGINE_HAS_GL
     r->default_shader = shader_create(DEFAULT_VERT, DEFAULT_FRAG);
     r->default_tile_texture = renderer_create_fallback_tile_texture();
-#ifdef __EMSCRIPTEN__
-    renderer_load_default_tile_texture_async(r->default_tile_texture);
-#endif
-#ifdef __EMSCRIPTEN__
-    /* WASM: render direct to canvas (FBO 0); no readback needed */
-    r->use_fbo = 0;
-#else
     /* Native: render to FBO so we can readback pixels */
     r->use_fbo = 1;
     setup_fbo(r);
-#endif
     glViewport(0, 0, width, height);
     glEnable(GL_DEPTH_TEST);
 #else
@@ -303,7 +221,6 @@ void renderer_end_frame(Renderer *r)
         glReadPixels(0, 0, r->width, r->height, GL_RGBA, GL_UNSIGNED_BYTE, r->frame_buffer);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-    /* WASM: canvas already has the rendered output; nothing to do */
 #else
 /* DX12 runtime is optional in this non-GL build path; headless readback remains
  * available for tests and ABI consumers. */
@@ -380,5 +297,5 @@ void renderer_destroy(Renderer *r)
     free(r);
 }
 
-/* ── WASM ABI stubs — wired to global singleton in engine.c ─────────────── */
+/* ── C ABI stubs — wired to global singleton in engine.c ────────────────── */
 /* These are implemented in engine.c where the singleton lives.              */

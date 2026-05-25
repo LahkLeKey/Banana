@@ -3,10 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __EMSCRIPTEN__
-#define BANANA_ENGINE_HAS_GL 1
-#include <GLES3/gl3.h>
-#elif defined(BANANA_ENGINE_HAS_GLFW)
+#if defined(BANANA_ENGINE_HAS_GLFW)
 #define BANANA_ENGINE_HAS_GL 1
 #include <GL/gl.h>
 #endif

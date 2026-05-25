@@ -36,7 +36,7 @@ extern "C"
     void controller_signal(ControllerInstance *c, const char *signal, const void *data);
     void controller_destroy(ControllerInstance *c);
 
-    /* ── WASM ABI exports ─────────────────────────────────────────────────────── */
+    /* ── C ABI exports ────────────────────────────────────────────────────────── */
     uint32_t engine_controller_create(const char *type_name, float x, float y, float z);
     void engine_controller_update(uint32_t id, float dt);
     void engine_controller_signal(uint32_t id, const char *signal_name);

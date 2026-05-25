@@ -42,6 +42,186 @@ static uint32_t chunk_hash(int cx, int cz)
     return h;
 }
 
+static uint64_t fnv1a64_seed(void)
+{
+    return 1469598103934665603ULL;
+}
+
+static uint64_t fnv1a64_step(uint64_t hash, uint64_t value)
+{
+    hash ^= value;
+    hash *= 1099511628211ULL;
+    return hash;
+}
+
+static uint64_t fnv1a64_string(uint64_t hash, const char *text)
+{
+    const unsigned char *cursor = (const unsigned char *)(text ? text : "");
+    while (*cursor != '\0')
+    {
+        hash = fnv1a64_step(hash, (uint64_t)(*cursor));
+        cursor++;
+    }
+    return hash;
+}
+
+static int floor_div_int(int numerator, int denominator)
+{
+    int quotient = 0;
+    int remainder = 0;
+
+    if (denominator <= 0)
+        return 0;
+
+    quotient = numerator / denominator;
+    remainder = numerator % denominator;
+    if (remainder != 0 && ((remainder < 0) != (denominator < 0)))
+    {
+        quotient -= 1;
+    }
+
+    return quotient;
+}
+
+uint64_t terrain_chunks_area_identity_hash(const char *world_id,
+                                           const char *lane_id,
+                                           int chunk_x,
+                                           int chunk_z,
+                                           uint32_t partition_epoch)
+{
+    const char *normalized_world_id = (world_id && world_id[0] != '\0') ? world_id : "default-world";
+    const char *normalized_lane_id = (lane_id && lane_id[0] != '\0') ? lane_id : "default-lane";
+    uint64_t hash = fnv1a64_seed();
+
+    hash = fnv1a64_string(hash, normalized_world_id);
+    hash = fnv1a64_string(hash, normalized_lane_id);
+    hash = fnv1a64_step(hash, (uint64_t)(uint32_t)chunk_x);
+    hash = fnv1a64_step(hash, (uint64_t)(uint32_t)chunk_z);
+    hash = fnv1a64_step(hash, (uint64_t)partition_epoch);
+
+    if (hash == 0ULL)
+        hash = 1ULL;
+
+    return hash;
+}
+
+int terrain_chunks_partition_tuple_from_world(float world_x,
+                                              float world_z,
+                                              int partition_span_chunks,
+                                              TerrainChunkPartitionTuple *out_tuple)
+{
+    int chunk_x = 0;
+    int chunk_z = 0;
+
+    if (!out_tuple || partition_span_chunks <= 0)
+        return -1;
+
+    terrain_chunks_world_to_chunk(world_x, world_z, &chunk_x, &chunk_z);
+
+    out_tuple->chunk_x = chunk_x;
+    out_tuple->chunk_z = chunk_z;
+    out_tuple->partition_x = floor_div_int(chunk_x, partition_span_chunks);
+    out_tuple->partition_z = floor_div_int(chunk_z, partition_span_chunks);
+    return 0;
+}
+
+int terrain_chunks_collect_adjacency_order(int chunk_x,
+                                           int chunk_z,
+                                           int radius,
+                                           int (*out_coords)[2],
+                                           int max_coords)
+{
+    int expected = (radius * 2 + 1) * (radius * 2 + 1);
+    int count = 0;
+    int dz = 0;
+    int dx = 0;
+
+    if (!out_coords || radius < 0 || max_coords < expected)
+        return -1;
+
+    for (dz = -radius; dz <= radius; dz++)
+    {
+        for (dx = -radius; dx <= radius; dx++)
+        {
+            out_coords[count][0] = chunk_x + dx;
+            out_coords[count][1] = chunk_z + dz;
+            count++;
+        }
+    }
+
+    return count;
+}
+
+uint64_t terrain_chunks_compute_boundary_hash(const TerrainChunk *chunk)
+{
+    uint64_t hash = fnv1a64_seed();
+    int i = 0;
+
+    if (!chunk)
+        return 0ULL;
+
+    hash = fnv1a64_step(hash, (uint64_t)(uint32_t)chunk->chunk_x);
+    hash = fnv1a64_step(hash, (uint64_t)(uint32_t)chunk->chunk_z);
+
+    for (i = 0; i < TERRAIN_CHUNK_SIZE; i++)
+    {
+        hash = fnv1a64_step(hash, (uint64_t)chunk->heights[0][i]);
+        hash = fnv1a64_step(hash, (uint64_t)chunk->biomes[0][i]);
+    }
+
+    for (i = 1; i < TERRAIN_CHUNK_SIZE; i++)
+    {
+        hash = fnv1a64_step(hash, (uint64_t)chunk->heights[i][TERRAIN_CHUNK_SIZE - 1]);
+        hash = fnv1a64_step(hash, (uint64_t)chunk->biomes[i][TERRAIN_CHUNK_SIZE - 1]);
+    }
+
+    for (i = TERRAIN_CHUNK_SIZE - 2; i >= 0; i--)
+    {
+        hash = fnv1a64_step(hash, (uint64_t)chunk->heights[TERRAIN_CHUNK_SIZE - 1][i]);
+        hash = fnv1a64_step(hash, (uint64_t)chunk->biomes[TERRAIN_CHUNK_SIZE - 1][i]);
+    }
+
+    for (i = TERRAIN_CHUNK_SIZE - 2; i > 0; i--)
+    {
+        hash = fnv1a64_step(hash, (uint64_t)chunk->heights[i][0]);
+        hash = fnv1a64_step(hash, (uint64_t)chunk->biomes[i][0]);
+    }
+
+    if (hash == 0ULL)
+        hash = 1ULL;
+
+    return hash;
+}
+
+static uint64_t chunk_generation_fingerprint(
+    int chunk_x,
+    int chunk_z,
+    const uint8_t heights[TERRAIN_CHUNK_SIZE][TERRAIN_CHUNK_SIZE],
+    const uint8_t biomes[TERRAIN_CHUNK_SIZE][TERRAIN_CHUNK_SIZE])
+{
+    uint64_t hash = 1469598103934665603ULL;
+    int z = 0;
+    int x = 0;
+
+    hash ^= (uint64_t)(uint32_t)chunk_x;
+    hash *= 1099511628211ULL;
+    hash ^= (uint64_t)(uint32_t)chunk_z;
+    hash *= 1099511628211ULL;
+
+    for (z = 0; z < TERRAIN_CHUNK_SIZE; z++)
+    {
+        for (x = 0; x < TERRAIN_CHUNK_SIZE; x++)
+        {
+            hash ^= (uint64_t)heights[z][x];
+            hash *= 1099511628211ULL;
+            hash ^= (uint64_t)biomes[z][x];
+            hash *= 1099511628211ULL;
+        }
+    }
+
+    return hash;
+}
+
 static float clampf_local(float v, float lo, float hi)
 {
     if (v < lo)
@@ -248,6 +428,8 @@ const TerrainChunk *terrain_chunks_get(int chunk_x, int chunk_z)
     cache_entry->chunk.chunk_x = chunk_x;
     cache_entry->chunk.chunk_z = chunk_z;
     cache_entry->chunk.generation_tick = 0;
+    cache_entry->chunk.generation_fingerprint = 0ULL;
+    cache_entry->chunk.boundary_hash = 0ULL;
     cache_entry->chunk.version = 1;
     cache_entry->chunk.is_dirty = 0;
     cache_entry->ref_count = 0;
@@ -255,6 +437,12 @@ const TerrainChunk *terrain_chunks_get(int chunk_x, int chunk_z)
 
     generate_heightfield(chunk_x, chunk_z, cache_entry->chunk.heights);
     generate_biomes(chunk_x, chunk_z, cache_entry->chunk.heights, cache_entry->chunk.biomes);
+    cache_entry->chunk.generation_fingerprint =
+        chunk_generation_fingerprint(chunk_x,
+                                     chunk_z,
+                                     cache_entry->chunk.heights,
+                                     cache_entry->chunk.biomes);
+    cache_entry->chunk.boundary_hash = terrain_chunks_compute_boundary_hash(&cache_entry->chunk);
 
     g_terrain_chunks.total_generated++;
 
@@ -281,25 +469,46 @@ int terrain_chunks_update_for_players(const float (*player_positions)[2], int pl
 
     /* For each player, ensure chunks in radius are cached */
     int chunks_updated = 0;
+    const int max_coords = (chunk_radius * 2 + 1) * (chunk_radius * 2 + 1);
+    int(*adjacency_coords)[2] = NULL;
+
+    adjacency_coords = (int(*)[2])malloc((size_t)max_coords * sizeof(*adjacency_coords));
+    if (!adjacency_coords)
+        return -1;
+
     for (int p = 0; p < player_count; p++)
     {
         int player_chunk_x, player_chunk_z;
+        int ordered_count = 0;
+        int index = 0;
         terrain_chunks_world_to_chunk(player_positions[p][0], player_positions[p][1],
                                       &player_chunk_x, &player_chunk_z);
 
-        /* Load chunks in radius */
-        for (int cx = player_chunk_x - chunk_radius; cx <= player_chunk_x + chunk_radius; cx++)
+        ordered_count = terrain_chunks_collect_adjacency_order(
+            player_chunk_x,
+            player_chunk_z,
+            chunk_radius,
+            adjacency_coords,
+            max_coords);
+        if (ordered_count < 0)
         {
-            for (int cz = player_chunk_z - chunk_radius; cz <= player_chunk_z + chunk_radius; cz++)
+            free(adjacency_coords);
+            return -1;
+        }
+
+        for (index = 0; index < ordered_count; index++)
+        {
+            int cx = adjacency_coords[index][0];
+            int cz = adjacency_coords[index][1];
+            const TerrainChunk *chunk = terrain_chunks_get(cx, cz);
+            if (chunk)
             {
-                const TerrainChunk *chunk = terrain_chunks_get(cx, cz);
-                if (chunk)
-                {
-                    chunks_updated++;
-                }
+                chunks_updated++;
             }
         }
     }
+
+    free(adjacency_coords);
 
     return chunks_updated;
 }

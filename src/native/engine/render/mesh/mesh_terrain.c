@@ -3,6 +3,75 @@
 #include <math.h>
 #include <stdlib.h>
 
+static uint64_t mesh_terrain_fnv1a64_step(uint64_t hash, uint64_t value)
+{
+    hash ^= value;
+    hash *= 1099511628211ULL;
+    return hash;
+}
+
+static uint64_t mesh_terrain_hash_float(uint64_t hash, float value)
+{
+    int64_t quantized = (int64_t)(value * 10000.0f);
+    return mesh_terrain_fnv1a64_step(hash, (uint64_t)quantized);
+}
+
+uint64_t mesh_terrain_heightfield_signature(const unsigned char *heights,
+                                            int width,
+                                            int depth,
+                                            float tile_size,
+                                            float height_scale)
+{
+    uint64_t hash = 1469598103934665603ULL;
+    int idx = 0;
+    int total = 0;
+
+    if (!heights || width < 2 || depth < 2 || tile_size <= 0.0f)
+        return 0ULL;
+
+    hash = mesh_terrain_fnv1a64_step(hash, (uint64_t)(uint32_t)width);
+    hash = mesh_terrain_fnv1a64_step(hash, (uint64_t)(uint32_t)depth);
+    hash = mesh_terrain_hash_float(hash, tile_size);
+    hash = mesh_terrain_hash_float(hash, height_scale);
+
+    total = width * depth;
+    for (idx = 0; idx < total; idx++)
+    {
+        hash = mesh_terrain_fnv1a64_step(hash, (uint64_t)heights[idx]);
+    }
+
+    if (hash == 0ULL)
+        hash = 1ULL;
+
+    return hash;
+}
+
+int mesh_terrain_heightfield_parity_match(const unsigned char *left_heights,
+                                          const unsigned char *right_heights,
+                                          int width,
+                                          int depth,
+                                          float tile_size,
+                                          float height_scale)
+{
+    uint64_t left_signature = mesh_terrain_heightfield_signature(
+        left_heights,
+        width,
+        depth,
+        tile_size,
+        height_scale);
+    uint64_t right_signature = mesh_terrain_heightfield_signature(
+        right_heights,
+        width,
+        depth,
+        tile_size,
+        height_scale);
+
+    if (left_signature == 0ULL || right_signature == 0ULL)
+        return 0;
+
+    return left_signature == right_signature ? 1 : 0;
+}
+
 Mesh *mesh_create_terrain_heightfield(const unsigned char *heights, int width, int depth,
                                       float tile_size, float height_scale)
 {

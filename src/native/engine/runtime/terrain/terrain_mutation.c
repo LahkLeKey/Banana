@@ -96,3 +96,36 @@ void runtime_terrain_mark_region_dirty(int terrain_size,
         for (int cx = min_cx; cx <= max_cx; cx++)
             mark_chunk_dirty(cx, cz);
 }
+
+int runtime_terrain_apply_delta(unsigned char *height_grid,
+                                int terrain_size,
+                                int terrain_max_layers,
+                                int chunk_size,
+                                const RuntimeTerrainDelta *delta,
+                                unsigned int *inout_applied_sequence,
+                                RuntimeTerrainMarkChunkDirtyFn mark_chunk_dirty)
+{
+    unsigned int expected_sequence = 0u;
+
+    if (!delta || !inout_applied_sequence)
+        return 0;
+
+    expected_sequence = (*inout_applied_sequence) + 1u;
+    if (delta->sequence != expected_sequence)
+        return 0;
+
+    if (!runtime_terrain_set_height(height_grid,
+                                    terrain_size,
+                                    terrain_max_layers,
+                                    chunk_size,
+                                    delta->x,
+                                    delta->z,
+                                    delta->elevation,
+                                    mark_chunk_dirty))
+    {
+        return 0;
+    }
+
+    *inout_applied_sequence = delta->sequence;
+    return 1;
+}

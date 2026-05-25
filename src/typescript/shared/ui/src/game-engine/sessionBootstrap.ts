@@ -1,5 +1,6 @@
-import {GAME_SESSION_STORAGE_KEY, type GameSessionBootstrap, rejoinGameSession, resolveApiBaseResolutionError, resolveApiBaseUrl, resolveRuntimePlayerGuid, startGameSession,} from './api';
 import {readStoredAuthSession} from '../auth/session';
+
+import {GAME_SESSION_STORAGE_KEY, type GameSessionBootstrap, rejoinGameSession, resolveApiBaseResolutionError, resolveApiBaseUrl, resolveRuntimePlayerGuid, startGameSession,} from './api';
 
 export type SessionBootstrapResult = {
   bootstrap: GameSessionBootstrap|null; error: string | null;
@@ -10,8 +11,7 @@ export type SessionBootstrapOptions = {
 };
 
 export async function ensureGameSessionBootstrap(
-    options: SessionBootstrapOptions = {}):
-    Promise<SessionBootstrapResult> {
+    options: SessionBootstrapOptions = {}): Promise<SessionBootstrapResult> {
   const runtimePlayerGuid = resolveRuntimePlayerGuid();
   const authSession = readStoredAuthSession();
 
@@ -70,10 +70,8 @@ export async function ensureGameSessionBootstrap(
   }
 
   try {
-    const created =
-        await startGameSession(
-            apiBaseUrl, fallbackPlayerName, runtimePlayerGuid,
-            authSession.token);
+    const created = await startGameSession(
+        apiBaseUrl, fallbackPlayerName, runtimePlayerGuid, authSession.token);
     const normalized = {
       ...created,
       playerGuid: runtimePlayerGuid,

@@ -47,6 +47,7 @@ extern "C"
         int32_t chunk_z;
         uint32_t version;
         int64_t generation_tick;
+        uint64_t generation_fingerprint;
 
         /* Terrain data */
         uint8_t heights[64][64];

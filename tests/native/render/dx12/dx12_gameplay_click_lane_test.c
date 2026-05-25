@@ -3,6 +3,27 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(_WIN32)
+#define setenv(name, value, overwrite) _putenv_s((name), (value))
+#endif
+
+static void apply_dx12_test_launch_gate_defaults(void)
+{
+    const char *mode = getenv("BANANA_LAUNCH_GATE_MODE");
+
+    setenv("BANANA_LAUNCH_GATE_MODE", mode && mode[0] != '\0' ? mode : "development", 0);
+
+    mode = getenv("BANANA_LAUNCH_GATE_MODE");
+    if (!mode || mode[0] == '\0' || strcmp(mode, "development") != 0)
+        return;
+
+    setenv("BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE", "1", 0);
+    setenv("BANANA_LAUNCH_GATE_VERIFICATION_FRESH", "1", 0);
+    setenv("BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING", "1", 0);
+}
 
 static int expect_int(const char *label, int actual, int expected)
 {
@@ -31,6 +52,8 @@ int main(void)
     int baseline_reached = 0;
     int reached = 0;
     int tick = 0;
+
+    apply_dx12_test_launch_gate_defaults();
 
     if (!expect_int("engine init", engine_init(BANANA_POC_WIDTH, BANANA_POC_HEIGHT), 0))
         return 1;

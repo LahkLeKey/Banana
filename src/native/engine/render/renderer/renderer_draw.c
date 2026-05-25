@@ -3,11 +3,7 @@
 #include "material.h"
 #include "mesh.h"
 
-#ifdef __EMSCRIPTEN__
-#define BANANA_ENGINE_HAS_GL 1
-#include "shader.h"
-#include <GLES3/gl3.h>
-#elif defined(BANANA_ENGINE_HAS_GLFW)
+#if defined(BANANA_ENGINE_HAS_GLFW)
 #define BANANA_ENGINE_HAS_GL 1
 #include "shader.h"
 #include <GL/gl.h>

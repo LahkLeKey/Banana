@@ -6,6 +6,8 @@ extern "C"
 {
 #endif
 
+#include <stdint.h>
+
     typedef struct Mesh Mesh;
 
     /* Create a mesh from raw vertex and index data.
@@ -40,6 +42,19 @@ extern "C"
      * height_scale: multiplier converting elevation values to world-space height. */
     Mesh *mesh_create_terrain_heightfield(const unsigned char *heights, int width, int depth,
                                           float tile_size, float height_scale);
+
+    uint64_t mesh_terrain_heightfield_signature(const unsigned char *heights,
+                                                int width,
+                                                int depth,
+                                                float tile_size,
+                                                float height_scale);
+
+    int mesh_terrain_heightfield_parity_match(const unsigned char *left_heights,
+                                              const unsigned char *right_heights,
+                                              int width,
+                                              int depth,
+                                              float tile_size,
+                                              float height_scale);
 
     /* Issue a draw call (VAO bind + glDrawElements). Shader must be bound. */
     void mesh_draw(Mesh *m);

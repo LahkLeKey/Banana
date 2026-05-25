@@ -1,0 +1,7 @@
+# 009 failure retry determinism
+timestamp=2026-05-25T07:07:48Z
+native=banana_runtime_terrain_retry_determinism_test
+native_exit=0
+api_tests=persistent-world-failure-retry.integration.test.ts
+[0m[1mbun test [0m[2mv1.3.9 (cf6cdbbb)[0m
+api_exit=0

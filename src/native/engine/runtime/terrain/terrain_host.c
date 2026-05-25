@@ -36,3 +36,21 @@ int runtime_terrain_host_rebuild_dirty(unsigned char *height_grid,
                                                 chunk_rows,
                                                 max_chunks);
 }
+
+RuntimeTerrainFailureClass runtime_terrain_host_classify_generation_failure(int status_code)
+{
+    if (status_code == RUNTIME_TERRAIN_GENERATION_STATUS_OK)
+        return RUNTIME_TERRAIN_FAILURE_CLASS_NONE;
+
+    switch (status_code)
+    {
+        case RUNTIME_TERRAIN_GENERATION_STATUS_TIMEOUT:
+        case RUNTIME_TERRAIN_GENERATION_STATUS_DEPENDENCY_UNAVAILABLE:
+            return RUNTIME_TERRAIN_FAILURE_CLASS_RECOVERABLE;
+
+        case RUNTIME_TERRAIN_GENERATION_STATUS_INVALID_AREA_IDENTITY:
+        case RUNTIME_TERRAIN_GENERATION_STATUS_CONTRACT_VERSION_UNSUPPORTED:
+        default:
+            return RUNTIME_TERRAIN_FAILURE_CLASS_NON_RECOVERABLE;
+    }
+}

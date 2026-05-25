@@ -1,4 +1,5 @@
 #include "../scene_flow.h"
+#include "demo_scene_catalog.h"
 
 static void clear_result(BananaPocSceneFlowResult *result)
 {
@@ -14,6 +15,8 @@ static void clear_result(BananaPocSceneFlowResult *result)
     result->editor_apply_requested = 0;
     result->entered_scene_browser_scene = 0;
     result->scene_browser_variant = 0;
+    result->scene_browser_launch_blocked = 0;
+    result->scene_browser_launch_diagnostics = (int)BANANA_POC_DEMO_SCENE_VALIDATION_OK;
     result->config_lab_toggled = 0;
 }
 
@@ -243,6 +246,14 @@ void banana_poc_scene_flow_step(BananaPocSceneFlowState *state,
 
     if (state->scene == BANANA_POC_SCENE_SCENE_BROWSER)
     {
+        int max_scene_index = banana_poc_demo_scene_catalog_count() - 1;
+
+        if (max_scene_index < 0)
+            return;
+
+        state->proto_config.scene_browser_index =
+            banana_poc_demo_scene_catalog_clamp_index(state->proto_config.scene_browser_index);
+
         /* Navigate the four prototype scenes. */
         if (input->up_pressed && state->proto_config.scene_browser_index > 0)
         {
@@ -251,7 +262,7 @@ void banana_poc_scene_flow_step(BananaPocSceneFlowState *state,
                 result->profile_dirty = 1;
         }
 
-        if (input->down_pressed && state->proto_config.scene_browser_index < 3)
+        if (input->down_pressed && state->proto_config.scene_browser_index < max_scene_index)
         {
             state->proto_config.scene_browser_index++;
             if (result)
@@ -260,16 +271,29 @@ void banana_poc_scene_flow_step(BananaPocSceneFlowState *state,
 
         if (input->enter_pressed)
         {
-            /* All prototype scenes reuse the WORLD runtime for now.
-               scene_browser_variant tells main.c which flavour to prep. */
-            state->scene = BANANA_POC_SCENE_WORLD;
-            state->proto_config.active_world_variant = state->proto_config.scene_browser_index;
-            if (result)
+            const BananaPocDemoSceneCatalogEntry *entry =
+                banana_poc_demo_scene_catalog_at_index(state->proto_config.scene_browser_index);
+            BananaPocDemoSceneValidationStatus status =
+                banana_poc_demo_scene_catalog_validate_index(state->proto_config.scene_browser_index);
+
+            if (entry && status == BANANA_POC_DEMO_SCENE_VALIDATION_OK)
             {
-                result->entered_world = 1;
-                result->entered_scene_browser_scene = 1;
-                result->scene_browser_variant = state->proto_config.scene_browser_index;
-                result->profile_dirty = 1;
+                /* All prototype scenes reuse the WORLD runtime for now.
+                   scene_browser_variant tells main.c which flavour to prep. */
+                state->scene = BANANA_POC_SCENE_WORLD;
+                state->proto_config.active_world_variant = entry->browser_variant;
+                if (result)
+                {
+                    result->entered_world = 1;
+                    result->entered_scene_browser_scene = 1;
+                    result->scene_browser_variant = entry->browser_variant;
+                    result->profile_dirty = 1;
+                }
+            }
+            else if (result)
+            {
+                result->scene_browser_launch_blocked = 1;
+                result->scene_browser_launch_diagnostics = (int)status;
             }
         }
 

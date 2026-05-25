@@ -45,6 +45,8 @@ typedef struct BananaPocSceneFlowResult
     int editor_apply_requested;
     int entered_scene_browser_scene; /* fired when user picks a proto scene     */
     int scene_browser_variant;       /* which proto scene was chosen (0-3)      */
+    int scene_browser_launch_blocked;
+    int scene_browser_launch_diagnostics;
     int config_lab_toggled;          /* fired when a config-lab value is changed */
 } BananaPocSceneFlowResult;
 

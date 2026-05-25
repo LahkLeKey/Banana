@@ -11,8 +11,7 @@ extern "C"
         BANANA_RENDER_BACKEND_UNKNOWN = 0,
         BANANA_RENDER_BACKEND_GLFW = 1,
         BANANA_RENDER_BACKEND_DX12 = 2,
-        BANANA_RENDER_BACKEND_WASM = 3,
-        BANANA_RENDER_BACKEND_HEADLESS = 4,
+        BANANA_RENDER_BACKEND_HEADLESS = 3,
     } BananaRenderBackend;
 
     BananaRenderBackend banana_render_backend_requested(void);

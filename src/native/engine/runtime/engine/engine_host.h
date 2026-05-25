@@ -16,6 +16,8 @@ extern "C"
 
     const unsigned char *runtime_engine_host_get_frame_buffer(Renderer *renderer);
 
+    const char *runtime_engine_host_launch_gate_mode_label_for(const char *trusted_mode_label);
+
     void runtime_engine_host_reset_state(Window **window,
                                          Renderer **renderer,
                                          PhysicsWorld **physics,

@@ -67,5 +67,5 @@ void world_destroy(World *w)
     free(w);
 }
 
-/* engine_world_spawn / engine_world_tick are WASM ABI entry points
+/* engine_world_spawn / engine_world_tick are C ABI entry points
  * that live in engine.c (they need the global singleton s_world). */

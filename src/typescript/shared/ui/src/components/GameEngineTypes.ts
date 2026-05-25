@@ -1,7 +1,6 @@
 /**
  * Shared types for game engine UI components
- * Used by GameEnginePage and cross-platform consumers (React, React Native,
- * Electron)
+ * Used by GameEnginePage and frontend consumers.
  */
 
 export type EngineStatus = 'idle'|'loading'|'running'|'error'|'unavailable';

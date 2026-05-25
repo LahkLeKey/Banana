@@ -26,6 +26,10 @@ extern "C"
                                                int max_x,
                                                int max_z);
 
+    unsigned int runtime_terrain_abi_retry_fingerprint_lineage(unsigned int generation_input_fingerprint,
+                                                               unsigned int retry_attempt,
+                                                               int last_failure_code);
+
 #ifdef __cplusplus
 }
 #endif

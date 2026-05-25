@@ -9,11 +9,8 @@ export type {EngineStatus, RadialDirection,} from './components/GameEngineTypes'
 export {computeMoveAxes, getDirectionFromTouch, isMovementKey, MOVEMENT_KEYS, RADIAL_CONFIG,} from './components/GameEngineTypes';
 export type {RetryButtonProps} from './components/RetryButton';
 export {RETRY_BUTTON_COPY, RetryButton} from './components/RetryButton';
-export type {NativeUiFrame, NativeUiHostKind, NativeUiMarshalInput, NativeUiSurface,} from './native/NativeUiAbi';
-export {marshalNativeUiFrame} from './native/NativeUiAbi';
 export type {Tokens} from './tokens';
 export {tokens} from './tokens';
-export type {ChatMessage, ChatSession, EnsembleVerdict, RipenessResult, TrainingAuditEvent, TrainingLane, TrainingRunRequest, TrainingRunResult,} from './types';
 
 export * from './domains/ConnectionManager';
 export * from './domains/GameEngineUIService';
@@ -27,4 +24,3 @@ export {LoginPage} from './auth/LoginPage';
 export {SessionRoomPage} from './auth/SessionRoomPage';
 export {BANANA_AUTH_STEAM_ID_STORAGE_KEY, BANANA_AUTH_TOKEN_STORAGE_KEY, buildSteamAuthStartUrl, clearStoredAuthSession, hasStoredAuthSession, parseAuthCallbackHash, readStoredAuthSession, resolveLoginReturnToUrl, storeAuthSession,} from './auth/session';
 export {logoutAuthSession, validateAuthSession} from './auth/session';
-export {GameEnginePage} from './game-engine/GameEnginePage';

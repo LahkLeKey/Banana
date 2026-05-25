@@ -45,9 +45,7 @@ export type GameSessionSnapshotEnvelope = {
 };
 
 export type PlayerAccountResponse = {
-  playerId: string;
-  accountStatus: string;
-  profile: Record<string, unknown>;
+  playerId: string; accountStatus: string; profile: Record<string, unknown>;
   version: number;
   updatedAt: string;
 };
@@ -62,10 +60,9 @@ export type PlayerInsightsResponse = {
 };
 
 export type GameAccountOverviewResponse = {
-  steamId: string;
-  playerGuid: string;
-  sessionId: string;
-  buildStats: {health: number; attack: number; defense: number; utility: number;};
+  steamId: string; playerGuid: string; sessionId: string;
+  buildStats:
+      {health: number; attack: number; defense: number; utility: number;};
   replayCursor: {lastTick: number; lastSequence: number;};
   antiCheat: {score: number; flagged: boolean; integrityHash: number;};
   world: {entityCount: number; lastSnapshotTick: number;};
@@ -73,13 +70,9 @@ export type GameAccountOverviewResponse = {
   mode: string;
 };
 
-type ElectronBridge = {
-  apiBaseUrl: string;
-};
-
 export type ApiBaseResolution = {
   baseUrl: string; error: string | null;
-  source: 'vite' | 'electron' | 'localhost-default' | 'unresolved';
+  source: 'vite' | 'localhost-default' | 'unresolved';
 };
 
 function createRandomHex(size: number): string {
@@ -138,14 +131,6 @@ export function resolveRuntimePlayerGuid(): string {
   return created;
 }
 
-function resolveElectronBridge(): ElectronBridge|undefined {
-  if (typeof window === 'undefined') {
-    return undefined;
-  }
-
-  return (window as Window & {banana?: ElectronBridge}).banana;
-}
-
 function resolveViteApiBaseUrl(): string {
   const importMeta = import.meta as {env?: {VITE_BANANA_API_BASE_URL?: string}};
   return importMeta.env?.VITE_BANANA_API_BASE_URL ?? '';
@@ -170,16 +155,10 @@ function resolveLocalhostDefaultApiBaseUrl(): string {
 
 export function resolveApiBaseResolution(
     viteBaseUrl = resolveViteApiBaseUrl(),
-    electronBridge = resolveElectronBridge(),
     localhostDefault = resolveLocalhostDefaultApiBaseUrl()): ApiBaseResolution {
   const normalizedVite = viteBaseUrl.trim();
   if (normalizedVite.length > 0) {
     return {baseUrl: normalizedVite, error: null, source: 'vite'};
-  }
-
-  const normalizedElectron = (electronBridge?.apiBaseUrl ?? '').trim();
-  if (normalizedElectron.length > 0) {
-    return {baseUrl: normalizedElectron, error: null, source: 'electron'};
   }
 
   const normalizedLocalhostDefault = localhostDefault.trim();
@@ -194,25 +173,21 @@ export function resolveApiBaseResolution(
   return {
     baseUrl: '',
     error:
-        'Missing API base URL. Set VITE_BANANA_API_BASE_URL for web or BANANA_API_BASE_URL for Electron preload, then relaunch via the canonical Compose frontend profile.',
+        'Missing API base URL. Set VITE_BANANA_API_BASE_URL and relaunch the frontend profile.',
     source: 'unresolved',
   };
 }
 
 export function resolveApiBaseResolutionError(
     viteBaseUrl = resolveViteApiBaseUrl(),
-    electronBridge = resolveElectronBridge(),
     localhostDefault = resolveLocalhostDefaultApiBaseUrl()): string|null {
-  return resolveApiBaseResolution(viteBaseUrl, electronBridge, localhostDefault)
-      .error;
+  return resolveApiBaseResolution(viteBaseUrl, localhostDefault).error;
 }
 
 export function resolveApiBaseUrl(
     viteBaseUrl = resolveViteApiBaseUrl(),
-    electronBridge = resolveElectronBridge(),
     localhostDefault = resolveLocalhostDefaultApiBaseUrl()): string {
-  return resolveApiBaseResolution(viteBaseUrl, electronBridge, localhostDefault)
-      .baseUrl;
+  return resolveApiBaseResolution(viteBaseUrl, localhostDefault).baseUrl;
 }
 
 function resolveLocalhostFastifyGameplayBase(baseUrl: string): string {
@@ -280,8 +255,8 @@ function withBearerAuth(token: string): Record<string, string> {
 }
 
 export async function startGameSession(
-    baseUrl: string, playerName: string,
-    playerGuid: string, token?: string): Promise<GameSessionBootstrap> {
+    baseUrl: string, playerName: string, playerGuid: string,
+    token?: string): Promise<GameSessionBootstrap> {
   const headers: Record<string, string> = {'content-type': 'application/json'};
   if (token?.trim()) {
     headers.authorization = `Bearer ${token.trim()}`;

@@ -34,6 +34,9 @@ int runtime_engine_composition_init(EngineRuntimeState *state,
     if (!state->service_ports)
         return -1;
 
+    if (runtime_engine_lifecycle_preflight_launch_gate(state) != 0)
+        return -1;
+
     if (state->engine_initialized)
         return 0;
     state->engine_initialized = 1;

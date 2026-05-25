@@ -1,4 +1,5 @@
 #include "../scene_overlay.h"
+#include "../scene/demo_scene_catalog.h"
 
 #include "../../engine.h"
 
@@ -67,12 +68,6 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
         "Tank",
         "Burst",
         "Support",
-    };
-    static const char *k_variant_names[] = {
-        "Open World",
-        "Physics Sandbox",
-        "AI Encounter",
-        "Render Benchmark",
     };
 
     if (remaining_seconds < 0)
@@ -189,23 +184,23 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
         }
         else if (scene == BANANA_POC_SCENE_SCENE_BROWSER)
         {
-            static const char *k_proto_scenes[] = {
-                "Open World         (terrain + physics + player)",
-                "Physics Sandbox    (flat arena, spawn test)",
-                "AI Encounter       (pre-spawned AI actors)",
-                "Render Benchmark   (geometry stress test)",
-            };
+            int scene_count = banana_poc_demo_scene_catalog_count();
             int i = 0;
-            int browser_index = proto ? proto->scene_browser_index : 0;
+            int browser_index = banana_poc_demo_scene_catalog_clamp_index(proto ? proto->scene_browser_index : 0);
             engine_ui_text(220.0f, 140.0f, "Scene Browser");
-            engine_ui_text(220.0f, 172.0f, "Up/Down select, Enter launch, Esc back");
-            for (i = 0; i < 4; i++)
+            engine_ui_text(220.0f, 172.0f, "Up/Down select, Enter launch enabled slice, Esc back");
+            for (i = 0; i < scene_count; i++)
             {
+                const BananaPocDemoSceneCatalogEntry *entry =
+                    banana_poc_demo_scene_catalog_at_index(i);
                 char row[160];
-                snprintf(row, sizeof(row), "%s %s",
+                snprintf(row,
+                         sizeof(row),
+                         "%s %s%s",
                          (i == browser_index) ? ">" : " ",
-                         k_proto_scenes[i]);
-                engine_ui_text(240.0f, 230.0f + ((float)i * 40.0f), row);
+                         (entry && entry->display_name) ? entry->display_name : "Unknown Scene",
+                         (entry && !entry->enabled) ? " [disabled]" : "");
+                engine_ui_text(240.0f, 230.0f + ((float)i * 34.0f), row);
             }
         }
         else if (scene == BANANA_POC_SCENE_CONFIG_LAB)
@@ -280,7 +275,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
             snprintf(line_one + used,
                      sizeof(line_one) - used,
                      " | VARIANT: %s",
-                     k_variant_names[proto->active_world_variant]);
+                     banana_poc_demo_scene_catalog_display_name_for_variant(proto->active_world_variant));
         }
     }
 

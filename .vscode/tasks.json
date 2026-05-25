@@ -47,7 +47,7 @@
       "command": "bun",
       "args": [
         "-e",
-        "import \"./src/typescript/shared/ui/src/types.ts\"; console.log(\"ui-types-ok\");"
+        "import \"./src/typescript/shared/ui/src/index.ts\"; console.log(\"ui-contract-ok\");"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

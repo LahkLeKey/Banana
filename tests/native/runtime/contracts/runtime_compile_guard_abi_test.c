@@ -43,6 +43,9 @@ typedef void (*RuntimeTerrainAbiMarkRegionDirtyFn)(const RuntimeApplicationServi
                                                    int min_z,
                                                    int max_x,
                                                    int max_z);
+typedef unsigned int (*RuntimeTerrainAbiRetryFingerprintLineageFn)(unsigned int generation_input_fingerprint,
+                                                                   unsigned int retry_attempt,
+                                                                   int last_failure_code);
 
 typedef const char *(*RuntimePlayerGatewayActiveGuidFn)(EntityId active_player_id);
 typedef RuntimeMerchantResourceGateway (*RuntimePlayerGatewayBuilderFn)(
@@ -149,6 +152,8 @@ ABI_COMPILE_ASSERT(terrain_abi_set_height_signature,
                    sizeof(&runtime_terrain_abi_set_height) == sizeof(RuntimeTerrainAbiSetHeightFn));
 ABI_COMPILE_ASSERT(terrain_abi_mark_region_dirty_signature,
                    sizeof(&runtime_terrain_abi_mark_region_dirty) == sizeof(RuntimeTerrainAbiMarkRegionDirtyFn));
+ABI_COMPILE_ASSERT(terrain_abi_retry_lineage_signature,
+                   sizeof(&runtime_terrain_abi_retry_fingerprint_lineage) == sizeof(RuntimeTerrainAbiRetryFingerprintLineageFn));
 
 ABI_COMPILE_ASSERT(player_gateway_resource_get_signature,
                    sizeof(((RuntimeMerchantResourceGateway *)0)->get) == sizeof(RuntimeMerchantGetResourceByKeyFn));
