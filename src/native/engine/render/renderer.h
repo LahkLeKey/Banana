@@ -59,7 +59,7 @@ extern "C"
 
     void renderer_destroy(Renderer *r);
 
-    /* ── WASM ABI exports (called from game loop) ─────────────────────────────── */
+    /* ── C ABI exports (called from game loop) ───────────────────────────────── */
     void engine_render_frame(void);
     const unsigned char *engine_get_frame_buffer(void);
 

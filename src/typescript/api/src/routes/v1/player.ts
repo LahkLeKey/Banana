@@ -10,6 +10,9 @@ import {validateUnifiedPlayerTruthModel} from '../../domains/progression-invento
 import {PlayerAccountUpdateRequestSchema} from '../../lib/contracts/v1/player.ts';
 import {assertPlayerSelfScope} from '../../middleware/playerScopeAuthorization.ts';
 
+import {registerV1AccountLinkRemediationRoutes} from './account-link-remediation.ts';
+import {registerV1LaunchGateRoutes} from './launch-gate.ts';
+
 export async function registerV1PlayerRoutes(app: FastifyInstance):
     Promise<void> {
   await app.register(async (scope) => {
@@ -63,6 +66,11 @@ export async function registerV1PlayerRoutes(app: FastifyInstance):
       assertPlayerSelfScope(request, playerId);
       validateUnifiedPlayerTruthModel(playerId);
       return buildPlayerInsightProjection(playerId);
+    });
+
+    await scope.register(registerV1LaunchGateRoutes, {prefix: '/launch-gate'});
+    await scope.register(registerV1AccountLinkRemediationRoutes, {
+      prefix: '/account-link-remediation',
     });
   }, {prefix: '/v1/player'});
 }

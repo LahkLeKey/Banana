@@ -38,7 +38,7 @@ extern "C"
 
     void world_destroy(World *w);
 
-    /* ── WASM ABI exports ─────────────────────────────────────────────────────── */
+    /* ── C ABI exports ────────────────────────────────────────────────────────── */
     uint32_t engine_world_spawn(int entity_type, float x, float y, float z);
     void engine_world_tick(float dt);
 

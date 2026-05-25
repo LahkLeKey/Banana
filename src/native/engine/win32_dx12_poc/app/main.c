@@ -2,6 +2,7 @@
 
 #include "../../engine.h"
 #include "../scene_overlay.h"
+#include "../scene/demo_scene_catalog.h"
 #include "../scene_flow.h"
 #include "../objective_policy.h"
 #include "../../render/backend.h"
@@ -144,9 +145,14 @@ static void apply_menu_mouse_input(BananaPocScene scene,
 
     if (scene == BANANA_POC_SCENE_SCENE_BROWSER)
     {
-        for (i = 0; i < 4; i++)
+        int scene_count = banana_poc_demo_scene_catalog_count();
+
+        if (scene_count <= 0)
+            return;
+
+        for (i = 0; i < scene_count; i++)
         {
-            int item_y = 230 + (i * 40);
+            int item_y = 230 + (i * 34);
             if (point_in_rect(mouse_x, mouse_y, 220, item_y - 10, 1060, item_y + 20))
             {
                 state->proto_config.scene_browser_index = i;
@@ -215,6 +221,40 @@ static int parse_env_flag(const char *name)
     }
 
     return 1;
+}
+
+static void set_env_default(const char *name, const char *value)
+{
+    const char *raw = getenv(name);
+
+    if (!name || !value)
+    {
+        return;
+    }
+
+    if (raw && raw[0] != '\0')
+    {
+        return;
+    }
+
+    _putenv_s(name, value);
+}
+
+static void apply_dx12_poc_launch_gate_defaults(void)
+{
+    const char *mode = getenv("BANANA_LAUNCH_GATE_MODE");
+
+    set_env_default("BANANA_LAUNCH_GATE_MODE", "development");
+
+    if (mode && mode[0] != '\0' && _stricmp(mode, "development") != 0)
+    {
+        return;
+    }
+
+    /* Keep DX12 POC runnable in local development when launch gate verification services are absent. */
+    set_env_default("BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE", "1");
+    set_env_default("BANANA_LAUNCH_GATE_VERIFICATION_FRESH", "1");
+    set_env_default("BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING", "1");
 }
 
 static void init_profile_path(void)
@@ -622,6 +662,7 @@ int main(void)
     int level_editor_height = 2;
     BananaPocProtoConfig proto_config;
     int world_variant = 0;
+    int startup_scene_variant = -1;
     int exit_code = 0;
     int last_rbutton_down = 0;
     int last_lbutton_down = 0;
@@ -651,6 +692,9 @@ int main(void)
     printf("[dx12-poc] controls: arrows navigate menus, Enter select, WASD in world, ESC back/quit\n");
     memset(&proto_config, 0, sizeof(proto_config));
     proto_config.level_editor_brush_radius = 1;
+
+    apply_dx12_poc_launch_gate_defaults();
+
     printf("[dx12-poc] backend requested=%s active=%s status=%s\n",
            banana_render_backend_name(banana_render_backend_requested()),
            banana_render_backend_name(banana_render_backend_active()),
@@ -678,6 +722,7 @@ int main(void)
 
     startup_smoke_mode = parse_env_flag("BANANA_DX12_POC_AUTOTEST");
     startup_smoke_seconds = parse_env_int("BANANA_DX12_POC_AUTOTEST_SECONDS", 2, 1, 30);
+    startup_scene_variant = parse_env_int("BANANA_DX12_POC_SCENE_VARIANT", -1, -1, 127);
     banana_poc_objective_policy_init(&objective_policy,
                                      parse_env_int("BANANA_DX12_POC_OBJECTIVE_TIMEOUT_SECONDS", 0, 0, 3600));
     telemetry_interval_ms = parse_env_int("BANANA_DX12_POC_TELEMETRY_INTERVAL_MS", 5000, 250, 60000);
@@ -712,10 +757,8 @@ int main(void)
         level_editor_height = 0;
     if (level_editor_height > 3)
         level_editor_height = 3;
-    if (proto_config.scene_browser_index < 0)
-        proto_config.scene_browser_index = 0;
-    if (proto_config.scene_browser_index > 3)
-        proto_config.scene_browser_index = 3;
+    proto_config.scene_browser_index =
+        banana_poc_demo_scene_catalog_clamp_index(proto_config.scene_browser_index);
     if (proto_config.config_lab_index < 0)
         proto_config.config_lab_index = 0;
     if (proto_config.config_lab_index > 3)
@@ -740,10 +783,43 @@ int main(void)
         proto_config.frame_cap_index = 0;
     if (proto_config.frame_cap_index > 3)
         proto_config.frame_cap_index = 3;
-    if (proto_config.active_world_variant < 0)
-        proto_config.active_world_variant = 0;
-    if (proto_config.active_world_variant > 3)
-        proto_config.active_world_variant = 3;
+    if (!banana_poc_demo_scene_catalog_for_browser_variant(proto_config.active_world_variant))
+    {
+        const BananaPocDemoSceneCatalogEntry *default_scene =
+            banana_poc_demo_scene_catalog_at_index(banana_poc_demo_scene_catalog_first_enabled_index());
+        proto_config.active_world_variant = default_scene ? default_scene->browser_variant : 0;
+    }
+
+    if (startup_scene_variant >= 0)
+    {
+        int startup_scene_index =
+            banana_poc_demo_scene_catalog_index_for_browser_variant(startup_scene_variant);
+        BananaPocDemoSceneValidationStatus startup_scene_status =
+            banana_poc_demo_scene_catalog_validate_index(startup_scene_index);
+        const BananaPocDemoSceneCatalogEntry *startup_scene_entry =
+            banana_poc_demo_scene_catalog_for_browser_variant(startup_scene_variant);
+
+        if (startup_scene_entry && startup_scene_status == BANANA_POC_DEMO_SCENE_VALIDATION_OK)
+        {
+            scene = BANANA_POC_SCENE_WORLD;
+            world_variant = startup_scene_variant;
+            proto_config.active_world_variant = startup_scene_variant;
+            proto_config.scene_browser_index = banana_poc_demo_scene_catalog_clamp_index(startup_scene_index);
+            banana_poc_objective_policy_apply_world_variant(&objective_policy, world_variant);
+            printf("[dx12-poc] startup scene override variant=%d key=%s kind=%d asset-pack=%s\n",
+                   world_variant,
+                   startup_scene_entry->scene_key,
+                   (int)startup_scene_entry->kind,
+                   startup_scene_entry->asset_pack_id);
+        }
+        else
+        {
+            fprintf(stderr,
+                    "[dx12-poc] startup scene override rejected variant=%d reason=%s\n",
+                    startup_scene_variant,
+                    banana_poc_demo_scene_catalog_validation_message(startup_scene_status));
+        }
+    }
 
     if (IsDebuggerPresent() && !parse_env_flag("BANANA_DX12_POC_ALLOW_DEBUG_TELEMETRY"))
         telemetry_enabled = 0;
@@ -861,8 +937,10 @@ int main(void)
                                                          flow_result.entered_scene_browser_scene);
             if (!flow_result.entered_scene_browser_scene)
             {
-                world_variant = 0;
-                proto_config.active_world_variant = 0;
+                const BananaPocDemoSceneCatalogEntry *default_scene =
+                    banana_poc_demo_scene_catalog_at_index(banana_poc_demo_scene_catalog_first_enabled_index());
+                world_variant = default_scene ? default_scene->browser_variant : 0;
+                proto_config.active_world_variant = world_variant;
             }
 
             if (previous_scene == BANANA_POC_SCENE_CHARACTER_SELECT)
@@ -908,13 +986,33 @@ int main(void)
 
         if (flow_result.entered_scene_browser_scene)
         {
+            const BananaPocDemoSceneCatalogEntry *entry =
+                banana_poc_demo_scene_catalog_for_browser_variant(flow_result.scene_browser_variant);
             world_variant = flow_result.scene_browser_variant;
             proto_config.active_world_variant = world_variant;
             auto_target_injected = 0;
             banana_poc_objective_policy_apply_world_variant(&objective_policy, world_variant);
             if (world_variant == 2 || world_variant == 3)
                 telemetry_enabled = 1;
-            printf("[dx12-poc] launching proto scene variant=%d\n", world_variant);
+            printf("[dx12-poc] launching scene variant=%d key=%s kind=%d asset-pack=%s\n",
+                   world_variant,
+                   (entry && entry->scene_key) ? entry->scene_key : "unknown-scene",
+                   entry ? (int)entry->kind : -1,
+                   (entry && entry->asset_pack_id) ? entry->asset_pack_id : "unknown-pack");
+        }
+
+        if (flow_result.scene_browser_launch_blocked)
+        {
+            int browser_index = banana_poc_demo_scene_catalog_clamp_index(proto_config.scene_browser_index);
+            const BananaPocDemoSceneCatalogEntry *entry =
+                banana_poc_demo_scene_catalog_at_index(browser_index);
+            BananaPocDemoSceneValidationStatus status =
+                (BananaPocDemoSceneValidationStatus)flow_result.scene_browser_launch_diagnostics;
+            fprintf(stderr,
+                    "[dx12-poc] scene launch blocked index=%d key=%s reason=%s\n",
+                    browser_index,
+                    (entry && entry->scene_key) ? entry->scene_key : "unknown-scene",
+                    banana_poc_demo_scene_catalog_validation_message(status));
         }
 
         if (flow_result.config_lab_toggled)

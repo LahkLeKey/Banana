@@ -20,7 +20,7 @@ Sync Impact Report
 ### I. Native UI ABI Wrapper and Marshaling
 All UI-specific behavior MUST pass through a native UI ABI wrapper that marshals
 engine state, input, and presentation data into each runtime-specific viewport.
-React, Electron, web, and mobile shells are thin hosts only; they MUST NOT own
+React and web shells are thin hosts only; they MUST NOT own
 UI-specific business logic or gameplay decisions. Any UI-facing contract change
 MUST update the wrapper, shared UI contract, and consuming runtimes in the same
 change set.
@@ -112,7 +112,7 @@ Amendment process:
 - Propose amendments through a pull request that includes motivation, impact scope,
 	migration or remediation tasks, and template synchronization updates.
 - Approval requires maintainers from affected domains (native, API/runtime,
-	frontend/Electron/mobile) when cross-domain behavior changes.
+	frontend) when cross-domain behavior changes.
 
 Versioning policy:
 - MAJOR: removes or redefines a principle in a backward-incompatible way.

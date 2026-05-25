@@ -1,6 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_ENGINE_AUX_ABI_H
 #define BANANA_ENGINE_RUNTIME_ENGINE_AUX_ABI_H
 
+#include "../../../include/banana_launch_gate_policy.h"
 #include "../../ai/controller.h"
 #include "../../world/world.h"
 
@@ -53,6 +54,20 @@ extern "C"
     int runtime_engine_aux_active_player_count(World *world);
 
     int runtime_engine_aux_parallel_sync_available(void);
+
+    int runtime_engine_aux_launch_gate_policy_resolve(const char *mode_label,
+                                                      banana_launch_gate_policy *out_policy);
+
+    int runtime_engine_aux_launch_gate_decide(const banana_launch_gate_policy *policy,
+                                              int has_steam_identity,
+                                              int account_linked,
+                                              int account_in_good_standing,
+                                              int verification_fresh,
+                                              int verification_available,
+                                              banana_launch_gate_reason_code *out_reason_code,
+                                              int *out_allow);
+
+    int runtime_engine_aux_launch_gate_reason_is_remediable(banana_launch_gate_reason_code reason_code);
 
 #ifdef __cplusplus
 }

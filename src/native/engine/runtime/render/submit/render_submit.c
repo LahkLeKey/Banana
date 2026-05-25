@@ -1,5 +1,38 @@
 #include "render_submit.h"
 
+#include <math.h>
+
+static float runtime_render_snap_to_step(float value, float step)
+{
+    float scaled = 0.0f;
+    float snapped = 0.0f;
+
+    if (step <= 0.0f)
+        return value;
+
+    scaled = value / step;
+    snapped = floorf(scaled + 0.5f) * step;
+    if (fabsf(snapped) < 1e-7f)
+        return 0.0f;
+    return snapped;
+}
+
+void runtime_render_apply_viewport_chunk_continuity_transform(RendererDrawCommand *command)
+{
+    const float position_step = 1.0f / 1024.0f;
+    const float scale_step = 1.0f / 2048.0f;
+
+    if (!command)
+        return;
+
+    command->position[0] = runtime_render_snap_to_step(command->position[0], position_step);
+    command->position[1] = runtime_render_snap_to_step(command->position[1], position_step);
+    command->position[2] = runtime_render_snap_to_step(command->position[2], position_step);
+    command->scale[0] = runtime_render_snap_to_step(command->scale[0], scale_step);
+    command->scale[1] = runtime_render_snap_to_step(command->scale[1], scale_step);
+    command->scale[2] = runtime_render_snap_to_step(command->scale[2], scale_step);
+}
+
 void runtime_render_submit_frame(Renderer *renderer,
                                  World *world,
                                  Mesh *entity_mesh,
@@ -50,6 +83,8 @@ void runtime_render_submit_frame(Renderer *renderer,
                 command.scale[2] = entity->scale[2];
                 command.material = material;
             }
+
+            runtime_render_apply_viewport_chunk_continuity_transform(&command);
 
             renderer_draw_command(renderer, &command);
         }

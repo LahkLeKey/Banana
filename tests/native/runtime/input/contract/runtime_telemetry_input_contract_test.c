@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 static int expect_int(const char *label, int actual, int expected)
 {
@@ -26,6 +27,10 @@ static int expect_float_near(const char *label, float actual, float expected)
 int main(void)
 {
     World *world = world_create();
+    TerrainChunk telemetry_chunk;
+    uint64_t area_hash_a = 0ULL;
+    uint64_t area_hash_b = 0ULL;
+    uint64_t area_hash_c = 0ULL;
     float out_x = 0.f;
     float out_z = 0.f;
 
@@ -42,6 +47,26 @@ int main(void)
     if (!expect_float_near("entity 1 z", runtime_world_entity_z(world, 1), 4.75f))
         return 1;
     if (!expect_float_near("out of range x", runtime_world_entity_x(world, 99), 0.f))
+        return 1;
+
+    area_hash_a = runtime_world_telemetry_area_identity_hash("world-a", "lane-main", 4, 8, 2u);
+    area_hash_b = runtime_world_telemetry_area_identity_hash("world-a", "lane-main", 4, 8, 2u);
+    area_hash_c = runtime_world_telemetry_area_identity_hash("world-a", "lane-main", 5, 8, 2u);
+    if (!expect_int("deterministic area hash", area_hash_a == area_hash_b ? 1 : 0, 1))
+        return 1;
+    if (!expect_int("area hash changes with chunk", area_hash_a != area_hash_c ? 1 : 0, 1))
+        return 1;
+
+    memset(&telemetry_chunk, 0, sizeof(telemetry_chunk));
+    telemetry_chunk.generation_fingerprint = 0x1234ULL;
+    telemetry_chunk.boundary_hash = 0x5678ULL;
+    if (!expect_int("generation fingerprint telemetry",
+                    runtime_world_telemetry_chunk_generation_fingerprint(&telemetry_chunk) == 0x1234ULL ? 1 : 0,
+                    1))
+        return 1;
+    if (!expect_int("boundary hash telemetry",
+                    runtime_world_telemetry_chunk_boundary_hash(&telemetry_chunk) == 0x5678ULL ? 1 : 0,
+                    1))
         return 1;
 
     runtime_input_contract_sanitize_move_input(2.5f, -3.5f, &out_x, &out_z);

@@ -8,7 +8,6 @@ import type {
     GameSessionServerMetrics,
     GameSessionSnapshotEntity,
 } from "../../lib/api";
-import type { NativeUiFrame } from "@banana/ui";
 
 export interface OverworldHudProps {
     readonly snapshotEntities: Record<string, GameSessionSnapshotEntity>;
@@ -22,7 +21,6 @@ export interface OverworldHudProps {
     readonly buildStats: GameplayBuildStats | null;
     readonly comboResult: GameplayComboResult | null;
     readonly buildBusy: boolean;
-    readonly nativeUiFrame: NativeUiFrame | null;
     readonly onSetClass: (classType: 0 | 1 | 2) => void;
     readonly onApplyPreset: () => void;
     readonly onEquipGear: () => void;
@@ -41,7 +39,6 @@ export function OverworldHud({
     buildStats,
     comboResult,
     buildBusy,
-    nativeUiFrame,
     onSetClass,
     onApplyPreset,
     onEquipGear,
@@ -96,12 +93,6 @@ export function OverworldHud({
                     <div style={{ fontSize: 12, opacity: 0.9 }}>
                         Combo: {comboResult ? `${comboResult.triggered ? "triggered" : "not triggered"} · dmg +${comboResult.damageBonusPct}% · mit +${comboResult.mitigationBonusPct}% · party +${comboResult.partySynergyBonusPct}%` : "none"}
                     </div>
-
-                    {nativeUiFrame ? (
-                        <div style={{ fontSize: 11, opacity: 0.75, marginTop: 8 }}>
-                            ABI: {nativeUiFrame.host} · {nativeUiFrame.surface} · {nativeUiFrame.engineStatus}
-                        </div>
-                    ) : null}
                 </aside>
             ) : null}
         </>

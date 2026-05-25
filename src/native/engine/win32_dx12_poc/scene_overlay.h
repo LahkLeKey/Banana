@@ -24,14 +24,14 @@ typedef enum BananaPocScene
    All fields default to 0 (safe/off) when zero-initialised. */
 typedef struct BananaPocProtoConfig
 {
-    int scene_browser_index;  /* cursor row in Scene Browser (0-3)  */
+    int scene_browser_index;  /* cursor row in Scene Browser (catalog-driven) */
     int config_lab_index;     /* cursor row in Config Lab   (0-3)   */
     int character_loadout_index; /* 0=Balanced 1=Tank 2=Burst 3=Support */
     int level_editor_brush_radius; /* 1..4 */
     int level_editor_paint_mode;   /* 0=Sculpt 1=Flatten 2=Smooth */
     int option_input_assist; /* option menu toggle */
     int option_compact_hud;  /* option menu toggle */
-    int active_world_variant; /* current launched scene browser variant */
+    int active_world_variant; /* current launched scene browser variant id */
     int render_debug_overlay; /* 0=off  1=on                        */
     int physics_wireframe;    /* 0=off  1=on                        */
     int world_seed_index;     /* 0=Default 1=42 2=1337 3=99         */

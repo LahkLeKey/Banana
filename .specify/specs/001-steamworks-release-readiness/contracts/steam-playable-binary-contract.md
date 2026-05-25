@@ -53,11 +53,11 @@ Minimum validated behaviors:
 
 ## Current Blockers
 
-- Electron packaging channel is currently scaffold-level (`src/typescript/electron/package.json` uses placeholder build scripts).
+- DX12-native packaging automation is still being standardized across scripts and CI entry points.
 - Steam deployment/upload automation is not yet implemented in repository scripts.
 
 ## Next Implementation Slice
 
-- Implement real desktop packaging scripts in `src/typescript/electron`.
+- Implement native DX12 Windows packaging scripts under `scripts/` and artifact contracts under `artifacts/steam-build/`.
 - Add Steam depot packaging/upload orchestration entrypoint.
 - Produce first `artifacts/steam-build/<build-id>/` playable candidate and run UAT checklist end-to-end.

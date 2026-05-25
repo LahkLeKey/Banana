@@ -13,6 +13,7 @@ export type NativePgBouncerRuntimeStatus = {
 export type DatabaseRuntimeStatus = {
   authoritativeUrlPresent: boolean; source: DatabaseUrlSource;
   aliasesSynced: boolean;
+  persistentWorldSourceOfRecordReady: boolean;
   nativePgBouncer: NativePgBouncerRuntimeStatus;
 };
 
@@ -28,6 +29,7 @@ let lastRuntimeStatus: DatabaseRuntimeStatus = {
   authoritativeUrlPresent: false,
   source: 'none',
   aliasesSynced: false,
+  persistentWorldSourceOfRecordReady: false,
   nativePgBouncer: {
     attempted: false,
     available: false,
@@ -84,6 +86,11 @@ function shouldUseStrictBootstrap(env: NodeJS.ProcessEnv): boolean {
   return trim(env.BANANA_NEON_STRICT) === 'true';
 }
 
+function shouldRequirePersistentWorldSourceOfRecord(env: NodeJS.ProcessEnv):
+    boolean {
+  return trim(env.BANANA_PERSISTENT_WORLD_REQUIRE_SOURCE_OF_RECORD) === 'true';
+}
+
 function resolveConfiguredAliases(env: NodeJS.ProcessEnv): string[] {
   return [
     trim(env.NEON_DATABASE_URL),
@@ -134,6 +141,8 @@ export function bootstrapDatabaseRuntime(
     authoritativeUrlPresent: aliasResult.authoritativeUrl.length > 0,
     source: aliasResult.source,
     aliasesSynced: aliasResult.aliasesSynced,
+    persistentWorldSourceOfRecordReady:
+        aliasResult.authoritativeUrl.length > 0 && aliasResult.aliasesSynced,
     nativePgBouncer: {
       attempted: false,
       available: false,
@@ -143,6 +152,7 @@ export function bootstrapDatabaseRuntime(
   };
 
   if (!status.authoritativeUrlPresent || !shouldConfigureNativePgBouncer(env)) {
+    ensurePersistentWorldSourceOfRecordReady(status, env);
     lastRuntimeStatus = status;
     return status;
   }
@@ -159,6 +169,7 @@ export function bootstrapDatabaseRuntime(
         throw new Error(
             'Native PgBouncer bridge unavailable while BANANA_NEON_STRICT=true.');
       }
+      ensurePersistentWorldSourceOfRecordReady(status, env);
       lastRuntimeStatus = status;
       return status;
     }
@@ -180,6 +191,7 @@ export function bootstrapDatabaseRuntime(
           'Native PgBouncer bridge did not report enabled state while BANANA_NEON_STRICT=true.');
     }
 
+    ensurePersistentWorldSourceOfRecordReady(status, env);
     lastRuntimeStatus = status;
     return status;
   } catch (error) {
@@ -187,8 +199,23 @@ export function bootstrapDatabaseRuntime(
     if (shouldUseStrictBootstrap(env)) {
       throw error;
     }
+    ensurePersistentWorldSourceOfRecordReady(status, env);
     lastRuntimeStatus = status;
     return status;
+  }
+}
+
+export function ensurePersistentWorldSourceOfRecordReady(
+    status: DatabaseRuntimeStatus,
+    env: NodeJS.ProcessEnv = process.env,
+    ): void {
+  if (!shouldRequirePersistentWorldSourceOfRecord(env)) {
+    return;
+  }
+
+  if (!status.persistentWorldSourceOfRecordReady) {
+    throw new Error(
+        'persistent_world_source_of_record_unavailable: configure one authoritative database url and keep aliases in sync');
   }
 }
 

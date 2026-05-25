@@ -24,6 +24,7 @@ static int terrain_rebuild_chunk(unsigned char *height_grid,
 {
     int stride = terrain_chunk_stride(chunk_size);
     unsigned char local_heights[16 * 16];
+    uint64_t baseline_signature = 0ULL;
     int base_x = chunk_x * chunk_size;
     int base_z = chunk_z * chunk_size;
     int idx = terrain_chunk_index(chunk_x, chunk_z, chunk_cols);
@@ -45,8 +46,26 @@ static int terrain_rebuild_chunk(unsigned char *height_grid,
         }
     }
 
+    baseline_signature = mesh_terrain_heightfield_signature(
+        local_heights,
+        stride,
+        stride,
+        1.0f,
+        0.30f);
+    if (baseline_signature == 0ULL)
+        return 0;
+
+    /* Revisit fetch path: when canonical baseline signature is unchanged, keep the
+       existing mesh and clear dirty state instead of regenerating geometry. */
+    if (chunks[idx].mesh && chunks[idx].baseline_signature == baseline_signature)
+    {
+        chunks[idx].dirty = 0u;
+        return 1;
+    }
+
     mesh_destroy(chunks[idx].mesh);
     chunks[idx].mesh = mesh_create_terrain_heightfield(local_heights, stride, stride, 1.0f, 0.30f);
+    chunks[idx].baseline_signature = chunks[idx].mesh ? baseline_signature : 0ULL;
     chunks[idx].dirty = 0u;
     return chunks[idx].mesh ? 1 : 0;
 }

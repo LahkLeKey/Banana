@@ -38,6 +38,8 @@ static int count_dirty_hits(void)
 int main(void)
 {
     unsigned char heights[TERRAIN_SIZE * TERRAIN_SIZE];
+    RuntimeTerrainDelta delta = {0};
+    unsigned int applied_sequence = 0u;
     memset(heights, 0, sizeof(heights));
     memset(s_dirty_hits, 0, sizeof(s_dirty_hits));
 
@@ -95,6 +97,38 @@ int main(void)
                                       1,
                                       mark_chunk_dirty);
     if (!expect_int("region dirty total", count_dirty_hits(), 9))
+        return 1;
+
+    memset(s_dirty_hits, 0, sizeof(s_dirty_hits));
+    delta.x = 5;
+    delta.z = 5;
+    delta.elevation = 3;
+    delta.sequence = 1u;
+    if (!expect_int("delta apply ordered",
+                    runtime_terrain_apply_delta(heights,
+                                                TERRAIN_SIZE,
+                                                TERRAIN_LAYERS,
+                                                CHUNK_SIZE,
+                                                &delta,
+                                                &applied_sequence,
+                                                mark_chunk_dirty),
+                    1))
+        return 1;
+    if (!expect_int("delta sequence advanced", (int)applied_sequence, 1))
+        return 1;
+
+    delta.sequence = 3u;
+    if (!expect_int("delta apply out-of-order rejected",
+                    runtime_terrain_apply_delta(heights,
+                                                TERRAIN_SIZE,
+                                                TERRAIN_LAYERS,
+                                                CHUNK_SIZE,
+                                                &delta,
+                                                &applied_sequence,
+                                                mark_chunk_dirty),
+                    0))
+        return 1;
+    if (!expect_int("sequence unchanged on reject", (int)applied_sequence, 1))
         return 1;
 
     return 0;

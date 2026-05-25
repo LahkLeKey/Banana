@@ -114,7 +114,7 @@ void engine_shutdown(void)
     runtime_engine_composition_shutdown(&s_engine_state);
 }
 
-/* ── WASM ABI — backed by singletons above ──────────────────────────────── */
+/* ── C ABI — backed by singletons above ─────────────────────────────────── */
 
 void engine_render_frame(void)
 {

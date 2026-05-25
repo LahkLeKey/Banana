@@ -39,11 +39,11 @@ if [[ -z "${HASH_FILE}" || ! -f "${HASH_FILE}" ]]; then
 fi
 
 cat > "${EMAIL_FILE}" <<EOF
-Subject: Escalation: Accidental Publish Bypass Risk (WASM Runtime Artifact Trust)
+Subject: Escalation: Accidental Publish Bypass Risk (Runtime Artifact Trust)
 
 Hello Steam Security / Steamworks Support,
 
-We are escalating a beta-channel incident involving possible unapproved WASM runtime artifact loading.
+We are escalating a beta-channel incident involving possible unapproved runtime artifact loading.
 
 Focus area: infrastructure and distribution trust controls.
 

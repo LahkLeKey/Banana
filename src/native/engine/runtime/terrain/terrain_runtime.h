@@ -5,6 +5,8 @@
 #include "../../render/mesh.h"
 #include "../../render/renderer.h"
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -14,6 +16,7 @@ extern "C"
     {
         Mesh *mesh;
         unsigned char dirty;
+        uint64_t baseline_signature;
     } RuntimeTerrainChunk;
 
     void runtime_terrain_mark_all_chunks_dirty(RuntimeTerrainChunk *chunks, int total_chunks);

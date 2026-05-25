@@ -239,7 +239,7 @@ jobs:
             echo "| Native / build + tests | ${{ needs.native-build.result }} |"
             echo "| Native / Neon integration | ${{ needs.native-neon-integration.result }} |"
             echo
-            echo "Removed stale lanes after reset: analytics scan, turbo monorepo lint matrix, legacy native preset matrix, sanitizer/coverage hard gates, architecture governance, compose/runtime smoke, web vitals budget, and WASM security/build lanes."
+            echo "Removed stale lanes after reset: analytics scan, turbo monorepo lint matrix, legacy native preset matrix, sanitizer/coverage hard gates, architecture governance, compose/runtime smoke, and web vitals budget."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify all upstream jobs succeeded

@@ -1,0 +1,8 @@
+# Native Launch Gate Allow/Deny Matrix
+Mon, May 25, 2026  6:13:41 AM
+
+launch_gate_matrix_test: pass
+
+player_sync_staleness_test: pass
+
+launch_gate_mode_policy_test: pass

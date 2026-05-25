@@ -37,6 +37,7 @@ void test_create_packet(void)
     chunk.chunk_z = 10;
     chunk.version = 1;
     chunk.generation_tick = 12345;
+    chunk.generation_fingerprint = 0x1122334455667788ULL;
 
     /* Fill with test data */
     for (int y = 0; y < 64; y++)
@@ -55,6 +56,9 @@ void test_create_packet(void)
     ASSERT_EQ(packet.chunk_x, 5, "Chunk X should match");
     ASSERT_EQ(packet.chunk_z, 10, "Chunk Z should match");
     ASSERT_EQ(packet.version, 1, "Version should match");
+    ASSERT_EQ(packet.generation_fingerprint,
+              0x1122334455667788ULL,
+              "Generation fingerprint should match");
     ASSERT_EQ(packet.object_count, 0, "Object count should be 0");
 
     /* Verify data copied */
@@ -70,6 +74,7 @@ void test_serialize_deserialize(void)
     chunk.chunk_z = 0;
     chunk.version = 42;
     chunk.generation_tick = 999;
+    chunk.generation_fingerprint = 0xAABBCCDDEEFF0011ULL;
 
     for (int y = 0; y < 64; y++)
     {
@@ -98,6 +103,9 @@ void test_serialize_deserialize(void)
     ASSERT_EQ(packet2.chunk_z, 0, "Chunk Z should survive round-trip");
     ASSERT_EQ(packet2.version, 42, "Version should survive round-trip");
     ASSERT_EQ(packet2.generation_tick, 999, "Tick should survive round-trip");
+    ASSERT_EQ(packet2.generation_fingerprint,
+              0xAABBCCDDEEFF0011ULL,
+              "Fingerprint should survive round-trip");
 
     /* Verify data */
     ASSERT_EQ(memcmp(packet.heights, packet2.heights, sizeof(packet.heights)), 0,
@@ -126,8 +134,8 @@ void test_packet_size_estimation(void)
     size_t size_10_objects = chunk_stream_packet_estimate_size(10);
     size_t size_100_objects = chunk_stream_packet_estimate_size(100);
 
-    /* Base size: 20 + 4096 + 4096 + 2 = 8214 */
-    ASSERT_EQ((size_no_objects == 8214), 1, "Base size should be 8214");
+    /* Base size: 28 + 4096 + 4096 + 2 = 8222 */
+    ASSERT_EQ((size_no_objects == 8222), 1, "Base size should be 8222");
 
     /* Each object adds 7 bytes */
     ASSERT_EQ((size_10_objects == size_no_objects + 70), 1, "10 objects adds 70 bytes");

@@ -72,5 +72,5 @@ void physics_world_destroy(PhysicsWorld *w)
     free(w);
 }
 
-/* physics_add_body / physics_update_body / physics_step are WASM ABI entry points
+/* physics_add_body / physics_update_body / physics_step are C ABI entry points
  * that live in engine.c (they need the global singleton s_physics). */

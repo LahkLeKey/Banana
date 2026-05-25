@@ -3,11 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Unified GL detection: Emscripten (WebGL2/GLES3) or native GLFW */
-#ifdef __EMSCRIPTEN__
-#define BANANA_ENGINE_HAS_GL 1
-#include <GLES3/gl3.h>
-#elif defined(BANANA_ENGINE_HAS_GLFW)
+/* Unified GL detection for native GLFW/OpenGL builds. */
+#if defined(BANANA_ENGINE_HAS_GLFW)
 #define BANANA_ENGINE_HAS_GL 1
 #include <GL/gl.h>
 #endif

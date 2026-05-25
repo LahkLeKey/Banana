@@ -17,11 +17,12 @@ The chunk streaming protocol efficiently transmits terrain chunks and spawned ob
 ### Binary Layout (Little-Endian)
 
 ```
-HEADER (20 bytes)
+HEADER (28 bytes)
 ├─ chunk_x: int32_t (4 bytes)
 ├─ chunk_z: int32_t (4 bytes)
 ├─ version: uint32_t (4 bytes)        // For cache invalidation
-└─ generation_tick: int64_t (8 bytes)
+├─ generation_tick: int64_t (8 bytes)
+└─ generation_fingerprint: uint64_t (8 bytes)
 
 TERRAIN DATA (8192 bytes)
 ├─ heights[64][64]: uint8_t (4096 bytes)  // Elevation per tile
@@ -38,8 +39,8 @@ OBJECTS (2 + N*7 bytes)
 
 ### Size Calculation
 
-- **Base packet**: 20 + 4096 + 4096 + 2 = **8,214 bytes** (no objects)
-- **With 256 objects**: 8,214 + (256 × 7) = **9,806 bytes**
+- **Base packet**: 28 + 4096 + 4096 + 2 = **8,222 bytes** (no objects)
+- **With 256 objects**: 8,222 + (256 × 7) = **10,014 bytes**
 
 Typical forest chunk with 50% spawn density (~800 objects) = **14,814 bytes**
 

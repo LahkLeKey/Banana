@@ -2,6 +2,7 @@
 #define BANANA_NATIVE_V3_H
 #include <stdint.h>
 
+#include "banana_launch_gate_policy.h"
 #include "banana_native_ui_abi.h"
 
 #if defined(_WIN32)
@@ -12,6 +13,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct banana_native_v3_launch_gate_decision {
+	int32_t allow;
+	banana_launch_gate_reason_code reason_code;
+	int32_t is_remediable;
+	int32_t reserved;
+} banana_native_v3_launch_gate_decision;
+
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_abi_version(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_ping(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_pgbouncer_available(void);
@@ -26,6 +35,15 @@ BANANA_NATIVE_V3_EXPORT int banana_native_v3_world_chunk_serialize(int chunk_x,
 											uint8_t *buffer,
 											int buffer_len);
 BANANA_NATIVE_V3_EXPORT void banana_native_v3_world_cleanup(void);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
+												 banana_launch_gate_policy *out_policy);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_decide(const char *mode_label,
+											 int has_steam_identity,
+											 int account_linked,
+											 int account_in_good_standing,
+											 int verification_fresh,
+											 int verification_available,
+											 banana_native_v3_launch_gate_decision *out_decision);
 BANANA_NATIVE_V3_EXPORT void banana_native_v3_ui_frame_reset(banana_native_ui_frame *frame);
 BANANA_NATIVE_V3_EXPORT void banana_native_v3_ui_frame_write(
 	banana_native_ui_frame *frame,

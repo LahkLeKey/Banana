@@ -19,6 +19,8 @@ extern "C"
                                                 RendererDrawCommand *out_command);
     typedef void (*RuntimeTerrainDrawFn)(void);
 
+    void runtime_render_apply_viewport_chunk_continuity_transform(RendererDrawCommand *command);
+
     void runtime_render_submit_frame(Renderer *renderer,
                                      World *world,
                                      Mesh *entity_mesh,

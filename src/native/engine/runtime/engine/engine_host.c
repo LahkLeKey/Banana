@@ -1,6 +1,9 @@
 #include "engine_host.h"
 
+#include "engine_aux_abi.h"
+
 #include <stddef.h>
+#include <stdlib.h>
 
 void runtime_engine_host_render_frame(Renderer *renderer)
 {
@@ -17,6 +20,46 @@ const unsigned char *runtime_engine_host_get_frame_buffer(Renderer *renderer)
         return NULL;
 
     return renderer_get_frame_buffer(renderer);
+}
+
+const char *runtime_engine_host_launch_gate_mode_label_for(const char *trusted_mode_label)
+{
+    const char *trusted_mode = trusted_mode_label;
+    const char *override_mode = getenv("BANANA_LAUNCH_GATE_MODE_OVERRIDE");
+    banana_launch_gate_policy trusted_policy;
+    banana_launch_gate_policy override_policy;
+
+    if (!trusted_mode || trusted_mode[0] == '\0')
+    {
+        trusted_mode = getenv("BANANA_LAUNCH_GATE_MODE");
+    }
+
+    if (!trusted_mode || trusted_mode[0] == '\0')
+    {
+        trusted_mode = "development";
+    }
+
+    if (!override_mode || override_mode[0] == '\0')
+    {
+        return trusted_mode;
+    }
+
+    if (runtime_engine_aux_launch_gate_policy_resolve(trusted_mode, &trusted_policy) != 0)
+    {
+        return trusted_mode;
+    }
+
+    if (!trusted_policy.allow_override_context)
+    {
+        return trusted_mode;
+    }
+
+    if (runtime_engine_aux_launch_gate_policy_resolve(override_mode, &override_policy) != 0)
+    {
+        return trusted_mode;
+    }
+
+    return override_mode;
 }
 
 void runtime_engine_host_reset_state(Window **window,

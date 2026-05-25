@@ -37,7 +37,7 @@ extern "C"
 
     void physics_world_destroy(PhysicsWorld *w);
 
-    /* ── WASM ABI exports ─────────────────────────────────────────────────────── */
+    /* ── C ABI exports ────────────────────────────────────────────────────────── */
     void physics_add_body(uint32_t id, float mass, float x, float y, float z);
     void physics_update_body(uint32_t id, const float *position, const float *velocity);
     void physics_step(float dt);

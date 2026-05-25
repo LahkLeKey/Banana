@@ -4,6 +4,9 @@ project(banana_native_v3 C)
 include(CTest)
 
 option(BANANA_ENABLE_POSTGRES "Enable native PostgreSQL/PgBouncer bridge paths" OFF)
+option(BANANA_ENABLE_DETERMINISTIC_PERSISTENCE_TESTS
+	"Enable deterministic persistent-world native test targets"
+	ON)
 
 add_subdirectory(engine)
 

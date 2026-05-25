@@ -11,8 +11,6 @@ Use this as the default, repeatable local runtime contract for Banana desktop an
 
 ## Required Entry Points
 
-- Windows-shell launcher: `scripts/launch-container-channels-with-wsl2-electron.sh`
-- Ubuntu launcher: `scripts/compose-electron-desktop-wsl2.sh`
 - Windows-shell launcher (mobile): `scripts/launch-container-channels-with-wsl2-mobile.sh`
 - Ubuntu launcher (mobile): `scripts/compose-mobile-emulators-wsl2.sh`
 
@@ -42,7 +40,6 @@ If no supported Ubuntu distro is available, fail with actionable setup guidance.
 
 ## Mobile Platform Contract
 
-- Standard Banana launcher (`scripts/launch-container-channels-with-wsl2-electron.sh`) defaults Android runtime to `auto`: prefer Ubuntu local SDK emulator with WSLg, then fallback to Docker Compose service `android-emulator` (profile `android-emulator`).
 - Optional standard-launcher override remains supported with `BANANA_SKIP_ANDROID_EMULATOR=1`.
 - Optional Android WSLg auto-open override remains supported with `BANANA_ANDROID_OPEN_WINDOW=0`.
 - Explicit runtime override remains supported with `BANANA_ANDROID_RUNTIME_MODE=local` or `BANANA_ANDROID_RUNTIME_MODE=container`.
@@ -78,5 +75,4 @@ If preflight fails, return clear integration guidance and fail with exit code `4
 1. `wsl --set-default Ubuntu-24.04` (or `Ubuntu`)
 2. In Docker Desktop, enable WSL Integration for the selected Ubuntu distro.
 3. `wsl --shutdown`
-4. Launch Banana from Windows shell using `scripts/launch-container-channels-with-wsl2-electron.sh` (includes Android emulator container channel).
 5. Launch Banana mobile channels from Windows shell using `scripts/launch-container-channels-with-wsl2-mobile.sh` when iOS-style preview and mobile helper flows are needed.

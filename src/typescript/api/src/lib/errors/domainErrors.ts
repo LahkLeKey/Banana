@@ -40,3 +40,33 @@ export function conflict(
 export function dependencyUnavailable(message: string): DomainError {
   return new DomainError('dependency_unavailable', message, 503);
 }
+
+export function persistentWorldRevisitValidationError(
+    details?: Record<string, unknown>): DomainError {
+  return new DomainError(
+      'validation_error',
+      'persistent_world_revisit_invalid_request',
+      400,
+      details,
+  );
+}
+
+export function persistentWorldRevisitPathConflict(
+    details?: Record<string, unknown>): DomainError {
+  return new DomainError(
+      'conflict',
+      'persistent_world_orchestration_path_mismatch',
+      409,
+      details,
+  );
+}
+
+export function persistentWorldRevisitBaselineUnavailable(
+    details?: Record<string, unknown>): DomainError {
+  return new DomainError(
+      'dependency_unavailable',
+      'persistent_world_revisit_baseline_unavailable',
+      503,
+      details,
+  );
+}

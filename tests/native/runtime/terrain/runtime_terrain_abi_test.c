@@ -80,6 +80,8 @@ int main(void)
 {
     EngineRuntimeState state;
     RuntimeApplicationServicePorts ports;
+    unsigned int retry_lineage_a = 0u;
+    unsigned int retry_lineage_b = 0u;
 
     memset(&state, 0, sizeof(state));
     memset(&ports, 0, sizeof(ports));
@@ -129,6 +131,17 @@ int main(void)
     if (!expect_int("dirty max x", g_stub.last_max_x, 5))
         return 1;
     if (!expect_int("dirty max z", g_stub.last_max_z, 7))
+        return 1;
+
+    retry_lineage_a = runtime_terrain_abi_retry_fingerprint_lineage(101u, 1u, -11);
+    retry_lineage_b = runtime_terrain_abi_retry_fingerprint_lineage(101u, 1u, -11);
+    if (!expect_int("retry lineage deterministic", retry_lineage_a == retry_lineage_b, 1))
+        return 1;
+    if (!expect_int("retry lineage non-zero", retry_lineage_a != 0u, 1))
+        return 1;
+    if (!expect_int("retry lineage differs by attempt",
+                    runtime_terrain_abi_retry_fingerprint_lineage(101u, 2u, -11) != retry_lineage_a,
+                    1))
         return 1;
 
     return 0;

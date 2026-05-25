@@ -27,7 +27,7 @@ extern "C"
     /* Retrieve current framebuffer dimensions (may differ from creation size). */
     void window_get_size(Window *w, int *width, int *height);
 
-    /* Retrieve current input-space dimensions (CSS pixels on Web/WASM). */
+    /* Retrieve current input-space dimensions in runtime-local coordinates. */
     void window_get_input_size(Window *w, int *width, int *height);
 
     /* Retrieve platform-native window handle (HWND/GLFWwindow/etc) when available. */

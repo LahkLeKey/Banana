@@ -20,6 +20,7 @@ int chunk_stream_packet_create(const TerrainChunk *chunk, int chunk_x, int chunk
     out_packet->chunk_z = chunk_z;
     out_packet->version = chunk->version;
     out_packet->generation_tick = chunk->generation_tick;
+    out_packet->generation_fingerprint = chunk->generation_fingerprint;
 
     /* Copy height and biome data */
     memcpy(out_packet->heights, chunk->heights, sizeof(chunk->heights));
@@ -56,6 +57,8 @@ int chunk_stream_packet_serialize(const ChunkStreamPacket *packet, uint8_t *buff
     offset += sizeof(uint32_t);
     memcpy(buffer + offset, &packet->generation_tick, sizeof(int64_t));
     offset += sizeof(int64_t);
+    memcpy(buffer + offset, &packet->generation_fingerprint, sizeof(uint64_t));
+    offset += sizeof(uint64_t);
 
     /* Terrain data (4096 bytes each) */
     memcpy(buffer + offset, packet->heights, sizeof(packet->heights));
@@ -87,7 +90,7 @@ int chunk_stream_packet_serialize(const ChunkStreamPacket *packet, uint8_t *buff
 int chunk_stream_packet_deserialize(const uint8_t *buffer, size_t buffer_size,
                                     ChunkStreamPacket *out_packet)
 {
-    if (!buffer || !out_packet || buffer_size < 24) /* Minimum header size */
+    if (!buffer || !out_packet || buffer_size < 32) /* Minimum header size */
     {
         return -1;
     }
@@ -103,6 +106,8 @@ int chunk_stream_packet_deserialize(const uint8_t *buffer, size_t buffer_size,
     offset += sizeof(uint32_t);
     memcpy(&out_packet->generation_tick, buffer + offset, sizeof(int64_t));
     offset += sizeof(int64_t);
+    memcpy(&out_packet->generation_fingerprint, buffer + offset, sizeof(uint64_t));
+    offset += sizeof(uint64_t);
 
     /* Check we have terrain data */
     if (buffer_size < offset + 8192) /* 4096 + 4096 */
@@ -154,8 +159,8 @@ int chunk_stream_packet_deserialize(const uint8_t *buffer, size_t buffer_size,
 
 size_t chunk_stream_packet_estimate_size(int object_count)
 {
-    /* Header: 4 + 4 + 4 + 8 = 20 bytes */
-    size_t size = 20;
+    /* Header: 4 + 4 + 4 + 8 + 8 = 28 bytes */
+    size_t size = 28;
     /* Heights: 64x64 = 4096 bytes */
     size += 4096;
     /* Biomes: 64x64 = 4096 bytes */

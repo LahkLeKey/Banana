@@ -2,7 +2,6 @@
   "folders": [
     { "name": "Root", "path": "." },
     { "name": "Code - API Domain", "path": "src/typescript/api" },
-    { "name": "Code - Electron Shell", "path": "src/typescript/electron" },
     { "name": "Code - Native - ABI Include", "path": "src/native/include" },
     { "name": "Code - Native - Engine", "path": "src/native/engine" },
     { "name": "Code - Native - Engine - AI", "path": "src/native/engine/ai" },
@@ -14,7 +13,6 @@
     { "name": "Code - Native - Engine - World", "path": "src/native/engine/world" },
     { "name": "Code - Native - Root", "path": "src/native" },
     { "name": "Code - Native - Scaffold", "path": "src/native/scaffold" },
-    { "name": "Code - React - Native Shell", "path": "src/typescript/react-native" },
     { "name": "Code - React - Shell", "path": "src/typescript/react" },
     { "name": "Code - Shared - Resilience", "path": "src/typescript/shared/resilience" },
     { "name": "Code - Shared - UI Contract", "path": "src/typescript/shared/ui" },

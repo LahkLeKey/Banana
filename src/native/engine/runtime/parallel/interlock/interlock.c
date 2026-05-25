@@ -8,8 +8,6 @@
 
 #ifdef BANANA_ENGINE_USE_OMP_LOCKS
 #include <omp.h>
-#elif defined(__EMSCRIPTEN__)
-#define BANANA_ENGINE_USE_SIMPLE_INTERLOCK 1
 #else
 #include <pthread.h>
 #endif
@@ -19,8 +17,6 @@ typedef struct RuntimeOmpLock
 {
 #ifdef BANANA_ENGINE_USE_OMP_LOCKS
     omp_lock_t lock;
-#elif defined(BANANA_ENGINE_USE_SIMPLE_INTERLOCK)
-    int locked;
 #else
     pthread_mutex_t lock;
 #endif
@@ -39,8 +35,6 @@ int runtime_interlock_init(RuntimeInterlockContext *ctx)
 
 #ifdef BANANA_ENGINE_USE_OMP_LOCKS
     omp_init_lock(&lock->lock);
-#elif defined(BANANA_ENGINE_USE_SIMPLE_INTERLOCK)
-    lock->locked = 0;
 #else
     if (pthread_mutex_init(&lock->lock, NULL) != 0)
     {
@@ -66,8 +60,6 @@ void runtime_interlock_destroy(RuntimeInterlockContext *ctx)
     {
 #ifdef BANANA_ENGINE_USE_OMP_LOCKS
         omp_destroy_lock(&lock->lock);
-#elif defined(BANANA_ENGINE_USE_SIMPLE_INTERLOCK)
-    lock->locked = 0;
 #else
         pthread_mutex_destroy(&lock->lock);
 #endif
@@ -96,10 +88,6 @@ void runtime_interlock_enter(RuntimeInterlockContext *ctx)
         omp_set_lock(&lock->lock);
         ctx->contention_hits += 1;
     }
-#elif defined(BANANA_ENGINE_USE_SIMPLE_INTERLOCK)
-    if (lock->locked)
-        ctx->contention_hits += 1;
-    lock->locked = 1;
 #else
     if (pthread_mutex_trylock(&lock->lock) != 0)
     {
@@ -122,8 +110,6 @@ void runtime_interlock_leave(RuntimeInterlockContext *ctx)
 
 #ifdef BANANA_ENGINE_USE_OMP_LOCKS
     omp_unset_lock(&lock->lock);
-#elif defined(BANANA_ENGINE_USE_SIMPLE_INTERLOCK)
-    lock->locked = 0;
 #else
     pthread_mutex_unlock(&lock->lock);
 #endif

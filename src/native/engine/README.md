@@ -55,8 +55,8 @@ cmake --build build --target banana_test_engine_domain_contracts
 
 ### Delivery note
 
-WASM/WebAssembly assets are not part of the active Steam DX12 release path.
-Treat any remaining Emscripten sources/targets as legacy compatibility material.
+WebAssembly/Emscripten targets are removed from the active engine runtime path.
+The supported gameplay runtime is DX12-native delivery.
 
 ## AI controller architecture
 

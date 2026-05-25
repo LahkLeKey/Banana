@@ -14,7 +14,7 @@ struct Renderer
     Shader *default_shader;
     Camera camera;
     unsigned char *frame_buffer;
-#if defined(BANANA_ENGINE_HAS_GL) || defined(__EMSCRIPTEN__) || defined(BANANA_ENGINE_HAS_GLFW)
+#if defined(BANANA_ENGINE_HAS_GL) || defined(BANANA_ENGINE_HAS_GLFW)
     unsigned int fbo;
     unsigned int fbo_texture;
     unsigned int fbo_depth;

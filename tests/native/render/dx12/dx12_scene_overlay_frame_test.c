@@ -4,9 +4,29 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#if defined(_WIN32)
+#define setenv(name, value, overwrite) _putenv_s((name), (value))
+#endif
 
 #define BANANA_POC_TEST_WIDTH 1280
 #define BANANA_POC_TEST_HEIGHT 720
+
+static void apply_dx12_test_launch_gate_defaults(void)
+{
+    const char *mode = getenv("BANANA_LAUNCH_GATE_MODE");
+
+    setenv("BANANA_LAUNCH_GATE_MODE", mode && mode[0] != '\0' ? mode : "development", 0);
+
+    mode = getenv("BANANA_LAUNCH_GATE_MODE");
+    if (!mode || mode[0] == '\0' || strcmp(mode, "development") != 0)
+        return;
+
+    setenv("BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE", "1", 0);
+    setenv("BANANA_LAUNCH_GATE_VERIFICATION_FRESH", "1", 0);
+    setenv("BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING", "1", 0);
+}
 
 static void fail_test(const char *label, const char *message)
 {
@@ -85,6 +105,8 @@ int main(void)
     uint64_t options_hash = 0;
     uint64_t world_hash = 0;
     uint64_t editor_hash = 0;
+
+    apply_dx12_test_launch_gate_defaults();
 
     if (engine_init(BANANA_POC_TEST_WIDTH, BANANA_POC_TEST_HEIGHT) != 0)
         fail_test("engine_init", "failed to initialize runtime");

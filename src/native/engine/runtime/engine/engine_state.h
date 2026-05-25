@@ -7,6 +7,7 @@
 #include "../../render/renderer.h"
 #include "../../render/window.h"
 #include "../../world/world.h"
+#include "../../../include/banana_launch_gate_policy.h"
 #include "../input/move_target/move_target_domain.h"
 #include "../terrain/terrain_runtime.h"
 
@@ -22,6 +23,18 @@ extern "C"
 #define BANANA_ENGINE_TERRAIN_CHUNK_ROWS (BANANA_ENGINE_TERRAIN_SIZE / BANANA_ENGINE_TERRAIN_CHUNK_SIZE)
 #define BANANA_ENGINE_TERRAIN_TOTAL_CHUNKS (BANANA_ENGINE_TERRAIN_CHUNK_COLS * BANANA_ENGINE_TERRAIN_CHUNK_ROWS)
 #define BANANA_ENGINE_MAX_ACTIVE_CONTROLLERS 256
+
+typedef enum RuntimeEngineLaunchGateBlockedState
+{
+    RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_NONE = 0,
+    RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_UNLINKED_ACCOUNT = 1,
+    RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_SUSPENDED_OR_RESTRICTED = 2,
+    RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_STALE_SESSION = 3,
+    RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_STEAM_UNAVAILABLE = 4,
+    RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_API_UNAVAILABLE = 5,
+    RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_OFFLINE_UNVERIFIABLE = 6,
+    RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_UNKNOWN_MODE = 7,
+} RuntimeEngineLaunchGateBlockedState;
 
 struct RuntimeApplicationServicePorts;
 
@@ -48,6 +61,9 @@ typedef struct EngineRuntimeState
     int merchants_seeded;
     int pbj_pickup_collected;
     const struct RuntimeApplicationServicePorts *service_ports;
+    int launch_gate_allowed;
+    banana_launch_gate_reason_code launch_gate_reason_code;
+    RuntimeEngineLaunchGateBlockedState launch_gate_blocked_state;
 
     unsigned char terrain_height[BANANA_ENGINE_TERRAIN_SIZE][BANANA_ENGINE_TERRAIN_SIZE];
     RuntimeTerrainChunk terrain_chunks[BANANA_ENGINE_TERRAIN_TOTAL_CHUNKS];
@@ -55,6 +71,13 @@ typedef struct EngineRuntimeState
     ControllerInstance *controllers[BANANA_ENGINE_MAX_ACTIVE_CONTROLLERS];
     int controller_count;
 } EngineRuntimeState;
+
+RuntimeEngineLaunchGateBlockedState
+runtime_engine_state_launch_gate_blocked_state_from_reason_code(banana_launch_gate_reason_code reason_code);
+
+void runtime_engine_state_apply_launch_gate_decision(EngineRuntimeState *state,
+                                                     int allow,
+                                                     banana_launch_gate_reason_code reason_code);
 
 void runtime_engine_state_reset(EngineRuntimeState *state);
 

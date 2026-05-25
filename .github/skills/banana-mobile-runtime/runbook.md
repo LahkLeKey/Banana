@@ -3,7 +3,6 @@
 ## Entry Points
 
 - VS Code Run and Debug profile: `Banana Channels (Container Driven)` (single consolidated launcher profile)
-- Standard desktop launcher (prefers Ubuntu local Android emulator, container fallback): `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-electron.sh'`
 - Windows shell launcher: `bash -lc 'set -eo pipefail; scripts/launch-container-channels-with-wsl2-mobile.sh'`
 - Ubuntu launcher (inside WSL): `scripts/compose-mobile-emulators-wsl2.sh`
 
@@ -21,12 +20,12 @@ Common variants:
 - `BANANA_ANDROID_RUNTIME_MODE`: Android runtime mode (`auto` default, `local`, or `container`)
 - `BANANA_ANDROID_BOOT_TIMEOUT_SEC`: Android boot timeout (seconds)
 - `BANANA_ANDROID_PREVIEW_URL`: URL opened inside Android emulator (default `http://10.0.2.2:19006`)
-- `BANANA_ANDROID_CONTAINER_PREVIEW_URL`: URL opened inside containerized Android emulator (default `http://react-native-web:8081`)
+- `BANANA_ANDROID_CONTAINER_PREVIEW_URL`: URL opened inside containerized Android emulator (default `http://react-web:8081`)
 - `BANANA_ANDROID_CONTAINER_SERVICE`: Compose service name for Android emulator container (default `android-emulator`)
 - `BANANA_ANDROID_OPEN_WINDOW`: Auto-open Android noVNC UI in WSLg window when container runtime is used (`1` default, set `0` to disable)
 - `BANANA_ANDROID_WSLG_WINDOW_URL`: Android noVNC URL opened in WSLg window (default `http://localhost:6080/vnc.html?autoconnect=1&resize=remote&reconnect=1`)
 - `BANANA_ANDROID_NOVNC_TIMEOUT_SEC`: Seconds to wait for noVNC HTTP readiness before attempting auto-open (default `60`)
-- `BANANA_OPEN_RUNTIME_WINDOWS`: On Windows shell launches, automatically open API/React/React Native runtime URLs in host browser windows (`1` default, set `0` to disable)
+- `BANANA_OPEN_RUNTIME_WINDOWS`: On Windows shell launches, automatically open runtime URLs in host browser windows (`1` default, set `0` to disable)
 - `BANANA_IOS_PREVIEW_URL`: URL opened for iOS-style preview (default `http://localhost:19006`)
 - `BANANA_IOS_PREVIEW_ENGINE`: Local iOS preview engine (`chromium` default, `webkit` optional)
 - `BANANA_SKIP_ANDROID_EMULATOR=1`: Skip Android launch (applies to both standard and mobile launchers)
