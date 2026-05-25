@@ -44,6 +44,35 @@ export type GameSessionSnapshotEnvelope = {
   server?: GameSessionServerMetrics;
 };
 
+export type PlayerAccountResponse = {
+  playerId: string;
+  accountStatus: string;
+  profile: Record<string, unknown>;
+  version: number;
+  updatedAt: string;
+};
+
+export type PlayerInsightsResponse = {
+  playerId: string;
+  sessionSummary: {changeEvents: number; latestAction: string | null;};
+  progressionSummary: {xp: number; level: number;};
+  inventoryTrendSummary: {distinctItems: number; totalQuantity: number;};
+  noData: boolean;
+  freshnessTimestamp: string;
+};
+
+export type GameAccountOverviewResponse = {
+  steamId: string;
+  playerGuid: string;
+  sessionId: string;
+  buildStats: {health: number; attack: number; defense: number; utility: number;};
+  replayCursor: {lastTick: number; lastSequence: number;};
+  antiCheat: {score: number; flagged: boolean; integrityHash: number;};
+  world: {entityCount: number; lastSnapshotTick: number;};
+  workflows: {totalEvents: number; recent: Array<Record<string, unknown>>;};
+  mode: string;
+};
+
 type ElectronBridge = {
   apiBaseUrl: string;
 };
@@ -246,24 +275,39 @@ async function requestJson<T>(
   return (await response.json()) as T;
 }
 
+function withBearerAuth(token: string): Record<string, string> {
+  return {authorization: `Bearer ${token}`};
+}
+
 export async function startGameSession(
     baseUrl: string, playerName: string,
-    playerGuid: string): Promise<GameSessionBootstrap> {
+    playerGuid: string, token?: string): Promise<GameSessionBootstrap> {
+  const headers: Record<string, string> = {'content-type': 'application/json'};
+  if (token?.trim()) {
+    headers.authorization = `Bearer ${token.trim()}`;
+  }
+
   return requestJson<GameSessionBootstrap>(
       resolveGameplayApiBaseUrl(baseUrl), '/api/game/session/start', {
         method: 'POST',
-        headers: {'content-type': 'application/json'},
+        headers,
         body: JSON.stringify({playerName, playerGuid}),
       });
 }
 
 export async function rejoinGameSession(
-    baseUrl: string, playerGuid: string): Promise<GameSessionBootstrap> {
+    baseUrl: string, playerGuid: string,
+    token?: string): Promise<GameSessionBootstrap> {
+  const headers: Record<string, string> = {'content-type': 'application/json'};
+  if (token?.trim()) {
+    headers.authorization = `Bearer ${token.trim()}`;
+  }
+
   const response =
       await requestJson<GameSessionBootstrap&{playerName?: string}>(
           resolveGameplayApiBaseUrl(baseUrl), '/api/game/session/rejoin', {
             method: 'POST',
-            headers: {'content-type': 'application/json'},
+            headers,
             body: JSON.stringify({playerGuid}),
           });
 
@@ -273,4 +317,42 @@ export async function rejoinGameSession(
     playerName: response.playerName ?? 'player',
     playerGuid,
   };
+}
+
+export async function fetchPlayerAccount(
+    baseUrl: string, token: string): Promise<PlayerAccountResponse> {
+  return requestJson<PlayerAccountResponse>(baseUrl, '/v1/player/account', {
+    method: 'GET',
+    headers: withBearerAuth(token),
+  });
+}
+
+export async function updatePlayerAccountProfile(
+    baseUrl: string, token: string, expectedVersion: number,
+    profilePatch: Record<string, unknown>): Promise<PlayerAccountResponse> {
+  return requestJson<PlayerAccountResponse>(baseUrl, '/v1/player/account', {
+    method: 'PATCH',
+    headers: {
+      'content-type': 'application/json',
+      ...withBearerAuth(token),
+    },
+    body: JSON.stringify({expectedVersion, profilePatch}),
+  });
+}
+
+export async function fetchPlayerInsights(
+    baseUrl: string, token: string): Promise<PlayerInsightsResponse> {
+  return requestJson<PlayerInsightsResponse>(baseUrl, '/v1/player/insights', {
+    method: 'GET',
+    headers: withBearerAuth(token),
+  });
+}
+
+export async function fetchGameAccountOverview(
+    baseUrl: string, token: string): Promise<GameAccountOverviewResponse> {
+  return requestJson<GameAccountOverviewResponse>(
+      resolveGameplayApiBaseUrl(baseUrl), '/api/game/account/overview', {
+        method: 'GET',
+        headers: withBearerAuth(token),
+      });
 }

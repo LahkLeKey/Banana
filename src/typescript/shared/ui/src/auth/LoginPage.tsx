@@ -43,7 +43,7 @@ export function LoginPage() {
             window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
             setSessionReady(true);
             setStatus("authenticated");
-            window.location.replace("/download");
+            window.location.replace("/session-room");
             return;
         }
 
@@ -72,6 +72,13 @@ export function LoginPage() {
         clearStoredAuthSession();
         setSessionReady(false);
         setStatus("idle");
+    };
+
+    const handleOpenSessionRoom = () => {
+        if (typeof window === "undefined") {
+            return;
+        }
+        window.location.assign("/session-room");
     };
 
     return (
@@ -369,6 +376,26 @@ export function LoginPage() {
                         )}
 
                         <div style={{ display: "grid", gap: 12 }}>
+                            {sessionReady ? (
+                                <button
+                                    type="button"
+                                    onClick={handleOpenSessionRoom}
+                                    style={{
+                                        border: "none",
+                                        borderRadius: 18,
+                                        padding: "16px 18px",
+                                        background: "linear-gradient(135deg, #2563eb, #0f766e)",
+                                        color: "#ffffff",
+                                        fontSize: tokens.font.size.md,
+                                        fontWeight: tokens.font.weight.semibold,
+                                        cursor: "pointer",
+                                        boxShadow: "0 16px 30px rgba(37, 99, 235, 0.28)",
+                                    }}
+                                >
+                                    Open session room
+                                </button>
+                            ) : null}
+
                             <button
                                 type="button"
                                 onClick={handleSteamSignIn}
