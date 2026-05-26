@@ -7,7 +7,3 @@ paths = [
   '''docs/cost-effective-under-20-db-plan.md''',
   '''docs/under-20-hetzner-postgres-runbook.md'''
 ]
-regexes = [
-  '''REPLACE_WITH_STRONG_PASSWORD''',
-  '''banana-prod-jwt-rotate-this-immediately-20260524'''
-]
