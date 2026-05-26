@@ -1,8 +1,0 @@
-MSBuild version 17.13.19+0d9f5a35a for .NET Framework
-MSBUILD : error MSB1008: Only one project can be specified.
-    Full command line: '"C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" ALL_BUILD.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:m v:n'
-  Switches appended by response files:
-'' came from 'C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.rsp'
-Switch: v:n
-
-For switch syntax, type "MSBuild -help"
