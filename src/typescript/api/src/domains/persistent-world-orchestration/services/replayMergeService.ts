@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 
-import type {AreaIdentity, RevisitBaselineView} from '../../../lib/contracts/v1/persistentWorld.ts';
+import {type AreaIdentity, type ContinuityPayload, ContinuityPayloadSchema, type RevisitBaselineView} from '../../../lib/contracts/v1/persistentWorld.ts';
 import {makeDeterministicCanonicalStateSignature} from '../normalization.ts';
 import {type AuthoritativeBaselineRecord, type BaselineRepository, createBaselineRepository} from '../persistence/baselineRepository.ts';
 import {createDeltaRepository, type DeltaRepository} from '../persistence/deltaRepository.ts';
@@ -19,11 +19,20 @@ export type ReplayMergeResult = {
   canonicalStateSignature: string;
 };
 
+export type ContinuityCheckpointReplay = {
+  areaIdentity: AreaIdentity; baselineId: string; areaStateVersion: number;
+  appliedDeltaThroughSequence: number;
+  canonicalStateSignature: string;
+  continuityPayload: ContinuityPayload;
+};
+
 export interface ReplayMergeService {
   ensureAuthoritativeBaseline(view: RevisitBaselineView):
       AuthoritativeBaselineRecord;
   applyDelta(request: ReplayDeltaRequest): ReplayMergeResult;
   replay(areaId: string): ReplayMergeResult|null;
+  replayLatestContinuityCheckpoint(areaId: string): ContinuityCheckpointReplay
+      |null;
 }
 
 function stableJson(value: unknown): string {
@@ -173,6 +182,38 @@ export function createReplayMergeService(
             appliedDeltaThroughSequence: state.appliedDeltaThroughSequence,
             canonicalStateSignature: state.canonicalStateSignature,
           };
+        },
+
+    replayLatestContinuityCheckpoint(areaId: string):
+            ContinuityCheckpointReplay |
+        null {
+          const baseline = baselineRepository.getByAreaId(areaId);
+          if (!baseline) {
+            return null;
+          }
+
+          const state =
+              areaStateVersionService.get(areaId) ?? baseline.areaStateVersion;
+          const deltas = deltaRepository.listByAreaId(areaId);
+
+          for (let index = deltas.length - 1; index >= 0; index--) {
+            const candidate = deltas[index]?.deltaPayload?.continuityPayload;
+            const parsed = ContinuityPayloadSchema.safeParse(candidate);
+            if (!parsed.success) {
+              continue;
+            }
+
+            return {
+              areaIdentity: baseline.areaIdentity,
+              baselineId: baseline.baselineId,
+              areaStateVersion: state.areaStateVersion,
+              appliedDeltaThroughSequence: state.appliedDeltaThroughSequence,
+              canonicalStateSignature: state.canonicalStateSignature,
+              continuityPayload: parsed.data,
+            };
+          }
+
+          return null;
         },
   };
 }

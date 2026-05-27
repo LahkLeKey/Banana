@@ -1,6 +1,7 @@
 import type {FastifyInstance} from 'fastify';
 
 import {type AreaStateVersionService, createAreaStateVersionService} from './services/areaStateVersionService.ts';
+import {type ContinuityPayloadService, createContinuityPayloadService} from './services/continuityPayloadService.ts';
 import {createFailureContextService, type FailureContextService} from './services/failureContextService.ts';
 import {createOrchestrationPathService, type OrchestrationPathService} from './services/orchestrationPathService.ts';
 import {createReplayMergeService, type ReplayMergeService} from './services/replayMergeService.ts';
@@ -16,6 +17,7 @@ export interface PersistentWorldOrchestrationDomain {
   readonly contractVersion: string;
   readonly orchestrationPathService: OrchestrationPathService;
   readonly revisitBaselineService: RevisitBaselineService;
+  readonly continuityPayloadService: ContinuityPayloadService;
   readonly areaStateVersionService: AreaStateVersionService;
   readonly replayMergeService: ReplayMergeService;
   readonly retryOrchestrationService: RetryOrchestrationService;
@@ -27,6 +29,7 @@ export interface PersistentWorldOrchestrationDomain {
 export function bootstrapPersistentWorldOrchestrationDomain(
     app: FastifyInstance): PersistentWorldOrchestrationDomain {
   const orchestrationPathService = createOrchestrationPathService();
+  const continuityPayloadService = createContinuityPayloadService();
   const areaStateVersionService = createAreaStateVersionService();
   const replayMergeService = createReplayMergeService(
       undefined,
@@ -44,6 +47,7 @@ export function bootstrapPersistentWorldOrchestrationDomain(
     contractVersion: 'v1',
     orchestrationPathService,
     revisitBaselineService,
+    continuityPayloadService,
     areaStateVersionService,
     replayMergeService,
     retryOrchestrationService,

@@ -44,9 +44,55 @@ export const RevisitBaselineViewSchema = z.object({
   orchestrationPathId: z.string().min(1),
 });
 
+export const ContinuityCheckpointStateSchema =
+    z.object({
+       checkpointId: z.string().min(1),
+       checkpointSequence: z.number().int().nonnegative(),
+       checkpointContextTag: z.string().min(1),
+       objectiveCompletionIds: z.array(z.string().min(1)).default([]),
+       profileState: z.record(z.unknown()).default({}),
+       profileFingerprint: z.string().min(1),
+     }).strict();
+
+export const ContinuityPayloadSchema =
+    z.object({
+       contractVersion: z.literal('v1'),
+       worldId: UuidSchema,
+       laneId: LaneIdSchema,
+       fromVariantId: z.string().min(1),
+       toVariantId: z.string().min(1),
+       routeKey: z.string().min(1),
+       partitionEpoch: z.number().int().nonnegative(),
+       chunkX: z.number().int(),
+       chunkY: z.number().int(),
+       checkpoint: ContinuityCheckpointStateSchema,
+       transitionSignature: z.string().regex(/^[a-f0-9]{32,128}$/i),
+     }).strict();
+
+export const ContinuityCheckpointCommitRequestSchema =
+    z.object({
+       continuityPayload: ContinuityPayloadSchema,
+       baseAreaStateVersion: VersionSchema,
+       idempotencyKey: z.string().min(8),
+     }).strict();
+
+export const ContinuityCheckpointCommitViewSchema = z.object({
+  areaIdentity: AreaIdentitySchema,
+  baselineId: z.string().uuid(),
+  areaStateVersion: AreaStateVersionSchema,
+  continuityPayload: ContinuityPayloadSchema,
+});
+
 export type AreaIdentity = z.infer<typeof AreaIdentitySchema>;
 export type GenerationFingerprint = z.infer<typeof GenerationFingerprintSchema>;
 export type AreaStateVersion = z.infer<typeof AreaStateVersionSchema>;
 export type RevisitBaselineRequest =
     z.infer<typeof RevisitBaselineRequestSchema>;
 export type RevisitBaselineView = z.infer<typeof RevisitBaselineViewSchema>;
+export type ContinuityCheckpointState =
+    z.infer<typeof ContinuityCheckpointStateSchema>;
+export type ContinuityPayload = z.infer<typeof ContinuityPayloadSchema>;
+export type ContinuityCheckpointCommitRequest =
+    z.infer<typeof ContinuityCheckpointCommitRequestSchema>;
+export type ContinuityCheckpointCommitView =
+    z.infer<typeof ContinuityCheckpointCommitViewSchema>;

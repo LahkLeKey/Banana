@@ -17,6 +17,8 @@ This board tracks churn across active specs and highlights what must finish befo
 | 009-persistent-world-orchestration | 51 | 51 | Complete | Monitor regressions and keep evidence fresh as contracts evolve |
 | 010-client-static-mesh-banana-line | 18 | 18 | Complete | Ready for runtime playtest sign-off and merge |
 | 011-client-world-assets-demo-scenes | 18 | 18 | Complete | Monitor scene-catalog regressions and refresh evidence when contracts change |
+| 015-coherent-game-world | 27 | 27 | Complete | Keep coherent-world suite as integration baseline and monitor regressions |
+| 016-gameplay-api-continuity | 24 | 24 | Complete | Closed; continue regression monitoring via continuity harness |
 
 ## Biome and Gameplay-Element Readiness Criteria
 

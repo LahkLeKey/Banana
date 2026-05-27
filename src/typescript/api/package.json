@@ -7,6 +7,8 @@
     "dev": "bun run --hot src/index.ts",
     "start": "bun run src/index.ts",
     "build": "bun build src/index.ts --target=bun --outdir=dist",
+    "test:continuity": "bun test src/domains/persistent-world-orchestration/services/continuityPayloadService.test.ts src/routes/world.continuity.contract.test.ts",
+    "test:integration:continuity": "bun test src/integration/persistent-world-continuity-roundtrip.integration.test.ts src/integration/persistent-world-continuity-contract-drift.integration.test.ts src/integration/persistent-world-continuity-growth-path.integration.test.ts",
     "parity:inventory": "bash ../../scripts/validate-api-parity-governance.sh --inventory-only",
     "parity:validate": "bash ../../scripts/validate-api-parity-governance.sh --strict",
     "test": "bun test",
