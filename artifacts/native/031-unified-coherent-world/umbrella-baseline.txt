@@ -1,12 +1,12 @@
 Test project C:/Github/Banana/out/v3-native
       Start 28: banana_runtime_demo_scene_catalog_bootstrap_test
- 1/31 Test #28: banana_runtime_demo_scene_catalog_bootstrap_test ...................   Passed    0.08 sec
+ 1/31 Test #28: banana_runtime_demo_scene_catalog_bootstrap_test ...................   Passed    0.01 sec
       Start 29: banana_runtime_demo_scene_catalog_modularity_test
- 2/31 Test #29: banana_runtime_demo_scene_catalog_modularity_test ..................   Passed    0.04 sec
+ 2/31 Test #29: banana_runtime_demo_scene_catalog_modularity_test ..................   Passed    0.01 sec
       Start 30: banana_runtime_demo_scene_catalog_gameplay_validation_test
  3/31 Test #30: banana_runtime_demo_scene_catalog_gameplay_validation_test .........   Passed    0.01 sec
       Start 31: banana_runtime_demo_scene_catalog_war_policy_test
- 4/31 Test #31: banana_runtime_demo_scene_catalog_war_policy_test ..................   Passed    0.03 sec
+ 4/31 Test #31: banana_runtime_demo_scene_catalog_war_policy_test ..................   Passed    0.01 sec
       Start 32: banana_runtime_demo_scene_catalog_vector_profile_test
  5/31 Test #32: banana_runtime_demo_scene_catalog_vector_profile_test ..............   Passed    0.01 sec
       Start 33: banana_runtime_demo_scene_catalog_asset_resolution_test
@@ -14,13 +14,13 @@ Test project C:/Github/Banana/out/v3-native
       Start 34: banana_runtime_demo_scene_catalog_theme_coverage_test
  7/31 Test #34: banana_runtime_demo_scene_catalog_theme_coverage_test ..............   Passed    0.01 sec
       Start 35: banana_runtime_demo_scene_catalog_theme_determinism_test
- 8/31 Test #35: banana_runtime_demo_scene_catalog_theme_determinism_test ...........   Passed    0.02 sec
+ 8/31 Test #35: banana_runtime_demo_scene_catalog_theme_determinism_test ...........   Passed    0.01 sec
       Start 36: banana_runtime_demo_scene_catalog_mutation_test
  9/31 Test #36: banana_runtime_demo_scene_catalog_mutation_test ....................   Passed    0.01 sec
       Start 37: banana_runtime_demo_scene_catalog_disabled_diagnostics_test
 10/31 Test #37: banana_runtime_demo_scene_catalog_disabled_diagnostics_test ........   Passed    0.01 sec
       Start 38: banana_runtime_demo_scene_catalog_coherent_profile_test
-11/31 Test #38: banana_runtime_demo_scene_catalog_coherent_profile_test ............   Passed    0.02 sec
+11/31 Test #38: banana_runtime_demo_scene_catalog_coherent_profile_test ............   Passed    0.01 sec
       Start 39: banana_runtime_demo_scene_catalog_coherent_launch_signature_test
 12/31 Test #39: banana_runtime_demo_scene_catalog_coherent_launch_signature_test ...   Passed    0.01 sec
       Start 40: banana_runtime_demo_scene_catalog_coherent_failure_path_test
@@ -36,32 +36,32 @@ Test project C:/Github/Banana/out/v3-native
       Start 45: banana_runtime_demo_scene_catalog_coherent_disabled_profile_test
 18/31 Test #45: banana_runtime_demo_scene_catalog_coherent_disabled_profile_test ...   Passed    0.01 sec
       Start 53: banana_dx12_scene_overlay_frame_test
-19/31 Test #53: banana_dx12_scene_overlay_frame_test ...............................   Passed    0.82 sec
+19/31 Test #53: banana_dx12_scene_overlay_frame_test ...............................   Passed    0.62 sec
       Start 54: banana_dx12_projection_policy_test
-20/31 Test #54: banana_dx12_projection_policy_test .................................   Passed    0.02 sec
+20/31 Test #54: banana_dx12_projection_policy_test .................................   Passed    0.01 sec
       Start 55: banana_dx12_objective_policy_test
-21/31 Test #55: banana_dx12_objective_policy_test ..................................   Passed    0.02 sec
+21/31 Test #55: banana_dx12_objective_policy_test ..................................   Passed    0.01 sec
       Start 56: banana_dx12_scene_flow_test
 22/31 Test #56: banana_dx12_scene_flow_test ........................................   Passed    0.01 sec
       Start 57: banana_dx12_gameplay_lane_test
-23/31 Test #57: banana_dx12_gameplay_lane_test .....................................   Passed    0.92 sec
+23/31 Test #57: banana_dx12_gameplay_lane_test .....................................   Passed    0.60 sec
       Start 58: banana_dx12_gameplay_click_lane_test
-24/31 Test #58: banana_dx12_gameplay_click_lane_test ...............................   Passed    2.12 sec
+24/31 Test #58: banana_dx12_gameplay_click_lane_test ...............................   Passed    1.85 sec
       Start 62: banana_runtime_engine_tick_test
-25/31 Test #62: banana_runtime_engine_tick_test ....................................   Passed    0.12 sec
+25/31 Test #62: banana_runtime_engine_tick_test ....................................   Passed    0.08 sec
       Start 63: banana_runtime_tick_budget_policy_test
-26/31 Test #63: banana_runtime_tick_budget_policy_test .............................   Passed    0.02 sec
+26/31 Test #63: banana_runtime_tick_budget_policy_test .............................   Passed    0.01 sec
       Start 64: banana_runtime_tick_input_phase_test
-27/31 Test #64: banana_runtime_tick_input_phase_test ...............................   Passed    0.03 sec
+27/31 Test #64: banana_runtime_tick_input_phase_test ...............................   Passed    0.01 sec
       Start 65: banana_runtime_tick_post_phase_test
-28/31 Test #65: banana_runtime_tick_post_phase_test ................................   Passed    0.03 sec
+28/31 Test #65: banana_runtime_tick_post_phase_test ................................   Passed    0.01 sec
       Start 72: banana_runtime_camera_follow_policy_test
-29/31 Test #72: banana_runtime_camera_follow_policy_test ...........................   Passed    0.02 sec
+29/31 Test #72: banana_runtime_camera_follow_policy_test ...........................   Passed    0.01 sec
       Start 73: banana_runtime_move_target_domain_test
 30/31 Test #73: banana_runtime_move_target_domain_test .............................   Passed    0.02 sec
       Start 77: banana_runtime_full_mmo_demo_test
-31/31 Test #77: banana_runtime_full_mmo_demo_test ..................................   Passed    0.83 sec
+31/31 Test #77: banana_runtime_full_mmo_demo_test ..................................   Passed    0.54 sec
 
 100% tests passed, 0 tests failed out of 31
 
-Total Test time (real) =   5.42 sec
+Total Test time (real) =   3.93 sec

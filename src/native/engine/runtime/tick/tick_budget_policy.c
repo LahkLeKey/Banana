@@ -437,3 +437,35 @@ int runtime_tick_budget_policy_controller_war_sentience_comeback_bonus_per_coord
 
     return (int)value;
 }
+
+int runtime_tick_budget_policy_controller_war_negotiate_min_intelligence_stage(void)
+{
+    const char *raw = getenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_INTELLIGENCE_STAGE");
+    long value = 3;
+
+    if (raw && raw[0])
+        value = strtol(raw, NULL, 10);
+
+    if (value < 0)
+        return 0;
+    if (value > 8)
+        return 8;
+
+    return (int)value;
+}
+
+int runtime_tick_budget_policy_controller_war_negotiate_min_reinforcements(void)
+{
+    const char *raw = getenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_REINFORCEMENTS");
+    long value = 1;
+
+    if (raw && raw[0])
+        value = strtol(raw, NULL, 10);
+
+    if (value < 0)
+        return 0;
+    if (value > 8)
+        return 8;
+
+    return (int)value;
+}

@@ -87,7 +87,7 @@ As a developer, adding a new gameplay placement, checkpoint, route signature, or
 - **FR-028**: Runtime terrain expansion MUST support policy-controlled procedural biome bias derived from war life-lane metrics while preserving bounded frontier growth and eventual all-biome unlock behavior.
 - **FR-029**: Banana and Bean factions MUST be treated as sentient humanoid combatants (not plant actors) in runtime telemetry/scaffolding, including bounded humanoid index, coordination, empathy, deterministic per-faction behavior modes (`hold-line`, `flank`, `regroup`, `negotiate`), mode-dependent tactical reinforcement placement geometry (flank wraps around opponent-facing normal; regroup forms rear echelons), and coordination-driven comeback bonus hooks.
 - **FR-030**: When both factions resolve to `negotiate` behavior, runtime warfront expansion MUST apply bounded consecutive-tick de-escalation trimming to reinforcement spawn pressure, MUST expose negotiation streak + trim telemetry, and MUST reset de-escalation state when negotiation no longer holds.
-- **FR-031**: Runtime warfront reinforcement scaffolding MUST emit sentience-mode-specific skirmish gameplay asset model IDs (`banana-scout-flank/regroup/envoy-<biome>`, `bean-raider-flank/regroup/envoy-<biome>`), and HUD/API telemetry MUST expose per-faction sentience mode channel totals (hold/flank/regroup/negotiate) so DX12 clients can render deterministic in-game sentience UI components.
+- **FR-031**: Runtime warfront reinforcement scaffolding MUST emit sentience-mode-specific skirmish gameplay asset model IDs (`banana-scout-flank/regroup/envoy-<biome>`, `bean-raider-flank/regroup/envoy-<biome>`), and HUD/API telemetry MUST expose per-faction sentience mode channel totals (hold/flank/regroup/negotiate) so DX12 clients can render deterministic in-game sentience UI components. At or above the configured negotiate-continuation intelligence threshold, negotiate de-escalation MUST preserve a bounded minimum reinforcement floor so Banana-vs-Bean conflict continuity remains measurable under sentience-heavy lanes.
 
 ## Full Engine Baseline (canonical)
 
@@ -95,7 +95,7 @@ As a developer, adding a new gameplay placement, checkpoint, route signature, or
 ctest --test-dir out/v3-native -C Debug --output-on-failure
 ```
 
-Baseline (2026-05-29): **122/122 passed** in 21.49s. Evidence: `artifacts/native/031-unified-coherent-world/full-engine-baseline.txt`.
+Baseline (2026-05-29): **123/123 passed** in 10.99s. Evidence: `artifacts/native/031-unified-coherent-world/full-engine-baseline.txt`.
 
 The narrow umbrella filter below is the cohesion-lane subset retained as a fast smoke signal for catalog/dx12/tick/camera/move-target work; it is a strict subset of the full engine baseline.
 
@@ -106,15 +106,15 @@ ctest --test-dir out/v3-native -C Debug --output-on-failure -R \
   "banana_(runtime_full_mmo_demo|runtime_demo_scene_catalog_.+|dx12_(objective_policy|scene_flow|scene_overlay_frame|projection_policy|gameplay_lane|gameplay_click_lane)|runtime_tick_(input_phase|post_phase|budget_policy)|runtime_engine_tick|runtime_camera_follow_policy|runtime_move_target_domain)_test"
 ```
 
-Baseline (2026-05-29): **31/31 passed** in 5.42s (30 cohesion-lane tests + `banana_runtime_full_mmo_demo_test`).
+Baseline (2026-05-29): **31/31 passed** in 3.93s (30 cohesion-lane tests + `banana_runtime_full_mmo_demo_test`).
 
 ## Evidence
 
-- Full engine baseline: `artifacts/native/031-unified-coherent-world/full-engine-baseline.txt` (122/122, 21.49s).
-- Cohesion-lane umbrella baseline: `artifacts/native/031-unified-coherent-world/umbrella-baseline.txt` (31/31, 5.42s).
+- Full engine baseline: `artifacts/native/031-unified-coherent-world/full-engine-baseline.txt` (123/123, 10.99s).
+- Cohesion-lane umbrella baseline: `artifacts/native/031-unified-coherent-world/umbrella-baseline.txt` (31/31, 3.93s).
 - Full-MMO demo evidence: `artifacts/native/031-unified-coherent-world/full-mmo-demo.txt`.
 - Combat vs wildlife war evidence: `artifacts/native/031-unified-coherent-world/combat-wildlife-war-evidence.txt`.
-- War terrain expansion loop evidence: `artifacts/native/031-unified-coherent-world/combat-wildlife-war-evidence.txt` (includes runtime terrain expansion, escalation-tier orchestration, intelligence growth/all-biome unlock, deterministic full-biome reinforcement cycle coverage, stage-5 mythic reinforcement scaffolding, intelligence-overcrowd burst scaling, explicit apex/mythic telemetry channels, stage-indexed channel rollups, Game-of-Life life-lane intelligence drive, procedural biome bias steering, sentient humanoid comeback scaffolding with deterministic behavior modes and mode-dependent tactical placement geometry (flank-wrap + rear-echelon regroup), sentience-mode skirmish asset channels (`scout/raider` flank/regroup/envoy), negotiate-mode consecutive-tick de-escalation trim telemetry, HUD mode-channel counters, and vector profile tests).
+- War terrain expansion loop evidence: `artifacts/native/031-unified-coherent-world/combat-wildlife-war-evidence.txt` (includes runtime terrain expansion, escalation-tier orchestration, intelligence growth/all-biome unlock, deterministic full-biome reinforcement cycle coverage, stage-5 mythic reinforcement scaffolding, intelligence-overcrowd burst scaling, explicit apex/mythic telemetry channels, stage-indexed channel rollups, Game-of-Life life-lane intelligence drive, procedural biome bias steering, sentient humanoid comeback scaffolding with deterministic behavior modes and mode-dependent tactical placement geometry (flank-wrap + rear-echelon regroup), sentience-mode skirmish asset channels (`scout/raider` flank/regroup/envoy), negotiate-mode consecutive-tick de-escalation trim telemetry, factory-driven negotiate-continuation floor + threshold gating regression scenarios, HUD mode-channel counters, and vector profile tests).
 
 
 ## API Unit Test Baseline (cross-domain verification)

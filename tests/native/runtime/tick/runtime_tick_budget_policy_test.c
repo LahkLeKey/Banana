@@ -387,6 +387,54 @@ int main(void)
         return 1;
     }
 
+    unsetenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_INTELLIGENCE_STAGE");
+    if (!expect_int("default negotiate minimum intelligence stage",
+                    runtime_tick_budget_policy_controller_war_negotiate_min_intelligence_stage(),
+                    3))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_INTELLIGENCE_STAGE", "-1", 1);
+    if (!expect_int("minimum negotiate minimum intelligence stage clamp",
+                    runtime_tick_budget_policy_controller_war_negotiate_min_intelligence_stage(),
+                    0))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_INTELLIGENCE_STAGE", "999", 1);
+    if (!expect_int("maximum negotiate minimum intelligence stage clamp",
+                    runtime_tick_budget_policy_controller_war_negotiate_min_intelligence_stage(),
+                    8))
+    {
+        return 1;
+    }
+
+    unsetenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_REINFORCEMENTS");
+    if (!expect_int("default negotiate minimum reinforcements",
+                    runtime_tick_budget_policy_controller_war_negotiate_min_reinforcements(),
+                    1))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_REINFORCEMENTS", "-1", 1);
+    if (!expect_int("minimum negotiate minimum reinforcements clamp",
+                    runtime_tick_budget_policy_controller_war_negotiate_min_reinforcements(),
+                    0))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_REINFORCEMENTS", "999", 1);
+    if (!expect_int("maximum negotiate minimum reinforcements clamp",
+                    runtime_tick_budget_policy_controller_war_negotiate_min_reinforcements(),
+                    8))
+    {
+        return 1;
+    }
+
     unsetenv("BANANA_TERRAIN_REBUILD_BUDGET");
     unsetenv("BANANA_CONTROLLER_WAR_RADIUS");
     unsetenv("BANANA_CONTROLLER_WAR_REINFORCEMENTS_PER_TICK");
@@ -408,5 +456,7 @@ int main(void)
     unsetenv("BANANA_CONTROLLER_WAR_PROCGEN_BIOME_VARIANCE");
     unsetenv("BANANA_CONTROLLER_WAR_SENTIENCE_GAIN_PER_TICK");
     unsetenv("BANANA_CONTROLLER_WAR_SENTIENCE_COMEBACK_BONUS_PER_COORDINATION");
+    unsetenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_INTELLIGENCE_STAGE");
+    unsetenv("BANANA_CONTROLLER_WAR_NEGOTIATE_MIN_REINFORCEMENTS");
     return 0;
 }

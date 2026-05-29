@@ -33,6 +33,8 @@ extern "C"
     int runtime_tick_budget_policy_controller_war_procgen_biome_variance(void);
     int runtime_tick_budget_policy_controller_war_sentience_gain_per_tick(void);
     int runtime_tick_budget_policy_controller_war_sentience_comeback_bonus_per_coordination(void);
+    int runtime_tick_budget_policy_controller_war_negotiate_min_intelligence_stage(void);
+    int runtime_tick_budget_policy_controller_war_negotiate_min_reinforcements(void);
 
 #ifdef __cplusplus
 }

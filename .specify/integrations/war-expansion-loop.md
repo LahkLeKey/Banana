@@ -8,7 +8,7 @@ Run this loop repeatedly while evolving AI behavior:
 
 1. Scaffold generated-vector assets for newly introduced gameplay model IDs.
 2. Validate model identity to vector profile mapping in catalog tests.
-3. Run focused war pressure/intelligence tests (`runtime_tick_orchestration_war_terrain_expansion_test`, `runtime_tick_orchestration_war_escalation_test`, `runtime_tick_orchestration_war_intelligence_growth_test`, `runtime_tick_orchestration_war_game_of_life_sentience_test`, `runtime_tick_orchestration_war_overcrowd_expansion_test`, `runtime_tick_orchestration_war_long_run_soak_test`, `runtime_gameplay_warfront_expansion_test`, `runtime_gameplay_warfront_comeback_bonus_test`, `runtime_gameplay_warfront_intelligence_feature_unlock_test`, `runtime_full_mmo_demo_test`, war evidence suite).
+3. Run focused war pressure/intelligence tests (`runtime_tick_orchestration_war_terrain_expansion_test`, `runtime_tick_orchestration_war_escalation_test`, `runtime_tick_orchestration_war_intelligence_growth_test`, `runtime_tick_orchestration_war_game_of_life_sentience_test`, `runtime_tick_orchestration_war_overcrowd_expansion_test`, `runtime_tick_orchestration_war_long_run_soak_test`, `runtime_gameplay_warfront_expansion_test`, `runtime_gameplay_warfront_comeback_bonus_test`, `runtime_gameplay_warfront_negotiate_factory_test` (includes floor-enabled + threshold-disabled scenarios), `runtime_gameplay_warfront_intelligence_feature_unlock_test`, `runtime_full_mmo_demo_test`, war evidence suite).
 4. Refresh coherent-world evidence artifacts.
 5. Append the next iteration notes to `.specify/memory/war-expansion-loop.md`.
 
@@ -45,6 +45,8 @@ Run deterministic Game-of-Life style war-lane ticks to keep AI simulation pressu
 Treat Banana and Bean combatants as sentient humanoid factions (not plants): keep sentience coordination/empathy telemetry visible, scaffold deterministic per-faction behavior modes (`hold-line`, `flank`, `regroup`, `negotiate`), let those modes drive deterministic tactical reinforcement placement geometry (flank wraps around opponent-facing normal; regroup forms rear echelons), and allow humanoid coordination + behavior mode to bias comeback allocation under bounded policy controls.
 
 When both factions remain in `negotiate` mode over consecutive ticks, apply bounded de-escalation trimming to reinforcement spawn pressure, expose streak/trim telemetry, and reset trim state immediately once either side leaves negotiation.
+
+At or above the configured intelligence threshold, preserve a bounded negotiate-continuation minimum reinforcement floor so conflict telemetry channels remain active; below the threshold, allow full de-escalation trim to zero to preserve staged behavior separation.
 
 Keep sentience-mode skirmish asset channels scaffolded for DX12 runtime visibility (`banana-scout-*` / `bean-raider-*` with `flank`, `regroup`, `envoy` variants) and expose per-faction mode channel counters (H/F/R/N) through engine getters + HUD overlay text so mode transitions are observable as in-game UI components.
 
