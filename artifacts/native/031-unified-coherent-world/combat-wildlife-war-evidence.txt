@@ -1,23 +1,37 @@
 Test project C:/Github/Banana/out/v3-native
-    Start  16: banana_combat_controller_signal_test
-1/9 Test  #16: banana_combat_controller_signal_test ...........................   Passed    0.03 sec
-    Start  17: banana_wildlife_controller_war_state_test
-2/9 Test  #17: banana_wildlife_controller_war_state_test ......................   Passed    0.03 sec
-    Start  23: banana_runtime_controller_team_war_test
-3/9 Test  #23: banana_runtime_controller_team_war_test ........................   Passed    0.03 sec
-    Start  31: banana_runtime_demo_scene_catalog_war_policy_test
-4/9 Test  #31: banana_runtime_demo_scene_catalog_war_policy_test ..............   Passed    0.01 sec
-    Start  32: banana_runtime_demo_scene_catalog_vector_profile_test
-5/9 Test  #32: banana_runtime_demo_scene_catalog_vector_profile_test ..........   Passed    0.01 sec
-    Start  65: banana_runtime_tick_post_phase_test
-6/9 Test  #65: banana_runtime_tick_post_phase_test ............................   Passed    0.03 sec
-    Start  66: banana_runtime_tick_orchestration_war_terrain_expansion_test
-7/9 Test  #66: banana_runtime_tick_orchestration_war_terrain_expansion_test ...   Passed    0.01 sec
-    Start  67: banana_runtime_tick_orchestration_war_escalation_test
-8/9 Test  #67: banana_runtime_tick_orchestration_war_escalation_test ..........   Passed    0.01 sec
-    Start 110: banana_runtime_gameplay_warfront_expansion_test
-9/9 Test #110: banana_runtime_gameplay_warfront_expansion_test ................   Passed    0.01 sec
+      Start  16: banana_combat_controller_signal_test
+ 1/16 Test  #16: banana_combat_controller_signal_test ................................   Passed    0.01 sec
+      Start  17: banana_wildlife_controller_war_state_test
+ 2/16 Test  #17: banana_wildlife_controller_war_state_test ...........................   Passed    0.02 sec
+      Start  23: banana_runtime_controller_team_war_test
+ 3/16 Test  #23: banana_runtime_controller_team_war_test .............................   Passed    0.01 sec
+      Start  31: banana_runtime_demo_scene_catalog_war_policy_test
+ 4/16 Test  #31: banana_runtime_demo_scene_catalog_war_policy_test ...................   Passed    0.01 sec
+      Start  32: banana_runtime_demo_scene_catalog_vector_profile_test
+ 5/16 Test  #32: banana_runtime_demo_scene_catalog_vector_profile_test ...............   Passed    0.02 sec
+      Start  65: banana_runtime_tick_post_phase_test
+ 6/16 Test  #65: banana_runtime_tick_post_phase_test .................................   Passed    0.02 sec
+      Start  66: banana_runtime_tick_orchestration_war_terrain_expansion_test
+ 7/16 Test  #66: banana_runtime_tick_orchestration_war_terrain_expansion_test ........   Passed    0.02 sec
+      Start  67: banana_runtime_tick_orchestration_war_escalation_test
+ 8/16 Test  #67: banana_runtime_tick_orchestration_war_escalation_test ...............   Passed    0.02 sec
+      Start  68: banana_runtime_tick_orchestration_war_intelligence_growth_test
+ 9/16 Test  #68: banana_runtime_tick_orchestration_war_intelligence_growth_test ......   Passed    0.02 sec
+      Start  69: banana_runtime_tick_orchestration_war_game_of_life_sentience_test
+10/16 Test  #69: banana_runtime_tick_orchestration_war_game_of_life_sentience_test ...   Passed    0.03 sec
+      Start  70: banana_runtime_tick_orchestration_war_overcrowd_expansion_test
+11/16 Test  #70: banana_runtime_tick_orchestration_war_overcrowd_expansion_test ......   Passed    0.02 sec
+      Start  71: banana_runtime_tick_orchestration_war_long_run_soak_test
+12/16 Test  #71: banana_runtime_tick_orchestration_war_long_run_soak_test ............   Passed    0.03 sec
+      Start 114: banana_runtime_gameplay_warfront_expansion_test
+13/16 Test #114: banana_runtime_gameplay_warfront_expansion_test .....................   Passed    0.01 sec
+      Start 115: banana_runtime_gameplay_warfront_comeback_bonus_test
+14/16 Test #115: banana_runtime_gameplay_warfront_comeback_bonus_test ................   Passed    0.02 sec
+      Start 116: banana_runtime_gameplay_warfront_negotiate_deescalation_test
+15/16 Test #116: banana_runtime_gameplay_warfront_negotiate_deescalation_test ........   Passed    0.02 sec
+      Start 117: banana_runtime_gameplay_warfront_intelligence_feature_unlock_test
+16/16 Test #117: banana_runtime_gameplay_warfront_intelligence_feature_unlock_test ...   Passed    0.02 sec
 
-100% tests passed, 0 tests failed out of 9
+100% tests passed, 0 tests failed out of 16
 
-Total Test time (real) =   0.28 sec
+Total Test time (real) =   0.35 sec
