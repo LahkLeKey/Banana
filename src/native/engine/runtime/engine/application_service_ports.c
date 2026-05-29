@@ -1,7 +1,10 @@
 #include "application_service_ports.h"
+#include "gameplay_model_profile.h"
 
 #include "../input/move_target/move_target_service.h"
 #include "../player/player_runtime_service.h"
+#include "../controller/kind/controller_kind_domain.h"
+#include "../controller/runtime/controller_runtime.h"
 #include "../render/material/render_material.h"
 #include "../render/submit/render_submit.h"
 #include "../terrain/terrain_height.h"
@@ -9,6 +12,84 @@
 #include "../terrain/terrain_mutation.h"
 
 #include <string.h>
+
+typedef struct RuntimeGameplayModelMeshCacheEntry
+{
+    char model_id[96];
+    Mesh *mesh;
+} RuntimeGameplayModelMeshCacheEntry;
+
+#define RUNTIME_GAMEPLAY_MODEL_MESH_CACHE_CAPACITY 32
+
+static RuntimeGameplayModelMeshCacheEntry s_model_mesh_cache[RUNTIME_GAMEPLAY_MODEL_MESH_CACHE_CAPACITY];
+static int s_model_mesh_cache_count = 0;
+
+static void runtime_model_mesh_cache_reset(void)
+{
+    int index = 0;
+
+    for (index = 0; index < s_model_mesh_cache_count; index++)
+    {
+        if (s_model_mesh_cache[index].mesh)
+        {
+            mesh_destroy(s_model_mesh_cache[index].mesh);
+            s_model_mesh_cache[index].mesh = NULL;
+        }
+        s_model_mesh_cache[index].model_id[0] = '\0';
+    }
+
+    s_model_mesh_cache_count = 0;
+}
+
+static Mesh *runtime_model_mesh_for_gameplay_model_id(const char *model_id)
+{
+    int index = 0;
+    float radius_scale = 0.0f;
+    float length_scale = 0.0f;
+    float curve_scale = 0.0f;
+    float tip_taper = 0.0f;
+    int quality = 0;
+
+    if (!model_id || model_id[0] == '\0')
+        return NULL;
+
+    for (index = 0; index < s_model_mesh_cache_count; index++)
+    {
+        if (strcmp(s_model_mesh_cache[index].model_id, model_id) == 0)
+            return s_model_mesh_cache[index].mesh;
+    }
+
+    if (s_model_mesh_cache_count >= RUNTIME_GAMEPLAY_MODEL_MESH_CACHE_CAPACITY)
+        return NULL;
+
+    if (!runtime_gameplay_model_vector_profile_for_model_id(model_id,
+                                                            &radius_scale,
+                                                            &length_scale,
+                                                            &curve_scale,
+                                                            &tip_taper,
+                                                            &quality))
+    {
+        return NULL;
+    }
+
+    s_model_mesh_cache[s_model_mesh_cache_count].mesh =
+        mesh_create_banana_vector(radius_scale,
+                                  length_scale,
+                                  curve_scale,
+                                  tip_taper,
+                                  quality);
+    if (!s_model_mesh_cache[s_model_mesh_cache_count].mesh)
+        return NULL;
+
+    strncpy(s_model_mesh_cache[s_model_mesh_cache_count].model_id,
+            model_id,
+            sizeof(s_model_mesh_cache[s_model_mesh_cache_count].model_id) - 1);
+    s_model_mesh_cache[s_model_mesh_cache_count]
+        .model_id[sizeof(s_model_mesh_cache[s_model_mesh_cache_count].model_id) - 1] = '\0';
+
+    s_model_mesh_cache_count += 1;
+    return s_model_mesh_cache[s_model_mesh_cache_count - 1].mesh;
+}
 
 static float terrain_sample_height_port(const EngineRuntimeState *state, float x, float z)
 {
@@ -169,13 +250,49 @@ static void player_apply_click_input_port(EngineRuntimeState *state,
 
 static Mesh *runtime_render_mesh_for_actor(const Entity *entity, Mesh *default_mesh)
 {
+    RuntimeControllerKind kind = RUNTIME_CONTROLLER_KIND_UNKNOWN;
+    Mesh *model_mesh = NULL;
+
     if (!entity || !s_mutation_state)
         return default_mesh;
+
+    kind = runtime_controller_kind_parse_or_unknown(entity->controller_kind);
+
+    model_mesh = runtime_model_mesh_for_gameplay_model_id(entity->gameplay_model_id);
+    if (model_mesh)
+        return model_mesh;
 
     if (entity->type == ENTITY_TYPE_STATIC && strcmp(entity->controller_kind, "pbj_pickup") == 0)
     {
         if (s_mutation_state->pbj_pickup_mesh)
             return s_mutation_state->pbj_pickup_mesh;
+    }
+
+    if (entity->type == ENTITY_TYPE_NPC && entity->controller_id != 0)
+    {
+        ControllerInstance *controller = runtime_controller_find_by_id(s_mutation_state->controllers,
+                                                                        s_mutation_state->controller_count,
+                                                                        entity->controller_id);
+        if (controller)
+        {
+            if (controller->team == CONTROLLER_TEAM_BANANA && s_mutation_state->banana_team_mesh)
+                return s_mutation_state->banana_team_mesh;
+            if (controller->team == CONTROLLER_TEAM_BEAN && s_mutation_state->bean_team_mesh)
+                return s_mutation_state->bean_team_mesh;
+        }
+    }
+
+    if (entity->type == ENTITY_TYPE_STATIC && kind == RUNTIME_CONTROLLER_KIND_CAMP)
+    {
+        if (s_mutation_state->landmark_mesh)
+            return s_mutation_state->landmark_mesh;
+    }
+
+    if ((entity->type == ENTITY_TYPE_DYNAMIC && kind == RUNTIME_CONTROLLER_KIND_RESOURCE) ||
+        (entity->type == ENTITY_TYPE_TRIGGER && kind == RUNTIME_CONTROLLER_KIND_QUEST))
+    {
+        if (s_mutation_state->traversal_mesh)
+            return s_mutation_state->traversal_mesh;
     }
 
     return default_mesh;
@@ -267,4 +384,9 @@ static const RuntimeApplicationServicePorts k_ports = {
 const RuntimeApplicationServicePorts *runtime_application_service_ports(void)
 {
     return &k_ports;
+}
+
+void runtime_application_service_ports_reset(void)
+{
+    runtime_model_mesh_cache_reset();
 }

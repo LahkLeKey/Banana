@@ -43,16 +43,16 @@
 > **NOTE: Write these tests first, confirm they fail for the new seam expectations, then implement the refactor.**
 
 - [x] T007 [P] [US1] Extend tests/native/runtime/tick/runtime_engine_tick_test.c with failing assertions for phase ordering, callback delegation, and behavior parity around runtime_engine_tick_execute
-- [ ] T008 [P] [US1] Extend tests/native/runtime/tick/runtime_tick_input_phase_test.c with failing seam coverage for right-click polling, input normalization delegation, and null-guard behavior
-- [ ] T009 [P] [US1] Extend tests/native/runtime/tick/runtime_tick_post_phase_test.c with failing seam coverage for controller sync, camera follow, and render dispatch ordering
+- [x] T008 [P] [US1] Extend tests/native/runtime/tick/runtime_tick_input_phase_test.c with failing seam coverage for right-click polling, input normalization delegation, and null-guard behavior
+- [x] T009 [P] [US1] Extend tests/native/runtime/tick/runtime_tick_post_phase_test.c with failing seam coverage for controller sync, camera follow, and render dispatch ordering
 
 ### Implementation for User Story 1
 
 - [x] T010 [US1] Create src/native/engine/runtime/orchestration/runtime_tick_orchestration.c to own ordered runtime tick sequencing declared in src/native/engine/runtime/orchestration/runtime_tick_orchestration.h
 - [x] T011 [US1] Refactor src/native/engine/runtime/engine_tick.c into a thin ABI-stable adapter that delegates sequencing to src/native/engine/runtime/orchestration/runtime_tick_orchestration.c
-- [ ] T012 [P] [US1] Move any remaining reusable phase helpers out of src/native/engine/runtime/engine_tick.c into src/native/engine/runtime/tick/tick_phases.c and src/native/engine/runtime/tick/tick_phases.h instead of re-growing the adapter
+- [x] T012 [P] [US1] Move any remaining reusable phase helpers out of src/native/engine/runtime/engine_tick.c into src/native/engine/runtime/tick/tick_phases.c and src/native/engine/runtime/tick/tick_phases.h instead of re-growing the adapter
 - [x] T013 [US1] Update src/native/engine/CMakeLists.txt to compile src/native/engine/runtime/orchestration/runtime_tick_orchestration.c and keep the focused runtime tick test targets registered
-- [ ] T014 [US1] Capture focused runtime tick validation evidence in artifacts/native/005-us1-runtime-tick.txt after running the User Story 1 targets from out/v3-native
+- [x] T014 [US1] Capture focused runtime tick validation evidence in artifacts/native/005-us1-runtime-tick.txt after running the User Story 1 targets from out/v3-native
 
 **Checkpoint**: Runtime tick sequencing is modularized behind explicit orchestration and phase files, and the focused tick tests pass without ABI drift.
 
@@ -69,8 +69,8 @@
 > **NOTE: Write these tests first, confirm they fail for the new diagnostics-boundary expectations, then implement the refactor.**
 
 - [x] T015 [P] [US2] Extend tests/native/render/dx12/engine_dx12_runtime_smoke_test.c with failing assertions for explicit diagnostic ownership, status reporting, and failure-surface parity
-- [ ] T016 [P] [US2] Extend tests/native/render/dx12/dx12_projection_policy_test.c with failing coverage for projection-policy diagnostics boundaries and fallback reporting
-- [ ] T017 [P] [US2] Extend tests/native/render/dx12/dx12_scene_flow_test.c and tests/native/render/dx12/dx12_scene_overlay_frame_test.c with failing diagnostics-boundary coverage for scene flow and overlay reporting
+- [x] T016 [P] [US2] Extend tests/native/render/dx12/dx12_projection_policy_test.c with failing coverage for projection-policy diagnostics boundaries and fallback reporting
+- [x] T017 [P] [US2] Extend tests/native/render/dx12/dx12_scene_flow_test.c and tests/native/render/dx12/dx12_scene_overlay_frame_test.c with failing diagnostics-boundary coverage for scene flow and overlay reporting
 
 ### Implementation for User Story 2
 

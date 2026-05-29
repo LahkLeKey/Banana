@@ -19,6 +19,9 @@ int main(void)
     int scene_count = banana_poc_demo_scene_catalog_count();
     int saw_continent_scene = 0;
     int saw_banana_line_scene = 0;
+    int saw_tropical_theme = 0;
+    int saw_urban_theme = 0;
+    int saw_rugged_theme = 0;
     int index = 0;
 
     if (!expect_true("continent asset pack count matches canonical region profile count",
@@ -46,6 +49,19 @@ int main(void)
         {
             return 1;
         }
+
+        if (!expect_true("every canonical region has gameplay asset metadata",
+                         banana_poc_continent_asset_pack_has_gameplay_models(pack)))
+        {
+            return 1;
+        }
+
+        if (strcmp(pack->gameplay_theme_id, "theme/tropical-coastal") == 0)
+            saw_tropical_theme = 1;
+        if (strcmp(pack->gameplay_theme_id, "theme/urban-industrial") == 0)
+            saw_urban_theme = 1;
+        if (strcmp(pack->gameplay_theme_id, "theme/rugged-wild") == 0)
+            saw_rugged_theme = 1;
     }
 
     if (!expect_true("scene catalog has entries", scene_count > 0))
@@ -84,6 +100,11 @@ int main(void)
                 banana_poc_demo_scene_catalog_bootstrap_signature_for_variant(entry->browser_variant);
             const BananaPocContinentAssetPack *pack =
                 banana_poc_continent_asset_pack_for_region(entry->primary_region_id);
+            int placement_count =
+                banana_poc_demo_scene_gameplay_placement_count_for_variant(entry->browser_variant);
+            int saw_landmark = 0;
+            int saw_traversal = 0;
+            int placement_index = 0;
 
             if (!expect_true("enabled entry validates cleanly",
                              validation == BANANA_POC_DEMO_SCENE_VALIDATION_OK))
@@ -105,6 +126,49 @@ int main(void)
             {
                 return 1;
             }
+
+            if (!expect_true("launchable entry resolves gameplay asset metadata",
+                             banana_poc_continent_asset_pack_has_gameplay_models(pack)))
+            {
+                return 1;
+            }
+
+            if (!expect_true("launchable entry has gameplay placements", placement_count >= 2))
+                return 1;
+
+            for (placement_index = 0; placement_index < placement_count; placement_index++)
+            {
+                const BananaPocDemoSceneGameplayPlacement *placement =
+                    banana_poc_demo_scene_gameplay_placement_at(entry->browser_variant, placement_index);
+
+                if (!expect_true("gameplay placement exists", placement != NULL))
+                    return 1;
+
+                if (!expect_true("gameplay placement has diagnostics tag",
+                                 placement->diagnostics_tag != NULL && placement->diagnostics_tag[0] != '\0'))
+                {
+                    return 1;
+                }
+
+                if (!expect_true("gameplay placement has model or fallback",
+                                 (placement->model_id != NULL && placement->model_id[0] != '\0') ||
+                                     (placement->fallback_model_id != NULL && placement->fallback_model_id[0] != '\0')))
+                {
+                    return 1;
+                }
+
+                if (placement->role == BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK)
+                    saw_landmark = 1;
+
+                if (placement->role == BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL)
+                    saw_traversal = 1;
+            }
+
+            if (!expect_true("launchable entry includes landmark placement", saw_landmark))
+                return 1;
+
+            if (!expect_true("launchable entry includes traversal placement", saw_traversal))
+                return 1;
         }
         else
         {
@@ -120,6 +184,15 @@ int main(void)
         return 1;
 
     if (!expect_true("catalog includes at least one banana line scene", saw_banana_line_scene))
+        return 1;
+
+    if (!expect_true("catalog covers tropical gameplay theme", saw_tropical_theme))
+        return 1;
+
+    if (!expect_true("catalog covers urban gameplay theme", saw_urban_theme))
+        return 1;
+
+    if (!expect_true("catalog covers rugged gameplay theme", saw_rugged_theme))
         return 1;
 
     printf("runtime_demo_scene_catalog_bootstrap_test: pass\n");

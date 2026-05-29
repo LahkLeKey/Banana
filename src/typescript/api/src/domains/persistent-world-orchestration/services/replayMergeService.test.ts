@@ -95,4 +95,67 @@ describe('replay merge service', () => {
           },
         })).toThrow('persistent_world_mesh_blob_not_allowed');
       });
+
+  test('replays the latest continuity checkpoint payload for an area', () => {
+    const service = createReplayMergeService();
+
+    const areaIdentity = {
+      worldId: '550e8400-e29b-41d4-a716-446655440000',
+      laneId: 'lane-a',
+      chunkX: 4,
+      chunkY: 2,
+      partitionEpoch: 1,
+      identityHash: 'abcdabcdabcdabcd',
+      areaId: 'area-4-2',
+    };
+
+    service.ensureAuthoritativeBaseline({
+      areaIdentity,
+      stateVersion: {
+        areaId: areaIdentity.areaId,
+        areaStateVersion: 0,
+        appliedDeltaThroughSequence: 0,
+        canonicalStateSignature: 'sig0',
+      },
+      baselineId: '550e8400-e29b-41d4-a716-446655440000',
+      orchestrationPathId: 'baseline-plus-delta-replay-v1',
+    });
+
+    service.applyDelta({
+      areaIdentity,
+      baselineId: '550e8400-e29b-41d4-a716-446655440000',
+      baseAreaStateVersion: 0,
+      idempotencyKey: 'k-continuity',
+      deltaPayload: {
+        continuityPayload: {
+          contractVersion: 'v1',
+          worldId: '550e8400-e29b-41d4-a716-446655440000',
+          laneId: 'lane-a',
+          fromVariantId: 'neo-musa',
+          toVariantId: 'metro-crescent',
+          routeKey: 'metro-crescent::neo-musa',
+          partitionEpoch: 1,
+          chunkX: 4,
+          chunkY: 2,
+          checkpoint: {
+            checkpointId: 'checkpoint-a',
+            checkpointSequence: 1,
+            checkpointContextTag: 'district:market-a',
+            objectiveCompletionIds: ['objective-a'],
+            profileState: {faction: 'banana-guild'},
+            profileFingerprint: 'profile-fp-a',
+          },
+          transitionSignature:
+              'b9ebf730f4c4736c017f0166ce622f6bc37c1ac97e8adf680e354db29320af57',
+        },
+      },
+    });
+
+    const replayed =
+        service.replayLatestContinuityCheckpoint(areaIdentity.areaId);
+    expect(replayed).not.toBeNull();
+    expect(replayed?.continuityPayload.checkpoint.checkpointId)
+        .toBe('checkpoint-a');
+    expect(replayed?.areaStateVersion).toBe(1);
+  });
 });

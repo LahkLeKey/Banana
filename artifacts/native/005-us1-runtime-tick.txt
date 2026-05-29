@@ -1,0 +1,22 @@
+Test project C:/Github/Banana/out/v3-native
+    Start 57: banana_runtime_engine_tick_test
+1/4 Test #57: banana_runtime_engine_tick_test ..........   Passed    0.10 sec
+    Start 58: banana_runtime_tick_budget_policy_test
+2/4 Test #58: banana_runtime_tick_budget_policy_test ...   Passed    0.03 sec
+    Start 59: banana_runtime_tick_input_phase_test
+3/4 Test #59: banana_runtime_tick_input_phase_test .....   Passed    0.01 sec
+    Start 60: banana_runtime_tick_post_phase_test
+4/4 Test #60: banana_runtime_tick_post_phase_test ......   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.21 sec
+
+---
+T012 status: no-op. `src/native/engine/runtime/engine_tick.c` no longer exists; the canonical entry point is `src/native/engine/runtime/engine/engine_tick.c`, which is already a thin delegate to `runtime_tick_orchestration_execute`. All reusable helpers already live in:
+- src/native/engine/runtime/tick/tick_input_phase.{c,h}
+- src/native/engine/runtime/tick/tick_post_phase.{c,h}
+- src/native/engine/runtime/tick/tick_phases.{c,h}
+- src/native/engine/runtime/tick/tick_budget_policy.{c,h}
+- src/native/engine/runtime/orchestration/tick/runtime_tick_orchestration.{c,h}
+No further extraction needed.

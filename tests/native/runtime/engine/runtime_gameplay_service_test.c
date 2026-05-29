@@ -35,11 +35,19 @@ int main(void)
 
     runtime_gameplay_service_tick(world,
                                   NULL,
+                                  NULL,
                                   0,
+                                  NULL,
                                   player_id,
                                   &pickup_collected,
                                   6.0f,
-                                  1.55f);
+                                  1.55f,
+                                  8.0f,
+                                  0,
+                                  32,
+                                  0,
+                                  0,
+                                  0);
 
     if (!expect_int("pickup collected flag", pickup_collected, 1))
         return 1;

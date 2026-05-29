@@ -23,6 +23,16 @@ extern "C"
                                         const char *signal_name,
                                         const void *data);
 
+    int runtime_controller_assign_team_by_id(ControllerInstance **controllers,
+                                             int controller_count,
+                                             uint32_t controller_id,
+                                             ControllerTeam team);
+
+    int runtime_controller_signal_team_war(ControllerInstance **controllers,
+                                           int controller_count,
+                                           float trigger_radius,
+                                           const char *signal_name);
+
 #ifdef __cplusplus
 }
 #endif

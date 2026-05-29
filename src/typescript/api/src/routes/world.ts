@@ -12,6 +12,7 @@ import type {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import path from 'node:path';
 
 import {bootstrapPersistentWorldOrchestrationDomain, type PersistentWorldOrchestrationDomain,} from '../domains/persistent-world-orchestration/index.ts';
+import type {ContinuityCheckpointCommitRequest, ContinuityPayload} from '../lib/contracts/v1/persistentWorld.ts';
 import {persistentWorldRevisitBaselineUnavailable,} from '../lib/errors/domainErrors.ts';
 
 /**
@@ -37,6 +38,8 @@ type RevisitCoordinates = {
   worldId: string; laneId: string; chunkX: number; chunkY: number;
   partitionEpoch: number;
 };
+
+type ContinuityCheckpointCommitBody = ContinuityCheckpointCommitRequest;
 
 type WorldRouteOptions = {
   persistentWorldOrchestrationDomain?: PersistentWorldOrchestrationDomain;
@@ -356,6 +359,82 @@ export async function registerWorldRoutes(
             appliedDeltaThroughSequence: merged.appliedDeltaThroughSequence,
             canonicalStateSignature: merged.canonicalStateSignature,
           },
+        });
+      },
+  );
+
+  app.post<{Body: ContinuityCheckpointCommitBody}>(
+      '/api/world/continuity/checkpoint',
+      async (
+          request: FastifyRequest<{Body: ContinuityCheckpointCommitBody}>,
+          reply: FastifyReply,
+          ) => {
+        const continuityPayload: ContinuityPayload =
+            persistentWorldDomain.continuityPayloadService.validateAndNormalize(
+                request.body.continuityPayload);
+
+        const baseline = persistentWorldDomain.revisitBaselineService
+                             .getAuthoritativeBaseline({
+                               worldId: continuityPayload.worldId,
+                               laneId: continuityPayload.laneId,
+                               chunkX: continuityPayload.chunkX,
+                               chunkY: continuityPayload.chunkY,
+                               partitionEpoch: continuityPayload.partitionEpoch,
+                             });
+
+        const authoritative = persistentWorldDomain.replayMergeService
+                                  .ensureAuthoritativeBaseline(baseline);
+
+        const merged = persistentWorldDomain.replayMergeService.applyDelta({
+          areaIdentity: authoritative.areaIdentity,
+          baselineId: authoritative.baselineId,
+          baseAreaStateVersion: request.body.baseAreaStateVersion,
+          idempotencyKey: request.body.idempotencyKey,
+          deltaPayload: {
+            continuityPayload,
+          },
+        });
+
+        return reply.status(200).send({
+          areaIdentity: merged.areaIdentity,
+          baselineId: merged.baselineId,
+          areaStateVersion: {
+            areaId: merged.areaIdentity.areaId,
+            areaStateVersion: merged.areaStateVersion,
+            appliedDeltaThroughSequence: merged.appliedDeltaThroughSequence,
+            canonicalStateSignature: merged.canonicalStateSignature,
+          },
+          continuityPayload,
+        });
+      },
+  );
+
+  app.get<{Params: {areaId: string}}>(
+      '/api/world/continuity/checkpoint/:areaId',
+      async (
+          request: FastifyRequest<{Params: {areaId: string}}>,
+          reply: FastifyReply,
+          ) => {
+        const replayed =
+            persistentWorldDomain.replayMergeService
+                .replayLatestContinuityCheckpoint(request.params.areaId);
+        if (!replayed) {
+          return reply.status(404).send({
+            error: 'not_found',
+            message: 'continuity checkpoint not found',
+          });
+        }
+
+        return reply.status(200).send({
+          areaIdentity: replayed.areaIdentity,
+          baselineId: replayed.baselineId,
+          areaStateVersion: {
+            areaId: replayed.areaIdentity.areaId,
+            areaStateVersion: replayed.areaStateVersion,
+            appliedDeltaThroughSequence: replayed.appliedDeltaThroughSequence,
+            canonicalStateSignature: replayed.canonicalStateSignature,
+          },
+          continuityPayload: replayed.continuityPayload,
         });
       },
   );

@@ -1,0 +1,26 @@
+# Tasks: Synthesis Pass Cohesion
+
+- [x] T001 Seed runtime evidence doc
+- [x] T002 Seed API evidence doc
+- [x] T003 Baseline command inventory
+- [x] T004 Audit synthesis-pass seams
+- [x] T005 Enforce non-canonical reject
+- [x] T006 Add unit + route + drift integration tests
+- [x] T007 Record US1 evidence
+- [x] T008 Audit replay lineage under drift retries
+- [x] T009 Expand diagnostics coverage
+- [x] T010 Add roundtrip US2 test
+- [x] T011 Confirm route contract coverage
+- [x] T012 Run API continuity suites
+- [x] T013 Record US2 evidence
+- [x] T014 Introduce additive resonance lane field
+- [x] T015 Update transition signature
+- [x] T016 Add mutation + growth-path coverage
+- [x] T017 Record US3 evidence
+- [x] T018 Run native coherence suites
+- [x] T019 Run API contract suite
+- [x] T020 Run API integration suite
+- [x] T021 Update spec status
+- [x] T022 Update plan
+- [x] T023 Update execution dashboard
+- [x] T024 Prepare handoff summary

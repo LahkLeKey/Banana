@@ -30,6 +30,25 @@
       "dependsOrder": "sequence"
     },
     {
+      "label": "Native: continuity suite (v3)",
+      "type": "shell",
+      "command": "ctest",
+      "args": [
+        "-C",
+        "Debug",
+        "--test-dir",
+        "out/v3-native",
+        "-R",
+        "banana_runtime_demo_scene_catalog_(coherent_profile_test|transition_continuity_test|continuity_roundtrip_test)",
+        "--output-on-failure"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Native: build (v3)",
+      "dependsOrder": "sequence"
+    },
+    {
       "label": "API: smoke (v3)",
       "type": "shell",
       "command": "bun",

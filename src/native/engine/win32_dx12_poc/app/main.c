@@ -223,6 +223,75 @@ static int parse_env_flag(const char *name)
     return 1;
 }
 
+static const char *gameplay_role_label(BananaPocGameplayPlacementRole role)
+{
+    switch (role)
+    {
+    case BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE:
+        return "reference";
+    case BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK:
+        return "landmark";
+    case BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL:
+        return "traversal";
+    default:
+        return "unknown";
+    }
+}
+
+static void log_scene_gameplay_placements(int browser_variant)
+{
+    int placement_count = banana_poc_demo_scene_gameplay_placement_count_for_variant(browser_variant);
+    int placement_index = 0;
+
+    for (placement_index = 0; placement_index < placement_count; placement_index++)
+    {
+        const BananaPocDemoSceneGameplayPlacement *placement =
+            banana_poc_demo_scene_gameplay_placement_at(browser_variant, placement_index);
+
+        if (!placement)
+            continue;
+
+        printf("[dx12-poc] gameplay-placement variant=%d index=%d role=%s model=%s fallback=%s tag=%s pos=(%.1f,%.1f,%.1f)\n",
+               browser_variant,
+               placement_index,
+               gameplay_role_label(placement->role),
+               (placement->model_id && placement->model_id[0] != '\0') ? placement->model_id : "none",
+               (placement->fallback_model_id && placement->fallback_model_id[0] != '\0') ? placement->fallback_model_id : "none",
+               (placement->diagnostics_tag && placement->diagnostics_tag[0] != '\0') ? placement->diagnostics_tag : "none",
+               placement->x,
+               placement->y,
+               placement->z);
+    }
+}
+
+static void log_coherent_world_profile(int browser_variant)
+{
+    BananaPocCoherentWorldProfile profile;
+    int consistent = 0;
+
+    if (!banana_poc_demo_scene_catalog_build_coherent_profile(browser_variant, &profile))
+    {
+        printf("[dx12-poc] coherent-world variant=%d status=missing-profile\n", browser_variant);
+        return;
+    }
+
+    consistent = banana_poc_demo_scene_catalog_coherent_profile_consistent(&profile);
+
+    printf("[dx12-poc] coherent-world variant=%d scene=%s kind=%d primary=%d secondary=%d route=%d anchor=%s theme=%s placements=%d signature=%u status=%s consistent=%d\n",
+           profile.browser_variant,
+           profile.scene_key ? profile.scene_key : "unknown-scene",
+           (int)profile.kind,
+           (int)profile.primary_region_id,
+           (int)profile.secondary_region_id,
+           (int)profile.route_id,
+           profile.anchor_county_id ? profile.anchor_county_id : "unknown-anchor",
+           profile.gameplay_theme_id ? profile.gameplay_theme_id : "unknown-theme",
+           profile.gameplay_placement_count,
+           profile.bootstrap_signature,
+           banana_poc_demo_scene_catalog_validation_message(profile.validation_status),
+           consistent);
+}
+
 static void set_env_default(const char *name, const char *value)
 {
     const char *raw = getenv(name);
@@ -255,6 +324,38 @@ static void apply_dx12_poc_launch_gate_defaults(void)
     set_env_default("BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE", "1");
     set_env_default("BANANA_LAUNCH_GATE_VERIFICATION_FRESH", "1");
     set_env_default("BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING", "1");
+}
+
+static void apply_scene_variant_war_policy(int browser_variant)
+{
+    float radius = 0.0f;
+    int reinforcements_per_tick = 0;
+    int population_cap = 0;
+    char radius_buffer[32];
+    char reinforcement_buffer[32];
+    char cap_buffer[32];
+
+    if (!banana_poc_demo_scene_catalog_war_policy_for_variant(browser_variant,
+                                                              &radius,
+                                                              &reinforcements_per_tick,
+                                                              &population_cap))
+    {
+        return;
+    }
+
+    snprintf(radius_buffer, sizeof(radius_buffer), "%.2f", radius);
+    snprintf(reinforcement_buffer, sizeof(reinforcement_buffer), "%d", reinforcements_per_tick);
+    snprintf(cap_buffer, sizeof(cap_buffer), "%d", population_cap);
+
+    _putenv_s("BANANA_CONTROLLER_WAR_RADIUS", radius_buffer);
+    _putenv_s("BANANA_CONTROLLER_WAR_REINFORCEMENTS_PER_TICK", reinforcement_buffer);
+    _putenv_s("BANANA_CONTROLLER_WAR_POPULATION_CAP", cap_buffer);
+
+    printf("[dx12-poc] variant-war-policy variant=%d radius=%.2f reinforcements=%d cap=%d\n",
+           browser_variant,
+           radius,
+           reinforcements_per_tick,
+           population_cap);
 }
 
 static void init_profile_path(void)
@@ -790,6 +891,8 @@ int main(void)
         proto_config.active_world_variant = default_scene ? default_scene->browser_variant : 0;
     }
 
+    apply_scene_variant_war_policy(proto_config.active_world_variant);
+
     if (startup_scene_variant >= 0)
     {
         int startup_scene_index =
@@ -801,16 +904,25 @@ int main(void)
 
         if (startup_scene_entry && startup_scene_status == BANANA_POC_DEMO_SCENE_VALIDATION_OK)
         {
+            const BananaPocContinentAssetPack *startup_pack =
+                banana_poc_continent_asset_pack_for_region(startup_scene_entry->primary_region_id);
+            int gameplay_placement_count =
+                banana_poc_demo_scene_gameplay_placement_count_for_variant(startup_scene_variant);
             scene = BANANA_POC_SCENE_WORLD;
             world_variant = startup_scene_variant;
             proto_config.active_world_variant = startup_scene_variant;
             proto_config.scene_browser_index = banana_poc_demo_scene_catalog_clamp_index(startup_scene_index);
             banana_poc_objective_policy_apply_world_variant(&objective_policy, world_variant);
-            printf("[dx12-poc] startup scene override variant=%d key=%s kind=%d asset-pack=%s\n",
+                 apply_scene_variant_war_policy(world_variant);
+            printf("[dx12-poc] startup scene override variant=%d key=%s kind=%d asset-pack=%s gameplay-theme=%s placements=%d\n",
                    world_variant,
                    startup_scene_entry->scene_key,
                    (int)startup_scene_entry->kind,
-                   startup_scene_entry->asset_pack_id);
+                   startup_scene_entry->asset_pack_id,
+                   (startup_pack && startup_pack->gameplay_theme_id) ? startup_pack->gameplay_theme_id : "unknown-theme",
+                   gameplay_placement_count);
+                        log_coherent_world_profile(startup_scene_variant);
+                        log_scene_gameplay_placements(startup_scene_variant);
         }
         else
         {
@@ -941,6 +1053,7 @@ int main(void)
                     banana_poc_demo_scene_catalog_at_index(banana_poc_demo_scene_catalog_first_enabled_index());
                 world_variant = default_scene ? default_scene->browser_variant : 0;
                 proto_config.active_world_variant = world_variant;
+                apply_scene_variant_war_policy(world_variant);
             }
 
             if (previous_scene == BANANA_POC_SCENE_CHARACTER_SELECT)
@@ -986,19 +1099,44 @@ int main(void)
 
         if (flow_result.entered_scene_browser_scene)
         {
+            int previous_world_variant = world_variant;
             const BananaPocDemoSceneCatalogEntry *entry =
                 banana_poc_demo_scene_catalog_for_browser_variant(flow_result.scene_browser_variant);
+            const BananaPocContinentAssetPack *pack =
+                entry ? banana_poc_continent_asset_pack_for_region(entry->primary_region_id) : NULL;
+            int gameplay_placement_count =
+                banana_poc_demo_scene_gameplay_placement_count_for_variant(flow_result.scene_browser_variant);
             world_variant = flow_result.scene_browser_variant;
             proto_config.active_world_variant = world_variant;
             auto_target_injected = 0;
             banana_poc_objective_policy_apply_world_variant(&objective_policy, world_variant);
-            if (world_variant == 2 || world_variant == 3)
+            apply_scene_variant_war_policy(world_variant);
+            if (world_variant == 2 || world_variant == 3 || world_variant == 6)
                 telemetry_enabled = 1;
-            printf("[dx12-poc] launching scene variant=%d key=%s kind=%d asset-pack=%s\n",
+            printf("[dx12-poc] launching scene variant=%d key=%s kind=%d asset-pack=%s gameplay-theme=%s placements=%d\n",
                    world_variant,
                    (entry && entry->scene_key) ? entry->scene_key : "unknown-scene",
                    entry ? (int)entry->kind : -1,
-                   (entry && entry->asset_pack_id) ? entry->asset_pack_id : "unknown-pack");
+                   (entry && entry->asset_pack_id) ? entry->asset_pack_id : "unknown-pack",
+                   (pack && pack->gameplay_theme_id) ? pack->gameplay_theme_id : "unknown-theme",
+                   gameplay_placement_count);
+            if (banana_poc_demo_scene_catalog_coherent_transition_connected(previous_world_variant, world_variant))
+            {
+                unsigned int transition_signature =
+                    banana_poc_demo_scene_catalog_coherent_transition_signature(previous_world_variant, world_variant);
+                printf("[dx12-poc] coherent-transition from=%d to=%d connected=1 signature=%u\n",
+                       previous_world_variant,
+                       world_variant,
+                       transition_signature);
+            }
+            else
+            {
+                printf("[dx12-poc] coherent-transition from=%d to=%d connected=0 signature=0\n",
+                       previous_world_variant,
+                       world_variant);
+            }
+                        log_coherent_world_profile(flow_result.scene_browser_variant);
+                        log_scene_gameplay_placements(flow_result.scene_browser_variant);
         }
 
         if (flow_result.scene_browser_launch_blocked)

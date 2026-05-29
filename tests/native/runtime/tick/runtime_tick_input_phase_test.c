@@ -79,5 +79,50 @@ int main(void)
     if (!expect_true("normalized y centered", s_last_click_y > -0.001f && s_last_click_y < 0.001f))
         return 1;
 
+    /* Seam: right-click polling counter must advance on every dispatch regardless of dims. */
+    if (!expect_int("dispatch zero-width keeps polling count",
+                    runtime_tick_input_phase_dispatch(NULL,
+                                                      click_callback,
+                                                      5.f,
+                                                      5.f,
+                                                      0,
+                                                      100),
+                    0))
+        return 1;
+    if (!expect_int("click count tracks polling even on zero width",
+                    runtime_input_contract_get_click_count(),
+                    3))
+        return 1;
+
+    /* Seam: input normalization delegation honors NULL callback without crashing or skipping the contract. */
+    if (!expect_int("valid dispatch with NULL callback returns success",
+                    runtime_tick_input_phase_dispatch(NULL,
+                                                      NULL,
+                                                      25.f,
+                                                      50.f,
+                                                      100,
+                                                      200),
+                    1))
+        return 1;
+    if (!expect_int("NULL callback dispatch still increments contract click count",
+                    runtime_input_contract_get_click_count(),
+                    4))
+        return 1;
+    if (!expect_int("NULL callback dispatch leaves user callback untouched",
+                    s_click_callback_calls,
+                    1))
+        return 1;
+
+    /* Null-guard: process() with NULL window must early-return without touching the contract. */
+    runtime_tick_input_phase_process(NULL, NULL, click_callback);
+    if (!expect_int("process(NULL window) does not advance click count",
+                    runtime_input_contract_get_click_count(),
+                    4))
+        return 1;
+    if (!expect_int("process(NULL window) does not invoke callback",
+                    s_click_callback_calls,
+                    1))
+        return 1;
+
     return 0;
 }

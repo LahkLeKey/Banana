@@ -79,6 +79,13 @@ function createMockDomainWithError(error: Error):
         throw error;
       },
     },
+    continuityPayloadService: {
+      validateAndNormalize: (payload) => payload as never,
+      canonicalRouteKey:
+          (fromVariantId,
+           toVariantId) => [fromVariantId, toVariantId].sort().join('::'),
+      expectedTransitionSignature: () => 'sig-continuity',
+    },
   };
 }
 

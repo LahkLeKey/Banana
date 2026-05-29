@@ -27,6 +27,8 @@ typedef struct
     float idle_timer;             /* seconds remaining in idle                 */
     float investigate_target[3];  /* target world position when investigating  */
     float investigate_timer;      /* seconds remaining before returning        */
+    float combat_target[3];       /* hostile target world position             */
+    float combat_timer;           /* seconds remaining in combat pursuit       */
     NavGrid grid;                 /* embedded nav grid (no heap alloc needed)  */
     NavPath current_path;         /* current A* path                           */
     StateMachine fsm;             /* embedded FSM                              */
@@ -111,6 +113,36 @@ static void investigate_exit(void *ctx)
     (void)ctx;
 }
 
+/* ── combat ── */
+static void combat_enter(void *ctx)
+{
+    WildlifeState *w = (WildlifeState *)ctx;
+    w->combat_timer = 6.0f;
+    nav_find_path(&w->grid,
+                  w->position[0],
+                  w->position[2],
+                  w->combat_target[0],
+                  w->combat_target[2],
+                  &w->current_path);
+}
+
+static void combat_update(void *ctx, float dt)
+{
+    WildlifeState *w = (WildlifeState *)ctx;
+    int arrived = 0;
+
+    w->combat_timer -= dt;
+    arrived = nav_move_along_path(&w->current_path, w->position, 7.0f, dt);
+
+    if (arrived || w->combat_timer <= 0.0f)
+        fsm_trigger(&w->fsm, "return");
+}
+
+static void combat_exit(void *ctx)
+{
+    (void)ctx;
+}
+
 /* ── return ── */
 static void return_enter(void *ctx)
 {
@@ -154,6 +186,14 @@ static void wildlife_signal(ControllerInstance *self, const char *signal, const 
         w->investigate_target[1] = 0.0f;
         w->investigate_target[2] = p[2];
         fsm_trigger(&w->fsm, "investigate");
+    }
+    else if (strcmp(signal, "battle_engage") == 0 && data)
+    {
+        const float *p = (const float *)data;
+        w->combat_target[0] = p[0];
+        w->combat_target[1] = 0.0f;
+        w->combat_target[2] = p[2];
+        fsm_trigger(&w->fsm, "combat");
     }
     else if (strcmp(signal, "death") == 0)
     {
@@ -206,12 +246,18 @@ static ControllerInstance *wildlife_factory(float x, float y, float z)
     int pat_idx = fsm_add_state(&w->fsm, "patrol", patrol_enter, patrol_update, patrol_exit);
     int inv_idx = fsm_add_state(&w->fsm, "investigate", investigate_enter, investigate_update,
                                 investigate_exit);
+    int combat_idx = fsm_add_state(&w->fsm, "combat", combat_enter, combat_update, combat_exit);
     int ret_idx = fsm_add_state(&w->fsm, "return", return_enter, return_update, return_exit);
 
     fsm_add_transition(&w->fsm, idle_idx, pat_idx, "start_patrol");
     fsm_add_transition(&w->fsm, pat_idx, idle_idx, "idle");
     fsm_add_transition(&w->fsm, pat_idx, inv_idx, "investigate");
     fsm_add_transition(&w->fsm, idle_idx, inv_idx, "investigate");
+    fsm_add_transition(&w->fsm, idle_idx, combat_idx, "combat");
+    fsm_add_transition(&w->fsm, pat_idx, combat_idx, "combat");
+    fsm_add_transition(&w->fsm, inv_idx, combat_idx, "combat");
+    fsm_add_transition(&w->fsm, ret_idx, combat_idx, "combat");
+    fsm_add_transition(&w->fsm, combat_idx, ret_idx, "return");
     fsm_add_transition(&w->fsm, inv_idx, ret_idx, "return");
     fsm_add_transition(&w->fsm, ret_idx, idle_idx, "idle");
 
@@ -230,4 +276,21 @@ static ControllerInstance *wildlife_factory(float x, float y, float z)
 void wildlife_controller_register(void)
 {
     controller_register("wildlife", wildlife_factory);
+}
+
+const char *wildlife_controller_debug_state_name(const ControllerInstance *controller)
+{
+    const WildlifeState *state = NULL;
+
+    if (!controller)
+        return NULL;
+
+    if (strncmp(controller->type_name, "wildlife", sizeof(controller->type_name)) != 0)
+        return NULL;
+
+    if (!controller->state)
+        return NULL;
+
+    state = (const WildlifeState *)controller->state;
+    return fsm_current_state_name(&state->fsm);
 }

@@ -36,6 +36,7 @@ set(ENGINE_AI_SOURCES
   ai/controller/controller.c
   ai/controller/controller_system_dispatch.c
   ai/controller/controller_system_lifecycle.c
+  ai/combat/combat_controller.c
   ai/navigation/navigation.c
   ai/npc/npc_merchant.c
   ai/perception/perception.c
@@ -77,6 +78,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/engine_state.c
   runtime/engine/engine_lifecycle.c
   runtime/engine/engine_tick.c
+  runtime/engine/gameplay_model_profile.c
   # Feature 005: keep extracted tick/runtime modularization seams grouped here.
   runtime/engine/gameplay_service.c
    runtime/input/abi/input_abi.c
@@ -310,6 +312,8 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_engine_serialize_test COMMAND banana_engine_serialize_test)
+  set_tests_properties(banana_engine_serialize_test PROPERTIES ENVIRONMENT
+    "BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE=1;BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING=1")
 
   add_executable(banana_runtime_terrain_mutation_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/terrain/runtime_terrain_mutation_test.c
@@ -507,6 +511,32 @@ if(BUILD_TESTING)
   )
   add_test(NAME banana_controller_system_dispatch_test COMMAND banana_controller_system_dispatch_test)
 
+  add_executable(banana_combat_controller_signal_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/ai/combat_controller_signal_test.c
+  )
+  target_link_libraries(banana_combat_controller_signal_test PRIVATE banana_engine_core)
+  target_include_directories(banana_combat_controller_signal_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+  )
+  add_test(NAME banana_combat_controller_signal_test COMMAND banana_combat_controller_signal_test)
+
+  add_executable(banana_wildlife_controller_war_state_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/ai/wildlife_controller_war_state_test.c
+  )
+  target_link_libraries(banana_wildlife_controller_war_state_test PRIVATE banana_engine_core)
+  target_include_directories(banana_wildlife_controller_war_state_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+  )
+  add_test(NAME banana_wildlife_controller_war_state_test COMMAND banana_wildlife_controller_war_state_test)
+
   add_executable(banana_render_headless_frame_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/runtime/render_headless_frame_test.c
   )
@@ -574,6 +604,20 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_runtime_controller_world_metrics_test COMMAND banana_runtime_controller_world_metrics_test)
+
+  add_executable(banana_runtime_controller_team_war_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/controller/runtime/runtime_controller_team_war_test.c
+  )
+  target_link_libraries(banana_runtime_controller_team_war_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_controller_team_war_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_controller_team_war_test COMMAND banana_runtime_controller_team_war_test)
 
   add_executable(banana_runtime_engine_aux_abi_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_engine_aux_abi_test.c
@@ -670,6 +714,294 @@ if(BUILD_TESTING)
   )
   add_test(NAME banana_runtime_demo_scene_catalog_modularity_test COMMAND banana_runtime_demo_scene_catalog_modularity_test)
 
+  add_executable(banana_runtime_demo_scene_catalog_gameplay_validation_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_gameplay_validation_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_gameplay_validation_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_gameplay_validation_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_gameplay_validation_test COMMAND banana_runtime_demo_scene_catalog_gameplay_validation_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_war_policy_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_war_policy_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_war_policy_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_war_policy_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_war_policy_test COMMAND banana_runtime_demo_scene_catalog_war_policy_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_vector_profile_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_vector_profile_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_vector_profile_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_vector_profile_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_vector_profile_test COMMAND banana_runtime_demo_scene_catalog_vector_profile_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_asset_resolution_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_asset_resolution_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_asset_resolution_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_asset_resolution_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_asset_resolution_test COMMAND banana_runtime_demo_scene_catalog_asset_resolution_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_theme_coverage_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_theme_coverage_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_theme_coverage_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_theme_coverage_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_theme_coverage_test COMMAND banana_runtime_demo_scene_catalog_theme_coverage_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_theme_determinism_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_theme_determinism_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_theme_determinism_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_theme_determinism_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_theme_determinism_test COMMAND banana_runtime_demo_scene_catalog_theme_determinism_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_mutation_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_mutation_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_mutation_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_mutation_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_mutation_test COMMAND banana_runtime_demo_scene_catalog_mutation_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_disabled_diagnostics_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_disabled_diagnostics_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_disabled_diagnostics_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_disabled_diagnostics_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_disabled_diagnostics_test COMMAND banana_runtime_demo_scene_catalog_disabled_diagnostics_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_coherent_profile_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_coherent_profile_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_coherent_profile_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_coherent_profile_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_coherent_profile_test COMMAND banana_runtime_demo_scene_catalog_coherent_profile_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_coherent_launch_signature_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_coherent_launch_signature_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_coherent_launch_signature_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_coherent_launch_signature_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_coherent_launch_signature_test COMMAND banana_runtime_demo_scene_catalog_coherent_launch_signature_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_coherent_failure_path_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_coherent_failure_path_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_coherent_failure_path_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_coherent_failure_path_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_coherent_failure_path_test COMMAND banana_runtime_demo_scene_catalog_coherent_failure_path_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_transition_continuity_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_transition_continuity_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_transition_continuity_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_transition_continuity_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_transition_continuity_test COMMAND banana_runtime_demo_scene_catalog_transition_continuity_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_transition_drift_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_transition_drift_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_transition_drift_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_transition_drift_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_transition_drift_test COMMAND banana_runtime_demo_scene_catalog_transition_drift_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_continuity_roundtrip_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_continuity_roundtrip_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_continuity_roundtrip_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_continuity_roundtrip_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_continuity_roundtrip_test COMMAND banana_runtime_demo_scene_catalog_continuity_roundtrip_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_coherent_mutation_safety_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_coherent_mutation_safety_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_coherent_mutation_safety_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_coherent_mutation_safety_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_coherent_mutation_safety_test COMMAND banana_runtime_demo_scene_catalog_coherent_mutation_safety_test)
+
+  add_executable(banana_runtime_demo_scene_catalog_coherent_disabled_profile_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_demo_scene_catalog_coherent_disabled_profile_test.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+  )
+  target_link_libraries(banana_runtime_demo_scene_catalog_coherent_disabled_profile_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_demo_scene_catalog_coherent_disabled_profile_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32_dx12_poc
+  )
+  add_test(NAME banana_runtime_demo_scene_catalog_coherent_disabled_profile_test COMMAND banana_runtime_demo_scene_catalog_coherent_disabled_profile_test)
+
   add_executable(banana_runtime_telemetry_input_contract_test
       ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/input/contract/runtime_telemetry_input_contract_test.c
   )
@@ -736,6 +1068,8 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_engine_click_to_move_target_test COMMAND banana_engine_click_to_move_target_test)
+  set_tests_properties(banana_engine_click_to_move_target_test PROPERTIES ENVIRONMENT
+    "BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE=1;BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING=1")
 
   add_executable(banana_engine_dx12_runtime_smoke_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/render/dx12/engine_dx12_runtime_smoke_test.c
@@ -750,6 +1084,8 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
   add_test(NAME banana_engine_dx12_runtime_smoke_test COMMAND banana_engine_dx12_runtime_smoke_test)
+  set_tests_properties(banana_engine_dx12_runtime_smoke_test PROPERTIES ENVIRONMENT
+    "BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE=1;BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING=1")
 
   if(WIN32)
     add_test(NAME banana_engine_win32_dx12_poc_startup_smoke COMMAND banana_engine_win32_dx12_poc)
@@ -933,6 +1269,90 @@ if(BUILD_TESTING)
   )
   add_test(NAME banana_runtime_tick_post_phase_test COMMAND banana_runtime_tick_post_phase_test)
 
+  add_executable(banana_runtime_tick_orchestration_war_terrain_expansion_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_terrain_expansion_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_terrain_expansion_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_terrain_expansion_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_terrain_expansion_test COMMAND banana_runtime_tick_orchestration_war_terrain_expansion_test)
+
+  add_executable(banana_runtime_tick_orchestration_war_escalation_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_escalation_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_escalation_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_escalation_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_escalation_test COMMAND banana_runtime_tick_orchestration_war_escalation_test)
+
+  add_executable(banana_runtime_tick_orchestration_war_intelligence_growth_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_intelligence_growth_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_intelligence_growth_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_intelligence_growth_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_intelligence_growth_test COMMAND banana_runtime_tick_orchestration_war_intelligence_growth_test)
+
+  add_executable(banana_runtime_tick_orchestration_war_game_of_life_sentience_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_game_of_life_sentience_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_game_of_life_sentience_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_game_of_life_sentience_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_game_of_life_sentience_test COMMAND banana_runtime_tick_orchestration_war_game_of_life_sentience_test)
+
+  add_executable(banana_runtime_tick_orchestration_war_overcrowd_expansion_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_overcrowd_expansion_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_overcrowd_expansion_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_overcrowd_expansion_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_overcrowd_expansion_test COMMAND banana_runtime_tick_orchestration_war_overcrowd_expansion_test)
+
+  add_executable(banana_runtime_tick_orchestration_war_long_run_soak_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_long_run_soak_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_long_run_soak_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_long_run_soak_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_long_run_soak_test COMMAND banana_runtime_tick_orchestration_war_long_run_soak_test)
+
   add_executable(banana_runtime_camera_follow_policy_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/camera/follow/runtime_camera_follow_policy_test.c
   )
@@ -1000,6 +1420,24 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_runtime_player_api_test COMMAND banana_runtime_player_api_test)
+
+  add_executable(banana_runtime_full_mmo_demo_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_full_mmo_demo_test.c
+    win32_dx12_poc/scene/demo_scene_catalog.c
+    win32_dx12_poc/scene/continent_asset_registry.c
+  )
+  target_link_libraries(banana_runtime_full_mmo_demo_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_full_mmo_demo_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_full_mmo_demo_test COMMAND banana_runtime_full_mmo_demo_test)
+  set_tests_properties(banana_runtime_full_mmo_demo_test PROPERTIES ENVIRONMENT
+    "BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE=1;BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING=1")
 
   add_executable(banana_runtime_player_gateway_abi_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/player/runtime_player_gateway_abi_test.c
@@ -1268,6 +1706,8 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/world
   )
   add_test(NAME banana_engine_merchant_trade_test COMMAND banana_engine_merchant_trade_test)
+  set_tests_properties(banana_engine_merchant_trade_test PROPERTIES ENVIRONMENT
+    "BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE=1;BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING=1")
 
   add_executable(banana_engine_typed_abi_validation_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/engine/engine_typed_abi_validation_test.c
@@ -1282,6 +1722,8 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
   add_test(NAME banana_engine_typed_abi_validation_test COMMAND banana_engine_typed_abi_validation_test)
+  set_tests_properties(banana_engine_typed_abi_validation_test PROPERTIES ENVIRONMENT
+    "BANANA_LAUNCH_GATE_VERIFICATION_AVAILABLE=1;BANANA_LAUNCH_GATE_ACCOUNT_IN_GOOD_STANDING=1")
 
   add_executable(banana_terrain_features_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/terrain/terrain_features_test.c
@@ -1494,6 +1936,62 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
   add_test(NAME banana_runtime_gameplay_service_test COMMAND banana_runtime_gameplay_service_test)
+
+  add_executable(banana_runtime_gameplay_warfront_expansion_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_expansion_test.c
+  )
+  target_link_libraries(banana_runtime_gameplay_warfront_expansion_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_gameplay_warfront_expansion_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_gameplay_warfront_expansion_test COMMAND banana_runtime_gameplay_warfront_expansion_test)
+
+  add_executable(banana_runtime_gameplay_warfront_comeback_bonus_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_comeback_bonus_test.c
+  )
+  target_link_libraries(banana_runtime_gameplay_warfront_comeback_bonus_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_gameplay_warfront_comeback_bonus_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_gameplay_warfront_comeback_bonus_test COMMAND banana_runtime_gameplay_warfront_comeback_bonus_test)
+
+  add_executable(banana_runtime_gameplay_warfront_negotiate_deescalation_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_negotiate_deescalation_test.c
+  )
+  target_link_libraries(banana_runtime_gameplay_warfront_negotiate_deescalation_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_gameplay_warfront_negotiate_deescalation_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_gameplay_warfront_negotiate_deescalation_test COMMAND banana_runtime_gameplay_warfront_negotiate_deescalation_test)
+
+  add_executable(banana_runtime_gameplay_warfront_intelligence_feature_unlock_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_intelligence_feature_unlock_test.c
+  )
+  target_link_libraries(banana_runtime_gameplay_warfront_intelligence_feature_unlock_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_gameplay_warfront_intelligence_feature_unlock_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_gameplay_warfront_intelligence_feature_unlock_test COMMAND banana_runtime_gameplay_warfront_intelligence_feature_unlock_test)
 
   add_executable(banana_player_builds_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player/player_builds_test.c

@@ -5,6 +5,7 @@
 #include "../orchestration/tick/runtime_tick_orchestration.h"
 
 #include "../../ai/npc_merchant.h"
+#include "../../ai/combat_controller.h"
 #include "../../ai/wildlife_controller.h"
 #include "../../render/backend.h"
 #include "../../ui/ui.h"
@@ -14,6 +15,7 @@
 #include "../input/contract/input_contract.h"
 #include "../player/player_builds.h"
 #include "../player/player_registry.h"
+#include "../tick/tick_budget_policy.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -57,6 +59,7 @@ int runtime_engine_composition_init(EngineRuntimeState *state,
     }
 
     wildlife_controller_register();
+    combat_controller_register();
 
     state->window = window_create(width, height, "Banana Engine");
     if (!state->window)
@@ -79,14 +82,31 @@ int runtime_engine_composition_init(EngineRuntimeState *state,
     state->player_id = world_spawn_entity(state->world, ENTITY_TYPE_PLAYER, 0.f, 0.f, 0.f);
     state->entity_mesh = mesh_create_banana_vector(1.05f, 1.55f, 1.65f, 0.15f, 3);
     state->pbj_pickup_mesh = mesh_create_peanut_butter_pickup_asset(2);
-    if (!state->entity_mesh || !state->pbj_pickup_mesh)
+    state->banana_team_mesh = mesh_create_banana_block_like(3);
+    state->bean_team_mesh = mesh_create_banana_orb_like(3);
+    state->landmark_mesh = mesh_create_banana_block_like(2);
+    state->traversal_mesh = mesh_create_banana_orb_like(2);
+    if (!state->entity_mesh || !state->pbj_pickup_mesh ||
+        !state->banana_team_mesh || !state->bean_team_mesh ||
+        !state->landmark_mesh || !state->traversal_mesh)
     {
         fprintf(stderr, "[engine] actor mesh creation failed\n");
         return -1;
     }
 
+    fprintf(stdout,
+            "[engine] generated-vector assets scaffolded (banana-team, bean-team, landmark, traversal)\n");
+
     state->viewport_width = width;
     state->viewport_height = height;
+    state->war_frontier_chunks = 1;
+    state->war_biome_stage_index = 1;
+    state->war_terrain_expand_tick_counter = 0;
+    state->war_escalation_tier = RUNTIME_WAR_ESCALATION_PEACEFUL;
+    state->war_effective_reinforcements_per_tick = runtime_tick_budget_policy_controller_war_reinforcements_per_tick();
+    state->war_intelligence_stage = 0;
+    state->war_intelligence_progress_ticks = 0;
+    state->war_biome_unlock_mask = 1u;
 
     if (player_builds_init() != 0)
         return -1;
@@ -161,6 +181,10 @@ void runtime_engine_composition_shutdown(EngineRuntimeState *state)
 
     mesh_destroy(state->entity_mesh);
     mesh_destroy(state->pbj_pickup_mesh);
+    mesh_destroy(state->banana_team_mesh);
+    mesh_destroy(state->bean_team_mesh);
+    mesh_destroy(state->landmark_mesh);
+    mesh_destroy(state->traversal_mesh);
     runtime_engine_lifecycle_reset_terrain_chunks(state->terrain_chunks,
                                                   BANANA_ENGINE_TERRAIN_TOTAL_CHUNKS);
     world_destroy(state->world);
@@ -174,6 +198,7 @@ void runtime_engine_composition_shutdown(EngineRuntimeState *state)
     player_builds_cleanup();
     runtime_player_registry_reset();
     runtime_input_contract_reset();
+    runtime_application_service_ports_reset();
     engine_serialize_reset();
     runtime_engine_state_reset(state);
 

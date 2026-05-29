@@ -59,6 +59,31 @@ void controller_destroy(ControllerInstance *c)
     free(c);
 }
 
+const char *controller_team_name(ControllerTeam team)
+{
+    switch (team)
+    {
+    case CONTROLLER_TEAM_BANANA:
+        return "banana";
+    case CONTROLLER_TEAM_BEAN:
+        return "bean";
+    case CONTROLLER_TEAM_NEUTRAL:
+    default:
+        return "neutral";
+    }
+}
+
+int controller_teams_are_hostile(ControllerTeam first, ControllerTeam second)
+{
+    if (first == CONTROLLER_TEAM_BANANA && second == CONTROLLER_TEAM_BEAN)
+        return 1;
+
+    if (first == CONTROLLER_TEAM_BEAN && second == CONTROLLER_TEAM_BANANA)
+        return 1;
+
+    return 0;
+}
+
 /* engine_controller_create / engine_controller_update / engine_controller_signal
  * are implemented in engine.c (singleton-backed).
  * They are NOT defined here to avoid duplicate-symbol errors. */
