@@ -203,7 +203,11 @@ fi
 
 cd "$REPO_ROOT"
 
-SPECS_DIR="$REPO_ROOT/specs"
+if [ -d "$REPO_ROOT/.specify/specs" ]; then
+    SPECS_DIR="$REPO_ROOT/.specify/specs"
+else
+    SPECS_DIR="$REPO_ROOT/specs"
+fi
 if [ "$DRY_RUN" != true ]; then
     mkdir -p "$SPECS_DIR"
 fi

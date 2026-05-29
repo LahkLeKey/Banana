@@ -1,3 +1,7 @@
+> **Superseded-by-031**: This spec is folded into [`031-unified-coherent-world`](../031-unified-coherent-world/spec.md) as of 2026-05-27. Do not extend this slice; extend 031 instead.
+>
+> **Note (2026-05-27):** All new verification, evidence, and test results—including cross-domain/API unit test baselines—are now tracked in 031's "API Unit Test Baseline" section. See that spec for the current coherent world verification signal.
+
 # Feature Specification: Gameplay/API Persistence Continuity
 
 **Feature Branch**: `016-gameplay-api-continuity`

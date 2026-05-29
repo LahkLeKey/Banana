@@ -1,0 +1,7 @@
+Test project C:/Github/Banana/out/v3-native
+    Start 66: banana_runtime_full_mmo_demo_test
+1/1 Test #66: banana_runtime_full_mmo_demo_test ...   Passed    0.76 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.78 sec

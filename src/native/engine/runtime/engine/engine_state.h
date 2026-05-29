@@ -36,6 +36,13 @@ typedef enum RuntimeEngineLaunchGateBlockedState
     RUNTIME_ENGINE_LAUNCH_GATE_BLOCKED_STATE_UNKNOWN_MODE = 7,
 } RuntimeEngineLaunchGateBlockedState;
 
+typedef enum RuntimeWarEscalationTier
+{
+    RUNTIME_WAR_ESCALATION_PEACEFUL = 0,
+    RUNTIME_WAR_ESCALATION_SKIRMISH = 1,
+    RUNTIME_WAR_ESCALATION_SIEGE = 2,
+} RuntimeWarEscalationTier;
+
 struct RuntimeApplicationServicePorts;
 
 typedef struct EngineRuntimeState
@@ -46,6 +53,10 @@ typedef struct EngineRuntimeState
     World *world;
     Mesh *entity_mesh;
     Mesh *pbj_pickup_mesh;
+    Mesh *banana_team_mesh;
+    Mesh *bean_team_mesh;
+    Mesh *landmark_mesh;
+    Mesh *traversal_mesh;
     EntityId player_id;
 
     int engine_initialized;
@@ -64,6 +75,11 @@ typedef struct EngineRuntimeState
     int launch_gate_allowed;
     banana_launch_gate_reason_code launch_gate_reason_code;
     RuntimeEngineLaunchGateBlockedState launch_gate_blocked_state;
+    int war_frontier_chunks;
+    int war_biome_stage_index;
+    int war_terrain_expand_tick_counter;
+    RuntimeWarEscalationTier war_escalation_tier;
+    int war_effective_reinforcements_per_tick;
 
     unsigned char terrain_height[BANANA_ENGINE_TERRAIN_SIZE][BANANA_ENGINE_TERRAIN_SIZE];
     RuntimeTerrainChunk terrain_chunks[BANANA_ENGINE_TERRAIN_TOTAL_CHUNKS];

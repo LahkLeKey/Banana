@@ -60,6 +60,7 @@ extern "C"
     float engine_get_entity_x(int idx);
     float engine_get_entity_z(int idx);
     int engine_get_entity_state(int idx); /* 0 = inactive, 1 = active */
+    int engine_get_entity_team(int idx);  /* ControllerTeam enum; neutral when unavailable */
     int engine_get_active_player_count(void);
     int engine_get_parallel_sync_available(void);
     int engine_get_parallel_sync_enabled(void);
@@ -160,6 +161,17 @@ extern "C"
 
     /* Query world half-span used for terrain-space mapping (centered at origin). */
     float engine_get_terrain_half_span(void);
+
+    /* Query live hostile-team populations tracked by active NPC controllers. */
+    int engine_get_team_banana_count(void);
+    int engine_get_team_bean_count(void);
+
+    /* Query live war budget policy values used by runtime ticks. */
+    float engine_get_controller_war_radius(void);
+    int engine_get_controller_war_reinforcements_per_tick(void);
+    int engine_get_controller_war_population_cap(void);
+    int engine_get_controller_war_escalation_tier(void);
+    int engine_get_controller_war_effective_reinforcements_per_tick(void);
 
     /* ── Player Build & Combo Systems ───────────────────────────────────── */
 

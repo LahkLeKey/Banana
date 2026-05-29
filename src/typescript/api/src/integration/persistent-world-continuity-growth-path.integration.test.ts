@@ -18,7 +18,21 @@ async function createApp() {
   return app;
 }
 
-function makePayload(contextTag: string) {
+function makePayload(
+    contextTag: string, routeSignatureTag = 'route:default',
+    fusionLaneTag = 'fusion:lane-default',
+    synthesisPassTag = 'synthesis:pass-default',
+    replayPhaseTag = 'replay:phase-default',
+    convergenceLaneTag = 'convergence:lane-default',
+    reconciliationLaneTag = 'reconciliation:lane-default',
+    observationLaneTag = 'observation:lane-default',
+    attunementLaneTag = 'attunement:lane-default',
+    echoLaneTag = 'echo:lane-default',
+    resonanceLaneTag = 'resonance:lane-default',
+    horizonLaneTag = 'horizon:lane-default',
+    meridianLaneTag = 'meridian:lane-default',
+    auroraLaneTag = 'aurora:lane-default',
+    stellarLaneTag = 'stellar:lane-default') {
   const continuityService = createContinuityPayloadService();
   const seed = {
     contractVersion: 'v1' as const,
@@ -34,6 +48,20 @@ function makePayload(contextTag: string) {
       checkpointId: 'checkpoint-growth',
       checkpointSequence: 1,
       checkpointContextTag: contextTag,
+      checkpointRouteSignatureTag: routeSignatureTag,
+      checkpointFusionLaneTag: fusionLaneTag,
+      checkpointSynthesisPassTag: synthesisPassTag,
+      checkpointReplayPhaseTag: replayPhaseTag,
+      checkpointConvergenceLaneTag: convergenceLaneTag,
+      checkpointReconciliationLaneTag: reconciliationLaneTag,
+      checkpointObservationLaneTag: observationLaneTag,
+      checkpointAttunementLaneTag: attunementLaneTag,
+      checkpointEchoLaneTag: echoLaneTag,
+      checkpointResonanceLaneTag: resonanceLaneTag,
+      checkpointHorizonLaneTag: horizonLaneTag,
+      checkpointMeridianLaneTag: meridianLaneTag,
+      checkpointAuroraLaneTag: auroraLaneTag,
+      checkpointStellarLaneTag: stellarLaneTag,
       objectiveCompletionIds: ['objective-growth'],
       profileState: {faction: 'banana-guild'},
       profileFingerprint: 'profile-growth-a',
@@ -60,7 +88,15 @@ describe('US3 continuity growth-path integration', () => {
         resetAreaStateVersionServiceForTests();
 
         const app = await createApp();
-        const payload = makePayload('district:growth-market');
+        const payload = makePayload(
+            'district:growth-market', 'route:growth-v2',
+            'fusion:lane-growth-v2', 'synthesis:pass-growth-v2',
+            'replay:phase-growth-v2', 'convergence:lane-growth-v2',
+            'reconciliation:lane-growth-v2', 'observation:lane-growth-v2',
+            'attunement:lane-growth-v2', 'echo:lane-growth-v2',
+            'resonance:lane-growth-v2', 'horizon:lane-growth-v2',
+            'meridian:lane-growth-v2', 'aurora:lane-growth-v2',
+            'stellar:lane-growth-v2');
 
         const commit = await app.inject({
           method: 'POST',
@@ -71,7 +107,24 @@ describe('US3 continuity growth-path integration', () => {
         expect(commit.statusCode).toBe(200);
         const committed = commit.json() as {
           areaIdentity: {areaId: string};
-          continuityPayload: {checkpoint: {checkpointContextTag: string};};
+          continuityPayload: {
+            checkpoint: {
+              checkpointContextTag: string; checkpointRouteSignatureTag: string;
+              checkpointFusionLaneTag: string;
+              checkpointSynthesisPassTag: string;
+              checkpointReplayPhaseTag: string;
+              checkpointConvergenceLaneTag: string;
+              checkpointReconciliationLaneTag: string;
+              checkpointObservationLaneTag: string;
+              checkpointAttunementLaneTag: string;
+              checkpointEchoLaneTag: string;
+              checkpointResonanceLaneTag: string;
+              checkpointHorizonLaneTag: string;
+              checkpointMeridianLaneTag: string;
+              checkpointAuroraLaneTag: string;
+              checkpointStellarLaneTag: string;
+            };
+          };
         };
 
         const rehydrate = await app.inject({
@@ -85,6 +138,20 @@ describe('US3 continuity growth-path integration', () => {
           continuityPayload: {
             checkpoint: {
               checkpointContextTag: 'district:growth-market',
+              checkpointRouteSignatureTag: 'route:growth-v2',
+              checkpointFusionLaneTag: 'fusion:lane-growth-v2',
+              checkpointSynthesisPassTag: 'synthesis:pass-growth-v2',
+              checkpointReplayPhaseTag: 'replay:phase-growth-v2',
+              checkpointConvergenceLaneTag: 'convergence:lane-growth-v2',
+              checkpointReconciliationLaneTag: 'reconciliation:lane-growth-v2',
+              checkpointObservationLaneTag: 'observation:lane-growth-v2',
+              checkpointAttunementLaneTag: 'attunement:lane-growth-v2',
+              checkpointEchoLaneTag: 'echo:lane-growth-v2',
+              checkpointResonanceLaneTag: 'resonance:lane-growth-v2',
+              checkpointHorizonLaneTag: 'horizon:lane-growth-v2',
+              checkpointMeridianLaneTag: 'meridian:lane-growth-v2',
+              checkpointAuroraLaneTag: 'aurora:lane-growth-v2',
+              checkpointStellarLaneTag: 'stellar:lane-growth-v2',
             },
           },
         });

@@ -69,6 +69,7 @@ extern "C"
     } RuntimeApplicationServicePorts;
 
     const RuntimeApplicationServicePorts *runtime_application_service_ports(void);
+    void runtime_application_service_ports_reset(void);
 
 #ifdef __cplusplus
 }

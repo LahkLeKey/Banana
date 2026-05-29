@@ -6,6 +6,20 @@
 #include <stdio.h>
 #include <string.h>
 
+static const char *banana_poc_war_tier_label(int tier)
+{
+    switch (tier)
+    {
+        case 1:
+            return "SKIRMISH";
+        case 2:
+            return "SIEGE";
+        case 0:
+        default:
+            return "PEACEFUL";
+    }
+}
+
 void banana_poc_render_scene_overlay(BananaPocScene scene,
                                      int main_menu_index,
                                      int character_index,
@@ -26,6 +40,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     char line_three[160];
     char line_four[160];
     char line_five[160];
+    char line_six[160];
     int remaining_seconds = objective_timeout_seconds - elapsed_seconds;
     float player_x = 0.0f;
     float player_z = 0.0f;
@@ -193,12 +208,17 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
             {
                 const BananaPocDemoSceneCatalogEntry *entry =
                     banana_poc_demo_scene_catalog_at_index(i);
+                BananaPocCoherentWorldProfile profile;
+                int profile_ready = entry ? banana_poc_demo_scene_catalog_build_coherent_profile(entry->browser_variant, &profile) : 0;
+                int coherent_ok = profile_ready ? banana_poc_demo_scene_catalog_coherent_profile_consistent(&profile) : 0;
                 char row[160];
                 snprintf(row,
                          sizeof(row),
-                         "%s %s%s",
+                         "%s %s [%s|coherent:%s]%s",
                          (i == browser_index) ? ">" : " ",
                          (entry && entry->display_name) ? entry->display_name : "Unknown Scene",
+                         (entry ? banana_poc_demo_scene_catalog_gameplay_theme_for_variant(entry->browser_variant) : "unknown-theme"),
+                         coherent_ok ? "ok" : "no",
                          (entry && !entry->enabled) ? " [disabled]" : "");
                 engine_ui_text(240.0f, 230.0f + ((float)i * 34.0f), row);
             }
@@ -257,7 +277,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
             hint_z = "W";
     }
 
-    engine_ui_panel(12.0f, 12.0f, 760.0f, 94.0f, 0x0A1118C0u, 1.0f);
+    engine_ui_panel(12.0f, 12.0f, 760.0f, 118.0f, 0x0A1118C0u, 1.0f);
     engine_ui_panel(12.0f, 112.0f, 420.0f, 92.0f, 0x121E28C0u, 1.0f);
     engine_ui_panel(minimap_x, minimap_y, minimap_w, minimap_h, 0x1A2A22D0u, 1.0f);
 
@@ -269,13 +289,19 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
 
     if (proto)
     {
+        BananaPocCoherentWorldProfile profile;
+        int profile_ready = banana_poc_demo_scene_catalog_build_coherent_profile(proto->active_world_variant, &profile);
+        int coherent_ok = profile_ready ? banana_poc_demo_scene_catalog_coherent_profile_consistent(&profile) : 0;
         size_t used = strlen(line_one);
         if (used < sizeof(line_one) - 1)
         {
             snprintf(line_one + used,
                      sizeof(line_one) - used,
-                     " | VARIANT: %s",
-                     banana_poc_demo_scene_catalog_display_name_for_variant(proto->active_world_variant));
+                     " | VARIANT: %s | THEME: %s | COHERENT:%s | SIG:%u",
+                     banana_poc_demo_scene_catalog_display_name_for_variant(proto->active_world_variant),
+                     banana_poc_demo_scene_catalog_gameplay_theme_for_variant(proto->active_world_variant),
+                     coherent_ok ? "ok" : "no",
+                     profile_ready ? profile.bootstrap_signature : 0u);
         }
     }
 
@@ -312,6 +338,17 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
              engine_get_entity_count(),
              engine_get_click_count(),
              engine_get_target_reached_count());
+
+    snprintf(line_six,
+             sizeof(line_six),
+             "WAR HUD | BANANA: %d  BEAN: %d  |  TIER: %s  RADIUS: %.1f  BASE:%d EFFECTIVE:%d  CAP: %d",
+             engine_get_team_banana_count(),
+             engine_get_team_bean_count(),
+             banana_poc_war_tier_label(engine_get_controller_war_escalation_tier()),
+             engine_get_controller_war_radius(),
+             engine_get_controller_war_reinforcements_per_tick(),
+             engine_get_controller_war_effective_reinforcements_per_tick(),
+             engine_get_controller_war_population_cap());
 
     if (has_player && has_target)
     {
@@ -355,6 +392,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     engine_ui_text(22.0f, 24.0f, line_one);
     engine_ui_text(22.0f, 48.0f, line_two);
     engine_ui_text(22.0f, 72.0f, line_three);
+    engine_ui_text(22.0f, 96.0f, line_six);
     engine_ui_text(22.0f, 124.0f, line_four);
     if (scene == BANANA_POC_SCENE_LEVEL_EDITOR)
     {
@@ -395,6 +433,57 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
                     minimap_h - 44.0f,
                     0x1E5A2FD8u,
                     1.0f);
+
+    {
+        int entity_count = engine_get_entity_count();
+        float panel_w = minimap_w - 20.0f;
+        float panel_h = minimap_h - 44.0f;
+        float team_marker_size = 3.0f;
+
+        for (int i = 0; i < entity_count; i++)
+        {
+            int team = engine_get_entity_team(i);
+            float ex = 0.0f;
+            float ez = 0.0f;
+            float normalized_x = 0.0f;
+            float normalized_z = 0.0f;
+            float screen_x = 0.0f;
+            float screen_y = 0.0f;
+            unsigned int color = 0u;
+
+            if (team == (int)CONTROLLER_TEAM_BANANA)
+                color = 0xD8D44DFFu;
+            else if (team == (int)CONTROLLER_TEAM_BEAN)
+                color = 0x4ED362FFu;
+            else
+                continue;
+
+            ex = engine_get_entity_x(i);
+            ez = engine_get_entity_z(i);
+
+            normalized_x = ex / world_half_span;
+            normalized_z = ez / world_half_span;
+
+            screen_x = (minimap_x + 10.0f) + ((normalized_x + 1.0f) * 0.5f) * panel_w;
+            screen_y = (minimap_y + 34.0f) + ((normalized_z + 1.0f) * 0.5f) * panel_h;
+
+            if (screen_x < (minimap_x + 10.0f))
+                screen_x = minimap_x + 10.0f;
+            if (screen_x > (minimap_x + minimap_w - 10.0f - team_marker_size * 2.0f))
+                screen_x = minimap_x + minimap_w - 10.0f - team_marker_size * 2.0f;
+            if (screen_y < (minimap_y + 34.0f))
+                screen_y = minimap_y + 34.0f;
+            if (screen_y > (minimap_y + minimap_h - 10.0f - team_marker_size * 2.0f))
+                screen_y = minimap_y + minimap_h - 10.0f - team_marker_size * 2.0f;
+
+            engine_ui_panel(screen_x,
+                            screen_y,
+                            team_marker_size * 2.0f,
+                            team_marker_size * 2.0f,
+                            color,
+                            1.0f);
+        }
+    }
 
     if (has_player)
     {

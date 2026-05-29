@@ -49,6 +49,32 @@ export const ContinuityCheckpointStateSchema =
        checkpointId: z.string().min(1),
        checkpointSequence: z.number().int().nonnegative(),
        checkpointContextTag: z.string().min(1),
+       checkpointRouteSignatureTag: z.string().min(1).default('route:default'),
+       checkpointFusionLaneTag:
+           z.string().min(1).default('fusion:lane-default'),
+       checkpointSynthesisPassTag:
+           z.string().min(1).default('synthesis:pass-default'),
+       checkpointReplayPhaseTag:
+           z.string().min(1).default('replay:phase-default'),
+       checkpointConvergenceLaneTag:
+           z.string().min(1).default('convergence:lane-default'),
+       checkpointReconciliationLaneTag:
+           z.string().min(1).default('reconciliation:lane-default'),
+       checkpointObservationLaneTag:
+           z.string().min(1).default('observation:lane-default'),
+       checkpointAttunementLaneTag:
+           z.string().min(1).default('attunement:lane-default'),
+       checkpointEchoLaneTag: z.string().min(1).default('echo:lane-default'),
+       checkpointResonanceLaneTag:
+           z.string().min(1).default('resonance:lane-default'),
+       checkpointHorizonLaneTag:
+           z.string().min(1).default('horizon:lane-default'),
+       checkpointMeridianLaneTag:
+           z.string().min(1).default('meridian:lane-default'),
+       checkpointAuroraLaneTag:
+           z.string().min(1).default('aurora:lane-default'),
+       checkpointStellarLaneTag:
+           z.string().min(1).default('stellar:lane-default'),
        objectiveCompletionIds: z.array(z.string().min(1)).default([]),
        profileState: z.record(z.unknown()).default({}),
        profileFingerprint: z.string().min(1),

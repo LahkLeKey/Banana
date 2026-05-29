@@ -4,6 +4,7 @@
 #include "ai/npc_merchant.h"
 #include "ai/wildlife_controller.h"
 #include "runtime/controller/sync/controller_sync.h"
+#include "runtime/controller/runtime/controller_runtime.h"
 #include "runtime/engine/application_service_ports.h"
 #include "runtime/engine/engine_aux_abi.h"
 #include "runtime/engine/engine_composition.h"
@@ -36,6 +37,7 @@
 #include "runtime/terrain/terrain_abi.h"
 #include "runtime/terrain/terrain_runtime.h"
 #include "runtime/tick/tick_phases.h"
+#include "runtime/tick/tick_budget_policy.h"
 #include "runtime/world/world_metrics.h"
 #include "runtime/world/world_abi.h"
 #include "runtime/world/world_telemetry.h"
@@ -237,6 +239,29 @@ int engine_get_entity_state(int idx)
                                                                  s_controllers,
                                                                  s_controller_count);
     return runtime_engine_aux_entity_state(context, idx);
+}
+
+int engine_get_entity_team(int idx)
+{
+    Entity *entity = NULL;
+    ControllerInstance *controller = NULL;
+
+    if (!s_world || idx < 0 || idx >= s_world->entity_count)
+        return (int)CONTROLLER_TEAM_NEUTRAL;
+
+    entity = s_world->entities[idx];
+    if (!entity || !entity->active)
+        return (int)CONTROLLER_TEAM_NEUTRAL;
+    if (entity->type != ENTITY_TYPE_NPC || entity->controller_id == 0)
+        return (int)CONTROLLER_TEAM_NEUTRAL;
+
+    controller = runtime_controller_find_by_id(s_controllers,
+                                               s_controller_count,
+                                               entity->controller_id);
+    if (!controller)
+        return (int)CONTROLLER_TEAM_NEUTRAL;
+
+    return (int)controller->team;
 }
 
 int engine_get_active_player_count(void)
@@ -489,6 +514,75 @@ int engine_get_pbj_pickup_position(float *out_x, float *out_z)
 float engine_get_terrain_half_span(void)
 {
     return ((float)BANANA_TERRAIN_SIZE - 1.0f) * 0.5f;
+}
+
+static int runtime_engine_count_active_team_members(ControllerTeam team)
+{
+    int count = 0;
+
+    if (!s_world)
+        return 0;
+
+    for (int i = 0; i < s_world->entity_count; i++)
+    {
+        Entity *entity = s_world->entities[i];
+        ControllerInstance *controller = NULL;
+
+        if (!entity || !entity->active)
+            continue;
+        if (entity->type != ENTITY_TYPE_NPC)
+            continue;
+        if (entity->controller_id == 0)
+            continue;
+
+        controller = runtime_controller_find_by_id(s_controllers,
+                                                   s_controller_count,
+                                                   entity->controller_id);
+        if (!controller)
+            continue;
+        if (controller->team == team)
+            count += 1;
+    }
+
+    return count;
+}
+
+int engine_get_team_banana_count(void)
+{
+    return runtime_engine_count_active_team_members(CONTROLLER_TEAM_BANANA);
+}
+
+int engine_get_team_bean_count(void)
+{
+    return runtime_engine_count_active_team_members(CONTROLLER_TEAM_BEAN);
+}
+
+float engine_get_controller_war_radius(void)
+{
+    return runtime_tick_budget_policy_controller_war_radius();
+}
+
+int engine_get_controller_war_reinforcements_per_tick(void)
+{
+    return runtime_tick_budget_policy_controller_war_reinforcements_per_tick();
+}
+
+int engine_get_controller_war_population_cap(void)
+{
+    return runtime_tick_budget_policy_controller_war_population_cap();
+}
+
+int engine_get_controller_war_escalation_tier(void)
+{
+    return (int)s_engine_state.war_escalation_tier;
+}
+
+int engine_get_controller_war_effective_reinforcements_per_tick(void)
+{
+    if (!s_engine_state.engine_initialized)
+        return runtime_tick_budget_policy_controller_war_reinforcements_per_tick();
+
+    return s_engine_state.war_effective_reinforcements_per_tick;
 }
 
 int engine_player_build_set_class(const char *player_guid, int class_type)

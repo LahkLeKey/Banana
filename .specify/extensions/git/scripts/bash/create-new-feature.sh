@@ -261,7 +261,11 @@ fi
 
 cd "$REPO_ROOT"
 
-SPECS_DIR="$REPO_ROOT/specs"
+if [ -d "$REPO_ROOT/.specify/specs" ]; then
+    SPECS_DIR="$REPO_ROOT/.specify/specs"
+else
+    SPECS_DIR="$REPO_ROOT/specs"
+fi
 
 # Function to generate branch name with stop word filtering
 generate_branch_name() {

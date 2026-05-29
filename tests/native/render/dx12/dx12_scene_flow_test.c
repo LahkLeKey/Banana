@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static void fail_test(const char *label, const char *message)
 {
@@ -140,6 +141,19 @@ int main(void)
     input.escape_pressed = 1;
     banana_poc_scene_flow_step(&state, &input, &result);
     expect_int("escape back to menu", state.scene, BANANA_POC_SCENE_MAIN_MENU);
+
+    /* Diagnostics boundary: NULL state must early-return without crashing. */
+    banana_poc_scene_flow_step(NULL, &input, &result);
+
+    /* Diagnostics boundary: NULL input must early-return without crashing. */
+    banana_poc_scene_flow_step(&state, NULL, &result);
+
+    /* Diagnostics boundary: NULL result must early-return without touching state. */
+    state.scene = BANANA_POC_SCENE_MAIN_MENU;
+    input = input_zero();
+    input.down_pressed = 1;
+    banana_poc_scene_flow_step(&state, &input, NULL);
+    expect_int("null result preserves scene", state.scene, BANANA_POC_SCENE_MAIN_MENU);
 
     puts("scene flow ok");
     return 0;

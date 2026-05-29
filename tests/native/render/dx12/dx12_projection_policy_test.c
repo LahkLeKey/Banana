@@ -125,5 +125,70 @@ int main(void)
                     1))
         return 1;
 
+    /* Diagnostics boundary: NULL camera falls back to defaults and produces bounded clip output. */
+    x = 7.0f;
+    y = 7.0f;
+    z = 7.0f;
+    depth = 7.0f;
+    banana_dx12_projection_world_to_clip(NULL,
+                                         1.0f,
+                                         0.0f,
+                                         0.0f,
+                                         &x,
+                                         &y,
+                                         &z,
+                                         &depth);
+    if (!expect_float_in_range("null camera fallback x bounded", x, -1.5f, 1.5f))
+        return 1;
+    if (!expect_float_in_range("null camera fallback depth positive", depth, 0.01f, 10000.0f))
+        return 1;
+
+    /* Diagnostics boundary: invalid flag forces fallback regardless of populated fields. */
+    {
+        BananaDx12ProjectionCamera invalid = camera;
+        float invalid_x = 0.0f;
+        float invalid_y = 0.0f;
+        float invalid_z = 0.0f;
+        float invalid_depth = 0.0f;
+        invalid.valid = 0;
+        banana_dx12_projection_world_to_clip(&invalid,
+                                             0.0f,
+                                             0.0f,
+                                             0.0f,
+                                             &invalid_x,
+                                             &invalid_y,
+                                             &invalid_z,
+                                             &invalid_depth);
+        if (!expect_float_in_range("invalid-flag fallback x bounded", invalid_x, -1.5f, 1.5f))
+            return 1;
+        if (!expect_float_in_range("invalid-flag fallback depth positive", invalid_depth, 0.01f, 10000.0f))
+            return 1;
+    }
+
+    /* Diagnostics boundary: out-of-range fov clamps without producing NaN. */
+    {
+        BananaDx12ProjectionCamera tiny_fov = camera;
+        float tiny_x = 0.0f;
+        float tiny_y = 0.0f;
+        float tiny_z = 0.0f;
+        float tiny_depth = 0.0f;
+        tiny_fov.fov_degrees = 0.5f; /* below clamp floor */
+        tiny_fov.aspect = 0.0f;       /* below clamp floor */
+        banana_dx12_projection_world_to_clip(&tiny_fov,
+                                             0.0f,
+                                             0.0f,
+                                             0.0f,
+                                             &tiny_x,
+                                             &tiny_y,
+                                             &tiny_z,
+                                             &tiny_depth);
+        if (!expect_int("tiny fov clamps finite x", isfinite(tiny_x) ? 1 : 0, 1))
+            return 1;
+        if (!expect_int("tiny fov clamps finite y", isfinite(tiny_y) ? 1 : 0, 1))
+            return 1;
+        if (!expect_int("tiny fov clamps finite depth", isfinite(tiny_depth) ? 1 : 0, 1))
+            return 1;
+    }
+
     return 0;
 }

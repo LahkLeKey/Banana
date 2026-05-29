@@ -19,7 +19,10 @@ static float clampf_local(float v, float lo, float hi)
 
 static int is_controller_ai(const char *controller_kind)
 {
-    return runtime_controller_kind_parse_or_unknown(controller_kind) == RUNTIME_CONTROLLER_KIND_AI;
+    RuntimeControllerKind kind = runtime_controller_kind_parse_or_unknown(controller_kind);
+    return kind == RUNTIME_CONTROLLER_KIND_AI ||
+           kind == RUNTIME_CONTROLLER_KIND_COMBAT ||
+           kind == RUNTIME_CONTROLLER_KIND_WILDLIFE;
 }
 
 static const char *normalize_controller_kind_or_default_human(const char *controller_kind)
@@ -148,7 +151,13 @@ NativePlayerBinding *runtime_player_registry_upsert(World *world,
         strncpy(entity->player_guid, binding->guid, sizeof(entity->player_guid) - 1);
         strncpy(entity->controller_kind, binding->controller_kind, sizeof(entity->controller_kind) - 1);
         if (is_controller_ai(binding->controller_kind) && entity->controller_id == 0 && attach_controller)
-            entity->controller_id = attach_controller(entity->id, "wildlife");
+        {
+            const char *controller_type = "wildlife";
+            if (runtime_controller_kind_parse_or_unknown(binding->controller_kind) == RUNTIME_CONTROLLER_KIND_COMBAT)
+                controller_type = "combat";
+
+            entity->controller_id = attach_controller(entity->id, controller_type);
+        }
     }
 
     if (inout_primary_player_id && *inout_primary_player_id == 0)

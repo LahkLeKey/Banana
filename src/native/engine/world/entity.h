@@ -25,6 +25,7 @@ extern "C"
         EntityType type;
         char player_guid[40];
         char controller_kind[16];
+        char gameplay_model_id[96];
         float position[3];
         float rotation[4]; /* quaternion x,y,z,w */
         float scale[3];

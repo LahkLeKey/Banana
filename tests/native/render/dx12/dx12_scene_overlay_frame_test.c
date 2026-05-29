@@ -200,6 +200,44 @@ int main(void)
     expect_distinct_u64("options_vs_editor", options_hash, editor_hash);
     expect_distinct_u64("world_vs_editor", world_hash, editor_hash);
 
+    /* Diagnostics boundary: extreme editor heights still yield non-zero distinct hashes. */
+    {
+        uint64_t editor_tall_hash = render_scene_hash(BANANA_POC_SCENE_LEVEL_EDITOR,
+                                                      0,
+                                                      0,
+                                                      0,
+                                                      0,
+                                                      1,
+                                                      0,
+                                                      1,
+                                                      32,
+                                                      1,
+                                                      0,
+                                                      0,
+                                                      0);
+        expect_nonzero_u64("editor_tall_hash", editor_tall_hash);
+        expect_distinct_u64("editor_default_vs_tall", editor_hash, editor_tall_hash);
+    }
+
+    /* Diagnostics boundary: distinct option_index produces a distinct options overlay frame. */
+    {
+        uint64_t options_alt_index = render_scene_hash(BANANA_POC_SCENE_OPTIONS,
+                                                       0,
+                                                       0,
+                                                       0,
+                                                       0,
+                                                       1,
+                                                       1,
+                                                       0,
+                                                       2,
+                                                       0,
+                                                       0,
+                                                       0,
+                                                       0);
+        expect_nonzero_u64("options_alt_index", options_alt_index);
+        expect_distinct_u64("options_index_toggle", options_hash, options_alt_index);
+    }
+
     printf("scene hashes: main=%llu character=%llu options=%llu world=%llu editor=%llu\n",
            (unsigned long long)main_menu_hash,
            (unsigned long long)character_hash,
