@@ -732,6 +732,7 @@ static void runtime_gameplay_service_expand_warfront(World *world,
     int banana_comeback_bonus = 0;
     int sentience_comeback_bonus = 0;
     int negotiate_deescalation_trim = 0;
+    int negotiate_spawn_budget_before_trim = 0;
     int negotiate_streak_ticks = 0;
     int banana_spawn_target = 0;
     int bean_spawn_target = 0;
@@ -819,12 +820,30 @@ static void runtime_gameplay_service_expand_warfront(World *world,
             negotiate_streak_ticks = 1;
         }
 
+        negotiate_spawn_budget_before_trim = spawn_budget;
         negotiate_deescalation_trim =
             runtime_gameplay_sentience_negotiate_deescalation_trim_for_streak(negotiate_streak_ticks);
         if (negotiate_deescalation_trim > spawn_budget)
             negotiate_deescalation_trim = spawn_budget;
 
         spawn_budget -= negotiate_deescalation_trim;
+
+        if (war_intelligence_stage >= runtime_tick_budget_policy_controller_war_negotiate_min_intelligence_stage())
+        {
+            int negotiate_min_reinforcements =
+                runtime_tick_budget_policy_controller_war_negotiate_min_reinforcements();
+
+            if (negotiate_min_reinforcements > negotiate_spawn_budget_before_trim)
+                negotiate_min_reinforcements = negotiate_spawn_budget_before_trim;
+
+            if (negotiate_min_reinforcements > 0 && spawn_budget < negotiate_min_reinforcements)
+            {
+                spawn_budget = negotiate_min_reinforcements;
+                negotiate_deescalation_trim = negotiate_spawn_budget_before_trim - spawn_budget;
+                if (negotiate_deescalation_trim < 0)
+                    negotiate_deescalation_trim = 0;
+            }
+        }
     }
     else if (runtime_state)
     {

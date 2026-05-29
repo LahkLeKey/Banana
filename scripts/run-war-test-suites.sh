@@ -68,6 +68,7 @@ append_suite_tests() {
             append_unique_test "banana_runtime_gameplay_warfront_expansion_test"
             append_unique_test "banana_runtime_gameplay_warfront_comeback_bonus_test"
             append_unique_test "banana_runtime_gameplay_warfront_negotiate_deescalation_test"
+            append_unique_test "banana_runtime_gameplay_warfront_negotiate_factory_test"
             append_unique_test "banana_runtime_gameplay_warfront_intelligence_feature_unlock_test"
             append_unique_test "banana_runtime_full_mmo_demo_test"
             ;;
@@ -85,6 +86,7 @@ append_suite_tests() {
             append_unique_test "banana_runtime_gameplay_warfront_expansion_test"
             append_unique_test "banana_runtime_gameplay_warfront_comeback_bonus_test"
             append_unique_test "banana_runtime_gameplay_warfront_negotiate_deescalation_test"
+            append_unique_test "banana_runtime_gameplay_warfront_negotiate_factory_test"
             append_unique_test "banana_runtime_gameplay_warfront_intelligence_feature_unlock_test"
             append_unique_test "banana_runtime_demo_scene_catalog_vector_profile_test"
             append_unique_test "banana_runtime_demo_scene_catalog_war_policy_test"

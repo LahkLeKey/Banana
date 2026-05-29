@@ -27,6 +27,7 @@
 - Validate sentience-mode skirmish asset variants (`banana-scout-*` / `bean-raider-*` flank/regroup/envoy) and per-faction mode-channel telemetry rollups (H/F/R/N) stay deterministic and visible to DX12 HUD/UI components.
 - Validate scene-browser variant `6` (`banana-war-sentience-showcase`) remains launchable and pre-seeds flank/regroup/envoy placements for immediate DX12 sentience asset preview.
 - Validate negotiate-mode consecutive-tick de-escalation trim behavior: streak increases while negotiation holds, trim remains bounded, spawn pressure is reduced deterministically, and streak/trim reset when negotiation breaks.
+- Validate negotiate-continuation intelligence-stage floor behavior: at/above threshold, negotiate lanes preserve a bounded minimum reinforcement floor; below threshold, full de-escalation to zero remains allowed.
 - Validate overcrowd terrain burst expansion behavior reaches additional chunk rings while preserving biome rotation bounds.
 - Validate HUD/API war status visibility for overcrowd policy, burst bonus, intelligence burst policy, frontier depth, biome stage, apex activation, and mythic activation.
 - Validate long-run soak invariants: monotonic frontier growth, bounded frontier cap, monotonic biome unlock progression, and full-layer unlock under sustained pressure.

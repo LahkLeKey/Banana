@@ -1979,6 +1979,20 @@ if(BUILD_TESTING)
   )
   add_test(NAME banana_runtime_gameplay_warfront_negotiate_deescalation_test COMMAND banana_runtime_gameplay_warfront_negotiate_deescalation_test)
 
+  add_executable(banana_runtime_gameplay_warfront_negotiate_factory_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_negotiate_factory_test.c
+  )
+  target_link_libraries(banana_runtime_gameplay_warfront_negotiate_factory_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_gameplay_warfront_negotiate_factory_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_gameplay_warfront_negotiate_factory_test COMMAND banana_runtime_gameplay_warfront_negotiate_factory_test)
+
   add_executable(banana_runtime_gameplay_warfront_intelligence_feature_unlock_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_intelligence_feature_unlock_test.c
   )
