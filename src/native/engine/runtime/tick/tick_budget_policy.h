@@ -19,6 +19,20 @@ extern "C"
     int runtime_tick_budget_policy_controller_war_siege_reinforcement_bonus(void);
     int runtime_tick_budget_policy_controller_war_skirmish_cooldown_reduction(void);
     int runtime_tick_budget_policy_controller_war_siege_cooldown_reduction(void);
+    int runtime_tick_budget_policy_controller_war_intelligence_progress_skirmish(void);
+    int runtime_tick_budget_policy_controller_war_intelligence_progress_siege(void);
+    int runtime_tick_budget_policy_controller_war_intelligence_level_threshold_ticks(void);
+    int runtime_tick_budget_policy_controller_war_intelligence_max_stage(void);
+    int runtime_tick_budget_policy_controller_war_intelligence_reinforcement_bonus_per_stage(void);
+    int runtime_tick_budget_policy_controller_war_intelligence_frontier_bonus_per_stage(void);
+    int runtime_tick_budget_policy_controller_war_overcrowd_pct(void);
+    int runtime_tick_budget_policy_controller_war_overcrowd_expand_bonus_chunks(void);
+    int runtime_tick_budget_policy_controller_war_overcrowd_intelligence_bonus_per_stage(void);
+    int runtime_tick_budget_policy_controller_war_life_tick_interval(void);
+    int runtime_tick_budget_policy_controller_war_life_intelligence_bonus_max(void);
+    int runtime_tick_budget_policy_controller_war_procgen_biome_variance(void);
+    int runtime_tick_budget_policy_controller_war_sentience_gain_per_tick(void);
+    int runtime_tick_budget_policy_controller_war_sentience_comeback_bonus_per_coordination(void);
 
 #ifdef __cplusplus
 }

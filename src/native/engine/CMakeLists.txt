@@ -1297,6 +1297,62 @@ if(BUILD_TESTING)
   )
   add_test(NAME banana_runtime_tick_orchestration_war_escalation_test COMMAND banana_runtime_tick_orchestration_war_escalation_test)
 
+  add_executable(banana_runtime_tick_orchestration_war_intelligence_growth_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_intelligence_growth_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_intelligence_growth_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_intelligence_growth_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_intelligence_growth_test COMMAND banana_runtime_tick_orchestration_war_intelligence_growth_test)
+
+  add_executable(banana_runtime_tick_orchestration_war_game_of_life_sentience_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_game_of_life_sentience_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_game_of_life_sentience_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_game_of_life_sentience_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_game_of_life_sentience_test COMMAND banana_runtime_tick_orchestration_war_game_of_life_sentience_test)
+
+  add_executable(banana_runtime_tick_orchestration_war_overcrowd_expansion_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_overcrowd_expansion_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_overcrowd_expansion_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_overcrowd_expansion_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_overcrowd_expansion_test COMMAND banana_runtime_tick_orchestration_war_overcrowd_expansion_test)
+
+  add_executable(banana_runtime_tick_orchestration_war_long_run_soak_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/tick/runtime_tick_orchestration_war_long_run_soak_test.c
+  )
+  target_link_libraries(banana_runtime_tick_orchestration_war_long_run_soak_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_tick_orchestration_war_long_run_soak_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_tick_orchestration_war_long_run_soak_test COMMAND banana_runtime_tick_orchestration_war_long_run_soak_test)
+
   add_executable(banana_runtime_camera_follow_policy_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/camera/follow/runtime_camera_follow_policy_test.c
   )
@@ -1894,6 +1950,48 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
   )
   add_test(NAME banana_runtime_gameplay_warfront_expansion_test COMMAND banana_runtime_gameplay_warfront_expansion_test)
+
+  add_executable(banana_runtime_gameplay_warfront_comeback_bonus_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_comeback_bonus_test.c
+  )
+  target_link_libraries(banana_runtime_gameplay_warfront_comeback_bonus_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_gameplay_warfront_comeback_bonus_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_gameplay_warfront_comeback_bonus_test COMMAND banana_runtime_gameplay_warfront_comeback_bonus_test)
+
+  add_executable(banana_runtime_gameplay_warfront_negotiate_deescalation_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_negotiate_deescalation_test.c
+  )
+  target_link_libraries(banana_runtime_gameplay_warfront_negotiate_deescalation_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_gameplay_warfront_negotiate_deescalation_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_gameplay_warfront_negotiate_deescalation_test COMMAND banana_runtime_gameplay_warfront_negotiate_deescalation_test)
+
+  add_executable(banana_runtime_gameplay_warfront_intelligence_feature_unlock_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/runtime/engine/runtime_gameplay_warfront_intelligence_feature_unlock_test.c
+  )
+  target_link_libraries(banana_runtime_gameplay_warfront_intelligence_feature_unlock_test PRIVATE banana_engine_core)
+  target_include_directories(banana_runtime_gameplay_warfront_intelligence_feature_unlock_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ai
+    ${CMAKE_CURRENT_SOURCE_DIR}/world
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+  )
+  add_test(NAME banana_runtime_gameplay_warfront_intelligence_feature_unlock_test COMMAND banana_runtime_gameplay_warfront_intelligence_feature_unlock_test)
 
   add_executable(banana_player_builds_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/player/player_builds_test.c

@@ -27,6 +27,13 @@ int main(void)
         return 1;
     }
 
+    if (!expect_true("sentience showcase slice validates gameplay placements",
+                     banana_poc_demo_scene_catalog_validate_gameplay_for_variant(6) ==
+                         BANANA_POC_DEMO_SCENE_VALIDATION_OK))
+    {
+        return 1;
+    }
+
     if (!expect_true("disabled lab slice exposes gameplay mismatch",
                      banana_poc_demo_scene_catalog_validate_gameplay_for_variant(4) ==
                          BANANA_POC_DEMO_SCENE_VALIDATION_GAMEPLAY_MODEL_MISMATCH))

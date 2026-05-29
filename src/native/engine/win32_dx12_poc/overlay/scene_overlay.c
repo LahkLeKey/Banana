@@ -20,6 +20,22 @@ static const char *banana_poc_war_tier_label(int tier)
     }
 }
 
+static const char *banana_poc_war_sentience_mode_label(int mode)
+{
+    switch (mode)
+    {
+        case 1:
+            return "FLK";
+        case 2:
+            return "RGR";
+        case 3:
+            return "NEG";
+        case 0:
+        default:
+            return "HLD";
+    }
+}
+
 void banana_poc_render_scene_overlay(BananaPocScene scene,
                                      int main_menu_index,
                                      int character_index,
@@ -41,6 +57,11 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     char line_four[160];
     char line_five[160];
     char line_six[160];
+    char line_seven[160];
+    char line_eight[160];
+    char line_nine[160];
+    char line_ten[160];
+    char line_eleven[160];
     int remaining_seconds = objective_timeout_seconds - elapsed_seconds;
     float player_x = 0.0f;
     float player_z = 0.0f;
@@ -56,6 +77,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     int has_target = 0;
     float nav_dx = 0.0f;
     float nav_dz = 0.0f;
+    int war_stage = engine_get_controller_war_intelligence_stage();
     const char *hint_x = "HOLD";
     const char *hint_z = "HOLD";
     static const char *k_main_menu_items[] = {
@@ -278,7 +300,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     }
 
     engine_ui_panel(12.0f, 12.0f, 760.0f, 118.0f, 0x0A1118C0u, 1.0f);
-    engine_ui_panel(12.0f, 112.0f, 420.0f, 92.0f, 0x121E28C0u, 1.0f);
+    engine_ui_panel(12.0f, 112.0f, 760.0f, 164.0f, 0x121E28C0u, 1.0f);
     engine_ui_panel(minimap_x, minimap_y, minimap_w, minimap_h, 0x1A2A22D0u, 1.0f);
 
     snprintf(line_one,
@@ -341,14 +363,84 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
 
     snprintf(line_six,
              sizeof(line_six),
-             "WAR HUD | BANANA: %d  BEAN: %d  |  TIER: %s  RADIUS: %.1f  BASE:%d EFFECTIVE:%d  CAP: %d",
+             "WAR HUD | BANANA: %d  BEAN: %d  |  TIER: %s  INTEL:%d  BIOMES:%d/%d  RADIUS: %.1f  BASE:%d EFFECTIVE:%d  CAP: %d",
              engine_get_team_banana_count(),
              engine_get_team_bean_count(),
              banana_poc_war_tier_label(engine_get_controller_war_escalation_tier()),
+             war_stage,
+             engine_get_controller_war_biome_unlock_count(),
+             4,
              engine_get_controller_war_radius(),
              engine_get_controller_war_reinforcements_per_tick(),
              engine_get_controller_war_effective_reinforcements_per_tick(),
              engine_get_controller_war_population_cap());
+
+    snprintf(line_seven,
+             sizeof(line_seven),
+             "WAR SPAWNS T:%d  BIO:%d/%d/%d/%d  FAM SC:%d SG:%d RD:%d WB:%d AP:%d/%d MY:%d/%d",
+             engine_get_controller_war_reinforcement_hits_total(),
+             engine_get_controller_war_reinforcement_hits_biome(0),
+             engine_get_controller_war_reinforcement_hits_biome(1),
+             engine_get_controller_war_reinforcement_hits_biome(2),
+             engine_get_controller_war_reinforcement_hits_biome(3),
+             engine_get_controller_war_reinforcement_hits_family_banana_scout(),
+             engine_get_controller_war_reinforcement_hits_family_banana_siege(),
+             engine_get_controller_war_reinforcement_hits_family_bean_raider(),
+             engine_get_controller_war_reinforcement_hits_family_bean_warbrute(),
+             engine_get_controller_war_reinforcement_hits_family_banana_apex(),
+             engine_get_controller_war_reinforcement_hits_family_bean_apex(),
+             engine_get_controller_war_reinforcement_hits_family_banana_mythic(),
+             engine_get_controller_war_reinforcement_hits_family_bean_mythic());
+
+    snprintf(line_eight,
+             sizeof(line_eight),
+             "WAR EXPAND OVR:%d%% +%dCH I+%d/ST  FRONT:%d  STAGE:%d  APEX:%s  MYTH:%s",
+             engine_get_controller_war_overcrowd_pct(),
+             engine_get_controller_war_overcrowd_expand_bonus_chunks(),
+             engine_get_controller_war_overcrowd_intelligence_bonus_per_stage(),
+             engine_get_controller_war_frontier_chunks(),
+             engine_get_controller_war_biome_stage_index(),
+             engine_get_controller_war_apex_feature_active() ? "ON" : "OFF",
+             engine_get_controller_war_mythic_feature_active() ? "ON" : "OFF");
+
+    snprintf(line_nine,
+             sizeof(line_nine),
+             "WAR STAGE CH STG:%d  AP:%d/%d  MY:%d/%d",
+             war_stage,
+             engine_get_controller_war_reinforcement_hits_stage_banana_apex(war_stage),
+             engine_get_controller_war_reinforcement_hits_stage_bean_apex(war_stage),
+             engine_get_controller_war_reinforcement_hits_stage_banana_mythic(war_stage),
+             engine_get_controller_war_reinforcement_hits_stage_bean_mythic(war_stage));
+
+    snprintf(line_ten,
+             sizeof(line_ten),
+             "WAR LIFE G:%d CELLS:%d/%d FRONT:%d BIAS:%d(VAR:%d) HUMAN:%d C:%d E:%d M:%s/%s N:%d T:%d +B:%d",
+             engine_get_controller_war_life_generation(),
+             engine_get_controller_war_life_alive_cells(),
+             16,
+             engine_get_controller_war_life_frontline_cells(),
+             engine_get_controller_war_procgen_biome_bias(),
+             engine_get_controller_war_procgen_biome_variance(),
+             engine_get_controller_war_sentience_humanoid_index(),
+             engine_get_controller_war_sentience_coordination_level(),
+             engine_get_controller_war_sentience_empathy_level(),
+             banana_poc_war_sentience_mode_label(engine_get_controller_war_sentience_behavior_mode_banana()),
+             banana_poc_war_sentience_mode_label(engine_get_controller_war_sentience_behavior_mode_bean()),
+             engine_get_controller_war_sentience_negotiate_streak_ticks(),
+             engine_get_controller_war_sentience_negotiate_deescalation_trim_last_tick(),
+             engine_get_controller_war_sentience_comeback_bonus_last_tick());
+
+    snprintf(line_eleven,
+             sizeof(line_eleven),
+             "WAR MODE CHANNELS B H/F/R/N:%d/%d/%d/%d  E:%d/%d/%d/%d",
+             engine_get_controller_war_sentience_spawn_mode_hits_banana(0),
+             engine_get_controller_war_sentience_spawn_mode_hits_banana(1),
+             engine_get_controller_war_sentience_spawn_mode_hits_banana(2),
+             engine_get_controller_war_sentience_spawn_mode_hits_banana(3),
+             engine_get_controller_war_sentience_spawn_mode_hits_bean(0),
+             engine_get_controller_war_sentience_spawn_mode_hits_bean(1),
+             engine_get_controller_war_sentience_spawn_mode_hits_bean(2),
+             engine_get_controller_war_sentience_spawn_mode_hits_bean(3));
 
     if (has_player && has_target)
     {
@@ -393,7 +485,12 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     engine_ui_text(22.0f, 48.0f, line_two);
     engine_ui_text(22.0f, 72.0f, line_three);
     engine_ui_text(22.0f, 96.0f, line_six);
-    engine_ui_text(22.0f, 124.0f, line_four);
+    engine_ui_text(22.0f, 118.0f, line_seven);
+    engine_ui_text(22.0f, 140.0f, line_eight);
+    engine_ui_text(22.0f, 162.0f, line_nine);
+    engine_ui_text(22.0f, 184.0f, line_ten);
+    engine_ui_text(22.0f, 206.0f, line_eleven);
+    engine_ui_text(22.0f, 228.0f, line_four);
     if (scene == BANANA_POC_SCENE_LEVEL_EDITOR)
     {
         char editor_line[160];
@@ -406,11 +503,11 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
                  editor_height,
                  brush,
                  k_paint_mode_names[mode]);
-        engine_ui_text(22.0f, 148.0f, editor_line);
+        engine_ui_text(22.0f, 250.0f, editor_line);
     }
     else if (!(proto && proto->option_compact_hud))
     {
-        engine_ui_text(22.0f, 148.0f, line_five);
+        engine_ui_text(22.0f, 250.0f, line_five);
     }
 
     if (proto && proto->render_debug_overlay)
@@ -423,7 +520,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
                  proto->frame_cap_index,
                  proto->physics_wireframe,
                  proto->option_input_assist);
-        engine_ui_text(22.0f, 176.0f, debug_line);
+        engine_ui_text(22.0f, 272.0f, debug_line);
     }
     engine_ui_text(minimap_x + 10.0f, minimap_y + 10.0f, "MINIMAP (TERRAIN + ACTORS)");
 

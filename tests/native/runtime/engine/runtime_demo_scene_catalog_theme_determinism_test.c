@@ -68,12 +68,13 @@ static unsigned int variant_signature(int browser_variant)
 
 int main(void)
 {
-    static const int k_variants[] = {0, 1, 2, 3};
-    unsigned int baseline[4] = {0u, 0u, 0u, 0u};
+    static const int k_variants[] = {0, 1, 2, 3, 6};
+    unsigned int baseline[5] = {0u, 0u, 0u, 0u, 0u};
+    int variant_count = (int)(sizeof(k_variants) / sizeof(k_variants[0]));
     int iteration = 0;
     int index = 0;
 
-    for (index = 0; index < 4; index++)
+    for (index = 0; index < variant_count; index++)
     {
         baseline[index] = variant_signature(k_variants[index]);
 
@@ -83,7 +84,7 @@ int main(void)
 
     for (iteration = 0; iteration < 16; iteration++)
     {
-        for (index = 0; index < 4; index++)
+        for (index = 0; index < variant_count; index++)
         {
             unsigned int current = variant_signature(k_variants[index]);
 
@@ -99,6 +100,9 @@ int main(void)
         return 1;
 
     if (!expect_true("urban station and urban corridor signatures differ", baseline[2] != baseline[3]))
+        return 1;
+
+    if (!expect_true("sentience showcase signature differs from urban station", baseline[4] != baseline[2]))
         return 1;
 
     printf("runtime_demo_scene_catalog_theme_determinism_test: pass\n");

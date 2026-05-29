@@ -172,6 +172,48 @@ extern "C"
     int engine_get_controller_war_population_cap(void);
     int engine_get_controller_war_escalation_tier(void);
     int engine_get_controller_war_effective_reinforcements_per_tick(void);
+    int engine_get_controller_war_intelligence_stage(void);
+    int engine_get_controller_war_biome_unlock_count(void);
+    int engine_get_controller_war_frontier_chunks(void);
+    int engine_get_controller_war_biome_stage_index(void);
+    int engine_get_controller_war_overcrowd_pct(void);
+    int engine_get_controller_war_overcrowd_expand_bonus_chunks(void);
+    int engine_get_controller_war_overcrowd_intelligence_bonus_per_stage(void);
+    int engine_get_controller_war_life_tick_interval(void);
+    int engine_get_controller_war_life_intelligence_bonus_max(void);
+    int engine_get_controller_war_procgen_biome_variance(void);
+    int engine_get_controller_war_sentience_gain_per_tick(void);
+    int engine_get_controller_war_sentience_comeback_bonus_per_coordination(void);
+    int engine_get_controller_war_apex_feature_active(void);
+    int engine_get_controller_war_mythic_feature_active(void);
+    int engine_get_controller_war_life_generation(void);
+    int engine_get_controller_war_life_alive_cells(void);
+    int engine_get_controller_war_life_frontline_cells(void);
+    int engine_get_controller_war_procgen_biome_bias(void);
+    int engine_get_controller_war_sentience_humanoid_index(void);
+    int engine_get_controller_war_sentience_coordination_level(void);
+    int engine_get_controller_war_sentience_empathy_level(void);
+    int engine_get_controller_war_sentience_behavior_mode_banana(void);
+    int engine_get_controller_war_sentience_behavior_mode_bean(void);
+    int engine_get_controller_war_sentience_spawn_mode_hits_banana(int mode);
+    int engine_get_controller_war_sentience_spawn_mode_hits_bean(int mode);
+    int engine_get_controller_war_sentience_negotiate_streak_ticks(void);
+    int engine_get_controller_war_sentience_negotiate_deescalation_trim_last_tick(void);
+    int engine_get_controller_war_sentience_comeback_bonus_last_tick(void);
+    int engine_get_controller_war_reinforcement_hits_total(void);
+    int engine_get_controller_war_reinforcement_hits_biome(int biome_index);
+    int engine_get_controller_war_reinforcement_hits_family_banana_scout(void);
+    int engine_get_controller_war_reinforcement_hits_family_banana_siege(void);
+    int engine_get_controller_war_reinforcement_hits_family_banana_apex(void);
+    int engine_get_controller_war_reinforcement_hits_family_banana_mythic(void);
+    int engine_get_controller_war_reinforcement_hits_family_bean_raider(void);
+    int engine_get_controller_war_reinforcement_hits_family_bean_warbrute(void);
+    int engine_get_controller_war_reinforcement_hits_family_bean_apex(void);
+    int engine_get_controller_war_reinforcement_hits_family_bean_mythic(void);
+    int engine_get_controller_war_reinforcement_hits_stage_banana_apex(int stage_index);
+    int engine_get_controller_war_reinforcement_hits_stage_banana_mythic(int stage_index);
+    int engine_get_controller_war_reinforcement_hits_stage_bean_apex(int stage_index);
+    int engine_get_controller_war_reinforcement_hits_stage_bean_mythic(int stage_index);
 
     /* ── Player Build & Combo Systems ───────────────────────────────────── */
 

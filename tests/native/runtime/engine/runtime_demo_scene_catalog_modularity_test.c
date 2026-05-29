@@ -29,6 +29,7 @@ int main(void)
         {3, 1, BANANA_POC_DEMO_SCENE_KIND_BANANA_LINE_CORRIDOR, "banana-mainline-metro-crescent"},
         {4, 0, BANANA_POC_DEMO_SCENE_KIND_LAB, "iron-spine-freight-lab"},
         {5, 0, BANANA_POC_DEMO_SCENE_KIND_CONTINENT, "frost-peel-preview"},
+        {6, 1, BANANA_POC_DEMO_SCENE_KIND_BANANA_LINE_STATION, "banana-war-sentience-showcase"},
     };
 
     int scene_count = banana_poc_demo_scene_catalog_count();

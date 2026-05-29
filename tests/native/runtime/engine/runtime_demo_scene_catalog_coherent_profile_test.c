@@ -13,7 +13,7 @@ static int expect_true(const char *label, int condition)
 
 int main(void)
 {
-    static const int k_enabled_variants[] = {0, 1, 2, 3};
+    static const int k_enabled_variants[] = {0, 1, 2, 3, 6};
     int index = 0;
 
     for (index = 0; index < (int)(sizeof(k_enabled_variants) / sizeof(k_enabled_variants[0])); index++)

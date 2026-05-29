@@ -1111,7 +1111,7 @@ int main(void)
             auto_target_injected = 0;
             banana_poc_objective_policy_apply_world_variant(&objective_policy, world_variant);
             apply_scene_variant_war_policy(world_variant);
-            if (world_variant == 2 || world_variant == 3)
+            if (world_variant == 2 || world_variant == 3 || world_variant == 6)
                 telemetry_enabled = 1;
             printf("[dx12-poc] launching scene variant=%d key=%s kind=%d asset-pack=%s gameplay-theme=%s placements=%d\n",
                    world_variant,

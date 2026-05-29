@@ -11,6 +11,7 @@ static const BananaPocDemoSceneCatalogEntry k_demo_scene_catalog[] = {
     {3, 1, BANANA_POC_DEMO_SCENE_KIND_BANANA_LINE_CORRIDOR, RUNTIME_TERRAIN_STATIC_MESH_REGION_METRO_BANANA, RUNTIME_TERRAIN_STATIC_MESH_REGION_CENTRAL_CRESCENT, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_MAINLINE, "neo-musa", "banana-mainline-metro-crescent", "Banana Line Corridor: Metro -> Crescent", "continent/metro-banana-v1", "banana-line-corridor"},
     {4, 0, BANANA_POC_DEMO_SCENE_KIND_LAB, RUNTIME_TERRAIN_STATIC_MESH_REGION_IRON_SPINE, RUNTIME_TERRAIN_STATIC_MESH_REGION_GOLDEN_HOOK, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_SPINE_FREIGHT, "spinehold", "iron-spine-freight-lab", "Lab: Iron Spine Freight", "continent/iron-spine-v1", "lab-disabled"},
     {5, 0, BANANA_POC_DEMO_SCENE_KIND_CONTINENT, RUNTIME_TERRAIN_STATIC_MESH_REGION_FROST_PEEL, RUNTIME_TERRAIN_STATIC_MESH_REGION_INVALID, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_FROST_FERRY, "icehook", "frost-peel-preview", "Preview: Frost Peel", "continent/frost-peel-v1", "preview-disabled"},
+    {6, 1, BANANA_POC_DEMO_SCENE_KIND_BANANA_LINE_STATION, RUNTIME_TERRAIN_STATIC_MESH_REGION_METRO_BANANA, RUNTIME_TERRAIN_STATIC_MESH_REGION_INVALID, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_MAINLINE, "neo-musa", "banana-war-sentience-showcase", "War Sentience Showcase: Metro Arena", "continent/metro-banana-v1", "war-sentience-showcase"},
 };
 
 typedef struct BananaPocGameplayModelCatalogEntry
@@ -50,21 +51,31 @@ static const BananaPocGameplayModelCatalogEntry k_demo_scene_gameplay_model_cata
     {"urban-station-traversal", "gameplay/urban-industrial/platform-barrier-v1", 1},
     {"urban-corridor-landmark", "gameplay/urban-industrial/archive-gate-v1", 1},
     {"urban-corridor-traversal", "gameplay/urban-industrial/market-stall-v1", 1},
+    {"war-banana-flank-urban", "gameplay/war/banana-scout-flank-urban-v1", 1},
+    {"war-bean-regroup-urban", "gameplay/war/bean-raider-regroup-urban-v1", 1},
+    {"war-banana-envoy-urban", "gameplay/war/banana-scout-envoy-urban-v1", 1},
+    {"war-bean-envoy-urban", "gameplay/war/bean-raider-envoy-urban-v1", 1},
 };
 
 static const BananaPocGameplayPlacementTemplate k_demo_scene_gameplay_placement_templates[] = {
     {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "reference-anchor", -2.0f, 0.0f, 1.0f},
-    {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BEAN, "reference-bean", "reference-banana", "bean-landmark-cluster", 4.0f, 0.0f, -3.5f},
+    {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BEAN, "reference-bean", "reference-banana", "bean-reference-anchor", -5.0f, 0.0f, 2.0f},
+    {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BEAN, "tropical-landmark", "reference-banana", "bean-landmark-cluster", 4.0f, 0.0f, -3.5f},
     {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BANANA, "tropical-traversal", "reference-banana", "traversal-route", 1.5f, 0.0f, 6.0f},
     {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "reference-anchor", -1.0f, 0.0f, 0.5f},
     {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "rugged-landmark", "reference-banana", "landmark-gate", 6.0f, 0.0f, -4.0f},
-    {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "reference-bean", "reference-banana", "bean-raider-route", 2.0f, 0.0f, 5.0f},
+    {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "rugged-traversal", "reference-banana", "bean-raider-route", 2.0f, 0.0f, 5.0f},
     {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "reference-anchor", -1.5f, 0.0f, 0.0f},
     {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "urban-station-landmark", "reference-banana", "station-landmark", 3.0f, 0.0f, -2.0f},
-    {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "reference-bean", "reference-banana", "bean-station-skirmish", 0.5f, 0.0f, 4.5f},
+    {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "urban-station-traversal", "reference-banana", "bean-station-skirmish", 0.5f, 0.0f, 4.5f},
     {3, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "reference-anchor", -0.5f, 0.0f, -1.0f},
     {3, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BEAN, "reference-bean", "reference-banana", "bean-corridor-front", 5.0f, 0.0f, -3.0f},
     {3, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BANANA, "urban-corridor-traversal", "reference-banana", "corridor-traversal", 1.0f, 0.0f, 5.5f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "showcase-reference-anchor", -1.5f, 0.0f, -0.5f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "war-banana-flank-urban", "reference-banana", "showcase-flank-banana", 2.8f, 0.0f, -2.4f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BEAN, "war-bean-regroup-urban", "reference-bean", "showcase-regroup-bean", 4.6f, 0.0f, -1.2f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BANANA, "war-banana-envoy-urban", "reference-banana", "showcase-envoy-banana", 0.8f, 0.0f, 4.3f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "war-bean-envoy-urban", "reference-bean", "showcase-envoy-bean", 3.2f, 0.0f, 5.1f},
 };
 
 #define BANANA_POC_GAMEPLAY_MODEL_OVERRIDE_CAPACITY 16
@@ -497,7 +508,13 @@ int banana_poc_demo_scene_catalog_war_policy_for_variant(int browser_variant,
     if (!entry || !out_radius || !out_reinforcements_per_tick || !out_population_cap)
         return 0;
 
-    if (entry->kind == BANANA_POC_DEMO_SCENE_KIND_CONTINENT)
+    if (entry->browser_variant == 6)
+    {
+        radius = 5.0f;
+        reinforcements_per_tick = 6;
+        population_cap = 192;
+    }
+    else if (entry->kind == BANANA_POC_DEMO_SCENE_KIND_CONTINENT)
     {
         radius = 12.0f;
         reinforcements_per_tick = 2;

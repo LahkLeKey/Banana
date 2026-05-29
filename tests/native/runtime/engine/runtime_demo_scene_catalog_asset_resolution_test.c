@@ -160,6 +160,57 @@ int main(void)
     if (!expect_true("variant 0 includes traversal role", saw_traversal))
         return 1;
 
+    {
+        int showcase_variant = 6;
+        int showcase_placement_count =
+            banana_poc_demo_scene_gameplay_placement_count_for_variant(showcase_variant);
+        int showcase_index = banana_poc_demo_scene_catalog_index_for_browser_variant(showcase_variant);
+        int placement_index = 0;
+        int saw_flank = 0;
+        int saw_regroup = 0;
+        int saw_envoy = 0;
+
+        if (!expect_true("showcase variant exists in catalog", showcase_index >= 0))
+            return 1;
+
+        if (!expect_true("showcase variant is launchable",
+                         banana_poc_demo_scene_catalog_validate_index(showcase_index) ==
+                             BANANA_POC_DEMO_SCENE_VALIDATION_OK))
+        {
+            return 1;
+        }
+
+        if (!expect_true("showcase variant has sentience placements", showcase_placement_count >= 4))
+            return 1;
+
+        for (placement_index = 0; placement_index < showcase_placement_count; placement_index++)
+        {
+            const BananaPocDemoSceneGameplayPlacement *placement =
+                banana_poc_demo_scene_gameplay_placement_at(showcase_variant, placement_index);
+            const char *model_id = placement ? placement->model_id : NULL;
+
+            if (!expect_true("showcase placement exists", placement != NULL))
+                return 1;
+
+            if (!model_id)
+                continue;
+
+            if (strstr(model_id, "flank") != NULL)
+                saw_flank = 1;
+            if (strstr(model_id, "regroup") != NULL)
+                saw_regroup = 1;
+            if (strstr(model_id, "envoy") != NULL)
+                saw_envoy = 1;
+        }
+
+        if (!expect_true("showcase variant includes flank model", saw_flank))
+            return 1;
+        if (!expect_true("showcase variant includes regroup model", saw_regroup))
+            return 1;
+        if (!expect_true("showcase variant includes envoy model", saw_envoy))
+            return 1;
+    }
+
     printf("runtime_demo_scene_catalog_asset_resolution_test: pass\n");
     return 0;
 }

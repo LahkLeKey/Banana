@@ -13,19 +13,25 @@
  *      npc_merchant_get_price / trade_buy / trade_sell) with verified
  *      gold + wood ledger.
  *   5. Pickup pipeline via runtime_gameplay_service_tick.
- *   6. Multiplayer presence: mark-seen / staleness / deactivate / rejoin.
- *   7. Coherent-world transition: catalog-driven connected pair with
+ *   6. Intelligence-driven warfront expansion scaffolding with full biome cycle.
+ *   7. Multiplayer presence: mark-seen / staleness / deactivate / rejoin.
+ *   8. Coherent-world transition: catalog-driven connected pair with
  *      deterministic continuity signature, plus self-loop signature.
+ *   9. War intelligence telemetry surface remains queryable for HUD/runtime.
  *
  * If any stage regresses, the "coherent game world" claim regresses with it.
  */
 
 #include "engine.h"
 #include "runtime/engine/gameplay_service.h"
+#include "runtime/controller/attach/controller_attach.h"
+#include "runtime/engine/engine_state.h"
 #include "runtime/player/player_api.h"
 #include "runtime/player/player_motion_host.h"
 #include "runtime/player/player_registry.h"
 #include "runtime/player/player_sync_abi.h"
+#include "ai/combat_controller.h"
+#include "ai/wildlife_controller.h"
 #include "win32_dx12_poc/scene/demo_scene_catalog.h"
 #include "world/world.h"
 
@@ -63,6 +69,27 @@ static uint32_t attach_controller_stub(uint32_t entity_id, const char *type)
 {
     (void)type;
     return entity_id + 5000u;
+}
+
+static int count_model_token(World *world, const char *token)
+{
+    int count = 0;
+
+    if (!world || !token)
+        return 0;
+
+    for (int i = 0; i < world->entity_count; i++)
+    {
+        const Entity *entity = world->entities[i];
+
+        if (!entity || !entity->active || entity->type != ENTITY_TYPE_NPC)
+            continue;
+
+        if (strstr(entity->gameplay_model_id, token) != NULL)
+            count += 1;
+    }
+
+    return count;
 }
 
 int main(void)
@@ -146,6 +173,7 @@ int main(void)
     int collected = 0;
     runtime_gameplay_service_tick(world,
                                   NULL,
+                                  NULL,
                                   0,
                                   NULL,
                                   host_entity,
@@ -154,14 +182,125 @@ int main(void)
                                   2.0f,
                                   8.0f,
                                   0,
-                                  96);
+                                  96,
+                                  0,
+                                  0,
+                                  0);
     expect_int("pickup collected", collected, 1);
     {
         Entity *p = world_get_entity(world, pickup);
         expect_true("pickup deactivated", p && p->active == 0);
     }
 
-    /* ---- 6. Multiplayer presence + staleness + rejoin ------------- */
+    /* ---- 6. Intelligence-driven warfront expansion scaffolding ---- */
+    {
+        ControllerInstance *controllers[32] = {0};
+        const int max_controllers = (int)(sizeof(controllers) / sizeof(controllers[0]));
+        int controller_count = 0;
+        int war_pickup_collected = 1;
+        int base_entities = world->entity_count;
+        EngineRuntimeState war_telemetry;
+        EntityId banana_front_id = world_spawn_entity(world, ENTITY_TYPE_NPC, 2.0f, 0.0f, 2.0f);
+        EntityId bean_front_id = world_spawn_entity(world, ENTITY_TYPE_NPC, 4.0f, 0.0f, 2.0f);
+        Entity *banana_front = world_get_entity(world, banana_front_id);
+        Entity *bean_front = world_get_entity(world, bean_front_id);
+
+        memset(&war_telemetry, 0, sizeof(war_telemetry));
+
+        wildlife_controller_register();
+        combat_controller_register();
+
+        if (banana_front)
+        {
+            strncpy(banana_front->controller_kind, "combat", sizeof(banana_front->controller_kind) - 1);
+            banana_front->controller_kind[sizeof(banana_front->controller_kind) - 1] = '\0';
+        }
+
+        if (bean_front)
+        {
+            strncpy(bean_front->controller_kind, "wildlife", sizeof(bean_front->controller_kind) - 1);
+            bean_front->controller_kind[sizeof(bean_front->controller_kind) - 1] = '\0';
+        }
+
+        expect_true("banana front entity exists", banana_front != NULL);
+        expect_true("bean front entity exists", bean_front != NULL);
+
+        if (banana_front && bean_front)
+        {
+            expect_true("banana front controller attached",
+                        runtime_controller_attach_to_entity_with_team(world,
+                                                                      controllers,
+                                                                      max_controllers,
+                                                                      &controller_count,
+                                                                      banana_front_id,
+                                                                      "combat",
+                                                                      CONTROLLER_TEAM_BANANA) != 0u);
+            expect_true("bean front controller attached",
+                        runtime_controller_attach_to_entity_with_team(world,
+                                                                      controllers,
+                                                                      max_controllers,
+                                                                      &controller_count,
+                                                                      bean_front_id,
+                                                                      "wildlife",
+                                                                      CONTROLLER_TEAM_BEAN) != 0u);
+
+            for (int biome_stage = 0; biome_stage < 4; biome_stage++)
+            {
+                runtime_gameplay_service_tick(world,
+                                              &war_telemetry,
+                                              controllers,
+                                              max_controllers,
+                                              &controller_count,
+                                              host_entity,
+                                              &war_pickup_collected,
+                                              6.0f,
+                                              1.55f,
+                                              8.0f,
+                                              2,
+                                              64,
+                                              1,
+                                              2,
+                                              biome_stage);
+            }
+
+            expect_true("warfront expanded with full-biome reinforcements", world->entity_count >= base_entities + 8);
+            expect_true("controller roster expanded for full-biome cycle", controller_count >= 10);
+            expect_true("banana siege-tropical model scaffolded",
+                        count_model_token(world, "banana-siege-commander-tropical") > 0);
+            expect_true("banana siege-glacier model scaffolded",
+                        count_model_token(world, "banana-siege-commander-glacier") > 0);
+            expect_true("banana siege-urban model scaffolded",
+                        count_model_token(world, "banana-siege-commander-urban") > 0);
+            expect_true("banana siege-volcanic model scaffolded",
+                        count_model_token(world, "banana-siege-commander-volcanic") > 0);
+            expect_true("bean warbrute-tropical model scaffolded",
+                        count_model_token(world, "bean-warbrute-tropical") > 0);
+            expect_true("bean warbrute-glacier model scaffolded",
+                        count_model_token(world, "bean-warbrute-glacier") > 0);
+            expect_true("bean warbrute-urban model scaffolded",
+                        count_model_token(world, "bean-warbrute-urban") > 0);
+            expect_true("bean warbrute-volcanic model scaffolded",
+                        count_model_token(world, "bean-warbrute-volcanic") > 0);
+            expect_true("war telemetry total recorded",
+                        war_telemetry.war_reinforcement_spawns_total >= 8);
+            expect_true("war telemetry tropical biome recorded",
+                        war_telemetry.war_reinforcement_biome_hits[0] > 0);
+            expect_true("war telemetry glacier biome recorded",
+                        war_telemetry.war_reinforcement_biome_hits[1] > 0);
+            expect_true("war telemetry urban biome recorded",
+                        war_telemetry.war_reinforcement_biome_hits[2] > 0);
+            expect_true("war telemetry volcanic biome recorded",
+                        war_telemetry.war_reinforcement_biome_hits[3] > 0);
+        }
+
+        for (int i = 0; i < controller_count; i++)
+        {
+            if (controllers[i])
+                controller_destroy(controllers[i]);
+        }
+    }
+
+    /* ---- 7. Multiplayer presence + staleness + rejoin ------------- */
     /* current=12000, threshold=1500 → host last_seen=11500 fresh; remote=1000 stale. */
     runtime_player_sync_abi_mark_seen("host-player", 11500);
     runtime_player_sync_abi_mark_seen("remote-player", 1000);
@@ -190,7 +329,7 @@ int main(void)
         expect_true("remote re-fresh after rejoin", r && r->is_stale == 0);
     }
 
-    /* ---- 7. Coherent-world transition ----------------------------- */
+    /* ---- 8. Coherent-world transition ----------------------------- */
     int catalog_count = banana_poc_demo_scene_catalog_count();
     expect_true("catalog has entries", catalog_count > 0);
 
@@ -255,12 +394,120 @@ int main(void)
         expect_true("self-loop signature non-zero", self_a != 0u);
     }
 
+    expect_true("war intelligence stage getter non-negative",
+                engine_get_controller_war_intelligence_stage() >= 0);
+    expect_true("war biome unlock getter positive",
+                engine_get_controller_war_biome_unlock_count() > 0);
+    expect_true("war reinforcement total getter non-negative",
+                engine_get_controller_war_reinforcement_hits_total() >= 0);
+    expect_true("war reinforcement biome getter non-negative",
+                engine_get_controller_war_reinforcement_hits_biome(0) >= 0);
+    expect_true("war reinforcement family getter non-negative",
+                engine_get_controller_war_reinforcement_hits_family_banana_siege() >= 0);
+    expect_true("war reinforcement apex getter non-negative",
+                engine_get_controller_war_reinforcement_hits_family_banana_apex() >= 0);
+    expect_true("war reinforcement mythic getter non-negative",
+                engine_get_controller_war_reinforcement_hits_family_banana_mythic() >= 0);
+    expect_true("war reinforcement bean apex getter non-negative",
+                engine_get_controller_war_reinforcement_hits_family_bean_apex() >= 0);
+    expect_true("war reinforcement bean mythic getter non-negative",
+                engine_get_controller_war_reinforcement_hits_family_bean_mythic() >= 0);
+    expect_true("war reinforcement stage apex getter non-negative",
+                engine_get_controller_war_reinforcement_hits_stage_banana_apex(3) >= 0);
+    expect_true("war reinforcement stage mythic getter non-negative",
+                engine_get_controller_war_reinforcement_hits_stage_banana_mythic(5) >= 0);
+    expect_true("war reinforcement bean stage apex getter non-negative",
+                engine_get_controller_war_reinforcement_hits_stage_bean_apex(3) >= 0);
+    expect_true("war reinforcement bean stage mythic getter non-negative",
+                engine_get_controller_war_reinforcement_hits_stage_bean_mythic(5) >= 0);
+    expect_int("war reinforcement stage getter negative index clamps to zero",
+               engine_get_controller_war_reinforcement_hits_stage_banana_apex(-1),
+               0);
+    expect_int("war reinforcement stage getter large index clamps to zero",
+               engine_get_controller_war_reinforcement_hits_stage_banana_mythic(99),
+               0);
+    expect_true("war life generation getter non-negative",
+                engine_get_controller_war_life_generation() >= 0);
+    expect_true("war life alive cells getter bounded",
+                engine_get_controller_war_life_alive_cells() >= 0 &&
+                    engine_get_controller_war_life_alive_cells() <= 16);
+    expect_true("war life frontline cells getter bounded",
+                engine_get_controller_war_life_frontline_cells() >= 0 &&
+                    engine_get_controller_war_life_frontline_cells() <=
+                        engine_get_controller_war_life_alive_cells());
+    expect_true("war procgen biome bias getter in range",
+                engine_get_controller_war_procgen_biome_bias() >= 0 &&
+                    engine_get_controller_war_procgen_biome_bias() < BANANA_ENGINE_TERRAIN_MAX_LAYERS);
+    expect_true("war sentience humanoid index getter non-negative",
+                engine_get_controller_war_sentience_humanoid_index() >= 0);
+    expect_true("war sentience coordination getter non-negative",
+                engine_get_controller_war_sentience_coordination_level() >= 0);
+    expect_true("war sentience empathy getter non-negative",
+                engine_get_controller_war_sentience_empathy_level() >= 0);
+    expect_true("war sentience banana behavior getter in range",
+                engine_get_controller_war_sentience_behavior_mode_banana() >= 0 &&
+                    engine_get_controller_war_sentience_behavior_mode_banana() <= 3);
+    expect_true("war sentience bean behavior getter in range",
+                engine_get_controller_war_sentience_behavior_mode_bean() >= 0 &&
+                    engine_get_controller_war_sentience_behavior_mode_bean() <= 3);
+    expect_true("war sentience banana mode-channel getter non-negative",
+                engine_get_controller_war_sentience_spawn_mode_hits_banana(1) >= 0);
+    expect_true("war sentience bean mode-channel getter non-negative",
+                engine_get_controller_war_sentience_spawn_mode_hits_bean(3) >= 0);
+    expect_int("war sentience banana mode-channel getter negative clamps to zero",
+               engine_get_controller_war_sentience_spawn_mode_hits_banana(-1),
+               0);
+    expect_int("war sentience bean mode-channel getter large index clamps to zero",
+               engine_get_controller_war_sentience_spawn_mode_hits_bean(99),
+               0);
+    expect_true("war sentience negotiate streak getter non-negative",
+                engine_get_controller_war_sentience_negotiate_streak_ticks() >= 0);
+    expect_true("war sentience negotiate trim getter bounded",
+                engine_get_controller_war_sentience_negotiate_deescalation_trim_last_tick() >= 0 &&
+                    engine_get_controller_war_sentience_negotiate_deescalation_trim_last_tick() <= 4);
+    expect_true("war sentience comeback bonus getter non-negative",
+                engine_get_controller_war_sentience_comeback_bonus_last_tick() >= 0);
+    expect_true("war life tick interval policy getter bounded",
+                engine_get_controller_war_life_tick_interval() >= 1 &&
+                    engine_get_controller_war_life_tick_interval() <= 32);
+    expect_true("war life intelligence bonus max policy getter bounded",
+                engine_get_controller_war_life_intelligence_bonus_max() >= 0 &&
+                    engine_get_controller_war_life_intelligence_bonus_max() <= 8);
+    expect_true("war procgen biome variance policy getter bounded",
+                engine_get_controller_war_procgen_biome_variance() >= 0 &&
+                    engine_get_controller_war_procgen_biome_variance() <= 3);
+    expect_true("war sentience gain policy getter bounded",
+                engine_get_controller_war_sentience_gain_per_tick() >= 0 &&
+                    engine_get_controller_war_sentience_gain_per_tick() <= 8);
+    expect_true("war sentience comeback policy getter bounded",
+                engine_get_controller_war_sentience_comeback_bonus_per_coordination() >= 0 &&
+                    engine_get_controller_war_sentience_comeback_bonus_per_coordination() <= 8);
+    expect_true("war frontier getter non-negative",
+                engine_get_controller_war_frontier_chunks() >= 0);
+    expect_true("war biome stage getter in range",
+                engine_get_controller_war_biome_stage_index() >= 0 &&
+                    engine_get_controller_war_biome_stage_index() < BANANA_ENGINE_TERRAIN_MAX_LAYERS);
+    expect_true("war overcrowd pct getter in range",
+                engine_get_controller_war_overcrowd_pct() >= 0 &&
+                    engine_get_controller_war_overcrowd_pct() <= 100);
+    expect_true("war overcrowd bonus getter non-negative",
+                engine_get_controller_war_overcrowd_expand_bonus_chunks() >= 0);
+    expect_true("war overcrowd intelligence bonus getter in range",
+                engine_get_controller_war_overcrowd_intelligence_bonus_per_stage() >= 0 &&
+                    engine_get_controller_war_overcrowd_intelligence_bonus_per_stage() <= 2);
+    expect_true("war apex active getter boolean",
+                engine_get_controller_war_apex_feature_active() == 0 ||
+                    engine_get_controller_war_apex_feature_active() == 1);
+    expect_true("war mythic active getter boolean",
+                engine_get_controller_war_mythic_feature_active() == 0 ||
+                    engine_get_controller_war_mythic_feature_active() == 1);
+
     world_destroy(world);
     engine_shutdown();
 
     if (g_failures == 0)
     {
-        printf("MMO DEMO: PASS (all 7 stages green)\n");
+        printf("MMO DEMO: PASS (all 9 stages green)\n");
         return 0;
     }
     fprintf(stderr, "MMO DEMO: FAIL (%d failed assertions)\n", g_failures);

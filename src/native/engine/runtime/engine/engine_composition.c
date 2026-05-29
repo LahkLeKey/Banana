@@ -100,10 +100,13 @@ int runtime_engine_composition_init(EngineRuntimeState *state,
     state->viewport_width = width;
     state->viewport_height = height;
     state->war_frontier_chunks = 1;
-    state->war_biome_stage_index = 0;
+    state->war_biome_stage_index = 1;
     state->war_terrain_expand_tick_counter = 0;
     state->war_escalation_tier = RUNTIME_WAR_ESCALATION_PEACEFUL;
     state->war_effective_reinforcements_per_tick = runtime_tick_budget_policy_controller_war_reinforcements_per_tick();
+    state->war_intelligence_stage = 0;
+    state->war_intelligence_progress_ticks = 0;
+    state->war_biome_unlock_mask = 1u;
 
     if (player_builds_init() != 0)
         return -1;

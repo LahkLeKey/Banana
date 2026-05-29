@@ -207,6 +207,186 @@ int main(void)
     if (!expect_int("siege cooldown reduction ceiling", runtime_tick_budget_policy_controller_war_siege_cooldown_reduction(), 32))
         return 1;
 
+    unsetenv("BANANA_CONTROLLER_WAR_OVERCROWD_PCT");
+    if (!expect_int("default overcrowd pct", runtime_tick_budget_policy_controller_war_overcrowd_pct(), 92))
+        return 1;
+
+    setenv("BANANA_CONTROLLER_WAR_OVERCROWD_PCT", "40", 1);
+    if (!expect_int("minimum overcrowd pct clamp", runtime_tick_budget_policy_controller_war_overcrowd_pct(), 60))
+        return 1;
+
+    setenv("BANANA_CONTROLLER_WAR_OVERCROWD_PCT", "140", 1);
+    if (!expect_int("maximum overcrowd pct clamp", runtime_tick_budget_policy_controller_war_overcrowd_pct(), 100))
+        return 1;
+
+    unsetenv("BANANA_CONTROLLER_WAR_OVERCROWD_EXPAND_BONUS_CHUNKS");
+    if (!expect_int("default overcrowd expand bonus", runtime_tick_budget_policy_controller_war_overcrowd_expand_bonus_chunks(), 0))
+        return 1;
+
+    setenv("BANANA_CONTROLLER_WAR_OVERCROWD_EXPAND_BONUS_CHUNKS", "2", 1);
+    if (!expect_int("configured overcrowd expand bonus", runtime_tick_budget_policy_controller_war_overcrowd_expand_bonus_chunks(), 2))
+        return 1;
+
+    setenv("BANANA_CONTROLLER_WAR_OVERCROWD_EXPAND_BONUS_CHUNKS", "-1", 1);
+    if (!expect_int("minimum overcrowd expand bonus clamp", runtime_tick_budget_policy_controller_war_overcrowd_expand_bonus_chunks(), 0))
+        return 1;
+
+    setenv("BANANA_CONTROLLER_WAR_OVERCROWD_EXPAND_BONUS_CHUNKS", "999", 1);
+    if (!expect_int("maximum overcrowd expand bonus clamp", runtime_tick_budget_policy_controller_war_overcrowd_expand_bonus_chunks(), 4))
+        return 1;
+
+    unsetenv("BANANA_CONTROLLER_WAR_OVERCROWD_INTELLIGENCE_BONUS_PER_STAGE");
+    if (!expect_int("default overcrowd intelligence bonus per stage",
+                    runtime_tick_budget_policy_controller_war_overcrowd_intelligence_bonus_per_stage(),
+                    0))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_OVERCROWD_INTELLIGENCE_BONUS_PER_STAGE", "1", 1);
+    if (!expect_int("configured overcrowd intelligence bonus per stage",
+                    runtime_tick_budget_policy_controller_war_overcrowd_intelligence_bonus_per_stage(),
+                    1))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_OVERCROWD_INTELLIGENCE_BONUS_PER_STAGE", "-1", 1);
+    if (!expect_int("minimum overcrowd intelligence bonus per stage clamp",
+                    runtime_tick_budget_policy_controller_war_overcrowd_intelligence_bonus_per_stage(),
+                    0))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_OVERCROWD_INTELLIGENCE_BONUS_PER_STAGE", "999", 1);
+    if (!expect_int("maximum overcrowd intelligence bonus per stage clamp",
+                    runtime_tick_budget_policy_controller_war_overcrowd_intelligence_bonus_per_stage(),
+                    2))
+    {
+        return 1;
+    }
+
+    unsetenv("BANANA_CONTROLLER_WAR_LIFE_TICK_INTERVAL");
+    if (!expect_int("default life tick interval",
+                    runtime_tick_budget_policy_controller_war_life_tick_interval(),
+                    1))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_LIFE_TICK_INTERVAL", "0", 1);
+    if (!expect_int("minimum life tick interval clamp",
+                    runtime_tick_budget_policy_controller_war_life_tick_interval(),
+                    1))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_LIFE_TICK_INTERVAL", "999", 1);
+    if (!expect_int("maximum life tick interval clamp",
+                    runtime_tick_budget_policy_controller_war_life_tick_interval(),
+                    32))
+    {
+        return 1;
+    }
+
+    unsetenv("BANANA_CONTROLLER_WAR_LIFE_INTELLIGENCE_BONUS_MAX");
+    if (!expect_int("default life intelligence bonus max",
+                    runtime_tick_budget_policy_controller_war_life_intelligence_bonus_max(),
+                    2))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_LIFE_INTELLIGENCE_BONUS_MAX", "-1", 1);
+    if (!expect_int("minimum life intelligence bonus max clamp",
+                    runtime_tick_budget_policy_controller_war_life_intelligence_bonus_max(),
+                    0))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_LIFE_INTELLIGENCE_BONUS_MAX", "999", 1);
+    if (!expect_int("maximum life intelligence bonus max clamp",
+                    runtime_tick_budget_policy_controller_war_life_intelligence_bonus_max(),
+                    8))
+    {
+        return 1;
+    }
+
+    unsetenv("BANANA_CONTROLLER_WAR_PROCGEN_BIOME_VARIANCE");
+    if (!expect_int("default procgen biome variance",
+                    runtime_tick_budget_policy_controller_war_procgen_biome_variance(),
+                    1))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_PROCGEN_BIOME_VARIANCE", "-1", 1);
+    if (!expect_int("minimum procgen biome variance clamp",
+                    runtime_tick_budget_policy_controller_war_procgen_biome_variance(),
+                    0))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_PROCGEN_BIOME_VARIANCE", "999", 1);
+    if (!expect_int("maximum procgen biome variance clamp",
+                    runtime_tick_budget_policy_controller_war_procgen_biome_variance(),
+                    3))
+    {
+        return 1;
+    }
+
+    unsetenv("BANANA_CONTROLLER_WAR_SENTIENCE_GAIN_PER_TICK");
+    if (!expect_int("default sentience gain per tick",
+                    runtime_tick_budget_policy_controller_war_sentience_gain_per_tick(),
+                    1))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_SENTIENCE_GAIN_PER_TICK", "-1", 1);
+    if (!expect_int("minimum sentience gain per tick clamp",
+                    runtime_tick_budget_policy_controller_war_sentience_gain_per_tick(),
+                    0))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_SENTIENCE_GAIN_PER_TICK", "999", 1);
+    if (!expect_int("maximum sentience gain per tick clamp",
+                    runtime_tick_budget_policy_controller_war_sentience_gain_per_tick(),
+                    8))
+    {
+        return 1;
+    }
+
+    unsetenv("BANANA_CONTROLLER_WAR_SENTIENCE_COMEBACK_BONUS_PER_COORDINATION");
+    if (!expect_int("default sentience comeback bonus per coordination",
+                    runtime_tick_budget_policy_controller_war_sentience_comeback_bonus_per_coordination(),
+                    2))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_SENTIENCE_COMEBACK_BONUS_PER_COORDINATION", "-1", 1);
+    if (!expect_int("minimum sentience comeback bonus per coordination clamp",
+                    runtime_tick_budget_policy_controller_war_sentience_comeback_bonus_per_coordination(),
+                    0))
+    {
+        return 1;
+    }
+
+    setenv("BANANA_CONTROLLER_WAR_SENTIENCE_COMEBACK_BONUS_PER_COORDINATION", "999", 1);
+    if (!expect_int("maximum sentience comeback bonus per coordination clamp",
+                    runtime_tick_budget_policy_controller_war_sentience_comeback_bonus_per_coordination(),
+                    8))
+    {
+        return 1;
+    }
+
     unsetenv("BANANA_TERRAIN_REBUILD_BUDGET");
     unsetenv("BANANA_CONTROLLER_WAR_RADIUS");
     unsetenv("BANANA_CONTROLLER_WAR_REINFORCEMENTS_PER_TICK");
@@ -220,5 +400,13 @@ int main(void)
     unsetenv("BANANA_CONTROLLER_WAR_SIEGE_REINFORCEMENT_BONUS");
     unsetenv("BANANA_CONTROLLER_WAR_SKIRMISH_COOLDOWN_REDUCTION");
     unsetenv("BANANA_CONTROLLER_WAR_SIEGE_COOLDOWN_REDUCTION");
+    unsetenv("BANANA_CONTROLLER_WAR_OVERCROWD_PCT");
+    unsetenv("BANANA_CONTROLLER_WAR_OVERCROWD_EXPAND_BONUS_CHUNKS");
+    unsetenv("BANANA_CONTROLLER_WAR_OVERCROWD_INTELLIGENCE_BONUS_PER_STAGE");
+    unsetenv("BANANA_CONTROLLER_WAR_LIFE_TICK_INTERVAL");
+    unsetenv("BANANA_CONTROLLER_WAR_LIFE_INTELLIGENCE_BONUS_MAX");
+    unsetenv("BANANA_CONTROLLER_WAR_PROCGEN_BIOME_VARIANCE");
+    unsetenv("BANANA_CONTROLLER_WAR_SENTIENCE_GAIN_PER_TICK");
+    unsetenv("BANANA_CONTROLLER_WAR_SENTIENCE_COMEBACK_BONUS_PER_COORDINATION");
     return 0;
 }

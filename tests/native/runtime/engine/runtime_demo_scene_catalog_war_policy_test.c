@@ -94,6 +94,22 @@ int main(void)
     if (!expect_int("corridor cap", cap, 176))
         return 1;
 
+    if (!expect_int("sentience showcase policy available",
+                    banana_poc_demo_scene_catalog_war_policy_for_variant(6,
+                                                                         &radius,
+                                                                         &reinforcements,
+                                                                         &cap),
+                    1))
+    {
+        return 1;
+    }
+    if (!expect_float_x10("sentience showcase radius", radius, 50))
+        return 1;
+    if (!expect_int("sentience showcase reinforcements", reinforcements, 6))
+        return 1;
+    if (!expect_int("sentience showcase cap", cap, 192))
+        return 1;
+
     if (!expect_true("null output pointer rejected",
                      banana_poc_demo_scene_catalog_war_policy_for_variant(0,
                                                                           NULL,

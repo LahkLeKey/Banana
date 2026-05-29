@@ -254,7 +254,7 @@ void banana_poc_scene_flow_step(BananaPocSceneFlowState *state,
         state->proto_config.scene_browser_index =
             banana_poc_demo_scene_catalog_clamp_index(state->proto_config.scene_browser_index);
 
-        /* Navigate the four prototype scenes. */
+        /* Navigate catalog-defined prototype scenes. */
         if (input->up_pressed && state->proto_config.scene_browser_index > 0)
         {
             state->proto_config.scene_browser_index--;
