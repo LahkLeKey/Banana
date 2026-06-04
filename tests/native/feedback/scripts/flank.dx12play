@@ -1,0 +1,11 @@
+# DX12 playloop script: flank validation
+page.goto warfront
+state.sentience 5 8 3
+engine.config snapshot-interval 2
+page.tick 2
+expect.mode banana flank
+expect.mode bean flank
+expect.metric banana-count gte 3
+expect.metric bean-count gte 3
+snapshot flank-baseline
+note flank_baseline_validated

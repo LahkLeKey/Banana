@@ -49,6 +49,90 @@
       "dependsOrder": "sequence"
     },
     {
+      "label": "Native: war suite (focused)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "bash scripts/run-war-test-suites.sh --suite focused"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Native: build (v3)",
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Native: war suite (evidence)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "bash scripts/run-war-test-suites.sh --suite evidence"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Native: build (v3)",
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Native: war suite (soak)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "bash scripts/run-war-test-suites.sh --suite soak"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Native: build (v3)",
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Native: war suite (legacy)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "bash scripts/run-war-test-suites.sh --suite legacy"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Native: build (v3)",
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Native: war suite (single test prompt)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "bash scripts/run-war-test-suites.sh --suite none --test \"${input:warCtestName}\""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Native: build (v3)",
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Native: war suite (custom regex prompt)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "bash scripts/run-war-test-suites.sh --regex \"${input:warCtestRegex}\""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Native: build (v3)",
+      "dependsOrder": "sequence"
+    },
+    {
       "label": "API: smoke (v3)",
       "type": "shell",
       "command": "bun",
@@ -144,6 +228,19 @@
       "options": {
         "cwd": "${workspaceFolder}"
       }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "warCtestName",
+      "type": "promptString",
+      "description": "ctest name to run (example: banana_runtime_gameplay_warfront_comeback_bonus_test)"
+    },
+    {
+      "id": "warCtestRegex",
+      "type": "promptString",
+      "description": "ctest regex pattern",
+      "default": "banana_(runtime_gameplay_warfront_expansion|runtime_gameplay_warfront_comeback_bonus|runtime_tick_orchestration_war_long_run_soak|runtime_full_mmo_demo)_test"
     }
   ]
 }

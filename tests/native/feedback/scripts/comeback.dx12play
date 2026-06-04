@@ -1,0 +1,10 @@
+# DX12 playloop script: comeback validation
+page.goto comeback
+state.sentience 11 4 2
+engine.config snapshot-interval 2
+page.tick 1
+expect.mode banana regroup
+expect.mode bean hold-line
+expect.metric comeback-bonus gte 1
+snapshot comeback-baseline
+note comeback_baseline_validated
