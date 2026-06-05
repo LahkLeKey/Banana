@@ -1,0 +1,11 @@
+# DX12 playloop script: negotiate validation
+page.goto negotiate
+state.sentience 14 9 9
+engine.config snapshot-interval 2
+page.tick 2
+expect.mode banana negotiate
+expect.mode bean negotiate
+expect.metric negotiate-streak gte 1
+expect.metric trim gte 1
+snapshot negotiate-baseline
+note negotiate_baseline_validated

@@ -128,6 +128,11 @@ const unsigned char *engine_get_frame_buffer(void)
     return runtime_engine_host_get_frame_buffer(s_renderer);
 }
 
+void engine_get_frame_dimensions(int *out_width, int *out_height)
+{
+    runtime_engine_host_get_frame_dimensions(s_renderer, out_width, out_height);
+}
+
 /* Physics ABI */
 void physics_step(float dt)
 {

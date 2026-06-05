@@ -1,0 +1,15 @@
+{
+  "frame_id": "warfront-1-13278093",
+  "run_id": "2026_06_04T03_18_01Z-gameplay-2-flank",
+  "scenario": "warfront",
+  "tick": 1,
+  "timestamp_ms": 13278093,
+  "image_path": "frames/warfront/1-13278093.bmp",
+  "metadata_path": "frames/warfront/1-13278093.json",
+  "width": 1280,
+  "height": 720,
+  "render_backend": "dx12",
+  "ui_overlay": false,
+  "scene_variant": -1,
+  "scene_key": ""
+}

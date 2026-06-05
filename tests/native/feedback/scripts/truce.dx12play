@@ -1,0 +1,12 @@
+# DX12 playloop script: negotiate truce validation
+page.goto negotiate
+state.sentience 14 9 9
+actor.spawn neutral wildlife 1.0 1.0
+engine.config snapshot-interval 2
+page.tick 2
+expect.mode banana negotiate
+expect.mode bean negotiate
+expect.metric negotiate-streak gte 1
+expect.team-count neutral gte 1
+snapshot truce-baseline
+note truce_baseline_validated

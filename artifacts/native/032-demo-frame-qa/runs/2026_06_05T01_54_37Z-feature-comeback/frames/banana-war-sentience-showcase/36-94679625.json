@@ -1,0 +1,15 @@
+{
+  "frame_id": "banana-war-sentience-showcase-36-94679625",
+  "run_id": "2026_06_05T01_54_37Z-feature-comeback",
+  "scenario": "banana-war-sentience-showcase",
+  "tick": 36,
+  "timestamp_ms": 94679625,
+  "image_path": "frames/banana-war-sentience-showcase/36-94679625.bmp",
+  "metadata_path": "frames/banana-war-sentience-showcase/36-94679625.json",
+  "width": 1280,
+  "height": 720,
+  "render_backend": "dx12",
+  "ui_overlay": false,
+  "scene_variant": 6,
+  "scene_key": "banana-war-sentience-showcase"
+}

@@ -1,6 +1,8 @@
 #if defined(_WIN32)
 
 #include "../../engine.h"
+#include "../../runtime/engine/demo_frame_export.h"
+#include "../../runtime/engine/engine_host.h"
 #include "../scene_overlay.h"
 #include "../scene/demo_scene_catalog.h"
 #include "../scene_flow.h"
@@ -334,6 +336,10 @@ static void apply_scene_variant_war_policy(int browser_variant)
     char radius_buffer[32];
     char reinforcement_buffer[32];
     char cap_buffer[32];
+    const char *radius_override = NULL;
+    const char *reinforcement_override = NULL;
+    const char *cap_override = NULL;
+    int override_used = 0;
 
     if (!banana_poc_demo_scene_catalog_war_policy_for_variant(browser_variant,
                                                               &radius,
@@ -343,19 +349,49 @@ static void apply_scene_variant_war_policy(int browser_variant)
         return;
     }
 
-    snprintf(radius_buffer, sizeof(radius_buffer), "%.2f", radius);
-    snprintf(reinforcement_buffer, sizeof(reinforcement_buffer), "%d", reinforcements_per_tick);
-    snprintf(cap_buffer, sizeof(cap_buffer), "%d", population_cap);
+    radius_override = getenv("BANANA_CONTROLLER_WAR_RADIUS");
+    reinforcement_override = getenv("BANANA_CONTROLLER_WAR_REINFORCEMENTS_PER_TICK");
+    cap_override = getenv("BANANA_CONTROLLER_WAR_POPULATION_CAP");
 
-    _putenv_s("BANANA_CONTROLLER_WAR_RADIUS", radius_buffer);
-    _putenv_s("BANANA_CONTROLLER_WAR_REINFORCEMENTS_PER_TICK", reinforcement_buffer);
-    _putenv_s("BANANA_CONTROLLER_WAR_POPULATION_CAP", cap_buffer);
+    if (radius_override && radius_override[0] != '\0')
+    {
+        radius = (float)atof(radius_override);
+        override_used = 1;
+    }
+    else
+    {
+        snprintf(radius_buffer, sizeof(radius_buffer), "%.2f", radius);
+        _putenv_s("BANANA_CONTROLLER_WAR_RADIUS", radius_buffer);
+    }
 
-    printf("[dx12-poc] variant-war-policy variant=%d radius=%.2f reinforcements=%d cap=%d\n",
+    if (reinforcement_override && reinforcement_override[0] != '\0')
+    {
+        reinforcements_per_tick = atoi(reinforcement_override);
+        override_used = 1;
+    }
+    else
+    {
+        snprintf(reinforcement_buffer, sizeof(reinforcement_buffer), "%d", reinforcements_per_tick);
+        _putenv_s("BANANA_CONTROLLER_WAR_REINFORCEMENTS_PER_TICK", reinforcement_buffer);
+    }
+
+    if (cap_override && cap_override[0] != '\0')
+    {
+        population_cap = atoi(cap_override);
+        override_used = 1;
+    }
+    else
+    {
+        snprintf(cap_buffer, sizeof(cap_buffer), "%d", population_cap);
+        _putenv_s("BANANA_CONTROLLER_WAR_POPULATION_CAP", cap_buffer);
+    }
+
+    printf("[dx12-poc] variant-war-policy variant=%d radius=%.2f reinforcements=%d cap=%d source=%s\n",
            browser_variant,
            radius,
            reinforcements_per_tick,
-           population_cap);
+           population_cap,
+           override_used ? "env" : "catalog");
 }
 
 static void init_profile_path(void)
@@ -753,6 +789,9 @@ int main(void)
     int startup_smoke_seconds = 0;
     int telemetry_interval_ms = 1000;
     int auto_target_enabled = 1;
+    int auto_target_env_override = 0;
+    int auto_target_env_value = 0;
+    int autotest_allow_target = 0;
     int target_hotkey_enabled = 0;
     int telemetry_enabled = 0;
     BananaPocScene scene = BANANA_POC_SCENE_MAIN_MENU;
@@ -765,6 +804,10 @@ int main(void)
     int world_variant = 0;
     int startup_scene_variant = -1;
     int exit_code = 0;
+    DemoFrameExportConfig demo_frame_config;
+    DemoFrameExportState demo_frame_state;
+    int demo_frame_tick = 0;
+    int demo_frame_enabled = 0;
     int last_rbutton_down = 0;
     int last_lbutton_down = 0;
     int last_target_hotkey_down = 0;
@@ -824,10 +867,14 @@ int main(void)
     startup_smoke_mode = parse_env_flag("BANANA_DX12_POC_AUTOTEST");
     startup_smoke_seconds = parse_env_int("BANANA_DX12_POC_AUTOTEST_SECONDS", 2, 1, 30);
     startup_scene_variant = parse_env_int("BANANA_DX12_POC_SCENE_VARIANT", -1, -1, 127);
+    autotest_allow_target = parse_env_flag("BANANA_DX12_POC_AUTOTEST_ALLOW_TARGET");
     banana_poc_objective_policy_init(&objective_policy,
                                      parse_env_int("BANANA_DX12_POC_OBJECTIVE_TIMEOUT_SECONDS", 0, 0, 3600));
     telemetry_interval_ms = parse_env_int("BANANA_DX12_POC_TELEMETRY_INTERVAL_MS", 5000, 250, 60000);
     auto_target_enabled = parse_env_int("BANANA_DX12_POC_AUTO_TARGET", 0, 0, 1);
+    auto_target_env_override = (getenv("BANANA_DX12_POC_AUTO_TARGET") != NULL &&
+                                getenv("BANANA_DX12_POC_AUTO_TARGET")[0] != '\0');
+    auto_target_env_value = auto_target_enabled;
     target_hotkey_enabled = parse_env_int("BANANA_DX12_POC_ENABLE_TARGET_HOTKEY", 0, 0, 1);
     telemetry_enabled = parse_env_int("BANANA_DX12_POC_TELEMETRY", 0, 0, 1);
     init_profile_path();
@@ -840,6 +887,8 @@ int main(void)
                  &telemetry_enabled,
                  &level_editor_height,
                  &proto_config);
+    if (auto_target_env_override)
+        auto_target_enabled = auto_target_env_value;
     if (menu_index < 0 || menu_index > 6)
         menu_index = 0;
     if (character_index < 0)
@@ -892,6 +941,33 @@ int main(void)
     }
 
     apply_scene_variant_war_policy(proto_config.active_world_variant);
+
+    demo_frame_export_config_init(&demo_frame_config);
+    demo_frame_export_config_apply_env(&demo_frame_config,
+                                       4,
+                                       "artifacts/native/032-demo-frame-qa/runs");
+    if (demo_frame_config.suite_label[0] == '\0')
+    {
+        strncpy(demo_frame_config.suite_label,
+                "dx12-poc",
+                sizeof(demo_frame_config.suite_label) - 1);
+    }
+    if (demo_frame_config.run_label[0] == '\0')
+    {
+        const char *default_label = startup_smoke_mode ? "autotest" : "poc";
+        strncpy(demo_frame_config.run_label,
+                default_label,
+                sizeof(demo_frame_config.run_label) - 1);
+    }
+
+    if (!demo_frame_export_begin(&demo_frame_state, &demo_frame_config))
+    {
+        fprintf(stderr, "[dx12-poc] demo frame export init failed\n");
+        engine_ui_shutdown();
+        engine_shutdown();
+        return 1;
+    }
+    demo_frame_enabled = demo_frame_export_is_enabled(&demo_frame_state);
 
     if (startup_scene_variant >= 0)
     {
@@ -1278,7 +1354,8 @@ int main(void)
                 last_target_hotkey_down = hotkey_down;
             }
 
-            if (!startup_smoke_mode && auto_target_enabled && !auto_target_injected && elapsed_seconds >= 2)
+            if (auto_target_enabled && !auto_target_injected && elapsed_seconds >= 2 &&
+                (!startup_smoke_mode || autotest_allow_target))
             {
                 engine_handle_right_click((float)(BANANA_POC_WIDTH / 2),
                                           (float)(BANANA_POC_HEIGHT / 2));
@@ -1364,6 +1441,41 @@ int main(void)
                           startup_smoke_mode,
                           &proto_config);
 
+        if (demo_frame_enabled &&
+            (scene == BANANA_POC_SCENE_WORLD || scene == BANANA_POC_SCENE_LEVEL_EDITOR))
+        {
+            RuntimeEngineCaptureContext capture_context;
+            BananaPocDemoSceneCaptureContext scene_capture;
+            const char *scene_key = "dx12-poc";
+
+            if (banana_poc_demo_scene_catalog_capture_context(world_variant, &scene_capture))
+            {
+                if (scene_capture.scene_key && scene_capture.scene_key[0] != '\0')
+                    scene_key = scene_capture.scene_key;
+            }
+
+            memset(&capture_context, 0, sizeof(capture_context));
+            strncpy(capture_context.scenario_name,
+                    scene_key,
+                    sizeof(capture_context.scenario_name) - 1);
+            strncpy(capture_context.scene_key,
+                    scene_key,
+                    sizeof(capture_context.scene_key) - 1);
+            capture_context.tick = ++demo_frame_tick;
+            capture_context.scene_variant = world_variant;
+            runtime_engine_host_set_capture_context(&capture_context);
+
+            if (demo_frame_export_should_capture(&demo_frame_state, demo_frame_tick))
+            {
+                if (!demo_frame_export_capture_engine_frame(&demo_frame_state, (int64_t)now_ms))
+                {
+                    fprintf(stderr, "[dx12-poc] demo frame export failed at tick %d\n", demo_frame_tick);
+                    exit_code = 1;
+                    break;
+                }
+            }
+        }
+
         if (banana_poc_objective_policy_on_objective_collected(&objective_policy,
                                                                 scene,
                                                                 objective_collected))
@@ -1391,6 +1503,12 @@ int main(void)
                    elapsed_seconds);
             printf("[dx12-poc] dx12-telemetry %s\n", banana_dx12_runtime_telemetry());
         }
+    }
+
+    if (demo_frame_enabled)
+    {
+        if (!demo_frame_export_finalize(&demo_frame_state))
+            exit_code = (exit_code == 0) ? 1 : exit_code;
     }
 
     engine_ui_shutdown();

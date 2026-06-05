@@ -4,6 +4,9 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
+
+static RuntimeEngineCaptureContext s_capture_context;
 
 void runtime_engine_host_render_frame(Renderer *renderer)
 {
@@ -20,6 +23,38 @@ const unsigned char *runtime_engine_host_get_frame_buffer(Renderer *renderer)
         return NULL;
 
     return renderer_get_frame_buffer(renderer);
+}
+
+void runtime_engine_host_get_frame_dimensions(Renderer *renderer, int *out_width, int *out_height)
+{
+    renderer_get_frame_dimensions(renderer, out_width, out_height);
+}
+
+void runtime_engine_host_set_capture_context(const RuntimeEngineCaptureContext *context)
+{
+    if (!context)
+    {
+        memset(&s_capture_context, 0, sizeof(s_capture_context));
+        return;
+    }
+
+    memset(&s_capture_context, 0, sizeof(s_capture_context));
+    s_capture_context.tick = context->tick;
+    s_capture_context.scene_variant = context->scene_variant;
+    strncpy(s_capture_context.scenario_name,
+            context->scenario_name,
+            sizeof(s_capture_context.scenario_name) - 1);
+    strncpy(s_capture_context.scene_key,
+            context->scene_key,
+            sizeof(s_capture_context.scene_key) - 1);
+}
+
+void runtime_engine_host_get_capture_context(RuntimeEngineCaptureContext *out_context)
+{
+    if (!out_context)
+        return;
+
+    *out_context = s_capture_context;
 }
 
 const char *runtime_engine_host_launch_gate_mode_label_for(const char *trusted_mode_label)

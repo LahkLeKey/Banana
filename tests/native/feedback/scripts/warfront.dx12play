@@ -1,0 +1,32 @@
+# DX12 playloop script: warfront baseline
+client.ping
+expect.metric scaffold-last-status eq 0
+expect.metric scaffold-abi-version eq 3
+client.world.init 1337 256
+expect.metric scaffold-last-status eq 0
+client.world.chunk-estimate 128
+expect.metric scaffold-chunk-estimate gt 0
+client.world.serialize 0 0 12288
+expect.metric scaffold-chunk-serialized gt 0
+client.launch.decide development 0 1 1 1 1
+expect.metric scaffold-launch-decided eq 1
+expect.metric scaffold-launch-allow eq 1
+expect.metric scaffold-launch-reason eq 0
+client.ui.reset
+client.ui.write native running keyboard 0.4 -0.2 1280 720 1280 720 1.0 123456
+expect.metric scaffold-ui-written eq 1
+expect.metric scaffold-ui-host eq 3
+expect.metric scaffold-ui-status eq 2
+expect.metric scaffold-ui-movement eq 1
+expect.metric scaffold-ui-css-width eq 1280
+expect.metric scaffold-ui-css-height eq 720
+page.goto warfront
+engine.config snapshot-interval 2
+page.tick 4
+expect.metric entities gte 8
+expect.metric controllers gte 6
+expect.mode banana hold-line
+expect.mode bean hold-line
+snapshot warfront-baseline
+client.world.cleanup
+note warfront_baseline_validated

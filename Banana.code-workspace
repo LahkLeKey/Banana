@@ -47,6 +47,20 @@
       "**/out": true,
       "**/.legacy": false
     },
-    "powershell.cwd": "Banana"
+    "powershell.cwd": "Banana",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.default.compileCommands": "${workspaceFolder:Root}/out/v3-native/compile_commands.json",
+    "C_Cpp.default.includePath": [
+      "${workspaceFolder:Root}/src/native/engine",
+      "${workspaceFolder:Root}/src/native/include",
+      "${workspaceFolder:Root}/src/native",
+      "${workspaceFolder:Root}/tests/native"
+    ],
+    "C_Cpp.default.browse.path": [
+      "${workspaceFolder:Root}/src/native/engine",
+      "${workspaceFolder:Root}/src/native/include",
+      "${workspaceFolder:Root}/src/native",
+      "${workspaceFolder:Root}/tests/native"
+    ]
   }
 }

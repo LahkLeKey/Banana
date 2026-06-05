@@ -30,5 +30,5 @@
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read .specify/specs/009-persistent-world-orchestration/plan.md
+shell commands, and other important information, read .specify/specs/032-demo-frame-qa/plan.md
 <!-- SPECKIT END -->
