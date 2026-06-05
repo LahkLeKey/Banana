@@ -254,6 +254,24 @@ const unsigned char *renderer_get_frame_buffer(Renderer *r)
     return r->frame_buffer;
 }
 
+int renderer_get_frame_width(Renderer *r)
+{
+    return r ? r->width : 0;
+}
+
+int renderer_get_frame_height(Renderer *r)
+{
+    return r ? r->height : 0;
+}
+
+void renderer_get_frame_dimensions(Renderer *r, int *out_width, int *out_height)
+{
+    if (out_width)
+        *out_width = r ? r->width : 0;
+    if (out_height)
+        *out_height = r ? r->height : 0;
+}
+
 void renderer_resize(Renderer *r, int width, int height)
 {
     r->width = width;

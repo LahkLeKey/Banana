@@ -1,0 +1,15 @@
+{
+  "frame_id": "banana-war-sentience-showcase-56-86168921",
+  "run_id": "2026_06_04T23_32_46Z-feature-pressure",
+  "scenario": "banana-war-sentience-showcase",
+  "tick": 56,
+  "timestamp_ms": 86168921,
+  "image_path": "frames/banana-war-sentience-showcase/56-86168921.bmp",
+  "metadata_path": "frames/banana-war-sentience-showcase/56-86168921.json",
+  "width": 1280,
+  "height": 720,
+  "render_backend": "dx12",
+  "ui_overlay": false,
+  "scene_variant": 6,
+  "scene_key": "banana-war-sentience-showcase"
+}

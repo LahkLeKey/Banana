@@ -69,6 +69,13 @@ typedef struct BananaPocDemoSceneCatalogEntry
     const char *diagnostics_tag;
 } BananaPocDemoSceneCatalogEntry;
 
+typedef struct BananaPocDemoSceneCaptureContext
+{
+    int browser_variant;
+    const char *scene_key;
+    const char *display_name;
+} BananaPocDemoSceneCaptureContext;
+
 typedef struct BananaPocCoherentWorldProfile
 {
     int browser_variant;
@@ -89,6 +96,8 @@ int banana_poc_demo_scene_catalog_count(void);
 const BananaPocDemoSceneCatalogEntry *banana_poc_demo_scene_catalog_at_index(int index);
 int banana_poc_demo_scene_catalog_index_for_browser_variant(int browser_variant);
 const BananaPocDemoSceneCatalogEntry *banana_poc_demo_scene_catalog_for_browser_variant(int browser_variant);
+int banana_poc_demo_scene_catalog_capture_context(int browser_variant,
+                                                  BananaPocDemoSceneCaptureContext *out_context);
 int banana_poc_demo_scene_catalog_clamp_index(int requested_index);
 int banana_poc_demo_scene_catalog_first_enabled_index(void);
 int banana_poc_demo_scene_catalog_is_launchable_index(int index);

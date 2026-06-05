@@ -1,0 +1,12 @@
+# DX12 playloop script: comeback rally validation
+page.goto comeback
+state.sentience 11 4 2
+actor.spawn banana combat 1.0 0.25
+engine.config snapshot-interval 2
+page.tick 2
+expect.mode banana hold-line
+expect.mode bean hold-line
+expect.metric comeback-bonus eq 0
+expect.team-count banana gte 2
+snapshot rally-baseline
+note rally_baseline_validated

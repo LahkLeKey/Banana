@@ -477,6 +477,21 @@ const char *banana_poc_demo_scene_catalog_display_name_for_variant(int browser_v
     return entry->display_name ? entry->display_name : "Unnamed Scene Variant";
 }
 
+int banana_poc_demo_scene_catalog_capture_context(int browser_variant,
+                                                  BananaPocDemoSceneCaptureContext *out_context)
+{
+    const BananaPocDemoSceneCatalogEntry *entry =
+        banana_poc_demo_scene_catalog_for_browser_variant(browser_variant);
+
+    if (!entry || !out_context)
+        return 0;
+
+    out_context->browser_variant = entry->browser_variant;
+    out_context->scene_key = entry->scene_key;
+    out_context->display_name = entry->display_name;
+    return 1;
+}
+
 const char *banana_poc_demo_scene_catalog_gameplay_theme_for_variant(int browser_variant)
 {
     const BananaPocDemoSceneCatalogEntry *entry =

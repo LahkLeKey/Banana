@@ -1,0 +1,16 @@
+# DX12 playloop script: warfront pressure validation
+page.goto warfront
+engine.config war-radius 7
+engine.config reinforcements 3
+engine.config population-cap 160
+actor.spawn banana combat 1.5 0.5
+actor.spawn bean wildlife 2.5 -0.5
+engine.config snapshot-interval 2
+page.tick 2
+expect.team-count banana gte 2
+expect.team-count bean gte 2
+expect.metric controllers gte 4
+expect.mode banana hold-line
+expect.mode bean hold-line
+snapshot pressure-baseline
+note pressure_baseline_validated

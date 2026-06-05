@@ -19,6 +19,10 @@ biome_stage=0
 list_only=0
 dry_run=0
 non_interactive=0
+demo_frame_export="${BANANA_DEMO_FRAME_EXPORT:-}"
+demo_frame_output_dir="${BANANA_DEMO_FRAME_OUTPUT_DIR:-$ROOT_DIR/artifacts/native/032-demo-frame-qa/runs}"
+demo_frame_interval="${BANANA_DEMO_FRAME_INTERVAL:-}"
+demo_frame_format="${BANANA_DEMO_FRAME_FORMAT:-}"
 
 declare -a explicit_scenarios=()
 declare -a selected_scenarios=()
@@ -34,8 +38,8 @@ Usage:
   bash scripts/run-war-test-suites.sh [options]
 
 Options:
-  --suite <name>             Named suite: focused, evidence, soak, legacy, mmo-only, none
-  --scenario <name>          Add a specific scenario (repeatable): warfront, negotiate, comeback
+    --suite <name>             Named suite: focused, evidence, soak, gameplay, legacy, mmo-only, none
+    --scenario <name>          Add a specific scenario (repeatable): warfront, negotiate, comeback, flank, pressure, truce, rally
   --ticks <count>            Tick count per scenario (default: 24)
   --snapshot-interval <n>    Snapshot cadence (default: 4)
   --war-radius <float>       Gameplay war radius (default: 6)
@@ -53,10 +57,17 @@ Options:
   --dry-run                  Print resolved commands without executing
   --help                     Show this help
 
+Environment:
+    BANANA_DEMO_FRAME_EXPORT=1            Enable demo frame export
+    BANANA_DEMO_FRAME_OUTPUT_DIR=<path>   Bundle output root (default: artifacts/native/032-demo-frame-qa/runs)
+    BANANA_DEMO_FRAME_INTERVAL=<ticks>    Capture interval override
+    BANANA_DEMO_FRAME_FORMAT=bmp          Capture format (default: bmp)
+
 Examples:
   bash scripts/run-war-test-suites.sh --suite focused --non-interactive
   bash scripts/run-war-test-suites.sh --suite evidence --ticks 32 --snapshot-interval 8
-  bash scripts/run-war-test-suites.sh --suite none --scenario negotiate --scenario comeback
+    bash scripts/run-war-test-suites.sh --suite none --scenario negotiate --scenario comeback
+    bash scripts/run-war-test-suites.sh --suite gameplay --non-interactive
 EOF_USAGE
 }
 
@@ -89,6 +100,15 @@ append_suite_scenarios() {
             append_unique_scenario "warfront"
             append_unique_scenario "comeback"
             ;;
+        gameplay)
+            append_unique_scenario "warfront"
+            append_unique_scenario "flank"
+            append_unique_scenario "pressure"
+            append_unique_scenario "negotiate"
+            append_unique_scenario "truce"
+            append_unique_scenario "comeback"
+            append_unique_scenario "rally"
+            ;;
         legacy)
             append_unique_scenario "warfront"
             ;;
@@ -109,6 +129,7 @@ Available suites:
   focused   - short operator loop: warfront + negotiate
   evidence  - canonical baseline loop: warfront + negotiate + comeback
   soak      - long pressure loop for warfront/comeback pair
+    gameplay  - extended gameplay coverage using dx12 playloop scripts
   legacy    - single warfront loop for backward-compatible script calls
   mmo-only  - alias for warfront-only loop
   none      - no preset scenario; use --scenario
@@ -216,6 +237,12 @@ fi
 
 append_suite_scenarios "$suite"
 
+if [[ "$suite" == "gameplay" && -z "$SCRIPT_DIR" ]]; then
+    SCRIPT_DIR="$ROOT_DIR/tests/native/feedback/scripts"
+fi
+
+demo_frame_suite="${BANANA_DEMO_FRAME_SUITE:-$suite}"
+
 for scenario_name in "${explicit_scenarios[@]}"; do
     append_unique_scenario "$scenario_name"
 done
@@ -243,7 +270,14 @@ for scenario_name in "${selected_scenarios[@]}"; do
     i=$((i + 1))
     scenario_log="$OUTPUT_DIR/${suite}-${i}-${scenario_name}.log"
 
-    cmd=(bash "$ROOT_DIR/scripts/run-native-feedback-loop.sh"
+    cmd=()
+
+    demo_frame_enabled=0
+    if [[ -n "$demo_frame_export" && "$demo_frame_export" != "0" ]]; then
+        demo_frame_enabled=1
+    fi
+
+    cmd+=(bash "$ROOT_DIR/scripts/run-native-feedback-loop.sh"
         --scenario "$scenario_name"
         --ticks "$ticks"
         --snapshot-interval "$snapshot_interval"
@@ -274,9 +308,29 @@ for scenario_name in "${selected_scenarios[@]}"; do
     echo "[war-suite] scenario=$scenario_name log=$scenario_log"
 
     if [[ "$dry_run" -eq 1 ]]; then
-        echo "[war-suite] dry-run: ${cmd[*]}"
+        if [[ "$demo_frame_enabled" -eq 1 ]]; then
+            echo "[war-suite] dry-run: BANANA_DEMO_FRAME_EXPORT=$demo_frame_export BANANA_DEMO_FRAME_OUTPUT_DIR=$demo_frame_output_dir BANANA_DEMO_FRAME_SUITE=$demo_frame_suite BANANA_DEMO_FRAME_RUN_LABEL=${suite}-${i}-${scenario_name} ${cmd[*]}"
+        else
+            echo "[war-suite] dry-run: ${cmd[*]}"
+        fi
         continue
     fi
 
-    "${cmd[@]}"
+    if [[ "$demo_frame_enabled" -eq 1 ]]; then
+        (
+            export BANANA_DEMO_FRAME_EXPORT="$demo_frame_export"
+            export BANANA_DEMO_FRAME_OUTPUT_DIR="$demo_frame_output_dir"
+            export BANANA_DEMO_FRAME_SUITE="$demo_frame_suite"
+            export BANANA_DEMO_FRAME_RUN_LABEL="${suite}-${i}-${scenario_name}"
+            if [[ -n "$demo_frame_interval" ]]; then
+                export BANANA_DEMO_FRAME_INTERVAL="$demo_frame_interval"
+            fi
+            if [[ -n "$demo_frame_format" ]]; then
+                export BANANA_DEMO_FRAME_FORMAT="$demo_frame_format"
+            fi
+            "${cmd[@]}"
+        )
+    else
+        "${cmd[@]}"
+    fi
 done

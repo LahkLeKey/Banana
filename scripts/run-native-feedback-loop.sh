@@ -19,6 +19,13 @@ output_path=""
 feedback_note=""
 skip_build=0
 non_interactive=0
+demo_frame_export="${BANANA_DEMO_FRAME_EXPORT:-}"
+demo_frame_output_dir="${BANANA_DEMO_FRAME_OUTPUT_DIR:-$ROOT_DIR/artifacts/native/032-demo-frame-qa/runs}"
+demo_frame_interval="${BANANA_DEMO_FRAME_INTERVAL:-}"
+demo_frame_format="${BANANA_DEMO_FRAME_FORMAT:-}"
+demo_frame_suite="${BANANA_DEMO_FRAME_SUITE:-}"
+demo_frame_run_label="${BANANA_DEMO_FRAME_RUN_LABEL:-}"
+is_windows_exe=0
 
 usage() {
     cat <<'EOF'
@@ -26,7 +33,7 @@ Usage:
   bash scripts/run-native-feedback-loop.sh [options]
 
 Options:
-  --scenario <warfront|negotiate|comeback>
+    --scenario <warfront|negotiate|comeback|flank|pressure|truce|rally>
   --ticks <count>
   --snapshot-interval <count>
   --war-radius <float>
@@ -43,6 +50,14 @@ Options:
   --skip-build
   --non-interactive
   --help
+
+Environment:
+    BANANA_DEMO_FRAME_EXPORT=1            Enable demo frame export
+    BANANA_DEMO_FRAME_OUTPUT_DIR=<path>   Bundle output root (default: artifacts/native/032-demo-frame-qa/runs)
+    BANANA_DEMO_FRAME_RUN_LABEL=<label>   Run label suffix for the bundle
+    BANANA_DEMO_FRAME_INTERVAL=<ticks>    Capture interval override
+    BANANA_DEMO_FRAME_FORMAT=bmp          Capture format (default: bmp)
+    BANANA_DEMO_FRAME_SUITE=<label>       Suite label for manifest metadata
 EOF
 }
 
@@ -169,7 +184,47 @@ done
 
 [[ -n "$feedback_binary" ]] || die "cannot find banana_native_feedback_loop_factory binary under $BUILD_DIR"
 
-cmd=("$feedback_binary"
+if [[ "$feedback_binary" == *.exe ]]; then
+    is_windows_exe=1
+fi
+
+to_windows_path() {
+    local path="$1"
+
+    if [[ -z "$path" ]]; then
+        printf '%s' ""
+        return
+    fi
+
+    if [[ "$is_windows_exe" -eq 1 ]] && command -v cygpath >/dev/null 2>&1; then
+        cygpath -w "$path"
+    else
+        printf '%s' "$path"
+    fi
+}
+
+script_path_arg="$script_path"
+output_path_arg="$output_path"
+demo_frame_output_dir_arg="$demo_frame_output_dir"
+demo_frame_enabled=0
+
+if [[ "$is_windows_exe" -eq 1 ]]; then
+    # Ensure Windows executables receive Windows-style paths for scripts/output bundles.
+    script_path_arg="$(to_windows_path "$script_path")"
+    output_path_arg="$(to_windows_path "$output_path")"
+    demo_frame_output_dir_arg="$(to_windows_path "$demo_frame_output_dir")"
+fi
+
+cmd=()
+
+if [[ -n "$demo_frame_export" && "$demo_frame_export" != "0" ]]; then
+    demo_frame_enabled=1
+    if [[ -z "$demo_frame_run_label" ]]; then
+        demo_frame_run_label="$scenario"
+    fi
+fi
+
+cmd+=("$feedback_binary"
     --scenario "$scenario"
     --ticks "$ticks"
     --snapshot-interval "$snapshot_interval"
@@ -181,13 +236,13 @@ cmd=("$feedback_binary"
     --biome-stage "$biome_stage")
 
 if [[ -n "$script_path" ]]; then
-    cmd+=(--script "$script_path")
+    cmd+=(--script "$script_path_arg")
 fi
 
 if [[ -n "$output_path" ]]; then
     output_dir="$(dirname "$output_path")"
     mkdir -p "$output_dir"
-    cmd+=(--output "$output_path")
+    cmd+=(--output "$output_path_arg")
 fi
 
 if [[ -n "$feedback_note" ]]; then
@@ -203,4 +258,22 @@ if [[ -n "$script_path" ]]; then
 else
     echo "[feedback-loop] running scenario=$scenario ticks=$ticks snapshot_interval=$snapshot_interval"
 fi
-"${cmd[@]}"
+if [[ "$demo_frame_enabled" -eq 1 ]]; then
+    (
+        export BANANA_DEMO_FRAME_EXPORT="$demo_frame_export"
+        export BANANA_DEMO_FRAME_OUTPUT_DIR="$demo_frame_output_dir_arg"
+        export BANANA_DEMO_FRAME_RUN_LABEL="$demo_frame_run_label"
+        if [[ -n "$demo_frame_interval" ]]; then
+            export BANANA_DEMO_FRAME_INTERVAL="$demo_frame_interval"
+        fi
+        if [[ -n "$demo_frame_format" ]]; then
+            export BANANA_DEMO_FRAME_FORMAT="$demo_frame_format"
+        fi
+        if [[ -n "$demo_frame_suite" ]]; then
+            export BANANA_DEMO_FRAME_SUITE="$demo_frame_suite"
+        fi
+        "${cmd[@]}"
+    )
+else
+    "${cmd[@]}"
+fi

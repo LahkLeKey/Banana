@@ -74,6 +74,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/controller/sync/controller_sync.c
   runtime/engine/engine_aux_abi.c
   runtime/engine/engine_composition.c
+  runtime/engine/demo_frame_export.c
   runtime/engine/engine_host.c
   runtime/engine/engine_state.c
   runtime/engine/engine_lifecycle.c
@@ -339,4 +340,6 @@ if(BUILD_TESTING)
       --script ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/scripts/flank.dx12play
       --non-interactive
   )
+
+  include(${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/CMakeLists.txt)
 endif()

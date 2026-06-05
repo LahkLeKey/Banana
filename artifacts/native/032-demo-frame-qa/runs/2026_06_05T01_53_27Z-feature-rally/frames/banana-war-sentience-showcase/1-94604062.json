@@ -1,0 +1,15 @@
+{
+  "frame_id": "banana-war-sentience-showcase-1-94604062",
+  "run_id": "2026_06_05T01_53_27Z-feature-rally",
+  "scenario": "banana-war-sentience-showcase",
+  "tick": 1,
+  "timestamp_ms": 94604062,
+  "image_path": "frames/banana-war-sentience-showcase/1-94604062.bmp",
+  "metadata_path": "frames/banana-war-sentience-showcase/1-94604062.json",
+  "width": 1280,
+  "height": 720,
+  "render_backend": "dx12",
+  "ui_overlay": false,
+  "scene_variant": 6,
+  "scene_key": "banana-war-sentience-showcase"
+}

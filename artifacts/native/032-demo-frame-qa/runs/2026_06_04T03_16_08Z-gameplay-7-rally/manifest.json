@@ -1,0 +1,28 @@
+{
+  "run_id": "2026_06_04T03_16_08Z-gameplay-7-rally",
+  "created_at": "2026-06-04T03:16:08Z",
+  "suite": "gameplay",
+  "scenarios": ["comeback"],
+  "capture_interval_ticks": 4,
+  "format": "bmp",
+  "output_dir": "C:/Github/Banana/artifacts/native/032-demo-frame-qa/runs",
+  "status": "complete",
+  "frames": [
+    {
+      "frame_id": "comeback-1-13165265",
+      "scenario": "comeback",
+      "tick": 1,
+      "timestamp_ms": 13165265,
+      "image_path": "frames/comeback/1-13165265.bmp",
+      "metadata_path": "frames/comeback/1-13165265.json",
+      "width": 1280,
+      "height": 720,
+      "render_backend": "dx12",
+      "ui_overlay": false,
+      "scene_variant": -1,
+      "scene_key": ""
+    }
+  ],
+  "failures": [
+  ]
+}

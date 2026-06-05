@@ -1,0 +1,15 @@
+{
+  "frame_id": "banana-war-sentience-showcase-1-94660734",
+  "run_id": "2026_06_05T01_54_24Z-feature-negotiate",
+  "scenario": "banana-war-sentience-showcase",
+  "tick": 1,
+  "timestamp_ms": 94660734,
+  "image_path": "frames/banana-war-sentience-showcase/1-94660734.bmp",
+  "metadata_path": "frames/banana-war-sentience-showcase/1-94660734.json",
+  "width": 1280,
+  "height": 720,
+  "render_backend": "dx12",
+  "ui_overlay": false,
+  "scene_variant": 6,
+  "scene_key": "banana-war-sentience-showcase"
+}
