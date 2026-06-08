@@ -788,6 +788,41 @@ int engine_get_controller_war_sentience_truce_variant_hits_stage(int stage_index
                                                           stage_index);
 }
 
+int engine_get_controller_war_sentience_truce_gate_checks_total(void)
+{
+    return s_engine_state.war_sentience_truce_gate_checks_total;
+}
+
+int engine_get_controller_war_sentience_truce_gate_checks_granted(void)
+{
+    return s_engine_state.war_sentience_truce_gate_checks_granted;
+}
+
+int engine_get_controller_war_sentience_truce_gate_block_behavior(void)
+{
+    return s_engine_state.war_sentience_truce_gate_block_behavior;
+}
+
+int engine_get_controller_war_sentience_truce_gate_block_empathy(void)
+{
+    return s_engine_state.war_sentience_truce_gate_block_empathy;
+}
+
+int engine_get_controller_war_sentience_truce_gate_block_coordination(void)
+{
+    return s_engine_state.war_sentience_truce_gate_block_coordination;
+}
+
+int engine_get_controller_war_sentience_truce_gate_block_streak(void)
+{
+    return s_engine_state.war_sentience_truce_gate_block_streak;
+}
+
+int engine_get_controller_war_sentience_truce_gate_block_intelligence(void)
+{
+    return s_engine_state.war_sentience_truce_gate_block_intelligence;
+}
+
 static int runtime_engine_sum_war_reinforcement_hits(const int *hits)
 {
     int total = 0;

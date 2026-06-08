@@ -207,6 +207,13 @@ extern "C"
     int engine_get_controller_war_sentience_truce_variant_hits_apex(void);
     int engine_get_controller_war_sentience_truce_variant_hits_mythic(void);
     int engine_get_controller_war_sentience_truce_variant_hits_stage(int stage_index);
+    int engine_get_controller_war_sentience_truce_gate_checks_total(void);
+    int engine_get_controller_war_sentience_truce_gate_checks_granted(void);
+    int engine_get_controller_war_sentience_truce_gate_block_behavior(void);
+    int engine_get_controller_war_sentience_truce_gate_block_empathy(void);
+    int engine_get_controller_war_sentience_truce_gate_block_coordination(void);
+    int engine_get_controller_war_sentience_truce_gate_block_streak(void);
+    int engine_get_controller_war_sentience_truce_gate_block_intelligence(void);
     int engine_get_controller_war_reinforcement_hits_total(void);
     int engine_get_controller_war_reinforcement_hits_biome(int biome_index);
     int engine_get_controller_war_reinforcement_hits_family_banana_scout(void);

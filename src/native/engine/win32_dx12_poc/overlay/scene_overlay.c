@@ -454,6 +454,17 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
              war_stage,
              engine_get_controller_war_sentience_truce_variant_hits_stage(war_stage));
 
+    snprintf(line_thirteen,
+             sizeof(line_thirteen),
+             "WAR TRUCE GATE CK:%d OK:%d BLK B/E/C/S/I:%d/%d/%d/%d/%d",
+             engine_get_controller_war_sentience_truce_gate_checks_total(),
+             engine_get_controller_war_sentience_truce_gate_checks_granted(),
+             engine_get_controller_war_sentience_truce_gate_block_behavior(),
+             engine_get_controller_war_sentience_truce_gate_block_empathy(),
+             engine_get_controller_war_sentience_truce_gate_block_coordination(),
+             engine_get_controller_war_sentience_truce_gate_block_streak(),
+             engine_get_controller_war_sentience_truce_gate_block_intelligence());
+
     if (has_player && has_target)
     {
         snprintf(line_four,
@@ -503,7 +514,8 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     engine_ui_text(22.0f, 184.0f, line_ten);
     engine_ui_text(22.0f, 206.0f, line_eleven);
     engine_ui_text(22.0f, 228.0f, line_twelve);
-    engine_ui_text(22.0f, 250.0f, line_four);
+    engine_ui_text(22.0f, 250.0f, line_thirteen);
+    engine_ui_text(22.0f, 272.0f, line_four);
     if (scene == BANANA_POC_SCENE_LEVEL_EDITOR)
     {
         char editor_line[160];
@@ -516,7 +528,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
                  editor_height,
                  brush,
                  k_paint_mode_names[mode]);
-        engine_ui_text(22.0f, 272.0f, editor_line);
+        engine_ui_text(22.0f, 294.0f, editor_line);
     }
     else if (!(proto && proto->option_compact_hud))
     {
