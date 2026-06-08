@@ -34,6 +34,16 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_curve_scale -= 0.06f;
             *out_tip_taper += 0.02f;
         }
+        else if (strstr(model_id, "urban") != NULL)
+        {
+            *out_length_scale += 0.06f;
+            *out_curve_scale -= 0.04f;
+        }
+        else if (strstr(model_id, "tropical") != NULL)
+        {
+            *out_curve_scale += 0.08f;
+            *out_tip_taper += 0.02f;
+        }
 
         if (strstr(model_id, "flank") != NULL)
         {
@@ -51,6 +61,17 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_length_scale += 0.04f;
             *out_curve_scale -= 0.26f;
             *out_tip_taper += 0.06f;
+        }
+
+        if (strstr(model_id, "banana-") != NULL)
+        {
+            *out_length_scale += 0.05f;
+            *out_curve_scale += 0.03f;
+        }
+        else if (strstr(model_id, "bean-") != NULL)
+        {
+            *out_radius_scale += 0.05f;
+            *out_tip_taper += 0.02f;
         }
 
         return 1;
@@ -74,6 +95,16 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_curve_scale -= 0.07f;
             *out_tip_taper += 0.03f;
         }
+        else if (strstr(model_id, "urban") != NULL)
+        {
+            *out_length_scale += 0.05f;
+            *out_curve_scale -= 0.03f;
+        }
+        else if (strstr(model_id, "tropical") != NULL)
+        {
+            *out_curve_scale += 0.07f;
+            *out_tip_taper += 0.02f;
+        }
 
         if (strstr(model_id, "flank") != NULL)
         {
@@ -91,6 +122,17 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_length_scale += 0.03f;
             *out_curve_scale -= 0.20f;
             *out_tip_taper += 0.05f;
+        }
+
+        if (strstr(model_id, "banana-") != NULL)
+        {
+            *out_length_scale += 0.04f;
+            *out_curve_scale += 0.02f;
+        }
+        else if (strstr(model_id, "bean-") != NULL)
+        {
+            *out_radius_scale += 0.04f;
+            *out_tip_taper += 0.02f;
         }
 
         return 1;
@@ -115,6 +157,45 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
         {
             *out_curve_scale -= 0.08f;
             *out_tip_taper += 0.03f;
+        }
+        else if (strstr(model_id, "urban") != NULL)
+        {
+            *out_length_scale += 0.04f;
+            *out_curve_scale -= 0.02f;
+        }
+        else if (strstr(model_id, "tropical") != NULL)
+        {
+            *out_curve_scale += 0.06f;
+            *out_tip_taper += 0.02f;
+        }
+
+        if (strstr(model_id, "banana-") != NULL)
+        {
+            *out_length_scale += 0.04f;
+            *out_curve_scale += 0.02f;
+        }
+        else if (strstr(model_id, "bean-") != NULL)
+        {
+            *out_radius_scale += 0.06f;
+            *out_tip_taper += 0.02f;
+        }
+
+        if (strstr(model_id, "flank") != NULL)
+        {
+            *out_length_scale += 0.08f;
+            *out_curve_scale += 0.13f;
+        }
+        else if (strstr(model_id, "regroup") != NULL)
+        {
+            *out_radius_scale += 0.12f;
+            *out_curve_scale -= 0.14f;
+            *out_tip_taper += 0.02f;
+        }
+        else if (strstr(model_id, "envoy") != NULL)
+        {
+            *out_length_scale += 0.03f;
+            *out_curve_scale -= 0.19f;
+            *out_tip_taper += 0.04f;
         }
 
         return 1;
