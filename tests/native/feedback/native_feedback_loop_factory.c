@@ -982,7 +982,8 @@ static void emit_snapshot(FILE *stream,
             "tick=%d scenario=%s label=%s entities=%d controllers=%d banana=%d bean=%d "
             "bananaMode=%s beanMode=%s negotiateStreak=%d trim=%d comebackBonus=%d "
             "bananaHits={hold:%d flank:%d regroup:%d negotiate:%d} "
-            "beanHits={hold:%d flank:%d regroup:%d negotiate:%d}\n",
+            "beanHits={hold:%d flank:%d regroup:%d negotiate:%d} "
+            "truceHits={total:%d banana:%d bean:%d base:%d apex:%d mythic:%d}\n",
             tick,
             scenario_name,
             label ? label : "-",
@@ -1002,7 +1003,13 @@ static void emit_snapshot(FILE *stream,
             context->telemetry.war_sentience_spawn_mode_hits_bean[RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE],
             context->telemetry.war_sentience_spawn_mode_hits_bean[RUNTIME_WAR_SENTIENCE_BEHAVIOR_FLANK],
             context->telemetry.war_sentience_spawn_mode_hits_bean[RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP],
-            context->telemetry.war_sentience_spawn_mode_hits_bean[RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE]);
+            context->telemetry.war_sentience_spawn_mode_hits_bean[RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE],
+            context->telemetry.war_sentience_truce_variant_hits_total,
+            context->telemetry.war_sentience_truce_variant_hits_banana,
+            context->telemetry.war_sentience_truce_variant_hits_bean,
+            context->telemetry.war_sentience_truce_variant_hits_base,
+            context->telemetry.war_sentience_truce_variant_hits_apex,
+            context->telemetry.war_sentience_truce_variant_hits_mythic);
 }
 
 static void emit_snapshot_dual(Dx12PlayloopRunner *runner, const char *label)
@@ -1280,6 +1287,42 @@ static int read_metric_value(const Dx12PlayloopRunner *runner, const char *metri
     if (strcmp(metric_name, "bean-negotiate-hits") == 0)
     {
         *out_value = runner->context.telemetry.war_sentience_spawn_mode_hits_bean[RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE];
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-hits-total") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_variant_hits_total;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-hits-banana") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_variant_hits_banana;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-hits-bean") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_variant_hits_bean;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-hits-base") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_variant_hits_base;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-hits-apex") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_variant_hits_apex;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-hits-mythic") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_variant_hits_mythic;
         return 1;
     }
 

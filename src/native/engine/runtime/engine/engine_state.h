@@ -123,6 +123,13 @@ typedef struct EngineRuntimeState
     RuntimeWarSentienceBehaviorMode war_sentience_behavior_bean;
     int war_sentience_spawn_mode_hits_banana[BANANA_ENGINE_WAR_SENTIENCE_MODE_COUNT];
     int war_sentience_spawn_mode_hits_bean[BANANA_ENGINE_WAR_SENTIENCE_MODE_COUNT];
+    int war_sentience_truce_variant_hits_total;
+    int war_sentience_truce_variant_hits_banana;
+    int war_sentience_truce_variant_hits_bean;
+    int war_sentience_truce_variant_hits_stage[BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS];
+    int war_sentience_truce_variant_hits_base;
+    int war_sentience_truce_variant_hits_apex;
+    int war_sentience_truce_variant_hits_mythic;
     int war_sentience_negotiate_streak_ticks;
     int war_sentience_negotiate_deescalation_trim_last_tick;
     int war_sentience_comeback_bonus_last_tick;
