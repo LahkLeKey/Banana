@@ -87,11 +87,53 @@ static const char *k_banana_apex_models[] = {
     "gameplay/war/banana-phalanx-volcanic-v1",
 };
 
+static const char *k_banana_apex_flank_models[] = {
+    "gameplay/war/banana-phalanx-flank-tropical-v1",
+    "gameplay/war/banana-phalanx-flank-glacier-v1",
+    "gameplay/war/banana-phalanx-flank-urban-v1",
+    "gameplay/war/banana-phalanx-flank-volcanic-v1",
+};
+
+static const char *k_banana_apex_regroup_models[] = {
+    "gameplay/war/banana-phalanx-regroup-tropical-v1",
+    "gameplay/war/banana-phalanx-regroup-glacier-v1",
+    "gameplay/war/banana-phalanx-regroup-urban-v1",
+    "gameplay/war/banana-phalanx-regroup-volcanic-v1",
+};
+
+static const char *k_banana_apex_negotiate_models[] = {
+    "gameplay/war/banana-phalanx-envoy-tropical-v1",
+    "gameplay/war/banana-phalanx-envoy-glacier-v1",
+    "gameplay/war/banana-phalanx-envoy-urban-v1",
+    "gameplay/war/banana-phalanx-envoy-volcanic-v1",
+};
+
 static const char *k_bean_apex_models[] = {
     "gameplay/war/bean-colossus-tropical-v1",
     "gameplay/war/bean-colossus-glacier-v1",
     "gameplay/war/bean-colossus-urban-v1",
     "gameplay/war/bean-colossus-volcanic-v1",
+};
+
+static const char *k_bean_apex_flank_models[] = {
+    "gameplay/war/bean-colossus-flank-tropical-v1",
+    "gameplay/war/bean-colossus-flank-glacier-v1",
+    "gameplay/war/bean-colossus-flank-urban-v1",
+    "gameplay/war/bean-colossus-flank-volcanic-v1",
+};
+
+static const char *k_bean_apex_regroup_models[] = {
+    "gameplay/war/bean-colossus-regroup-tropical-v1",
+    "gameplay/war/bean-colossus-regroup-glacier-v1",
+    "gameplay/war/bean-colossus-regroup-urban-v1",
+    "gameplay/war/bean-colossus-regroup-volcanic-v1",
+};
+
+static const char *k_bean_apex_negotiate_models[] = {
+    "gameplay/war/bean-colossus-envoy-tropical-v1",
+    "gameplay/war/bean-colossus-envoy-glacier-v1",
+    "gameplay/war/bean-colossus-envoy-urban-v1",
+    "gameplay/war/bean-colossus-envoy-volcanic-v1",
 };
 
 static const char *k_banana_mythic_models[] = {
@@ -101,11 +143,53 @@ static const char *k_banana_mythic_models[] = {
     "gameplay/war/banana-archon-volcanic-v1",
 };
 
+static const char *k_banana_mythic_flank_models[] = {
+    "gameplay/war/banana-archon-flank-tropical-v1",
+    "gameplay/war/banana-archon-flank-glacier-v1",
+    "gameplay/war/banana-archon-flank-urban-v1",
+    "gameplay/war/banana-archon-flank-volcanic-v1",
+};
+
+static const char *k_banana_mythic_regroup_models[] = {
+    "gameplay/war/banana-archon-regroup-tropical-v1",
+    "gameplay/war/banana-archon-regroup-glacier-v1",
+    "gameplay/war/banana-archon-regroup-urban-v1",
+    "gameplay/war/banana-archon-regroup-volcanic-v1",
+};
+
+static const char *k_banana_mythic_negotiate_models[] = {
+    "gameplay/war/banana-archon-envoy-tropical-v1",
+    "gameplay/war/banana-archon-envoy-glacier-v1",
+    "gameplay/war/banana-archon-envoy-urban-v1",
+    "gameplay/war/banana-archon-envoy-volcanic-v1",
+};
+
 static const char *k_bean_mythic_models[] = {
     "gameplay/war/bean-leviathan-tropical-v1",
     "gameplay/war/bean-leviathan-glacier-v1",
     "gameplay/war/bean-leviathan-urban-v1",
     "gameplay/war/bean-leviathan-volcanic-v1",
+};
+
+static const char *k_bean_mythic_flank_models[] = {
+    "gameplay/war/bean-leviathan-flank-tropical-v1",
+    "gameplay/war/bean-leviathan-flank-glacier-v1",
+    "gameplay/war/bean-leviathan-flank-urban-v1",
+    "gameplay/war/bean-leviathan-flank-volcanic-v1",
+};
+
+static const char *k_bean_mythic_regroup_models[] = {
+    "gameplay/war/bean-leviathan-regroup-tropical-v1",
+    "gameplay/war/bean-leviathan-regroup-glacier-v1",
+    "gameplay/war/bean-leviathan-regroup-urban-v1",
+    "gameplay/war/bean-leviathan-regroup-volcanic-v1",
+};
+
+static const char *k_bean_mythic_negotiate_models[] = {
+    "gameplay/war/bean-leviathan-envoy-tropical-v1",
+    "gameplay/war/bean-leviathan-envoy-glacier-v1",
+    "gameplay/war/bean-leviathan-envoy-urban-v1",
+    "gameplay/war/bean-leviathan-envoy-volcanic-v1",
 };
 
 typedef enum RuntimeWarReinforcementFamily
@@ -410,6 +494,89 @@ static RuntimeWarReinforcementVisualTier runtime_gameplay_reinforcement_visual_t
     return RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_BASE;
 }
 
+static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
+    RuntimeWarReinforcementFamily family,
+    RuntimeWarSentienceBehaviorMode behavior_mode,
+    RuntimeWarReinforcementVisualTier visual_tier,
+    int biome_index)
+{
+    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_APEX)
+    {
+        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT ||
+            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE)
+        {
+            switch (behavior_mode)
+            {
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_FLANK:
+                    return k_banana_apex_flank_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
+                    return k_banana_apex_regroup_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    return k_banana_apex_negotiate_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
+                default:
+                    return k_banana_apex_models[biome_index];
+            }
+        }
+
+        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER ||
+            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE)
+        {
+            switch (behavior_mode)
+            {
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_FLANK:
+                    return k_bean_apex_flank_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
+                    return k_bean_apex_regroup_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    return k_bean_apex_negotiate_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
+                default:
+                    return k_bean_apex_models[biome_index];
+            }
+        }
+    }
+
+    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC)
+    {
+        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT ||
+            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE)
+        {
+            switch (behavior_mode)
+            {
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_FLANK:
+                    return k_banana_mythic_flank_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
+                    return k_banana_mythic_regroup_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    return k_banana_mythic_negotiate_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
+                default:
+                    return k_banana_mythic_models[biome_index];
+            }
+        }
+
+        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER ||
+            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE)
+        {
+            switch (behavior_mode)
+            {
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_FLANK:
+                    return k_bean_mythic_flank_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
+                    return k_bean_mythic_regroup_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    return k_bean_mythic_negotiate_models[biome_index];
+                case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
+                default:
+                    return k_bean_mythic_models[biome_index];
+            }
+        }
+    }
+
+    return NULL;
+}
+
 static const char *runtime_gameplay_behavioral_skirmish_model_id_for_family(
     RuntimeWarReinforcementFamily family,
     RuntimeWarSentienceBehaviorMode behavior_mode,
@@ -460,25 +627,24 @@ static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWar
 {
     RuntimeWarReinforcementVisualTier visual_tier =
         runtime_gameplay_reinforcement_visual_tier_for_family(family, war_intelligence_stage);
-    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC)
+    const char *behavioral_model_id = NULL;
+
+    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_BASE)
     {
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE ||
-            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT)
-            return k_banana_mythic_models[biome_index];
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE ||
-            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)
-            return k_bean_mythic_models[biome_index];
+        behavioral_model_id = runtime_gameplay_behavioral_skirmish_model_id_for_family(family,
+                                                                                        behavior_mode,
+                                                                                        biome_index);
+    }
+    else
+    {
+        behavioral_model_id = runtime_gameplay_behavioral_elite_model_id_for_family(family,
+                                                                                     behavior_mode,
+                                                                                     visual_tier,
+                                                                                     biome_index);
     }
 
-    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_APEX)
-    {
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE ||
-            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT)
-            return k_banana_apex_models[biome_index];
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE ||
-            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)
-            return k_bean_apex_models[biome_index];
-    }
+    if (behavioral_model_id)
+        return behavioral_model_id;
 
     if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT ||
         family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)

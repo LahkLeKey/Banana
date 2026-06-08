@@ -27,3 +27,4 @@ Thumbs.db
 *.swp
 .idea/
 /artifacts/steam-build/dev-candidate/http-upload
+/artifacts/native/human-feedback/
