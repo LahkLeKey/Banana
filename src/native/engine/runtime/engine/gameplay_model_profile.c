@@ -9,6 +9,13 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
                                                        float *out_tip_taper,
                                                        int *out_quality)
 {
+    const int has_flank_tag = model_id && strstr(model_id, "flank") != NULL;
+    const int has_regroup_tag = model_id && strstr(model_id, "regroup") != NULL;
+    const int has_envoy_tag = model_id &&
+                              (strstr(model_id, "envoy") != NULL || strstr(model_id, "truce") != NULL);
+    const int has_banana_tag = model_id && strstr(model_id, "banana-") != NULL;
+    const int has_bean_tag = model_id && strstr(model_id, "bean-") != NULL;
+
     if (!model_id || model_id[0] == '\0' ||
         !out_radius_scale || !out_length_scale || !out_curve_scale ||
         !out_tip_taper || !out_quality)
@@ -45,30 +52,30 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_tip_taper += 0.02f;
         }
 
-        if (strstr(model_id, "flank") != NULL)
+        if (has_flank_tag)
         {
             *out_length_scale += 0.10f;
             *out_curve_scale += 0.16f;
         }
-        else if (strstr(model_id, "regroup") != NULL)
+        else if (has_regroup_tag)
         {
             *out_radius_scale += 0.14f;
             *out_curve_scale -= 0.18f;
             *out_tip_taper += 0.03f;
         }
-        else if (strstr(model_id, "envoy") != NULL)
+        else if (has_envoy_tag)
         {
-            *out_length_scale += 0.04f;
-            *out_curve_scale -= 0.26f;
-            *out_tip_taper += 0.06f;
+            *out_length_scale += 0.08f;
+            *out_curve_scale -= 0.34f;
+            *out_tip_taper += 0.09f;
         }
 
-        if (strstr(model_id, "banana-") != NULL)
+        if (has_banana_tag)
         {
             *out_length_scale += 0.05f;
             *out_curve_scale += 0.03f;
         }
-        else if (strstr(model_id, "bean-") != NULL)
+        else if (has_bean_tag)
         {
             *out_radius_scale += 0.05f;
             *out_tip_taper += 0.02f;
@@ -106,30 +113,30 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_tip_taper += 0.02f;
         }
 
-        if (strstr(model_id, "flank") != NULL)
+        if (has_flank_tag)
         {
             *out_length_scale += 0.08f;
             *out_curve_scale += 0.14f;
         }
-        else if (strstr(model_id, "regroup") != NULL)
+        else if (has_regroup_tag)
         {
             *out_radius_scale += 0.12f;
             *out_curve_scale -= 0.16f;
             *out_tip_taper += 0.02f;
         }
-        else if (strstr(model_id, "envoy") != NULL)
+        else if (has_envoy_tag)
         {
-            *out_length_scale += 0.03f;
-            *out_curve_scale -= 0.20f;
-            *out_tip_taper += 0.05f;
+            *out_length_scale += 0.07f;
+            *out_curve_scale -= 0.28f;
+            *out_tip_taper += 0.07f;
         }
 
-        if (strstr(model_id, "banana-") != NULL)
+        if (has_banana_tag)
         {
             *out_length_scale += 0.04f;
             *out_curve_scale += 0.02f;
         }
-        else if (strstr(model_id, "bean-") != NULL)
+        else if (has_bean_tag)
         {
             *out_radius_scale += 0.04f;
             *out_tip_taper += 0.02f;
@@ -169,33 +176,33 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_tip_taper += 0.02f;
         }
 
-        if (strstr(model_id, "banana-") != NULL)
+        if (has_banana_tag)
         {
             *out_length_scale += 0.04f;
             *out_curve_scale += 0.02f;
         }
-        else if (strstr(model_id, "bean-") != NULL)
+        else if (has_bean_tag)
         {
             *out_radius_scale += 0.06f;
             *out_tip_taper += 0.02f;
         }
 
-        if (strstr(model_id, "flank") != NULL)
+        if (has_flank_tag)
         {
             *out_length_scale += 0.08f;
             *out_curve_scale += 0.13f;
         }
-        else if (strstr(model_id, "regroup") != NULL)
+        else if (has_regroup_tag)
         {
             *out_radius_scale += 0.12f;
             *out_curve_scale -= 0.14f;
             *out_tip_taper += 0.02f;
         }
-        else if (strstr(model_id, "envoy") != NULL)
+        else if (has_envoy_tag)
         {
-            *out_length_scale += 0.03f;
-            *out_curve_scale -= 0.19f;
-            *out_tip_taper += 0.04f;
+            *out_length_scale += 0.06f;
+            *out_curve_scale -= 0.24f;
+            *out_tip_taper += 0.06f;
         }
 
         return 1;
@@ -209,20 +216,21 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
         *out_tip_taper = 0.20f;
         *out_quality = 3;
 
-        if (strstr(model_id, "flank") != NULL)
+        if (has_flank_tag)
         {
             *out_length_scale += 0.06f;
             *out_curve_scale += 0.18f;
         }
-        else if (strstr(model_id, "regroup") != NULL)
+        else if (has_regroup_tag)
         {
             *out_radius_scale += 0.10f;
             *out_curve_scale -= 0.22f;
         }
-        else if (strstr(model_id, "envoy") != NULL)
+        else if (has_envoy_tag)
         {
-            *out_curve_scale -= 0.30f;
-            *out_tip_taper += 0.05f;
+            *out_length_scale += 0.05f;
+            *out_curve_scale -= 0.36f;
+            *out_tip_taper += 0.08f;
         }
 
         if (strstr(model_id, "urban") != NULL)
