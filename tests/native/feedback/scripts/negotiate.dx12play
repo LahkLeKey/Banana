@@ -9,5 +9,7 @@ expect.metric negotiate-streak gte 1
 expect.metric trim gte 1
 expect.metric truce-hits-total eq 0
 expect.metric truce-hits-stage-current eq 0
+expect.metric truce-gate-checks gte 1
+expect.metric truce-gate-block-empathy gte 1
 snapshot negotiate-baseline
 note negotiate_baseline_validated

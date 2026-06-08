@@ -983,7 +983,8 @@ static void emit_snapshot(FILE *stream,
             "bananaMode=%s beanMode=%s negotiateStreak=%d trim=%d comebackBonus=%d "
             "bananaHits={hold:%d flank:%d regroup:%d negotiate:%d} "
             "beanHits={hold:%d flank:%d regroup:%d negotiate:%d} "
-            "truceHits={total:%d banana:%d bean:%d base:%d apex:%d mythic:%d}\n",
+            "truceHits={total:%d banana:%d bean:%d base:%d apex:%d mythic:%d} "
+            "truceGate={checks:%d ok:%d behavior:%d empathy:%d coord:%d streak:%d intel:%d}\n",
             tick,
             scenario_name,
             label ? label : "-",
@@ -1009,7 +1010,14 @@ static void emit_snapshot(FILE *stream,
             context->telemetry.war_sentience_truce_variant_hits_bean,
             context->telemetry.war_sentience_truce_variant_hits_base,
             context->telemetry.war_sentience_truce_variant_hits_apex,
-            context->telemetry.war_sentience_truce_variant_hits_mythic);
+            context->telemetry.war_sentience_truce_variant_hits_mythic,
+            context->telemetry.war_sentience_truce_gate_checks_total,
+            context->telemetry.war_sentience_truce_gate_checks_granted,
+            context->telemetry.war_sentience_truce_gate_block_behavior,
+            context->telemetry.war_sentience_truce_gate_block_empathy,
+            context->telemetry.war_sentience_truce_gate_block_coordination,
+            context->telemetry.war_sentience_truce_gate_block_streak,
+            context->telemetry.war_sentience_truce_gate_block_intelligence);
 }
 
 static void emit_snapshot_dual(Dx12PlayloopRunner *runner, const char *label)
@@ -1336,6 +1344,48 @@ static int read_metric_value(const Dx12PlayloopRunner *runner, const char *metri
             stage_index = BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS - 1;
 
         *out_value = runner->context.telemetry.war_sentience_truce_variant_hits_stage[stage_index];
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-gate-checks") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_checks_total;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-gate-granted") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_checks_granted;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-gate-block-behavior") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_block_behavior;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-gate-block-empathy") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_block_empathy;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-gate-block-coordination") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_block_coordination;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-gate-block-streak") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_block_streak;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-gate-block-intelligence") == 0)
+    {
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_block_intelligence;
         return 1;
     }
 

@@ -250,6 +250,16 @@ typedef enum RuntimeWarReinforcementVisualTier
     RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC = 2,
 } RuntimeWarReinforcementVisualTier;
 
+typedef enum RuntimeWarTruceGateResult
+{
+    RUNTIME_WAR_TRUCE_GATE_GRANTED = 0,
+    RUNTIME_WAR_TRUCE_GATE_BLOCK_BEHAVIOR = 1,
+    RUNTIME_WAR_TRUCE_GATE_BLOCK_EMPATHY = 2,
+    RUNTIME_WAR_TRUCE_GATE_BLOCK_COORDINATION = 3,
+    RUNTIME_WAR_TRUCE_GATE_BLOCK_STREAK = 4,
+    RUNTIME_WAR_TRUCE_GATE_BLOCK_INTELLIGENCE = 5,
+} RuntimeWarTruceGateResult;
+
 static int runtime_gameplay_clamp_biome_index(int war_biome_stage_index)
 {
     int model_count = (int)(sizeof(k_banana_skirmish_models) / sizeof(k_banana_skirmish_models[0]));
@@ -554,6 +564,65 @@ static int runtime_gameplay_should_use_truce_variant(const EngineRuntimeState *r
         return 0;
 
     return 1;
+}
+
+static RuntimeWarTruceGateResult runtime_gameplay_evaluate_truce_gate(const EngineRuntimeState *runtime_state,
+                                                                      RuntimeWarSentienceBehaviorMode behavior_mode,
+                                                                      int war_intelligence_stage,
+                                                                      int *out_use_truce_variant)
+{
+    int use_truce_variant = runtime_gameplay_should_use_truce_variant(runtime_state,
+                                                                       behavior_mode,
+                                                                       war_intelligence_stage);
+
+    if (out_use_truce_variant)
+        *out_use_truce_variant = use_truce_variant;
+
+    if (use_truce_variant)
+        return RUNTIME_WAR_TRUCE_GATE_GRANTED;
+
+    if (behavior_mode != RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE)
+        return RUNTIME_WAR_TRUCE_GATE_BLOCK_BEHAVIOR;
+    if (!runtime_state || runtime_state->war_sentience_empathy_level < 7)
+        return RUNTIME_WAR_TRUCE_GATE_BLOCK_EMPATHY;
+    if (runtime_state->war_sentience_coordination_level < 5)
+        return RUNTIME_WAR_TRUCE_GATE_BLOCK_COORDINATION;
+    if (runtime_state->war_sentience_negotiate_streak_ticks < 2)
+        return RUNTIME_WAR_TRUCE_GATE_BLOCK_STREAK;
+
+    return RUNTIME_WAR_TRUCE_GATE_BLOCK_INTELLIGENCE;
+}
+
+static void runtime_gameplay_record_truce_gate_result(EngineRuntimeState *runtime_state,
+                                                      RuntimeWarTruceGateResult gate_result)
+{
+    if (!runtime_state)
+        return;
+
+    runtime_state->war_sentience_truce_gate_checks_total += 1;
+
+    switch (gate_result)
+    {
+        case RUNTIME_WAR_TRUCE_GATE_GRANTED:
+            runtime_state->war_sentience_truce_gate_checks_granted += 1;
+            break;
+        case RUNTIME_WAR_TRUCE_GATE_BLOCK_BEHAVIOR:
+            runtime_state->war_sentience_truce_gate_block_behavior += 1;
+            break;
+        case RUNTIME_WAR_TRUCE_GATE_BLOCK_EMPATHY:
+            runtime_state->war_sentience_truce_gate_block_empathy += 1;
+            break;
+        case RUNTIME_WAR_TRUCE_GATE_BLOCK_COORDINATION:
+            runtime_state->war_sentience_truce_gate_block_coordination += 1;
+            break;
+        case RUNTIME_WAR_TRUCE_GATE_BLOCK_STREAK:
+            runtime_state->war_sentience_truce_gate_block_streak += 1;
+            break;
+        case RUNTIME_WAR_TRUCE_GATE_BLOCK_INTELLIGENCE:
+        default:
+            runtime_state->war_sentience_truce_gate_block_intelligence += 1;
+            break;
+    }
 }
 
 static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
@@ -1170,6 +1239,7 @@ static int runtime_gameplay_spawn_war_reinforcement(World *world,
     Entity *entity = NULL;
     uint32_t controller_id = 0;
     int use_truce_variant = 0;
+    RuntimeWarTruceGateResult truce_gate_result = RUNTIME_WAR_TRUCE_GATE_BLOCK_BEHAVIOR;
 
     if (!world || !controllers || !inout_controller_count || max_controllers <= 0)
         return 0;
@@ -1195,9 +1265,11 @@ static int runtime_gameplay_spawn_war_reinforcement(World *world,
     }
     else
     {
-        use_truce_variant = runtime_gameplay_should_use_truce_variant(runtime_state,
-                                                                      behavior_mode,
-                                                                      war_intelligence_stage);
+        truce_gate_result = runtime_gameplay_evaluate_truce_gate(runtime_state,
+                                                                 behavior_mode,
+                                                                 war_intelligence_stage,
+                                                                 &use_truce_variant);
+        runtime_gameplay_record_truce_gate_result(runtime_state, truce_gate_result);
         gameplay_model_id = runtime_gameplay_reinforcement_model_id_for_family(family,
                                                                                 behavior_mode,
                                                                                 war_intelligence_stage,

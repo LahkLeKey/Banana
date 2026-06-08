@@ -130,6 +130,13 @@ typedef struct EngineRuntimeState
     int war_sentience_truce_variant_hits_base;
     int war_sentience_truce_variant_hits_apex;
     int war_sentience_truce_variant_hits_mythic;
+    int war_sentience_truce_gate_checks_total;
+    int war_sentience_truce_gate_checks_granted;
+    int war_sentience_truce_gate_block_behavior;
+    int war_sentience_truce_gate_block_empathy;
+    int war_sentience_truce_gate_block_coordination;
+    int war_sentience_truce_gate_block_streak;
+    int war_sentience_truce_gate_block_intelligence;
     int war_sentience_negotiate_streak_ticks;
     int war_sentience_negotiate_deescalation_trim_last_tick;
     int war_sentience_comeback_bonus_last_tick;
