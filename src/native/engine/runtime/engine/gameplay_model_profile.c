@@ -35,6 +35,24 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_tip_taper += 0.02f;
         }
 
+        if (strstr(model_id, "flank") != NULL)
+        {
+            *out_length_scale += 0.10f;
+            *out_curve_scale += 0.16f;
+        }
+        else if (strstr(model_id, "regroup") != NULL)
+        {
+            *out_radius_scale += 0.14f;
+            *out_curve_scale -= 0.18f;
+            *out_tip_taper += 0.03f;
+        }
+        else if (strstr(model_id, "envoy") != NULL)
+        {
+            *out_length_scale += 0.04f;
+            *out_curve_scale -= 0.26f;
+            *out_tip_taper += 0.06f;
+        }
+
         return 1;
     }
 
@@ -55,6 +73,24 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
         {
             *out_curve_scale -= 0.07f;
             *out_tip_taper += 0.03f;
+        }
+
+        if (strstr(model_id, "flank") != NULL)
+        {
+            *out_length_scale += 0.08f;
+            *out_curve_scale += 0.14f;
+        }
+        else if (strstr(model_id, "regroup") != NULL)
+        {
+            *out_radius_scale += 0.12f;
+            *out_curve_scale -= 0.16f;
+            *out_tip_taper += 0.02f;
+        }
+        else if (strstr(model_id, "envoy") != NULL)
+        {
+            *out_length_scale += 0.03f;
+            *out_curve_scale -= 0.20f;
+            *out_tip_taper += 0.05f;
         }
 
         return 1;
