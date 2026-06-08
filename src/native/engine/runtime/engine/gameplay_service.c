@@ -410,6 +410,11 @@ static RuntimeWarReinforcementVisualTier runtime_gameplay_reinforcement_visual_t
     return RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_BASE;
 }
 
+static int runtime_gameplay_sentience_mode_prefers_behavioral_art(RuntimeWarSentienceBehaviorMode behavior_mode)
+{
+    return behavior_mode == RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE;
+}
+
 static const char *runtime_gameplay_behavioral_skirmish_model_id_for_family(
     RuntimeWarReinforcementFamily family,
     RuntimeWarSentienceBehaviorMode behavior_mode,
@@ -460,6 +465,20 @@ static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWar
 {
     RuntimeWarReinforcementVisualTier visual_tier =
         runtime_gameplay_reinforcement_visual_tier_for_family(family, war_intelligence_stage);
+
+    if ((family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT ||
+         family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER) &&
+        runtime_gameplay_sentience_mode_prefers_behavioral_art(behavior_mode))
+    {
+        const char *behavioral_skirmish_model_id =
+            runtime_gameplay_behavioral_skirmish_model_id_for_family(family,
+                                                                     behavior_mode,
+                                                                     biome_index);
+
+        if (behavioral_skirmish_model_id)
+            return behavioral_skirmish_model_id;
+    }
+
     if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC)
     {
         if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE ||
