@@ -759,10 +759,13 @@ static void runtime_gameplay_record_war_reinforcement_spawn(EngineRuntimeState *
                                                             RuntimeWarReinforcementFamily family,
                                                             RuntimeWarSentienceBehaviorMode behavior_mode,
                                                             int war_intelligence_stage,
+                                                            int use_truce_variant,
                                                             int biome_index)
 {
     int stage_bucket = 0;
     int mode_index = 0;
+    RuntimeWarReinforcementVisualTier visual_tier =
+        runtime_gameplay_reinforcement_visual_tier_for_family(family, war_intelligence_stage);
 
     if (!runtime_state)
         return;
@@ -779,6 +782,24 @@ static void runtime_gameplay_record_war_reinforcement_spawn(EngineRuntimeState *
         runtime_state->war_sentience_spawn_mode_hits_banana[mode_index] += 1;
     else if (team == CONTROLLER_TEAM_BEAN)
         runtime_state->war_sentience_spawn_mode_hits_bean[mode_index] += 1;
+
+    if (use_truce_variant)
+    {
+        runtime_state->war_sentience_truce_variant_hits_total += 1;
+        runtime_state->war_sentience_truce_variant_hits_stage[stage_bucket] += 1;
+
+        if (team == CONTROLLER_TEAM_BANANA)
+            runtime_state->war_sentience_truce_variant_hits_banana += 1;
+        else if (team == CONTROLLER_TEAM_BEAN)
+            runtime_state->war_sentience_truce_variant_hits_bean += 1;
+
+        if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC)
+            runtime_state->war_sentience_truce_variant_hits_mythic += 1;
+        else if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_APEX)
+            runtime_state->war_sentience_truce_variant_hits_apex += 1;
+        else
+            runtime_state->war_sentience_truce_variant_hits_base += 1;
+    }
 
     switch (family)
     {
@@ -1148,6 +1169,7 @@ static int runtime_gameplay_spawn_war_reinforcement(World *world,
     EntityId entity_id = 0;
     Entity *entity = NULL;
     uint32_t controller_id = 0;
+    int use_truce_variant = 0;
 
     if (!world || !controllers || !inout_controller_count || max_controllers <= 0)
         return 0;
@@ -1173,10 +1195,9 @@ static int runtime_gameplay_spawn_war_reinforcement(World *world,
     }
     else
     {
-        const int use_truce_variant =
-            runtime_gameplay_should_use_truce_variant(runtime_state,
-                                                      behavior_mode,
-                                                      war_intelligence_stage);
+        use_truce_variant = runtime_gameplay_should_use_truce_variant(runtime_state,
+                                                                      behavior_mode,
+                                                                      war_intelligence_stage);
         gameplay_model_id = runtime_gameplay_reinforcement_model_id_for_family(family,
                                                                                 behavior_mode,
                                                                                 war_intelligence_stage,
@@ -1219,6 +1240,7 @@ static int runtime_gameplay_spawn_war_reinforcement(World *world,
                                                     family,
                                                     behavior_mode,
                                                     war_intelligence_stage,
+                                                    use_truce_variant,
                                                     biome_index);
     return 1;
 }
