@@ -750,6 +750,36 @@ int engine_get_controller_war_sentience_comeback_bonus_last_tick(void)
     return s_engine_state.war_sentience_comeback_bonus_last_tick;
 }
 
+int engine_get_controller_war_sentience_truce_variant_hits_total(void)
+{
+    return s_engine_state.war_sentience_truce_variant_hits_total;
+}
+
+int engine_get_controller_war_sentience_truce_variant_hits_banana(void)
+{
+    return s_engine_state.war_sentience_truce_variant_hits_banana;
+}
+
+int engine_get_controller_war_sentience_truce_variant_hits_bean(void)
+{
+    return s_engine_state.war_sentience_truce_variant_hits_bean;
+}
+
+int engine_get_controller_war_sentience_truce_variant_hits_base(void)
+{
+    return s_engine_state.war_sentience_truce_variant_hits_base;
+}
+
+int engine_get_controller_war_sentience_truce_variant_hits_apex(void)
+{
+    return s_engine_state.war_sentience_truce_variant_hits_apex;
+}
+
+int engine_get_controller_war_sentience_truce_variant_hits_mythic(void)
+{
+    return s_engine_state.war_sentience_truce_variant_hits_mythic;
+}
+
 static int runtime_engine_sum_war_reinforcement_hits(const int *hits)
 {
     int total = 0;

@@ -442,6 +442,16 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
              engine_get_controller_war_sentience_spawn_mode_hits_bean(2),
              engine_get_controller_war_sentience_spawn_mode_hits_bean(3));
 
+    snprintf(line_twelve,
+             sizeof(line_twelve),
+             "WAR TRUCE HITS T:%d B:%d E:%d BASE:%d AP:%d MY:%d",
+             engine_get_controller_war_sentience_truce_variant_hits_total(),
+             engine_get_controller_war_sentience_truce_variant_hits_banana(),
+             engine_get_controller_war_sentience_truce_variant_hits_bean(),
+             engine_get_controller_war_sentience_truce_variant_hits_base(),
+             engine_get_controller_war_sentience_truce_variant_hits_apex(),
+             engine_get_controller_war_sentience_truce_variant_hits_mythic());
+
     if (has_player && has_target)
     {
         snprintf(line_four,
@@ -490,7 +500,8 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     engine_ui_text(22.0f, 162.0f, line_nine);
     engine_ui_text(22.0f, 184.0f, line_ten);
     engine_ui_text(22.0f, 206.0f, line_eleven);
-    engine_ui_text(22.0f, 228.0f, line_four);
+    engine_ui_text(22.0f, 228.0f, line_twelve);
+    engine_ui_text(22.0f, 250.0f, line_four);
     if (scene == BANANA_POC_SCENE_LEVEL_EDITOR)
     {
         char editor_line[160];
@@ -503,7 +514,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
                  editor_height,
                  brush,
                  k_paint_mode_names[mode]);
-        engine_ui_text(22.0f, 250.0f, editor_line);
+        engine_ui_text(22.0f, 272.0f, editor_line);
     }
     else if (!(proto && proto->option_compact_hud))
     {
