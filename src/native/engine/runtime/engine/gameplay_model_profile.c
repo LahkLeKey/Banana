@@ -11,8 +11,9 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
 {
     const int has_flank_tag = model_id && strstr(model_id, "flank") != NULL;
     const int has_regroup_tag = model_id && strstr(model_id, "regroup") != NULL;
-    const int has_envoy_tag = model_id &&
-                              (strstr(model_id, "envoy") != NULL || strstr(model_id, "truce") != NULL);
+    const int has_envoy_tag = model_id && strstr(model_id, "envoy") != NULL;
+    const int has_truce_tag = model_id && strstr(model_id, "truce") != NULL;
+    const int has_diplomacy_tag = has_envoy_tag || has_truce_tag;
     const int has_banana_tag = model_id && strstr(model_id, "banana-") != NULL;
     const int has_bean_tag = model_id && strstr(model_id, "bean-") != NULL;
 
@@ -63,11 +64,18 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_curve_scale -= 0.18f;
             *out_tip_taper += 0.03f;
         }
-        else if (has_envoy_tag)
+        else if (has_diplomacy_tag)
         {
             *out_length_scale += 0.08f;
             *out_curve_scale -= 0.34f;
             *out_tip_taper += 0.09f;
+
+            if (has_truce_tag)
+            {
+                *out_radius_scale += 0.06f;
+                *out_curve_scale -= 0.06f;
+                *out_tip_taper += 0.02f;
+            }
         }
 
         if (has_banana_tag)
@@ -124,11 +132,18 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_curve_scale -= 0.16f;
             *out_tip_taper += 0.02f;
         }
-        else if (has_envoy_tag)
+        else if (has_diplomacy_tag)
         {
             *out_length_scale += 0.07f;
             *out_curve_scale -= 0.28f;
             *out_tip_taper += 0.07f;
+
+            if (has_truce_tag)
+            {
+                *out_radius_scale += 0.05f;
+                *out_curve_scale -= 0.05f;
+                *out_tip_taper += 0.02f;
+            }
         }
 
         if (has_banana_tag)
@@ -198,11 +213,18 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_curve_scale -= 0.14f;
             *out_tip_taper += 0.02f;
         }
-        else if (has_envoy_tag)
+        else if (has_diplomacy_tag)
         {
             *out_length_scale += 0.06f;
             *out_curve_scale -= 0.24f;
             *out_tip_taper += 0.06f;
+
+            if (has_truce_tag)
+            {
+                *out_radius_scale += 0.04f;
+                *out_curve_scale -= 0.04f;
+                *out_tip_taper += 0.02f;
+            }
         }
 
         return 1;
@@ -226,11 +248,18 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_radius_scale += 0.10f;
             *out_curve_scale -= 0.22f;
         }
-        else if (has_envoy_tag)
+        else if (has_diplomacy_tag)
         {
             *out_length_scale += 0.05f;
             *out_curve_scale -= 0.36f;
             *out_tip_taper += 0.08f;
+
+            if (has_truce_tag)
+            {
+                *out_radius_scale += 0.03f;
+                *out_curve_scale -= 0.06f;
+                *out_tip_taper += 0.02f;
+            }
         }
 
         if (strstr(model_id, "urban") != NULL)

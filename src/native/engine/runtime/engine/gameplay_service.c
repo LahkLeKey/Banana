@@ -38,6 +38,13 @@ static const char *k_banana_skirmish_negotiate_models[] = {
     "gameplay/war/banana-scout-envoy-volcanic-v1",
 };
 
+static const char *k_banana_skirmish_truce_models[] = {
+    "gameplay/war/banana-scout-truce-tropical-v1",
+    "gameplay/war/banana-scout-truce-glacier-v1",
+    "gameplay/war/banana-scout-truce-urban-v1",
+    "gameplay/war/banana-scout-truce-volcanic-v1",
+};
+
 static const char *k_banana_siege_models[] = {
     "gameplay/war/banana-siege-commander-tropical-v1",
     "gameplay/war/banana-siege-commander-glacier-v1",
@@ -71,6 +78,13 @@ static const char *k_bean_skirmish_negotiate_models[] = {
     "gameplay/war/bean-raider-envoy-glacier-v1",
     "gameplay/war/bean-raider-envoy-urban-v1",
     "gameplay/war/bean-raider-envoy-volcanic-v1",
+};
+
+static const char *k_bean_skirmish_truce_models[] = {
+    "gameplay/war/bean-raider-truce-tropical-v1",
+    "gameplay/war/bean-raider-truce-glacier-v1",
+    "gameplay/war/bean-raider-truce-urban-v1",
+    "gameplay/war/bean-raider-truce-volcanic-v1",
 };
 
 static const char *k_bean_siege_models[] = {
@@ -108,6 +122,13 @@ static const char *k_banana_apex_negotiate_models[] = {
     "gameplay/war/banana-phalanx-envoy-volcanic-v1",
 };
 
+static const char *k_banana_apex_truce_models[] = {
+    "gameplay/war/banana-phalanx-truce-tropical-v1",
+    "gameplay/war/banana-phalanx-truce-glacier-v1",
+    "gameplay/war/banana-phalanx-truce-urban-v1",
+    "gameplay/war/banana-phalanx-truce-volcanic-v1",
+};
+
 static const char *k_bean_apex_models[] = {
     "gameplay/war/bean-colossus-tropical-v1",
     "gameplay/war/bean-colossus-glacier-v1",
@@ -134,6 +155,13 @@ static const char *k_bean_apex_negotiate_models[] = {
     "gameplay/war/bean-colossus-envoy-glacier-v1",
     "gameplay/war/bean-colossus-envoy-urban-v1",
     "gameplay/war/bean-colossus-envoy-volcanic-v1",
+};
+
+static const char *k_bean_apex_truce_models[] = {
+    "gameplay/war/bean-colossus-truce-tropical-v1",
+    "gameplay/war/bean-colossus-truce-glacier-v1",
+    "gameplay/war/bean-colossus-truce-urban-v1",
+    "gameplay/war/bean-colossus-truce-volcanic-v1",
 };
 
 static const char *k_banana_mythic_models[] = {
@@ -164,6 +192,13 @@ static const char *k_banana_mythic_negotiate_models[] = {
     "gameplay/war/banana-archon-envoy-volcanic-v1",
 };
 
+static const char *k_banana_mythic_truce_models[] = {
+    "gameplay/war/banana-archon-truce-tropical-v1",
+    "gameplay/war/banana-archon-truce-glacier-v1",
+    "gameplay/war/banana-archon-truce-urban-v1",
+    "gameplay/war/banana-archon-truce-volcanic-v1",
+};
+
 static const char *k_bean_mythic_models[] = {
     "gameplay/war/bean-leviathan-tropical-v1",
     "gameplay/war/bean-leviathan-glacier-v1",
@@ -190,6 +225,13 @@ static const char *k_bean_mythic_negotiate_models[] = {
     "gameplay/war/bean-leviathan-envoy-glacier-v1",
     "gameplay/war/bean-leviathan-envoy-urban-v1",
     "gameplay/war/bean-leviathan-envoy-volcanic-v1",
+};
+
+static const char *k_bean_mythic_truce_models[] = {
+    "gameplay/war/bean-leviathan-truce-tropical-v1",
+    "gameplay/war/bean-leviathan-truce-glacier-v1",
+    "gameplay/war/bean-leviathan-truce-urban-v1",
+    "gameplay/war/bean-leviathan-truce-volcanic-v1",
 };
 
 typedef enum RuntimeWarReinforcementFamily
@@ -494,10 +536,31 @@ static RuntimeWarReinforcementVisualTier runtime_gameplay_reinforcement_visual_t
     return RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_BASE;
 }
 
+static int runtime_gameplay_should_use_truce_variant(const EngineRuntimeState *runtime_state,
+                                                     RuntimeWarSentienceBehaviorMode behavior_mode,
+                                                     int war_intelligence_stage)
+{
+    if (!runtime_state)
+        return 0;
+    if (behavior_mode != RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE)
+        return 0;
+    if (runtime_state->war_sentience_empathy_level < 7)
+        return 0;
+    if (runtime_state->war_sentience_coordination_level < 5)
+        return 0;
+    if (runtime_state->war_sentience_negotiate_streak_ticks < 2)
+        return 0;
+    if (war_intelligence_stage < 2)
+        return 0;
+
+    return 1;
+}
+
 static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
     RuntimeWarReinforcementFamily family,
     RuntimeWarSentienceBehaviorMode behavior_mode,
     RuntimeWarReinforcementVisualTier visual_tier,
+    int use_truce_variant,
     int biome_index)
 {
     if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_APEX)
@@ -512,6 +575,8 @@ static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
                     return k_banana_apex_regroup_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    if (use_truce_variant)
+                        return k_banana_apex_truce_models[biome_index];
                     return k_banana_apex_negotiate_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
                 default:
@@ -529,6 +594,8 @@ static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
                     return k_bean_apex_regroup_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    if (use_truce_variant)
+                        return k_bean_apex_truce_models[biome_index];
                     return k_bean_apex_negotiate_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
                 default:
@@ -549,6 +616,8 @@ static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
                     return k_banana_mythic_regroup_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    if (use_truce_variant)
+                        return k_banana_mythic_truce_models[biome_index];
                     return k_banana_mythic_negotiate_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
                 default:
@@ -566,6 +635,8 @@ static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
                     return k_bean_mythic_regroup_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    if (use_truce_variant)
+                        return k_bean_mythic_truce_models[biome_index];
                     return k_bean_mythic_negotiate_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
                 default:
@@ -580,6 +651,7 @@ static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
 static const char *runtime_gameplay_behavioral_skirmish_model_id_for_family(
     RuntimeWarReinforcementFamily family,
     RuntimeWarSentienceBehaviorMode behavior_mode,
+    int use_truce_variant,
     int biome_index)
 {
     switch (family)
@@ -592,6 +664,8 @@ static const char *runtime_gameplay_behavioral_skirmish_model_id_for_family(
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
                     return k_banana_skirmish_regroup_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    if (use_truce_variant)
+                        return k_banana_skirmish_truce_models[biome_index];
                     return k_banana_skirmish_negotiate_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
                 default:
@@ -606,6 +680,8 @@ static const char *runtime_gameplay_behavioral_skirmish_model_id_for_family(
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_REGROUP:
                     return k_bean_skirmish_regroup_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_NEGOTIATE:
+                    if (use_truce_variant)
+                        return k_bean_skirmish_truce_models[biome_index];
                     return k_bean_skirmish_negotiate_models[biome_index];
                 case RUNTIME_WAR_SENTIENCE_BEHAVIOR_HOLD_LINE:
                 default:
@@ -623,6 +699,7 @@ static const char *runtime_gameplay_behavioral_skirmish_model_id_for_family(
 static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWarReinforcementFamily family,
                                                                        RuntimeWarSentienceBehaviorMode behavior_mode,
                                                                        int war_intelligence_stage,
+                                                                       int use_truce_variant,
                                                                        int biome_index)
 {
     RuntimeWarReinforcementVisualTier visual_tier =
@@ -633,6 +710,7 @@ static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWar
     {
         behavioral_model_id = runtime_gameplay_behavioral_skirmish_model_id_for_family(family,
                                                                                         behavior_mode,
+                                                                                        use_truce_variant,
                                                                                         biome_index);
     }
     else
@@ -640,6 +718,7 @@ static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWar
         behavioral_model_id = runtime_gameplay_behavioral_elite_model_id_for_family(family,
                                                                                      behavior_mode,
                                                                                      visual_tier,
+                                                                                     use_truce_variant,
                                                                                      biome_index);
     }
 
@@ -652,6 +731,7 @@ static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWar
         const char *behavioral_skirmish_model_id =
             runtime_gameplay_behavioral_skirmish_model_id_for_family(family,
                                                                      behavior_mode,
+                                                                     use_truce_variant,
                                                                      biome_index);
 
         if (behavioral_skirmish_model_id)
@@ -1093,9 +1173,14 @@ static int runtime_gameplay_spawn_war_reinforcement(World *world,
     }
     else
     {
+        const int use_truce_variant =
+            runtime_gameplay_should_use_truce_variant(runtime_state,
+                                                      behavior_mode,
+                                                      war_intelligence_stage);
         gameplay_model_id = runtime_gameplay_reinforcement_model_id_for_family(family,
                                                                                 behavior_mode,
                                                                                 war_intelligence_stage,
+                                                                                use_truce_variant,
                                                                                 biome_index);
     }
 
