@@ -444,13 +444,15 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
 
     snprintf(line_twelve,
              sizeof(line_twelve),
-             "WAR TRUCE HITS T:%d B:%d E:%d BASE:%d AP:%d MY:%d",
+             "WAR TRUCE HITS T:%d B:%d E:%d BASE:%d AP:%d MY:%d STG[%d]:%d",
              engine_get_controller_war_sentience_truce_variant_hits_total(),
              engine_get_controller_war_sentience_truce_variant_hits_banana(),
              engine_get_controller_war_sentience_truce_variant_hits_bean(),
              engine_get_controller_war_sentience_truce_variant_hits_base(),
              engine_get_controller_war_sentience_truce_variant_hits_apex(),
-             engine_get_controller_war_sentience_truce_variant_hits_mythic());
+             engine_get_controller_war_sentience_truce_variant_hits_mythic(),
+             war_stage,
+             engine_get_controller_war_sentience_truce_variant_hits_stage(war_stage));
 
     if (has_player && has_target)
     {

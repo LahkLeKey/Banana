@@ -8,5 +8,6 @@ expect.mode bean negotiate
 expect.metric negotiate-streak gte 1
 expect.metric trim gte 1
 expect.metric truce-hits-total eq 0
+expect.metric truce-hits-stage-current eq 0
 snapshot negotiate-baseline
 note negotiate_baseline_validated

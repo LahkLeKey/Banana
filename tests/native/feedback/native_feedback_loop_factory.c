@@ -1326,6 +1326,19 @@ static int read_metric_value(const Dx12PlayloopRunner *runner, const char *metri
         return 1;
     }
 
+    if (strcmp(metric_name, "truce-hits-stage-current") == 0)
+    {
+        int stage_index = runner->context.telemetry.war_intelligence_stage;
+
+        if (stage_index < 0)
+            stage_index = 0;
+        if (stage_index >= BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS)
+            stage_index = BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS - 1;
+
+        *out_value = runner->context.telemetry.war_sentience_truce_variant_hits_stage[stage_index];
+        return 1;
+    }
+
     return 0;
 }
 
