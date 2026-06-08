@@ -10,5 +10,6 @@ expect.metric negotiate-streak gte 1
 expect.team-count neutral gte 1
 expect.metric truce-hits-total gte 1
 expect.metric truce-hits-apex gte 1
+expect.metric truce-hits-stage-current gte 1
 snapshot truce-baseline
 note truce_baseline_validated

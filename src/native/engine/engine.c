@@ -723,6 +723,8 @@ static int runtime_engine_war_sentience_mode_hits_at(const int *hits, int mode)
     return hits[mode];
 }
 
+static int runtime_engine_war_reinforcement_stage_hits_at(const int *hits, int stage_index);
+
 int engine_get_controller_war_sentience_spawn_mode_hits_banana(int mode)
 {
     return runtime_engine_war_sentience_mode_hits_at(s_engine_state.war_sentience_spawn_mode_hits_banana,
@@ -778,6 +780,12 @@ int engine_get_controller_war_sentience_truce_variant_hits_apex(void)
 int engine_get_controller_war_sentience_truce_variant_hits_mythic(void)
 {
     return s_engine_state.war_sentience_truce_variant_hits_mythic;
+}
+
+int engine_get_controller_war_sentience_truce_variant_hits_stage(int stage_index)
+{
+    return runtime_engine_war_reinforcement_stage_hits_at(s_engine_state.war_sentience_truce_variant_hits_stage,
+                                                          stage_index);
 }
 
 static int runtime_engine_sum_war_reinforcement_hits(const int *hits)

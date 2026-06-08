@@ -206,6 +206,7 @@ extern "C"
     int engine_get_controller_war_sentience_truce_variant_hits_base(void);
     int engine_get_controller_war_sentience_truce_variant_hits_apex(void);
     int engine_get_controller_war_sentience_truce_variant_hits_mythic(void);
+    int engine_get_controller_war_sentience_truce_variant_hits_stage(int stage_index);
     int engine_get_controller_war_reinforcement_hits_total(void);
     int engine_get_controller_war_reinforcement_hits_biome(int biome_index);
     int engine_get_controller_war_reinforcement_hits_family_banana_scout(void);
