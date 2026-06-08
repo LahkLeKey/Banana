@@ -494,8 +494,6 @@ static RuntimeWarReinforcementVisualTier runtime_gameplay_reinforcement_visual_t
     return RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_BASE;
 }
 
-<<<<<<< HEAD
-=======
 static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
     RuntimeWarReinforcementFamily family,
     RuntimeWarSentienceBehaviorMode behavior_mode,
@@ -579,7 +577,6 @@ static const char *runtime_gameplay_behavioral_elite_model_id_for_family(
     return NULL;
 }
 
->>>>>>> 2f31c9f (Expand war reinforcement art suite)
 static const char *runtime_gameplay_behavioral_skirmish_model_id_for_family(
     RuntimeWarReinforcementFamily family,
     RuntimeWarSentienceBehaviorMode behavior_mode,
@@ -630,27 +627,6 @@ static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWar
 {
     RuntimeWarReinforcementVisualTier visual_tier =
         runtime_gameplay_reinforcement_visual_tier_for_family(family, war_intelligence_stage);
-<<<<<<< HEAD
-    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC)
-    {
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE ||
-            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT)
-            return k_banana_mythic_models[biome_index];
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE ||
-            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)
-            return k_bean_mythic_models[biome_index];
-    }
-
-    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_APEX)
-    {
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE ||
-            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT)
-            return k_banana_apex_models[biome_index];
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE ||
-            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)
-            return k_bean_apex_models[biome_index];
-    }
-=======
     const char *behavioral_model_id = NULL;
 
     if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_BASE)
@@ -669,7 +645,6 @@ static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWar
 
     if (behavioral_model_id)
         return behavioral_model_id;
->>>>>>> 2f31c9f (Expand war reinforcement art suite)
 
     if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT ||
         family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)
