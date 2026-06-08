@@ -244,15 +244,38 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
             *out_tip_taper += 0.02f;
         }
 
+        if (has_banana_tag)
+        {
+            *out_length_scale += 0.08f;
+            *out_curve_scale += 0.06f;
+            *out_tip_taper -= 0.02f;
+        }
+        else if (has_bean_tag)
+        {
+            *out_radius_scale += 0.09f;
+            *out_curve_scale -= 0.08f;
+            *out_tip_taper += 0.04f;
+        }
+
         return 1;
     }
 
-    if (strstr(model_id, "banana-bean-green") != NULL || strstr(model_id, "bean") != NULL)
+    if (strstr(model_id, "banana-bean-green") != NULL)
     {
-        *out_radius_scale = 1.32f;
-        *out_length_scale = 0.72f;
-        *out_curve_scale = 0.62f;
-        *out_tip_taper = 0.22f;
+        *out_radius_scale = 1.26f;
+        *out_length_scale = 0.84f;
+        *out_curve_scale = 0.70f;
+        *out_tip_taper = 0.18f;
+        *out_quality = 3;
+        return 1;
+    }
+
+    if (strstr(model_id, "bean") != NULL)
+    {
+        *out_radius_scale = 1.38f;
+        *out_length_scale = 0.68f;
+        *out_curve_scale = 0.54f;
+        *out_tip_taper = 0.26f;
         *out_quality = 3;
         return 1;
     }
