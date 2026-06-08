@@ -594,17 +594,24 @@ static RuntimeWarTruceGateResult runtime_gameplay_evaluate_truce_gate(const Engi
 }
 
 static void runtime_gameplay_record_truce_gate_result(EngineRuntimeState *runtime_state,
-                                                      RuntimeWarTruceGateResult gate_result)
+                                                      RuntimeWarTruceGateResult gate_result,
+                                                      int war_intelligence_stage)
 {
+    int stage_bucket = 0;
+
     if (!runtime_state)
         return;
 
+    stage_bucket = runtime_gameplay_clamp_war_intelligence_stage_bucket(war_intelligence_stage);
+
     runtime_state->war_sentience_truce_gate_checks_total += 1;
+    runtime_state->war_sentience_truce_gate_checks_stage[stage_bucket] += 1;
 
     switch (gate_result)
     {
         case RUNTIME_WAR_TRUCE_GATE_GRANTED:
             runtime_state->war_sentience_truce_gate_checks_granted += 1;
+            runtime_state->war_sentience_truce_gate_granted_stage[stage_bucket] += 1;
             break;
         case RUNTIME_WAR_TRUCE_GATE_BLOCK_BEHAVIOR:
             runtime_state->war_sentience_truce_gate_block_behavior += 1;
@@ -1269,7 +1276,9 @@ static int runtime_gameplay_spawn_war_reinforcement(World *world,
                                                                  behavior_mode,
                                                                  war_intelligence_stage,
                                                                  &use_truce_variant);
-        runtime_gameplay_record_truce_gate_result(runtime_state, truce_gate_result);
+        runtime_gameplay_record_truce_gate_result(runtime_state,
+                              truce_gate_result,
+                              war_intelligence_stage);
         gameplay_model_id = runtime_gameplay_reinforcement_model_id_for_family(family,
                                                                                 behavior_mode,
                                                                                 war_intelligence_stage,

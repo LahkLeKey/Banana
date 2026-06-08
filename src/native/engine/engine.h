@@ -209,6 +209,8 @@ extern "C"
     int engine_get_controller_war_sentience_truce_variant_hits_stage(int stage_index);
     int engine_get_controller_war_sentience_truce_gate_checks_total(void);
     int engine_get_controller_war_sentience_truce_gate_checks_granted(void);
+    int engine_get_controller_war_sentience_truce_gate_checks_stage(int stage_index);
+    int engine_get_controller_war_sentience_truce_gate_granted_stage(int stage_index);
     int engine_get_controller_war_sentience_truce_gate_block_behavior(void);
     int engine_get_controller_war_sentience_truce_gate_block_empathy(void);
     int engine_get_controller_war_sentience_truce_gate_block_coordination(void);
