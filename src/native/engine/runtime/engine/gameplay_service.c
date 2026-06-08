@@ -117,6 +117,13 @@ typedef enum RuntimeWarReinforcementFamily
     RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE = 4,
 } RuntimeWarReinforcementFamily;
 
+typedef enum RuntimeWarReinforcementVisualTier
+{
+    RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_BASE = 0,
+    RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_APEX = 1,
+    RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC = 2,
+} RuntimeWarReinforcementVisualTier;
+
 static int runtime_gameplay_clamp_biome_index(int war_biome_stage_index)
 {
     int model_count = (int)(sizeof(k_banana_skirmish_models) / sizeof(k_banana_skirmish_models[0]));
@@ -385,6 +392,24 @@ static RuntimeWarReinforcementFamily runtime_gameplay_reinforcement_family_for_t
     return RUNTIME_WAR_REINFORCEMENT_FAMILY_NONE;
 }
 
+static RuntimeWarReinforcementVisualTier runtime_gameplay_reinforcement_visual_tier_for_family(
+    RuntimeWarReinforcementFamily family,
+    int war_intelligence_stage)
+{
+    if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT ||
+        family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE ||
+        family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER ||
+        family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE)
+    {
+        if (war_intelligence_stage >= 5)
+            return RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC;
+        if (war_intelligence_stage >= 3)
+            return RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_APEX;
+    }
+
+    return RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_BASE;
+}
+
 static const char *runtime_gameplay_behavioral_skirmish_model_id_for_family(
     RuntimeWarReinforcementFamily family,
     RuntimeWarSentienceBehaviorMode behavior_mode,
@@ -433,28 +458,38 @@ static const char *runtime_gameplay_reinforcement_model_id_for_family(RuntimeWar
                                                                        int war_intelligence_stage,
                                                                        int biome_index)
 {
-    const char *behavioral_skirmish_model_id =
-        runtime_gameplay_behavioral_skirmish_model_id_for_family(family,
-                                                                 behavior_mode,
-                                                                 biome_index);
-
-    if (behavioral_skirmish_model_id)
-        return behavioral_skirmish_model_id;
-
-    if (war_intelligence_stage >= 5)
+    RuntimeWarReinforcementVisualTier visual_tier =
+        runtime_gameplay_reinforcement_visual_tier_for_family(family, war_intelligence_stage);
+    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_MYTHIC)
     {
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE)
+        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE ||
+            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT)
             return k_banana_mythic_models[biome_index];
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE)
+        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE ||
+            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)
             return k_bean_mythic_models[biome_index];
     }
 
-    if (war_intelligence_stage >= 3)
+    if (visual_tier == RUNTIME_WAR_REINFORCEMENT_VISUAL_TIER_APEX)
     {
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE)
+        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE ||
+            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT)
             return k_banana_apex_models[biome_index];
-        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE)
+        if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE ||
+            family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)
             return k_bean_apex_models[biome_index];
+    }
+
+    if (family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT ||
+        family == RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER)
+    {
+        const char *behavioral_skirmish_model_id =
+            runtime_gameplay_behavioral_skirmish_model_id_for_family(family,
+                                                                     behavior_mode,
+                                                                     biome_index);
+
+        if (behavioral_skirmish_model_id)
+            return behavioral_skirmish_model_id;
     }
 
     switch (family)
@@ -503,6 +538,16 @@ static void runtime_gameplay_record_war_reinforcement_spawn(EngineRuntimeState *
     {
         case RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SCOUT:
             runtime_state->war_reinforcement_banana_scout_hits[biome_index] += 1;
+            if (war_intelligence_stage >= 5)
+            {
+                runtime_state->war_reinforcement_banana_mythic_hits[biome_index] += 1;
+                runtime_state->war_reinforcement_banana_mythic_stage_hits[stage_bucket] += 1;
+            }
+            else if (war_intelligence_stage >= 3)
+            {
+                runtime_state->war_reinforcement_banana_apex_hits[biome_index] += 1;
+                runtime_state->war_reinforcement_banana_apex_stage_hits[stage_bucket] += 1;
+            }
             break;
         case RUNTIME_WAR_REINFORCEMENT_FAMILY_BANANA_SIEGE:
             runtime_state->war_reinforcement_banana_siege_hits[biome_index] += 1;
@@ -519,6 +564,16 @@ static void runtime_gameplay_record_war_reinforcement_spawn(EngineRuntimeState *
             break;
         case RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_RAIDER:
             runtime_state->war_reinforcement_bean_raider_hits[biome_index] += 1;
+            if (war_intelligence_stage >= 5)
+            {
+                runtime_state->war_reinforcement_bean_mythic_hits[biome_index] += 1;
+                runtime_state->war_reinforcement_bean_mythic_stage_hits[stage_bucket] += 1;
+            }
+            else if (war_intelligence_stage >= 3)
+            {
+                runtime_state->war_reinforcement_bean_apex_hits[biome_index] += 1;
+                runtime_state->war_reinforcement_bean_apex_stage_hits[stage_bucket] += 1;
+            }
             break;
         case RUNTIME_WAR_REINFORCEMENT_FAMILY_BEAN_WARBRUTE:
             runtime_state->war_reinforcement_bean_warbrute_hits[biome_index] += 1;
