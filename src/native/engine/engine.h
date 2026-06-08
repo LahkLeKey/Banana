@@ -200,6 +200,12 @@ extern "C"
     int engine_get_controller_war_sentience_negotiate_streak_ticks(void);
     int engine_get_controller_war_sentience_negotiate_deescalation_trim_last_tick(void);
     int engine_get_controller_war_sentience_comeback_bonus_last_tick(void);
+    int engine_get_controller_war_sentience_truce_variant_hits_total(void);
+    int engine_get_controller_war_sentience_truce_variant_hits_banana(void);
+    int engine_get_controller_war_sentience_truce_variant_hits_bean(void);
+    int engine_get_controller_war_sentience_truce_variant_hits_base(void);
+    int engine_get_controller_war_sentience_truce_variant_hits_apex(void);
+    int engine_get_controller_war_sentience_truce_variant_hits_mythic(void);
     int engine_get_controller_war_reinforcement_hits_total(void);
     int engine_get_controller_war_reinforcement_hits_biome(int biome_index);
     int engine_get_controller_war_reinforcement_hits_family_banana_scout(void);
