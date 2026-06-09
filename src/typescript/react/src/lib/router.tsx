@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { hasStoredAuthSession } from "@banana/ui";
+import { DataSciencePlaygroundPage } from "../pages/DataSciencePlaygroundPage";
 import { LoginPage } from "../pages/LoginPage";
 import { MarketingPage } from "../pages/MarketingPage";
 import { PlayerPortalPage } from "../pages/PlayerPortalPage";
@@ -8,8 +9,9 @@ import { SessionRoomPage } from "../pages/SessionRoomPage";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MarketingPage />,
+    element: <DataSciencePlaygroundPage />,
   },
+  { path: "/marketing", element: <MarketingPage /> },
   { path: "/download", element: <PlayerPortalPage /> },
   { path: "/account", element: <PlayerPortalPage /> },
   { path: "/login", element: <LoginPage /> },
