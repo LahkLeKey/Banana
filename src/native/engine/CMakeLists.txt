@@ -84,6 +84,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/composition/engine_composition_shutdown.c
   runtime/engine/exports/engine_runtime_context.c
   runtime/engine/exports/engine_exports_core_abi.c
+  runtime/engine/exports/engine_exports_ui_economy.c
   runtime/engine/engine_host.c
   runtime/engine/lifecycle/engine_lifecycle_actor_spawn.c
   runtime/engine/lifecycle/engine_lifecycle_launch_gate.c
