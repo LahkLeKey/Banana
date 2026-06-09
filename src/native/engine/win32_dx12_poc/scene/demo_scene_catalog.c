@@ -1,5 +1,5 @@
 #include "demo_scene_catalog.h"
-#include "../../runtime/engine/gameplay_model_profile.h"
+#include "../../runtime/engine/gameplay/model/gameplay_model_profile.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -10,7 +10,7 @@ static const BananaPocDemoSceneCatalogEntry k_demo_scene_catalog[] = {
     {2, 1, BANANA_POC_DEMO_SCENE_KIND_BANANA_LINE_STATION, RUNTIME_TERRAIN_STATIC_MESH_REGION_METRO_BANANA, RUNTIME_TERRAIN_STATIC_MESH_REGION_INVALID, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_MAINLINE, "neo-musa", "banana-mainline-neo-musa", "Banana Line Station: Neo Musa", "continent/metro-banana-v1", "banana-line-station"},
     {3, 1, BANANA_POC_DEMO_SCENE_KIND_BANANA_LINE_CORRIDOR, RUNTIME_TERRAIN_STATIC_MESH_REGION_METRO_BANANA, RUNTIME_TERRAIN_STATIC_MESH_REGION_CENTRAL_CRESCENT, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_MAINLINE, "neo-musa", "banana-mainline-metro-crescent", "Banana Line Corridor: Metro -> Crescent", "continent/metro-banana-v1", "banana-line-corridor"},
     {4, 0, BANANA_POC_DEMO_SCENE_KIND_LAB, RUNTIME_TERRAIN_STATIC_MESH_REGION_IRON_SPINE, RUNTIME_TERRAIN_STATIC_MESH_REGION_GOLDEN_HOOK, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_SPINE_FREIGHT, "spinehold", "iron-spine-freight-lab", "Lab: Iron Spine Freight", "continent/iron-spine-v1", "lab-disabled"},
-    {5, 0, BANANA_POC_DEMO_SCENE_KIND_CONTINENT, RUNTIME_TERRAIN_STATIC_MESH_REGION_FROST_PEEL, RUNTIME_TERRAIN_STATIC_MESH_REGION_INVALID, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_FROST_FERRY, "icehook", "frost-peel-preview", "Preview: Frost Peel", "continent/frost-peel-v1", "preview-disabled"},
+    {5, 1, BANANA_POC_DEMO_SCENE_KIND_CONTINENT, RUNTIME_TERRAIN_STATIC_MESH_REGION_FROST_PEEL, RUNTIME_TERRAIN_STATIC_MESH_REGION_INVALID, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_FROST_FERRY, "icehook", "frost-peel-preview", "Preview: Frost Peel", "continent/frost-peel-v1", "continent-slice"},
     {6, 1, BANANA_POC_DEMO_SCENE_KIND_BANANA_LINE_STATION, RUNTIME_TERRAIN_STATIC_MESH_REGION_METRO_BANANA, RUNTIME_TERRAIN_STATIC_MESH_REGION_INVALID, RUNTIME_TERRAIN_BANANA_LINE_ROUTE_MAINLINE, "neo-musa", "banana-war-sentience-showcase", "War Sentience Showcase: Metro Arena", "continent/metro-banana-v1", "war-sentience-showcase"},
 };
 
@@ -45,8 +45,16 @@ static const BananaPocGameplayModelCatalogEntry k_demo_scene_gameplay_model_cata
     {"reference-bean", "gameplay/reference/banana-bean-green-v1", 1},
     {"tropical-landmark", "gameplay/tropical-coastal/volcanic-arch-v1", 1},
     {"tropical-traversal", "gameplay/tropical-coastal/palm-cluster-v1", 1},
+    {"tropical-boardwalk-gate", "gameplay/tropical-coastal/boardwalk-gate-v1", 1},
+    {"tropical-solar-kiosk", "gameplay/tropical-coastal/solar-kiosk-v1", 1},
     {"rugged-landmark", "gameplay/rugged-wild/ice-gate-v1", 1},
     {"rugged-traversal", "gameplay/rugged-wild/pine-cluster-v1", 1},
+    {"rugged-freight-crane", "gameplay/rugged-wild/freight-crane-v1", 1},
+    {"rugged-ore-cart", "gameplay/rugged-wild/ore-cart-v1", 1},
+    {"rugged-cliff-watch", "gameplay/rugged-wild/cliff-watch-v1", 1},
+    {"rugged-trail-marker", "gameplay/rugged-wild/trail-marker-v1", 1},
+    {"rugged-frost-spire", "gameplay/rugged-wild/frost-spire-v1", 1},
+    {"rugged-snow-drift", "gameplay/rugged-wild/snow-drift-barrier-v1", 1},
     {"urban-station-landmark", "gameplay/urban-industrial/rail-hub-v1", 1},
     {"urban-station-traversal", "gameplay/urban-industrial/platform-barrier-v1", 1},
     {"urban-corridor-landmark", "gameplay/urban-industrial/archive-gate-v1", 1},
@@ -62,20 +70,36 @@ static const BananaPocGameplayPlacementTemplate k_demo_scene_gameplay_placement_
     {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BEAN, "reference-bean", "reference-banana", "bean-reference-anchor", -5.0f, 0.0f, 2.0f},
     {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BEAN, "tropical-landmark", "reference-banana", "bean-landmark-cluster", 4.0f, 0.0f, -3.5f},
     {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BANANA, "tropical-traversal", "reference-banana", "traversal-route", 1.5f, 0.0f, 6.0f},
+    {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "tropical-boardwalk-gate", "reference-banana", "boardwalk-gate", -6.5f, 0.0f, -4.5f},
+    {0, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BANANA, "tropical-solar-kiosk", "reference-banana", "solar-kiosk", 6.0f, 0.0f, 3.0f},
     {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "reference-anchor", -1.0f, 0.0f, 0.5f},
     {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "rugged-landmark", "reference-banana", "landmark-gate", 6.0f, 0.0f, -4.0f},
     {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "rugged-traversal", "reference-banana", "bean-raider-route", 2.0f, 0.0f, 5.0f},
+    {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "rugged-cliff-watch", "reference-banana", "cliff-watch", -5.5f, 0.0f, -3.5f},
+    {1, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "rugged-trail-marker", "reference-banana", "trail-marker", 3.5f, 0.0f, 6.2f},
     {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "reference-anchor", -1.5f, 0.0f, 0.0f},
     {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "urban-station-landmark", "reference-banana", "station-landmark", 3.0f, 0.0f, -2.0f},
     {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "urban-station-traversal", "reference-banana", "bean-station-skirmish", 0.5f, 0.0f, 4.5f},
+    {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "urban-corridor-landmark", "reference-banana", "station-archive-gate", 6.0f, 0.0f, -4.0f},
+    {2, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "urban-corridor-traversal", "reference-banana", "market-stall", -2.5f, 0.0f, 6.0f},
     {3, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "reference-anchor", -0.5f, 0.0f, -1.0f},
     {3, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BEAN, "reference-bean", "reference-banana", "bean-corridor-front", 5.0f, 0.0f, -3.0f},
     {3, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BANANA, "urban-corridor-traversal", "reference-banana", "corridor-traversal", 1.0f, 0.0f, 5.5f},
+    {3, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "rugged-freight-crane", "reference-banana", "freight-crane", -6.0f, 0.0f, -2.5f},
+    {3, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "rugged-ore-cart", "reference-banana", "ore-cart", 2.5f, 0.0f, 6.5f},
+    {5, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "reference-anchor", -1.0f, 0.0f, 0.5f},
+    {5, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BEAN, "reference-bean", "reference-banana", "bean-reference-anchor", -4.0f, 0.0f, 2.0f},
+    {5, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "rugged-frost-spire", "reference-banana", "frost-spire", 4.5f, 0.0f, -3.5f},
+    {5, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "rugged-snow-drift", "reference-banana", "snow-drift", 2.5f, 0.0f, 5.5f},
     {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_REFERENCE, BANANA_POC_GAMEPLAY_TEAM_BANANA, "reference-banana", NULL, "showcase-reference-anchor", -1.5f, 0.0f, -0.5f},
     {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "war-banana-flank-urban", "reference-banana", "showcase-flank-banana", 2.8f, 0.0f, -2.4f},
     {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BEAN, "war-bean-regroup-urban", "reference-bean", "showcase-regroup-bean", 4.6f, 0.0f, -1.2f},
     {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BANANA, "war-banana-envoy-urban", "reference-banana", "showcase-envoy-banana", 0.8f, 0.0f, 4.3f},
     {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "war-bean-envoy-urban", "reference-bean", "showcase-envoy-bean", 3.2f, 0.0f, 5.1f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BANANA, "war-banana-flank-urban", "reference-banana", "showcase-flank-banana-2", -3.6f, 0.0f, -3.2f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_LANDMARK, BANANA_POC_GAMEPLAY_TEAM_BEAN, "war-bean-regroup-urban", "reference-bean", "showcase-regroup-bean-2", 6.2f, 0.0f, -2.0f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BANANA, "war-banana-envoy-urban", "reference-banana", "showcase-envoy-banana-2", -0.6f, 0.0f, 6.4f},
+    {6, BANANA_POC_GAMEPLAY_PLACEMENT_ROLE_TRAVERSAL, BANANA_POC_GAMEPLAY_TEAM_BEAN, "war-bean-envoy-urban", "reference-bean", "showcase-envoy-bean-2", 4.8f, 0.0f, 6.6f},
 };
 
 #define BANANA_POC_GAMEPLAY_MODEL_OVERRIDE_CAPACITY 16
@@ -475,21 +499,6 @@ const char *banana_poc_demo_scene_catalog_display_name_for_variant(int browser_v
         return "Unknown Scene Variant";
 
     return entry->display_name ? entry->display_name : "Unnamed Scene Variant";
-}
-
-int banana_poc_demo_scene_catalog_capture_context(int browser_variant,
-                                                  BananaPocDemoSceneCaptureContext *out_context)
-{
-    const BananaPocDemoSceneCatalogEntry *entry =
-        banana_poc_demo_scene_catalog_for_browser_variant(browser_variant);
-
-    if (!entry || !out_context)
-        return 0;
-
-    out_context->browser_variant = entry->browser_variant;
-    out_context->scene_key = entry->scene_key;
-    out_context->display_name = entry->display_name;
-    return 1;
 }
 
 const char *banana_poc_demo_scene_catalog_gameplay_theme_for_variant(int browser_variant)

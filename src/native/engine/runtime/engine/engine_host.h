@@ -12,23 +12,7 @@ extern "C"
 {
 #endif
 
-#define RUNTIME_ENGINE_CAPTURE_LABEL_MAX 64
-
-    typedef struct RuntimeEngineCaptureContext
-    {
-        char scenario_name[RUNTIME_ENGINE_CAPTURE_LABEL_MAX];
-        int tick;
-        int scene_variant;
-        char scene_key[RUNTIME_ENGINE_CAPTURE_LABEL_MAX];
-    } RuntimeEngineCaptureContext;
-
     void runtime_engine_host_render_frame(Renderer *renderer);
-
-    const unsigned char *runtime_engine_host_get_frame_buffer(Renderer *renderer);
-    void runtime_engine_host_get_frame_dimensions(Renderer *renderer, int *out_width, int *out_height);
-
-    void runtime_engine_host_set_capture_context(const RuntimeEngineCaptureContext *context);
-    void runtime_engine_host_get_capture_context(RuntimeEngineCaptureContext *out_context);
 
     const char *runtime_engine_host_launch_gate_mode_label_for(const char *trusted_mode_label);
 

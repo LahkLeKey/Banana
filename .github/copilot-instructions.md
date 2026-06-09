@@ -30,5 +30,5 @@
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read .specify/specs/032-demo-frame-qa/plan.md
+shell commands, and other important information, read .specify/specs/031-unified-coherent-world/spec.md
 <!-- SPECKIT END -->
