@@ -1,8 +1,8 @@
 #ifndef BANANA_ENGINE_RUNTIME_PLAYER_REGISTRY_H
 #define BANANA_ENGINE_RUNTIME_PLAYER_REGISTRY_H
 
-#include "../../world/world.h"
-#include "../resource/resource_domain.h"
+#include "../../../world/world.h"
+#include "../../resource/resource_domain.h"
 #include <stdint.h>
 
 #ifdef __cplusplus

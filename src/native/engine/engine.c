@@ -28,7 +28,7 @@
 #include "runtime/player/resource/player_resource_abi.h"
 #include "runtime/player/merchant/player_merchant_adapter.h"
 #include "runtime/player/sync/player_sync_abi.h"
-#include "runtime/player/player_registry.h"
+#include "runtime/player/registry/player_registry.h"
 #include "runtime/abi/physics/physics_abi.h"
 #include "runtime/input/abi/input_abi.h"
 #include "runtime/resource/resource_domain.h"

@@ -4,7 +4,7 @@
 #include "../../../ai/controller.h"
 #include "../state/engine_state.h"
 #include "../../../world/world.h"
-#include "../../player/player_registry.h"
+#include "../../player/registry/player_registry.h"
 #include "../../terrain/terrain_runtime.h"
 
 #ifdef __cplusplus

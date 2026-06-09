@@ -1,6 +1,6 @@
 #include "player_sync_abi.h"
 
-#include "../player_registry.h"
+#include "../registry/player_registry.h"
 
 void runtime_player_sync_abi_mark_seen(const char *player_guid,
                                        int64_t current_time_ms)
