@@ -1,6 +1,6 @@
 #include "player_resource_abi.h"
 
-#include "player_registry.h"
+#include "../player_registry.h"
 
 int runtime_player_resource_abi_get(const char *player_guid,
                                     const char *resource_type)
