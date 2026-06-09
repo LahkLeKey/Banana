@@ -19,7 +19,7 @@
 #include "runtime/player/runtime/player_runtime_service.h"
 #include "runtime/player/gateway/player_gateway_abi.h"
 #include "runtime/render/material/render_material.h"
-#include "runtime/player/player_motion.h"
+#include "runtime/player/motion/player_motion.h"
 #include "runtime/player/runtime/player_motion_host.h"
 #include "runtime/player/api/player_api.h"
 #include "runtime/player/build/abi/player_build_abi.h"

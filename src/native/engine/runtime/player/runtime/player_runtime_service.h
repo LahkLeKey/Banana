@@ -2,7 +2,7 @@
 #define BANANA_ENGINE_RUNTIME_PLAYER_RUNTIME_SERVICE_H
 
 #include "../../input/move_target/move_target_domain.h"
-#include "../player_motion.h"
+#include "../motion/player_motion.h"
 
 #include "../../../render/renderer.h"
 #include "../../../world/world.h"

@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_PLAYER_MOTION_HOST_H
 #define BANANA_ENGINE_RUNTIME_PLAYER_MOTION_HOST_H
 
-#include "../player_motion.h"
+#include "../motion/player_motion.h"
 
 #ifdef __cplusplus
 extern "C"

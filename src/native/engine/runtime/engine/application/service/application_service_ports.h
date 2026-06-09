@@ -3,7 +3,7 @@
 
 #include "../../state/engine_state.h"
 #include "../../../merchant/service/merchant_service.h"
-#include "../../../player/player_motion.h"
+#include "../../../player/motion/player_motion.h"
 
 #ifdef __cplusplus
 extern "C"

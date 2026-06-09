@@ -2,7 +2,7 @@
 #define BANANA_ENGINE_RUNTIME_ENGINE_APPLICATION_SERVICE_PLAYER_PORT_H
 
 #include "../../state/engine_state.h"
-#include "../../../player/player_motion.h"
+#include "../../../player/motion/player_motion.h"
 
 #ifdef __cplusplus
 extern "C"

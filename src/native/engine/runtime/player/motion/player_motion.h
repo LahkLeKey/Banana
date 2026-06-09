@@ -1,8 +1,8 @@
 #ifndef BANANA_ENGINE_RUNTIME_PLAYER_MOTION_H
 #define BANANA_ENGINE_RUNTIME_PLAYER_MOTION_H
 
-#include "../../world/world.h"
-#include "player_registry.h"
+#include "../../../world/world.h"
+#include "../player_registry.h"
 
 #ifdef __cplusplus
 extern "C"
