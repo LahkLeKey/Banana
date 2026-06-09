@@ -33,6 +33,7 @@ export function DataSciencePlaygroundPage() {
     const { loading, manifest, manifestError, manifestSource, notebookError, notebookSource, cellLookup, notebookCellCount } = useNotebookClient();
     const [query, setQuery] = useState("");
     const [selectedFile, setSelectedFile] = useState<string>("");
+    const [mode, setMode] = useState<"mission" | "explorer" | "diagnostics">("mission");
 
     const filteredFiles = useMemo(() => {
         const files = manifest?.files ?? [];
@@ -66,21 +67,12 @@ export function DataSciencePlaygroundPage() {
                     indexedFileCount={manifest?.file_count ?? 0}
                     notebookCellCount={notebookCellCount}
                     manifestAvailable={Boolean(manifest)}
+                    activeMode={mode}
+                    onChangeMode={setMode}
                 />
 
-                <section style={dashboardGridStyle}>
-                    <NotebookExplorerPanel
-                        files={filteredFiles}
-                        query={query}
-                        selectedFile={selectedFile}
-                        onChangeQuery={setQuery}
-                        onSelectFile={setSelectedFile}
-                        fileCountLabel={manifestLabel}
-                        maxLinesLabel={sourceLabel.length > 0 ? `${maxLinesLabel} | ${sourceLabel}` : maxLinesLabel}
-                        sourceRootLabel={sourceRootLabel}
-                    />
-
-                    <div style={{ display: "grid", gap: 16 }}>
+                {mode === "mission" ? (
+                    <section style={{ display: "grid", gap: 16, marginTop: 18 }}>
                         <NotebookGameplaySurface selectedFile={selectedFile} selectedContent={selectedContent} />
                         <NotebookHealthPanel
                             loading={loading}
@@ -89,8 +81,49 @@ export function DataSciencePlaygroundPage() {
                             manifestSource={manifestSource}
                             notebookSource={notebookSource}
                         />
-                    </div>
-                </section>
+                    </section>
+                ) : null}
+
+                {mode === "explorer" ? (
+                    <section style={dashboardGridStyle}>
+                        <NotebookExplorerPanel
+                            files={filteredFiles}
+                            query={query}
+                            selectedFile={selectedFile}
+                            onChangeQuery={setQuery}
+                            onSelectFile={setSelectedFile}
+                            fileCountLabel={manifestLabel}
+                            maxLinesLabel={sourceLabel.length > 0 ? `${maxLinesLabel} | ${sourceLabel}` : maxLinesLabel}
+                            sourceRootLabel={sourceRootLabel}
+                        />
+
+                        <div style={{ display: "grid", gap: 16 }}>
+                            <NotebookGameplaySurface selectedFile={selectedFile} selectedContent={selectedContent} />
+                        </div>
+                    </section>
+                ) : null}
+
+                {mode === "diagnostics" ? (
+                    <section style={{ display: "grid", gap: 16, marginTop: 18 }}>
+                        <NotebookHealthPanel
+                            loading={loading}
+                            manifestError={manifestError}
+                            notebookError={notebookError}
+                            manifestSource={manifestSource}
+                            notebookSource={notebookSource}
+                        />
+                        <NotebookExplorerPanel
+                            files={filteredFiles}
+                            query={query}
+                            selectedFile={selectedFile}
+                            onChangeQuery={setQuery}
+                            onSelectFile={setSelectedFile}
+                            fileCountLabel={manifestLabel}
+                            maxLinesLabel={sourceLabel.length > 0 ? `${maxLinesLabel} | ${sourceLabel}` : maxLinesLabel}
+                            sourceRootLabel={sourceRootLabel}
+                        />
+                    </section>
+                ) : null}
             </section>
         </main>
     );
