@@ -61,6 +61,7 @@ set(ENGINE_UI_SOURCES
 
 set(ENGINE_RUNTIME_SOURCES
   runtime/engine/application_service_player_port.c
+  runtime/engine/application_service_render_model_cache.c
   runtime/engine/application_service_render_port.c
   runtime/engine/application_service_terrain_port.c
   runtime/engine/application_service_ports.c

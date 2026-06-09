@@ -1,6 +1,5 @@
 #include "application_service_render_port.h"
-
-#include "gameplay_model_profile.h"
+#include "application_service_render_model_cache.h"
 
 #include "../controller/kind/controller_kind_domain.h"
 #include "../controller/runtime/controller_runtime.h"
@@ -9,85 +8,7 @@
 #include "../terrain/terrain_height.h"
 
 #include <string.h>
-
-typedef struct RuntimeGameplayModelMeshCacheEntry
-{
-    char model_id[96];
-    Mesh *mesh;
-} RuntimeGameplayModelMeshCacheEntry;
-
-#define RUNTIME_GAMEPLAY_MODEL_MESH_CACHE_CAPACITY 32
-
-static RuntimeGameplayModelMeshCacheEntry s_model_mesh_cache[RUNTIME_GAMEPLAY_MODEL_MESH_CACHE_CAPACITY];
-static int s_model_mesh_cache_count = 0;
 static EngineRuntimeState *s_render_state = NULL;
-
-static void runtime_model_mesh_cache_reset(void)
-{
-    int index = 0;
-
-    for (index = 0; index < s_model_mesh_cache_count; index++)
-    {
-        if (s_model_mesh_cache[index].mesh)
-        {
-            mesh_destroy(s_model_mesh_cache[index].mesh);
-            s_model_mesh_cache[index].mesh = NULL;
-        }
-        s_model_mesh_cache[index].model_id[0] = '\0';
-    }
-
-    s_model_mesh_cache_count = 0;
-}
-
-static Mesh *runtime_model_mesh_for_gameplay_model_id(const char *model_id)
-{
-    int index = 0;
-    float radius_scale = 0.0f;
-    float length_scale = 0.0f;
-    float curve_scale = 0.0f;
-    float tip_taper = 0.0f;
-    int quality = 0;
-
-    if (!model_id || model_id[0] == '\0')
-        return NULL;
-
-    for (index = 0; index < s_model_mesh_cache_count; index++)
-    {
-        if (strcmp(s_model_mesh_cache[index].model_id, model_id) == 0)
-            return s_model_mesh_cache[index].mesh;
-    }
-
-    if (s_model_mesh_cache_count >= RUNTIME_GAMEPLAY_MODEL_MESH_CACHE_CAPACITY)
-        return NULL;
-
-    if (!runtime_gameplay_model_vector_profile_for_model_id(model_id,
-                                                            &radius_scale,
-                                                            &length_scale,
-                                                            &curve_scale,
-                                                            &tip_taper,
-                                                            &quality))
-    {
-        return NULL;
-    }
-
-    s_model_mesh_cache[s_model_mesh_cache_count].mesh =
-        mesh_create_banana_vector(radius_scale,
-                                  length_scale,
-                                  curve_scale,
-                                  tip_taper,
-                                  quality);
-    if (!s_model_mesh_cache[s_model_mesh_cache_count].mesh)
-        return NULL;
-
-    strncpy(s_model_mesh_cache[s_model_mesh_cache_count].model_id,
-            model_id,
-            sizeof(s_model_mesh_cache[s_model_mesh_cache_count].model_id) - 1);
-    s_model_mesh_cache[s_model_mesh_cache_count]
-        .model_id[sizeof(s_model_mesh_cache[s_model_mesh_cache_count].model_id) - 1] = '\0';
-
-    s_model_mesh_cache_count += 1;
-    return s_model_mesh_cache[s_model_mesh_cache_count - 1].mesh;
-}
 
 static float terrain_sample_height_for_render(const EngineRuntimeState *state,
                                               float x,
@@ -114,7 +35,7 @@ static Mesh *runtime_render_mesh_for_actor(const Entity *entity, Mesh *default_m
 
     kind = runtime_controller_kind_parse_or_unknown(entity->controller_kind);
 
-    model_mesh = runtime_model_mesh_for_gameplay_model_id(entity->gameplay_model_id);
+    model_mesh = runtime_application_render_model_mesh_for_gameplay_model_id(entity->gameplay_model_id);
     if (model_mesh)
         return model_mesh;
 
@@ -220,5 +141,5 @@ void runtime_application_render_submit_scene_port(EngineRuntimeState *state)
 
 void runtime_application_render_ports_reset(void)
 {
-    runtime_model_mesh_cache_reset();
+    runtime_application_render_model_cache_reset();
 }
