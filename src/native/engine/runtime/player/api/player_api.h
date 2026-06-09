@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_PLAYER_API_H
 #define BANANA_ENGINE_RUNTIME_PLAYER_API_H
 
-#include "player_registry.h"
+#include "../player_registry.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -117,7 +117,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/parallel/contract/parallel_contract.c
   runtime/parallel/model/parallel_model.c
   runtime/abi/physics/physics_abi.c
-  runtime/player/player_api.c
+  runtime/player/api/player_api.c
   runtime/player/player_merchant_adapter.c
   runtime/player/player_build_abi.c
   runtime/player/player_gateway_abi.c

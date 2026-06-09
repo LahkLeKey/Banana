@@ -21,7 +21,7 @@
 #include "runtime/render/material/render_material.h"
 #include "runtime/player/player_motion.h"
 #include "runtime/player/runtime/player_motion_host.h"
-#include "runtime/player/player_api.h"
+#include "runtime/player/api/player_api.h"
 #include "runtime/player/player_build_abi.h"
 #include "runtime/merchant/query/merchant_query_abi.h"
 #include "runtime/merchant/trade/merchant_trade_domain.h"
