@@ -4,7 +4,7 @@
  */
 
 #include "interactive_collection.h"
-#include "../../player/player_resources.h"
+#include "../../player/resource/player_resources.h"
 
 #include <stdlib.h>
 #include <string.h>
