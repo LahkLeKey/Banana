@@ -2,7 +2,7 @@
 #define BANANA_ENGINE_RUNTIME_ENGINE_GAMEPLAY_SERVICE_REINFORCEMENT_SPAWN_H
 
 #include "gameplay_service.h"
-#include "engine_state.h"
+#include "../../engine_state.h"
 
 #ifdef __cplusplus
 extern "C"

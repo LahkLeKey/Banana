@@ -1,7 +1,7 @@
 #include "gameplay_service.h"
 #include "gameplay_service_warfront_expansion.h"
 
-#include "../wildlife/wildlife_gameplay.h"
+#include "../../../wildlife/wildlife_gameplay.h"
 
 #include <math.h>
 #include <string.h>

@@ -1,6 +1,6 @@
 #include "gameplay_service_sentience_decision.h"
 
-#include "../tick/tick_budget_policy.h"
+#include "../../../tick/tick_budget_policy.h"
 
 RuntimeWarSentienceBehaviorMode runtime_gameplay_resolve_sentience_behavior_mode(
     const EngineRuntimeState *runtime_state,

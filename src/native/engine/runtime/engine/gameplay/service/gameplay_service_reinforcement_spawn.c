@@ -4,7 +4,7 @@
 #include "gameplay_service_reinforcement_metrics.h"
 #include "gameplay_service_sentience_behavior.h"
 
-#include "../controller/attach/controller_attach.h"
+#include "../../../controller/attach/controller_attach.h"
 
 #include <string.h>
 

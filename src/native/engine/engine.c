@@ -12,7 +12,7 @@
 #include "runtime/engine/engine_state.h"
 #include "runtime/engine/engine_lifecycle.h"
 #include "runtime/engine/engine_tick.h"
-#include "runtime/engine/gameplay_service.h"
+#include "runtime/engine/gameplay/service/gameplay_service.h"
 #include "runtime/camera/follow/camera_follow.h"
 #include "runtime/camera/basis/camera_basis.h"
 #include "runtime/input/move_target/move_target_service.h"
@@ -121,16 +121,6 @@ void engine_shutdown(void)
 void engine_render_frame(void)
 {
     runtime_engine_host_render_frame(s_renderer);
-}
-
-const unsigned char *engine_get_frame_buffer(void)
-{
-    return runtime_engine_host_get_frame_buffer(s_renderer);
-}
-
-void engine_get_frame_dimensions(int *out_width, int *out_height)
-{
-    runtime_engine_host_get_frame_dimensions(s_renderer, out_width, out_height);
 }
 
 /* Physics ABI */

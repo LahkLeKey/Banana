@@ -90,18 +90,18 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/engine_lifecycle.c
   runtime/engine/engine_tick.c
   runtime/engine/gameplay_model_profile.c
-  runtime/engine/gameplay_service_model_catalog.c
-  runtime/engine/gameplay_service_models.c
-  runtime/engine/gameplay_service_reinforcement_metrics.c
-  runtime/engine/gameplay_service_reinforcement_spawn.c
-  runtime/engine/gameplay_service_sentience_behavior.c
-  runtime/engine/gameplay_service_sentience_decision.c
-  runtime/engine/gameplay_service_sentience_override_config.c
-  runtime/engine/gameplay_service_sentience_overrides.c
-  runtime/engine/gameplay_service_warfront.c
-  runtime/engine/gameplay_service_warfront_expansion.c
+  runtime/engine/gameplay/service/gameplay_service_model_catalog.c
+  runtime/engine/gameplay/service/gameplay_service_models.c
+  runtime/engine/gameplay/service/gameplay_service_reinforcement_metrics.c
+  runtime/engine/gameplay/service/gameplay_service_reinforcement_spawn.c
+  runtime/engine/gameplay/service/gameplay_service_sentience_behavior.c
+  runtime/engine/gameplay/service/gameplay_service_sentience_decision.c
+  runtime/engine/gameplay/service/gameplay_service_sentience_override_config.c
+  runtime/engine/gameplay/service/gameplay_service_sentience_overrides.c
+  runtime/engine/gameplay/service/gameplay_service_warfront.c
+  runtime/engine/gameplay/service/gameplay_service_warfront_expansion.c
   # Feature 005: keep extracted tick/runtime modularization seams grouped here.
-  runtime/engine/gameplay_service.c
+  runtime/engine/gameplay/service/gameplay_service.c
    runtime/input/abi/input_abi.c
    runtime/input/click/input_click_policy.c
    runtime/input/contract/input_contract.c

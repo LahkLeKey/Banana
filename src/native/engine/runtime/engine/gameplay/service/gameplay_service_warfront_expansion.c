@@ -6,7 +6,7 @@
 #include "gameplay_service_sentience_overrides.h"
 #include "gameplay_service_warfront.h"
 
-#include "../tick/tick_budget_policy.h"
+#include "../../../tick/tick_budget_policy.h"
 
 #include <math.h>
 #include <stdio.h>
