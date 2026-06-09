@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 #include "../merchant/trade/merchant_trade_abi.h"
-#include "player_gateway_abi.h"
+#include "gateway/player_gateway_abi.h"
 #include "player_resource_abi.h"
 
 #define PLAYER_MERCHANT_ADAPTER_ASSERT(name, expr) \

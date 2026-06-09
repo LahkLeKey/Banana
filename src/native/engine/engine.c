@@ -17,7 +17,7 @@
 #include "runtime/camera/basis/camera_basis.h"
 #include "runtime/input/move_target/move_target_service.h"
 #include "runtime/player/runtime/player_runtime_service.h"
-#include "runtime/player/player_gateway_abi.h"
+#include "runtime/player/gateway/player_gateway_abi.h"
 #include "runtime/render/material/render_material.h"
 #include "runtime/player/player_motion.h"
 #include "runtime/player/runtime/player_motion_host.h"
