@@ -66,10 +66,10 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/application/service/application_service_render_port.c
   runtime/engine/application/service/application_service_terrain_port.c
   runtime/engine/application/service/application_service_ports.c
-  runtime/orchestration/tick/runtime_tick_orchestration.c
-  runtime/orchestration/tick/player_tick_orchestration.c
-  runtime/orchestration/tick/render_tick_orchestration.c
-  runtime/orchestration/tick/terrain_tick_orchestration.c
+  runtime/orchestration/tick/loop/runtime_tick_orchestration.c
+  runtime/orchestration/tick/loop/player_tick_orchestration.c
+  runtime/orchestration/tick/loop/render_tick_orchestration.c
+  runtime/orchestration/tick/loop/terrain_tick_orchestration.c
   runtime/controller/kind/controller_kind_domain.c
   runtime/camera/basis/camera_basis.c
   runtime/camera/follow/camera_follow.c

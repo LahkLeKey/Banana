@@ -2,7 +2,7 @@
 #include "engine_composition_init.h"
 #include "engine_composition_shutdown.h"
 
-#include "../../orchestration/tick/runtime_tick_orchestration.h"
+#include "../../orchestration/tick/loop/runtime_tick_orchestration.h"
 
 #include "../tick/engine_tick.h"
 

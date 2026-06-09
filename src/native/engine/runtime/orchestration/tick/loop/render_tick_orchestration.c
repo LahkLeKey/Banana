@@ -1,7 +1,7 @@
 #include "runtime_tick_orchestration.h"
 
-#include "../../engine/gameplay/service/gameplay_service.h"
-#include "../../tick/tick_budget_policy.h"
+#include "../../../engine/gameplay/service/gameplay_service.h"
+#include "../../../tick/tick_budget_policy.h"
 
 #include <stdio.h>
 #include <string.h>
