@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_ENGINE_COMPOSITION_H
 #define BANANA_ENGINE_RUNTIME_ENGINE_COMPOSITION_H
 
-#include "../engine_state.h"
+#include "../state/engine_state.h"
 #include "../../player/player_motion.h"
 
 #ifdef __cplusplus

@@ -86,7 +86,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/lifecycle/engine_lifecycle_actor_spawn.c
   runtime/engine/lifecycle/engine_lifecycle_launch_gate.c
   runtime/engine/lifecycle/engine_lifecycle_spawn_math.c
-  runtime/engine/engine_state.c
+  runtime/engine/state/engine_state.c
   runtime/engine/lifecycle/engine_lifecycle.c
   runtime/engine/tick/engine_tick.c
   runtime/engine/gameplay/model/gameplay_model_profile.c

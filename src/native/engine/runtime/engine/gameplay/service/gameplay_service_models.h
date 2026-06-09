@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_ENGINE_GAMEPLAY_SERVICE_MODELS_H
 #define BANANA_ENGINE_RUNTIME_ENGINE_GAMEPLAY_SERVICE_MODELS_H
 
-#include "../../engine_state.h"
+#include "../../state/engine_state.h"
 
 #ifdef __cplusplus
 extern "C"

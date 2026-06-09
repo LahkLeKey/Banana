@@ -9,7 +9,7 @@
 #include "runtime/engine/engine_aux_abi.h"
 #include "runtime/engine/composition/engine_composition.h"
 #include "runtime/engine/engine_host.h"
-#include "runtime/engine/engine_state.h"
+#include "runtime/engine/state/engine_state.h"
 #include "runtime/engine/lifecycle/engine_lifecycle.h"
 #include "runtime/engine/tick/engine_tick.h"
 #include "runtime/engine/gameplay/service/gameplay_service.h"
