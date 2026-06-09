@@ -1,6 +1,6 @@
 import type {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import * as jose from 'jose';
-import {createHash} from 'node:crypto';
+import {createHash, randomUUID} from 'node:crypto';
 
 import {signToken, verifyToken} from '../middleware/auth.ts';
 import {deriveDefaultSessionExpiry, getAuthSessionStore,} from '../services/authSessionStore.ts';
@@ -17,6 +17,10 @@ type SteamQueryValue = string|string[]|undefined;
 type SteamOpenIdQuery = {
   [key: string]: SteamQueryValue;
   returnTo?: SteamQueryValue;
+};
+
+type GuestStartBody = {
+  alias?: string;
 };
 
 function getFirstQueryValue(value: SteamQueryValue): string {
@@ -149,8 +153,43 @@ function resolveSteamIdFromSubject(subject: string): string {
   return subject.startsWith('steam:') ? subject.slice(6) : subject;
 }
 
+function normalizeGuestAlias(rawAlias: string|undefined): string {
+  const value = (rawAlias ?? '').trim().replace(/\s+/g, ' ');
+  if (!value) {
+    return 'Guest';
+  }
+
+  const normalized = value.replace(/[^a-zA-Z0-9 _-]/g, '').slice(0, 24).trim();
+  return normalized.length > 0 ? normalized : 'Guest';
+}
+
 export async function registerAuthRoutes(app: FastifyInstance) {
   const authStore = await getAuthSessionStore();
+
+  app.post('/auth/guest/start', async (request, reply) => {
+    const body = (request.body ?? {}) as GuestStartBody;
+    const alias = normalizeGuestAlias(body.alias);
+    const guestId = randomUUID().replace(/-/g, '').slice(0, 16);
+    const subject = `guest:${guestId}`;
+
+    const token = await signToken({sub: subject, role: 'viewer'});
+    const tokenHash = hashToken(token);
+    const expiresAt = resolveTokenExpiry(token);
+
+    await authStore.upsertSteamUser(subject);
+    await authStore.createSession({
+      steamId: subject,
+      tokenHash,
+      expiresAt,
+    });
+
+    return reply.send({
+      token,
+      guestId,
+      displayName: alias,
+      expiresAt: expiresAt.toISOString(),
+    });
+  });
 
   app.get('/auth/steam/start', async (request, reply) => {
     const origin = resolveRequestOrigin(request);
@@ -232,6 +271,8 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       authenticated: true,
       role: claims.role,
       steamId: resolveSteamIdFromSubject(claims.sub),
+      guestId: claims.sub.startsWith('guest:') ? claims.sub.slice(6) : null,
+      identityKind: claims.sub.startsWith('guest:') ? 'guest' : 'steam',
       sub: claims.sub,
     });
   });

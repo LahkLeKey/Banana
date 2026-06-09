@@ -1,4 +1,4 @@
-# Feature Specification: ABI Notebook Playground Pivot
+# Feature Specification: Notebook MMO Gameplay Client
 
 **Feature Branch**: `033-abi-notebook-playground`
 
@@ -6,88 +6,117 @@
 
 **Status**: Draft
 
-**Input**: User description: "lock this refactor in and lets scaffold a new abi workflow, we want to load all of our c into jupytr notebooks for interactive prototyping instead of rushing a half baked dx12 client, our frontend deployment on vercel and be a data science playground instead of a marketing playground for now use specifiy to implement this on a new branch after you have merged all of this to main"
+**Input**: User request to use notebooks as the primary gameplay renderer/client, split bloated playground page into shared components, introduce a main menu flow, and plan API orchestration alignment.
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Export Native C Into Notebooks (Priority: P1)
+### User Story 1 - Notebook-first gameplay shell (Priority: P1)
 
-As an engine/runtime contributor, I need a deterministic workflow that converts native C and header files into a notebook artifact so I can prototype and inspect runtime behavior interactively without depending on the DX12 client loop.
+As a player/developer, I can launch into a notebook-first gameplay shell from a main menu so notebook assets become the primary client runtime surface.
 
-**Why this priority**: This is the core capability request and unlocks immediate exploratory development for native ABI changes.
+**Why this priority**: This establishes the new gameplay-client identity and unblocks all downstream flows.
 
-**Independent Test**: Run `bash scripts/scaffold-abi-notebook-workflow.sh` and verify `artifacts/notebooks/native-c-catalog.ipynb` is generated with an index and per-file code cells.
+**Independent Test**: Open `/` and verify the main menu renders, displays notebook status, and routes into notebook render surface without raw JSON dump UI.
 
 **Acceptance Scenarios**:
 
-1. **Given** native C files exist under `src/native`, **When** the scaffold script runs, **Then** a notebook artifact is generated with deterministic file ordering.
-2. **Given** a file exceeds max lines per cell, **When** export runs, **Then** content is truncated with a clear marker instead of failing generation.
+1. **Given** notebook assets exist, **When** user loads `/`, **Then** a main menu with a launch action into notebook gameplay appears.
+2. **Given** notebook assets are missing, **When** user loads `/`, **Then** menu shows actionable regeneration guidance and avoids hard crashes.
 
 ---
 
-### User Story 2 - Vercel Root Becomes Data Science Playground (Priority: P2)
+### User Story 2 - Shared dashboard component architecture (Priority: P2)
 
-As a web user, I need the root frontend route to position Banana as a data science playground so the deployment reflects the temporary strategic focus rather than marketing copy.
+As a frontend maintainer, I can evolve notebook gameplay UI through small shared components instead of one large page file.
 
-**Why this priority**: The website messaging pivot is requested now and should not block the notebook workflow foundation.
+**Why this priority**: Prevents page bloat/churn and improves iteration speed for MMO client UX.
 
-**Independent Test**: Build/import-smoke the React app and verify `/` renders the new playground page while existing routes remain reachable.
+**Independent Test**: Verify playground route compiles with extracted component modules and no behavior regression in notebook launch flow.
 
 **Acceptance Scenarios**:
 
-1. **Given** I open `/` on the web app, **When** the router resolves the root path, **Then** I see data science playground messaging and notebook workflow links.
-2. **Given** I open `/marketing`, **When** routing resolves, **Then** the prior marketing page remains accessible for fallback.
+1. **Given** componentized layout, **When** I change menu/metrics/list panels, **Then** changes stay isolated to component files.
+2. **Given** manifest and notebook data, **When** explorer renders, **Then** shared components consume typed props without page-level duplication.
+
+---
+
+### User Story 3 - API orchestration-ready notebook client (Priority: P3)
+
+As an integration engineer, I can wire notebook gameplay client actions to API orchestration progressively without redesigning the UI shell.
+
+**Why this priority**: Aligns current notebook client with future MMO orchestration/API flows.
+
+**Independent Test**: Confirm defined service hooks/interfaces exist and menu actions can call API-backed loaders with graceful fallback.
+
+**Acceptance Scenarios**:
+
+1. **Given** API is reachable, **When** menu requests manifest/session metadata, **Then** data hydrates client panels.
+2. **Given** API is unavailable, **When** client loads, **Then** local notebook artifacts still power fallback mode.
 
 ---
 
 ### Edge Cases
 
-- Source-root path missing: script exits non-zero with actionable guidance.
-- No `.c`/`.h` files discovered: generation aborts with explicit error.
-- Extremely large files: exporter truncates per configurable line cap and marks truncation.
-- Frontend deploy without notebook artifacts: page still renders and provides generation command fallback.
+- Manifest exists but notebook file is missing or malformed.
+- Notebook contains cells without source headers.
+- API returns partial payloads for session/menu metadata.
+- Large file catalogs exceed simple list rendering and need filtering/pagination.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST provide a scriptable workflow that exports `src/native/**/*.c` and `src/native/**/*.h` into a Jupyter notebook artifact.
-- **FR-002**: Export workflow MUST generate deterministic output order for reproducibility.
-- **FR-003**: Export workflow MUST include a top-level markdown index cell listing source paths included in the notebook.
-- **FR-004**: Export workflow MUST support per-file truncation with an explicit truncation marker.
-- **FR-005**: React root route (`/`) MUST render a data science playground page instead of the marketing page.
-- **FR-006**: Existing non-root routes (`/marketing`, `/download`, `/login`, `/session-room`) MUST remain available.
-- **FR-007**: `.specify/feature.json` MUST point to this feature directory during implementation.
+- **FR-001**: System MUST expose a main-menu-first notebook gameplay client route at `/`.
+- **FR-002**: System MUST decompose current playground page into shared components (menu, stats, source list, code surface, health panel).
+- **FR-003**: System MUST load notebook manifest and notebook document into typed client state.
+- **FR-004**: System MUST provide searchable file navigation and selectable code preview from notebook cells.
+- **FR-005**: System MUST keep notebook generation flow (`scaffold-abi-notebook-workflow.sh`) as source of truth for notebook artifacts.
+- **FR-006**: System MUST define API orchestration integration points for menu/session/notebook metadata retrieval.
+- **FR-007**: System MUST preserve fallback operation from static `/notebooks/*` assets when API services are unavailable.
 
 ### Key Entities *(include if feature involves data)*
 
-- **NativeNotebookExportManifest**: Source-root, discovered file list, line cap, generated timestamp, output path.
-- **NotebookCellDescriptor**: Cell type, language metadata, source path label, emitted source lines.
-- **PlaygroundLandingModel**: Frontend copy + canonical links to notebook artifacts and generation commands.
+- **GameplayMenuModel**: Launch actions, client status, notebook readiness state.
+- **NotebookRuntimeManifest**: Generated timestamp, source root, file catalog, render limits.
+- **NotebookCellRuntimeIndex**: Mapping from source path to notebook code payload for renderer view.
+- **NotebookClientSessionState**: API-backed metadata and local fallback status for gameplay shell.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Running the scaffold script produces `artifacts/notebooks/native-c-catalog.ipynb` in under 30 seconds on current repo size.
-- **SC-002**: Generated notebook contains at least one code cell for every discovered native source file up to configured cap.
-- **SC-003**: React root route change compiles and preserves existing non-root route navigation.
-- **SC-004**: Native build and focused feedback-loop smoke tests pass after integration changes.
+- **SC-001**: Main menu and notebook gameplay shell render at `/` without raw JSON iframe dependency.
+- **SC-002**: `DataSciencePlaygroundPage` responsibilities are split into shared components with no single monolithic control surface.
+- **SC-003**: Notebook explorer interactions (filter/select/render) stay responsive for 291+ indexed files.
+- **SC-004**: API-orchestration hooks are documented and scaffolded with typed fallbacks to local notebook assets.
+
+## Iteration Checklist
+
+- [ ] Stage 1: Splash route (`/`) renders and transitions to engine boot.
+- [ ] Stage 2: Engine boot route (`/banana-engine`) transitions to login.
+- [ ] Stage 3: Login route (`/login`) supports guest entry without Steam account.
+- [ ] Stage 4: API route scaffold exists for guest auth bootstrap (`POST /auth/guest/start`).
+- [ ] Stage 5: Game main menu route (`/game-main-menu`) enforces authenticated session.
+- [ ] Stage 6: Character select route (`/select-character`) stores selected operator profile.
+- [ ] Stage 7: Notebook client route (`/notebooks`) enforces both authenticated session and selected character.
+- [ ] Stage 8: Session validation/logout support guest sessions and Steam sessions.
+- [ ] Stage 9: Add telemetry checkpoints for each onboarding stage transition.
+- [ ] Stage 10: Add production hardening pass (rate limits, guest alias validation policy, abuse controls).
 
 ## Assumptions
 
-- Python 3 is available in contributor environments where notebook generation runs.
-- Notebook generation is artifact-oriented and does not execute kernels as part of this feature.
-- Marketing page code is retained as a fallback route, not deleted.
-- Vercel continues serving static artifacts with existing rewrite/header behavior.
+- React continues as the current web gameplay shell runtime.
+- Notebook files remain generated artifacts, not edited directly by users.
+- API orchestration integration can be incremental and backward-compatible with local assets.
+- Existing routes like `/marketing` remain available during transition.
 
 ## Constitution Alignment *(mandatory)*
 
-- **Disclosure Integrity**: This pivot affects web messaging only; no Steam storefront claim changes are introduced in this feature.
-- **Cross-Domain Contracts**: Touches native source discovery (read-only), script orchestration, and React route composition.
-- **Quality Gates**: Native compile and focused smoke tests plus React smoke import and notebook generation command.
-- **Delivery Evidence**: Generated notebook artifact path and terminal evidence from build/test/generation commands.
+- **Disclosure Integrity**: No storefront claims changed; this is internal gameplay client UX evolution.
+- **Cross-Domain Contracts**: Touches scripts artifact pipeline, React client shell, and future API orchestration interfaces.
+- **Quality Gates**: React build/smoke, notebook generation validation, and integration fallback checks.
+- **Delivery Evidence**: Notebook artifacts, dashboard render snapshots, and command logs for generation/build validations.
 
 ## Storefront & Release Claims *(required when public Steam copy is affected)*
 
-- Not applicable for this feature scope.
+- Not applicable in this feature phase.

@@ -24,6 +24,13 @@ export type ApiRootResponse = {
   endpoints?: {health?: string; swagger?: string};
 };
 
+export type GuestAuthStartResponse = {
+  token: string;
+  guestId: string;
+  displayName: string;
+  expiresAt: string;
+};
+
 export type PlayerAccountResponse = {
   playerId: string; accountStatus: string; profile: Record<string, unknown>;
   version: number;
@@ -326,6 +333,15 @@ export async function fetchApiHealth(baseUrl: string):
 
 export async function fetchApiRoot(baseUrl: string): Promise<ApiRootResponse> {
   return requestJson<ApiRootResponse>(baseUrl, '/');
+}
+
+export async function startGuestAuthSession(
+    baseUrl: string, alias: string): Promise<GuestAuthStartResponse> {
+  return requestJson<GuestAuthStartResponse>(baseUrl, '/auth/guest/start', {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify({alias}),
+  });
 }
 
 export async function fetchPlayerAccount(

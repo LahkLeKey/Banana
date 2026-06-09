@@ -8,18 +8,25 @@ import { useNotebookClient } from "../lib/notebook-client/useNotebookClient";
 const shellStyle: CSSProperties = {
     minHeight: "100dvh",
     background:
-        "radial-gradient(circle at 10% 12%, rgba(14, 165, 233, 0.16), transparent 30%), radial-gradient(circle at 84% 16%, rgba(34, 197, 94, 0.14), transparent 32%), linear-gradient(145deg, #04070d 0%, #0a1524 55%, #0f2033 100%)",
+        "radial-gradient(circle at 8% 10%, rgba(20, 184, 166, 0.22), transparent 28%), radial-gradient(circle at 88% 14%, rgba(14, 165, 233, 0.16), transparent 34%), linear-gradient(155deg, #02050c 0%, #071322 45%, #0a1b2d 100%)",
     color: "#e2e8f0",
     padding: "28px clamp(16px, 2.2vw, 36px)",
+    fontFamily: '"Rajdhani", "Segoe UI", sans-serif',
 };
 
 const panelStyle: CSSProperties = {
     width: "100%",
-    border: "1px solid rgba(148, 163, 184, 0.28)",
+    border: "1px solid rgba(45, 212, 191, 0.28)",
     borderRadius: 24,
     padding: "28px clamp(18px, 2.4vw, 36px)",
-    background: "rgba(5, 11, 22, 0.78)",
+    background: "linear-gradient(170deg, rgba(3, 10, 19, 0.85), rgba(1, 7, 14, 0.95))",
     boxShadow: "0 24px 90px rgba(2, 6, 23, 0.52)",
+};
+
+const missionStackStyle: CSSProperties = {
+    display: "grid",
+    gap: 16,
+    marginTop: 18,
 };
 
 const dashboardGridStyle: CSSProperties = {
@@ -72,7 +79,7 @@ export function DataSciencePlaygroundPage() {
                 />
 
                 {mode === "mission" ? (
-                    <section style={{ display: "grid", gap: 16, marginTop: 18 }}>
+                    <section style={missionStackStyle}>
                         <NotebookGameplaySurface selectedFile={selectedFile} selectedContent={selectedContent} />
                         <NotebookHealthPanel
                             loading={loading}
@@ -104,7 +111,7 @@ export function DataSciencePlaygroundPage() {
                 ) : null}
 
                 {mode === "diagnostics" ? (
-                    <section style={{ display: "grid", gap: 16, marginTop: 18 }}>
+                    <section style={missionStackStyle}>
                         <NotebookHealthPanel
                             loading={loading}
                             manifestError={manifestError}

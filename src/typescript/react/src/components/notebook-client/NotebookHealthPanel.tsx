@@ -9,22 +9,23 @@ type NotebookHealthPanelProps = {
 };
 
 const cardStyle: CSSProperties = {
-    borderRadius: 14,
-    border: "1px solid rgba(148, 163, 184, 0.22)",
+    borderRadius: 18,
+    border: "1px solid rgba(45, 212, 191, 0.22)",
     padding: 18,
-    background: "rgba(15, 23, 42, 0.55)",
+    background: "linear-gradient(170deg, rgba(8, 21, 33, 0.92), rgba(5, 14, 24, 0.96))",
+    fontFamily: '"IBM Plex Sans", "Segoe UI", sans-serif',
 };
 
 export function NotebookHealthPanel({ loading, manifestError, notebookError, manifestSource, notebookSource }: NotebookHealthPanelProps) {
     return (
         <article style={cardStyle}>
-            <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Data & API Orchestration Health</h2>
-            {loading ? <p style={{ margin: 0, color: "#cbd5e1" }}>Loading notebook manifest and payload...</p> : null}
+            <h2 style={{ margin: "0 0 8px", fontSize: 18, letterSpacing: "0.04em", textTransform: "uppercase" }}>Relay Diagnostics</h2>
+            {loading ? <p style={{ margin: 0, color: "#cbd5e1" }}>Syncing manifest and notebook payload...</p> : null}
             {manifestError ? <p style={{ margin: 0, color: "#fca5a5" }}>{manifestError}</p> : null}
             {notebookError ? <p style={{ margin: "8px 0 0", color: "#fca5a5" }}>{notebookError}</p> : null}
             {!loading && !manifestError && !notebookError ? (
                 <p style={{ margin: "8px 0 0", color: "#cbd5e1", lineHeight: 1.6 }}>
-                    Manifest and notebook payload loaded. API orchestration can layer on this shell while static notebook fallback remains active.
+                    Transport healthy. Mission dataset is available and API-first fallback routing is operational.
                 </p>
             ) : null}
             {!loading && (manifestSource.length > 0 || notebookSource.length > 0) ? (
