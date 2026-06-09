@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
@@ -20,8 +21,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output",
-        default="artifacts/notebooks/native-c-catalog.ipynb",
+        default="notebooks/native-c-catalog.ipynb",
         help="Workspace-relative notebook output path",
+    )
+    parser.add_argument(
+        "--manifest-output",
+        default="notebooks/catalog-index.json",
+        help="Workspace-relative manifest output path",
     )
     parser.add_argument(
         "--max-lines-per-file",
@@ -99,6 +105,7 @@ def main() -> int:
     workspace_root = Path.cwd()
     source_root = (workspace_root / args.source_root).resolve()
     output_path = (workspace_root / args.output).resolve()
+    manifest_path = (workspace_root / args.manifest_output).resolve()
 
     if not source_root.exists() or not source_root.is_dir():
         raise SystemExit(f"source root not found: {source_root}")
@@ -133,7 +140,19 @@ def main() -> int:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(notebook, indent=2), encoding="utf-8")
 
+    manifest = {
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "source_root": source_root.relative_to(workspace_root).as_posix(),
+        "notebook_path": output_path.relative_to(workspace_root).as_posix(),
+        "file_count": len(files),
+        "max_lines_per_file": args.max_lines_per_file,
+        "files": [path.relative_to(workspace_root).as_posix() for path in files],
+    }
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
     print(f"generated notebook: {output_path}")
+    print(f"generated manifest: {manifest_path}")
     print(f"files exported: {len(files)}")
     print(f"max lines per file: {args.max_lines_per_file}")
     return 0

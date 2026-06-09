@@ -1,6 +1,6 @@
 {
   "installCommand": "cd src/typescript/react && bun install",
-  "buildCommand": "cd src/typescript/react && bun run build",
+  "buildCommand": "bash scripts/scaffold-abi-notebook-workflow.sh && cd src/typescript/react && bun run build",
   "outputDirectory": "src/typescript/react/dist",
   "rewrites": [
     {
