@@ -118,8 +118,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/parallel/model/parallel_model.c
   runtime/abi/physics/physics_abi.c
   runtime/player/api/player_api.c
-  runtime/player/player_merchant_adapter.c
-  runtime/player/player_build_abi.c
+  runtime/player/build/abi/player_build_abi.c
   runtime/player/gateway/player_gateway_abi.c
   runtime/player/player_builds.c
   runtime/player/runtime/player_runtime_service.c
@@ -129,6 +128,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/player/player_motion.c
   runtime/player/player_registry.c
   runtime/player/player_resources.c
+  runtime/player/merchant/player_merchant_adapter.c
    runtime/interaction/collection/interactive_collection.c
    runtime/interaction/spawner/interactive_object_spawner.c
   runtime/chunk/chunk_stream_packet.c

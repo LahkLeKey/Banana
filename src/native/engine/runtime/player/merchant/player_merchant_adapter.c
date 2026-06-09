@@ -2,9 +2,9 @@
 
 #include <stddef.h>
 
-#include "../merchant/trade/merchant_trade_abi.h"
-#include "gateway/player_gateway_abi.h"
-#include "resource/player_resource_abi.h"
+#include "../../merchant/trade/merchant_trade_abi.h"
+#include "../gateway/player_gateway_abi.h"
+#include "../resource/player_resource_abi.h"
 
 #define PLAYER_MERCHANT_ADAPTER_ASSERT(name, expr) \
     typedef char player_merchant_adapter_assert_##name[(expr) ? 1 : -1]
