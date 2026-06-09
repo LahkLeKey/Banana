@@ -90,6 +90,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/engine_lifecycle.c
   runtime/engine/engine_tick.c
   runtime/engine/gameplay_model_profile.c
+  runtime/engine/gameplay_service_model_catalog.c
   runtime/engine/gameplay_service_models.c
   runtime/engine/gameplay_service_reinforcement_metrics.c
   runtime/engine/gameplay_service_reinforcement_spawn.c
