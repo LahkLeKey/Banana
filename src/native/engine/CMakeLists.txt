@@ -95,6 +95,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/gameplay_service_reinforcement_spawn.c
   runtime/engine/gameplay_service_sentience_behavior.c
   runtime/engine/gameplay_service_sentience_decision.c
+  runtime/engine/gameplay_service_sentience_override_config.c
   runtime/engine/gameplay_service_sentience_overrides.c
   runtime/engine/gameplay_service_warfront.c
   runtime/engine/gameplay_service_warfront_expansion.c
