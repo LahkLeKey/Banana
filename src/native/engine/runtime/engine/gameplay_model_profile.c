@@ -13,7 +13,6 @@ int runtime_gameplay_model_vector_profile_for_model_id(const char *model_id,
     const int has_regroup_tag = model_id && strstr(model_id, "regroup") != NULL;
     const int has_envoy_tag = model_id && strstr(model_id, "envoy") != NULL;
     const int has_truce_tag = model_id && strstr(model_id, "truce") != NULL;
-    const int has_diplomacy_tag = has_envoy_tag || has_truce_tag;
     const int has_banana_tag = model_id && strstr(model_id, "banana-") != NULL;
     const int has_bean_tag = model_id && strstr(model_id, "bean-") != NULL;
 
