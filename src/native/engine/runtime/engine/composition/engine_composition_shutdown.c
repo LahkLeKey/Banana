@@ -1,14 +1,14 @@
 #include "engine_composition_shutdown.h"
 
-#include "application/service/application_service_ports.h"
-#include "engine_lifecycle.h"
+#include "../application/service/application_service_ports.h"
+#include "../engine_lifecycle.h"
 
-#include "../../ai/npc_merchant.h"
-#include "../../ui/ui.h"
-#include "../../engine_serialize.h"
-#include "../input/contract/input_contract.h"
-#include "../player/player_builds.h"
-#include "../player/player_registry.h"
+#include "../../../ai/npc_merchant.h"
+#include "../../../ui/ui.h"
+#include "../../../engine_serialize.h"
+#include "../../input/contract/input_contract.h"
+#include "../../player/player_builds.h"
+#include "../../player/player_registry.h"
 
 #include <stdio.h>
 

@@ -2,9 +2,9 @@
 #include "engine_composition_init.h"
 #include "engine_composition_shutdown.h"
 
-#include "../orchestration/tick/runtime_tick_orchestration.h"
+#include "../../orchestration/tick/runtime_tick_orchestration.h"
 
-#include "engine_tick.h"
+#include "../engine_tick.h"
 
 int runtime_engine_composition_init(EngineRuntimeState *state,
                                     int width,

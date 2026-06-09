@@ -7,7 +7,7 @@
 #include "runtime/controller/runtime/controller_runtime.h"
 #include "runtime/engine/application/service/application_service_ports.h"
 #include "runtime/engine/engine_aux_abi.h"
-#include "runtime/engine/engine_composition.h"
+#include "runtime/engine/composition/engine_composition.h"
 #include "runtime/engine/engine_host.h"
 #include "runtime/engine/engine_state.h"
 #include "runtime/engine/engine_lifecycle.h"

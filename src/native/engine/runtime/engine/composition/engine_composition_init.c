@@ -1,15 +1,15 @@
 #include "engine_composition_init.h"
 
-#include "application/service/application_service_ports.h"
-#include "engine_lifecycle.h"
+#include "../application/service/application_service_ports.h"
+#include "../engine_lifecycle.h"
 
-#include "../../ai/combat_controller.h"
-#include "../../ai/wildlife_controller.h"
-#include "../../render/backend.h"
-#include "../../ui/ui.h"
-#include "../../engine_serialize.h"
-#include "../player/player_builds.h"
-#include "../tick/tick_budget_policy.h"
+#include "../../../ai/combat_controller.h"
+#include "../../../ai/wildlife_controller.h"
+#include "../../../render/backend.h"
+#include "../../../ui/ui.h"
+#include "../../../engine_serialize.h"
+#include "../../player/player_builds.h"
+#include "../../tick/tick_budget_policy.h"
 
 #include <stdio.h>
 
