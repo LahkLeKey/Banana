@@ -76,6 +76,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/controller/runtime/controller_runtime.c
   runtime/controller/sync/controller_sync.c
   runtime/engine/engine_aux_abi.c
+  runtime/engine/engine_aux_launch_gate.c
   runtime/engine/engine_composition.c
   runtime/engine/engine_composition_init.c
   runtime/engine/engine_composition_shutdown.c
