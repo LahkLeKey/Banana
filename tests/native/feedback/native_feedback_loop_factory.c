@@ -984,7 +984,7 @@ static void emit_snapshot(FILE *stream,
             "bananaHits={hold:%d flank:%d regroup:%d negotiate:%d} "
             "beanHits={hold:%d flank:%d regroup:%d negotiate:%d} "
             "truceHits={total:%d banana:%d bean:%d base:%d apex:%d mythic:%d} "
-            "truceGate={checks:%d ok:%d behavior:%d empathy:%d coord:%d streak:%d intel:%d}\n",
+            "truceGate={checks:%d ok:%d stageChecks:%d stageOk:%d behavior:%d empathy:%d coord:%d streak:%d intel:%d}\n",
             tick,
             scenario_name,
             label ? label : "-",
@@ -1013,6 +1013,16 @@ static void emit_snapshot(FILE *stream,
             context->telemetry.war_sentience_truce_variant_hits_mythic,
             context->telemetry.war_sentience_truce_gate_checks_total,
             context->telemetry.war_sentience_truce_gate_checks_granted,
+                 context->telemetry.war_sentience_truce_gate_checks_stage[context->telemetry.war_intelligence_stage < 0
+                                                   ? 0
+                                                   : (context->telemetry.war_intelligence_stage >= BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS
+                                                       ? BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS - 1
+                                                       : context->telemetry.war_intelligence_stage)],
+                 context->telemetry.war_sentience_truce_gate_granted_stage[context->telemetry.war_intelligence_stage < 0
+                                                     ? 0
+                                                     : (context->telemetry.war_intelligence_stage >= BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS
+                                                         ? BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS - 1
+                                                         : context->telemetry.war_intelligence_stage)],
             context->telemetry.war_sentience_truce_gate_block_behavior,
             context->telemetry.war_sentience_truce_gate_block_empathy,
             context->telemetry.war_sentience_truce_gate_block_coordination,
@@ -1353,9 +1363,35 @@ static int read_metric_value(const Dx12PlayloopRunner *runner, const char *metri
         return 1;
     }
 
+    if (strcmp(metric_name, "truce-gate-checks-stage-current") == 0)
+    {
+        int stage_index = runner->context.telemetry.war_intelligence_stage;
+
+        if (stage_index < 0)
+            stage_index = 0;
+        if (stage_index >= BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS)
+            stage_index = BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS - 1;
+
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_checks_stage[stage_index];
+        return 1;
+    }
+
     if (strcmp(metric_name, "truce-gate-granted") == 0)
     {
         *out_value = runner->context.telemetry.war_sentience_truce_gate_checks_granted;
+        return 1;
+    }
+
+    if (strcmp(metric_name, "truce-gate-granted-stage-current") == 0)
+    {
+        int stage_index = runner->context.telemetry.war_intelligence_stage;
+
+        if (stage_index < 0)
+            stage_index = 0;
+        if (stage_index >= BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS)
+            stage_index = BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS - 1;
+
+        *out_value = runner->context.telemetry.war_sentience_truce_gate_granted_stage[stage_index];
         return 1;
     }
 

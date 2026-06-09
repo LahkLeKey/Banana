@@ -132,6 +132,8 @@ typedef struct EngineRuntimeState
     int war_sentience_truce_variant_hits_mythic;
     int war_sentience_truce_gate_checks_total;
     int war_sentience_truce_gate_checks_granted;
+    int war_sentience_truce_gate_checks_stage[BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS];
+    int war_sentience_truce_gate_granted_stage[BANANA_ENGINE_WAR_INTELLIGENCE_STAGE_BUCKETS];
     int war_sentience_truce_gate_block_behavior;
     int war_sentience_truce_gate_block_empathy;
     int war_sentience_truce_gate_block_coordination;

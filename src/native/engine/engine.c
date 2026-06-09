@@ -798,6 +798,18 @@ int engine_get_controller_war_sentience_truce_gate_checks_granted(void)
     return s_engine_state.war_sentience_truce_gate_checks_granted;
 }
 
+int engine_get_controller_war_sentience_truce_gate_checks_stage(int stage_index)
+{
+    return runtime_engine_war_reinforcement_stage_hits_at(s_engine_state.war_sentience_truce_gate_checks_stage,
+                                                          stage_index);
+}
+
+int engine_get_controller_war_sentience_truce_gate_granted_stage(int stage_index)
+{
+    return runtime_engine_war_reinforcement_stage_hits_at(s_engine_state.war_sentience_truce_gate_granted_stage,
+                                                          stage_index);
+}
+
 int engine_get_controller_war_sentience_truce_gate_block_behavior(void)
 {
     return s_engine_state.war_sentience_truce_gate_block_behavior;
