@@ -1,6 +1,6 @@
 #include "engine_tick.h"
 
-#include "../orchestration/tick/runtime_tick_orchestration.h"
+#include "../../orchestration/tick/runtime_tick_orchestration.h"
 
 int runtime_engine_tick_execute(Window *window,
                                 Renderer *renderer,

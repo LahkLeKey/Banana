@@ -102,7 +102,7 @@ Runtime responsibilities are split by domain service modules rather than one
 monolithic `engine.c` control block:
 
 - `runtime/engine/lifecycle/engine_lifecycle*.*`: bootstrap/teardown orchestration.
-- `runtime/engine/engine_tick.*`: tick pipeline execution and phase ordering.
+- `runtime/engine/tick/engine_tick.*`: tick pipeline execution and phase ordering.
 - `runtime/input/contract/input_contract.*`: click/move intent contract and sanitization.
 - `runtime/input/move_target/move_target_domain.*`: strongly-typed click-target state and steering decisions.
 - `runtime/render/submit/render_submit.*` + `RendererDrawCommand`: typed scene command

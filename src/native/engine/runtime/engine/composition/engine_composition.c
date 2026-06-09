@@ -4,7 +4,7 @@
 
 #include "../../orchestration/tick/runtime_tick_orchestration.h"
 
-#include "../engine_tick.h"
+#include "../tick/engine_tick.h"
 
 int runtime_engine_composition_init(EngineRuntimeState *state,
                                     int width,

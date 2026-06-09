@@ -1,12 +1,12 @@
 #ifndef BANANA_ENGINE_RUNTIME_ENGINE_TICK_H
 #define BANANA_ENGINE_RUNTIME_ENGINE_TICK_H
 
-#include "../../ai/controller.h"
-#include "../../physics/world.h"
-#include "../../render/renderer.h"
-#include "../../render/window.h"
-#include "../../world/world.h"
-#include "../tick/tick_phases.h"
+#include "../../../ai/controller.h"
+#include "../../../physics/world.h"
+#include "../../../render/renderer.h"
+#include "../../../render/window.h"
+#include "../../../world/world.h"
+#include "../../tick/tick_phases.h"
 
 #ifdef __cplusplus
 extern "C"
