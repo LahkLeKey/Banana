@@ -1,7 +1,7 @@
 #include "player_motion_host.h"
 
-#include "../camera/basis/camera_basis.h"
-#include "player_registry.h"
+#include "../../camera/basis/camera_basis.h"
+#include "../player_registry.h"
 
 void runtime_player_motion_tick(World *world,
                                 EntityId primary_player_id,

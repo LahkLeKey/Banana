@@ -125,7 +125,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/player/runtime/player_runtime_service.c
   runtime/player/player_resource_abi.c
   runtime/player/player_sync_abi.c
-  runtime/player/player_motion_host.c
+  runtime/player/runtime/player_motion_host.c
   runtime/player/player_motion.c
   runtime/player/player_registry.c
   runtime/player/player_resources.c
