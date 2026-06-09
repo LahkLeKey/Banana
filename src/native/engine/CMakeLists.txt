@@ -85,6 +85,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/engine_host.c
   runtime/engine/engine_lifecycle_actor_spawn.c
   runtime/engine/engine_lifecycle_launch_gate.c
+  runtime/engine/engine_lifecycle_spawn_math.c
   runtime/engine/engine_state.c
   runtime/engine/engine_lifecycle.c
   runtime/engine/engine_tick.c

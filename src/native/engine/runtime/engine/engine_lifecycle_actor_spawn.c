@@ -1,47 +1,7 @@
 #include "engine_lifecycle.h"
+#include "engine_lifecycle_spawn_math.h"
 
 #include <string.h>
-
-static unsigned int runtime_spawn_hash(unsigned int value)
-{
-    unsigned int n = value * 374761393u + 20260523u;
-    n = (n ^ (n >> 13)) * 1274126177u;
-    return n ^ (n >> 16);
-}
-
-static float runtime_spawn_jitter(unsigned int seed)
-{
-    return (((float)(seed & 0xFFu) / 255.0f) - 0.5f) * 2.4f;
-}
-
-/* Sample center + footprint corners and return the highest ground point.
-   This avoids actor corners clipping out of sloped terrain near map edges. */
-static float runtime_spawn_sample_max_ground(RuntimeTerrainSampleFn terrain_sample_height,
-                                             float x,
-                                             float z,
-                                             float sx,
-                                             float sz)
-{
-    float half_x = sx * 0.5f;
-    float half_z = sz * 0.5f;
-    float max_h = terrain_sample_height(x, z);
-    float h = 0.0f;
-
-    h = terrain_sample_height(x - half_x, z - half_z);
-    if (h > max_h)
-        max_h = h;
-    h = terrain_sample_height(x + half_x, z - half_z);
-    if (h > max_h)
-        max_h = h;
-    h = terrain_sample_height(x - half_x, z + half_z);
-    if (h > max_h)
-        max_h = h;
-    h = terrain_sample_height(x + half_x, z + half_z);
-    if (h > max_h)
-        max_h = h;
-
-    return max_h;
-}
 
 int runtime_engine_lifecycle_spawn_default_actors(World *world,
                                                   RuntimeTerrainSampleFn terrain_sample_height,
@@ -83,14 +43,14 @@ int runtime_engine_lifecycle_spawn_default_actors(World *world,
     for (i = 0; i < (int)(sizeof(actor_archetypes) / sizeof(actor_archetypes[0])); i++)
     {
         const RuntimeActorArchetype *archetype = &actor_archetypes[i];
-        unsigned int hash = runtime_spawn_hash((unsigned int)(i + 1));
-        float x = (archetype->x * spread_radius) + runtime_spawn_jitter(hash);
-        float z = (archetype->z * spread_radius) + runtime_spawn_jitter(hash >> 8);
-        float base_ground = runtime_spawn_sample_max_ground(terrain_sample_height,
-                                                            x,
-                                                            z,
-                                                            archetype->sx,
-                                                            archetype->sz);
+        unsigned int hash = runtime_engine_lifecycle_spawn_hash((unsigned int)(i + 1));
+        float x = (archetype->x * spread_radius) + runtime_engine_lifecycle_spawn_jitter(hash);
+        float z = (archetype->z * spread_radius) + runtime_engine_lifecycle_spawn_jitter(hash >> 8);
+        float base_ground = runtime_engine_lifecycle_spawn_sample_max_ground(terrain_sample_height,
+                                             x,
+                                             z,
+                                             archetype->sx,
+                                             archetype->sz);
         float y = base_ground + archetype->y_offset;
         EntityId actor_id = world_spawn_entity(world, archetype->type, x, y, z);
         Entity *actor = world_get_entity(world, actor_id);
