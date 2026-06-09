@@ -2,9 +2,9 @@
 #include "application_service_render_actor_resolver.h"
 #include "application_service_render_model_cache.h"
 
-#include "../render/material/render_material.h"
-#include "../render/submit/render_submit.h"
-#include "../terrain/terrain_height.h"
+#include "../../../render/material/render_material.h"
+#include "../../../render/submit/render_submit.h"
+#include "../../../terrain/terrain_height.h"
 
 static EngineRuntimeState *s_render_state = NULL;
 

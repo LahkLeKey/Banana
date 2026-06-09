@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_ENGINE_APPLICATION_SERVICE_RENDER_MODEL_CACHE_H
 #define BANANA_ENGINE_RUNTIME_ENGINE_APPLICATION_SERVICE_RENDER_MODEL_CACHE_H
 
-#include "../../render/mesh.h"
+#include "../../../../render/mesh.h"
 
 #ifdef __cplusplus
 extern "C"

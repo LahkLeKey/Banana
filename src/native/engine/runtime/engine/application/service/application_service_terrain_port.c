@@ -1,8 +1,8 @@
 #include "application_service_terrain_port.h"
 
-#include "../terrain/terrain_height.h"
-#include "../terrain/terrain_host.h"
-#include "../terrain/terrain_mutation.h"
+#include "../../../terrain/terrain_height.h"
+#include "../../../terrain/terrain_host.h"
+#include "../../../terrain/terrain_mutation.h"
 
 static EngineRuntimeState *s_mutation_state = NULL;
 

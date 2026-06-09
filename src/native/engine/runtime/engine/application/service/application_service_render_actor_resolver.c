@@ -2,9 +2,9 @@
 
 #include "application_service_render_model_cache.h"
 
-#include "../controller/kind/controller_kind_domain.h"
-#include "../controller/runtime/controller_runtime.h"
-#include "../terrain/terrain_height.h"
+#include "../../../controller/kind/controller_kind_domain.h"
+#include "../../../controller/runtime/controller_runtime.h"
+#include "../../../terrain/terrain_height.h"
 
 #include <string.h>
 
