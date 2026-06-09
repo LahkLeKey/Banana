@@ -10,7 +10,7 @@
 #include "runtime/engine/composition/engine_composition.h"
 #include "runtime/engine/engine_host.h"
 #include "runtime/engine/engine_state.h"
-#include "runtime/engine/engine_lifecycle.h"
+#include "runtime/engine/lifecycle/engine_lifecycle.h"
 #include "runtime/engine/engine_tick.h"
 #include "runtime/engine/gameplay/service/gameplay_service.h"
 #include "runtime/camera/follow/camera_follow.h"

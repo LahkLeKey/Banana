@@ -83,11 +83,11 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/composition/engine_composition_init.c
   runtime/engine/composition/engine_composition_shutdown.c
   runtime/engine/engine_host.c
-  runtime/engine/engine_lifecycle_actor_spawn.c
-  runtime/engine/engine_lifecycle_launch_gate.c
-  runtime/engine/engine_lifecycle_spawn_math.c
+  runtime/engine/lifecycle/engine_lifecycle_actor_spawn.c
+  runtime/engine/lifecycle/engine_lifecycle_launch_gate.c
+  runtime/engine/lifecycle/engine_lifecycle_spawn_math.c
   runtime/engine/engine_state.c
-  runtime/engine/engine_lifecycle.c
+  runtime/engine/lifecycle/engine_lifecycle.c
   runtime/engine/engine_tick.c
   runtime/engine/gameplay_model_profile.c
   runtime/engine/gameplay/service/gameplay_service_model_catalog.c

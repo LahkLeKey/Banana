@@ -1,7 +1,7 @@
 #include "engine_composition_shutdown.h"
 
 #include "../application/service/application_service_ports.h"
-#include "../engine_lifecycle.h"
+#include "../lifecycle/engine_lifecycle.h"
 
 #include "../../../ai/npc_merchant.h"
 #include "../../../ui/ui.h"

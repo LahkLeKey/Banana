@@ -1,7 +1,7 @@
 #include "engine_composition_init.h"
 
 #include "../application/service/application_service_ports.h"
-#include "../engine_lifecycle.h"
+#include "../lifecycle/engine_lifecycle.h"
 
 #include "../../../ai/combat_controller.h"
 #include "../../../ai/wildlife_controller.h"

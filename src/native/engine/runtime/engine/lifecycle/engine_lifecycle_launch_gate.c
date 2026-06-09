@@ -1,7 +1,7 @@
 #include "engine_lifecycle.h"
 
-#include "engine_aux_abi.h"
-#include "engine_host.h"
+#include "../engine_aux_abi.h"
+#include "../engine_host.h"
 
 #include <stdio.h>
 #include <stdlib.h>
