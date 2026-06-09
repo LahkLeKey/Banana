@@ -1,6 +1,6 @@
 #include "player_build_abi.h"
 
-#include "../../player_builds.h"
+#include "../player_builds.h"
 
 int runtime_player_build_abi_set_class(const char *player_guid,
                                        int class_type)

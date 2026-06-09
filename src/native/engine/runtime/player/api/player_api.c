@@ -1,5 +1,5 @@
 #include "player_api.h"
-#include "../player_builds.h"
+#include "../build/player_builds.h"
 #include "../../controller/kind/controller_kind_domain.h"
 
 static BuildClass default_class_for_controller(const char *controller_kind)

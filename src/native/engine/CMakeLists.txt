@@ -120,7 +120,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/player/api/player_api.c
   runtime/player/build/abi/player_build_abi.c
   runtime/player/gateway/player_gateway_abi.c
-  runtime/player/player_builds.c
+  runtime/player/build/player_builds.c
   runtime/player/runtime/player_runtime_service.c
   runtime/player/resource/player_resource_abi.c
   runtime/player/sync/player_sync_abi.c
