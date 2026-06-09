@@ -15,13 +15,6 @@ Run paths:
 - Evidence refresh: `bash scripts/refresh-coherent-world-evidence.sh`
 - CTest smoke targets: `banana_native_feedback_loop_factory_smoke` (hold-line gameplay), `banana_native_feedback_loop_factory_negotiate_smoke`, `banana_native_feedback_loop_factory_comeback_smoke`, `banana_native_feedback_loop_factory_flank_smoke`, and `banana_native_feedback_loop_factory_dx12_scaffold_smoke` (scaffold lifecycle)
 
-Demo frame export (visual QA evidence):
-
-- Enable via `BANANA_DEMO_FRAME_EXPORT=1` (optional cadence: `BANANA_DEMO_FRAME_INTERVAL=<ticks>`)
-- Output root defaults to `artifacts/native/032-demo-frame-qa/runs` (override with `BANANA_DEMO_FRAME_OUTPUT_DIR`)
-- Optional labels: `BANANA_DEMO_FRAME_SUITE=<name>` and `BANANA_DEMO_FRAME_RUN_LABEL=<label>`
-- Validate latest bundle: `bash tests/native/feedback/validate_demo_frame_bundle.sh --output-dir artifacts/native/032-demo-frame-qa/runs`
-
 DX12 playloop fixture scripts:
 
 - `feedback/scripts/warfront.dx12play`

@@ -19,12 +19,6 @@ output_path=""
 feedback_note=""
 skip_build=0
 non_interactive=0
-demo_frame_export="${BANANA_DEMO_FRAME_EXPORT:-}"
-demo_frame_output_dir="${BANANA_DEMO_FRAME_OUTPUT_DIR:-$ROOT_DIR/artifacts/native/032-demo-frame-qa/runs}"
-demo_frame_interval="${BANANA_DEMO_FRAME_INTERVAL:-}"
-demo_frame_format="${BANANA_DEMO_FRAME_FORMAT:-}"
-demo_frame_suite="${BANANA_DEMO_FRAME_SUITE:-}"
-demo_frame_run_label="${BANANA_DEMO_FRAME_RUN_LABEL:-}"
 is_windows_exe=0
 
 usage() {
@@ -51,13 +45,6 @@ Options:
   --non-interactive
   --help
 
-Environment:
-    BANANA_DEMO_FRAME_EXPORT=1            Enable demo frame export
-    BANANA_DEMO_FRAME_OUTPUT_DIR=<path>   Bundle output root (default: artifacts/native/032-demo-frame-qa/runs)
-    BANANA_DEMO_FRAME_RUN_LABEL=<label>   Run label suffix for the bundle
-    BANANA_DEMO_FRAME_INTERVAL=<ticks>    Capture interval override
-    BANANA_DEMO_FRAME_FORMAT=bmp          Capture format (default: bmp)
-    BANANA_DEMO_FRAME_SUITE=<label>       Suite label for manifest metadata
 EOF
 }
 
@@ -205,24 +192,14 @@ to_windows_path() {
 
 script_path_arg="$script_path"
 output_path_arg="$output_path"
-demo_frame_output_dir_arg="$demo_frame_output_dir"
-demo_frame_enabled=0
 
 if [[ "$is_windows_exe" -eq 1 ]]; then
     # Ensure Windows executables receive Windows-style paths for scripts/output bundles.
     script_path_arg="$(to_windows_path "$script_path")"
     output_path_arg="$(to_windows_path "$output_path")"
-    demo_frame_output_dir_arg="$(to_windows_path "$demo_frame_output_dir")"
 fi
 
 cmd=()
-
-if [[ -n "$demo_frame_export" && "$demo_frame_export" != "0" ]]; then
-    demo_frame_enabled=1
-    if [[ -z "$demo_frame_run_label" ]]; then
-        demo_frame_run_label="$scenario"
-    fi
-fi
 
 cmd+=("$feedback_binary"
     --scenario "$scenario"
@@ -258,22 +235,4 @@ if [[ -n "$script_path" ]]; then
 else
     echo "[feedback-loop] running scenario=$scenario ticks=$ticks snapshot_interval=$snapshot_interval"
 fi
-if [[ "$demo_frame_enabled" -eq 1 ]]; then
-    (
-        export BANANA_DEMO_FRAME_EXPORT="$demo_frame_export"
-        export BANANA_DEMO_FRAME_OUTPUT_DIR="$demo_frame_output_dir_arg"
-        export BANANA_DEMO_FRAME_RUN_LABEL="$demo_frame_run_label"
-        if [[ -n "$demo_frame_interval" ]]; then
-            export BANANA_DEMO_FRAME_INTERVAL="$demo_frame_interval"
-        fi
-        if [[ -n "$demo_frame_format" ]]; then
-            export BANANA_DEMO_FRAME_FORMAT="$demo_frame_format"
-        fi
-        if [[ -n "$demo_frame_suite" ]]; then
-            export BANANA_DEMO_FRAME_SUITE="$demo_frame_suite"
-        fi
-        "${cmd[@]}"
-    )
-else
-    "${cmd[@]}"
-fi
+"${cmd[@]}"

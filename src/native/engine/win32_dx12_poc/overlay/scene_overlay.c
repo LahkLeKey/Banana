@@ -80,6 +80,7 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     int war_stage = engine_get_controller_war_intelligence_stage();
     const char *hint_x = "HOLD";
     const char *hint_z = "HOLD";
+    int render_minimap = !(proto && proto->option_compact_hud);
     static const char *k_main_menu_items[] = {
         "Enter World",
         "Character Select",
@@ -442,31 +443,6 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
              engine_get_controller_war_sentience_spawn_mode_hits_bean(2),
              engine_get_controller_war_sentience_spawn_mode_hits_bean(3));
 
-    snprintf(line_twelve,
-             sizeof(line_twelve),
-             "WAR TRUCE HITS T:%d B:%d E:%d BASE:%d AP:%d MY:%d STG[%d]:%d",
-             engine_get_controller_war_sentience_truce_variant_hits_total(),
-             engine_get_controller_war_sentience_truce_variant_hits_banana(),
-             engine_get_controller_war_sentience_truce_variant_hits_bean(),
-             engine_get_controller_war_sentience_truce_variant_hits_base(),
-             engine_get_controller_war_sentience_truce_variant_hits_apex(),
-             engine_get_controller_war_sentience_truce_variant_hits_mythic(),
-             war_stage,
-             engine_get_controller_war_sentience_truce_variant_hits_stage(war_stage));
-
-    snprintf(line_thirteen,
-             sizeof(line_thirteen),
-             "WAR TRUCE GATE CK:%d OK:%d STG[%d] CK/OK:%d/%d BLK B/E/C/S/I:%d/%d/%d/%d/%d",
-             engine_get_controller_war_sentience_truce_gate_checks_total(),
-             engine_get_controller_war_sentience_truce_gate_checks_granted(),
-             war_stage,
-             engine_get_controller_war_sentience_truce_gate_checks_stage(war_stage),
-             engine_get_controller_war_sentience_truce_gate_granted_stage(war_stage),
-             engine_get_controller_war_sentience_truce_gate_block_behavior(),
-             engine_get_controller_war_sentience_truce_gate_block_empathy(),
-             engine_get_controller_war_sentience_truce_gate_block_coordination(),
-             engine_get_controller_war_sentience_truce_gate_block_streak(),
-             engine_get_controller_war_sentience_truce_gate_block_intelligence());
 
     if (has_player && has_target)
     {
@@ -516,8 +492,6 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
     engine_ui_text(22.0f, 162.0f, line_nine);
     engine_ui_text(22.0f, 184.0f, line_ten);
     engine_ui_text(22.0f, 206.0f, line_eleven);
-    engine_ui_text(22.0f, 228.0f, line_twelve);
-    engine_ui_text(22.0f, 250.0f, line_thirteen);
     engine_ui_text(22.0f, 272.0f, line_four);
     if (scene == BANANA_POC_SCENE_LEVEL_EDITOR)
     {
@@ -550,116 +524,119 @@ void banana_poc_render_scene_overlay(BananaPocScene scene,
                  proto->option_input_assist);
         engine_ui_text(22.0f, 272.0f, debug_line);
     }
-    engine_ui_text(minimap_x + 10.0f, minimap_y + 10.0f, "MINIMAP (TERRAIN + ACTORS)");
-
-    engine_ui_panel(minimap_x + 10.0f,
-                    minimap_y + 34.0f,
-                    minimap_w - 20.0f,
-                    minimap_h - 44.0f,
-                    0x1E5A2FD8u,
-                    1.0f);
-
+    if (render_minimap)
     {
-        int entity_count = engine_get_entity_count();
-        float panel_w = minimap_w - 20.0f;
-        float panel_h = minimap_h - 44.0f;
-        float team_marker_size = 3.0f;
+        engine_ui_text(minimap_x + 10.0f, minimap_y + 10.0f, "MINIMAP (TERRAIN + ACTORS)");
 
-        for (int i = 0; i < entity_count; i++)
+        engine_ui_panel(minimap_x + 10.0f,
+                        minimap_y + 34.0f,
+                        minimap_w - 20.0f,
+                        minimap_h - 44.0f,
+                        0x1E5A2FD8u,
+                        1.0f);
+
         {
-            int team = engine_get_entity_team(i);
-            float ex = 0.0f;
-            float ez = 0.0f;
-            float normalized_x = 0.0f;
-            float normalized_z = 0.0f;
-            float screen_x = 0.0f;
-            float screen_y = 0.0f;
-            unsigned int color = 0u;
+            int entity_count = engine_get_entity_count();
+            float panel_w = minimap_w - 20.0f;
+            float panel_h = minimap_h - 44.0f;
+            float team_marker_size = 3.0f;
 
-            if (team == (int)CONTROLLER_TEAM_BANANA)
-                color = 0xD8D44DFFu;
-            else if (team == (int)CONTROLLER_TEAM_BEAN)
-                color = 0x4ED362FFu;
-            else
-                continue;
+            for (int i = 0; i < entity_count; i++)
+            {
+                int team = engine_get_entity_team(i);
+                float ex = 0.0f;
+                float ez = 0.0f;
+                float normalized_x = 0.0f;
+                float normalized_z = 0.0f;
+                float screen_x = 0.0f;
+                float screen_y = 0.0f;
+                unsigned int color = 0u;
 
-            ex = engine_get_entity_x(i);
-            ez = engine_get_entity_z(i);
+                if (team == (int)CONTROLLER_TEAM_BANANA)
+                    color = 0xD8D44DFFu;
+                else if (team == (int)CONTROLLER_TEAM_BEAN)
+                    color = 0x4ED362FFu;
+                else
+                    continue;
 
-            normalized_x = ex / world_half_span;
-            normalized_z = ez / world_half_span;
+                ex = engine_get_entity_x(i);
+                ez = engine_get_entity_z(i);
 
-            screen_x = (minimap_x + 10.0f) + ((normalized_x + 1.0f) * 0.5f) * panel_w;
-            screen_y = (minimap_y + 34.0f) + ((normalized_z + 1.0f) * 0.5f) * panel_h;
+                normalized_x = ex / world_half_span;
+                normalized_z = ez / world_half_span;
+
+                screen_x = (minimap_x + 10.0f) + ((normalized_x + 1.0f) * 0.5f) * panel_w;
+                screen_y = (minimap_y + 34.0f) + ((normalized_z + 1.0f) * 0.5f) * panel_h;
+
+                if (screen_x < (minimap_x + 10.0f))
+                    screen_x = minimap_x + 10.0f;
+                if (screen_x > (minimap_x + minimap_w - 10.0f - team_marker_size * 2.0f))
+                    screen_x = minimap_x + minimap_w - 10.0f - team_marker_size * 2.0f;
+                if (screen_y < (minimap_y + 34.0f))
+                    screen_y = minimap_y + 34.0f;
+                if (screen_y > (minimap_y + minimap_h - 10.0f - team_marker_size * 2.0f))
+                    screen_y = minimap_y + minimap_h - 10.0f - team_marker_size * 2.0f;
+
+                engine_ui_panel(screen_x,
+                                screen_y,
+                                team_marker_size * 2.0f,
+                                team_marker_size * 2.0f,
+                                color,
+                                1.0f);
+            }
+        }
+
+        if (has_player)
+        {
+            float px = (player_x / world_half_span);
+            float pz = (player_z / world_half_span);
+            float panel_w = minimap_w - 20.0f;
+            float panel_h = minimap_h - 44.0f;
+            float screen_x = (minimap_x + 10.0f) + ((px + 1.0f) * 0.5f) * panel_w;
+            float screen_y = (minimap_y + 34.0f) + ((pz + 1.0f) * 0.5f) * panel_h;
 
             if (screen_x < (minimap_x + 10.0f))
                 screen_x = minimap_x + 10.0f;
-            if (screen_x > (minimap_x + minimap_w - 10.0f - team_marker_size * 2.0f))
-                screen_x = minimap_x + minimap_w - 10.0f - team_marker_size * 2.0f;
+            if (screen_x > (minimap_x + minimap_w - 10.0f - marker_size * 2.0f))
+                screen_x = minimap_x + minimap_w - 10.0f - marker_size * 2.0f;
             if (screen_y < (minimap_y + 34.0f))
                 screen_y = minimap_y + 34.0f;
-            if (screen_y > (minimap_y + minimap_h - 10.0f - team_marker_size * 2.0f))
-                screen_y = minimap_y + minimap_h - 10.0f - team_marker_size * 2.0f;
+            if (screen_y > (minimap_y + minimap_h - 10.0f - marker_size * 2.0f))
+                screen_y = minimap_y + minimap_h - 10.0f - marker_size * 2.0f;
 
             engine_ui_panel(screen_x,
                             screen_y,
-                            team_marker_size * 2.0f,
-                            team_marker_size * 2.0f,
-                            color,
+                            marker_size * 2.0f,
+                            marker_size * 2.0f,
+                            0x44D46CFFu,
                             1.0f);
         }
-    }
 
-    if (has_player)
-    {
-        float px = (player_x / world_half_span);
-        float pz = (player_z / world_half_span);
-        float panel_w = minimap_w - 20.0f;
-        float panel_h = minimap_h - 44.0f;
-        float screen_x = (minimap_x + 10.0f) + ((px + 1.0f) * 0.5f) * panel_w;
-        float screen_y = (minimap_y + 34.0f) + ((pz + 1.0f) * 0.5f) * panel_h;
+        if (has_target)
+        {
+            float tx = (target_x / world_half_span);
+            float tz = (target_z / world_half_span);
+            float panel_w = minimap_w - 20.0f;
+            float panel_h = minimap_h - 44.0f;
+            float screen_x = (minimap_x + 10.0f) + ((tx + 1.0f) * 0.5f) * panel_w;
+            float screen_y = (minimap_y + 34.0f) + ((tz + 1.0f) * 0.5f) * panel_h;
 
-        if (screen_x < (minimap_x + 10.0f))
-            screen_x = minimap_x + 10.0f;
-        if (screen_x > (minimap_x + minimap_w - 10.0f - marker_size * 2.0f))
-            screen_x = minimap_x + minimap_w - 10.0f - marker_size * 2.0f;
-        if (screen_y < (minimap_y + 34.0f))
-            screen_y = minimap_y + 34.0f;
-        if (screen_y > (minimap_y + minimap_h - 10.0f - marker_size * 2.0f))
-            screen_y = minimap_y + minimap_h - 10.0f - marker_size * 2.0f;
+            if (screen_x < (minimap_x + 10.0f))
+                screen_x = minimap_x + 10.0f;
+            if (screen_x > (minimap_x + minimap_w - 10.0f - marker_size * 2.0f))
+                screen_x = minimap_x + minimap_w - 10.0f - marker_size * 2.0f;
+            if (screen_y < (minimap_y + 34.0f))
+                screen_y = minimap_y + 34.0f;
+            if (screen_y > (minimap_y + minimap_h - 10.0f - marker_size * 2.0f))
+                screen_y = minimap_y + minimap_h - 10.0f - marker_size * 2.0f;
 
-        engine_ui_panel(screen_x,
-                        screen_y,
-                        marker_size * 2.0f,
-                        marker_size * 2.0f,
-                        0x44D46CFFu,
-                        1.0f);
-    }
-
-    if (has_target)
-    {
-        float tx = (target_x / world_half_span);
-        float tz = (target_z / world_half_span);
-        float panel_w = minimap_w - 20.0f;
-        float panel_h = minimap_h - 44.0f;
-        float screen_x = (minimap_x + 10.0f) + ((tx + 1.0f) * 0.5f) * panel_w;
-        float screen_y = (minimap_y + 34.0f) + ((tz + 1.0f) * 0.5f) * panel_h;
-
-        if (screen_x < (minimap_x + 10.0f))
-            screen_x = minimap_x + 10.0f;
-        if (screen_x > (minimap_x + minimap_w - 10.0f - marker_size * 2.0f))
-            screen_x = minimap_x + minimap_w - 10.0f - marker_size * 2.0f;
-        if (screen_y < (minimap_y + 34.0f))
-            screen_y = minimap_y + 34.0f;
-        if (screen_y > (minimap_y + minimap_h - 10.0f - marker_size * 2.0f))
-            screen_y = minimap_y + minimap_h - 10.0f - marker_size * 2.0f;
-
-        engine_ui_panel(screen_x,
-                        screen_y,
-                        marker_size * 2.0f,
-                        marker_size * 2.0f,
-                        0x4A8CFAFFu,
-                        1.0f);
+            engine_ui_panel(screen_x,
+                            screen_y,
+                            marker_size * 2.0f,
+                            marker_size * 2.0f,
+                            0x4A8CFAFFu,
+                            1.0f);
+        }
     }
 
     engine_ui_inventory_panel((float)BANANA_POC_WIDTH - 16.0f, 12.0f);

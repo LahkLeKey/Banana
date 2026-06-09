@@ -1,13 +1,9 @@
-#include "runtime/engine/gameplay_service.h"
-#include "runtime/engine/engine_state.h"
-#include "runtime/engine/demo_frame_export.h"
-#include "runtime/engine/engine_host.h"
+#include "runtime/engine/gameplay/service/gameplay_service.h"
+#include "runtime/engine/state/engine_state.h"
 #include "runtime/controller/attach/controller_attach.h"
 #include "ai/combat_controller.h"
 #include "ai/wildlife_controller.h"
 #include "banana_native_v3.h"
-#include "render/backend.h"
-#include "render/renderer.h"
 
 #include <ctype.h>
 #include <limits.h>
@@ -73,8 +69,6 @@ typedef struct Dx12PlayloopRunner
     FeedbackLoopContext context;
     FeedbackLoopConfig config;
     FILE *artifact;
-    DemoFrameExportState demo_frame_export;
-    Renderer *demo_frame_renderer;
     int page_loaded;
     int tick_cursor;
     int expect_passed;
@@ -166,110 +160,6 @@ static void trim_trailing_newline(char *line)
         line[length - 1] = '\0';
         length--;
     }
-}
-
-#define DEMO_FRAME_DEFAULT_WIDTH 1280
-#define DEMO_FRAME_DEFAULT_HEIGHT 720
-
-static void demo_frame_export_set_context(const char *scenario_name, int tick)
-{
-    RuntimeEngineCaptureContext context;
-
-    memset(&context, 0, sizeof(context));
-    if (scenario_name && scenario_name[0] != '\0')
-    {
-        strncpy(context.scenario_name,
-                scenario_name,
-                sizeof(context.scenario_name) - 1);
-    }
-    context.tick = tick;
-    context.scene_variant = -1;
-    runtime_engine_host_set_capture_context(&context);
-}
-
-static int demo_frame_export_prepare(const FeedbackLoopConfig *config,
-                                     DemoFrameExportState *export_state,
-                                     Renderer **out_renderer)
-{
-    DemoFrameExportConfig export_config;
-
-    if (!export_state)
-        return 0;
-
-    demo_frame_export_config_init(&export_config);
-    demo_frame_export_config_apply_env(&export_config,
-                                       config ? config->snapshot_interval : 1,
-                                       "artifacts/native/032-demo-frame-qa/runs");
-
-    if (export_config.suite_label[0] == '\0')
-    {
-        strncpy(export_config.suite_label,
-                "feedback-loop",
-                sizeof(export_config.suite_label) - 1);
-    }
-
-    if (export_config.run_label[0] == '\0' && config && config->scenario_name)
-    {
-        strncpy(export_config.run_label,
-                config->scenario_name,
-                sizeof(export_config.run_label) - 1);
-    }
-
-    if (!demo_frame_export_begin(export_state, &export_config))
-        return 0;
-
-    if (demo_frame_export_is_enabled(export_state))
-    {
-        *out_renderer = renderer_create(DEMO_FRAME_DEFAULT_WIDTH, DEMO_FRAME_DEFAULT_HEIGHT);
-        if (!*out_renderer)
-            return 0;
-    }
-
-    return 1;
-}
-
-static int demo_frame_export_capture_tick(DemoFrameExportState *export_state,
-                                          Renderer *renderer,
-                                          const char *scenario_name,
-                                          int tick)
-{
-    if (!demo_frame_export_is_enabled(export_state))
-        return 1;
-
-    if (!demo_frame_export_should_capture(export_state, tick))
-        return 1;
-
-    if (!renderer)
-        return 0;
-
-    demo_frame_export_set_context(scenario_name, tick);
-    renderer_begin_frame(renderer);
-    renderer_end_frame(renderer);
-
-    return demo_frame_export_capture_rgba(export_state,
-                                          renderer_get_frame_buffer(renderer),
-                                          renderer_get_frame_width(renderer),
-                                          renderer_get_frame_height(renderer),
-                                          0,
-                                          banana_render_backend_name(banana_render_backend_active()),
-                                          0);
-}
-
-static int demo_frame_export_close(DemoFrameExportState *export_state,
-                                   Renderer **renderer)
-{
-    int result = 1;
-
-    if (export_state && demo_frame_export_is_enabled(export_state))
-        result = demo_frame_export_finalize(export_state);
-
-    if (renderer && *renderer)
-    {
-        renderer_destroy(*renderer);
-        *renderer = NULL;
-    }
-
-    return result;
 }
 
 static int parse_int_arg(const char *raw, int *out_value)
@@ -1632,14 +1522,6 @@ static int execute_ticks(Dx12PlayloopRunner *runner, int tick_count)
         feedback_loop_tick_once(&runner->context, &runner->config);
         runner->tick_cursor++;
 
-        if (!demo_frame_export_capture_tick(&runner->demo_frame_export,
-                                            runner->demo_frame_renderer,
-                                            runner->active_scenario_name,
-                                            runner->tick_cursor))
-        {
-            return 0;
-        }
-
         if ((runner->tick_cursor % runner->config.snapshot_interval) == 0)
             emit_snapshot_dual(runner, "auto");
     }
@@ -2446,13 +2328,6 @@ static int run_scripted_playloop(const FeedbackLoopConfig *config)
     strncpy(runner.active_scenario_name, config->scenario_name, sizeof(runner.active_scenario_name) - 1);
     runner.active_scenario_name[sizeof(runner.active_scenario_name) - 1] = '\0';
 
-    if (!demo_frame_export_prepare(config, &runner.demo_frame_export, &runner.demo_frame_renderer))
-    {
-        fprintf(stderr, "failed to initialize demo frame export\n");
-        status = 1;
-        goto cleanup;
-    }
-
     script = fopen(config->script_path, "r");
     if (!script)
     {
@@ -2545,9 +2420,6 @@ cleanup:
     if (runner.artifact)
         fclose(runner.artifact);
 
-    if (!demo_frame_export_close(&runner.demo_frame_export, &runner.demo_frame_renderer))
-        status = 1;
-
     return status;
 }
 
@@ -2555,15 +2427,12 @@ static int run_feedback_loop(const FeedbackLoopConfig *config)
 {
     FeedbackLoopContext context;
     FILE *artifact = NULL;
-    DemoFrameExportState demo_frame_export;
-    Renderer *demo_frame_renderer = NULL;
     char operator_note[512] = {0};
     const char *note_to_emit = NULL;
     int tick = 0;
     int status = 1;
 
     memset(&context, 0, sizeof(context));
-    demo_frame_export_state_init(&demo_frame_export);
 
     if (!feedback_loop_context_init(&context, -12.0f, -12.0f))
         goto cleanup;
@@ -2571,12 +2440,6 @@ static int run_feedback_loop(const FeedbackLoopConfig *config)
     if (!seed_scenario(&context, config->scenario_kind))
     {
         fprintf(stderr, "failed to seed scenario '%s'\n", config->scenario_name);
-        goto cleanup;
-    }
-
-    if (!demo_frame_export_prepare(config, &demo_frame_export, &demo_frame_renderer))
-    {
-        fprintf(stderr, "failed to initialize demo frame export\n");
         goto cleanup;
     }
 
@@ -2621,15 +2484,6 @@ static int run_feedback_loop(const FeedbackLoopConfig *config)
 
         feedback_loop_tick_once(&context, config);
 
-        if (!demo_frame_export_capture_tick(&demo_frame_export,
-                                            demo_frame_renderer,
-                                            config->scenario_name,
-                                            tick))
-        {
-            status = 1;
-            goto cleanup;
-        }
-
         if (tick == 1 || (tick % config->snapshot_interval) == 0 || tick == config->ticks)
         {
             emit_snapshot(stdout, config->scenario_name, "legacy", &context, tick);
@@ -2665,9 +2519,6 @@ static int run_feedback_loop(const FeedbackLoopConfig *config)
 cleanup:
     if (artifact)
         fclose(artifact);
-
-    if (!demo_frame_export_close(&demo_frame_export, &demo_frame_renderer))
-        status = 1;
 
     feedback_loop_context_destroy(&context);
     return status;

@@ -1,8 +1,8 @@
 #ifndef BANANA_ENGINE_RUNTIME_INPUT_ABI_H
 #define BANANA_ENGINE_RUNTIME_INPUT_ABI_H
 
-#include "../../engine/engine_composition.h"
-#include "../../engine/engine_state.h"
+#include "../../engine/composition/engine_composition.h"
+#include "../../engine/state/engine_state.h"
 #include "../move_target/move_target_service.h"
 
 #ifdef __cplusplus

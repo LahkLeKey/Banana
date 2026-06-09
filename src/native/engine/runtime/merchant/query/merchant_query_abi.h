@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_MERCHANT_QUERY_ABI_H
 #define BANANA_ENGINE_RUNTIME_MERCHANT_QUERY_ABI_H
 
-#include "../../engine/application_service_ports.h"
+#include "../../engine/application/service/application_service_ports.h"
 
 #ifdef __cplusplus
 extern "C"

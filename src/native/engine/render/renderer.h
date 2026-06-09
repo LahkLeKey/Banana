@@ -43,18 +43,8 @@ extern "C"
     /* Set the active camera. */
     void renderer_set_camera(Renderer *r, const Camera *camera);
 
-    /* Finish frame: resolve to frame buffer, optionally read pixels back. */
+    /* Finish frame: resolve the render pass. */
     void renderer_end_frame(Renderer *r);
-
-    /* Return pointer to the RGBA pixel data of the last completed frame.
-     * Buffer size = width * height * 4 bytes.
-     * Pointer is valid until the next renderer_end_frame call. */
-    const unsigned char *renderer_get_frame_buffer(Renderer *r);
-
-    /* Query frame buffer dimensions for export helpers. */
-    int renderer_get_frame_width(Renderer *r);
-    int renderer_get_frame_height(Renderer *r);
-    void renderer_get_frame_dimensions(Renderer *r, int *out_width, int *out_height);
 
     /* Resize internal buffers (call on window resize). */
     void renderer_resize(Renderer *r, int width, int height);
@@ -66,8 +56,6 @@ extern "C"
 
     /* ── C ABI exports (called from game loop) ───────────────────────────────── */
     void engine_render_frame(void);
-    const unsigned char *engine_get_frame_buffer(void);
-    void engine_get_frame_dimensions(int *out_width, int *out_height);
 
 #ifdef __cplusplus
 }

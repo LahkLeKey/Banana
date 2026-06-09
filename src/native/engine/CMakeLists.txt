@@ -60,11 +60,16 @@ set(ENGINE_UI_SOURCES
 )
 
 set(ENGINE_RUNTIME_SOURCES
-  runtime/engine/application_service_ports.c
-  runtime/orchestration/tick/runtime_tick_orchestration.c
-  runtime/orchestration/tick/player_tick_orchestration.c
-  runtime/orchestration/tick/render_tick_orchestration.c
-  runtime/orchestration/tick/terrain_tick_orchestration.c
+  runtime/engine/application/service/application_service_player_port.c
+  runtime/engine/application/service/application_service_render_actor_resolver.c
+  runtime/engine/application/service/application_service_render_model_cache.c
+  runtime/engine/application/service/application_service_render_port.c
+  runtime/engine/application/service/application_service_terrain_port.c
+  runtime/engine/application/service/application_service_ports.c
+  runtime/orchestration/tick/loop/runtime_tick_orchestration.c
+  runtime/orchestration/tick/loop/player_tick_orchestration.c
+  runtime/orchestration/tick/loop/render_tick_orchestration.c
+  runtime/orchestration/tick/loop/terrain_tick_orchestration.c
   runtime/controller/kind/controller_kind_domain.c
   runtime/camera/basis/camera_basis.c
   runtime/camera/follow/camera_follow.c
@@ -72,16 +77,36 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/controller/attach/controller_attach.c
   runtime/controller/runtime/controller_runtime.c
   runtime/controller/sync/controller_sync.c
-  runtime/engine/engine_aux_abi.c
-  runtime/engine/engine_composition.c
-  runtime/engine/demo_frame_export.c
+  runtime/engine/support/engine_aux_abi.c
+  runtime/engine/support/engine_aux_launch_gate.c
+  runtime/engine/composition/engine_composition.c
+  runtime/engine/composition/engine_composition_init.c
+  runtime/engine/composition/engine_composition_shutdown.c
+  runtime/engine/exports/engine_runtime_context.c
+  runtime/engine/exports/engine_exports_core_abi.c
+  runtime/engine/exports/engine_exports_ui_economy.c
+  runtime/engine/exports/engine_exports_war_metrics.c
+  runtime/engine/exports/engine_exports_input_player.c
   runtime/engine/engine_host.c
-  runtime/engine/engine_state.c
-  runtime/engine/engine_lifecycle.c
-  runtime/engine/engine_tick.c
-  runtime/engine/gameplay_model_profile.c
+  runtime/engine/lifecycle/engine_lifecycle_actor_spawn.c
+  runtime/engine/lifecycle/engine_lifecycle_launch_gate.c
+  runtime/engine/lifecycle/engine_lifecycle_spawn_math.c
+  runtime/engine/state/engine_state.c
+  runtime/engine/lifecycle/engine_lifecycle.c
+  runtime/engine/tick/engine_tick.c
+  runtime/engine/gameplay/model/gameplay_model_profile.c
+  runtime/engine/gameplay/service/gameplay_service_model_catalog.c
+  runtime/engine/gameplay/service/gameplay_service_models.c
+  runtime/engine/gameplay/service/gameplay_service_reinforcement_metrics.c
+  runtime/engine/gameplay/service/gameplay_service_reinforcement_spawn.c
+  runtime/engine/gameplay/service/gameplay_service_sentience_behavior.c
+  runtime/engine/gameplay/service/gameplay_service_sentience_decision.c
+  runtime/engine/gameplay/service/gameplay_service_sentience_override_config.c
+  runtime/engine/gameplay/service/gameplay_service_sentience_overrides.c
+  runtime/engine/gameplay/service/gameplay_service_warfront.c
+  runtime/engine/gameplay/service/gameplay_service_warfront_expansion.c
   # Feature 005: keep extracted tick/runtime modularization seams grouped here.
-  runtime/engine/gameplay_service.c
+  runtime/engine/gameplay/service/gameplay_service.c
    runtime/input/abi/input_abi.c
    runtime/input/click/input_click_policy.c
    runtime/input/contract/input_contract.c
@@ -97,18 +122,18 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/parallel/contract/parallel_contract.c
   runtime/parallel/model/parallel_model.c
   runtime/abi/physics/physics_abi.c
-  runtime/player/player_api.c
-  runtime/player/player_merchant_adapter.c
-  runtime/player/player_build_abi.c
-  runtime/player/player_gateway_abi.c
-  runtime/player/player_builds.c
-  runtime/player/player_runtime_service.c
-  runtime/player/player_resource_abi.c
-  runtime/player/player_sync_abi.c
-  runtime/player/player_motion_host.c
-  runtime/player/player_motion.c
-  runtime/player/player_registry.c
-  runtime/player/player_resources.c
+  runtime/player/api/player_api.c
+  runtime/player/build/abi/player_build_abi.c
+  runtime/player/gateway/player_gateway_abi.c
+  runtime/player/build/player_builds.c
+  runtime/player/runtime/player_runtime_service.c
+  runtime/player/resource/player_resource_abi.c
+  runtime/player/sync/player_sync_abi.c
+  runtime/player/runtime/player_motion_host.c
+  runtime/player/motion/player_motion.c
+  runtime/player/registry/player_registry.c
+  runtime/player/resource/player_resources.c
+  runtime/player/merchant/player_merchant_adapter.c
    runtime/interaction/collection/interactive_collection.c
    runtime/interaction/spawner/interactive_object_spawner.c
   runtime/chunk/chunk_stream_packet.c

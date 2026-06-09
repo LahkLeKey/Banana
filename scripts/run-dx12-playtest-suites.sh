@@ -4,12 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${BANANA_NATIVE_BUILD_DIR:-out/v3-native}"
 BUILD_CONFIG="${BANANA_NATIVE_BUILD_CONFIG:-Debug}"
-
-demo_frame_export="${BANANA_DEMO_FRAME_EXPORT:-}"
-demo_frame_output_dir="${BANANA_DEMO_FRAME_OUTPUT_DIR:-$ROOT_DIR/artifacts/native/032-demo-frame-qa/runs}"
-demo_frame_interval="${BANANA_DEMO_FRAME_INTERVAL:-}"
-demo_frame_format="${BANANA_DEMO_FRAME_FORMAT:-}"
-demo_frame_suite="${BANANA_DEMO_FRAME_SUITE:-dx12-playtest}"
+config_set=0
+if [[ -n "${BANANA_NATIVE_BUILD_CONFIG:-}" ]]; then
+    config_set=1
+fi
 
 auto_target=""
 target_hotkey=""
@@ -17,7 +15,6 @@ telemetry=""
 autotest_seconds=""
 playtest_defaults=0
 defaults_locked=0
-record_mode=0
 
 suite="playtest"
 list_only=0
@@ -44,7 +41,7 @@ Options:
     --variant <id>               Add a specific demo scene variant (repeatable)
     --feature <name>             Add a war-sentience feature run (repeatable)
     --build-dir <path>           Build folder (default: out/v3-native)
-    --config <name>              Build config (default: Debug)
+    --config <name>              Build config (default: Debug; playtest suites default to RelWithDebInfo)
     --skip-build                 Skip build step
     --autotest <seconds>         Run DX12 POC in autotest mode for N seconds
     --telemetry                  Enable runtime telemetry
@@ -52,12 +49,6 @@ Options:
     --target-hotkey              Enable target hotkey
     --defaults                   Enable playtest-friendly defaults (telemetry + auto-target)
     --no-defaults                Disable playtest-friendly defaults
-    --record                     Enable demo frame export and autotest (6s if not provided)
-    --demo-frame                 Enable demo frame export
-    --demo-frame-output <path>   Override demo frame output directory
-    --demo-frame-interval <n>    Override demo frame capture interval
-    --demo-frame-format <fmt>    Override demo frame format (default: bmp)
-    --demo-frame-suite <label>   Override demo frame suite label
     --list                       Print suite and variant map
     --help                       Show this help
 
@@ -73,8 +64,6 @@ Suites:
 
 Environment:
   BANANA_NATIVE_BUILD_DIR, BANANA_NATIVE_BUILD_CONFIG
-  BANANA_DEMO_FRAME_EXPORT, BANANA_DEMO_FRAME_OUTPUT_DIR, BANANA_DEMO_FRAME_INTERVAL
-  BANANA_DEMO_FRAME_FORMAT, BANANA_DEMO_FRAME_SUITE
 EOF_USAGE
 }
 
@@ -233,6 +222,7 @@ while [[ $# -gt 0 ]]; do
         --config)
             [[ $# -ge 2 ]] || die "--config requires a value"
             BUILD_CONFIG="$2"
+            config_set=1
             shift 2
             ;;
         --skip-build)
@@ -266,35 +256,6 @@ while [[ $# -gt 0 ]]; do
             defaults_locked=1
             shift
             ;;
-        --record)
-            record_mode=1
-            demo_frame_export=1
-            shift
-            ;;
-        --demo-frame)
-            demo_frame_export=1
-            shift
-            ;;
-        --demo-frame-output)
-            [[ $# -ge 2 ]] || die "--demo-frame-output requires a value"
-            demo_frame_output_dir="$2"
-            shift 2
-            ;;
-        --demo-frame-interval)
-            [[ $# -ge 2 ]] || die "--demo-frame-interval requires a value"
-            demo_frame_interval="$2"
-            shift 2
-            ;;
-        --demo-frame-format)
-            [[ $# -ge 2 ]] || die "--demo-frame-format requires a value"
-            demo_frame_format="$2"
-            shift 2
-            ;;
-        --demo-frame-suite)
-            [[ $# -ge 2 ]] || die "--demo-frame-suite requires a value"
-            demo_frame_suite="$2"
-            shift 2
-            ;;
         --list)
             list_only=1
             shift
@@ -317,6 +278,14 @@ fi
 append_suite_variants "$suite"
 append_suite_features "$suite"
 
+if [[ "$config_set" -eq 0 ]]; then
+    case "$suite" in
+        playtest|showcase|metro|corridor|continent|features|all)
+            BUILD_CONFIG="RelWithDebInfo"
+            ;;
+    esac
+fi
+
 for variant in "${explicit_variants[@]}"; do
     append_variant "$variant"
 done
@@ -329,10 +298,6 @@ if [[ ${#selected_variants[@]} -eq 0 && ${#selected_features[@]} -eq 0 ]]; then
     die "no scene variants or features resolved (pick --suite, --variant, or --feature)"
 fi
 
-if [[ "$record_mode" -eq 1 && -z "$autotest_seconds" ]]; then
-    autotest_seconds=6
-fi
-
 if [[ "$defaults_locked" -eq 0 && ( "$suite" == "playtest" || "$suite" == "features" ) ]]; then
     playtest_defaults=1
 fi
@@ -340,6 +305,8 @@ fi
 if [[ "$playtest_defaults" -eq 1 ]]; then
     telemetry=1
     auto_target=1
+    export BANANA_DX12_POC_FRAME_CAP_INDEX="${BANANA_DX12_POC_FRAME_CAP_INDEX:-1}"
+    export BANANA_DX12_POC_UI_THROTTLE_MS="${BANANA_DX12_POC_UI_THROTTLE_MS:-100}"
 fi
 
 binary_candidates=(
@@ -374,31 +341,6 @@ done
 
 [[ -n "$poc_binary" ]] || die "cannot find banana_engine_win32_dx12_poc under $BUILD_DIR"
 
-is_windows_exe=0
-if [[ "$poc_binary" == *.exe ]]; then
-    is_windows_exe=1
-fi
-
-to_windows_path() {
-    local path="$1"
-
-    if [[ -z "$path" ]]; then
-        printf '%s' ""
-        return
-    fi
-
-    if [[ "$is_windows_exe" -eq 1 ]] && command -v cygpath >/dev/null 2>&1; then
-        cygpath -w "$path"
-    else
-        printf '%s' "$path"
-    fi
-}
-
-demo_frame_output_dir_arg="$demo_frame_output_dir"
-if [[ "$is_windows_exe" -eq 1 ]]; then
-    demo_frame_output_dir_arg="$(to_windows_path "$demo_frame_output_dir")"
-fi
-
 variant_list="${selected_variants[*]}"
 feature_list="${selected_features[*]}"
 if [[ -z "$variant_list" ]]; then
@@ -408,16 +350,7 @@ if [[ -z "$feature_list" ]]; then
     feature_list="none"
 fi
 
-if [[ "$suite" == "features" && -z "${BANANA_DEMO_FRAME_SUITE:-}" && "$demo_frame_suite" == "dx12-playtest" ]]; then
-    demo_frame_suite="dx12-playtest-features"
-fi
-
 echo "[dx12-playtest] suite=$suite variants=$variant_list features=$feature_list"
-
-demo_frame_enabled=0
-if [[ -n "$demo_frame_export" && "$demo_frame_export" != "0" ]]; then
-    demo_frame_enabled=1
-fi
 
 reset_feature_overrides() {
     unset BANANA_WAR_SENTIENCE_MODE_OVERRIDE
@@ -486,7 +419,6 @@ apply_feature_overrides() {
 
 launch_poc() {
     local variant="$1"
-    local run_label="$2"
 
     export BANANA_DX12_POC_SCENE_VARIANT="$variant"
 
@@ -511,19 +443,6 @@ launch_poc() {
         export BANANA_DX12_POC_ENABLE_TARGET_HOTKEY=1
     fi
 
-    if [[ "$demo_frame_enabled" -eq 1 ]]; then
-        export BANANA_DEMO_FRAME_EXPORT="$demo_frame_export"
-        export BANANA_DEMO_FRAME_OUTPUT_DIR="$demo_frame_output_dir_arg"
-        export BANANA_DEMO_FRAME_SUITE="$demo_frame_suite"
-        export BANANA_DEMO_FRAME_RUN_LABEL="$run_label"
-        if [[ -n "$demo_frame_interval" ]]; then
-            export BANANA_DEMO_FRAME_INTERVAL="$demo_frame_interval"
-        fi
-        if [[ -n "$demo_frame_format" ]]; then
-            export BANANA_DEMO_FRAME_FORMAT="$demo_frame_format"
-        fi
-    fi
-
     "$poc_binary"
 }
 
@@ -531,7 +450,7 @@ for feature in "${selected_features[@]}"; do
     echo "[dx12-playtest] launching feature=$feature variant=$feature_variant"
     (
         apply_feature_overrides "$feature"
-        launch_poc "$feature_variant" "feature-$feature"
+        launch_poc "$feature_variant"
     )
 done
 
@@ -539,6 +458,6 @@ for variant in "${selected_variants[@]}"; do
     label="$(variant_label "$variant")"
     echo "[dx12-playtest] launching variant=$variant label=$label"
     (
-        launch_poc "$variant" "playtest-$label"
+        launch_poc "$variant"
     )
 done
