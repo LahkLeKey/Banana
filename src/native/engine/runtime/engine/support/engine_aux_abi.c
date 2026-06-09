@@ -1,10 +1,10 @@
 #include "engine_aux_abi.h"
 
-#include "../controller/attach/controller_attach.h"
-#include "../controller/runtime/controller_runtime.h"
-#include "../controller/sync/controller_sync.h"
-#include "../world/world_metrics.h"
-#include "../world/world_telemetry.h"
+#include "../../controller/attach/controller_attach.h"
+#include "../../controller/runtime/controller_runtime.h"
+#include "../../controller/sync/controller_sync.h"
+#include "../../world/world_metrics.h"
+#include "../../world/world_telemetry.h"
 
 
 RuntimeEngineAuxContext runtime_engine_aux_context(World *world,
