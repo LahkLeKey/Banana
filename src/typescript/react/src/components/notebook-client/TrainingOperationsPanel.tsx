@@ -36,10 +36,17 @@ const buttonStyle: CSSProperties = {
 
 function buildBulkQueueTemplate(selectedFile: string):
     Array<{ title: string; sector: string; rewardXp: number; }> {
+    const normalized = selectedFile.replace(/\\/g, '/');
+    const lane = normalized.split('/').filter(Boolean).pop() ?? selectedFile;
+    const sectorLabel = lane
+        .replace(/\.[^.]+$/, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (match) => match.toUpperCase());
     const sector = selectedFile.length > 0 ? selectedFile : 'default-sector';
+    const targetLabel = sectorLabel.length > 0 ? sectorLabel : 'Frontier Sector';
     return [
         {
-            title: `Survey frontier output in ${sector}`,
+            title: `Survey frontier output in ${targetLabel}`,
             sector,
             rewardXp: 120,
         },

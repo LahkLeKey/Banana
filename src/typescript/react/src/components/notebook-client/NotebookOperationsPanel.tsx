@@ -35,6 +35,18 @@ function deriveThreatIndex(selectedFile: string): string {
     return 'Low';
 }
 
+function deriveProvinceLabel(selectedFile: string): string {
+    if (!selectedFile) {
+        return 'No province selected';
+    }
+
+    const lane = selectedFile.replace(/\\/g, '/').split('/').filter(Boolean).pop() ?? selectedFile;
+    return lane
+        .replace(/\.[^.]+$/, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
 export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
     const {
         selectedFile,
@@ -50,6 +62,7 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
     } = props;
 
     const threatIndex = useMemo(() => deriveThreatIndex(selectedFile), [selectedFile]);
+    const provinceLabel = useMemo(() => deriveProvinceLabel(selectedFile), [selectedFile]);
     const selectedLineCount = useMemo(() => selectedContent.split('\n').length, [selectedContent]);
     const [drawerOpen, setDrawerOpen] = useState(true);
     const [overlayMode, setOverlayMode] = useState<'training' | 'diagnostics' | 'split'>('training');
@@ -378,7 +391,7 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
                 <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
                     <div style={{ borderRadius: 10, border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(8, 13, 28, 0.62)', padding: 10 }}>
                         <div style={{ fontSize: 11, color: '#93c5fd', textTransform: 'uppercase' }}>Province Focus</div>
-                        <div style={{ marginTop: 4, fontSize: 12, color: '#cbd5e1', overflowWrap: 'anywhere' }}>{selectedFile || 'No province selected'}</div>
+                        <div style={{ marginTop: 4, fontSize: 12, color: '#cbd5e1', overflowWrap: 'anywhere' }}>{provinceLabel}</div>
                     </div>
                     <div style={{ borderRadius: 10, border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(8, 13, 28, 0.62)', padding: 10 }}>
                         <div style={{ fontSize: 11, color: '#93c5fd', textTransform: 'uppercase' }}>Deck Status</div>

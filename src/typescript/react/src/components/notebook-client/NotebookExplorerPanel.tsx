@@ -25,7 +25,7 @@ const inputStyle: CSSProperties = {
     padding: '10px 11px',
 };
 
-function deriveSectorMeta(file: string): { title: string; domain: string; lane: string; code: string; } {
+function deriveSectorMeta(file: string): { title: string; domain: string; lane: string; code: string; rarity: 'common' | 'rare' | 'epic'; threat: number; } {
     const normalized = file.replace(/\\/g, '/');
     const parts = normalized.split('/').filter(Boolean);
     const lane = parts.length > 0 ? parts[parts.length - 1] ?? normalized : normalized;
@@ -51,11 +51,17 @@ function deriveSectorMeta(file: string): { title: string; domain: string; lane: 
         domain = 'Runtime';
     }
 
+    const checksum = Math.abs(normalized.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0));
+    const threat = (checksum % 100) + 1;
+    const rarity: 'common' | 'rare' | 'epic' = threat > 80 ? 'epic' : threat > 52 ? 'rare' : 'common';
+
     return {
         title,
         domain,
         lane: laneLabel,
-        code: `${domain.slice(0, 2).toUpperCase()}-${Math.abs(normalized.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 1000}`,
+        code: `${domain.slice(0, 2).toUpperCase()}-${checksum % 1000}`,
+        rarity,
+        threat,
     };
 }
 
@@ -74,28 +80,82 @@ export function NotebookExplorerPanel(props: NotebookExplorerPanelProps) {
         notebookAvailabilityLabel,
     } = props;
     const [showDeveloperIndex, setShowDeveloperIndex] = useState(false);
+    const [showTechnicalBrief, setShowTechnicalBrief] = useState(false);
     const missionFiles = files.slice(0, 24);
+
+    const rarityStyle: Record<'common' | 'rare' | 'epic', { border: string; aura: string; label: string; text: string; }> = {
+        common: {
+            border: 'rgba(148, 163, 184, 0.35)',
+            aura: 'rgba(15, 23, 42, 0.3)',
+            label: 'Common',
+            text: '#cbd5e1',
+        },
+        rare: {
+            border: 'rgba(56, 189, 248, 0.55)',
+            aura: 'rgba(8, 47, 73, 0.38)',
+            label: 'Rare',
+            text: '#bae6fd',
+        },
+        epic: {
+            border: 'rgba(244, 114, 182, 0.62)',
+            aura: 'rgba(131, 24, 67, 0.34)',
+            label: 'Epic',
+            text: '#fbcfe8',
+        },
+    };
 
     return (
         <aside style={{ alignSelf: 'start', minWidth: 0 }}>
             <SurfaceCard title="World Codex" description="Curated source map and notebook artifact index for runtime sectors.">
                 <p style={{ margin: 0, color: '#cbd5e1', lineHeight: 1.6 }}>
-                    Rebuild mission dataset:
+                    Command relay can refresh this mission archive whenever new sectors are published.
                 </p>
-                <pre style={{ margin: '8px 0 0', whiteSpace: 'pre-wrap', color: '#a5f3fc' }}>
-                    bash scripts/scaffold-abi-notebook-workflow.sh
-                </pre>
+
+                <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    <button
+                        type="button"
+                        onClick={() => setShowTechnicalBrief((previous) => !previous)}
+                        style={{
+                            borderRadius: 999,
+                            border: '1px solid rgba(148, 163, 184, 0.35)',
+                            background: showTechnicalBrief ? 'rgba(30, 41, 59, 0.82)' : 'rgba(8, 13, 28, 0.5)',
+                            color: '#cbd5e1',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: '0.04em',
+                            textTransform: 'uppercase',
+                            padding: '6px 10px',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        {showTechnicalBrief ? 'Hide Technical Brief' : 'Show Technical Brief'}
+                    </button>
+                </div>
+
+                {showTechnicalBrief ? (
+                    <pre style={{ margin: '8px 0 0', whiteSpace: 'pre-wrap', color: '#a5f3fc' }}>
+                        bash scripts/scaffold-abi-notebook-workflow.sh
+                    </pre>
+                ) : null}
 
                 <div style={{ marginTop: 6, fontSize: 13, color: '#a5b4fc' }}>{fileCountLabel}</div>
-                <div style={{ marginTop: 4, fontSize: 13, color: '#a5b4fc', overflowWrap: 'anywhere' }}>{maxLinesLabel}</div>
-                <div style={{ marginTop: 4, fontSize: 13, color: '#a5b4fc' }}>{sourceRootLabel}</div>
+                {!showTechnicalBrief ? (
+                    <div style={{ marginTop: 4, fontSize: 13, color: '#93c5fd' }}>
+                        Mission telemetry online. Technical metadata hidden.
+                    </div>
+                ) : (
+                    <>
+                        <div style={{ marginTop: 4, fontSize: 13, color: '#a5b4fc', overflowWrap: 'anywhere' }}>{maxLinesLabel}</div>
+                        <div style={{ marginTop: 4, fontSize: 13, color: '#a5b4fc' }}>{sourceRootLabel}</div>
+                    </>
+                )}
 
                 <div style={{ marginTop: 12, border: '1px solid rgba(45, 212, 191, 0.2)', borderRadius: 10, padding: 10, background: 'rgba(2, 8, 18, 0.6)' }}>
-                    <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#67e8f9', fontWeight: 700 }}>Notebook Artifacts</div>
+                    <div style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#67e8f9', fontWeight: 700 }}>Mission Archive</div>
                     <div style={{ marginTop: 6, fontSize: 13, color: '#cbd5e1' }}>{notebookAvailabilityLabel}</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                        <ActionLink href={notebookPayloadHref}>native-c-catalog.ipynb</ActionLink>
-                        <ActionLink href={notebookManifestHref}>catalog-index.json</ActionLink>
+                        <ActionLink href={notebookPayloadHref}>Sector archive</ActionLink>
+                        <ActionLink href={notebookManifestHref}>Mission index</ActionLink>
                     </div>
                 </div>
 
@@ -103,7 +163,7 @@ export function NotebookExplorerPanel(props: NotebookExplorerPanelProps) {
                     type="text"
                     value={query}
                     onChange={(event) => onChangeQuery(event.target.value)}
-                    placeholder="Search sectors (e.g. gameplay_service)"
+                    placeholder="Search missions (e.g. combat, controller, runtime)"
                     style={inputStyle}
                 />
 
@@ -150,6 +210,7 @@ export function NotebookExplorerPanel(props: NotebookExplorerPanelProps) {
                     <div style={{ marginTop: 12, maxHeight: '52dvh', overflow: 'auto', border: '1px solid rgba(45, 212, 191, 0.2)', borderRadius: 10 }}>
                         {missionFiles.map((file) => {
                             const sector = deriveSectorMeta(file);
+                            const tier = rarityStyle[sector.rarity];
                             return (
                                 <button
                                     key={file}
@@ -162,10 +223,13 @@ export function NotebookExplorerPanel(props: NotebookExplorerPanelProps) {
                                         padding: '10px 11px',
                                         border: 'none',
                                         borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
-                                        background: file === selectedFile ? 'linear-gradient(90deg, rgba(20, 184, 166, 0.28), rgba(8, 47, 73, 0.28))' : 'transparent',
+                                        background: file === selectedFile
+                                            ? `linear-gradient(90deg, ${tier.aura}, rgba(8, 47, 73, 0.28))`
+                                            : 'transparent',
                                         color: '#e2e8f0',
                                         cursor: 'pointer',
                                         gap: 5,
+                                        boxShadow: file === selectedFile ? `inset 0 0 0 1px ${tier.border}` : 'none',
                                     }}
                                 >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', minWidth: 0 }}>
@@ -182,15 +246,15 @@ export function NotebookExplorerPanel(props: NotebookExplorerPanelProps) {
                                         <span style={{
                                             flexShrink: 0,
                                             borderRadius: 999,
-                                            border: '1px solid rgba(45, 212, 191, 0.35)',
+                                            border: `1px solid ${tier.border}`,
                                             padding: '2px 7px',
                                             fontSize: 10,
                                             textTransform: 'uppercase',
                                             letterSpacing: '0.06em',
-                                            color: '#67e8f9',
+                                            color: tier.text,
                                             background: 'rgba(2, 8, 18, 0.62)',
                                         }}>
-                                            {sector.domain}
+                                            {sector.domain} · {tier.label}
                                         </span>
                                     </div>
                                     <div style={{
@@ -209,8 +273,12 @@ export function NotebookExplorerPanel(props: NotebookExplorerPanelProps) {
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap',
                                         textTransform: 'uppercase',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        gap: 8,
                                     }}>
-                                        Objective ID: {sector.code}
+                                        <span>Objective ID: {sector.code}</span>
+                                        <span style={{ color: tier.text }}>Threat {sector.threat}</span>
                                     </div>
                                 </button>
                             );

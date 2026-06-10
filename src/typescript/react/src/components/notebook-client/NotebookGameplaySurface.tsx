@@ -28,6 +28,47 @@ type IntelEvent = {
     readonly detail: string;
 };
 
+function deriveSectorMissionMeta(file: string): { title: string; domain: string; code: string; } {
+    if (!file) {
+        return { title: 'Unassigned Sector', domain: 'Other', code: 'OT-000' };
+    }
+
+    const normalized = file.replace(/\\/g, '/');
+    const lane = normalized.split('/').filter(Boolean).pop() ?? normalized;
+    const title = lane
+        .replace(/\.[^.]+$/, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (match) => match.toUpperCase());
+
+    let domain = 'Other';
+    if (normalized.includes('/ai/')) {
+        domain = 'AI';
+    } else if (normalized.includes('/physics/')) {
+        domain = 'Physics';
+    } else if (normalized.includes('/render/')) {
+        domain = 'Render';
+    } else if (normalized.includes('/world/')) {
+        domain = 'World';
+    } else if (normalized.includes('/runtime/')) {
+        domain = 'Runtime';
+    }
+
+    const checksum = Math.abs(normalized.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 1000;
+    return {
+        title,
+        domain,
+        code: `${domain.slice(0, 2).toUpperCase()}-${String(checksum).padStart(3, '0')}`,
+    };
+}
+
+function normalizeDependencyLabel(rawTarget: string): string {
+    const cleaned = rawTarget.replace(/["<>]/g, '').split('/').pop() ?? rawTarget;
+    return cleaned
+        .replace(/\.[^.]+$/, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
 const codeSurfaceStyle: CSSProperties = {
     width: '100%',
     minHeight: 'min(440px, 56dvh)',
@@ -134,6 +175,10 @@ export function NotebookGameplaySurface({
         const matches = selectedContent.match(/^\s*#include\s+[<"].+[>"]/gm) ?? [];
         return matches.slice(0, 3).map((entry) => entry.replace(/^\s*#include\s+/, ''));
     }, [selectedContent]);
+    const primaryDependencyLabel = useMemo(
+        () => includeTargets[0] ? normalizeDependencyLabel(includeTargets[0]) : 'No dependency route detected',
+        [includeTargets],
+    );
     const ifCount = useMemo(
         () => (selectedContent.match(/\bif\s*\(/g) ?? []).length,
         [selectedContent],
@@ -194,6 +239,10 @@ export function NotebookGameplaySurface({
         }
         return Math.round((completedQuestCount / questProgress.length) * 100);
     }, [completedQuestCount, questProgress.length]);
+    const missionSector = useMemo(
+        () => deriveSectorMissionMeta(selectedFile),
+        [selectedFile],
+    );
     const intelEvents = useMemo<IntelEvent[]>(() => {
         const events: IntelEvent[] = [];
 
@@ -216,7 +265,7 @@ export function NotebookGameplaySurface({
             label: dependencyPulse >= 60 ? 'Dependency Spike' : dependencyPulse >= 30 ? 'Dependency Drift' : 'Dependency Calm',
             severity: dependencyPulse >= 60 ? 'high' : dependencyPulse >= 30 ? 'medium' : 'low',
             detail: includeTargets[0]
-                ? `Primary route anchored to ${includeTargets[0]} (${includeCount} include channels).`
+                ? `Primary route anchored to ${primaryDependencyLabel} (${includeCount} dependency channels).`
                 : `No include route detected in this sector snapshot.`,
         });
 
@@ -240,6 +289,7 @@ export function NotebookGameplaySurface({
         includeTargets,
         loopCount,
         memoryRisk,
+        primaryDependencyLabel,
         pointerCount,
     ]);
     const sourcePreviewWithLineNumbers = useMemo(
@@ -332,7 +382,7 @@ export function NotebookGameplaySurface({
                     pointerEvents: 'none',
                     whiteSpace: 'nowrap',
                 }}>
-                    {selectedFile ? `Sector Live Feed - ${selectedFile}` : 'Mission Staging Bay'}
+                    {selectedFile ? `Sector Live Feed - ${missionSector.title} (${missionSector.code})` : 'Mission Staging Bay'}
                 </div>
 
                 <div style={{
@@ -391,10 +441,10 @@ export function NotebookGameplaySurface({
                                 color: activeTheme.accent,
                                 fontWeight: 700,
                             }}>
-                                Gameplay Camera Ready
+                                Gameplay Camera Ready · {missionSector.domain}
                             </div>
                             <div style={{ marginTop: 5, fontSize: 13, color: '#cbd5e1', lineHeight: 1.45 }}>
-                                Center viewport is now reserved for world visualizations. Expand the bottom dock menus for intel, objectives, and player stats.
+                                Center viewport reserved for world visualizations in {missionSector.title}. Expand bottom dock menus for intel, objectives, and player stats.
                             </div>
                         </div>
                     ) : (
@@ -458,7 +508,7 @@ export function NotebookGameplaySurface({
                                             Intel Dock
                                         </span>
                                         <span style={{ fontSize: 11, color: '#cbd5e1' }}>
-                                            Domain {selectedDomain.toUpperCase()} · {lineCount} lines · {functionCount} calls
+                                            {missionSector.title} · {missionSector.code} · {lineCount} lines · {functionCount} signals
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -551,7 +601,7 @@ export function NotebookGameplaySurface({
                                             <div style={{ borderRadius: 10, border: '1px solid rgba(103, 232, 249, 0.3)', background: 'rgba(8, 47, 73, 0.32)', padding: 9 }}>
                                                 <div style={{ fontSize: 10, color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Dependency Route</div>
                                                 <div style={{ marginTop: 5, color: '#cffafe', fontWeight: 700 }}>
-                                                    {includeTargets[0] ?? 'No include route detected'}
+                                                    {primaryDependencyLabel}
                                                 </div>
                                             </div>
                                         </div>
