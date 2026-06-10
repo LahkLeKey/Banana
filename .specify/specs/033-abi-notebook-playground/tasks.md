@@ -1,42 +1,44 @@
-# Tasks: ABI Notebook Playground Pivot
+# Tasks: Notebook MMO Gameplay Client
 
-**Input**: Design documents from `.specify/specs/033-abi-notebook-playground/`
+**Input**: `.specify/specs/033-abi-notebook-playground/spec.md`
 
-**Prerequisites**: plan.md, spec.md
+**Prerequisites**: spec.md, plan.md
 
 ## Phase 1: Setup
 
-- [ ] T001 Create artifact output directory for generated notebooks at `artifacts/notebooks/`.
-- [ ] T002 Add `scripts/export-native-c-to-notebook.py` to generate consolidated notebook JSON from native C/H files.
-- [ ] T003 Add `scripts/scaffold-abi-notebook-workflow.sh` wrapper to run the generator with sensible defaults.
+- [ ] T001 Confirm `.specify/feature.json` points to `.specify/specs/033-abi-notebook-playground`.
+- [ ] T002 Recreate feature docs: `spec.md`, `plan.md`, `tasks.md`, `quickstart.md`, `contracts/`.
+- [ ] T003 Validate notebook generation baseline with `bash scripts/scaffold-abi-notebook-workflow.sh`.
 
-## Phase 2: Foundational
+## Phase 2: Foundation
 
-- [ ] T004 Wire `.specify/feature.json` to `.specify/specs/033-abi-notebook-playground`.
-- [ ] T005 Define notebook scaffold contract in `.specify/specs/033-abi-notebook-playground/contracts/abi-notebook-workflow.md`.
+- [ ] T004 Create shared notebook client component directory under `src/typescript/react/src/components/notebook-client/`.
+- [ ] T005 Add typed data models/hooks for manifest/notebook/session state under `src/typescript/react/src/lib/`.
+- [ ] T006 Add API orchestration abstraction (fetchers + fallback adapter) for notebook gameplay bootstrap.
 
-## Phase 3: User Story 1 - Native ABI Notebook Export (P1)
+## Phase 3: User Story 1 - Main Menu Gameplay Shell (P1)
 
-**Goal**: Enable interactive prototyping by exporting native C sources to a Jupyter notebook artifact.
+- [ ] T007 [US1] Implement `MainMenuPanel` component with launch CTA and readiness status.
+- [ ] T008 [US1] Implement `NotebookGameplaySurface` component (file-selected code render view).
+- [ ] T009 [US1] Wire `/` route to new orchestrator container that composes main menu + gameplay surface.
+- [ ] T010 [US1] Add missing-asset fallback state with regeneration command guidance.
 
-**Independent Test**: Run `bash scripts/scaffold-abi-notebook-workflow.sh` and verify `artifacts/notebooks/native-c-catalog.ipynb` is generated with code cells for selected C/H files.
+## Phase 4: User Story 2 - Shared Component Refactor (P2)
 
-- [ ] T006 [US1] Implement source discovery and deterministic ordering in `scripts/export-native-c-to-notebook.py`.
-- [ ] T007 [US1] Implement notebook JSON writer with markdown index + per-file code cells in `scripts/export-native-c-to-notebook.py`.
-- [ ] T008 [US1] Add truncation policy and summary metadata in generated notebook output.
+- [ ] T011 [US2] Extract `NotebookStatsCards` component.
+- [ ] T012 [US2] Extract `NotebookFileExplorer` component with filter/search behavior.
+- [ ] T013 [US2] Extract `NotebookHealthPanel` component for manifest/notebook/API status.
+- [ ] T014 [US2] Keep page container slim by delegating state orchestration to custom hooks.
 
-## Phase 4: User Story 2 - Frontend Playground Pivot (P2)
+## Phase 5: User Story 3 - API Orchestration Integration (P3)
 
-**Goal**: Replace marketing-first root page with data-science playground entry.
+- [ ] T015 [US3] Scaffold API client methods for notebook-menu orchestration metadata.
+- [ ] T016 [US3] Integrate API-first load path with local `/notebooks/*` fallback.
+- [ ] T017 [US3] Add integration-safe retries/timeouts and explicit status messaging.
 
-**Independent Test**: Run React smoke import and verify root route points to data science playground page.
+## Phase 6: Validation & Polish
 
-- [ ] T009 [US2] Add `DataSciencePlaygroundPage` in `src/typescript/react/src/pages/DataSciencePlaygroundPage.tsx`.
-- [ ] T010 [US2] Update root route in `src/typescript/react/src/lib/router.tsx` to point at the new page.
-- [ ] T011 [US2] Preserve access to existing routes (`/marketing`, `/download`, `/login`, `/session-room`).
-
-## Phase 5: Polish
-
-- [ ] T012 Document generation and validation steps in `.specify/specs/033-abi-notebook-playground/quickstart.md`.
-- [ ] T013 Validate native build and focused smoke tests after merge reconciliation.
-- [ ] T014 Validate React import smoke and capture command evidence for branch PR notes.
+- [ ] T018 Run `bun run build` in `src/typescript/react` and capture output.
+- [ ] T019 Validate integrated browser flow for menu -> notebook gameplay interactions.
+- [ ] T020 Validate notebook endpoints (`/notebooks/catalog-index.json`, `/notebooks/native-c-catalog.ipynb`) in dashboard mode.
+- [ ] T021 Update quickstart and contract docs to reflect final shared-component architecture.

@@ -25,10 +25,7 @@ export type ApiRootResponse = {
 };
 
 export type GuestAuthStartResponse = {
-  token: string;
-  guestId: string;
-  displayName: string;
-  expiresAt: string;
+  token: string; guestId: string; displayName: string; expiresAt: string;
 };
 
 export type PlayerAccountResponse = {
@@ -44,6 +41,35 @@ export type PlayerInsightsResponse = {
   inventoryTrendSummary: {distinctItems: number; totalQuantity: number;};
   noData: boolean;
   freshnessTimestamp: string;
+};
+
+export type TrainingJob = {
+  jobId: string; playerId: string; title: string; sector: string;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  rewardXp: number;
+  score: number;
+  durationMs: number;
+  antiCheatVerdict: 'pending' | 'passed' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TrainingReward = {
+  rewardId: string; playerId: string; sourceJobId: string; xp: number;
+  status: 'pending' | 'claimed';
+  createdAt: string;
+  claimedAt: string | null;
+};
+
+export type TrainingLeaderboardEntry = {
+  playerId: string; totalScore: number; totalXp: number; completedJobs: number;
+  updatedAt: string;
+};
+
+export type TrainingTransitionEvent = {
+  eventId: string; playerId: string; eventType: string; correlationId: string;
+  details: Record<string, unknown>;
+  createdAt: string;
 };
 
 export const GAME_SESSION_STORAGE_KEY = 'banana-game-session';
@@ -184,7 +210,7 @@ function resolveLocalhostDefaultApiBaseUrl(): string {
 
   const host = window.location?.hostname?.trim().toLowerCase() ?? '';
   if (host === 'localhost' || host === '127.0.0.1') {
-    return 'http://localhost:8080';
+    return 'http://localhost:8081';
   }
 
   if (host === 'banana.engineer' || host === 'www.banana.engineer') {
@@ -358,6 +384,113 @@ export async function fetchPlayerInsights(
     method: 'GET',
     headers: withBearerAuth(token),
   });
+}
+
+export async function scaffoldTrainingJobs(
+    baseUrl: string, token: string,
+    jobs: Array<{title: string; sector: string; rewardXp: number}>):
+    Promise<{playerId: string; jobs: TrainingJob[]}> {
+  return requestJson<{playerId: string; jobs: TrainingJob[]}>(
+      baseUrl,
+      '/v1/player/training/jobs/scaffold',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...withBearerAuth(token),
+        },
+        body: JSON.stringify({jobs}),
+      },
+  );
+}
+
+export async function fetchTrainingJobs(baseUrl: string, token: string):
+    Promise<{playerId: string; jobs: TrainingJob[]}> {
+  return requestJson<{playerId: string; jobs: TrainingJob[]}>(
+      baseUrl, '/v1/player/training/jobs', {
+        method: 'GET',
+        headers: withBearerAuth(token),
+      });
+}
+
+export async function executeTrainingJob(
+    baseUrl: string, token: string, jobId: string,
+    payload: {score: number; durationMs: number; integrityProof: string;}):
+    Promise<{
+      playerId: string; antiCheatPassed: boolean; job: TrainingJob;
+      reward: TrainingReward;
+    }> {
+  return requestJson(
+      baseUrl, `/v1/player/training/jobs/${encodeURIComponent(jobId)}/execute`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...withBearerAuth(token),
+        },
+        body: JSON.stringify(payload),
+      });
+}
+
+export async function fetchTrainingLeaderboard(
+    baseUrl: string, token: string,
+    limit = 25): Promise<{leaderboard: TrainingLeaderboardEntry[]}> {
+  const params = new URLSearchParams({
+    limit: String(Math.max(1, Math.min(200, Math.trunc(limit)))),
+  });
+  return requestJson<{leaderboard: TrainingLeaderboardEntry[]}>(
+      baseUrl,
+      `/v1/player/training/leaderboard?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: withBearerAuth(token),
+      },
+  );
+}
+
+export async function fetchTrainingRewards(baseUrl: string, token: string):
+    Promise<{playerId: string; rewards: TrainingReward[]}> {
+  return requestJson<{playerId: string; rewards: TrainingReward[]}>(
+      baseUrl,
+      '/v1/player/training/rewards',
+      {
+        method: 'GET',
+        headers: withBearerAuth(token),
+      },
+  );
+}
+
+export async function claimTrainingReward(
+    baseUrl: string, token: string,
+    rewardId: string): Promise<{playerId: string; reward: TrainingReward}> {
+  return requestJson(
+      baseUrl,
+      `/v1/player/training/rewards/${encodeURIComponent(rewardId)}/claim`, {
+        method: 'POST',
+        headers: withBearerAuth(token),
+      });
+}
+
+export async function recordTrainingTransitionEvent(
+    baseUrl: string, token: string, payload: {
+      eventType: 'queue.scaffolded'|'queue.execution.started'|
+      'queue.execution.completed'|'reward.claim.attempted'|
+      'reward.claim.succeeded'|'reward.claim.failed';
+      correlationId?: string;
+      details?: Record<string, unknown>;
+    }): Promise<{event: TrainingTransitionEvent}> {
+  return requestJson<{event: TrainingTransitionEvent}>(
+      baseUrl,
+      '/v1/player/training/telemetry/transitions',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...withBearerAuth(token),
+        },
+        body: JSON.stringify(payload),
+      },
+  );
 }
 
 export async function startGameSession(

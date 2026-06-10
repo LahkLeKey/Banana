@@ -25,7 +25,7 @@ services:
     command:
       - sh
       - -lc
-      - sed -i 's/\r$//' /workspace/scripts/ensure-native-linux-artifact.sh && sh /workspace/scripts/ensure-native-linux-artifact.sh && bun install && bun run dev
+      - sed -i 's/\r$//' /workspace/scripts/ensure-native-linux-artifact.sh && sh /workspace/scripts/ensure-native-linux-artifact.sh && (test -d node_modules || bun install) && bun run dev
     environment:
       HOST: 0.0.0.0
       PORT: "8081"
@@ -46,7 +46,7 @@ services:
     command:
       - sh
       - -lc
-      - bun install --cwd /workspace/src/typescript/shared/ui && bun run --cwd /workspace/src/typescript/shared/ui tokens:gen && bun install && bun run dev --host 0.0.0.0 --port 5173
+      - (test -d /workspace/src/typescript/shared/ui/node_modules || bun install --cwd /workspace/src/typescript/shared/ui) && bun run --cwd /workspace/src/typescript/shared/ui tokens:gen && (test -d node_modules || bun install) && bun run dev --host 0.0.0.0 --port 5173
     environment:
       VITE_BANANA_API_BASE_URL: http://localhost:8081
     depends_on:

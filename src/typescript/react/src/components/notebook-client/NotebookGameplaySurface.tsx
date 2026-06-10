@@ -1,56 +1,85 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties } from 'react';
+
+import { Pill, SurfaceCard } from './SurfacePrimitives';
 
 type NotebookGameplaySurfaceProps = {
     readonly selectedFile: string;
     readonly selectedContent: string;
 };
 
-const cardStyle: CSSProperties = {
-    borderRadius: 18,
-    border: "1px solid rgba(45, 212, 191, 0.3)",
-    padding: 18,
-    background: "linear-gradient(170deg, rgba(4, 16, 28, 0.92), rgba(2, 10, 18, 0.96))",
-    boxShadow: "inset 0 1px 0 rgba(94, 234, 212, 0.2)",
-};
-
 const codeSurfaceStyle: CSSProperties = {
-    width: "100%",
-    minHeight: 520,
+    width: '100%',
+    minHeight: 'min(440px, 56dvh)',
+    maxHeight: '62dvh',
     borderRadius: 12,
-    border: "1px solid rgba(45, 212, 191, 0.35)",
-    background: "radial-gradient(circle at top left, rgba(20, 184, 166, 0.14), rgba(2, 6, 23, 0.95) 30%)",
+    border: '1px solid rgba(45, 212, 191, 0.35)',
+    background: 'radial-gradient(circle at top left, rgba(20, 184, 166, 0.14), rgba(2, 6, 23, 0.95) 30%)',
     fontFamily: '"IBM Plex Mono", SFMono-Regular, Menlo, Consolas, monospace',
     fontSize: 13,
     lineHeight: 1.55,
-    color: "#d1fae5",
-    overflow: "auto",
-    whiteSpace: "pre",
+    color: '#d1fae5',
+    overflow: 'auto',
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word',
     padding: 14,
+    position: 'relative',
+};
+
+const hudOverlayStyle: CSSProperties = {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 'min(260px, calc(100% - 20px))',
+    borderRadius: 10,
+    border: '1px solid rgba(94, 234, 212, 0.35)',
+    background: 'linear-gradient(160deg, rgba(8, 25, 38, 0.88), rgba(2, 10, 19, 0.92))',
+    backdropFilter: 'blur(6px)',
+    padding: 10,
+    zIndex: 2,
 };
 
 export function NotebookGameplaySurface({ selectedFile, selectedContent }: NotebookGameplaySurfaceProps) {
     const lineCount = selectedContent.split("\n").length;
+    const hasSelection = selectedFile.trim().length > 0;
 
     return (
-        <article style={cardStyle}>
-            <h2 style={{ margin: "0 0 8px", fontSize: 18, letterSpacing: "0.04em", textTransform: "uppercase" }}>Mission Viewport</h2>
-            <p style={{ margin: 0, color: "#cbd5e1", lineHeight: 1.6 }}>
-                Source-driven runtime feed for the current sector. Treat this as the playable client viewport backed by notebook cells.
-            </p>
-            <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
-                <span style={{ fontSize: 12, color: "#5eead4", border: "1px solid rgba(45, 212, 191, 0.4)", padding: "4px 8px", borderRadius: 999 }}>
-                    Sector: {selectedFile || "none"}
-                </span>
-                <span style={{ fontSize: 12, color: "#a5b4fc", border: "1px solid rgba(148, 163, 184, 0.35)", padding: "4px 8px", borderRadius: 999 }}>
+        <SurfaceCard
+            title="Mission Viewport"
+            description="Source-driven runtime feed for the current sector. Treat this as the playable client viewport backed by notebook cells."
+        >
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <Pill color="#5eead4" borderColor="rgba(45, 212, 191, 0.4)">
+                    Sector: {selectedFile || 'none'}
+                </Pill>
+                <Pill color="#a5b4fc" borderColor="rgba(148, 163, 184, 0.35)">
                     Lines: {lineCount}
-                </span>
-                <span style={{ fontSize: 12, color: "#86efac", border: "1px solid rgba(34, 197, 94, 0.35)", padding: "4px 8px", borderRadius: 999 }}>
+                </Pill>
+                <Pill color="#86efac" borderColor="rgba(34, 197, 94, 0.35)">
                     Renderer: notebook
-                </span>
+                </Pill>
             </div>
             <div style={{ ...codeSurfaceStyle, marginTop: 10 }}>
+                <aside style={hudOverlayStyle}>
+                    <div style={{ fontSize: 11, color: '#67e8f9', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        Overlay HUD
+                    </div>
+                    <div style={{ marginTop: 6, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6 }}>
+                        <div style={{ borderRadius: 8, border: '1px solid rgba(148, 163, 184, 0.25)', padding: 6, background: 'rgba(15, 23, 42, 0.6)' }}>
+                            <div style={{ fontSize: 10, color: '#93c5fd', textTransform: 'uppercase' }}>Lock</div>
+                            <div style={{ fontSize: 12, marginTop: 2 }}>{hasSelection ? 'Live' : 'Idle'}</div>
+                        </div>
+                        <div style={{ borderRadius: 8, border: '1px solid rgba(148, 163, 184, 0.25)', padding: 6, background: 'rgba(15, 23, 42, 0.6)' }}>
+                            <div style={{ fontSize: 10, color: '#93c5fd', textTransform: 'uppercase' }}>Lines</div>
+                            <div style={{ fontSize: 12, marginTop: 2 }}>{lineCount}</div>
+                        </div>
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 11, color: '#cbd5e1', overflowWrap: 'anywhere' }}>
+                        {selectedFile || 'Awaiting sector selection'}
+                    </div>
+                </aside>
                 {selectedContent}
             </div>
-        </article>
+        </SurfaceCard>
     );
 }

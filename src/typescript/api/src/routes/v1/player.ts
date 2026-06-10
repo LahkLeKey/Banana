@@ -12,6 +12,7 @@ import {assertPlayerSelfScope} from '../../middleware/playerScopeAuthorization.t
 
 import {registerV1AccountLinkRemediationRoutes} from './account-link-remediation.ts';
 import {registerV1LaunchGateRoutes} from './launch-gate.ts';
+import {registerV1PlayerTrainingEconomyRoutes} from './player.training-economy.ts';
 
 export async function registerV1PlayerRoutes(app: FastifyInstance):
     Promise<void> {
@@ -71,6 +72,9 @@ export async function registerV1PlayerRoutes(app: FastifyInstance):
     await scope.register(registerV1LaunchGateRoutes, {prefix: '/launch-gate'});
     await scope.register(registerV1AccountLinkRemediationRoutes, {
       prefix: '/account-link-remediation',
+    });
+    await scope.register(registerV1PlayerTrainingEconomyRoutes, {
+      prefix: '/training',
     });
   }, {prefix: '/v1/player'});
 }

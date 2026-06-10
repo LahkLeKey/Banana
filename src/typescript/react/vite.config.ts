@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react';
+import {resolve} from 'node:path';
 import {defineConfig, loadEnv} from 'vite';
 
 // Compile-time injection (spec 009 contract): VITE_BANANA_API_BASE_URL.
@@ -22,6 +23,13 @@ export default defineConfig(({mode}) => {
           JSON.stringify(engineAssetVersion),
     },
     plugins: [react()],
+    resolve: {
+      alias: {
+        '@banana/ui': resolve(__dirname, '../shared/ui/src/index.ts'),
+        '@banana/resilience':
+            resolve(__dirname, '../shared/resilience/src/index.ts'),
+      },
+    },
     server: {host: '0.0.0.0', port: 5173},
     build: {
       sourcemap: false,

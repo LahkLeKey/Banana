@@ -7,7 +7,7 @@ export type NotebookManifest = {
 
 export type NotebookCell = {
   cell_type: 'markdown'|'code';
-  source?: string[];
+  source?: string[] | string;
 };
 
 export type NotebookDocument = {

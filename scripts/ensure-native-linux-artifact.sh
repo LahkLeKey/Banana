@@ -20,11 +20,21 @@ if [ "$(uname -s 2>/dev/null || echo unknown)" != "Linux" ]; then
 fi
 
 if ! command -v cmake >/dev/null 2>&1; then
-  echo "[native-bootstrap] cmake missing; attempting install via apt-get"
-  if command -v apt-get >/dev/null 2>&1; then
-    DEBIAN_FRONTEND=noninteractive apt-get update >/dev/null 2>&1 || true
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      cmake build-essential pkg-config libomp-dev >/dev/null 2>&1 || true
+  if [ "${BANANA_NATIVE_BOOTSTRAP_INSTALL_TOOLS:-0}" = "1" ]; then
+    echo "[native-bootstrap] cmake missing; attempting install via apt-get"
+    if command -v apt-get >/dev/null 2>&1; then
+      if command -v timeout >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive timeout 45s apt-get update >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive timeout 120s apt-get install -y --no-install-recommends \
+          cmake build-essential pkg-config libomp-dev >/dev/null 2>&1 || true
+      else
+        DEBIAN_FRONTEND=noninteractive apt-get update >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+          cmake build-essential pkg-config libomp-dev >/dev/null 2>&1 || true
+      fi
+    fi
+  else
+    echo "[native-bootstrap] cmake missing and tool install disabled; continuing with API fallback world service"
   fi
 fi
 

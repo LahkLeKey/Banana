@@ -1,53 +1,55 @@
-# Implementation Plan: ABI Notebook Playground Pivot
+# Implementation Plan: Notebook MMO Gameplay Client
 
-**Branch**: `033-abi-notebook-playground` | **Date**: 2026-06-08 | **Spec**: .specify/specs/033-abi-notebook-playground/spec.md
+**Branch**: `033-abi-notebook-playground` | **Date**: 2026-06-08 | **Spec**: `.specify/specs/033-abi-notebook-playground/spec.md`
 
 **Input**: Feature specification from `.specify/specs/033-abi-notebook-playground/spec.md`
 
 ## Summary
 
-Create a first-class ABI notebook workflow that snapshots native C sources into a generated Jupyter notebook for interactive prototyping, and pivot the Vercel-served React root experience from marketing-first messaging to a data-science playground launch surface.
+Promote notebooks from artifact-only output to primary gameplay-client runtime UX by introducing a main-menu-first shell, decomposing the current bloated playground page into shared components, and defining API orchestration hooks with static notebook fallback.
 
 ## Technical Context
 
-**Language/Version**: C (existing native sources), TypeScript React (existing app), Python 3 for notebook generation tooling, Bash for orchestration
+**Language/Version**: TypeScript + React (existing Vite/Bun app), Python 3 (artifact generation), Bash (workflow orchestration)
 
-**Primary Dependencies**: Existing Bun + Vite frontend stack, standard Python json/pathlib/argparse libraries, existing native source tree
+**Primary Dependencies**: React, react-router-dom, existing local fetch/browser APIs, existing notebook scaffold scripts
 
-**Storage**: File-based generated artifacts under `artifacts/notebooks`
+**Storage**: File artifacts in `notebooks/`, `src/typescript/react/public/notebooks/`, `artifacts/notebooks/`
 
-**Testing**: Native build + focused CTest smoke, React smoke import, script dry-run generation validation
+**Testing**: React build + integrated browser validation + notebook generation command validation
 
-**Target Platform**: Windows dev shell + Git Bash, CI/Linux-compatible shell scripts, Vercel static deployment
+**Target Platform**: Windows dev + Vercel static deployment + browser runtime
 
-**Project Type**: Monorepo with native runtime, React frontend, and orchestration scripts
+**Project Type**: Web gameplay client shell with generated-data ingestion
 
-**Performance Goals**: Notebook generation under 30s for current native tree; generated notebook size bounded by per-file truncation
+**Performance Goals**: Interactive file filtering/selection stays responsive for 291+ indexed files
 
-**Constraints**: Preserve existing runtime/API contracts, keep Bun contract in React app, avoid requiring notebook kernel setup to generate artifacts
+**Constraints**: Preserve existing routes/contracts; maintain fallback when API orchestration is unavailable
 
-**Scale/Scope**: Native C and header files under `src/native`; one generated consolidated notebook artifact for exploratory workflows
+**Scale/Scope**: Refactor notebook client surface into shared components and menu orchestration boundary
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: Must pass before implementation.*
 
-- [x] Player trust and disclosure alignment verified (this pivot is temporary website messaging scope; no Steam claim mutation required).
-- [x] Storefront governance artifacts identified when public Steam copy is affected (not affected in this feature).
-- [x] Cross-domain contracts mapped for touched layers (native sources read-only ingestion, script workflow, React landing route).
-- [x] Quality gates defined with measurable checks (build, targeted tests, script generation, frontend smoke import).
-- [x] Reproducible delivery path identified (script-generated notebook in tracked artifacts path and Vercel-exposed notebooks route).
+- [x] Player trust and disclosure alignment verified (no storefront claim changes in this phase).
+- [x] Storefront governance artifacts not required for this internal gameplay client pivot.
+- [x] Cross-domain contracts mapped (scripts + React shell + future API layer).
+- [x] Quality gates defined (build, browser runtime behavior, notebook asset loading).
+- [x] Reproducible delivery path identified (scaffold script publishes all notebook endpoints).
 
 ## Project Structure
 
-### Documentation (this feature)
+### Documentation (feature)
 
 ```text
 .specify/specs/033-abi-notebook-playground/
 ├── spec.md
 ├── plan.md
 ├── tasks.md
+├── quickstart.md
 └── contracts/
+    └── notebook-client-orchestration.md
 ```
 
 ### Source Code (repository root)
@@ -57,16 +59,27 @@ scripts/
 ├── scaffold-abi-notebook-workflow.sh
 └── export-native-c-to-notebook.py
 
-artifacts/
-└── notebooks/
+notebooks/
+├── catalog-index.json
+└── native-c-catalog.ipynb
 
 src/typescript/react/src/
-├── lib/router.tsx
-└── pages/DataSciencePlaygroundPage.tsx
+├── pages/
+│   └── DataSciencePlaygroundPage.tsx
+├── components/
+│   └── notebook-client/           # planned extraction target
+└── lib/
+    └── notebook-client/           # planned orchestration hooks/models
 ```
 
-**Structure Decision**: Keep implementation minimal and additive: one shell orchestrator, one Python generator, one new React page, one router pivot.
+**Structure Decision**: Keep deployment simple while reducing page bloat via shared notebook-client components and typed orchestration hooks.
+
+## Delivery Notes
+
+- Notebook artifacts are the gameplay renderer payload for this phase.
+- Main menu UX is treated as gameplay client shell, not marketing landing.
+- API orchestration is introduced behind typed adapters with local file fallback.
 
 ## Complexity Tracking
 
-No constitution violations requiring exceptions.
+No constitution exceptions required.

@@ -19,23 +19,21 @@ export function resolveNotebookApiBaseUrl(): string {
 }
 
 function manifestCandidates(apiBaseUrl: string): string[] {
-  const candidates: string[] = [];
+  const candidates: string[] = ['/notebooks/catalog-index.json'];
   if (apiBaseUrl.length > 0) {
     candidates.push(joinUrl(apiBaseUrl, '/api/notebooks/catalog-index.json'));
     candidates.push(joinUrl(apiBaseUrl, '/notebooks/catalog-index.json'));
   }
-  candidates.push('/notebooks/catalog-index.json');
   return candidates;
 }
 
 function notebookCandidates(apiBaseUrl: string): string[] {
-  const candidates: string[] = [];
+  const candidates: string[] = ['/notebooks/native-c-catalog.ipynb'];
   if (apiBaseUrl.length > 0) {
     candidates.push(
         joinUrl(apiBaseUrl, '/api/notebooks/native-c-catalog.ipynb'));
     candidates.push(joinUrl(apiBaseUrl, '/notebooks/native-c-catalog.ipynb'));
   }
-  candidates.push('/notebooks/native-c-catalog.ipynb');
   return candidates;
 }
 

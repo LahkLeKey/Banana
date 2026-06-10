@@ -103,6 +103,19 @@ As an integration engineer, I can wire notebook gameplay client actions to API o
 - [ ] Stage 9: Add telemetry checkpoints for each onboarding stage transition.
 - [ ] Stage 10: Add production hardening pass (rate limits, guest alias validation policy, abuse controls).
 
+## Gamified ML Frontend Bulk TODO Execution
+
+- [x] TODO 1: Fix notebooks viewport overflow (responsive grid + wrapped code rendering).
+- [x] TODO 2: Keep source explorer paths readable on mobile widths.
+- [x] TODO 3: Add training arena panel scaffold in notebooks client.
+- [x] TODO 4: Add training leaderboard surface with derived scores/streaks.
+- [x] TODO 5: Add reward progression surface (tier, power, XP summary).
+- [x] TODO 6: Scaffold bulk TODO queue actions ("Scaffold Bulk TODOs", "Execute Queue").
+- [x] TODO 7: Wire queue execution to backend training job orchestration API contract.
+- [x] TODO 8: Persist leaderboard/rank/rewards from API instead of derived client-only metrics.
+- [x] TODO 9: Add anti-cheat validation policy for reward claims and leaderboard writes.
+- [x] TODO 10: Add telemetry for queue scaffold/execute and reward unlock transitions.
+
 ## Assumptions
 
 - React continues as the current web gameplay shell runtime.
