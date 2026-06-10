@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import { NotebookHealthPanel } from './NotebookHealthPanel';
+import { HudIcon, HudRailButton, HudStatusChip } from './HudPrimitives';
 import { TrainingOperationsPanel } from './TrainingOperationsPanel';
 import { Pill, SurfaceCard } from './SurfacePrimitives';
 
@@ -32,70 +33,6 @@ function deriveThreatIndex(selectedFile: string): string {
     }
 
     return 'Low';
-}
-
-function HudIcon(props: { kind: 'economy' | 'logistics' | 'relay' | 'intel' | 'split' }) {
-    const common = {
-        width: 14,
-        height: 14,
-        viewBox: '0 0 14 14',
-        fill: 'none',
-        stroke: 'currentColor',
-        strokeWidth: 1.4,
-        strokeLinecap: 'round' as const,
-        strokeLinejoin: 'round' as const,
-        'aria-hidden': true,
-        focusable: false,
-    };
-
-    if (props.kind === 'economy') {
-        return (
-            <svg {...common}>
-                <circle cx="7" cy="7" r="4.5" />
-                <path d="M7 4.1v5.8" />
-                <path d="M5.4 5.3c0-.8.7-1.4 1.6-1.4s1.6.6 1.6 1.4-.7 1.4-1.6 1.4-1.6.6-1.6 1.4.7 1.4 1.6 1.4 1.6-.6 1.6-1.4" />
-            </svg>
-        );
-    }
-
-    if (props.kind === 'logistics') {
-        return (
-            <svg {...common}>
-                <path d="M2.8 4.4h5.4" />
-                <path d="M7.2 2.4l2 2-2 2" />
-                <path d="M11.2 9.6H5.8" />
-                <path d="M6.8 7.6l-2 2 2 2" />
-            </svg>
-        );
-    }
-
-    if (props.kind === 'relay') {
-        return (
-            <svg {...common}>
-                <path d="M7 10.8V7" />
-                <path d="M4.5 5.3c1.6-1.6 3.4-1.6 5 0" />
-                <path d="M3 3.7c2.3-2.3 5.7-2.3 8 0" />
-                <circle cx="7" cy="11.1" r="0.8" fill="currentColor" stroke="none" />
-            </svg>
-        );
-    }
-
-    if (props.kind === 'intel') {
-        return (
-            <svg {...common}>
-                <path d="M2.3 7c1.2-2 2.8-3 4.7-3s3.5 1 4.7 3c-1.2 2-2.8 3-4.7 3s-3.5-1-4.7-3Z" />
-                <circle cx="7" cy="7" r="1.4" />
-            </svg>
-        );
-    }
-
-    return (
-        <svg {...common}>
-            <path d="M4 2.8v8.4" />
-            <path d="M10 2.8v8.4" />
-            <path d="M4 7h6" />
-        </svg>
-    );
 }
 
 export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
@@ -235,136 +172,71 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
                         </div>
 
                         <div style={{ display: 'grid', gap: 6 }}>
-                            <button
-                                type="button"
+                            <HudRailButton
                                 title="Economy overview"
+                                active={overlayMode === 'training'}
+                                color="#fef3c7"
+                                activeBorderColor="rgba(251, 191, 36, 0.75)"
+                                activeBackground="rgba(120, 53, 15, 0.38)"
                                 onClick={() => {
                                     setOverlayMode('training');
                                     setDrawerOpen(true);
-                                }}
-                                style={{
-                                    borderRadius: 10,
-                                    border: overlayMode === 'training' ? '1px solid rgba(251, 191, 36, 0.75)' : '1px solid rgba(148, 163, 184, 0.4)',
-                                    background: overlayMode === 'training' ? 'rgba(120, 53, 15, 0.38)' : 'rgba(8, 13, 28, 0.55)',
-                                    color: '#fef3c7',
-                                    padding: '8px 4px',
-                                    cursor: 'pointer',
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    lineHeight: 1.1,
-                                    fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 4,
                                 }}
                             >
                                 <span style={{ display: 'inline-flex', color: '#fcd34d' }}><HudIcon kind="economy" /></span>
-                            </button>
-                            <button
-                                type="button"
+                            </HudRailButton>
+                            <HudRailButton
                                 title="Logistics operations"
+                                active={overlayMode === 'training'}
+                                color="#fef3c7"
+                                activeBorderColor="rgba(251, 191, 36, 0.75)"
+                                activeBackground="rgba(120, 53, 15, 0.38)"
                                 onClick={() => {
                                     setOverlayMode('training');
                                     setDrawerOpen(true);
                                 }}
-                                style={{
-                                    borderRadius: 10,
-                                    border: overlayMode === 'training' ? '1px solid rgba(251, 191, 36, 0.75)' : '1px solid rgba(148, 163, 184, 0.4)',
-                                    background: overlayMode === 'training' ? 'rgba(120, 53, 15, 0.38)' : 'rgba(8, 13, 28, 0.55)',
-                                    color: '#fef3c7',
-                                    padding: '8px 4px',
-                                    cursor: 'pointer',
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    lineHeight: 1.1,
-                                    fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 4,
-                                }}
                             >
                                 <span style={{ display: 'inline-flex', color: '#fef3c7' }}><HudIcon kind="logistics" /></span>
-                            </button>
-                            <button
-                                type="button"
+                            </HudRailButton>
+                            <HudRailButton
                                 title="Relay diagnostics"
+                                active={overlayMode === 'diagnostics'}
+                                color="#cffafe"
+                                activeBorderColor="rgba(34, 211, 238, 0.75)"
+                                activeBackground="rgba(8, 47, 73, 0.46)"
                                 onClick={() => {
                                     setOverlayMode('diagnostics');
                                     setDrawerOpen(true);
-                                }}
-                                style={{
-                                    borderRadius: 10,
-                                    border: overlayMode === 'diagnostics' ? '1px solid rgba(34, 211, 238, 0.75)' : '1px solid rgba(148, 163, 184, 0.4)',
-                                    background: overlayMode === 'diagnostics' ? 'rgba(8, 47, 73, 0.46)' : 'rgba(8, 13, 28, 0.55)',
-                                    color: '#cffafe',
-                                    padding: '8px 4px',
-                                    cursor: 'pointer',
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    lineHeight: 1.1,
-                                    fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 4,
                                 }}
                             >
                                 <span style={{ display: 'inline-flex', color: '#67e8f9' }}><HudIcon kind="relay" /></span>
-                            </button>
-                            <button
-                                type="button"
+                            </HudRailButton>
+                            <HudRailButton
                                 title="Intel diagnostics"
+                                active={overlayMode === 'diagnostics'}
+                                color="#cffafe"
+                                activeBorderColor="rgba(34, 211, 238, 0.75)"
+                                activeBackground="rgba(8, 47, 73, 0.46)"
                                 onClick={() => {
                                     setOverlayMode('diagnostics');
                                     setDrawerOpen(true);
                                 }}
-                                style={{
-                                    borderRadius: 10,
-                                    border: overlayMode === 'diagnostics' ? '1px solid rgba(34, 211, 238, 0.75)' : '1px solid rgba(148, 163, 184, 0.4)',
-                                    background: overlayMode === 'diagnostics' ? 'rgba(8, 47, 73, 0.46)' : 'rgba(8, 13, 28, 0.55)',
-                                    color: '#cffafe',
-                                    padding: '8px 4px',
-                                    cursor: 'pointer',
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    lineHeight: 1.1,
-                                    fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 4,
-                                }}
                             >
                                 <span style={{ display: 'inline-flex', color: '#cffafe' }}><HudIcon kind="intel" /></span>
-                            </button>
-                            <button
-                                type="button"
+                            </HudRailButton>
+                            <HudRailButton
                                 title="Split logistics and diagnostics"
+                                active={overlayMode === 'split'}
+                                color="#99f6e4"
+                                activeBorderColor="rgba(45, 212, 191, 0.75)"
+                                activeBackground="rgba(15, 118, 110, 0.34)"
                                 onClick={() => {
                                     setOverlayMode('split');
                                     setDrawerOpen(true);
                                 }}
-                                style={{
-                                    borderRadius: 10,
-                                    border: overlayMode === 'split' ? '1px solid rgba(45, 212, 191, 0.75)' : '1px solid rgba(148, 163, 184, 0.4)',
-                                    background: overlayMode === 'split' ? 'rgba(15, 118, 110, 0.34)' : 'rgba(8, 13, 28, 0.55)',
-                                    color: '#99f6e4',
-                                    padding: '8px 4px',
-                                    cursor: 'pointer',
-                                    fontSize: 10,
-                                    fontWeight: 700,
-                                    lineHeight: 1.1,
-                                    fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 4,
-                                }}
                             >
                                 <span style={{ display: 'inline-flex', color: '#99f6e4' }}><HudIcon kind="split" /></span>
-                            </button>
+                            </HudRailButton>
                         </div>
 
                         <button
@@ -443,18 +315,11 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
                                 <Pill color="#86efac" borderColor="rgba(34, 197, 94, 0.35)">Intel: {selectedLineCount}</Pill>
                             </div>
 
-                            <div style={{
-                                borderRadius: 8,
-                                border: '1px solid rgba(148, 163, 184, 0.24)',
-                                background: 'rgba(8, 13, 28, 0.46)',
-                                color: '#cbd5e1',
-                                fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
-                                fontSize: 10,
-                                letterSpacing: '0.04em',
-                                textTransform: 'uppercase',
-                                padding: '6px 8px',
-                            }}>
-                                Mode: {overlayModeLabel} | Net: {networkStatusLabel} | Auth: Server | Deck: {deckStatusLabel}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                <HudStatusChip label="Mode" value={overlayModeLabel} color="#67e8f9" borderColor="rgba(45, 212, 191, 0.32)" />
+                                <HudStatusChip label="Net" value={networkStatusLabel} color="#93c5fd" borderColor="rgba(148, 163, 184, 0.26)" />
+                                <HudStatusChip label="Auth" value="Server" color="#fcd34d" borderColor="rgba(251, 191, 36, 0.28)" />
+                                <HudStatusChip label="Deck" value={deckStatusLabel} color="#99f6e4" borderColor="rgba(45, 212, 191, 0.3)" />
                             </div>
                         </div>
 

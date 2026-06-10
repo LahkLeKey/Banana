@@ -31,7 +31,11 @@ export function buildCellLookup(notebook: NotebookDocument|null):
     }
 
     const filePath = header.replace(/^\/\/\s*source:\s*/, '').trim();
-    const content = sourceLines.slice(1).join('');
+    const rawContent = sourceLines.slice(1).join('');
+    const content = rawContent.replace(/\\n/g, '\n')
+                        .replace(/\\t/g, '\t')
+                        .replace(/\\r/g, '')
+                        .replace(/\\\\/g, '\\');
     lookup.set(filePath, content);
   }
 

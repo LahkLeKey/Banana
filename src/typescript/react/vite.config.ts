@@ -30,7 +30,8 @@ export default defineConfig(({mode}) => {
             resolve(__dirname, '../shared/resilience/src/index.ts'),
       },
     },
-    server: {host: '0.0.0.0', port: 5173},
+    server:
+        {host: '0.0.0.0', port: 5173, watch: {usePolling: true, interval: 800}},
     build: {
       sourcemap: false,
       rollupOptions: {
