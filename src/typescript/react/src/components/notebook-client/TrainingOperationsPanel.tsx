@@ -1,4 +1,4 @@
-import { readStoredAuthSession } from '@banana/ui';
+import { readStoredAuthSession, RouteSubActionBar } from '@banana/ui';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 
 import {
@@ -15,7 +15,6 @@ import {
     type TrainingLeaderboardEntry,
     type TrainingReward,
 } from '../../lib/api';
-import { SurfaceCard } from './SurfacePrimitives';
 
 type TrainingOperationsPanelProps = {
     readonly selectedFile: string;
@@ -454,12 +453,9 @@ export function TrainingOperationsPanel(
     }
 
     return (
-        <SurfaceCard
-            title="Logistics Directorate"
-            tone="amber"
-            description="Province-scale command surface for planning orders, resolving cycles, and collecting stipends across the realm."
-        >
-            {content}
-        </SurfaceCard>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, minHeight: 0 }}>
+            <RouteSubActionBar meta="Logistics Directorate · Province command surface" />
+            <div style={{ padding: '8px 10px' }}>{content}</div>
+        </div>
     );
 }

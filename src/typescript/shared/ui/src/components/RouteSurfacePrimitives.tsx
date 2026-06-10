@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react';
 
-type SurfaceTone = 'teal' | 'amber';
+export type RouteSurfaceTone = 'teal' | 'amber';
 
-const toneStyles: Record<SurfaceTone, { border: string; background: string; }> = {
+const toneStyles: Record<RouteSurfaceTone, { border: string; background: string; }> = {
     teal: {
         border: '1px solid rgba(45, 212, 191, 0.26)',
         background: 'linear-gradient(170deg, rgba(8, 21, 33, 0.92), rgba(4, 11, 22, 0.96))',
@@ -13,16 +13,16 @@ const toneStyles: Record<SurfaceTone, { border: string; background: string; }> =
     },
 };
 
-type SurfaceCardProps = {
-    title: string;
-    description?: string;
-    tone?: SurfaceTone;
-    children: ReactNode;
-    aside?: ReactNode;
+type RouteSurfaceCardProps = {
+    readonly title: string;
+    readonly description?: string;
+    readonly tone?: RouteSurfaceTone;
+    readonly children: ReactNode;
+    readonly aside?: ReactNode;
 };
 
-export function SurfaceCard(
-    { title, description, tone = 'teal', children, aside }: SurfaceCardProps) {
+export function RouteSurfaceCard(
+    { title, description, tone = 'teal', children, aside }: RouteSurfaceCardProps) {
     const toneStyle = toneStyles[tone];
     return (
         <article style={{
@@ -54,8 +54,14 @@ export function SurfaceCard(
     );
 }
 
-export function StatTile(
-    { label, value, accent = '#93c5fd' }: { label: string; value: ReactNode; accent?: string; }) {
+type RouteStatTileProps = {
+    readonly label: string;
+    readonly value: ReactNode;
+    readonly accent?: string;
+};
+
+export function RouteStatTile(
+    { label, value, accent = '#93c5fd' }: RouteStatTileProps) {
     return (
         <article style={{
             borderRadius: 12,
@@ -76,8 +82,14 @@ export function StatTile(
     );
 }
 
-export function Pill(
-    { children, color, borderColor }: { children: ReactNode; color: string; borderColor: string; }) {
+type RoutePillProps = {
+    readonly children: ReactNode;
+    readonly color: string;
+    readonly borderColor: string;
+};
+
+export function RoutePill(
+    { children, color, borderColor }: RoutePillProps) {
     return (
         <span style={{
             fontSize: 12,
@@ -92,9 +104,14 @@ export function Pill(
     );
 }
 
-export function ActionLink(
-    { href, children, emphasis = 'secondary' }:
-        { href: string; children: ReactNode; emphasis?: 'primary' | 'secondary'; }) {
+type RouteActionLinkPrimitiveProps = {
+    readonly href: string;
+    readonly children: ReactNode;
+    readonly emphasis?: 'primary' | 'secondary';
+};
+
+export function RouteActionLinkPrimitive(
+    { href, children, emphasis = 'secondary' }: RouteActionLinkPrimitiveProps) {
     const baseStyle: CSSProperties = {
         display: 'inline-flex',
         alignItems: 'center',

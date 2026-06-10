@@ -9,6 +9,20 @@ export type {EngineStatus, RadialDirection,} from './components/GameEngineTypes'
 export {computeMoveAxes, getDirectionFromTouch, isMovementKey, MOVEMENT_KEYS, RADIAL_CONFIG,} from './components/GameEngineTypes';
 export type {RetryButtonProps} from './components/RetryButton';
 export {RETRY_BUTTON_COPY, RetryButton} from './components/RetryButton';
+export {RouteDeckTransition} from './components/RouteDeckTransition';
+export type {RouteDockCorner, RouteDockEntry} from './components/RouteDockGrid';
+export {RouteDockGrid} from './components/RouteDockGrid';
+export {RouteFilePickerOverlay} from './components/RouteFilePickerOverlay';
+export {RouteHudControlStrip} from './components/RouteHudControlStrip';
+export type {RouteDescriptorAction} from './components/RouteModeDescriptorCard';
+export {RouteModeDescriptorCard} from './components/RouteModeDescriptorCard';
+export {RouteActionButton, RouteActionLink, RouteActionsRow, RouteBody, RouteEyebrow, RouteFieldLabel, RouteInfoCard, RouteInfoGrid, RouteMetaText, RoutePanel, RouteShell, RouteTextInput, RouteTitle,} from './components/RouteScaffold';
+export type {RouteSubActionTab} from './components/RouteSubActionBar';
+export {RouteSubActionBar, RouteSubActionLink} from './components/RouteSubActionBar';
+export type {RouteSurfaceTone} from './components/RouteSurfacePrimitives';
+export {RouteActionLinkPrimitive, RoutePill, RouteStatTile, RouteSurfaceCard} from './components/RouteSurfacePrimitives';
+export type {WorkflowDepth, WorkflowOverlayModel, WorkflowStepOption,} from './components/WorkflowOrchestrator';
+export {WorkflowCenterToolbar, WorkflowOverlayStack,} from './components/WorkflowOrchestrator';
 export type {Tokens} from './tokens';
 export {tokens} from './tokens';
 

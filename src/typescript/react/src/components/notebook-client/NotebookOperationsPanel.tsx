@@ -1,9 +1,9 @@
+import { RoutePill as Pill, RouteSubActionBar } from '@banana/ui';
 import { useMemo, useState } from 'react';
 
 import { NotebookHealthPanel } from './NotebookHealthPanel';
 import { HudIcon, HudRailButton, HudStatusChip } from './HudPrimitives';
 import { TrainingOperationsPanel } from './TrainingOperationsPanel';
-import { Pill, SurfaceCard } from './SurfacePrimitives';
 
 type NotebookOperationsPanelProps = {
     selectedFile: string;
@@ -344,194 +344,31 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
     }
 
     return (
-        <SurfaceCard
-            title="Command Deck"
-            description="Central management panel for province posture, logistics orders, and relay diagnostics."
-        >
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {/* Sub-action bar: mode tabs replace card header + pill rows + routing section */}
+            <RouteSubActionBar
+                tabs={[
+                    { id: 'training', label: 'Logistics' },
+                    { id: 'diagnostics', label: 'Relay' },
+                    { id: 'split', label: 'Split' },
+                ]}
+                activeTab={overlayMode}
+                onTabChange={(id) => setOverlayMode(id as 'training' | 'diagnostics' | 'split')}
+                meta={`${provinceLabel} · Risk ${threatIndex} · ${indexedFileCount} sectors · ${selectedLineCount} lines`}
+            />
+
+            {/* Status chips inline below bar — no wrapper card */}
+            <div style={{ display: 'flex', gap: 6, padding: '6px 12px', borderBottom: '1px solid rgba(45, 212, 191, 0.08)', flexWrap: 'wrap', flexShrink: 0 }}>
                 <Pill color="#fcd34d" borderColor="rgba(251, 191, 36, 0.4)">Risk: {threatIndex}</Pill>
-                <Pill color="#93c5fd" borderColor="rgba(148, 163, 184, 0.35)">Provinces: {indexedFileCount}</Pill>
-                <Pill color="#93c5fd" borderColor="rgba(148, 163, 184, 0.35)">Cells: {notebookCellCount}</Pill>
-                <Pill color="#86efac" borderColor="rgba(34, 197, 94, 0.35)">Intel Lines: {selectedLineCount}</Pill>
+                <Pill color="#93c5fd" borderColor="rgba(148, 163, 184, 0.35)">{indexedFileCount} sectors</Pill>
+                <Pill color="#86efac" borderColor="rgba(34, 197, 94, 0.35)">{selectedLineCount} lines</Pill>
+                <Pill color={loading ? '#fcd34d' : '#86efac'} borderColor={loading ? 'rgba(251, 191, 36, 0.3)' : 'rgba(34, 197, 94, 0.3)'}>{networkStatusLabel}</Pill>
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                <Pill color="#99f6e4" borderColor="rgba(45, 212, 191, 0.65)">Strategy Deck</Pill>
-                <Pill color="#fcd34d" borderColor="rgba(251, 191, 36, 0.5)">Logistics Deck</Pill>
-                <Pill color="#67e8f9" borderColor="rgba(45, 212, 191, 0.45)">Relay Deck</Pill>
-                <button
-                    type="button"
-                    onClick={() => setDrawerOpen((current) => !current)}
-                    style={{
-                        marginLeft: 'auto',
-                        borderRadius: 999,
-                        border: '1px solid rgba(45, 212, 191, 0.45)',
-                        background: drawerOpen ? 'rgba(13, 148, 136, 0.22)' : 'rgba(8, 13, 28, 0.5)',
-                        color: '#e2e8f0',
-                        padding: '6px 12px',
-                        cursor: 'pointer',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                    }}
-                >
-                    {drawerOpen ? 'Collapse Deck' : 'Open Deck'}
-                </button>
+            {/* Mode content — flat, no nested card */}
+            <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 10 }}>
+                {renderDrawerContent()}
             </div>
-
-            <section style={{
-                position: 'relative',
-                marginTop: 12,
-                borderRadius: 12,
-                border: '1px solid rgba(45, 212, 191, 0.25)',
-                background: 'linear-gradient(165deg, rgba(2, 8, 18, 0.82), rgba(3, 15, 27, 0.76))',
-                minHeight: 320,
-                padding: 12,
-            }}>
-                <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-                    <div style={{ borderRadius: 10, border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(8, 13, 28, 0.62)', padding: 10 }}>
-                        <div style={{ fontSize: 11, color: '#93c5fd', textTransform: 'uppercase' }}>Province Focus</div>
-                        <div style={{ marginTop: 4, fontSize: 12, color: '#cbd5e1', overflowWrap: 'anywhere' }}>{provinceLabel}</div>
-                    </div>
-                    <div style={{ borderRadius: 10, border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(8, 13, 28, 0.62)', padding: 10 }}>
-                        <div style={{ fontSize: 11, color: '#93c5fd', textTransform: 'uppercase' }}>Deck Status</div>
-                        <div style={{ marginTop: 4, fontWeight: 700 }}>{drawerOpen ? 'Deck Open' : 'Deck Parked'}</div>
-                    </div>
-                    <div style={{ borderRadius: 10, border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(8, 13, 28, 0.62)', padding: 10 }}>
-                        <div style={{ fontSize: 11, color: '#93c5fd', textTransform: 'uppercase' }}>Network Load</div>
-                        <div style={{ marginTop: 4, fontWeight: 700 }}>{loading ? 'Syncing' : 'Stable'}</div>
-                    </div>
-                </div>
-
-                <div style={{ marginTop: 12 }}>
-                    <div style={{
-                        borderRadius: 10,
-                        border: '1px solid rgba(148, 163, 184, 0.22)',
-                        background: 'rgba(8, 13, 28, 0.4)',
-                        padding: 10,
-                        minHeight: 96,
-                    }}>
-                        <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#93c5fd', letterSpacing: '0.06em' }}>
-                            Deck Routing
-                        </div>
-                        <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setOverlayMode('training');
-                                    setDrawerOpen(true);
-                                }}
-                                style={{
-                                    borderRadius: 999,
-                                    border: overlayMode === 'training' ? '1px solid rgba(251, 191, 36, 0.7)' : '1px solid rgba(148, 163, 184, 0.35)',
-                                    background: overlayMode === 'training' ? 'rgba(120, 53, 15, 0.35)' : 'rgba(8, 13, 28, 0.45)',
-                                    color: '#fef3c7',
-                                    padding: '6px 11px',
-                                    cursor: 'pointer',
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                }}
-                            >
-                                Logistics
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setOverlayMode('diagnostics');
-                                    setDrawerOpen(true);
-                                }}
-                                style={{
-                                    borderRadius: 999,
-                                    border: overlayMode === 'diagnostics' ? '1px solid rgba(34, 211, 238, 0.7)' : '1px solid rgba(148, 163, 184, 0.35)',
-                                    background: overlayMode === 'diagnostics' ? 'rgba(8, 47, 73, 0.45)' : 'rgba(8, 13, 28, 0.45)',
-                                    color: '#cffafe',
-                                    padding: '6px 11px',
-                                    cursor: 'pointer',
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                }}
-                            >
-                                Relay
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setOverlayMode('split');
-                                    setDrawerOpen(true);
-                                }}
-                                style={{
-                                    borderRadius: 999,
-                                    border: overlayMode === 'split' ? '1px solid rgba(45, 212, 191, 0.7)' : '1px solid rgba(148, 163, 184, 0.35)',
-                                    background: overlayMode === 'split' ? 'rgba(15, 118, 110, 0.3)' : 'rgba(8, 13, 28, 0.45)',
-                                    color: '#99f6e4',
-                                    padding: '6px 11px',
-                                    cursor: 'pointer',
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                }}
-                            >
-                                Split View
-                            </button>
-                        </div>
-                        <div style={{ marginTop: 8, color: '#cbd5e1', fontSize: 12 }}>
-                            {drawerOpen ? `Deck active: ${overlayMode}` : 'Deck parked. Open deck to view panel content.'}
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{
-                    position: 'absolute',
-                    right: 12,
-                    top: 72,
-                    bottom: 12,
-                    width: 'min(540px, calc(100% - 24px))',
-                    borderRadius: 12,
-                    border: '1px solid rgba(45, 212, 191, 0.32)',
-                    background: 'linear-gradient(165deg, rgba(2, 10, 20, 0.96), rgba(3, 20, 33, 0.94))',
-                    boxShadow: '0 24px 44px rgba(2, 6, 23, 0.5)',
-                    padding: 10,
-                    overflowY: 'auto',
-                    transform: drawerOpen ? 'translateX(0)' : 'translateX(calc(100% + 18px))',
-                    opacity: drawerOpen ? 1 : 0,
-                    pointerEvents: drawerOpen ? 'auto' : 'none',
-                    transition: 'transform 220ms ease, opacity 180ms ease',
-                }}>
-                    <div style={{
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 2,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: 8,
-                        marginBottom: 10,
-                        paddingBottom: 8,
-                        background: 'linear-gradient(180deg, rgba(2, 10, 20, 0.96), rgba(2, 10, 20, 0.7))',
-                    }}>
-                        <div style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#67e8f9' }}>
-                            {overlayMode === 'split' ? 'Split Command Deck' : `${overlayMode} Command Deck`}
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setDrawerOpen(false)}
-                            style={{
-                                borderRadius: 999,
-                                border: '1px solid rgba(148, 163, 184, 0.35)',
-                                background: 'rgba(8, 13, 28, 0.45)',
-                                color: '#e2e8f0',
-                                fontSize: 11,
-                                fontWeight: 700,
-                                padding: '5px 10px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Hide
-                        </button>
-                    </div>
-
-                    {renderDrawerContent()}
-                </div>
-            </section>
-        </SurfaceCard>
+        </div>
     );
 }

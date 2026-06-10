@@ -1,3 +1,4 @@
+import { RouteDeckTransition, RouteDockGrid, RouteFilePickerOverlay, RouteHudControlStrip } from '@banana/ui';
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -9,7 +10,6 @@ import { NotebookHealthPanel } from '../components/notebook-client/NotebookHealt
 import { NotebookOperationsPanel } from '../components/notebook-client/NotebookOperationsPanel';
 import { RouteModePanel } from '../components/notebook-client/RouteModePanel';
 import { withErrorBoundary } from '../components/errors/withErrorBoundary';
-import { HudActionBar, HudActionButton, HudCornerDock, HudDockSurface, HudFilePicker } from '../components/notebook-client/HudPrimitives';
 import {
     buildQuestProgress,
     calculateLevel,
@@ -19,6 +19,7 @@ import {
     deriveSectorRarity,
     type SectorDomain,
 } from '../lib/notebook-client/gamification';
+import { useNotebookLayoutStore } from '../lib/notebook-client/layoutStore';
 import { resolveRouteHudPreset, type NotebookRouteMode } from '../lib/notebook-client/routeModeConfig';
 import { useNotebookClient } from '../lib/notebook-client/useNotebookClient';
 
@@ -56,39 +57,8 @@ const stageStyle: CSSProperties = {
     position: 'relative',
     height: '100dvh',
     overflow: 'hidden',
-    padding: 16,
+    padding: 0,
 };
-
-const routeDeckTransitionStyle: CSSProperties = {
-    transition: 'opacity 220ms ease, transform 220ms ease, filter 220ms ease',
-};
-
-function resolveDeckTransitionStyle(
-    reducedMotion: boolean,
-    animating: boolean,
-    delayMs: number,
-    inactiveOpacity: number,
-    inactiveTransform: string,
-    inactiveFilter: string,
-): CSSProperties {
-    if (reducedMotion) {
-        return {
-            transition: 'none',
-            transitionDelay: '0ms',
-            opacity: 1,
-            transform: 'none',
-            filter: 'none',
-        };
-    }
-
-    return {
-        ...routeDeckTransitionStyle,
-        transitionDelay: animating ? `${delayMs}ms` : '0ms',
-        opacity: animating ? inactiveOpacity : 1,
-        transform: animating ? inactiveTransform : 'translateY(0) scale(1)',
-        filter: animating ? inactiveFilter : 'none',
-    };
-}
 
 export function DataSciencePlaygroundPage() {
     const location = useLocation();
@@ -96,11 +66,16 @@ export function DataSciencePlaygroundPage() {
     const [query, setQuery] = useState('');
     const [selectedFile, setSelectedFile] = useState<string>('');
     const [recentFiles, setRecentFiles] = useState<string[]>([]);
-    const [showExplorer, setShowExplorer] = useState(true);
-    const [showMenu, setShowMenu] = useState(true);
-    const [showStatus, setShowStatus] = useState(true);
-    const [showOperations, setShowOperations] = useState(true);
-    const [explorerDropupOpen, setExplorerDropupOpen] = useState(false);
+    const showExplorer = useNotebookLayoutStore((state) => state.showExplorer);
+    const showMenu = useNotebookLayoutStore((state) => state.showMenu);
+    const showStatus = useNotebookLayoutStore((state) => state.showStatus);
+    const showOperations = useNotebookLayoutStore((state) => state.showOperations);
+    const explorerDropupOpen = useNotebookLayoutStore((state) => state.explorerDropupOpen);
+    const setExplorerDropupOpen = useNotebookLayoutStore((state) => state.setExplorerDropupOpen);
+    const applyHudPreset = useNotebookLayoutStore((state) => state.applyHudPreset);
+    const focusHudPanel = useNotebookLayoutStore((state) => state.focusHudPanel);
+    const resetHudPanels = useNotebookLayoutStore((state) => state.resetHudPanels);
+    const activeDock = useNotebookLayoutStore((state) => state.activeDock);
     const [modeDeckAnimating, setModeDeckAnimating] = useState(false);
     const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
     const [transitionHistory, setTransitionHistory] = useState<Array<{ pathname: string; mode: NotebookRouteMode; time: string; }>>([]);
@@ -143,12 +118,31 @@ export function DataSciencePlaygroundPage() {
     }, [filteredFiles, selectedFile]);
 
     useEffect(() => {
-        setShowExplorer(routeHudPreset.explorer);
-        setShowMenu(routeHudPreset.menu);
-        setShowStatus(routeHudPreset.status);
-        setShowOperations(routeHudPreset.operations);
-        setExplorerDropupOpen(false);
-    }, [routeHudPreset]);
+        applyHudPreset({
+            explorer: routeHudPreset.explorer,
+            menu: routeHudPreset.menu,
+            status: routeHudPreset.status,
+            operations: routeHudPreset.operations,
+        });
+    }, [applyHudPreset, routeHudPreset]);
+
+    useEffect(() => {
+        if (!selectedFile) {
+            return;
+        }
+
+        if (activeDock === 'intel') {
+            focusHudPanel('status');
+            return;
+        }
+        if (activeDock === 'objectives') {
+            focusHudPanel('operations');
+            return;
+        }
+        if (activeDock === 'player') {
+            focusHudPanel('menu');
+        }
+    }, [activeDock, focusHudPanel, selectedFile]);
 
     useEffect(() => {
         setModeDeckAnimating(true);
@@ -226,7 +220,30 @@ export function DataSciencePlaygroundPage() {
         comboStreak,
     ]);
 
-    const selectedContent = selectedFile ? (cellLookup.get(selectedFile) ?? 'No code cell available for this file.') : 'Select a file from the notebook index.';
+    const aggregatedSectorContent = useMemo(() => {
+        if (allFiles.length === 0) {
+            return 'Select a file from the notebook index.';
+        }
+
+        const sectorBlocks = allFiles
+            .map((file) => {
+                const content = cellLookup.get(file);
+                if (!content || content.trim().length === 0) {
+                    return '';
+                }
+                return `// sector:${file}\n${content}`;
+            })
+            .filter((block) => block.length > 0);
+
+        if (sectorBlocks.length === 0) {
+            return 'Select a file from the notebook index.';
+        }
+
+        return sectorBlocks.join('\n\n');
+    }, [allFiles, cellLookup]);
+    const selectedContent = selectedFile
+        ? (cellLookup.get(selectedFile) ?? 'No code cell available for this file.')
+        : aggregatedSectorContent;
     const selectedLineCount = useMemo(
         () => selectedContent.split('\n').length,
         [selectedContent],
@@ -298,7 +315,14 @@ export function DataSciencePlaygroundPage() {
             />
         ),
         menu: (
-            <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 0, 0.74, 'translateY(8px) scale(0.988)', 'saturate(1.05)')}>
+            <RouteDeckTransition
+                reducedMotion={prefersReducedMotion}
+                animating={modeDeckAnimating}
+                delayMs={0}
+                inactiveOpacity={0.74}
+                inactiveTransform="translateY(8px) scale(0.988)"
+                inactiveFilter="saturate(1.05)"
+            >
                 {routeHudPreset.mode === 'runtime'
                     ? (
                         <SafeMainMenuPanel
@@ -313,10 +337,17 @@ export function DataSciencePlaygroundPage() {
                         />
                     )
                     : <SafeRouteModePanel mode={routeHudPreset.mode} />}
-            </div>
+            </RouteDeckTransition>
         ),
         status: (
-            <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 40, 0.86, 'translateY(7px) scale(1)', 'saturate(1.03)')}>
+            <RouteDeckTransition
+                reducedMotion={prefersReducedMotion}
+                animating={modeDeckAnimating}
+                delayMs={40}
+                inactiveOpacity={0.86}
+                inactiveTransform="translateY(7px) scale(1)"
+                inactiveFilter="saturate(1.03)"
+            >
                 <SafeNotebookHealthPanel
                     loading={loading}
                     manifestError={manifestError}
@@ -324,10 +355,17 @@ export function DataSciencePlaygroundPage() {
                     manifestSource={manifestSource}
                     notebookSource={notebookSource}
                 />
-            </div>
+            </RouteDeckTransition>
         ),
         operations: (
-            <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 80, 0.8, 'translateY(9px) scale(0.992)', 'saturate(1.07)')}>
+            <RouteDeckTransition
+                reducedMotion={prefersReducedMotion}
+                animating={modeDeckAnimating}
+                delayMs={80}
+                inactiveOpacity={0.8}
+                inactiveTransform="translateY(9px) scale(0.992)"
+                inactiveFilter="saturate(1.07)"
+            >
                 <SafeNotebookOperationsPanel
                     selectedFile={selectedFile}
                     selectedContent={selectedContent}
@@ -339,7 +377,7 @@ export function DataSciencePlaygroundPage() {
                     manifestSource={manifestSource}
                     notebookSource={notebookSource}
                 />
-            </div>
+            </RouteDeckTransition>
         ),
     } as const;
 
@@ -349,6 +387,12 @@ export function DataSciencePlaygroundPage() {
         { id: 'status', corner: 'bottom-left' },
         { id: 'operations', corner: 'bottom-right' },
     ];
+    const dockEntries = dockLayout.map((dock) => ({
+        id: dock.id,
+        corner: dock.corner,
+        visible: dockState[dock.id],
+        content: dockRenderers[dock.id],
+    }));
 
     return (
         <main style={shellStyle}>
@@ -371,6 +415,9 @@ export function DataSciencePlaygroundPage() {
                     selectedFile={selectedFile}
                     selectedContent={selectedContent}
                     fullBleed
+                    routeMode={routeHudPreset.mode}
+                    allIndexedFiles={allFiles}
+                    contentByFile={cellLookup}
                     indexedFileCount={manifest?.file_count ?? 0}
                     notebookCellCount={notebookCellCount}
                     selectedDomain={selectedDomain}
@@ -385,79 +432,30 @@ export function DataSciencePlaygroundPage() {
                     nextDomainTarget={nextDomainTarget}
                 />
 
-                {dockLayout.map((dock) => (dockState[dock.id] ? (
-                    <HudCornerDock key={dock.id} corner={dock.corner}>
-                        <HudDockSurface>{dockRenderers[dock.id]}</HudDockSurface>
-                    </HudCornerDock>
-                ) : null))}
+                <RouteDockGrid entries={dockEntries} surface="overlay" />
 
-                <HudActionBar>
-                    <HudActionButton
-                        label="Explorer"
-                        onClick={() => { setShowExplorer(true); setExplorerDropupOpen((open) => !open); }}
-                        active={showExplorer || explorerDropupOpen}
-                    />
+                <RouteHudControlStrip
+                    routeLabel={routeHudPreset.label}
+                    showExplorer={showExplorer}
+                    explorerDropupOpen={explorerDropupOpen}
+                    showMenu={showMenu}
+                    showOperations={showOperations}
+                    showStatus={showStatus}
+                    onToggleExplorer={() => {
+                        focusHudPanel('explorer');
+                        setExplorerDropupOpen(!explorerDropupOpen);
+                    }}
+                    onToggleMenu={() => focusHudPanel(showMenu ? null : 'menu')}
+                    onToggleOperations={() => focusHudPanel(showOperations ? null : 'operations')}
+                    onToggleStatus={() => focusHudPanel(showStatus ? null : 'status')}
+                    onFocusViewport={() => {
+                        focusHudPanel(null);
+                    }}
+                    onResetHud={resetHudPanels}
+                />
 
-                    <HudActionButton
-                        label="Command Menu"
-                        onClick={() => setShowMenu((open) => !open)}
-                        active={showMenu}
-                    />
-
-                    <HudActionButton
-                        label="Operations"
-                        onClick={() => setShowOperations((open) => !open)}
-                        active={showOperations}
-                    />
-
-                    <HudActionButton
-                        label="Status"
-                        onClick={() => setShowStatus((open) => !open)}
-                        active={showStatus}
-                    />
-
-                    <span style={{
-                        borderRadius: 999,
-                        border: '1px solid rgba(148, 163, 184, 0.3)',
-                        background: 'rgba(8, 13, 28, 0.5)',
-                        color: '#93c5fd',
-                        padding: '8px 13px',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                        whiteSpace: 'nowrap',
-                    }}>
-                        {routeHudPreset.label}
-                    </span>
-
-                    <div style={{ width: 1, background: 'rgba(45, 212, 191, 0.2)', alignSelf: 'stretch', margin: '0 2px' }} />
-
-                    <HudActionButton
-                        label="Focus Viewport"
-                        onClick={() => {
-                            setShowExplorer(false);
-                            setShowMenu(false);
-                            setShowStatus(false);
-                            setShowOperations(false);
-                            setExplorerDropupOpen(false);
-                        }}
-                        muted
-                    />
-                    <HudActionButton
-                        label="Reset HUD"
-                        onClick={() => {
-                            setShowExplorer(true);
-                            setShowMenu(true);
-                            setShowStatus(true);
-                            setShowOperations(true);
-                        }}
-                        muted
-                    />
-                </HudActionBar>
-
-                {explorerDropupOpen && (
-                    <HudFilePicker
+                {explorerDropupOpen && showExplorer && (
+                    <RouteFilePickerOverlay
                         files={allFiles}
                         recentFiles={recentFiles}
                         selected={selectedFile}
