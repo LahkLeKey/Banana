@@ -1,8 +1,8 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode, type SVGProps } from 'react';
 
 export type HudIconKind = 'economy' | 'logistics' | 'relay' | 'intel' | 'split';
 
-const iconStyle: CSSProperties = {
+const iconSvgProps: SVGProps<SVGSVGElement> = {
     width: 14,
     height: 14,
     viewBox: '0 0 14 14',
@@ -18,7 +18,7 @@ const iconStyle: CSSProperties = {
 export function HudIcon({ kind }: { kind: HudIconKind; }) {
     if (kind === 'economy') {
         return (
-            <svg {...iconStyle}>
+            <svg {...iconSvgProps}>
                 <circle cx="7" cy="7" r="4.5" />
                 <path d="M7 4.1v5.8" />
                 <path d="M5.4 5.3c0-.8.7-1.4 1.6-1.4s1.6.6 1.6 1.4-.7 1.4-1.6 1.4-1.6.6-1.6 1.4.7 1.4 1.6 1.4 1.6-.6 1.6-1.4" />
@@ -28,7 +28,7 @@ export function HudIcon({ kind }: { kind: HudIconKind; }) {
 
     if (kind === 'logistics') {
         return (
-            <svg {...iconStyle}>
+            <svg {...iconSvgProps}>
                 <path d="M2.8 4.4h5.4" />
                 <path d="M7.2 2.4l2 2-2 2" />
                 <path d="M11.2 9.6H5.8" />
@@ -39,7 +39,7 @@ export function HudIcon({ kind }: { kind: HudIconKind; }) {
 
     if (kind === 'relay') {
         return (
-            <svg {...iconStyle}>
+            <svg {...iconSvgProps}>
                 <path d="M7 10.8V7" />
                 <path d="M4.5 5.3c1.6-1.6 3.4-1.6 5 0" />
                 <path d="M3 3.7c2.3-2.3 5.7-2.3 8 0" />
@@ -50,7 +50,7 @@ export function HudIcon({ kind }: { kind: HudIconKind; }) {
 
     if (kind === 'intel') {
         return (
-            <svg {...iconStyle}>
+            <svg {...iconSvgProps}>
                 <path d="M2.3 7c1.2-2 2.8-3 4.7-3s3.5 1 4.7 3c-1.2 2-2.8 3-4.7 3s-3.5-1-4.7-3Z" />
                 <circle cx="7" cy="7" r="1.4" />
             </svg>
@@ -58,7 +58,7 @@ export function HudIcon({ kind }: { kind: HudIconKind; }) {
     }
 
     return (
-        <svg {...iconStyle}>
+        <svg {...iconSvgProps}>
             <path d="M4 2.8v8.4" />
             <path d="M10 2.8v8.4" />
             <path d="M4 7h6" />
@@ -156,6 +156,54 @@ export function HudCornerDock(
     const vPos: CSSProperties = isBottom ? { bottom: 76 } : { top: 16 };
 
     return <div style={{ ...base, ...hPos, ...vPos }}>{children}</div>;
+}
+
+export function HudDockSurface({ children }: { children: ReactNode; }) {
+    return (
+        <div style={{
+            borderRadius: 18,
+            border: '1px solid rgba(45, 212, 191, 0.28)',
+            background: 'linear-gradient(170deg, rgba(3, 10, 19, 0.9), rgba(1, 7, 14, 0.94))',
+            boxShadow: '0 22px 72px rgba(2, 6, 23, 0.48)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+        }}>
+            <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'auto' }}>
+                {children}
+            </div>
+        </div>
+    );
+}
+
+type HudActionButtonProps = {
+    label: string;
+    onClick: () => void;
+    active?: boolean;
+    muted?: boolean;
+};
+
+export function HudActionButton({ label, onClick, active = false, muted = false }: HudActionButtonProps) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            style={{
+                borderRadius: 999,
+                border: active ? '1px solid rgba(45, 212, 191, 0.6)' : '1px solid rgba(148, 163, 184, 0.3)',
+                background: active ? 'rgba(13, 148, 136, 0.2)' : 'rgba(8, 13, 28, 0.5)',
+                color: muted ? '#94a3b8' : '#e2e8f0',
+                padding: '8px 13px',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+            }}
+        >
+            {label}
+        </button>
+    );
 }
 
 export function HudFilePicker(

@@ -1,85 +1,131 @@
-# Implementation Plan: Notebook MMO Gameplay Client
+# Implementation Plan: [FEATURE]
 
-**Branch**: `033-abi-notebook-playground` | **Date**: 2026-06-08 | **Spec**: `.specify/specs/033-abi-notebook-playground/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 
-**Input**: Feature specification from `.specify/specs/033-abi-notebook-playground/spec.md`
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
-Promote notebooks from artifact-only output to primary gameplay-client runtime UX by introducing a main-menu-first shell, decomposing the current bloated playground page into shared components, and defining API orchestration hooks with static notebook fallback.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
 
-**Language/Version**: TypeScript + React (existing Vite/Bun app), Python 3 (artifact generation), Bash (workflow orchestration)
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
 
-**Primary Dependencies**: React, react-router-dom, existing local fetch/browser APIs, existing notebook scaffold scripts
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
 
-**Storage**: File artifacts in `notebooks/`, `src/typescript/react/public/notebooks/`, `artifacts/notebooks/`
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 
-**Testing**: React build + integrated browser validation + notebook generation command validation
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
-**Target Platform**: Windows dev + Vercel static deployment + browser runtime
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
 
-**Project Type**: Web gameplay client shell with generated-data ingestion
+**Target Platform**: [e.g., Linux server, Windows 10+ DX12, iOS 15+ or NEEDS CLARIFICATION]
 
-**Performance Goals**: Interactive file filtering/selection stays responsive for 291+ indexed files
+**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
 
-**Constraints**: Preserve existing routes/contracts; maintain fallback when API orchestration is unavailable
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
 
-**Scale/Scope**: Refactor notebook client surface into shared components and menu orchestration boundary
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
+
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
-*GATE: Must pass before implementation.*
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- [x] Player trust and disclosure alignment verified (no storefront claim changes in this phase).
-- [x] Storefront governance artifacts not required for this internal gameplay client pivot.
-- [x] Cross-domain contracts mapped (scripts + React shell + future API layer).
-- [x] Quality gates defined (build, browser runtime behavior, notebook asset loading).
-- [x] Reproducible delivery path identified (scaffold script publishes all notebook endpoints).
+- [ ] Player trust and disclosure alignment verified (store/runtime claims,
+  AI-content disclosure, controller support, and system requirements).
+- [ ] Storefront governance artifacts identified when public Steam copy is
+  affected (storefront copy contract, asset inventory, and storefront checklist).
+- [ ] Cross-domain contracts mapped for touched layers (native/API/client/runtime)
+  and required docs are queued in-scope.
+- [ ] Quality gates defined with measurable checks for deterministic behavior,
+  integration paths, and failure handling.
+- [ ] Reproducible delivery path identified for target runtime channels and
+  evidence artifacts listed for release validation, including storefront
+  screenshots or text evidence when applicable.
 
 ## Project Structure
 
-### Documentation (feature)
+### Documentation (this feature)
 
 ```text
-.specify/specs/033-abi-notebook-playground/
-├── spec.md
-├── plan.md
-├── tasks.md
-├── quickstart.md
-└── contracts/
-    └── notebook-client-orchestration.md
+specs/[###-feature]/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
-scripts/
-├── scaffold-abi-notebook-workflow.sh
-└── export-native-c-to-notebook.py
-
-notebooks/
-├── catalog-index.json
-└── native-c-catalog.ipynb
-
-src/typescript/react/src/
-├── pages/
-│   └── DataSciencePlaygroundPage.tsx
-├── components/
-│   └── notebook-client/           # planned extraction target
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
+├── services/
+├── cli/
 └── lib/
-    └── notebook-client/           # planned orchestration hooks/models
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Keep deployment simple while reducing page bloat via shared notebook-client components and typed orchestration hooks.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
-## Delivery Notes
+## Storefront Deliverables *(required when public Steam copy is affected)*
 
-- Notebook artifacts are the gameplay renderer payload for this phase.
-- Main menu UX is treated as gameplay client shell, not marketing landing.
-- API orchestration is introduced behind typed adapters with local file fallback.
+- `contracts/steam-storefront-copy.md` — canonical public claim target.
+- `contracts/steam-storefront-assets.md` — inventory of current page assets.
+- `checklists/steam-storefront-readiness.md` — storefront release checklist.
+- `checklists/steam-uat-readiness.md` — playable build readiness checklist.
+- `quickstart.md` — runtime, Steam UAT, and storefront validation entry point.
 
 ## Complexity Tracking
 
-No constitution exceptions required.
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

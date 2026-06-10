@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { MainMenuPanel } from '../components/notebook-client/MainMenuPanel';
+import { ModeRegistryPanel } from '../components/notebook-client/ModeRegistryPanel';
 import { NotebookExplorerPanel } from '../components/notebook-client/NotebookExplorerPanel';
 import { NotebookGameplaySurface } from '../components/notebook-client/NotebookGameplaySurface';
+import { NotebookHealthPanel } from '../components/notebook-client/NotebookHealthPanel';
 import { NotebookOperationsPanel } from '../components/notebook-client/NotebookOperationsPanel';
-import { HudActionBar, HudCornerDock, HudFilePicker } from '../components/notebook-client/HudPrimitives';
+import { RouteModePanel } from '../components/notebook-client/RouteModePanel';
+import { HudActionBar, HudActionButton, HudCornerDock, HudDockSurface, HudFilePicker } from '../components/notebook-client/HudPrimitives';
+import { resolveRouteHudPreset, type NotebookRouteMode } from '../lib/notebook-client/routeModeConfig';
 import { useNotebookClient } from '../lib/notebook-client/useNotebookClient';
 
 const shellStyle: CSSProperties = {
@@ -19,37 +24,58 @@ const shellStyle: CSSProperties = {
 
 const stageStyle: CSSProperties = {
     position: 'relative',
-    height: '100%',
+    height: '100dvh',
     overflow: 'hidden',
     padding: 16,
 };
 
-const dockPanelStyle: CSSProperties = {
-    borderRadius: 18,
-    border: '1px solid rgba(45, 212, 191, 0.28)',
-    background: 'linear-gradient(170deg, rgba(3, 10, 19, 0.9), rgba(1, 7, 14, 0.94))',
-    boxShadow: '0 22px 72px rgba(2, 6, 23, 0.48)',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: 0,
+const routeDeckTransitionStyle: CSSProperties = {
+    transition: 'opacity 220ms ease, transform 220ms ease, filter 220ms ease',
 };
 
-const dockInnerStyle: CSSProperties = {
-    flex: '1 1 auto',
-    minHeight: 0,
-    overflow: 'auto',
-};
+function resolveDeckTransitionStyle(
+    reducedMotion: boolean,
+    animating: boolean,
+    delayMs: number,
+    inactiveOpacity: number,
+    inactiveTransform: string,
+    inactiveFilter: string,
+): CSSProperties {
+    if (reducedMotion) {
+        return {
+            transition: 'none',
+            transitionDelay: '0ms',
+            opacity: 1,
+            transform: 'none',
+            filter: 'none',
+        };
+    }
+
+    return {
+        ...routeDeckTransitionStyle,
+        transitionDelay: animating ? `${delayMs}ms` : '0ms',
+        opacity: animating ? inactiveOpacity : 1,
+        transform: animating ? inactiveTransform : 'translateY(0) scale(1)',
+        filter: animating ? inactiveFilter : 'none',
+    };
+}
 
 export function DataSciencePlaygroundPage() {
+    const location = useLocation();
     const { loading, manifest, manifestError, manifestSource, notebookError, notebookSource, cellLookup, notebookCellCount } = useNotebookClient();
     const [query, setQuery] = useState('');
     const [selectedFile, setSelectedFile] = useState<string>('');
     const [recentFiles, setRecentFiles] = useState<string[]>([]);
     const [showExplorer, setShowExplorer] = useState(true);
     const [showMenu, setShowMenu] = useState(true);
-    const [showDeck, setShowDeck] = useState(true);
+    const [showStatus, setShowStatus] = useState(true);
+    const [showOperations, setShowOperations] = useState(true);
     const [explorerDropupOpen, setExplorerDropupOpen] = useState(false);
+    const [modeDeckAnimating, setModeDeckAnimating] = useState(false);
+    const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+    const [transitionHistory, setTransitionHistory] = useState<Array<{ pathname: string; mode: NotebookRouteMode; time: string; }>>([]);
+
+    const routeHudPreset = useMemo(() => resolveRouteHudPreset(location.pathname), [location.pathname]);
 
     const allFiles = useMemo(() => manifest?.files ?? [], [manifest?.files]);
 
@@ -77,6 +103,57 @@ export function DataSciencePlaygroundPage() {
         }
     }, [filteredFiles, selectedFile, handleSelectFile]);
 
+    useEffect(() => {
+        setShowExplorer(routeHudPreset.explorer);
+        setShowMenu(routeHudPreset.menu);
+        setShowStatus(routeHudPreset.status);
+        setShowOperations(routeHudPreset.operations);
+        setExplorerDropupOpen(false);
+    }, [routeHudPreset]);
+
+    useEffect(() => {
+        setModeDeckAnimating(true);
+        const timer = window.setTimeout(() => {
+            setModeDeckAnimating(false);
+        }, 360);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, [routeHudPreset.mode]);
+
+    useEffect(() => {
+        const timestamp = new Date().toLocaleTimeString();
+        setTransitionHistory((previous) => {
+            const nextEntry = {
+                pathname: location.pathname,
+                mode: routeHudPreset.mode,
+                time: timestamp,
+            };
+
+            const deduped = previous.filter((entry) => !(entry.pathname === nextEntry.pathname && entry.mode === nextEntry.mode));
+            return [nextEntry, ...deduped].slice(0, 3);
+        });
+    }, [location.pathname, routeHudPreset.mode]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+            return;
+        }
+
+        const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const applyPreference = () => {
+            setPrefersReducedMotion(mediaQuery.matches);
+        };
+
+        applyPreference();
+        mediaQuery.addEventListener('change', applyPreference);
+
+        return () => {
+            mediaQuery.removeEventListener('change', applyPreference);
+        };
+    }, []);
+
     const selectedContent = selectedFile ? (cellLookup.get(selectedFile) ?? 'No code cell available for this file.') : 'Select a file from the notebook index.';
     const manifestLabel = manifest ? `Files indexed: ${manifest.file_count}` : 'Manifest pending';
     const sourceRootLabel = manifest ? `Source root: ${manifest.source_root}` : '';
@@ -84,114 +161,165 @@ export function DataSciencePlaygroundPage() {
     const sourceLabel = manifestSource.length > 0 ? `Manifest source: ${manifestSource}` : (notebookSource.length > 0 ? `Notebook source: ${notebookSource}` : '');
     const notebookAvailabilityLabel = manifest ? 'Artifacts loaded and indexed.' : (loading ? 'Loading notebook artifacts...' : 'Artifacts unavailable. Run scaffold workflow.');
 
+    const dockState = {
+        explorer: showExplorer,
+        menu: showMenu,
+        status: showStatus,
+        operations: showOperations,
+    } as const;
+
+    const dockRenderers = {
+        explorer: (
+            <NotebookExplorerPanel
+                files={filteredFiles}
+                query={query}
+                selectedFile={selectedFile}
+                onChangeQuery={setQuery}
+                onSelectFile={handleSelectFile}
+                fileCountLabel={manifestLabel}
+                maxLinesLabel={sourceLabel.length > 0 ? `${maxLinesLabel} | ${sourceLabel}` : maxLinesLabel}
+                sourceRootLabel={sourceRootLabel}
+                notebookManifestHref="/notebooks/catalog-index.json"
+                notebookPayloadHref="/notebooks/native-c-catalog.ipynb"
+                notebookAvailabilityLabel={notebookAvailabilityLabel}
+            />
+        ),
+        menu: (
+            <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 0, 0.74, 'translateY(8px) scale(0.988)', 'saturate(1.05)')}>
+                {routeHudPreset.mode === 'runtime'
+                    ? (
+                        <MainMenuPanel
+                            indexedFileCount={manifest?.file_count ?? 0}
+                            notebookCellCount={notebookCellCount}
+                            manifestAvailable={Boolean(manifest)}
+                        />
+                    )
+                    : <RouteModePanel mode={routeHudPreset.mode} />}
+            </div>
+        ),
+        status: (
+            <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 40, 0.86, 'translateY(7px) scale(1)', 'saturate(1.03)')}>
+                <NotebookHealthPanel
+                    loading={loading}
+                    manifestError={manifestError}
+                    notebookError={notebookError}
+                    manifestSource={manifestSource}
+                    notebookSource={notebookSource}
+                />
+            </div>
+        ),
+        operations: (
+            <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 80, 0.8, 'translateY(9px) scale(0.992)', 'saturate(1.07)')}>
+                <NotebookOperationsPanel
+                    selectedFile={selectedFile}
+                    selectedContent={selectedContent}
+                    indexedFileCount={manifest?.file_count ?? 0}
+                    notebookCellCount={notebookCellCount}
+                    loading={loading}
+                    manifestError={manifestError}
+                    notebookError={notebookError}
+                    manifestSource={manifestSource}
+                    notebookSource={notebookSource}
+                />
+            </div>
+        ),
+    } as const;
+
+    const dockLayout: Array<{ id: keyof typeof dockRenderers; corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; }> = [
+        { id: 'explorer', corner: 'top-left' },
+        { id: 'menu', corner: 'top-right' },
+        { id: 'status', corner: 'bottom-left' },
+        { id: 'operations', corner: 'bottom-right' },
+    ];
+
     return (
         <main style={shellStyle}>
             <section style={stageStyle}>
+                {import.meta.env.DEV ? (
+                    <ModeRegistryPanel
+                        pathname={location.pathname}
+                        mode={routeHudPreset.mode}
+                        label={routeHudPreset.label}
+                        explorer={showExplorer}
+                        menu={showMenu}
+                        status={showStatus}
+                        operations={showOperations}
+                        prefersReducedMotion={prefersReducedMotion}
+                        transitions={transitionHistory}
+                    />
+                ) : null}
+
                 <NotebookGameplaySurface selectedFile={selectedFile} selectedContent={selectedContent} fullBleed />
 
-                {showExplorer ? (
-                    <HudCornerDock corner="top-left">
-                        <div style={dockPanelStyle}>
-                            <div style={dockInnerStyle}>
-                                <NotebookExplorerPanel
-                                    files={filteredFiles}
-                                    query={query}
-                                    selectedFile={selectedFile}
-                                    onChangeQuery={setQuery}
-                                    onSelectFile={handleSelectFile}
-                                    fileCountLabel={manifestLabel}
-                                    maxLinesLabel={sourceLabel.length > 0 ? `${maxLinesLabel} | ${sourceLabel}` : maxLinesLabel}
-                                    sourceRootLabel={sourceRootLabel}
-                                    notebookManifestHref="/notebooks/catalog-index.json"
-                                    notebookPayloadHref="/notebooks/native-c-catalog.ipynb"
-                                    notebookAvailabilityLabel={notebookAvailabilityLabel}
-                                />
-                            </div>
-                        </div>
+                {dockLayout.map((dock) => (dockState[dock.id] ? (
+                    <HudCornerDock key={dock.id} corner={dock.corner}>
+                        <HudDockSurface>{dockRenderers[dock.id]}</HudDockSurface>
                     </HudCornerDock>
-                ) : null}
-
-                {showMenu ? (
-                    <HudCornerDock corner="top-right">
-                        <div style={dockPanelStyle}>
-                            <div style={dockInnerStyle}>
-                                <MainMenuPanel
-                                    indexedFileCount={manifest?.file_count ?? 0}
-                                    notebookCellCount={notebookCellCount}
-                                    manifestAvailable={Boolean(manifest)}
-                                />
-                            </div>
-                        </div>
-                    </HudCornerDock>
-                ) : null}
-
-                {showDeck ? (
-                    <HudCornerDock corner="bottom-right">
-                        <div style={dockPanelStyle}>
-                            <div style={dockInnerStyle}>
-                                <NotebookOperationsPanel
-                                    selectedFile={selectedFile}
-                                    selectedContent={selectedContent}
-                                    indexedFileCount={manifest?.file_count ?? 0}
-                                    notebookCellCount={notebookCellCount}
-                                    loading={loading}
-                                    manifestError={manifestError}
-                                    notebookError={notebookError}
-                                    manifestSource={manifestSource}
-                                    notebookSource={notebookSource}
-                                />
-                            </div>
-                        </div>
-                    </HudCornerDock>
-                ) : null}
+                ) : null))}
 
                 <HudActionBar>
-                    {/* Explorer — left anchor toggle + dropup */}
-                    <button
-                        type="button"
-                        onClick={() => { setShowExplorer(true); setExplorerDropupOpen(o => !o); }}
-                        style={{ borderRadius: 999, border: `1px solid ${explorerDropupOpen ? 'rgba(45, 212, 191, 0.7)' : 'rgba(45, 212, 191, 0.35)'}`, background: explorerDropupOpen ? 'rgba(13, 148, 136, 0.32)' : showExplorer ? 'rgba(13, 148, 136, 0.18)' : 'rgba(8, 13, 28, 0.55)', color: '#e2e8f0', padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
-                    >
-                        {explorerDropupOpen ? '▼ Explorer' : '▲ Explorer'}
-                    </button>
-                    {/* Toggle dock visibility */}
-                    <button
-                        type="button"
-                        onClick={() => setShowExplorer(o => !o)}
-                        style={{ borderRadius: 999, border: '1px solid rgba(45, 212, 191, 0.22)', background: 'rgba(8, 13, 28, 0.45)', color: showExplorer ? '#5eead4' : '#475569', padding: '8px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
-                        title={showExplorer ? 'Hide explorer dock' : 'Show explorer dock'}
-                    >{showExplorer ? '◧' : '□'}</button>
+                    <HudActionButton
+                        label="Explorer"
+                        onClick={() => { setShowExplorer(true); setExplorerDropupOpen((open) => !open); }}
+                        active={showExplorer || explorerDropupOpen}
+                    />
+
+                    <HudActionButton
+                        label="Command Menu"
+                        onClick={() => setShowMenu((open) => !open)}
+                        active={showMenu}
+                    />
+
+                    <HudActionButton
+                        label="Operations"
+                        onClick={() => setShowOperations((open) => !open)}
+                        active={showOperations}
+                    />
+
+                    <HudActionButton
+                        label="Status"
+                        onClick={() => setShowStatus((open) => !open)}
+                        active={showStatus}
+                    />
+
+                    <span style={{
+                        borderRadius: 999,
+                        border: '1px solid rgba(148, 163, 184, 0.3)',
+                        background: 'rgba(8, 13, 28, 0.5)',
+                        color: '#93c5fd',
+                        padding: '8px 13px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                    }}>
+                        {routeHudPreset.label}
+                    </span>
 
                     <div style={{ width: 1, background: 'rgba(45, 212, 191, 0.2)', alignSelf: 'stretch', margin: '0 2px' }} />
 
-                    {/* Command Menu toggle */}
-                    <button
-                        type="button"
-                        onClick={() => setShowMenu(o => !o)}
-                        style={{ borderRadius: 999, border: '1px solid rgba(45, 212, 191, 0.35)', background: showMenu ? 'rgba(13, 148, 136, 0.18)' : 'rgba(8, 13, 28, 0.55)', color: '#e2e8f0', padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
-                    >Uplink</button>
-
-                    <div style={{ width: 1, background: 'rgba(45, 212, 191, 0.2)', alignSelf: 'stretch', margin: '0 2px' }} />
-
-                    {/* Operations toggle */}
-                    <button
-                        type="button"
-                        onClick={() => setShowDeck(o => !o)}
-                        style={{ borderRadius: 999, border: '1px solid rgba(45, 212, 191, 0.35)', background: showDeck ? 'rgba(13, 148, 136, 0.18)' : 'rgba(8, 13, 28, 0.55)', color: '#e2e8f0', padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
-                    >Ops Deck</button>
-
-                    <div style={{ width: 1, background: 'rgba(45, 212, 191, 0.2)', alignSelf: 'stretch', margin: '0 2px' }} />
-
-                    <button
-                        type="button"
-                        onClick={() => { setShowExplorer(false); setShowMenu(false); setShowDeck(false); setExplorerDropupOpen(false); }}
-                        style={{ borderRadius: 999, border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(8, 13, 28, 0.55)', color: '#94a3b8', padding: '8px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
-                    >Focus</button>
-                    <button
-                        type="button"
-                        onClick={() => { setShowExplorer(true); setShowMenu(true); setShowDeck(true); }}
-                        style={{ borderRadius: 999, border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(8, 13, 28, 0.55)', color: '#94a3b8', padding: '8px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
-                    >Reset</button>
+                    <HudActionButton
+                        label="Focus Viewport"
+                        onClick={() => {
+                            setShowExplorer(false);
+                            setShowMenu(false);
+                            setShowStatus(false);
+                            setShowOperations(false);
+                            setExplorerDropupOpen(false);
+                        }}
+                        muted
+                    />
+                    <HudActionButton
+                        label="Reset HUD"
+                        onClick={() => {
+                            setShowExplorer(true);
+                            setShowMenu(true);
+                            setShowStatus(true);
+                            setShowOperations(true);
+                        }}
+                        muted
+                    />
                 </HudActionBar>
 
                 {explorerDropupOpen && (
