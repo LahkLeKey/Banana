@@ -121,6 +121,7 @@ describe('auth routes', () => {
     };
     expect(body.authenticated).toBe(true);
     expect(body.steamId).toBe('76561198000000000');
+    expect(body.identityKind).toBe('steam');
 
     await app.close();
   });
@@ -148,6 +149,47 @@ describe('auth routes', () => {
       },
     });
     expect(session.statusCode).toBe(401);
+
+    await app.close();
+  });
+
+  it('creates guest auth sessions without Steam login', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const start = await app.inject({
+      method: 'POST',
+      url: '/auth/guest/start',
+      payload: {alias: 'Notebook Ranger'},
+    });
+
+    expect(start.statusCode).toBe(200);
+    const startBody = start.json() as {
+      token: string;
+      guestId: string;
+      displayName: string;
+    };
+    expect(startBody.token.length).toBeGreaterThan(20);
+    expect(startBody.guestId.length).toBeGreaterThan(5);
+    expect(startBody.displayName).toBe('Notebook Ranger');
+
+    const session = await app.inject({
+      method: 'GET',
+      url: '/auth/session',
+      headers: {
+        authorization: `Bearer ${startBody.token}`,
+      },
+    });
+
+    expect(session.statusCode).toBe(200);
+    const sessionBody = session.json() as {
+      authenticated: boolean;
+      identityKind: string;
+      guestId: string;
+    };
+    expect(sessionBody.authenticated).toBe(true);
+    expect(sessionBody.identityKind).toBe('guest');
+    expect(sessionBody.guestId).toBe(startBody.guestId);
 
     await app.close();
   });
