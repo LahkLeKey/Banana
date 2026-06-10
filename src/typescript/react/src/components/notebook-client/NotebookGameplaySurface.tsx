@@ -414,18 +414,20 @@ export function NotebookGameplaySurface({
     }, [laneContractCoherence, linkConfidence.intel, linkConfidence.objectives, linkConfidence.ops, linkConfidence.player]);
     const visibleLoops = useMemo(() => subsystemLoops, [subsystemLoops]);
     const nodeAnchors = useMemo(() => {
-        const center = { x: 50, y: hasOpenDock ? 44 : 48 };
-        const leftX = showExplorer ? 24 : 18;
-        const rightX = showMenu ? 76 : 82;
-        const bottomLeftX = showStatus ? 16 : 12;
-        const bottomRightX = showOperations ? 84 : 88;
-        const topY = (showExplorer || showMenu) ? 28 : 20;
-        const nominalBottomY = (showStatus || showOperations) ? 82 : 88;
-        const bottomY = Math.min(nominalBottomY, hasOpenDock ? 78 : 86);
+        const center = { x: 50, y: hasOpenDock ? 47 : 50 };
+        const topLeftX = showExplorer ? 30 : 12;
+        const topRightX = showMenu ? 70 : 88;
+        const bottomLeftX = showStatus ? 24 : 10;
+        const bottomRightX = showOperations ? 76 : 90;
+        const topY = (showExplorer || showMenu) ? 34 : 18;
+        const nominalBottomY = (showStatus || showOperations) ? 86 : 90;
+        const bottomY = Math.min(nominalBottomY, hasOpenDock ? 82 : 88);
         const topSpan = Math.max(6, center.y - topY);
         const bottomSpan = Math.max(8, bottomY - center.y);
-        const leftSpan = Math.max(8, center.x - leftX);
-        const rightSpan = Math.max(8, rightX - center.x);
+        const leftTopSpan = Math.max(8, center.x - topLeftX);
+        const rightTopSpan = Math.max(8, topRightX - center.x);
+        const leftBottomSpan = Math.max(8, center.x - bottomLeftX);
+        const rightBottomSpan = Math.max(8, bottomRightX - center.x);
 
         const projectionById = new Map<ContractNodeId, { x: number; y: number; z: number; }>();
         hypersphereProjection.nodes.forEach((node) => {
@@ -439,11 +441,14 @@ export function NotebookGameplaySurface({
             const pz = Math.min(1, Math.max(0, projection?.z ?? 0.5));
             const radialBias = 0.54 + px * 0.28 + (1 - pz) * 0.12;
             const verticalBias = 0.56 + py * 0.26 + (1 - pz) * 0.12;
+            const horizontalSpan = horizontal === 'left'
+                ? (vertical === 'top' ? leftTopSpan : leftBottomSpan)
+                : (vertical === 'top' ? rightTopSpan : rightBottomSpan);
 
             return {
                 x: horizontal === 'left'
-                    ? center.x - leftSpan * radialBias
-                    : center.x + rightSpan * radialBias,
+                    ? center.x - horizontalSpan * radialBias
+                    : center.x + horizontalSpan * radialBias,
                 y: vertical === 'top'
                     ? center.y - topSpan * verticalBias
                     : center.y + bottomSpan * verticalBias,
@@ -639,10 +644,16 @@ export function NotebookGameplaySurface({
         }
         setShowFullSourceDump(value);
     };
+    const viewportTopInset = 40;
     const viewportBottomInset = 0;
-    const loopRailBottom = hasOpenDock ? 266 : 104;
-    const dockPanelBottom = hasOpenDock ? 88 : 70;
-    const dockPanelMaxHeight = hasOpenDock ? '32dvh' : '40dvh';
+    const dockPanelBottom = hasOpenDock ? 74 : 60;
+    const loopRailBottom: number | string = hasOpenDock ? 'calc(26dvh + 108px)' : 134;
+    const dockPanelMaxHeight = hasOpenDock ? '26dvh' : '34dvh';
+    const leftRailInset = (showExplorer || showStatus) ? 408 : 12;
+    const rightRailInset = (showMenu || showOperations) ? 408 : 12;
+    const leftTelemetryBottom = showStatus ? 364 : 112;
+    const questRailWidth = (showMenu || showOperations) ? 'min(300px, calc(100% - 24px))' : 'min(340px, calc(100% - 24px))';
+    const dockPanelWidth = (showMenu || showOperations) ? 'min(320px, calc(100% - 24px))' : 'min(360px, calc(100% - 24px))';
 
     if (fullBleed) {
         return (
@@ -678,25 +689,38 @@ export function NotebookGameplaySurface({
 
                 <div style={{
                     position: 'absolute',
-                    top: 14,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    top: 6,
+                    left: 12,
+                    right: 12,
+                    height: 22,
+                    display: 'grid',
+                    gridTemplateColumns: '1fr auto 1fr',
+                    alignItems: 'center',
                     zIndex: 3,
-                    fontSize: 11,
-                    color: 'rgba(103, 232, 249, 0.78)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.12em',
                     pointerEvents: 'none',
-                    whiteSpace: 'nowrap',
                 }}>
-                    {selectedFile
-                        ? `Sector Live Feed - ${missionSector.title} (${missionSector.code})`
-                        : 'Rule Mining Constellation'}
+                    <div style={{ justifySelf: 'start', fontSize: 9, color: 'rgba(148, 163, 184, 0.68)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        {selectedFile ? missionSector.code : `mode ${routeMode}`}
+                    </div>
+                    <div style={{
+                        fontSize: 10,
+                        color: 'rgba(103, 232, 249, 0.78)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        whiteSpace: 'nowrap',
+                    }}>
+                        {selectedFile
+                            ? `Sector Live Feed - ${missionSector.title}`
+                            : 'Rule Mining Constellation'}
+                    </div>
+                    <div style={{ justifySelf: 'end', fontSize: 9, color: 'rgba(148, 163, 184, 0.68)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        Hyper D{hypersphereProjection.dimensions}
+                    </div>
                 </div>
 
                 <div style={{
                     position: 'absolute',
-                    inset: `54px 0 ${viewportBottomInset}px`,
+                    inset: `${viewportTopInset}px 0 ${viewportBottomInset}px`,
                     borderRadius: 0,
                     border: `1px solid ${activeTheme.accent}44`,
                     background: 'linear-gradient(180deg, rgba(2, 10, 22, 0.72), rgba(1, 7, 16, 0.68))',
@@ -1175,8 +1199,7 @@ export function NotebookGameplaySurface({
                             <div style={{ fontSize: 16, fontWeight: 800, color: activeDock === 'intel' ? activeTheme.accent : '#cbd5e1', lineHeight: 1 }}>{callDensity}%</div>
                             <div style={{ fontSize: 8, textTransform: 'uppercase', color: '#64748b', marginTop: 2 }}>Signal</div>
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: activeDock === 'intel' ? activeTheme.accent : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Intel</div>
-                        <div style={{ fontSize: 9, color: '#475569' }}>{riskLabel}</div>
+                        <div style={{ marginTop: 4, fontSize: 9, fontWeight: 700, color: activeDock === 'intel' ? activeTheme.accent : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Intel</div>
                     </button>
 
                     {/* ─── OBJECTIVES NODE (bottom-left) ────────────────────── */}
@@ -1203,8 +1226,7 @@ export function NotebookGameplaySurface({
                             <div style={{ fontSize: 16, fontWeight: 800, color: activeDock === 'objectives' ? '#38bdf8' : '#cbd5e1', lineHeight: 1 }}>{questPercent}%</div>
                             <div style={{ fontSize: 8, textTransform: 'uppercase', color: '#64748b', marginTop: 2 }}>Done</div>
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: activeDock === 'objectives' ? '#38bdf8' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Quests</div>
-                        <div style={{ fontSize: 9, color: '#475569' }}>{completedQuestCount}/{questProgress.length}</div>
+                        <div style={{ marginTop: 4, fontSize: 9, fontWeight: 700, color: activeDock === 'objectives' ? '#38bdf8' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Quests</div>
                     </button>
 
                     {/* ─── PLAYER NODE (top-right) ──────────────────────────── */}
@@ -1230,8 +1252,7 @@ export function NotebookGameplaySurface({
                             <div style={{ fontSize: 16, fontWeight: 800, color: activeDock === 'player' ? '#a78bfa' : '#cbd5e1', lineHeight: 1 }}>Lv{playerLevel}</div>
                             <div style={{ fontSize: 8, textTransform: 'uppercase', color: '#64748b', marginTop: 2 }}>{totalXp} xp</div>
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: activeDock === 'player' ? '#a78bfa' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Player</div>
-                        <div style={{ fontSize: 9, color: '#475569' }}>x{Math.max(1, comboStreak)} combo</div>
+                        <div style={{ marginTop: 4, fontSize: 9, fontWeight: 700, color: activeDock === 'player' ? '#a78bfa' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Player</div>
                     </button>
 
                     {/* ─── WORKFLOW NODE (bottom-right) ─────────────────────── */}
@@ -1261,117 +1282,163 @@ export function NotebookGameplaySurface({
                             <div style={{ fontSize: 14, fontWeight: 800, color: '#fbbf24', lineHeight: 1 }}>{functionCount}</div>
                             <div style={{ fontSize: 8, textTransform: 'uppercase', color: '#64748b', marginTop: 2 }}>Fns</div>
                         </div>
-                        <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Action</div>
-                        <div style={{ fontSize: 9, color: '#9ca3af' }}>Prime +{projectedRewardXp} XP</div>
+                        <div style={{ marginTop: 4, fontSize: 9, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Action</div>
                     </button>
 
-                    {/* ─── Live ticker strip (top) ──────────────────────────── */}
-                    <div style={{
-                        position: 'absolute', top: 8, left: 0, right: 0,
-                        display: 'flex', justifyContent: 'center', gap: 12,
-                        pointerEvents: 'none', zIndex: 2,
-                    }}>
-                        {selectedFile ? (
-                            <>
-                                <span style={{ fontSize: 10, color: activeTheme.accent, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                                    {missionSector.title} ({missionSector.code})
-                                </span>
-                                <span style={{ fontSize: 10, color: '#475569' }}>·</span>
-                                <span style={{ fontSize: 10, color: '#94a3b8' }}>{lineCount} lines · {includeCount} deps</span>
-                                <span style={{ fontSize: 10, color: '#475569' }}>·</span>
-                                <span style={{ fontSize: 10, color: riskLabel === 'Critical' ? '#fda4af' : riskLabel === 'Elevated' ? '#fcd34d' : '#86efac' }}>
-                                    {riskLabel}
-                                </span>
-                                <span style={{ fontSize: 10, color: '#475569' }}>·</span>
-                                <span style={{ fontSize: 10, color: '#67e8f9' }}>
-                                    Hyper D{hypersphereProjection.dimensions} align {hypersphereProjection.alignment}%
-                                </span>
-                                <span style={{ fontSize: 10, color: '#475569' }}>·</span>
-                                <span style={{ fontSize: 10, color: '#a5b4fc' }}>
-                                    N/2 orbits {Math.max(2, Math.ceil(hypersphereProjection.dimensions / 2))}
-                                </span>
-                            </>
-                        ) : (
-                            <>
-                                <span style={{ fontSize: 10, color: '#67e8f9', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                                    All-sector rule mining
-                                </span>
-                                <span style={{ fontSize: 10, color: '#475569' }}>·</span>
-                                <span style={{ fontSize: 10, color: '#94a3b8' }}>
-                                    {indexedFileCount} sectors · {notebookCellCount} cells
-                                </span>
-                                <span style={{ fontSize: 10, color: '#475569' }}>·</span>
-                                <span style={{ fontSize: 10, color: '#a5b4fc' }}>
-                                    Hyper D{hypersphereProjection.dimensions} · N/2 {Math.max(2, Math.ceil(hypersphereProjection.dimensions / 2))}
-                                </span>
-                                <span style={{ fontSize: 10, color: '#475569' }}>·</span>
-                                <span style={{ fontSize: 10, color: '#7dd3fc' }}>
-                                    C files {cFileCount}
-                                </span>
-                            </>
-                        )}
-                    </div>
-
+                    {/* ─── Side telemetry rail (left) ───────────────────────── */}
                     <div style={{
                         position: 'absolute',
-                        left: '50%',
-                        bottom: loopRailBottom,
-                        transform: 'translateX(-50%)',
-                        width: 'min(840px, calc(100% - 24px))',
+                        left: leftRailInset,
+                        bottom: leftTelemetryBottom,
+                        width: 160,
                         display: 'grid',
-                        gridTemplateColumns: `repeat(${visibleLoops.length}, minmax(120px, 1fr))`,
                         gap: 8,
                         zIndex: 3,
+                        pointerEvents: 'none',
                     }}>
-                        {visibleLoops.map((loop) => {
-                            const active = loop.id !== null && activeDock === loop.id;
-                            return (
-                                <button
-                                    key={loop.label}
-                                    type="button"
-                                    onClick={() => {
-                                        if (loop.id === null) {
-                                            setActiveWorkflowStep('commit');
-                                            setWorkflowDepth(3);
-                                            setActiveDock('player');
-                                            return;
-                                        }
-                                        setActiveDock(activeDock === loop.id ? null : loop.id);
-                                    }}
-                                    style={{
-                                        borderRadius: 10,
-                                        border: active ? `1px solid ${loop.accent}` : `1px solid ${rewardBand.soft}`,
-                                        background: active ? 'rgba(8, 47, 73, 0.5)' : 'rgba(2, 10, 22, 0.64)',
-                                        color: '#e2e8f0',
-                                        padding: '7px 8px',
-                                        textAlign: 'left',
-                                        cursor: 'pointer',
-                                        opacity: 1,
-                                        boxShadow: active ? `0 0 16px ${rewardBand.glow}` : 'none',
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6, alignItems: 'baseline' }}>
-                                        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: loop.accent, fontWeight: 700 }}>{loop.label}</span>
-                                        <span style={{ fontSize: 11, fontWeight: 700 }}>{loop.value}%</span>
-                                    </div>
-                                    <div style={{ marginTop: 5, height: 4, borderRadius: 999, background: 'rgba(15, 23, 42, 0.85)', overflow: 'hidden' }}>
-                                        <div style={{ width: `${loop.value}%`, height: '100%', background: loop.accent, transition: 'width 220ms ease' }} />
-                                    </div>
-                                    <div style={{ marginTop: 5, fontSize: 9, color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {loop.id === null ? `Prime reward +${projectedRewardXp} XP` : loop.detail}
-                                    </div>
-                                </button>
-                            );
-                        })}
+                        <div style={{
+                            borderRadius: 10,
+                            border: '1px solid rgba(148, 163, 184, 0.24)',
+                            background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.82), rgba(3, 9, 19, 0.82))',
+                            padding: '8px 9px',
+                            display: 'grid',
+                            gap: 6,
+                        }}>
+                            <div style={{ fontSize: 9, color: '#93c5fd', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Signal</div>
+                            <div style={{ fontSize: 10, color: '#e2e8f0' }}>{lineCount} lines · {includeCount} deps</div>
+                            <div style={{ fontSize: 10, color: '#e2e8f0' }}>{callDensity}% density</div>
+                            <div style={{ fontSize: 10, color: riskLabel === 'Critical' ? '#fda4af' : riskLabel === 'Elevated' ? '#fcd34d' : '#86efac' }}>{riskLabel}</div>
+                        </div>
+
+                        <div style={{
+                            borderRadius: 10,
+                            border: '1px solid rgba(148, 163, 184, 0.24)',
+                            background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.82), rgba(3, 9, 19, 0.82))',
+                            padding: '8px 9px',
+                            display: 'grid',
+                            gap: 6,
+                        }}>
+                            <div style={{ fontSize: 9, color: '#a5b4fc', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Hypersphere</div>
+                            <div style={{ fontSize: 10, color: '#e2e8f0' }}>D{hypersphereProjection.dimensions} · N/2 {Math.max(2, Math.ceil(hypersphereProjection.dimensions / 2))}</div>
+                            <div style={{ fontSize: 10, color: '#e2e8f0' }}>Align {hypersphereProjection.alignment}%</div>
+                            <div style={{ fontSize: 10, color: '#7dd3fc' }}>C files {cFileCount}</div>
+                        </div>
+                    </div>
+
+                    {/* ─── Quest log rail (right) ───────────────────────────── */}
+                    <div style={{
+                        position: 'absolute',
+                        right: rightRailInset,
+                        bottom: loopRailBottom,
+                        width: questRailWidth,
+                        borderRadius: 12,
+                        border: '1px solid rgba(148, 163, 184, 0.28)',
+                        background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.9), rgba(3, 9, 19, 0.9))',
+                        boxShadow: '0 10px 22px rgba(2, 6, 23, 0.34)',
+                        padding: 8,
+                        display: 'grid',
+                        gap: 8,
+                        zIndex: 4,
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                            <div style={{ fontSize: 10, color: '#a5b4fc', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+                                Quest Log
+                            </div>
+                            <div style={{ fontSize: 9, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                                Step {activeWorkflowStep} · Depth {workflowDepth}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gap: 6 }}>
+                            {visibleLoops.filter((loop) => loop.id !== null).map((loop, index) => {
+                                const active = activeDock === loop.id;
+                                return (
+                                    <button
+                                        key={loop.label}
+                                        type="button"
+                                        onClick={() => setActiveDock(active ? null : loop.id)}
+                                        style={{
+                                            borderRadius: 9,
+                                            border: active ? `1px solid ${loop.accent}` : `1px solid ${rewardBand.soft}`,
+                                            background: active ? 'rgba(8, 47, 73, 0.52)' : 'rgba(2, 10, 22, 0.68)',
+                                            color: '#e2e8f0',
+                                            padding: '7px 9px',
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            boxShadow: active ? `0 0 12px ${rewardBand.glow}` : 'none',
+                                            display: 'grid',
+                                            gap: 4,
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                                <span style={{
+                                                    width: 18,
+                                                    height: 18,
+                                                    borderRadius: 999,
+                                                    border: `1px solid ${loop.accent}`,
+                                                    color: loop.accent,
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: 10,
+                                                    fontWeight: 700,
+                                                    flexShrink: 0,
+                                                }}>
+                                                    {index + 1}
+                                                </span>
+                                                <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: loop.accent, fontWeight: 700 }}>
+                                                    {loop.label}
+                                                </span>
+                                            </div>
+                                            <span style={{ fontSize: 10, fontWeight: 700, color: '#cbd5e1' }}>{loop.value}%</span>
+                                        </div>
+                                        <div style={{ fontSize: 9, color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {loop.detail}
+                                        </div>
+                                        <div style={{ height: 3, borderRadius: 999, background: 'rgba(15, 23, 42, 0.9)', overflow: 'hidden' }}>
+                                            <div style={{ width: `${loop.value}%`, height: '100%', background: loop.accent, transition: 'width 220ms ease' }} />
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setActiveWorkflowStep('commit');
+                                setWorkflowDepth(3);
+                                setActiveDock('player');
+                            }}
+                            style={{
+                                borderRadius: 9,
+                                border: '1px solid rgba(16, 185, 129, 0.46)',
+                                background: 'linear-gradient(180deg, rgba(5, 46, 22, 0.86), rgba(6, 34, 18, 0.82))',
+                                color: '#d1fae5',
+                                padding: '7px 9px',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                display: 'grid',
+                                gap: 4,
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+                                <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#86efac', fontWeight: 700 }}>Main Action</span>
+                                <span style={{ fontSize: 11, fontWeight: 700 }}>+{projectedRewardXp} XP</span>
+                            </div>
+                            <div style={{ fontSize: 9, color: '#a7f3d0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                Commit workflow and route to player lane
+                            </div>
+                        </button>
                     </div>
                 </div>
 
                 <div style={{
                     position: 'absolute',
-                    left: '50%',
+                    right: rightRailInset,
                     bottom: dockPanelBottom,
-                    transform: 'translateX(-50%)',
-                    width: 'min(980px, calc(100% - 20px))',
+                    width: dockPanelWidth,
                     zIndex: 4,
                     display: 'grid',
                     gap: 8,
@@ -1380,7 +1447,7 @@ export function NotebookGameplaySurface({
                         <div style={{
                             borderRadius: 14,
                             border: '1px solid rgba(94, 234, 212, 0.22)',
-                            background: 'linear-gradient(180deg, rgba(2, 10, 22, 0.72), rgba(2, 8, 20, 0.7))',
+                            background: 'linear-gradient(180deg, rgba(2, 10, 22, 0.9), rgba(2, 8, 20, 0.9))',
                             boxShadow: '0 12px 20px rgba(2, 6, 23, 0.28)',
                             padding: 8,
                             maxHeight: dockPanelMaxHeight,
@@ -1396,56 +1463,32 @@ export function NotebookGameplaySurface({
                                 borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
                                 paddingBottom: 6,
                             }}>
-                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                    {([
-                                        { id: 'intel', label: 'Intel Node' },
-                                        { id: 'objectives', label: 'Objective Node' },
-                                        { id: 'player', label: 'Player Node' },
-                                    ] as const).map((node) => (
-                                        <button
-                                            key={node.id}
-                                            type="button"
-                                            onClick={() => setActiveDock(node.id)}
-                                            style={{
-                                                borderRadius: 999,
-                                                border: activeDock === node.id ? '1px solid rgba(94, 234, 212, 0.55)' : '1px solid rgba(148, 163, 184, 0.28)',
-                                                background: activeDock === node.id ? 'rgba(13, 148, 136, 0.22)' : 'rgba(8, 13, 28, 0.48)',
-                                                color: activeDock === node.id ? '#99f6e4' : '#cbd5e1',
-                                                padding: '4px 10px',
-                                                fontSize: 10,
-                                                fontWeight: 700,
-                                                letterSpacing: '0.05em',
-                                                textTransform: 'uppercase',
-                                                cursor: 'pointer',
-                                            }}
-                                        >
-                                            {node.label}
-                                        </button>
-                                    ))}
+                                <div style={{ display: 'grid', gap: 2 }}>
+                                    <div style={{ fontSize: 10, color: '#99f6e4', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                                        {activeDock === 'intel' ? 'Intel Node' : activeDock === 'objectives' ? 'Objective Node' : 'Player Node'}
+                                    </div>
+                                    <div style={{ fontSize: 9, color: '#94a3b8' }}>
+                                        Switch nodes from the workflow command lane
+                                    </div>
                                 </div>
-
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setActiveWorkflowStep('commit');
-                                        setWorkflowDepth(3);
-                                        setActiveDock('player');
-                                    }}
+                                    onClick={() => setActiveDock(null)}
                                     style={{
-                                        border: '1px solid rgba(16, 185, 129, 0.45)',
+                                        border: '1px solid rgba(148, 163, 184, 0.34)',
                                         borderRadius: 999,
-                                        background: 'rgba(5, 46, 22, 0.8)',
-                                        color: '#86efac',
+                                        background: 'rgba(8, 13, 28, 0.55)',
+                                        color: '#cbd5e1',
                                         fontSize: 10,
                                         fontWeight: 700,
-                                        letterSpacing: '0.05em',
+                                        letterSpacing: '0.04em',
                                         padding: '4px 10px',
                                         cursor: 'pointer',
                                         textTransform: 'uppercase',
                                         whiteSpace: 'nowrap',
                                     }}
                                 >
-                                    Prime Reward
+                                    Close
                                 </button>
                             </div>
 
@@ -1458,7 +1501,7 @@ export function NotebookGameplaySurface({
                                 Neural relevance {neuralRelevanceScore}% · {rewardTier} · Reward +{projectedRewardXp} XP
                             </div>
 
-                            <div style={{ maxHeight: '31dvh', overflowY: 'auto', paddingRight: 4 }}>
+                            <div style={{ maxHeight: '24dvh', overflowY: 'auto', paddingRight: 4 }}>
                                 {activeDock === 'intel' ? (
                                     <IntelDockPanel
                                         missionTitle={missionSector.title}

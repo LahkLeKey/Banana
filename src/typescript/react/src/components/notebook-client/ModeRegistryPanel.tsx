@@ -16,11 +16,11 @@ type ModeRegistryPanelProps = {
 
 const shellStyle: CSSProperties = {
     position: 'absolute',
-    top: 12,
+    top: 48,
     right: 14,
     zIndex: 8,
     pointerEvents: 'none',
-    width: 'min(420px, calc(100vw - 28px))',
+    width: 'min(360px, calc(100vw - 28px))',
     maxHeight: '30dvh',
     borderRadius: 12,
     border: '1px solid rgba(45, 212, 191, 0.24)',

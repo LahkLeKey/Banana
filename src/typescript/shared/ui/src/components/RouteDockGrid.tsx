@@ -31,7 +31,7 @@ function RouteCornerDock({ corner, children, surface }: { readonly corner: Route
     };
 
     const hPos: CSSProperties = isRight ? { right: 16 } : { left: 16 };
-    const vPos: CSSProperties = isBottom ? { bottom: 76 } : { top: 16 };
+    const vPos: CSSProperties = isBottom ? { bottom: 76 } : { top: 52 };
 
     return <div style={{ ...base, ...hPos, ...vPos }}>{children}</div>;
 }
