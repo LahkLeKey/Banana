@@ -1,4 +1,4 @@
-import { readStoredAuthSession } from '@banana/ui';
+import { readStoredAuthSession, RouteSubActionBar } from '@banana/ui';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 
 import {
@@ -15,7 +15,6 @@ import {
     type TrainingLeaderboardEntry,
     type TrainingReward,
 } from '../../lib/api';
-import { SurfaceCard } from './SurfacePrimitives';
 
 type TrainingOperationsPanelProps = {
     readonly selectedFile: string;
@@ -36,10 +35,17 @@ const buttonStyle: CSSProperties = {
 
 function buildBulkQueueTemplate(selectedFile: string):
     Array<{ title: string; sector: string; rewardXp: number; }> {
+    const normalized = selectedFile.replace(/\\/g, '/');
+    const lane = normalized.split('/').filter(Boolean).pop() ?? selectedFile;
+    const sectorLabel = lane
+        .replace(/\.[^.]+$/, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (match) => match.toUpperCase());
     const sector = selectedFile.length > 0 ? selectedFile : 'default-sector';
+    const targetLabel = sectorLabel.length > 0 ? sectorLabel : 'Frontier Sector';
     return [
         {
-            title: `Survey frontier output in ${sector}`,
+            title: `Survey frontier output in ${targetLabel}`,
             sector,
             rewardXp: 120,
         },
@@ -447,12 +453,9 @@ export function TrainingOperationsPanel(
     }
 
     return (
-        <SurfaceCard
-            title="Logistics Directorate"
-            tone="amber"
-            description="Province-scale command surface for planning orders, resolving cycles, and collecting stipends across the realm."
-        >
-            {content}
-        </SurfaceCard>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, minHeight: 0 }}>
+            <RouteSubActionBar meta="Logistics Directorate · Province command surface" />
+            <div style={{ padding: '8px 10px' }}>{content}</div>
+        </div>
     );
 }

@@ -3,6 +3,14 @@ import {
     clearStoredAuthSession,
     logoutAuthSession,
     readStoredAuthSession,
+    RouteActionLink,
+    RouteBody,
+    RouteEyebrow,
+    RouteInfoCard,
+    RouteInfoGrid,
+    RoutePanel,
+    RouteShell,
+    RouteTitle,
 } from '@banana/ui';
 
 import {
@@ -83,33 +91,35 @@ export function PlayerPortalPage() {
 
     if (!session?.token) {
         return (
-            <main style={shellStyle}>
-                <section style={panelStyle}>
-                    <h1 style={titleStyle}>Steam login required</h1>
-                    <p style={bodyStyle}>
+            <RouteShell background={shellStyle.background as string}>
+                <RoutePanel width="min(100%, 1100px)">
+                    <RouteTitle>Steam login required</RouteTitle>
+                    <RouteBody>
                         Sign in with Steam to view your account details and gameplay stats.
-                    </p>
-                    <a href="/login" style={actionStyle}>Continue to login</a>
-                </section>
-            </main>
+                    </RouteBody>
+                    <div style={{ marginTop: 18 }}>
+                        <RouteActionLink href="/login" tone="primary">Continue to login</RouteActionLink>
+                    </div>
+                </RoutePanel>
+            </RouteShell>
         );
     }
 
     return (
-        <main style={shellStyle}>
-            <section style={panelStyle}>
+        <RouteShell background={shellStyle.background as string}>
+            <RoutePanel width="min(100%, 1100px)">
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div>
-                        <p style={eyebrowStyle}>Banana player portal</p>
-                        <h1 style={titleStyle}>Your account and stats</h1>
-                        <p style={bodyStyle}>
+                        <RouteEyebrow color="#bbf7d0">Banana player portal</RouteEyebrow>
+                        <RouteTitle>Your account and stats</RouteTitle>
+                        <RouteBody>
                             Public player data only. Admin and operator controls are excluded from this website.
-                        </p>
+                        </RouteBody>
                     </div>
                     <button type="button" onClick={handleSignOut} style={buttonStyle}>Sign out</button>
                 </div>
 
-                {loadState === 'loading' ? <p style={bodyStyle}>Loading your latest stats...</p> : null}
+                {loadState === 'loading' ? <RouteBody>Loading your latest stats...</RouteBody> : null}
 
                 {loadState === 'error' ? (
                     <div style={errorPanelStyle}>
@@ -119,37 +129,34 @@ export function PlayerPortalPage() {
                 ) : null}
 
                 {loadState === 'ready' && account && insights ? (
-                    <div style={gridStyle}>
-                        <article style={cardStyle}>
-                            <h2 style={cardTitleStyle}>Identity</h2>
+                    <RouteInfoGrid>
+                        <RouteInfoCard title="Identity">
                             <dl style={dlStyle}>
                                 <div style={rowStyle}><dt style={dtStyle}>Steam ID</dt><dd style={ddStyle}>{account.playerId}</dd></div>
                                 <div style={rowStyle}><dt style={dtStyle}>Status</dt><dd style={ddStyle}>{account.accountStatus}</dd></div>
                                 <div style={rowStyle}><dt style={dtStyle}>Version</dt><dd style={ddStyle}>{account.version}</dd></div>
                             </dl>
-                        </article>
+                        </RouteInfoCard>
 
-                        <article style={cardStyle}>
-                            <h2 style={cardTitleStyle}>Progression</h2>
+                        <RouteInfoCard title="Progression">
                             <dl style={dlStyle}>
                                 <div style={rowStyle}><dt style={dtStyle}>Level</dt><dd style={ddStyle}>{insights.progressionSummary.level}</dd></div>
                                 <div style={rowStyle}><dt style={dtStyle}>XP</dt><dd style={ddStyle}>{insights.progressionSummary.xp}</dd></div>
                                 <div style={rowStyle}><dt style={dtStyle}>No data flag</dt><dd style={ddStyle}>{String(insights.noData)}</dd></div>
                             </dl>
-                        </article>
+                        </RouteInfoCard>
 
-                        <article style={cardStyle}>
-                            <h2 style={cardTitleStyle}>Gameplay snapshot</h2>
+                        <RouteInfoCard title="Gameplay snapshot">
                             <dl style={dlStyle}>
                                 <div style={rowStyle}><dt style={dtStyle}>Change events</dt><dd style={ddStyle}>{insights.sessionSummary.changeEvents}</dd></div>
                                 <div style={rowStyle}><dt style={dtStyle}>Distinct items</dt><dd style={ddStyle}>{insights.inventoryTrendSummary.distinctItems}</dd></div>
                                 <div style={rowStyle}><dt style={dtStyle}>Total quantity</dt><dd style={ddStyle}>{insights.inventoryTrendSummary.totalQuantity}</dd></div>
                             </dl>
-                        </article>
-                    </div>
+                        </RouteInfoCard>
+                    </RouteInfoGrid>
                 ) : null}
-            </section>
-        </main>
+            </RoutePanel>
+        </RouteShell>
     );
 }
 
@@ -161,48 +168,6 @@ const shellStyle: CSSProperties = {
     background:
         'radial-gradient(circle at 12% 8%, rgba(251, 191, 36, 0.18), transparent 34%), radial-gradient(circle at 90% 24%, rgba(34, 197, 94, 0.16), transparent 36%), linear-gradient(150deg, #060917 0%, #0c1228 54%, #101a35 100%)',
     color: '#f8fafc',
-};
-
-const panelStyle: CSSProperties = {
-    width: 'min(100%, 1100px)',
-    borderRadius: 24,
-    border: '1px solid rgba(148, 163, 184, 0.25)',
-    padding: 28,
-    background: 'rgba(8, 12, 27, 0.72)',
-    boxShadow: '0 24px 90px rgba(2, 6, 23, 0.5)',
-};
-
-const eyebrowStyle: CSSProperties = {
-    margin: 0,
-    textTransform: 'uppercase',
-    letterSpacing: '0.13em',
-    color: '#bbf7d0',
-    fontWeight: 700,
-    fontSize: 12,
-};
-
-const titleStyle: CSSProperties = {
-    margin: '12px 0 8px',
-    fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-    lineHeight: 1,
-};
-
-const bodyStyle: CSSProperties = {
-    margin: 0,
-    color: '#cbd5e1',
-    lineHeight: 1.6,
-};
-
-const actionStyle: CSSProperties = {
-    marginTop: 18,
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '12px 16px',
-    borderRadius: 12,
-    textDecoration: 'none',
-    color: '#fff',
-    fontWeight: 700,
-    background: 'linear-gradient(135deg, #16a34a, #0f766e)',
 };
 
 const buttonStyle: CSSProperties = {
@@ -223,25 +188,6 @@ const errorPanelStyle: CSSProperties = {
     border: '1px solid rgba(248, 113, 113, 0.45)',
     background: 'rgba(127, 29, 29, 0.26)',
     color: '#fecaca',
-};
-
-const gridStyle: CSSProperties = {
-    marginTop: 22,
-    display: 'grid',
-    gap: 14,
-    gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-};
-
-const cardStyle: CSSProperties = {
-    borderRadius: 16,
-    border: '1px solid rgba(148, 163, 184, 0.2)',
-    background: 'rgba(15, 23, 42, 0.52)',
-    padding: 16,
-};
-
-const cardTitleStyle: CSSProperties = {
-    margin: '0 0 10px',
-    fontSize: 18,
 };
 
 const dlStyle: CSSProperties = {

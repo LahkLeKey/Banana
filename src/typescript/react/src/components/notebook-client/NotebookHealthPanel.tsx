@@ -1,4 +1,4 @@
-import { SurfaceCard } from './SurfacePrimitives';
+import { RouteSubActionBar } from '@banana/ui';
 
 type NotebookHealthPanelProps = {
     readonly loading: boolean;
@@ -33,9 +33,16 @@ export function NotebookHealthPanel({ loading, manifestError, notebookError, man
         return content;
     }
 
+    const statusMeta = loading
+        ? 'Syncing…'
+        : (manifestError || notebookError)
+            ? 'Transport error'
+            : 'Transport healthy';
+
     return (
-        <SurfaceCard title="Relay Diagnostics" description="Manifest and notebook transport health for this runtime shell.">
-            {content}
-        </SurfaceCard>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <RouteSubActionBar meta={statusMeta} />
+            <div style={{ padding: '10px 12px' }}>{content}</div>
+        </div>
     );
 }

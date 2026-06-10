@@ -193,6 +193,15 @@ export type TelemetryEventsResponse = {
   count: number; backend: 'postgres' | 'memory'; events: TelemetryApiEvent[];
 };
 
+export type ComponentErrorTelemetryPayload = {
+  componentName: string; message: string;
+  stack?: string;
+  componentStack?: string;
+  routePath?: string;
+  userAgent?: string; timestamp: number;
+  metadata?: Record<string, unknown>;
+};
+
 export type ApiBaseResolution = {
   baseUrl: string; error: string | null;
   source: 'vite' | 'localhost-default' | 'unresolved';
@@ -641,6 +650,15 @@ export async function fetchTelemetryEvents(
 
   return requestJson<TelemetryEventsResponse>(
       baseUrl, `/operator/telemetry/events?${params.toString()}`);
+}
+
+export async function reportComponentErrorTelemetry(
+    baseUrl: string, payload: ComponentErrorTelemetryPayload): Promise<void> {
+  await requestJson(baseUrl, '/telemetry/component-errors', {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function verifyLaunchGate(

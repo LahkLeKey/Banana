@@ -10,6 +10,7 @@ import {registerFastifyErrorMapper} from './lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from './middleware/requestContext';
 import {registerRateLimitPlugin} from './plugins/rate-limit.ts';
 import {registerAuthRoutes} from './routes/auth.ts';
+import {registerFrontendTelemetryRoutes} from './routes/frontend-telemetry.ts';
 import {registerGameSessionRoutes} from './routes/game-session.ts';
 import {registerHealthRoutes} from './routes/health.ts';
 import {registerV1GameplayRoutes} from './routes/v1/gameplay';
@@ -77,6 +78,7 @@ app.addHook('onRequest', async (request, reply) => {
 });
 
 await registerHealthRoutes(app);
+await registerFrontendTelemetryRoutes(app);
 await registerAuthRoutes(app);
 await registerGameSessionRoutes(app);
 await registerWorldRoutes(app, {persistentWorldOrchestrationDomain});

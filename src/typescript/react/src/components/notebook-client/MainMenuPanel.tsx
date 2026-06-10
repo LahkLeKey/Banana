@@ -1,46 +1,55 @@
-import type { CSSProperties } from 'react';
-
-import { ActionLink, StatTile, SurfaceCard } from './SurfacePrimitives';
+import { RouteStatTile as StatTile, RouteSubActionBar, RouteSubActionLink } from '@banana/ui';
 
 type MainMenuPanelProps = {
     readonly indexedFileCount: number;
     readonly notebookCellCount: number;
     readonly manifestAvailable: boolean;
+    readonly playerLevel: number;
+    readonly totalXp: number;
+    readonly comboStreak: number;
+    readonly completedQuestCount: number;
+    readonly totalQuestCount: number;
 };
 
-const headingStyle: CSSProperties = {
-    margin: '8px 0 12px',
-    fontSize: 'clamp(2rem, 4.6vw, 3.4rem)',
-    lineHeight: 1,
-    fontFamily: '"Rajdhani", "Segoe UI", sans-serif',
-};
-
-export function MainMenuPanel({ indexedFileCount, notebookCellCount, manifestAvailable }: MainMenuPanelProps) {
+export function MainMenuPanel({
+    indexedFileCount,
+    notebookCellCount,
+    manifestAvailable,
+    playerLevel,
+    totalXp,
+    comboStreak,
+    completedQuestCount,
+    totalQuestCount,
+}: MainMenuPanelProps) {
     return (
-        <SurfaceCard
-            title="Banana Command Uplink"
-            description="Notebook-driven world simulation client. Source Explorer remains the primary workspace for navigating runtime sectors."
-        >
-            <h1 style={headingStyle}>Overworld Runtime Bridge</h1>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {/* Sub-action bar: quick-links as actions, connection status as meta */}
+            <RouteSubActionBar
+                meta={`Lv${playerLevel} · ${totalXp} XP · ${completedQuestCount}/${totalQuestCount} quests · ${manifestAvailable ? 'Synced' : 'Awaiting sync'}`}
+                actions={
+                    <>
+                        <RouteSubActionLink href="/notebooks/native-c-catalog.ipynb">Payload</RouteSubActionLink>
+                        <RouteSubActionLink href="/notebooks/catalog-index.json">Manifest</RouteSubActionLink>
+                    </>
+                }
+            />
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
-                <StatTile label="Map Sectors" value={indexedFileCount} />
-                <StatTile label="Runtime Cells" value={notebookCellCount} />
-                <StatTile
-                    label="Connection"
-                    value={manifestAvailable ? 'Synchronized' : 'Awaiting Sync'}
-                    accent={manifestAvailable ? '#86efac' : '#fca5a5'}
-                />
+            {/* Stat tiles — no card wrapper, direct grid */}
+            <div style={{ flex: 1, overflow: 'auto', padding: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+                    <StatTile label="Map Sectors" value={indexedFileCount} />
+                    <StatTile label="Runtime Cells" value={notebookCellCount} />
+                    <StatTile
+                        label="Connection"
+                        value={manifestAvailable ? 'Synced' : 'Awaiting'}
+                        accent={manifestAvailable ? '#86efac' : '#fca5a5'}
+                    />
+                    <StatTile label="Cmd Level" value={playerLevel} accent="#fcd34d" />
+                    <StatTile label="Total XP" value={totalXp} accent="#67e8f9" />
+                    <StatTile label="Combo" value={`x${Math.max(1, comboStreak)}`} accent="#a5b4fc" />
+                    <StatTile label="Quests" value={`${completedQuestCount}/${totalQuestCount}`} accent="#f9a8d4" />
+                </div>
             </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                <ActionLink href="/notebooks/native-c-catalog.ipynb" emphasis="primary">
-                    Download Notebook Payload
-                </ActionLink>
-                <ActionLink href="/notebooks/catalog-index.json">Open Notebook Manifest</ActionLink>
-                <ActionLink href="/marketing">Legacy Marketing</ActionLink>
-                <ActionLink href="/login">Account Login</ActionLink>
-            </div>
-        </SurfaceCard>
+        </div>
     );
 }

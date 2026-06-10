@@ -1,5 +1,13 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { withErrorBoundary } from "../components/errors/withErrorBoundary";
 import { DataSciencePlaygroundPage } from "../pages/DataSciencePlaygroundPage";
+
+const SafeDataSciencePlaygroundPage = withErrorBoundary(
+  DataSciencePlaygroundPage,
+  {
+    componentName: 'DataSciencePlaygroundPage',
+  },
+);
 
 const notebookAliases = [
   "/",
@@ -17,7 +25,7 @@ const notebookAliases = [
 export const router = createBrowserRouter([
   ...notebookAliases.map((path) => ({
     path,
-    element: <DataSciencePlaygroundPage />,
+    element: <SafeDataSciencePlaygroundPage />,
   })),
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
