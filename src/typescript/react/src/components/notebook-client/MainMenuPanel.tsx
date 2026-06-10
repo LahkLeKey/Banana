@@ -6,6 +6,11 @@ type MainMenuPanelProps = {
     readonly indexedFileCount: number;
     readonly notebookCellCount: number;
     readonly manifestAvailable: boolean;
+    readonly playerLevel: number;
+    readonly totalXp: number;
+    readonly comboStreak: number;
+    readonly completedQuestCount: number;
+    readonly totalQuestCount: number;
 };
 
 const headingStyle: CSSProperties = {
@@ -15,7 +20,16 @@ const headingStyle: CSSProperties = {
     fontFamily: '"Rajdhani", "Segoe UI", sans-serif',
 };
 
-export function MainMenuPanel({ indexedFileCount, notebookCellCount, manifestAvailable }: MainMenuPanelProps) {
+export function MainMenuPanel({
+    indexedFileCount,
+    notebookCellCount,
+    manifestAvailable,
+    playerLevel,
+    totalXp,
+    comboStreak,
+    completedQuestCount,
+    totalQuestCount,
+}: MainMenuPanelProps) {
     return (
         <SurfaceCard
             title="Banana Command Uplink"
@@ -31,6 +45,10 @@ export function MainMenuPanel({ indexedFileCount, notebookCellCount, manifestAva
                     value={manifestAvailable ? 'Synchronized' : 'Awaiting Sync'}
                     accent={manifestAvailable ? '#86efac' : '#fca5a5'}
                 />
+                <StatTile label="Commander Level" value={playerLevel} accent="#fcd34d" />
+                <StatTile label="Total XP" value={totalXp} accent="#67e8f9" />
+                <StatTile label="Combo Chain" value={`x${Math.max(1, comboStreak)}`} accent="#a5b4fc" />
+                <StatTile label="Quest Log" value={`${completedQuestCount}/${totalQuestCount}`} accent="#f9a8d4" />
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>

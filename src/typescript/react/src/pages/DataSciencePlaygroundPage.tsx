@@ -8,9 +8,39 @@ import { NotebookGameplaySurface } from '../components/notebook-client/NotebookG
 import { NotebookHealthPanel } from '../components/notebook-client/NotebookHealthPanel';
 import { NotebookOperationsPanel } from '../components/notebook-client/NotebookOperationsPanel';
 import { RouteModePanel } from '../components/notebook-client/RouteModePanel';
+import { withErrorBoundary } from '../components/errors/withErrorBoundary';
 import { HudActionBar, HudActionButton, HudCornerDock, HudDockSurface, HudFilePicker } from '../components/notebook-client/HudPrimitives';
+import {
+    buildQuestProgress,
+    calculateLevel,
+    calculateSectorXp,
+    deriveNextCoreDomainTarget,
+    deriveSectorDomain,
+    deriveSectorRarity,
+    type SectorDomain,
+} from '../lib/notebook-client/gamification';
 import { resolveRouteHudPreset, type NotebookRouteMode } from '../lib/notebook-client/routeModeConfig';
 import { useNotebookClient } from '../lib/notebook-client/useNotebookClient';
+
+const SafeNotebookGameplaySurface =
+    withErrorBoundary(NotebookGameplaySurface, {
+        componentName: 'NotebookGameplaySurface',
+    });
+const SafeNotebookExplorerPanel = withErrorBoundary(NotebookExplorerPanel, {
+    componentName: 'NotebookExplorerPanel',
+});
+const SafeMainMenuPanel = withErrorBoundary(MainMenuPanel, {
+    componentName: 'MainMenuPanel',
+});
+const SafeRouteModePanel = withErrorBoundary(RouteModePanel, {
+    componentName: 'RouteModePanel',
+});
+const SafeNotebookHealthPanel = withErrorBoundary(NotebookHealthPanel, {
+    componentName: 'NotebookHealthPanel',
+});
+const SafeNotebookOperationsPanel = withErrorBoundary(NotebookOperationsPanel, {
+    componentName: 'NotebookOperationsPanel',
+});
 
 const shellStyle: CSSProperties = {
     height: '100dvh',
@@ -74,6 +104,14 @@ export function DataSciencePlaygroundPage() {
     const [modeDeckAnimating, setModeDeckAnimating] = useState(false);
     const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
     const [transitionHistory, setTransitionHistory] = useState<Array<{ pathname: string; mode: NotebookRouteMode; time: string; }>>([]);
+    const [capturedFiles, setCapturedFiles] = useState<string[]>([]);
+    const [totalXp, setTotalXp] = useState(0);
+    const [comboStreak, setComboStreak] = useState(0);
+    const [comboDomain, setComboDomain] = useState<SectorDomain | ''>('');
+    const [lastSelectionForXp, setLastSelectionForXp] = useState('');
+    const [lastXpGain, setLastXpGain] = useState(0);
+    const [questToast, setQuestToast] = useState('');
+    const [announcedQuestIds, setAnnouncedQuestIds] = useState<string[]>([]);
 
     const routeHudPreset = useMemo(() => resolveRouteHudPreset(location.pathname), [location.pathname]);
 
@@ -98,10 +136,11 @@ export function DataSciencePlaygroundPage() {
             setSelectedFile('');
             return;
         }
-        if (!selectedFile || !filteredFiles.includes(selectedFile)) {
-            handleSelectFile(filteredFiles[0]);
+
+        if (selectedFile && !filteredFiles.includes(selectedFile)) {
+            setSelectedFile('');
         }
-    }, [filteredFiles, selectedFile, handleSelectFile]);
+    }, [filteredFiles, selectedFile]);
 
     useEffect(() => {
         setShowExplorer(routeHudPreset.explorer);
@@ -154,7 +193,81 @@ export function DataSciencePlaygroundPage() {
         };
     }, []);
 
+    useEffect(() => {
+        if (!selectedFile || selectedFile === lastSelectionForXp) {
+            return;
+        }
+
+        const sectorText = cellLookup.get(selectedFile) ?? '';
+        const sectorLineCount = sectorText.length > 0 ? sectorText.split('\n').length : 1;
+        const sectorDomain = deriveSectorDomain(selectedFile);
+        const sectorRarity = deriveSectorRarity(selectedFile, sectorLineCount);
+        const firstCapture = !capturedFiles.includes(selectedFile);
+        const nextCombo = comboDomain === sectorDomain ? comboStreak + 1 : 1;
+        const gainedXp = calculateSectorXp(
+            sectorLineCount,
+            sectorRarity.multiplier,
+            nextCombo,
+            firstCapture,
+        );
+
+        setCapturedFiles((previous) => firstCapture ? [...previous, selectedFile] : previous);
+        setComboDomain(sectorDomain);
+        setComboStreak(nextCombo);
+        setTotalXp((previous) => previous + gainedXp);
+        setLastXpGain(gainedXp);
+        setLastSelectionForXp(selectedFile);
+    }, [
+        selectedFile,
+        lastSelectionForXp,
+        cellLookup,
+        capturedFiles,
+        comboDomain,
+        comboStreak,
+    ]);
+
     const selectedContent = selectedFile ? (cellLookup.get(selectedFile) ?? 'No code cell available for this file.') : 'Select a file from the notebook index.';
+    const selectedLineCount = useMemo(
+        () => selectedContent.split('\n').length,
+        [selectedContent],
+    );
+    const selectedDomain = useMemo(
+        () => deriveSectorDomain(selectedFile),
+        [selectedFile],
+    );
+    const selectedRarity = useMemo(
+        () => deriveSectorRarity(selectedFile, selectedLineCount),
+        [selectedFile, selectedLineCount],
+    );
+    const playerLevel = useMemo(() => calculateLevel(totalXp), [totalXp]);
+    const questProgress = useMemo(() => buildQuestProgress(capturedFiles), [capturedFiles]);
+    const nextDomainTarget = useMemo(
+        () => deriveNextCoreDomainTarget(capturedFiles),
+        [capturedFiles],
+    );
+    const completedQuestCount = useMemo(
+        () => questProgress.filter((quest) => quest.completed).length,
+        [questProgress],
+    );
+
+    useEffect(() => {
+        const newlyCompleted = questProgress.find(
+            (quest) => quest.completed && !announcedQuestIds.includes(quest.id),
+        );
+        if (!newlyCompleted) {
+            return;
+        }
+
+        setAnnouncedQuestIds((previous) => [...previous, newlyCompleted.id]);
+        setQuestToast(`Quest Complete: ${newlyCompleted.title}`);
+        const timer = window.setTimeout(() => {
+            setQuestToast('');
+        }, 2300);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, [announcedQuestIds, completedQuestCount, questProgress]);
     const manifestLabel = manifest ? `Files indexed: ${manifest.file_count}` : 'Manifest pending';
     const sourceRootLabel = manifest ? `Source root: ${manifest.source_root}` : '';
     const maxLinesLabel = manifest ? `Max lines/file: ${manifest.max_lines_per_file}` : 'Run workflow to publish metadata';
@@ -170,7 +283,7 @@ export function DataSciencePlaygroundPage() {
 
     const dockRenderers = {
         explorer: (
-            <NotebookExplorerPanel
+            <SafeNotebookExplorerPanel
                 files={filteredFiles}
                 query={query}
                 selectedFile={selectedFile}
@@ -188,18 +301,23 @@ export function DataSciencePlaygroundPage() {
             <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 0, 0.74, 'translateY(8px) scale(0.988)', 'saturate(1.05)')}>
                 {routeHudPreset.mode === 'runtime'
                     ? (
-                        <MainMenuPanel
+                        <SafeMainMenuPanel
                             indexedFileCount={manifest?.file_count ?? 0}
                             notebookCellCount={notebookCellCount}
                             manifestAvailable={Boolean(manifest)}
+                            playerLevel={playerLevel}
+                            totalXp={totalXp}
+                            comboStreak={comboStreak}
+                            completedQuestCount={completedQuestCount}
+                            totalQuestCount={questProgress.length}
                         />
                     )
-                    : <RouteModePanel mode={routeHudPreset.mode} />}
+                    : <SafeRouteModePanel mode={routeHudPreset.mode} />}
             </div>
         ),
         status: (
             <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 40, 0.86, 'translateY(7px) scale(1)', 'saturate(1.03)')}>
-                <NotebookHealthPanel
+                <SafeNotebookHealthPanel
                     loading={loading}
                     manifestError={manifestError}
                     notebookError={notebookError}
@@ -210,7 +328,7 @@ export function DataSciencePlaygroundPage() {
         ),
         operations: (
             <div style={resolveDeckTransitionStyle(prefersReducedMotion, modeDeckAnimating, 80, 0.8, 'translateY(9px) scale(0.992)', 'saturate(1.07)')}>
-                <NotebookOperationsPanel
+                <SafeNotebookOperationsPanel
                     selectedFile={selectedFile}
                     selectedContent={selectedContent}
                     indexedFileCount={manifest?.file_count ?? 0}
@@ -249,7 +367,23 @@ export function DataSciencePlaygroundPage() {
                     />
                 ) : null}
 
-                <NotebookGameplaySurface selectedFile={selectedFile} selectedContent={selectedContent} fullBleed />
+                <SafeNotebookGameplaySurface
+                    selectedFile={selectedFile}
+                    selectedContent={selectedContent}
+                    fullBleed
+                    indexedFileCount={manifest?.file_count ?? 0}
+                    notebookCellCount={notebookCellCount}
+                    selectedDomain={selectedDomain}
+                    rarityLabel={selectedRarity.label}
+                    rarityAccent={selectedRarity.accent}
+                    playerLevel={playerLevel}
+                    totalXp={totalXp}
+                    comboStreak={comboStreak}
+                    lastXpGain={lastXpGain}
+                    questProgress={questProgress}
+                    questToast={questToast}
+                    nextDomainTarget={nextDomainTarget}
+                />
 
                 {dockLayout.map((dock) => (dockState[dock.id] ? (
                     <HudCornerDock key={dock.id} corner={dock.corner}>
