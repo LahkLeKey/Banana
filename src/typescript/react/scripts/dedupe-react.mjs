@@ -42,7 +42,7 @@ for (const scopedPkg of ["react", "react-dom"]) {
   console.log(`[dedupe-react] linked @types/${scopedPkg} -> ${target}`);
 }
 
-for (const pkg of ["react", "react-dom"]) {
+for (const pkg of ["react", "react-dom", "zustand"]) {
   const target = join(reactAppRoot, "node_modules", pkg);
   const link = join(sharedUiNm, pkg);
   if (!existsSync(target)) {
