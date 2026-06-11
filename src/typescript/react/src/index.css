@@ -36,4 +36,29 @@
     --ring: 47.9 95.8% 53.1%;
     --radius: 0.5rem;
   }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(56, 189, 248, 0.45) rgba(8, 13, 28, 0.46);
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: rgba(8, 13, 28, 0.46);
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(45, 212, 191, 0.5), rgba(59, 130, 246, 0.48));
+    border: 2px solid rgba(8, 13, 28, 0.58);
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(94, 234, 212, 0.62), rgba(125, 211, 252, 0.6));
+  }
 }

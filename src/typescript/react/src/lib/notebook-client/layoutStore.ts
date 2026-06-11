@@ -38,6 +38,19 @@ type NotebookLayoutState = {
   showMenu: boolean;
   showStatus: boolean;
   showOperations: boolean;
+  lastHudSnapshot:
+      {explorer: boolean; menu: boolean; status: boolean; operations: boolean;};
+  showIntelNodeWindow: boolean;
+  showObjectiveNodeWindow: boolean;
+  showPlayerNodeWindow: boolean;
+  showQuestLogWindow: boolean;
+  showNodeOpsWindow: boolean;
+  lastGameplayWindowSnapshot: {
+    intelNode: boolean; objectiveNode: boolean; playerNode: boolean;
+    questLog: boolean;
+    nodeOps: boolean;
+  };
+  lastGameplayDockSnapshot: ActiveDock;
   explorerDropupOpen: boolean;
   setActiveDock: (dock: ActiveDock) => void;
   setIntelPanel: (panel: IntelPanel) => void;
@@ -52,6 +65,19 @@ type NotebookLayoutState = {
   applyHudPreset: (preset: {
     explorer: boolean; menu: boolean; status: boolean; operations: boolean;
   }) => void;
+  setHudPanelVisibility: (
+      panel: 'explorer'|'menu'|'status'|'operations',
+      visible: boolean,
+      ) => void;
+  toggleHudPanel: (panel: 'explorer'|'menu'|'status'|'operations') => void;
+  closeAllHudPanels: () => void;
+  reopenHudPanels: () => void;
+  setGameplayWindowVisibility: (
+      window: 'intelNode'|'objectiveNode'|'playerNode'|'questLog'|'nodeOps',
+      visible: boolean,
+      ) => void;
+  closeAllGameplayWindows: () => void;
+  reopenGameplayWindows: () => void;
   focusHudPanel: (panel: 'explorer'|'menu'|'status'|'operations'|null) => void;
   resetHudPanels: () => void;
   resetForSector: (hasSelection: boolean) => void;
@@ -70,6 +96,25 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
       showMenu: true,
       showStatus: true,
       showOperations: true,
+      lastHudSnapshot: {
+        explorer: true,
+        menu: true,
+        status: true,
+        operations: true,
+      },
+      showIntelNodeWindow: true,
+      showObjectiveNodeWindow: true,
+      showPlayerNodeWindow: true,
+      showQuestLogWindow: true,
+      showNodeOpsWindow: true,
+      lastGameplayWindowSnapshot: {
+        intelNode: true,
+        objectiveNode: true,
+        playerNode: true,
+        questLog: true,
+        nodeOps: true,
+      },
+      lastGameplayDockSnapshot: 'intel',
       explorerDropupOpen: false,
       setActiveDock: (dock) => set({activeDock: dock}),
       setIntelPanel: (panel) => set({intelPanel: panel}),
@@ -99,6 +144,87 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
         showOperations: pickHudPanelFromPreset(preset) === 'operations',
         explorerDropupOpen: false,
       }),
+      setHudPanelVisibility: (panel, visible) => set(
+          (state) => ({
+            showExplorer: panel === 'explorer' ? visible : state.showExplorer,
+            showMenu: panel === 'menu' ? visible : state.showMenu,
+            showStatus: panel === 'status' ? visible : state.showStatus,
+            showOperations: panel === 'operations' ? visible :
+                                                     state.showOperations,
+          })),
+      toggleHudPanel: (panel) =>
+          set((state) => ({
+                showExplorer: panel === 'explorer' ? !state.showExplorer :
+                                                     state.showExplorer,
+                showMenu: panel === 'menu' ? !state.showMenu : state.showMenu,
+                showStatus: panel === 'status' ? !state.showStatus :
+                                                 state.showStatus,
+                showOperations: panel === 'operations' ? !state.showOperations :
+                                                         state.showOperations,
+                explorerDropupOpen: false,
+              })),
+      closeAllHudPanels: () => set((state) => ({
+                                     lastHudSnapshot: {
+                                       explorer: state.showExplorer,
+                                       menu: state.showMenu,
+                                       status: state.showStatus,
+                                       operations: state.showOperations,
+                                     },
+                                     showExplorer: false,
+                                     showMenu: false,
+                                     showStatus: false,
+                                     showOperations: false,
+                                     explorerDropupOpen: false,
+                                   })),
+      reopenHudPanels: () =>
+          set((state) => ({
+                showExplorer: state.lastHudSnapshot.explorer,
+                showMenu: state.lastHudSnapshot.menu,
+                showStatus: state.lastHudSnapshot.status,
+                showOperations: state.lastHudSnapshot.operations,
+                explorerDropupOpen: false,
+              })),
+      setGameplayWindowVisibility: (window, visible) => set(
+          (state) => ({
+            showIntelNodeWindow:
+                window === 'intelNode' ? visible : state.showIntelNodeWindow,
+            showObjectiveNodeWindow: window === 'objectiveNode' ?
+                visible :
+                state.showObjectiveNodeWindow,
+            showPlayerNodeWindow:
+                window === 'playerNode' ? visible : state.showPlayerNodeWindow,
+            showQuestLogWindow:
+                window === 'questLog' ? visible : state.showQuestLogWindow,
+            showNodeOpsWindow: window === 'nodeOps' ? visible :
+                                                      state.showNodeOpsWindow,
+          })),
+      closeAllGameplayWindows: () =>
+          set((state) => ({
+                lastGameplayWindowSnapshot: {
+                  intelNode: state.showIntelNodeWindow,
+                  objectiveNode: state.showObjectiveNodeWindow,
+                  playerNode: state.showPlayerNodeWindow,
+                  questLog: state.showQuestLogWindow,
+                  nodeOps: state.showNodeOpsWindow,
+                },
+                lastGameplayDockSnapshot: state.activeDock,
+                activeDock: null,
+                showIntelNodeWindow: false,
+                showObjectiveNodeWindow: false,
+                showPlayerNodeWindow: false,
+                showQuestLogWindow: false,
+                showNodeOpsWindow: false,
+              })),
+      reopenGameplayWindows: () => set(
+          (state) => ({
+            activeDock: state.lastGameplayDockSnapshot,
+            showIntelNodeWindow: state.lastGameplayWindowSnapshot.intelNode,
+            showObjectiveNodeWindow:
+                state.lastGameplayWindowSnapshot.objectiveNode,
+            showPlayerNodeWindow: state.lastGameplayWindowSnapshot.playerNode,
+            showQuestLogWindow: state.lastGameplayWindowSnapshot.questLog,
+            showNodeOpsWindow: state.lastGameplayWindowSnapshot.nodeOps,
+          })),
       focusHudPanel: (panel) => set(() => ({
                                       showExplorer: panel === 'explorer',
                                       showMenu: panel === 'menu',

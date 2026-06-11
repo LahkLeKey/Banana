@@ -10,6 +10,7 @@ export type ResizablePanelProps = {
     readonly defaultHeight?: number;
     readonly onResize?: (width: number, height: number) => void;
     readonly onCollapse?: () => void;
+    readonly onExpand?: () => void;
     readonly isCollapsed?: boolean;
     readonly corner?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 };
@@ -24,6 +25,7 @@ export function ResizablePanel({
     defaultHeight = 400,
     onResize,
     onCollapse,
+    onExpand,
     isCollapsed = false,
     corner = 'top-left',
 }: ResizablePanelProps) {
@@ -36,26 +38,41 @@ export function ResizablePanel({
         setIsResizing(direction);
     };
 
+    const getViewportLimits = () => {
+        const horizontalMargin = 40;
+        const verticalMargin = 140;
+        const maxWidth = Math.max(minWidth, window.innerWidth - horizontalMargin);
+        const maxHeight = Math.max(minHeight, window.innerHeight - verticalMargin);
+        return { maxWidth, maxHeight };
+    };
+
     useEffect(() => {
         if (!isResizing || !containerRef.current) return;
 
         const handleMouseMove = (e: MouseEvent) => {
             e.preventDefault();
 
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (!rect) {
+                return;
+            }
+
+            const { maxWidth, maxHeight } = getViewportLimits();
+
             if (isResizing === 'horizontal') {
                 const isRight = corner === 'top-right' || corner === 'bottom-right';
                 const newWidth = isRight
-                    ? width - (e.clientX - (containerRef.current?.getBoundingClientRect().right ?? 0))
-                    : e.clientX - (containerRef.current?.getBoundingClientRect().left ?? 0);
-                const constrainedWidth = Math.max(minWidth, newWidth);
+                    ? rect.right - e.clientX
+                    : e.clientX - rect.left;
+                const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
                 setWidth(constrainedWidth);
                 onResize?.(constrainedWidth, height);
             } else if (isResizing === 'vertical') {
                 const isBottom = corner === 'bottom-left' || corner === 'bottom-right';
                 const newHeight = isBottom
-                    ? height - (e.clientY - (containerRef.current?.getBoundingClientRect().bottom ?? 0))
-                    : e.clientY - (containerRef.current?.getBoundingClientRect().top ?? 0);
-                const constrainedHeight = Math.max(minHeight, newHeight);
+                    ? rect.bottom - e.clientY
+                    : e.clientY - rect.top;
+                const constrainedHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
                 setHeight(constrainedHeight);
                 onResize?.(width, constrainedHeight);
             }
@@ -117,9 +134,12 @@ export function ResizablePanel({
         zIndex: 10,
     };
 
+    const isRight = corner === 'top-right' || corner === 'bottom-right';
+    const isBottom = corner === 'bottom-left' || corner === 'bottom-right';
+
     const horizontalHandleStyle: CSSProperties = {
         ...resizeHandleStyle,
-        right: 0,
+        ...(isRight ? { left: 0 } : { right: 0 }),
         top: 0,
         bottom: 0,
         width: '4px',
@@ -127,7 +147,7 @@ export function ResizablePanel({
 
     const verticalHandleStyle: CSSProperties = {
         ...resizeHandleStyle,
-        bottom: 0,
+        ...(isBottom ? { top: 0 } : { bottom: 0 }),
         left: 0,
         right: 0,
         height: '4px',
@@ -159,24 +179,46 @@ export function ResizablePanel({
             {title && (
                 <div style={headerStyle}>
                     <span>{title}</span>
-                    {onCollapse && (
-                        <button
-                            onClick={onCollapse}
-                            style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'rgba(226, 232, 240, 0.5)',
-                                cursor: 'pointer',
-                                padding: '2px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                            title="Collapse panel"
-                        >
-                            ×
-                        </button>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {onExpand && (
+                            <button
+                                onClick={onExpand}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'rgba(148, 163, 184, 0.8)',
+                                    cursor: 'pointer',
+                                    padding: '2px 4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '11px',
+                                    lineHeight: 1,
+                                }}
+                                title="Expand panel"
+                            >
+                                □
+                            </button>
+                        )}
+                        {onCollapse && (
+                            <button
+                                onClick={onCollapse}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'rgba(226, 232, 240, 0.5)',
+                                    cursor: 'pointer',
+                                    padding: '2px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                                title="Collapse panel"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
             <div style={contentStyle}>{children}</div>
