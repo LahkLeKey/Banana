@@ -1,4 +1,4 @@
-import {create} from 'zustand';
+import {create, type StateCreator} from 'zustand';
 
 export type DockCorner = 'top-left'|'top-right'|'bottom-left'|'bottom-right';
 export type DockAnchorSide = 'left'|'right'|'top'|'bottom';
@@ -140,8 +140,7 @@ const getGroupMembers =
       return [...visited];
     };
 
-export const useResizableDockLayoutStore = create<DockLayoutsStore>(
-    (set) => ({
+const createDockLayoutsStore: StateCreator<DockLayoutsStore> = (set) => ({
       layouts: {},
 
       initializeLayout: (
@@ -448,4 +447,6 @@ export const useResizableDockLayoutStore = create<DockLayoutsStore>(
               },
             };
           }),
-    }));
+        });
+
+    export const useResizableDockLayoutStore = create<DockLayoutsStore>(createDockLayoutsStore);
