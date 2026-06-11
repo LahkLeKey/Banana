@@ -1,4 +1,4 @@
-import { RouteDeckTransition, RouteDockGrid, RouteFilePickerOverlay, RouteHudControlStrip, RouteTopBar } from '@banana/ui';
+import { RouteDeckTransition, ResizableDockGrid, RouteFilePickerOverlay, RouteHudControlStrip, RouteTopBar } from '@banana/ui';
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -398,17 +398,20 @@ export function DataSciencePlaygroundPage() {
         ),
     } as const;
 
-    const dockLayout: Array<{ id: keyof typeof dockRenderers; corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; }> = [
-        { id: 'explorer', corner: 'top-left' },
-        { id: 'menu', corner: 'top-right' },
-        { id: 'status', corner: 'bottom-left' },
-        { id: 'operations', corner: 'bottom-right' },
+    const dockLayout: Array<{ id: keyof typeof dockRenderers; corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; title: string; }> = [
+        { id: 'explorer', corner: 'top-left', title: 'FILE EXPLORER' },
+        { id: 'menu', corner: 'top-right', title: 'MAIN MENU' },
+        { id: 'status', corner: 'bottom-left', title: 'ROUTE REGISTRY' },
+        { id: 'operations', corner: 'bottom-right', title: 'OPERATIONS' },
     ];
     const dockEntries = dockLayout.map((dock) => ({
         id: dock.id,
         corner: dock.corner,
         visible: dockState[dock.id],
         content: dockRenderers[dock.id],
+        title: dock.title,
+        defaultWidth: 360,
+        defaultHeight: 320,
     }));
 
     return (
@@ -459,7 +462,7 @@ export function DataSciencePlaygroundPage() {
                     nextDomainTarget={nextDomainTarget}
                 />
 
-                <RouteDockGrid entries={dockEntries} surface="overlay" />
+                <ResizableDockGrid entries={dockEntries} />
 
                 <RouteHudControlStrip
                     routeLabel={routeHudPreset.label}
