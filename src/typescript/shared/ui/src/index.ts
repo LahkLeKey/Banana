@@ -2,13 +2,13 @@
 // Deep imports are forbidden by lint; everything cross-platform-safe is
 // re-exported here.
 
+export type {EnhancedPanelProps} from './components/EnhancedPanel';
+export {EnhancedPanel} from './components/EnhancedPanel';
 export type {ErrorTextProps} from './components/ErrorText';
 export {ErrorText} from './components/ErrorText';
 // Game Engine UI — shared components for ARPG viewport
 export type {EngineStatus, RadialDirection,} from './components/GameEngineTypes';
 export {computeMoveAxes, getDirectionFromTouch, isMovementKey, MOVEMENT_KEYS, RADIAL_CONFIG,} from './components/GameEngineTypes';
-export type {EnhancedPanelProps} from './components/EnhancedPanel';
-export {EnhancedPanel} from './components/EnhancedPanel';
 export type {PanelBaseProps} from './components/PanelBase';
 export {PanelBase} from './components/PanelBase';
 export type {PanelGroupEntry, PanelGroupProps} from './components/PanelGroup';
@@ -28,22 +28,21 @@ export {RouteFilePickerOverlay} from './components/RouteFilePickerOverlay';
 export {RouteHudControlStrip} from './components/RouteHudControlStrip';
 export type {RouteDescriptorAction} from './components/RouteModeDescriptorCard';
 export {RouteModeDescriptorCard} from './components/RouteModeDescriptorCard';
-export type {TabbedPanelEntry, TabbedPanelGroupProps} from './components/TabbedPanelGroup';
-export {TabbedPanelGroup} from './components/TabbedPanelGroup';
 export {RouteActionButton, RouteActionLink, RouteActionsRow, RouteBody, RouteEyebrow, RouteFieldLabel, RouteInfoCard, RouteInfoGrid, RouteMetaText, RoutePanel, RouteShell, RouteTextInput, RouteTitle,} from './components/RouteScaffold';
 export type {RouteSubActionTab} from './components/RouteSubActionBar';
 export {RouteSubActionBar, RouteSubActionLink} from './components/RouteSubActionBar';
 export type {RouteSurfaceTone} from './components/RouteSurfacePrimitives';
 export {RouteActionLinkPrimitive, RoutePill, RouteStatTile, RouteSurfaceCard} from './components/RouteSurfacePrimitives';
 export {RouteTopBar} from './components/RouteTopBar';
+export type {TabbedPanelEntry, TabbedPanelGroupProps} from './components/TabbedPanelGroup';
+export {TabbedPanelGroup} from './components/TabbedPanelGroup';
 export type {WorkflowDepth, WorkflowOverlayModel, WorkflowStepOption,} from './components/WorkflowOrchestrator';
 export {WorkflowCenterToolbar, WorkflowOverlayStack,} from './components/WorkflowOrchestrator';
-export type {Tokens} from './tokens';
-export {tokens} from './tokens';
-
 // Hooks for panel state management
 export type {PanelState, PanelStateActions} from './hooks/usePanelState';
 export {usePanelState} from './hooks/usePanelState';
+export type {Tokens} from './tokens';
+export {tokens} from './tokens';
 
 export * from './domains/ConnectionManager';
 export * from './domains/GameEngineUIService';
