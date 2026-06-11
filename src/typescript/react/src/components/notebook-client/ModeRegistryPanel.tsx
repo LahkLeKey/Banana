@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { PanelBase } from '@banana/ui';
 
 import type { NotebookRouteMode } from '../../lib/notebook-client/routeModeConfig';
 
@@ -17,20 +18,10 @@ type ModeRegistryPanelProps = {
 const shellStyle: CSSProperties = {
     position: 'absolute',
     top: 48,
-    right: 14,
-    zIndex: 8,
+    zIndex: 3,
+    width: 'min(380px, calc(100vw - 28px))',
+    maxHeight: 'calc(100dvh - 120px)',
     pointerEvents: 'none',
-    width: 'min(360px, calc(100vw - 28px))',
-    maxHeight: '30dvh',
-    borderRadius: 12,
-    border: '1px solid rgba(45, 212, 191, 0.24)',
-    background: 'linear-gradient(180deg, rgba(2, 12, 24, 0.82), rgba(3, 18, 32, 0.78))',
-    boxShadow: '0 14px 30px rgba(2, 6, 23, 0.45)',
-    padding: '7px 9px',
-    color: '#cbd5e1',
-    fontFamily: '"IBM Plex Mono", "Cascadia Mono", monospace',
-    fontSize: 10,
-    overflow: 'auto',
 };
 
 function formatFlag(name: string, enabled: boolean): string {
@@ -56,47 +47,88 @@ export function ModeRegistryPanel(props: ModeRegistryPanelProps) {
         formatFlag('status', status),
         formatFlag('operations', operations),
     ].join('  ');
+    const [expanded, setExpanded] = useState(false);
+
+    const containerStyle: CSSProperties = {
+        ...shellStyle,
+        ...(explorer ? { left: 14 } : { right: 14 }),
+        width: expanded ? 'min(520px, calc(100vw - 28px))' : shellStyle.width,
+        maxHeight: expanded ? '62dvh' : '156px',
+    };
 
     return (
-        <aside style={shellStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                <span style={{ color: '#67e8f9', letterSpacing: '0.04em' }}>
-                    MODE REGISTRY (DEV)
-                </span>
-                <span style={{ color: '#93c5fd' }}>
-                    route={pathname}
-                </span>
-            </div>
-            <div style={{ marginTop: 5, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <span>mode={mode}</span>
-                <span>label={label}</span>
-                <span>{dockFlags}</span>
-                <span>reducedMotion:{prefersReducedMotion ? 'on' : 'off'}</span>
-            </div>
+        <aside style={containerStyle}>
+            <div style={{ pointerEvents: 'auto' }}>
+                <PanelBase
+                    title="Mode Registry (Dev)"
+                    variant="compact"
+                    headerAction={(
+                        <button
+                            type="button"
+                            onClick={() => setExpanded((current) => !current)}
+                            style={{
+                                borderRadius: 6,
+                                border: '1px solid rgba(45, 212, 191, 0.3)',
+                                background: expanded ? 'rgba(45, 212, 191, 0.14)' : 'rgba(8, 47, 73, 0.4)',
+                                color: '#5eead4',
+                                padding: '2px 8px',
+                                fontSize: 9,
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                cursor: 'pointer',
+                            }}
+                            title={expanded ? 'Compact mode registry' : 'Expand mode registry'}
+                        >
+                            {expanded ? 'Compact' : 'Expand'}
+                        </button>
+                    )}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', fontSize: 11, fontFamily: '"IBM Plex Mono", monospace', marginBottom: 8 }}>
+                        <span style={{ color: '#67e8f9' }}>route={pathname}</span>
+                        <span style={{ color: '#93c5fd' }}>mode={mode}</span>
+                    </div>
+                    <div style={{ fontSize: 11, fontFamily: '"IBM Plex Mono", monospace', marginBottom: 8 }}>
+                        <div style={{ color: '#cbd5e1', marginBottom: 3 }}>label={label}</div>
+                        <div style={{ color: '#94a3b8' }}>{dockFlags}</div>
+                        <div style={{ color: '#94a3b8' }}>reducedMotion:{prefersReducedMotion ? 'on' : 'off'}</div>
+                    </div>
 
-            <div style={{ marginTop: 6, display: 'flex', gap: 5, flexWrap: 'wrap', pointerEvents: 'auto' }}>
-                {['/notebooks', '/login', '/marketing', '/account'].map((href) => (
-                    <a
-                        key={href}
-                        href={href}
-                        style={{
-                            borderRadius: 999,
-                            border: '1px solid rgba(148, 163, 184, 0.3)',
-                            background: 'rgba(8, 13, 28, 0.45)',
-                            color: '#93c5fd',
-                            textDecoration: 'none',
-                            padding: '3px 7px',
-                            fontSize: 9,
-                            letterSpacing: '0.03em',
-                        }}
-                    >
-                        {href}
-                    </a>
-                ))}
-            </div>
+                    <div style={{ marginTop: 6, display: 'flex', gap: 4, flexWrap: 'wrap', pointerEvents: 'auto' }}>
+                        {['/notebooks', '/login', '/marketing', '/account'].map((href) => (
+                            <a
+                                key={href}
+                                href={href}
+                                style={{
+                                    borderRadius: 6,
+                                    border: '1px solid rgba(45, 212, 191, 0.3)',
+                                    background: 'rgba(8, 47, 73, 0.4)',
+                                    color: '#5eead4',
+                                    textDecoration: 'none',
+                                    padding: '4px 8px',
+                                    fontSize: 9,
+                                    fontWeight: 500,
+                                    transition: 'all 0.15s ease',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(45, 212, 191, 0.15)';
+                                    e.currentTarget.style.borderColor = 'rgba(45, 212, 191, 0.5)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(8, 47, 73, 0.4)';
+                                    e.currentTarget.style.borderColor = 'rgba(45, 212, 191, 0.3)';
+                                }}
+                            >
+                                {href}
+                            </a>
+                        ))}
+                    </div>
 
-            <div style={{ marginTop: 6, color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                transitionHistory={transitions.map((entry) => `${entry.time}:${entry.mode}@${entry.pathname}`).join('  |  ') || 'none'}
+                    {expanded ? (
+                        <div style={{ marginTop: 6, fontSize: 9, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: '"IBM Plex Mono", monospace' }}>
+                            history={transitions.map((entry) => `${entry.time}:${entry.mode}@${entry.pathname}`).join(' | ') || 'none'}
+                        </div>
+                    ) : null}
+                </PanelBase>
             </div>
         </aside>
     );

@@ -1,9 +1,10 @@
-import { RouteDeckTransition, RouteDockGrid, RouteFilePickerOverlay, RouteHudControlStrip, RouteTopBar } from '@banana/ui';
+import { RouteDeckTransition, ResizableDockGrid, RouteHudControlStrip, RouteTopBar } from '@banana/ui';
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { MainMenuPanel } from '../components/notebook-client/MainMenuPanel';
 import { ModeRegistryPanel } from '../components/notebook-client/ModeRegistryPanel';
+import { ObjectivesDockPanel } from '../components/notebook-client/NotebookDockPanels';
 import { NotebookExplorerPanel } from '../components/notebook-client/NotebookExplorerPanel';
 import { NotebookGameplaySurface } from '../components/notebook-client/NotebookGameplaySurface';
 import { NotebookHealthPanel } from '../components/notebook-client/NotebookHealthPanel';
@@ -21,6 +22,7 @@ import {
 } from '../lib/notebook-client/gamification';
 import { useNotebookLayoutStore } from '../lib/notebook-client/layoutStore';
 import { resolveRouteHudPreset, type NotebookRouteMode } from '../lib/notebook-client/routeModeConfig';
+import { useNotebookWindowOrchestrator } from '../lib/notebook-client/useNotebookWindowOrchestrator';
 import { useNotebookClient } from '../lib/notebook-client/useNotebookClient';
 
 const SafeNotebookGameplaySurface =
@@ -66,16 +68,28 @@ export function DataSciencePlaygroundPage() {
     const [query, setQuery] = useState('');
     const [selectedFile, setSelectedFile] = useState<string>('');
     const [recentFiles, setRecentFiles] = useState<string[]>([]);
-    const showExplorer = useNotebookLayoutStore((state) => state.showExplorer);
-    const showMenu = useNotebookLayoutStore((state) => state.showMenu);
-    const showStatus = useNotebookLayoutStore((state) => state.showStatus);
-    const showOperations = useNotebookLayoutStore((state) => state.showOperations);
-    const explorerDropupOpen = useNotebookLayoutStore((state) => state.explorerDropupOpen);
-    const setExplorerDropupOpen = useNotebookLayoutStore((state) => state.setExplorerDropupOpen);
-    const applyHudPreset = useNotebookLayoutStore((state) => state.applyHudPreset);
-    const focusHudPanel = useNotebookLayoutStore((state) => state.focusHudPanel);
-    const resetHudPanels = useNotebookLayoutStore((state) => state.resetHudPanels);
-    const activeDock = useNotebookLayoutStore((state) => state.activeDock);
+    const {
+        showExplorer,
+        showMenu,
+        showStatus,
+        showOperations,
+        showIntelNode,
+        showObjectiveNode,
+        showPlayerNode,
+        showQuestLog,
+        showNodeOps,
+        panelVisibility,
+        pinnedPanels,
+        togglePanelPin,
+        togglePanel,
+        closePanel,
+        closeForViewport,
+        resetHudPanels,
+        closeAllWindows,
+        reopenAllWindows,
+    } = useNotebookWindowOrchestrator();
+    const objectivePanel = useNotebookLayoutStore((state) => state.objectivePanel);
+    const setObjectivePanel = useNotebookLayoutStore((state) => state.setObjectivePanel);
     const [modeDeckAnimating, setModeDeckAnimating] = useState(false);
     const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
     const [transitionHistory, setTransitionHistory] = useState<Array<{ pathname: string; mode: NotebookRouteMode; time: string; }>>([]);
@@ -103,7 +117,6 @@ export function DataSciencePlaygroundPage() {
     const handleSelectFile = useCallback((file: string) => {
         setSelectedFile(file);
         setRecentFiles(prev => [file, ...prev.filter(f => f !== file)].slice(0, 8));
-        setExplorerDropupOpen(false);
     }, []);
 
     const handleResetAllSectors = useCallback(() => {
@@ -118,10 +131,9 @@ export function DataSciencePlaygroundPage() {
         setLastXpGain(0);
         setQuestToast('');
         setAnnouncedQuestIds([]);
-        setExplorerDropupOpen(false);
         resetHudPanels();
-        focusHudPanel(null);
-    }, [focusHudPanel, resetHudPanels, setExplorerDropupOpen]);
+        closeForViewport();
+    }, [closeForViewport, resetHudPanels]);
 
     useEffect(() => {
         if (filteredFiles.length === 0) {
@@ -133,33 +145,6 @@ export function DataSciencePlaygroundPage() {
             setSelectedFile('');
         }
     }, [filteredFiles, selectedFile]);
-
-    useEffect(() => {
-        applyHudPreset({
-            explorer: routeHudPreset.explorer,
-            menu: routeHudPreset.menu,
-            status: routeHudPreset.status,
-            operations: routeHudPreset.operations,
-        });
-    }, [applyHudPreset, routeHudPreset]);
-
-    useEffect(() => {
-        if (!selectedFile) {
-            return;
-        }
-
-        if (activeDock === 'intel') {
-            focusHudPanel('status');
-            return;
-        }
-        if (activeDock === 'objectives') {
-            focusHudPanel('operations');
-            return;
-        }
-        if (activeDock === 'player') {
-            focusHudPanel('menu');
-        }
-    }, [activeDock, focusHudPanel, selectedFile]);
 
     useEffect(() => {
         setModeDeckAnimating(true);
@@ -283,6 +268,12 @@ export function DataSciencePlaygroundPage() {
         () => questProgress.filter((quest) => quest.completed).length,
         [questProgress],
     );
+    const questPercent = useMemo(() => {
+        if (questProgress.length === 0) {
+            return 0;
+        }
+        return Math.round((completedQuestCount / questProgress.length) * 100);
+    }, [completedQuestCount, questProgress.length]);
 
     useEffect(() => {
         const newlyCompleted = questProgress.find(
@@ -307,13 +298,6 @@ export function DataSciencePlaygroundPage() {
     const maxLinesLabel = manifest ? `Max lines/file: ${manifest.max_lines_per_file}` : 'Run workflow to publish metadata';
     const sourceLabel = manifestSource.length > 0 ? `Manifest source: ${manifestSource}` : (notebookSource.length > 0 ? `Notebook source: ${notebookSource}` : '');
     const notebookAvailabilityLabel = manifest ? 'Artifacts loaded and indexed.' : (loading ? 'Loading notebook artifacts...' : 'Artifacts unavailable. Run scaffold workflow.');
-
-    const dockState = {
-        explorer: showExplorer,
-        menu: showMenu,
-        status: showStatus,
-        operations: showOperations,
-    } as const;
 
     const dockRenderers = {
         explorer: (
@@ -396,19 +380,129 @@ export function DataSciencePlaygroundPage() {
                 />
             </RouteDeckTransition>
         ),
+        objectiveNode: (
+            <ObjectivesDockPanel
+                completedQuestCount={completedQuestCount}
+                questProgress={questProgress}
+                questPercent={questPercent}
+                objectivePanel={objectivePanel}
+                setObjectivePanel={(value) => {
+                    if (typeof value === 'function') {
+                        setObjectivePanel(value(objectivePanel));
+                        return;
+                    }
+                    setObjectivePanel(value);
+                }}
+                nextDomainTarget={nextDomainTarget}
+            />
+        ),
+        intelNode: (
+            <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ fontSize: 11, color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+                    Intel Node
+                </div>
+                <div style={{ fontSize: 12, color: '#cbd5e1' }}>
+                    Sector: {selectedFile || 'all sectors'}
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Domain: {selectedDomain || 'other'} · Cells: {notebookCellCount}
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Route Mode: {routeHudPreset.label}
+                </div>
+            </div>
+        ),
+        playerNode: (
+            <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ fontSize: 11, color: '#c4b5fd', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+                    Player Node
+                </div>
+                <div style={{ fontSize: 12, color: '#cbd5e1' }}>
+                    Level {playerLevel} · XP {totalXp}
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Combo x{Math.max(1, comboStreak)} · Last Gain +{lastXpGain}
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Quests {completedQuestCount}/{questProgress.length}
+                </div>
+            </div>
+        ),
+        nodeOps: (
+            <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ fontSize: 11, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+                    Node Ops Console
+                </div>
+                <div style={{ fontSize: 12, color: '#cbd5e1' }}>
+                    Active Sector: {selectedFile || 'none'}
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Command actions Snapshot / Inspect / Train / Route are routed from the gameplay action node.
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Current chain: x{Math.max(1, comboStreak)} · XP +{lastXpGain}
+                </div>
+            </div>
+        ),
+        questLog: (
+            <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ fontSize: 11, color: '#99f6e4', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+                    Quest Log
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Completed {completedQuestCount}/{questProgress.length} · {questPercent}%
+                </div>
+                <div style={{ display: 'grid', gap: 6, maxHeight: '22dvh', overflowY: 'auto', paddingRight: 4 }}>
+                    {questProgress.map((quest) => (
+                        <div
+                            key={quest.id}
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                gap: 10,
+                                alignItems: 'center',
+                                fontSize: 12,
+                                color: '#cbd5e1',
+                                borderRadius: 8,
+                                border: `1px solid ${quest.completed ? 'rgba(74, 222, 128, 0.5)' : 'rgba(148, 163, 184, 0.32)'}`,
+                                background: quest.completed ? 'rgba(20, 83, 45, 0.45)' : 'rgba(15, 23, 42, 0.52)',
+                                padding: '6px 8px',
+                            }}
+                        >
+                            <span>{quest.title}</span>
+                            <span style={{
+                                color: quest.completed ? '#86efac' : '#7dd3fc',
+                                fontWeight: 700,
+                                whiteSpace: 'nowrap',
+                            }}>
+                                {quest.progress}/{quest.target}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        ),
     } as const;
 
-    const dockLayout: Array<{ id: keyof typeof dockRenderers; corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; }> = [
-        { id: 'explorer', corner: 'top-left' },
-        { id: 'menu', corner: 'top-right' },
-        { id: 'status', corner: 'bottom-left' },
-        { id: 'operations', corner: 'bottom-right' },
+    const dockLayout: Array<{ id: keyof typeof dockRenderers; corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; title: string; }> = [
+        { id: 'menu', corner: 'top-left', title: 'MAIN MENU' },
+        { id: 'playerNode', corner: 'top-left', title: 'PLAYER NODE' },
+        { id: 'explorer', corner: 'top-right', title: 'FILE EXPLORER' },
+        { id: 'intelNode', corner: 'top-right', title: 'INTEL NODE' },
+        { id: 'status', corner: 'bottom-left', title: 'ROUTE REGISTRY' },
+        { id: 'questLog', corner: 'bottom-left', title: 'QUEST LOG' },
+        { id: 'objectiveNode', corner: 'bottom-right', title: 'OBJECTIVE NODE' },
+        { id: 'nodeOps', corner: 'bottom-right', title: 'NODE OPS' },
+        { id: 'operations', corner: 'bottom-right', title: 'OPERATIONS' },
     ];
     const dockEntries = dockLayout.map((dock) => ({
         id: dock.id,
         corner: dock.corner,
-        visible: dockState[dock.id],
+        visible: panelVisibility[dock.id],
         content: dockRenderers[dock.id],
+        title: dock.title,
+        defaultWidth: 360,
+        defaultHeight: 320,
     }));
 
     return (
@@ -431,10 +525,10 @@ export function DataSciencePlaygroundPage() {
                 <RouteTopBar
                     routeLabel={routeHudPreset.label}
                     showExplorer={showExplorer}
-                    onToggleExplorer={() => {
-                        focusHudPanel('explorer');
-                        setExplorerDropupOpen(!explorerDropupOpen);
-                    }}
+                    showExplorerButton={false}
+                    nodeBrowserFiles={allFiles}
+                    selectedNodeFile={selectedFile}
+                    onSelectNodeFile={handleSelectFile}
                     onResetSectors={handleResetAllSectors}
                 />
 
@@ -457,33 +551,49 @@ export function DataSciencePlaygroundPage() {
                     questProgress={questProgress}
                     questToast={questToast}
                     nextDomainTarget={nextDomainTarget}
+                    taskbarOwnsObjectiveAndQuestWindows
+                    taskbarOwnsIntelAndPlayerWindows
+                    taskbarOwnsNodeOpsWindow
+                    onToggleIntelNodeWindow={() => togglePanel('intelNode')}
+                    onToggleObjectiveNodeWindow={() => togglePanel('objectiveNode')}
+                    onTogglePlayerNodeWindow={() => togglePanel('playerNode')}
+                    onToggleNodeOpsWindow={() => togglePanel('nodeOps')}
                 />
 
-                <RouteDockGrid entries={dockEntries} surface="overlay" />
+                <ResizableDockGrid
+                    entries={dockEntries}
+                    onPanelClose={(panelId) => {
+                        closePanel(panelId as Parameters<typeof closePanel>[0]);
+                    }}
+                />
 
                 <RouteHudControlStrip
                     routeLabel={routeHudPreset.label}
+                    showExplorer={showExplorer}
                     showMenu={showMenu}
                     showOperations={showOperations}
                     showStatus={showStatus}
-                    onToggleMenu={() => focusHudPanel(showMenu ? null : 'menu')}
-                    onToggleOperations={() => focusHudPanel(showOperations ? null : 'operations')}
-                    onToggleStatus={() => focusHudPanel(showStatus ? null : 'status')}
-                    onFocusViewport={() => {
-                        focusHudPanel(null);
-                    }}
+                    showIntelNode={showIntelNode}
+                    showObjectiveNode={showObjectiveNode}
+                    showPlayerNode={showPlayerNode}
+                    showQuestLog={showQuestLog}
+                    showNodeOps={showNodeOps}
+                    pinnedPanels={pinnedPanels}
+                    onToggleExplorer={() => togglePanel('explorer')}
+                    onToggleMenu={() => togglePanel('menu')}
+                    onToggleOperations={() => togglePanel('operations')}
+                    onToggleStatus={() => togglePanel('status')}
+                    onToggleIntelNode={() => togglePanel('intelNode')}
+                    onToggleObjectiveNode={() => togglePanel('objectiveNode')}
+                    onTogglePlayerNode={() => togglePanel('playerNode')}
+                    onToggleQuestLog={() => togglePanel('questLog')}
+                    onToggleNodeOps={() => togglePanel('nodeOps')}
+                    onTogglePanelPin={togglePanelPin}
+                    onFocusViewport={closeForViewport}
                     onResetHud={resetHudPanels}
+                    onCloseAllPanels={closeAllWindows}
+                    onReopenPanels={reopenAllWindows}
                 />
-
-                {explorerDropupOpen && showExplorer && (
-                    <RouteFilePickerOverlay
-                        files={allFiles}
-                        recentFiles={recentFiles}
-                        selected={selectedFile}
-                        onSelect={handleSelectFile}
-                        onClose={() => setExplorerDropupOpen(false)}
-                    />
-                )}
             </section>
         </main>
     );

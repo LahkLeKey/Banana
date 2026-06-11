@@ -2,11 +2,23 @@
 // Deep imports are forbidden by lint; everything cross-platform-safe is
 // re-exported here.
 
+export type {EnhancedPanelProps} from './components/EnhancedPanel';
+export {EnhancedPanel} from './components/EnhancedPanel';
 export type {ErrorTextProps} from './components/ErrorText';
 export {ErrorText} from './components/ErrorText';
 // Game Engine UI — shared components for ARPG viewport
 export type {EngineStatus, RadialDirection,} from './components/GameEngineTypes';
 export {computeMoveAxes, getDirectionFromTouch, isMovementKey, MOVEMENT_KEYS, RADIAL_CONFIG,} from './components/GameEngineTypes';
+export type {PanelBaseProps} from './components/PanelBase';
+export {PanelBase} from './components/PanelBase';
+export type {PanelGroupEntry, PanelGroupProps} from './components/PanelGroup';
+export {PanelGroup} from './components/PanelGroup';
+export type {PanelOverlayProps} from './components/PanelOverlay';
+export {PanelOverlay} from './components/PanelOverlay';
+export type {ResizableDockEntry, ResizableDockGridProps} from './components/ResizableDockGrid';
+export {ResizableDockGrid} from './components/ResizableDockGrid';
+export type {ResizablePanelProps} from './components/ResizablePanel';
+export {ResizablePanel} from './components/ResizablePanel';
 export type {RetryButtonProps} from './components/RetryButton';
 export {RETRY_BUTTON_COPY, RetryButton} from './components/RetryButton';
 export {RouteDeckTransition} from './components/RouteDeckTransition';
@@ -22,8 +34,13 @@ export {RouteSubActionBar, RouteSubActionLink} from './components/RouteSubAction
 export type {RouteSurfaceTone} from './components/RouteSurfacePrimitives';
 export {RouteActionLinkPrimitive, RoutePill, RouteStatTile, RouteSurfaceCard} from './components/RouteSurfacePrimitives';
 export {RouteTopBar} from './components/RouteTopBar';
+export type {TabbedPanelEntry, TabbedPanelGroupProps} from './components/TabbedPanelGroup';
+export {TabbedPanelGroup} from './components/TabbedPanelGroup';
 export type {WorkflowDepth, WorkflowOverlayModel, WorkflowStepOption,} from './components/WorkflowOrchestrator';
 export {WorkflowCenterToolbar, WorkflowOverlayStack,} from './components/WorkflowOrchestrator';
+// Hooks for panel state management
+export type {PanelState, PanelStateActions} from './hooks/usePanelState';
+export {usePanelState} from './hooks/usePanelState';
 export type {Tokens} from './tokens';
 export {tokens} from './tokens';
 

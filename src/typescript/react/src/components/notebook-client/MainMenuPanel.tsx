@@ -1,4 +1,4 @@
-import { RouteStatTile as StatTile, RouteSubActionBar, RouteSubActionLink } from '@banana/ui';
+import { PanelBase, RouteStatTile as StatTile, RouteSubActionLink } from '@banana/ui';
 
 type MainMenuPanelProps = {
     readonly indexedFileCount: number;
@@ -21,35 +21,33 @@ export function MainMenuPanel({
     completedQuestCount,
     totalQuestCount,
 }: MainMenuPanelProps) {
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            {/* Sub-action bar: quick-links as actions, connection status as meta */}
-            <RouteSubActionBar
-                meta={`Lv${playerLevel} · ${totalXp} XP · ${completedQuestCount}/${totalQuestCount} quests · ${manifestAvailable ? 'Synced' : 'Awaiting sync'}`}
-                actions={
-                    <>
-                        <RouteSubActionLink href="/notebooks/native-c-catalog.ipynb">Payload</RouteSubActionLink>
-                        <RouteSubActionLink href="/notebooks/catalog-index.json">Manifest</RouteSubActionLink>
-                    </>
-                }
-            />
+    const statusText = `Lv${playerLevel} · ${totalXp} XP · ${completedQuestCount}/${totalQuestCount} quests · ${manifestAvailable ? 'Synced' : 'Awaiting sync'}`;
 
-            {/* Stat tiles — no card wrapper, direct grid */}
-            <div style={{ flex: 1, overflow: 'auto', padding: 10 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
-                    <StatTile label="Map Sectors" value={indexedFileCount} />
-                    <StatTile label="Runtime Cells" value={notebookCellCount} />
-                    <StatTile
-                        label="Connection"
-                        value={manifestAvailable ? 'Synced' : 'Awaiting'}
-                        accent={manifestAvailable ? '#86efac' : '#fca5a5'}
-                    />
-                    <StatTile label="Cmd Level" value={playerLevel} accent="#fcd34d" />
-                    <StatTile label="Total XP" value={totalXp} accent="#67e8f9" />
-                    <StatTile label="Combo" value={`x${Math.max(1, comboStreak)}`} accent="#a5b4fc" />
-                    <StatTile label="Quests" value={`${completedQuestCount}/${totalQuestCount}`} accent="#f9a8d4" />
-                </div>
+    return (
+        <PanelBase
+            title="Main Menu"
+            headerAction={
+                <>
+                    <RouteSubActionLink href="/notebooks/native-c-catalog.ipynb">Payload</RouteSubActionLink>
+                    <RouteSubActionLink href="/notebooks/catalog-index.json">Manifest</RouteSubActionLink>
+                </>
+            }
+            footer={statusText}
+            variant="default"
+        >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+                <StatTile label="Map Sectors" value={indexedFileCount} />
+                <StatTile label="Runtime Cells" value={notebookCellCount} />
+                <StatTile
+                    label="Connection"
+                    value={manifestAvailable ? 'Synced' : 'Awaiting'}
+                    accent={manifestAvailable ? '#86efac' : '#fca5a5'}
+                />
+                <StatTile label="Cmd Level" value={playerLevel} accent="#fcd34d" />
+                <StatTile label="Total XP" value={totalXp} accent="#67e8f9" />
+                <StatTile label="Combo" value={`x${Math.max(1, comboStreak)}`} accent="#a5b4fc" />
+                <StatTile label="Quests" value={`${completedQuestCount}/${totalQuestCount}`} accent="#f9a8d4" />
             </div>
-        </div>
+        </PanelBase>
     );
 }
