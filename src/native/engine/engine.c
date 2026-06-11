@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include "engine.h"
 #include "runtime/engine/application/service/application_service_ports.h"
 #include "runtime/engine/composition/engine_composition.h"

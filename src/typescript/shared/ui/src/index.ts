@@ -21,6 +21,7 @@ export type {RouteSubActionTab} from './components/RouteSubActionBar';
 export {RouteSubActionBar, RouteSubActionLink} from './components/RouteSubActionBar';
 export type {RouteSurfaceTone} from './components/RouteSurfacePrimitives';
 export {RouteActionLinkPrimitive, RoutePill, RouteStatTile, RouteSurfaceCard} from './components/RouteSurfacePrimitives';
+export {RouteTopBar} from './components/RouteTopBar';
 export type {WorkflowDepth, WorkflowOverlayModel, WorkflowStepOption,} from './components/WorkflowOrchestrator';
 export {WorkflowCenterToolbar, WorkflowOverlayStack,} from './components/WorkflowOrchestrator';
 export type {Tokens} from './tokens';

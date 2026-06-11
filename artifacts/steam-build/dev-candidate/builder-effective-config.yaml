@@ -12,4 +12,3 @@ win:
   target:
     - dir
   artifactName: BananaEngineer-${version}-${arch}.${ext}
-electronVersion: 31.7.7

@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 
 type RouteHudControlStripProps = {
     readonly routeLabel: string;
-    readonly showExplorer: boolean;
-    readonly explorerDropupOpen: boolean;
+    readonly showExplorer?: boolean;
+    readonly explorerDropupOpen?: boolean;
     readonly showMenu: boolean;
     readonly showOperations: boolean;
     readonly showStatus: boolean;
-    readonly onToggleExplorer: () => void;
+    readonly onToggleExplorer?: () => void;
     readonly onToggleMenu: () => void;
     readonly onToggleOperations: () => void;
     readonly onToggleStatus: () => void;
@@ -72,12 +72,9 @@ function Bar({ children }: { readonly children: ReactNode }) {
 
 export function RouteHudControlStrip({
     routeLabel,
-    showExplorer,
-    explorerDropupOpen,
     showMenu,
     showOperations,
     showStatus,
-    onToggleExplorer,
     onToggleMenu,
     onToggleOperations,
     onToggleStatus,
@@ -87,12 +84,6 @@ export function RouteHudControlStrip({
     return (
         <Bar>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <HudButton
-                    label="Explorer"
-                    onClick={onToggleExplorer}
-                    active={showExplorer || explorerDropupOpen}
-                />
-
                 <HudButton
                     label="Command Menu"
                     onClick={onToggleMenu}

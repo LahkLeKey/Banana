@@ -6,6 +6,17 @@ WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
 BUILD_DIR="${WORKSPACE_DIR}/out/native"
 TARGET_DIR="${WORKSPACE_DIR}/out/native/bin"
 TARGET_SO="${TARGET_DIR}/libbanana_native.so"
+REQUIRED="${BANANA_NATIVE_BOOTSTRAP_REQUIRED:-0}"
+
+fail_or_continue() {
+  message="$1"
+  if [ "${REQUIRED}" = "1" ]; then
+    echo "[native-bootstrap] ${message}; failing because BANANA_NATIVE_BOOTSTRAP_REQUIRED=1"
+    exit 1
+  fi
+
+  echo "[native-bootstrap] ${message}; continuing with API fallback world service"
+}
 
 echo "[native-bootstrap] ensuring Linux native artifact at ${TARGET_SO}"
 
@@ -15,8 +26,7 @@ if [ -f "${TARGET_SO}" ]; then
 fi
 
 if [ "$(uname -s 2>/dev/null || echo unknown)" != "Linux" ]; then
-  echo "[native-bootstrap] non-Linux runtime detected; skipping Linux artifact build"
-  exit 0
+  fail_or_continue "non-Linux runtime detected; skipping Linux artifact build"
 fi
 
 if ! command -v cmake >/dev/null 2>&1; then
@@ -34,33 +44,29 @@ if ! command -v cmake >/dev/null 2>&1; then
       fi
     fi
   else
-    echo "[native-bootstrap] cmake missing and tool install disabled; continuing with API fallback world service"
+    fail_or_continue "cmake missing and tool install disabled"
   fi
 fi
 
 if ! command -v cmake >/dev/null 2>&1; then
-  echo "[native-bootstrap] cmake still unavailable; continuing with API fallback world service"
-  exit 0
+  fail_or_continue "cmake still unavailable"
 fi
 
 mkdir -p "${TARGET_DIR}"
 
 echo "[native-bootstrap] configuring native build"
 if ! cmake -S "${WORKSPACE_DIR}/src/native" -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release >/tmp/banana-native-configure.log 2>&1; then
-  echo "[native-bootstrap] configure failed; continuing with API fallback world service"
-  exit 0
+  fail_or_continue "configure failed"
 fi
 
 echo "[native-bootstrap] building native library"
 if ! cmake --build "${BUILD_DIR}" --config Release >/tmp/banana-native-build.log 2>&1; then
-  echo "[native-bootstrap] build failed; continuing with API fallback world service"
-  exit 0
+  fail_or_continue "build failed"
 fi
 
 FOUND_SO="$(find "${BUILD_DIR}" -type f -name 'libbanana_native.so' | head -n 1 || true)"
 if [ -z "${FOUND_SO}" ]; then
-  echo "[native-bootstrap] build completed but libbanana_native.so was not found; continuing with API fallback world service"
-  exit 0
+  fail_or_continue "build completed but libbanana_native.so was not found"
 fi
 
 cp "${FOUND_SO}" "${TARGET_SO}"

@@ -21,6 +21,89 @@ typedef struct banana_native_v3_launch_gate_decision {
 	int32_t reserved;
 } banana_native_v3_launch_gate_decision;
 
+typedef struct banana_native_v3_netcode_ledger {
+	int32_t snapshots;
+	int32_t inspections;
+	int32_t trainings;
+	int32_t routes;
+	int32_t node_taps;
+} banana_native_v3_netcode_ledger;
+
+typedef struct banana_native_v3_netcode_signal_input {
+	int32_t call_density;
+	int32_t quest_percent;
+	int32_t combo_streak;
+	int32_t branch_pressure;
+	int32_t workflow_depth;
+} banana_native_v3_netcode_signal_input;
+
+typedef struct banana_native_v3_netcode_learning_output {
+	int32_t model_confidence;
+	int32_t training_accuracy;
+	int32_t policy_momentum;
+	int32_t node_weights[4];
+	int32_t recommended_node;
+	int32_t recommended_action;
+	int32_t xp_by_action[4];
+} banana_native_v3_netcode_learning_output;
+
+typedef struct banana_native_v3_netcode_reward_output {
+	int32_t neural_relevance_score;
+	int32_t projected_reward_xp;
+	int32_t reward_tier;
+} banana_native_v3_netcode_reward_output;
+
+typedef struct banana_native_v3_netcode_link_input {
+	int32_t call_density;
+	int32_t quest_percent;
+	int32_t player_level;
+	int32_t combo_streak;
+	int32_t branch_pressure;
+	int32_t dependency_pulse;
+	int32_t interaction_signal;
+} banana_native_v3_netcode_link_input;
+
+typedef struct banana_native_v3_netcode_link_output {
+	int32_t intel;
+	int32_t objectives;
+	int32_t player;
+	int32_t ops;
+} banana_native_v3_netcode_link_output;
+
+typedef struct banana_native_v3_netcode_vector_input {
+	int32_t call_density;
+	int32_t quest_percent;
+	int32_t player_level;
+	int32_t combo_streak;
+	int32_t branch_pressure;
+	int32_t dependency_pulse;
+	int32_t workflow_depth;
+	int32_t neural_relevance_score;
+	int32_t network_dimensions;
+	int32_t model_confidence;
+	int32_t policy_momentum;
+} banana_native_v3_netcode_vector_input;
+
+typedef struct banana_native_v3_netcode_vector_output {
+	int32_t dimensions;
+	float node_vectors[4][16];
+	int32_t contract_strength[4];
+} banana_native_v3_netcode_vector_output;
+
+typedef struct banana_native_v3_netcode_projection_node {
+	float x;
+	float y;
+	float z;
+	int32_t coherence;
+} banana_native_v3_netcode_projection_node;
+
+typedef struct banana_native_v3_netcode_hypersphere_output {
+	int32_t dimensions;
+	banana_native_v3_netcode_projection_node nodes[4];
+	int32_t alignment;
+	int32_t radial_stability;
+} banana_native_v3_netcode_hypersphere_output;
+
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_abi_version(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_ping(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_pgbouncer_available(void);
@@ -35,6 +118,21 @@ BANANA_NATIVE_V3_EXPORT int banana_native_v3_world_chunk_serialize(int chunk_x,
 											uint8_t *buffer,
 											int buffer_len);
 BANANA_NATIVE_V3_EXPORT void banana_native_v3_world_cleanup(void);
+BANANA_NATIVE_V3_EXPORT void banana_native_v3_netcode_reset(void);
+BANANA_NATIVE_V3_EXPORT void banana_native_v3_netcode_record_node_tap(int32_t node);
+BANANA_NATIVE_V3_EXPORT void banana_native_v3_netcode_record_action(int32_t action);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_get_ledger(banana_native_v3_netcode_ledger *out_ledger);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_learning(const banana_native_v3_netcode_signal_input *signal_input,
+										 banana_native_v3_netcode_learning_output *out_output);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_reward(const banana_native_v3_netcode_signal_input *signal_input,
+						 int32_t interaction_signal,
+						 banana_native_v3_netcode_reward_output *out_output);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_link(const banana_native_v3_netcode_link_input *signal_input,
+						 banana_native_v3_netcode_link_output *out_output);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_vector(const banana_native_v3_netcode_vector_input *signal_input,
+						   banana_native_v3_netcode_vector_output *out_output);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_vector_input *signal_input,
+							banana_native_v3_netcode_hypersphere_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
 												 banana_launch_gate_policy *out_policy);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_decide(const char *mode_label,

@@ -6,12 +6,10 @@ import { buildIntelSignals, buildMissionIntelEvents } from '../../domain/noteboo
 import { deriveMissionMeta } from '../../domain/notebook/mission-domain';
 import {
     buildCFileContractNodeModel,
-    buildContractHypersphereProjectionModel,
-    buildContractNodeVectorModel,
-    buildNodeLinkConfidenceModel,
-    buildRewardSignalModel,
     type ContractNodeId,
+    type NodeInteractionAction,
 } from '../../domain/notebook/network-domain';
+import { useNetcodeSession } from '../../domain/notebook/useNetcodeSession';
 import type { NotebookRouteMode } from '../../lib/notebook-client/routeModeConfig';
 import { buildWorkflowStepMap, type WorkflowStepId } from '../../domain/notebook/workflow-domain';
 import { useNotebookLayoutStore } from '../../lib/notebook-client/layoutStore';
@@ -103,6 +101,20 @@ const routeModeOrbitAccent: Record<NotebookRouteMode, string> = {
     character: '#fca5a5',
 };
 
+const nodeActionLabels: Record<NodeInteractionAction, string> = {
+    snapshot: 'Snapshot',
+    inspect: 'Inspect',
+    train: 'Train',
+    route: 'Route',
+};
+
+const nodeTitles: Record<ContractNodeId, string> = {
+    intel: 'Intel Node',
+    objectives: 'Objective Node',
+    player: 'Player Node',
+    ops: 'Action Node',
+};
+
 export function NotebookGameplaySurface({
     selectedFile,
     selectedContent,
@@ -125,6 +137,10 @@ export function NotebookGameplaySurface({
 }: NotebookGameplaySurfaceProps) {
     const [intelMode, setIntelMode] = useState<'summary' | 'raw'>('summary');
     const [developerIntelUnlocked, setDeveloperIntelUnlocked] = useState(false);
+    const [isCompactViewport, setIsCompactViewport] = useState(false);
+    const [focusedNode, setFocusedNode] = useState<ContractNodeId>('intel');
+    const [sessionXpGain, setSessionXpGain] = useState(0);
+    const [interactionToast, setInteractionToast] = useState('');
     const activeDock = useNotebookLayoutStore((state) => state.activeDock);
     const setActiveDock = useNotebookLayoutStore((state) => state.setActiveDock);
     const intelPanel = useNotebookLayoutStore((state) => state.intelPanel);
@@ -171,6 +187,8 @@ export function NotebookGameplaySurface({
         () => questProgress.filter((quest) => quest.completed).length,
         [questProgress],
     );
+    const effectiveTotalXp = totalXp + sessionXpGain;
+    const effectivePlayerLevel = playerLevel + Math.floor(effectiveTotalXp / 260) - Math.floor(totalXp / 260);
     const questPercent = useMemo(() => {
         if (questProgress.length === 0) {
             return 0;
@@ -212,6 +230,36 @@ export function NotebookGameplaySurface({
         comboStreak,
         lastXpGain,
     ]);
+    const cFileCount = useMemo(
+        () => allIndexedFiles.filter((filePath) => /\.c$/i.test(filePath)).length,
+        [allIndexedFiles],
+    );
+    const networkDimensions = useMemo(() => {
+        if (cFileCount <= 0) {
+            return 6;
+        }
+
+        // Expand hypersphere dimensionality as C-file evidence increases.
+        return Math.min(16, Math.max(8, 6 + Math.floor(Math.log2(cFileCount + 1))));
+    }, [cFileCount]);
+    const {
+        learningModel,
+        ledger: interactionLedger,
+        recordNodeTap,
+        recordAction,
+        rewardSignal,
+        linkConfidence,
+        hypersphereProjection,
+    } = useNetcodeSession({
+        callDensity,
+        questPercent,
+        comboStreak,
+        branchPressure,
+        workflowDepth,
+        playerLevel: effectivePlayerLevel,
+        dependencyPulse,
+        networkDimensions,
+    });
     const subsystemLoops = useMemo(() => ([
         {
             id: 'intel' as const,
@@ -230,9 +278,9 @@ export function NotebookGameplaySurface({
         {
             id: 'player' as const,
             label: 'Player',
-            value: Math.min(100, Math.round(playerLevel * 8 + comboStreak * 4)),
+            value: Math.min(100, Math.round(effectivePlayerLevel * 8 + comboStreak * 4)),
             accent: '#a78bfa',
-            detail: `Lv${playerLevel} · x${Math.max(1, comboStreak)}`,
+            detail: `Lv${effectivePlayerLevel} · x${Math.max(1, comboStreak)}`,
         },
         {
             id: null,
@@ -248,64 +296,12 @@ export function NotebookGameplaySurface({
         comboStreak,
         completedQuestCount,
         dependencyPulse,
-        playerLevel,
+        effectivePlayerLevel,
         questPercent,
         questProgress.length,
         riskLabel,
     ]);
-    const rewardSignal = useMemo(() => buildRewardSignalModel({
-        callDensity,
-        questPercent,
-        comboStreak,
-        branchPressure,
-        workflowDepth,
-    }), [branchPressure, callDensity, comboStreak, questPercent, workflowDepth]);
     const { neuralRelevanceScore, projectedRewardXp, rewardTier, rewardBand } = rewardSignal;
-    const cFileCount = useMemo(
-        () => allIndexedFiles.filter((filePath) => /\.c$/i.test(filePath)).length,
-        [allIndexedFiles],
-    );
-    const networkDimensions = useMemo(() => {
-        if (cFileCount <= 0) {
-            return 6;
-        }
-
-        // Expand hypersphere dimensionality as C-file evidence increases.
-        return Math.min(16, Math.max(8, 6 + Math.floor(Math.log2(cFileCount + 1))));
-    }, [cFileCount]);
-    const linkConfidence = useMemo(() => buildNodeLinkConfidenceModel({
-        callDensity,
-        questPercent,
-        playerLevel,
-        comboStreak,
-        branchPressure,
-        dependencyPulse,
-    }), [branchPressure, callDensity, comboStreak, dependencyPulse, playerLevel, questPercent]);
-    const contractVectors = useMemo(() => buildContractNodeVectorModel({
-        callDensity,
-        questPercent,
-        playerLevel,
-        comboStreak,
-        branchPressure,
-        dependencyPulse,
-        workflowDepth,
-        neuralRelevanceScore,
-        networkDimensions,
-    }), [
-        branchPressure,
-        callDensity,
-        comboStreak,
-        dependencyPulse,
-        networkDimensions,
-        neuralRelevanceScore,
-        playerLevel,
-        questPercent,
-        workflowDepth,
-    ]);
-    const hypersphereProjection = useMemo(
-        () => buildContractHypersphereProjectionModel({ nodes: contractVectors }),
-        [contractVectors],
-    );
     const laneContractCoherence = useMemo(() => {
         const coherenceMap = new Map<ContractNodeId, number>();
         hypersphereProjection.nodes.forEach((node) => {
@@ -593,6 +589,23 @@ export function NotebookGameplaySurface({
     }, []);
 
     useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        const applyViewportMode = () => {
+            setIsCompactViewport(window.innerWidth <= 1100);
+        };
+
+        applyViewportMode();
+        window.addEventListener('resize', applyViewportMode);
+
+        return () => {
+            window.removeEventListener('resize', applyViewportMode);
+        };
+    }, []);
+
+    useEffect(() => {
         if (!developerIntelUnlocked && intelMode === 'raw') {
             setIntelMode('summary');
         }
@@ -603,6 +616,20 @@ export function NotebookGameplaySurface({
             setShowFullSourceDump(false);
         }
     }, [intelMode, setShowFullSourceDump]);
+
+    useEffect(() => {
+        if (interactionToast.length === 0) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setInteractionToast('');
+        }, 2100);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
+    }, [interactionToast]);
 
     const toggleDeveloperUnlock = () => {
         setDeveloperIntelUnlocked((previous) => {
@@ -644,16 +671,59 @@ export function NotebookGameplaySurface({
         }
         setShowFullSourceDump(value);
     };
+    const cycleNodeFocus = () => {
+        const nodeOrder: ContractNodeId[] = ['intel', 'objectives', 'player', 'ops'];
+        const currentIndex = nodeOrder.indexOf(focusedNode);
+        const nextNode = nodeOrder[(currentIndex + 1 + nodeOrder.length) % nodeOrder.length];
+        setFocusedNode(nextNode);
+        recordNodeTap(nextNode);
+        const tapXp = Math.max(1, Math.round(learningModel.policyMomentum / 28));
+        setSessionXpGain((previous) => previous + tapXp);
+        setInteractionToast(`Node lock ${nodeTitles[nextNode]} +${tapXp} XP`);
+    };
+    const focusNode = (node: ContractNodeId) => {
+        setFocusedNode(node);
+        recordNodeTap(node);
+    };
+    const applyNodeAction = (action: NodeInteractionAction) => {
+        const weightedBonus = Math.max(1, Math.round((learningModel.nodeWeights[focusedNode] ?? 0) / 26));
+        const actionXp = learningModel.xpByAction[action] + weightedBonus;
+
+        recordAction(action);
+        setSessionXpGain((previous) => previous + actionXp);
+
+        if (action === 'inspect') {
+            setActiveDock(focusedNode === 'ops' ? 'player' : focusedNode);
+        }
+        if (action === 'train') {
+            setActiveWorkflowStep('shape');
+            setWorkflowDepth(3);
+        }
+        if (action === 'route') {
+            setActiveWorkflowStep('commit');
+            setActiveDock('player');
+            cycleWorkflowStep();
+        }
+
+        setInteractionToast(`${nodeActionLabels[action]} ${nodeTitles[focusedNode]} +${actionXp} XP · model ${learningModel.modelConfidence}%`);
+    };
     const viewportTopInset = 40;
     const viewportBottomInset = 0;
     const dockPanelBottom = hasOpenDock ? 74 : 60;
     const loopRailBottom: number | string = hasOpenDock ? 'calc(26dvh + 108px)' : 134;
     const dockPanelMaxHeight = hasOpenDock ? '26dvh' : '34dvh';
-    const leftRailInset = (showExplorer || showStatus) ? 408 : 12;
-    const rightRailInset = (showMenu || showOperations) ? 408 : 12;
-    const leftTelemetryBottom = showStatus ? 364 : 112;
-    const questRailWidth = (showMenu || showOperations) ? 'min(300px, calc(100% - 24px))' : 'min(340px, calc(100% - 24px))';
-    const dockPanelWidth = (showMenu || showOperations) ? 'min(320px, calc(100% - 24px))' : 'min(360px, calc(100% - 24px))';
+    const leftRailInset = isCompactViewport ? 12 : ((showExplorer || showStatus) ? 408 : 12);
+    const rightRailInset = isCompactViewport ? 12 : ((showMenu || showOperations) ? 408 : 12);
+    const leftTelemetryBottom = isCompactViewport ? 78 : (showStatus ? 364 : 112);
+    const questRailWidth = isCompactViewport
+        ? 'min(360px, calc(100% - 24px))'
+        : ((showMenu || showOperations) ? 'min(300px, calc(100% - 24px))' : 'min(340px, calc(100% - 24px))');
+    const dockPanelWidth = isCompactViewport
+        ? 'calc(100% - 24px)'
+        : ((showMenu || showOperations) ? 'min(320px, calc(100% - 24px))' : 'min(360px, calc(100% - 24px))');
+    const showQuestRail = !showOperations && !isCompactViewport;
+    const showTelemetryRail = !showStatus && !isCompactViewport;
+    const questRailBottom: number | string = hasOpenDock ? 'calc(24dvh + 118px)' : 132;
 
     if (fullBleed) {
         return (
@@ -666,7 +736,7 @@ export function NotebookGameplaySurface({
                 overflow: 'hidden',
                 zIndex: 1,
             }}>
-                {questToast.length > 0 ? (
+                {(questToast.length > 0 || interactionToast.length > 0) ? (
                     <div style={{
                         position: 'absolute',
                         top: 16,
@@ -683,7 +753,7 @@ export function NotebookGameplaySurface({
                         fontWeight: 700,
                         boxShadow: '0 14px 28px rgba(120, 53, 15, 0.38)',
                     }}>
-                        {questToast}
+                        {interactionToast.length > 0 ? interactionToast : questToast}
                     </div>
                 ) : null}
 
@@ -699,7 +769,18 @@ export function NotebookGameplaySurface({
                     zIndex: 3,
                     pointerEvents: 'none',
                 }}>
-                    <div style={{ justifySelf: 'start', fontSize: 9, color: 'rgba(148, 163, 184, 0.68)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    <div style={{
+                        justifySelf: 'start',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: 9,
+                        color: 'rgba(148, 163, 184, 0.68)',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        visibility: isCompactViewport ? 'hidden' : 'visible',
+                    }}>
                         {selectedFile ? missionSector.code : `mode ${routeMode}`}
                     </div>
                     <div style={{
@@ -713,7 +794,18 @@ export function NotebookGameplaySurface({
                             ? `Sector Live Feed - ${missionSector.title}`
                             : 'Rule Mining Constellation'}
                     </div>
-                    <div style={{ justifySelf: 'end', fontSize: 9, color: 'rgba(148, 163, 184, 0.68)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    <div style={{
+                        justifySelf: 'end',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: 9,
+                        color: 'rgba(148, 163, 184, 0.68)',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        visibility: isCompactViewport ? 'hidden' : 'visible',
+                    }}>
                         Hyper D{hypersphereProjection.dimensions}
                     </div>
                 </div>
@@ -1071,6 +1163,7 @@ export function NotebookGameplaySurface({
                             type="button"
                             onClick={() => {
                                 cycleWorkflowStep();
+                                cycleNodeFocus();
                             }}
                             aria-label="Cycle workflow step"
                             style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
@@ -1180,7 +1273,10 @@ export function NotebookGameplaySurface({
                     <button
                         type="button"
                         aria-label="Open Intel dock"
-                        onClick={() => setActiveDock(activeDock === 'intel' ? null : 'intel')}
+                        onClick={() => {
+                            focusNode('intel');
+                            setActiveDock(activeDock === 'intel' ? null : 'intel');
+                        }}
                         style={{
                             position: 'absolute', left: `${nodeAnchors.intel.x}%`, top: `${nodeAnchors.intel.y}%`, transform: 'translate(-50%,-50%)',
                             background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center', zIndex: 3,
@@ -1206,7 +1302,10 @@ export function NotebookGameplaySurface({
                     <button
                         type="button"
                         aria-label="Open Objectives dock"
-                        onClick={() => setActiveDock(activeDock === 'objectives' ? null : 'objectives')}
+                        onClick={() => {
+                            focusNode('objectives');
+                            setActiveDock(activeDock === 'objectives' ? null : 'objectives');
+                        }}
                         style={{
                             position: 'absolute', left: `${nodeAnchors.objectives.x}%`, top: `${nodeAnchors.objectives.y}%`, transform: 'translate(-50%,-50%)',
                             background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center', zIndex: 3,
@@ -1233,7 +1332,10 @@ export function NotebookGameplaySurface({
                     <button
                         type="button"
                         aria-label="Open Player dock"
-                        onClick={() => setActiveDock(activeDock === 'player' ? null : 'player')}
+                        onClick={() => {
+                            focusNode('player');
+                            setActiveDock(activeDock === 'player' ? null : 'player');
+                        }}
                         style={{
                             position: 'absolute', left: `${nodeAnchors.player.x}%`, top: `${nodeAnchors.player.y}%`, transform: 'translate(-50%,-50%)',
                             background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center', zIndex: 3,
@@ -1249,8 +1351,8 @@ export function NotebookGameplaySurface({
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             transition: 'border-color 0.2s, box-shadow 0.2s',
                         }}>
-                            <div style={{ fontSize: 16, fontWeight: 800, color: activeDock === 'player' ? '#a78bfa' : '#cbd5e1', lineHeight: 1 }}>Lv{playerLevel}</div>
-                            <div style={{ fontSize: 8, textTransform: 'uppercase', color: '#64748b', marginTop: 2 }}>{totalXp} xp</div>
+                            <div style={{ fontSize: 16, fontWeight: 800, color: activeDock === 'player' ? '#a78bfa' : '#cbd5e1', lineHeight: 1 }}>Lv{effectivePlayerLevel}</div>
+                            <div style={{ fontSize: 8, textTransform: 'uppercase', color: '#64748b', marginTop: 2 }}>{effectiveTotalXp} xp</div>
                         </div>
                         <div style={{ marginTop: 4, fontSize: 9, fontWeight: 700, color: activeDock === 'player' ? '#a78bfa' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Player</div>
                     </button>
@@ -1260,9 +1362,11 @@ export function NotebookGameplaySurface({
                         type="button"
                         aria-label="Activate main action orb"
                         onClick={() => {
+                            focusNode('ops');
                             setActiveWorkflowStep('commit');
                             setWorkflowDepth(3);
                             setActiveDock('player');
+                            applyNodeAction('route');
                         }}
                         style={{
                             position: 'absolute', left: `${nodeAnchors.ops.x}%`, top: `${nodeAnchors.ops.y}%`, transform: 'translate(-50%,-50%)',
@@ -1285,153 +1389,232 @@ export function NotebookGameplaySurface({
                         <div style={{ marginTop: 4, fontSize: 9, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Action</div>
                     </button>
 
-                    {/* ─── Side telemetry rail (left) ───────────────────────── */}
                     <div style={{
                         position: 'absolute',
-                        left: leftRailInset,
-                        bottom: leftTelemetryBottom,
-                        width: 160,
-                        display: 'grid',
-                        gap: 8,
-                        zIndex: 3,
-                        pointerEvents: 'none',
-                    }}>
-                        <div style={{
-                            borderRadius: 10,
-                            border: '1px solid rgba(148, 163, 184, 0.24)',
-                            background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.82), rgba(3, 9, 19, 0.82))',
-                            padding: '8px 9px',
-                            display: 'grid',
-                            gap: 6,
-                        }}>
-                            <div style={{ fontSize: 9, color: '#93c5fd', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Signal</div>
-                            <div style={{ fontSize: 10, color: '#e2e8f0' }}>{lineCount} lines · {includeCount} deps</div>
-                            <div style={{ fontSize: 10, color: '#e2e8f0' }}>{callDensity}% density</div>
-                            <div style={{ fontSize: 10, color: riskLabel === 'Critical' ? '#fda4af' : riskLabel === 'Elevated' ? '#fcd34d' : '#86efac' }}>{riskLabel}</div>
-                        </div>
-
-                        <div style={{
-                            borderRadius: 10,
-                            border: '1px solid rgba(148, 163, 184, 0.24)',
-                            background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.82), rgba(3, 9, 19, 0.82))',
-                            padding: '8px 9px',
-                            display: 'grid',
-                            gap: 6,
-                        }}>
-                            <div style={{ fontSize: 9, color: '#a5b4fc', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Hypersphere</div>
-                            <div style={{ fontSize: 10, color: '#e2e8f0' }}>D{hypersphereProjection.dimensions} · N/2 {Math.max(2, Math.ceil(hypersphereProjection.dimensions / 2))}</div>
-                            <div style={{ fontSize: 10, color: '#e2e8f0' }}>Align {hypersphereProjection.alignment}%</div>
-                            <div style={{ fontSize: 10, color: '#7dd3fc' }}>C files {cFileCount}</div>
-                        </div>
-                    </div>
-
-                    {/* ─── Quest log rail (right) ───────────────────────────── */}
-                    <div style={{
-                        position: 'absolute',
-                        right: rightRailInset,
-                        bottom: loopRailBottom,
-                        width: questRailWidth,
+                        left: '50%',
+                        bottom: hasOpenDock ? 12 : 18,
+                        transform: 'translateX(-50%)',
+                        width: isCompactViewport ? 'calc(100% - 24px)' : 'min(620px, calc(100% - 24px))',
                         borderRadius: 12,
-                        border: '1px solid rgba(148, 163, 184, 0.28)',
-                        background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.9), rgba(3, 9, 19, 0.9))',
+                        border: '1px solid rgba(56, 189, 248, 0.28)',
+                        background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.84), rgba(3, 9, 19, 0.84))',
                         boxShadow: '0 10px 22px rgba(2, 6, 23, 0.34)',
-                        padding: 8,
+                        padding: '8px 9px',
                         display: 'grid',
-                        gap: 8,
+                        gap: 7,
                         zIndex: 4,
                     }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                            <div style={{ fontSize: 10, color: '#a5b4fc', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
-                                Quest Log
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#a5b4fc', fontWeight: 700 }}>
+                                Node Ops Console · {nodeTitles[focusedNode]}
                             </div>
-                            <div style={{ fontSize: 9, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                                Step {activeWorkflowStep} · Depth {workflowDepth}
+                            <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                model {learningModel.modelConfidence}% · accuracy {learningModel.trainingAccuracy}% · momentum {learningModel.policyMomentum}%
                             </div>
                         </div>
-
-                        <div style={{ display: 'grid', gap: 6 }}>
-                            {visibleLoops.filter((loop) => loop.id !== null).map((loop, index) => {
-                                const active = activeDock === loop.id;
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: isCompactViewport ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
+                            gap: 6,
+                        }}>
+                            {(['snapshot', 'inspect', 'train', 'route'] as const).map((action) => {
+                                const recommended = learningModel.recommendedAction === action;
                                 return (
                                     <button
-                                        key={loop.label}
+                                        key={action}
                                         type="button"
-                                        onClick={() => setActiveDock(active ? null : loop.id)}
+                                        onClick={() => applyNodeAction(action)}
                                         style={{
                                             borderRadius: 9,
-                                            border: active ? `1px solid ${loop.accent}` : `1px solid ${rewardBand.soft}`,
-                                            background: active ? 'rgba(8, 47, 73, 0.52)' : 'rgba(2, 10, 22, 0.68)',
-                                            color: '#e2e8f0',
-                                            padding: '7px 9px',
+                                            border: recommended ? '1px solid rgba(110, 231, 183, 0.62)' : '1px solid rgba(148, 163, 184, 0.32)',
+                                            background: recommended ? 'rgba(6, 78, 59, 0.66)' : 'rgba(2, 10, 22, 0.66)',
+                                            color: recommended ? '#d1fae5' : '#cbd5e1',
+                                            padding: '6px 8px',
                                             textAlign: 'left',
                                             cursor: 'pointer',
-                                            boxShadow: active ? `0 0 12px ${rewardBand.glow}` : 'none',
                                             display: 'grid',
-                                            gap: 4,
+                                            gap: 3,
                                         }}
                                     >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                                                <span style={{
-                                                    width: 18,
-                                                    height: 18,
-                                                    borderRadius: 999,
-                                                    border: `1px solid ${loop.accent}`,
-                                                    color: loop.accent,
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontSize: 10,
-                                                    fontWeight: 700,
-                                                    flexShrink: 0,
-                                                }}>
-                                                    {index + 1}
-                                                </span>
-                                                <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: loop.accent, fontWeight: 700 }}>
-                                                    {loop.label}
-                                                </span>
-                                            </div>
-                                            <span style={{ fontSize: 10, fontWeight: 700, color: '#cbd5e1' }}>{loop.value}%</span>
-                                        </div>
-                                        <div style={{ fontSize: 9, color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {loop.detail}
-                                        </div>
-                                        <div style={{ height: 3, borderRadius: 999, background: 'rgba(15, 23, 42, 0.9)', overflow: 'hidden' }}>
-                                            <div style={{ width: `${loop.value}%`, height: '100%', background: loop.accent, transition: 'width 220ms ease' }} />
-                                        </div>
+                                        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>
+                                            {nodeActionLabels[action]}
+                                        </span>
+                                        <span style={{ fontSize: 9, color: recommended ? '#a7f3d0' : '#94a3b8' }}>
+                                            +{learningModel.xpByAction[action]} XP
+                                            {recommended ? ' · Recommended' : ''}
+                                        </span>
                                     </button>
                                 );
                             })}
                         </div>
-
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setActiveWorkflowStep('commit');
-                                setWorkflowDepth(3);
-                                setActiveDock('player');
-                            }}
-                            style={{
-                                borderRadius: 9,
-                                border: '1px solid rgba(16, 185, 129, 0.46)',
-                                background: 'linear-gradient(180deg, rgba(5, 46, 22, 0.86), rgba(6, 34, 18, 0.82))',
-                                color: '#d1fae5',
-                                padding: '7px 9px',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                display: 'grid',
-                                gap: 4,
-                            }}
-                        >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
-                                <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#86efac', fontWeight: 700 }}>Main Action</span>
-                                <span style={{ fontSize: 11, fontWeight: 700 }}>+{projectedRewardXp} XP</span>
-                            </div>
-                            <div style={{ fontSize: 9, color: '#a7f3d0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                Commit workflow and route to player lane
-                            </div>
-                        </button>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            <span>Snapshots {interactionLedger.snapshots}</span>
+                            <span>Inspects {interactionLedger.inspections}</span>
+                            <span>Training {interactionLedger.trainings}</span>
+                            <span>Routes {interactionLedger.routes}</span>
+                            <span>Session XP +{sessionXpGain}</span>
+                        </div>
                     </div>
+
+                    {/* ─── Side telemetry rail (left) ───────────────────────── */}
+                    {showTelemetryRail ? (
+                        <div style={{
+                            position: 'absolute',
+                            left: leftRailInset,
+                            bottom: leftTelemetryBottom,
+                            width: 160,
+                            display: 'grid',
+                            gap: 8,
+                            zIndex: 3,
+                            pointerEvents: 'none',
+                        }}>
+                            <div style={{
+                                borderRadius: 10,
+                                border: '1px solid rgba(148, 163, 184, 0.24)',
+                                background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.82), rgba(3, 9, 19, 0.82))',
+                                padding: '8px 9px',
+                                display: 'grid',
+                                gap: 6,
+                            }}>
+                                <div style={{ fontSize: 9, color: '#93c5fd', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Signal</div>
+                                <div style={{ fontSize: 10, color: '#e2e8f0' }}>{lineCount} lines · {includeCount} deps</div>
+                                <div style={{ fontSize: 10, color: '#e2e8f0' }}>{callDensity}% density</div>
+                                <div style={{ fontSize: 10, color: riskLabel === 'Critical' ? '#fda4af' : riskLabel === 'Elevated' ? '#fcd34d' : '#86efac' }}>{riskLabel}</div>
+                            </div>
+
+                            <div style={{
+                                borderRadius: 10,
+                                border: '1px solid rgba(148, 163, 184, 0.24)',
+                                background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.82), rgba(3, 9, 19, 0.82))',
+                                padding: '8px 9px',
+                                display: 'grid',
+                                gap: 6,
+                            }}>
+                                <div style={{ fontSize: 9, color: '#a5b4fc', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Hypersphere</div>
+                                <div style={{ fontSize: 10, color: '#e2e8f0' }}>D{hypersphereProjection.dimensions} · N/2 {Math.max(2, Math.ceil(hypersphereProjection.dimensions / 2))}</div>
+                                <div style={{ fontSize: 10, color: '#e2e8f0' }}>Align {hypersphereProjection.alignment}%</div>
+                                <div style={{ fontSize: 10, color: '#7dd3fc' }}>C files {cFileCount}</div>
+                                <div style={{ fontSize: 10, color: '#a7f3d0' }}>ML conf {learningModel.modelConfidence}%</div>
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {/* ─── Quest log rail (right) ───────────────────────────── */}
+                    {showQuestRail ? (
+                        <div style={{
+                            position: 'absolute',
+                            right: rightRailInset,
+                            bottom: questRailBottom,
+                            width: questRailWidth,
+                            borderRadius: 12,
+                            border: '1px solid rgba(148, 163, 184, 0.28)',
+                            background: 'linear-gradient(180deg, rgba(5, 12, 24, 0.9), rgba(3, 9, 19, 0.9))',
+                            boxShadow: '0 10px 22px rgba(2, 6, 23, 0.34)',
+                            padding: 8,
+                            display: 'grid',
+                            gap: 8,
+                            zIndex: 4,
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                                <div style={{ fontSize: 10, color: '#a5b4fc', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700 }}>
+                                    Quest Log
+                                </div>
+                                <div style={{ fontSize: 9, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                                    Step {activeWorkflowStep} · Depth {workflowDepth} · x{Math.max(1, comboStreak)}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gap: 6, maxHeight: hasOpenDock ? '18dvh' : '24dvh', overflowY: 'auto', paddingRight: 2 }}>
+                                {visibleLoops.filter((loop) => loop.id !== null).map((loop, index) => {
+                                    const active = activeDock === loop.id;
+                                    return (
+                                        <button
+                                            key={loop.label}
+                                            type="button"
+                                            onClick={() => {
+                                                if (loop.id) {
+                                                    focusNode(loop.id);
+                                                }
+                                                setActiveDock(active ? null : loop.id);
+                                            }}
+                                            style={{
+                                                borderRadius: 9,
+                                                border: active ? `1px solid ${loop.accent}` : `1px solid ${rewardBand.soft}`,
+                                                background: active ? 'rgba(8, 47, 73, 0.52)' : 'rgba(2, 10, 22, 0.68)',
+                                                color: '#e2e8f0',
+                                                padding: '7px 9px',
+                                                textAlign: 'left',
+                                                cursor: 'pointer',
+                                                boxShadow: active ? `0 0 12px ${rewardBand.glow}` : 'none',
+                                                display: 'grid',
+                                                gap: 4,
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                                    <span style={{
+                                                        width: 18,
+                                                        height: 18,
+                                                        borderRadius: 999,
+                                                        border: `1px solid ${loop.accent}`,
+                                                        color: loop.accent,
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: 10,
+                                                        fontWeight: 700,
+                                                        flexShrink: 0,
+                                                    }}>
+                                                        {index + 1}
+                                                    </span>
+                                                    <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: loop.accent, fontWeight: 700 }}>
+                                                        {loop.label}
+                                                    </span>
+                                                </div>
+                                                <span style={{ fontSize: 10, fontWeight: 700, color: '#cbd5e1' }}>{loop.value}%</span>
+                                            </div>
+                                            <div style={{ fontSize: 9, color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {loop.detail}
+                                            </div>
+                                            <div style={{ height: 3, borderRadius: 999, background: 'rgba(15, 23, 42, 0.9)', overflow: 'hidden' }}>
+                                                <div style={{ width: `${loop.value}%`, height: '100%', background: loop.accent, transition: 'width 220ms ease' }} />
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setActiveWorkflowStep('commit');
+                                    setWorkflowDepth(3);
+                                    setActiveDock('player');
+                                    focusNode('ops');
+                                    applyNodeAction('route');
+                                }}
+                                style={{
+                                    borderRadius: 9,
+                                    border: '1px solid rgba(16, 185, 129, 0.46)',
+                                    background: 'linear-gradient(180deg, rgba(5, 46, 22, 0.86), rgba(6, 34, 18, 0.82))',
+                                    color: '#d1fae5',
+                                    padding: '7px 9px',
+                                    textAlign: 'left',
+                                    cursor: 'pointer',
+                                    display: 'grid',
+                                    gap: 4,
+                                }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+                                    <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#86efac', fontWeight: 700 }}>Main Action</span>
+                                    <span style={{ fontSize: 11, fontWeight: 700 }}>+{projectedRewardXp} XP</span>
+                                </div>
+                                <div style={{ fontSize: 9, color: '#a7f3d0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    Commit workflow and route to player lane
+                                </div>
+                            </button>
+                        </div>
+                    ) : null}
                 </div>
 
                 <div style={{
@@ -1498,7 +1681,7 @@ export function NotebookGameplaySurface({
                                 letterSpacing: '0.05em',
                                 textTransform: 'uppercase',
                             }}>
-                                Neural relevance {neuralRelevanceScore}% · {rewardTier} · Reward +{projectedRewardXp} XP
+                                Neural relevance {neuralRelevanceScore}% · {rewardTier} · Reward +{projectedRewardXp} XP · Session +{sessionXpGain} XP
                             </div>
 
                             <div style={{ maxHeight: '24dvh', overflowY: 'auto', paddingRight: 4 }}>
@@ -1544,10 +1727,10 @@ export function NotebookGameplaySurface({
                                     <PlayerDockPanel
                                         playerPanel={playerPanel}
                                         setPlayerPanel={setPlayerPanelDispatch}
-                                        playerLevel={playerLevel}
+                                        playerLevel={effectivePlayerLevel}
                                         rarityLabel={rarityLabel}
                                         rarityAccent={rarityAccent}
-                                        totalXp={totalXp}
+                                        totalXp={effectiveTotalXp}
                                         lastXpGain={lastXpGain}
                                         comboStreak={comboStreak}
                                     />

@@ -19,11 +19,13 @@ export function resolveNotebookApiBaseUrl(): string {
 }
 
 function manifestCandidates(apiBaseUrl: string): string[] {
-  const candidates: string[] = ['/notebooks/catalog-index.json'];
+  // Live API endpoint is always preferred so the explorer reflects the current
+  // native source tree without a manual rebuild. Static asset is the fallback.
+  const candidates: string[] = [];
   if (apiBaseUrl.length > 0) {
     candidates.push(joinUrl(apiBaseUrl, '/api/notebooks/catalog-index.json'));
-    candidates.push(joinUrl(apiBaseUrl, '/notebooks/catalog-index.json'));
   }
+  candidates.push('/notebooks/catalog-index.json');
   return candidates;
 }
 

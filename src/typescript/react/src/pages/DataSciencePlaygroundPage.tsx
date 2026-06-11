@@ -1,4 +1,4 @@
-import { RouteDeckTransition, RouteDockGrid, RouteFilePickerOverlay, RouteHudControlStrip } from '@banana/ui';
+import { RouteDeckTransition, RouteDockGrid, RouteFilePickerOverlay, RouteHudControlStrip, RouteTopBar } from '@banana/ui';
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -105,6 +105,23 @@ export function DataSciencePlaygroundPage() {
         setRecentFiles(prev => [file, ...prev.filter(f => f !== file)].slice(0, 8));
         setExplorerDropupOpen(false);
     }, []);
+
+    const handleResetAllSectors = useCallback(() => {
+        setQuery('');
+        setSelectedFile('');
+        setRecentFiles([]);
+        setCapturedFiles([]);
+        setTotalXp(0);
+        setComboStreak(0);
+        setComboDomain('');
+        setLastSelectionForXp('');
+        setLastXpGain(0);
+        setQuestToast('');
+        setAnnouncedQuestIds([]);
+        setExplorerDropupOpen(false);
+        resetHudPanels();
+        focusHudPanel(null);
+    }, [focusHudPanel, resetHudPanels, setExplorerDropupOpen]);
 
     useEffect(() => {
         if (filteredFiles.length === 0) {
@@ -411,6 +428,16 @@ export function DataSciencePlaygroundPage() {
                     />
                 ) : null}
 
+                <RouteTopBar
+                    routeLabel={routeHudPreset.label}
+                    showExplorer={showExplorer}
+                    onToggleExplorer={() => {
+                        focusHudPanel('explorer');
+                        setExplorerDropupOpen(!explorerDropupOpen);
+                    }}
+                    onResetSectors={handleResetAllSectors}
+                />
+
                 <SafeNotebookGameplaySurface
                     selectedFile={selectedFile}
                     selectedContent={selectedContent}
@@ -436,15 +463,9 @@ export function DataSciencePlaygroundPage() {
 
                 <RouteHudControlStrip
                     routeLabel={routeHudPreset.label}
-                    showExplorer={showExplorer}
-                    explorerDropupOpen={explorerDropupOpen}
                     showMenu={showMenu}
                     showOperations={showOperations}
                     showStatus={showStatus}
-                    onToggleExplorer={() => {
-                        focusHudPanel('explorer');
-                        setExplorerDropupOpen(!explorerDropupOpen);
-                    }}
                     onToggleMenu={() => focusHudPanel(showMenu ? null : 'menu')}
                     onToggleOperations={() => focusHudPanel(showOperations ? null : 'operations')}
                     onToggleStatus={() => focusHudPanel(showStatus ? null : 'status')}

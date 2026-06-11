@@ -20,7 +20,9 @@ services:
       - .:/workspace
 
   api-overworld:
-    image: oven/bun:1.2
+    build:
+      context: .
+      dockerfile: docker/api-overworld.Dockerfile
     working_dir: /workspace/src/typescript/api
     command:
       - sh
@@ -31,6 +33,7 @@ services:
       PORT: "8081"
       BANANA_ENGINE_ADAPTER: inmemory
       BANANA_NATIVE_PATH: /workspace/out/native/bin/libbanana_native.so
+      BANANA_NATIVE_BOOTSTRAP_REQUIRED: "1"
       NEON_DATABASE_URL: ${NEON_DATABASE_URL:-}
       DATABASE_URL: ${DATABASE_URL:-}
       BANANA_PG_CONNECTION: ${BANANA_PG_CONNECTION:-}
