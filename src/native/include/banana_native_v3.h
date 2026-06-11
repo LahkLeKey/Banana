@@ -21,6 +21,32 @@ typedef struct banana_native_v3_launch_gate_decision {
 	int32_t reserved;
 } banana_native_v3_launch_gate_decision;
 
+typedef struct banana_native_v3_netcode_ledger {
+	int32_t snapshots;
+	int32_t inspections;
+	int32_t trainings;
+	int32_t routes;
+	int32_t node_taps;
+} banana_native_v3_netcode_ledger;
+
+typedef struct banana_native_v3_netcode_signal_input {
+	int32_t call_density;
+	int32_t quest_percent;
+	int32_t combo_streak;
+	int32_t branch_pressure;
+	int32_t workflow_depth;
+} banana_native_v3_netcode_signal_input;
+
+typedef struct banana_native_v3_netcode_learning_output {
+	int32_t model_confidence;
+	int32_t training_accuracy;
+	int32_t policy_momentum;
+	int32_t node_weights[4];
+	int32_t recommended_node;
+	int32_t recommended_action;
+	int32_t xp_by_action[4];
+} banana_native_v3_netcode_learning_output;
+
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_abi_version(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_ping(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_pgbouncer_available(void);
@@ -35,6 +61,12 @@ BANANA_NATIVE_V3_EXPORT int banana_native_v3_world_chunk_serialize(int chunk_x,
 											uint8_t *buffer,
 											int buffer_len);
 BANANA_NATIVE_V3_EXPORT void banana_native_v3_world_cleanup(void);
+BANANA_NATIVE_V3_EXPORT void banana_native_v3_netcode_reset(void);
+BANANA_NATIVE_V3_EXPORT void banana_native_v3_netcode_record_node_tap(int32_t node);
+BANANA_NATIVE_V3_EXPORT void banana_native_v3_netcode_record_action(int32_t action);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_get_ledger(banana_native_v3_netcode_ledger *out_ledger);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_learning(const banana_native_v3_netcode_signal_input *signal_input,
+										 banana_native_v3_netcode_learning_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
 												 banana_launch_gate_policy *out_policy);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_decide(const char *mode_label,

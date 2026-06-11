@@ -774,12 +774,6 @@ static int resolve_ui_host(const char *raw, banana_native_ui_host_kind *out_host
         return 1;
     }
 
-    if (strcmp(raw, "electron") == 0)
-    {
-        *out_host = BANANA_NATIVE_UI_HOST_ELECTRON;
-        return 1;
-    }
-
     if (strcmp(raw, "react-native") == 0 || strcmp(raw, "react_native") == 0)
     {
         *out_host = BANANA_NATIVE_UI_HOST_REACT_NATIVE;

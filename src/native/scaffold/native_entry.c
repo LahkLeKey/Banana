@@ -1,6 +1,7 @@
 #include "banana_native_v3.h"
 #include "runtime/engine/engine_aux_abi.h"
 #include "runtime/engine/engine_host.h"
+#include "runtime/abi/netcode/netcode_abi.h"
 #include "runtime/chunk/chunk_stream_packet.h"
 #include "runtime/terrain/terrain_chunks.h"
 
@@ -164,6 +165,82 @@ void banana_native_v3_world_cleanup(void)
 
 	terrain_chunks_cleanup();
 	s_world_initialized = 0;
+}
+
+void banana_native_v3_netcode_reset(void)
+{
+	runtime_netcode_abi_reset();
+}
+
+void banana_native_v3_netcode_record_node_tap(int32_t node)
+{
+	runtime_netcode_abi_record_node_tap((RuntimeNetcodeNode)node);
+}
+
+void banana_native_v3_netcode_record_action(int32_t action)
+{
+	runtime_netcode_abi_record_action((RuntimeNetcodeAction)action);
+}
+
+int banana_native_v3_netcode_get_ledger(banana_native_v3_netcode_ledger *out_ledger)
+{
+	RuntimeNetcodeInteractionLedger ledger;
+
+	if (!out_ledger)
+	{
+		return -1;
+	}
+
+	if (runtime_netcode_abi_get_ledger(&ledger) != 0)
+	{
+		return -1;
+	}
+
+	out_ledger->snapshots = ledger.snapshots;
+	out_ledger->inspections = ledger.inspections;
+	out_ledger->trainings = ledger.trainings;
+	out_ledger->routes = ledger.routes;
+	out_ledger->node_taps = ledger.node_taps;
+	return 0;
+}
+
+int banana_native_v3_netcode_build_learning(const banana_native_v3_netcode_signal_input *signal_input,
+									banana_native_v3_netcode_learning_output *out_output)
+{
+	RuntimeNetcodeSignalInput native_input;
+	RuntimeNetcodeLearningOutput native_output;
+
+	if (!signal_input || !out_output)
+	{
+		return -1;
+	}
+
+	native_input.call_density = signal_input->call_density;
+	native_input.quest_percent = signal_input->quest_percent;
+	native_input.combo_streak = signal_input->combo_streak;
+	native_input.branch_pressure = signal_input->branch_pressure;
+	native_input.workflow_depth = signal_input->workflow_depth;
+
+	if (runtime_netcode_abi_build_learning(native_input, &native_output) != 0)
+	{
+		return -1;
+	}
+
+	out_output->model_confidence = native_output.model_confidence;
+	out_output->training_accuracy = native_output.training_accuracy;
+	out_output->policy_momentum = native_output.policy_momentum;
+	out_output->node_weights[0] = native_output.node_weights[0];
+	out_output->node_weights[1] = native_output.node_weights[1];
+	out_output->node_weights[2] = native_output.node_weights[2];
+	out_output->node_weights[3] = native_output.node_weights[3];
+	out_output->recommended_node = (int32_t)native_output.recommended_node;
+	out_output->recommended_action = (int32_t)native_output.recommended_action;
+	out_output->xp_by_action[0] = native_output.xp_by_action[0];
+	out_output->xp_by_action[1] = native_output.xp_by_action[1];
+	out_output->xp_by_action[2] = native_output.xp_by_action[2];
+	out_output->xp_by_action[3] = native_output.xp_by_action[3];
+
+	return 0;
 }
 
 int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,

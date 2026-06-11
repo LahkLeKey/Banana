@@ -121,6 +121,9 @@ set(ENGINE_RUNTIME_SOURCES
    runtime/input/move_target/move_target_domain.c
   runtime/parallel/contract/parallel_contract.c
   runtime/parallel/model/parallel_model.c
+  runtime/netcode/model/netcode_model.c
+  runtime/netcode/contract/netcode_contract.c
+  runtime/abi/netcode/netcode_abi.c
   runtime/abi/physics/physics_abi.c
   runtime/player/api/player_api.c
   runtime/player/build/abi/player_build_abi.c
