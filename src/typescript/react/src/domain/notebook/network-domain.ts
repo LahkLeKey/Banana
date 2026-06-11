@@ -1,5 +1,3 @@
-import {tryBuildNativeNodeInteractionLearningModel} from './network-native-bridge';
-
 export type RewardTier = 'Elite Signal'|'Relevant'|'Needs Labeling';
 
 export type ContractNodeId = 'intel'|'objectives'|'player'|'ops';
@@ -295,23 +293,6 @@ export function buildContractNodeVectorModel(input: {
       contractStrength: makeStrength(opsVector)
     },
   ];
-}
-
-export function buildNodeInteractionLearningModel(input: {
-  readonly ledger: NodeInteractionLedger; readonly callDensity: number; readonly questPercent: number; readonly comboStreak: number; readonly branchPressure: number; readonly workflowDepth:
-                                                                                                                                                                                   1 |
-      2 | 3;
-}): NodeInteractionLearningModel {
-  return tryBuildNativeNodeInteractionLearningModel(
-      input.ledger,
-      {
-        callDensity: input.callDensity,
-        questPercent: input.questPercent,
-        comboStreak: input.comboStreak,
-        branchPressure: input.branchPressure,
-        workflowDepth: input.workflowDepth,
-      },
-  );
 }
 
 export function buildContractHypersphereProjectionModel(

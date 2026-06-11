@@ -6,15 +6,10 @@ import { buildIntelSignals, buildMissionIntelEvents } from '../../domain/noteboo
 import { deriveMissionMeta } from '../../domain/notebook/mission-domain';
 import {
     buildCFileContractNodeModel,
-    buildContractHypersphereProjectionModel,
-    buildContractNodeVectorModel,
-    buildNodeLinkConfidenceModel,
-    buildNodeInteractionLearningModel,
-    buildRewardSignalModel,
     type ContractNodeId,
     type NodeInteractionAction,
-    type NodeInteractionLedger,
 } from '../../domain/notebook/network-domain';
+import { useNetcodeSession } from '../../domain/notebook/useNetcodeSession';
 import type { NotebookRouteMode } from '../../lib/notebook-client/routeModeConfig';
 import { buildWorkflowStepMap, type WorkflowStepId } from '../../domain/notebook/workflow-domain';
 import { useNotebookLayoutStore } from '../../lib/notebook-client/layoutStore';
@@ -146,13 +141,6 @@ export function NotebookGameplaySurface({
     const [focusedNode, setFocusedNode] = useState<ContractNodeId>('intel');
     const [sessionXpGain, setSessionXpGain] = useState(0);
     const [interactionToast, setInteractionToast] = useState('');
-    const [interactionLedger, setInteractionLedger] = useState<NodeInteractionLedger>({
-        snapshots: 0,
-        inspections: 0,
-        trainings: 0,
-        routes: 0,
-        nodeTaps: 0,
-    });
     const activeDock = useNotebookLayoutStore((state) => state.activeDock);
     const setActiveDock = useNotebookLayoutStore((state) => state.setActiveDock);
     const intelPanel = useNotebookLayoutStore((state) => state.intelPanel);
@@ -242,14 +230,36 @@ export function NotebookGameplaySurface({
         comboStreak,
         lastXpGain,
     ]);
-    const learningModel = useMemo(() => buildNodeInteractionLearningModel({
+    const cFileCount = useMemo(
+        () => allIndexedFiles.filter((filePath) => /\.c$/i.test(filePath)).length,
+        [allIndexedFiles],
+    );
+    const networkDimensions = useMemo(() => {
+        if (cFileCount <= 0) {
+            return 6;
+        }
+
+        // Expand hypersphere dimensionality as C-file evidence increases.
+        return Math.min(16, Math.max(8, 6 + Math.floor(Math.log2(cFileCount + 1))));
+    }, [cFileCount]);
+    const {
+        learningModel,
         ledger: interactionLedger,
+        recordNodeTap,
+        recordAction,
+        rewardSignal,
+        linkConfidence,
+        hypersphereProjection,
+    } = useNetcodeSession({
         callDensity,
         questPercent,
         comboStreak,
         branchPressure,
         workflowDepth,
-    }), [branchPressure, callDensity, comboStreak, interactionLedger, questPercent, workflowDepth]);
+        playerLevel: effectivePlayerLevel,
+        dependencyPulse,
+        networkDimensions,
+    });
     const subsystemLoops = useMemo(() => ([
         {
             id: 'intel' as const,
@@ -291,65 +301,7 @@ export function NotebookGameplaySurface({
         questProgress.length,
         riskLabel,
     ]);
-    const rewardSignal = useMemo(() => buildRewardSignalModel({
-        callDensity,
-        questPercent,
-        comboStreak,
-        branchPressure,
-        workflowDepth,
-        interactionSignal: learningModel.modelConfidence,
-    }), [branchPressure, callDensity, comboStreak, learningModel.modelConfidence, questPercent, workflowDepth]);
     const { neuralRelevanceScore, projectedRewardXp, rewardTier, rewardBand } = rewardSignal;
-    const cFileCount = useMemo(
-        () => allIndexedFiles.filter((filePath) => /\.c$/i.test(filePath)).length,
-        [allIndexedFiles],
-    );
-    const networkDimensions = useMemo(() => {
-        if (cFileCount <= 0) {
-            return 6;
-        }
-
-        // Expand hypersphere dimensionality as C-file evidence increases.
-        return Math.min(16, Math.max(8, 6 + Math.floor(Math.log2(cFileCount + 1))));
-    }, [cFileCount]);
-    const linkConfidence = useMemo(() => buildNodeLinkConfidenceModel({
-        callDensity,
-        questPercent,
-        playerLevel: effectivePlayerLevel,
-        comboStreak,
-        branchPressure,
-        dependencyPulse,
-        interactionSignal: learningModel.policyMomentum,
-    }), [branchPressure, callDensity, comboStreak, dependencyPulse, effectivePlayerLevel, learningModel.policyMomentum, questPercent]);
-    const contractVectors = useMemo(() => buildContractNodeVectorModel({
-        callDensity,
-        questPercent,
-        playerLevel: effectivePlayerLevel,
-        comboStreak,
-        branchPressure,
-        dependencyPulse,
-        workflowDepth,
-        neuralRelevanceScore,
-        networkDimensions,
-        modelConfidence: learningModel.modelConfidence,
-        policyMomentum: learningModel.policyMomentum,
-    }), [
-        branchPressure,
-        callDensity,
-        comboStreak,
-        dependencyPulse,
-        effectivePlayerLevel,
-        learningModel.modelConfidence,
-        learningModel.policyMomentum,
-        networkDimensions,
-        neuralRelevanceScore,
-        questPercent,
-        workflowDepth,
-    ]);
-    const hypersphereProjection = useMemo(
-        () => buildContractHypersphereProjectionModel({ nodes: contractVectors }),
-        [contractVectors],
-    );
     const laneContractCoherence = useMemo(() => {
         const coherenceMap = new Map<ContractNodeId, number>();
         hypersphereProjection.nodes.forEach((node) => {
@@ -724,32 +676,20 @@ export function NotebookGameplaySurface({
         const currentIndex = nodeOrder.indexOf(focusedNode);
         const nextNode = nodeOrder[(currentIndex + 1 + nodeOrder.length) % nodeOrder.length];
         setFocusedNode(nextNode);
-        setInteractionLedger((previous) => ({
-            ...previous,
-            nodeTaps: previous.nodeTaps + 1,
-        }));
+        recordNodeTap(nextNode);
         const tapXp = Math.max(1, Math.round(learningModel.policyMomentum / 28));
         setSessionXpGain((previous) => previous + tapXp);
         setInteractionToast(`Node lock ${nodeTitles[nextNode]} +${tapXp} XP`);
     };
     const focusNode = (node: ContractNodeId) => {
         setFocusedNode(node);
-        setInteractionLedger((previous) => ({
-            ...previous,
-            nodeTaps: previous.nodeTaps + 1,
-        }));
+        recordNodeTap(node);
     };
     const applyNodeAction = (action: NodeInteractionAction) => {
         const weightedBonus = Math.max(1, Math.round((learningModel.nodeWeights[focusedNode] ?? 0) / 26));
         const actionXp = learningModel.xpByAction[action] + weightedBonus;
 
-        setInteractionLedger((previous) => ({
-            ...previous,
-            snapshots: previous.snapshots + (action === 'snapshot' ? 1 : 0),
-            inspections: previous.inspections + (action === 'inspect' ? 1 : 0),
-            trainings: previous.trainings + (action === 'train' ? 1 : 0),
-            routes: previous.routes + (action === 'route' ? 1 : 0),
-        }));
+        recordAction(action);
         setSessionXpGain((previous) => previous + actionXp);
 
         if (action === 'inspect') {

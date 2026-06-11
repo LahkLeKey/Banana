@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.20)
 
+if(NOT MSVC)
+  # GNU/Clang builds are stricter about NULL visibility; force-include stddef
+  # across C translation units to keep cross-platform builds consistent.
+  add_compile_options(
+    $<$<COMPILE_LANGUAGE:C>:-include>
+    $<$<COMPILE_LANGUAGE:C>:stddef.h>
+  )
+endif()
+
 # ─────────────────────────────────────────────────────────────────────────────
 # banana_engine_core — static C library (render, physics, ai, world modules)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -122,6 +131,10 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/parallel/contract/parallel_contract.c
   runtime/parallel/model/parallel_model.c
   runtime/netcode/model/netcode_model.c
+  runtime/netcode/reward/netcode_reward.c
+  runtime/netcode/link/netcode_link.c
+  runtime/netcode/vector/netcode_vector.c
+  runtime/netcode/hypersphere/netcode_hypersphere.c
   runtime/netcode/contract/netcode_contract.c
   runtime/abi/netcode/netcode_abi.c
   runtime/abi/physics/physics_abi.c
@@ -177,6 +190,8 @@ add_library(banana_engine_core STATIC
   ${ENGINE_WORLD_SOURCES}
   ${ENGINE_UI_SOURCES}
 )
+
+set_target_properties(banana_engine_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32)
   set(BANANA_RENDER_BACKEND_DEFAULT "dx12")
