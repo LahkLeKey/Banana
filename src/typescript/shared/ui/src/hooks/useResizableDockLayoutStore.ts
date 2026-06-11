@@ -144,218 +144,232 @@ export const useResizableDockLayoutStore = create<DockLayoutsStore>(
     (set) => ({
       layouts: {},
 
-      initializeLayout: (layoutId, entries, viewport) => set((state) => {
-        const current = state.layouts[layoutId];
-        const nextPanels: Record<string, DockPanelState> = {};
-        const nextFocusOrder =
-            current?.focusOrder.filter(
-                (id) => entries.some((entry) => entry.id === id)) ??
-            [];
+      initializeLayout: (
+          layoutId: string, entries: DockEntrySeed[], viewport: DockViewport) =>
+          set((state: DockLayoutsStore) => {
+            const current = state.layouts[layoutId];
+            const nextPanels: Record<string, DockPanelState> = {};
+            const nextFocusOrder =
+                current?.focusOrder.filter(
+                    (id) => entries.some((entry) => entry.id === id)) ??
+                [];
 
-        const byCorner: Record<DockCorner, DockEntrySeed[]> = {
-          'top-left': [],
-          'top-right': [],
-          'bottom-left': [],
-          'bottom-right': [],
-        };
-
-        for (const entry of entries) {
-          byCorner[entry.corner].push(entry);
-        }
-
-        for (const entry of entries) {
-          const cornerIndex = byCorner[entry.corner].findIndex(
-              (candidate) => candidate.id === entry.id);
-          const baseRect = getDefaultRect(entry, cornerIndex, viewport);
-          const previous = current?.panels[entry.id];
-          const resetToken = entry.resetToken ?? 0;
-          const rect = !previous || previous.resetToken !== resetToken ?
-              baseRect :
-              clampRectToViewport(previous, viewport);
-
-          nextPanels[entry.id] = {
-            ...rect,
-            corner: entry.corner,
-            zIndex: previous?.zIndex ?? 10 + nextFocusOrder.length,
-            resetToken,
-          };
-
-          if (!nextFocusOrder.includes(entry.id)) {
-            nextFocusOrder.push(entry.id);
-          }
-        }
-
-        nextFocusOrder.forEach((id, index) => {
-          if (nextPanels[id]) {
-            nextPanels[id].zIndex = 10 + index;
-          }
-        });
-
-        const nextAnchorLinks: Record<string, DockAnchorLink[]> = {};
-        for (const [id, links] of Object.entries(current?.anchorLinks ?? {})) {
-          if (!nextPanels[id]) {
-            continue;
-          }
-          const validLinks =
-              links.filter((link) => Boolean(nextPanels[link.id]));
-          if (validLinks.length > 0) {
-            nextAnchorLinks[id] = validLinks;
-          }
-        }
-
-        const nextResizeLocks: Record<string, boolean> = {};
-        for (const [id, locked] of Object.entries(
-                 current?.resizeLockedByPanel ?? {})) {
-          if (nextPanels[id]) {
-            nextResizeLocks[id] = locked;
-          }
-        }
-
-        return {
-          layouts: {
-            ...state.layouts,
-            [layoutId]: {
-              panels: nextPanels,
-              focusOrder: nextFocusOrder,
-              anchorLinks: nextAnchorLinks,
-              resizeLockedByPanel: nextResizeLocks,
-              viewport,
-            },
-          },
-        };
-      }),
-
-      focusPanel: (layoutId, panelId) => set((state) => {
-        const layout = state.layouts[layoutId];
-        if (!layout?.panels[panelId]) {
-          return state;
-        }
-
-        const focusOrder =
-            [...layout.focusOrder.filter((id) => id !== panelId), panelId];
-        const panels = {...layout.panels};
-        focusOrder.forEach((id, index) => {
-          if (panels[id]) {
-            panels[id] = {...panels[id], zIndex: 10 + index};
-          }
-        });
-
-        return {
-          layouts: {
-            ...state.layouts,
-            [layoutId]: {...layout, focusOrder, panels},
-          },
-        };
-      }),
-
-      movePanelGroupBy: (layoutId, panelId, delta) => set((state) => {
-        const layout = state.layouts[layoutId];
-        if (!layout?.panels[panelId]) {
-          return state;
-        }
-
-        const members = getGroupMembers(layout, panelId);
-        const bounds = members.reduce((acc, memberId) => {
-          const panel = layout.panels[memberId];
-          if (!panel) {
-            return acc;
-          }
-          return {
-            left: Math.min(acc.left, panel.x),
-            top: Math.min(acc.top, panel.y),
-            right: Math.max(acc.right, panel.x + panel.width),
-            bottom: Math.max(acc.bottom, panel.y + panel.height),
-          };
-        }, {
-          left: Number.POSITIVE_INFINITY,
-          top: Number.POSITIVE_INFINITY,
-          right: Number.NEGATIVE_INFINITY,
-          bottom: Number.NEGATIVE_INFINITY,
-        });
-
-        const dx = clamp(
-            delta.x, viewportPadding - bounds.left,
-            layout.viewport.width - viewportPadding - bounds.right);
-        const dy = clamp(
-            delta.y, viewportPadding - bounds.top,
-            layout.viewport.height - viewportPadding - bounds.bottom);
-
-        if (dx === 0 && dy === 0) {
-          return state;
-        }
-
-        const panels = {...layout.panels};
-        for (const memberId of members) {
-          const panel = panels[memberId];
-          if (!panel) {
-            continue;
-          }
-          panels[memberId] = {
-            ...panel,
-            x: panel.x + dx,
-            y: panel.y + dy,
-          };
-        }
-
-        return {
-          layouts: {
-            ...state.layouts,
-            [layoutId]: {...layout, panels},
-          },
-        };
-      }),
-
-      resizePanel: (layoutId, panelId, rect) => set((state) => {
-        const layout = state.layouts[layoutId];
-        const panel = layout?.panels[panelId];
-        if (!layout || !panel) {
-          return state;
-        }
-
-        const nextRect = clampRectToViewport(rect, layout.viewport);
-        const dw = nextRect.width - panel.width;
-        const dh = nextRect.height - panel.height;
-
-        const panels = {
-          ...layout.panels,
-          [panelId]: {
-            ...panel,
-            ...nextRect,
-          },
-        };
-
-        if (layout.resizeLockedByPanel[panelId]) {
-          const members =
-              getGroupMembers(layout, panelId).filter((id) => id !== panelId);
-          for (const memberId of members) {
-            const member = panels[memberId];
-            if (!member) {
-              continue;
-            }
-            panels[memberId] = {
-              ...member,
-              ...clampRectToViewport(
-                  {
-                    x: member.x,
-                    y: member.y,
-                    width: member.width + dw,
-                    height: member.height + dh,
-                  },
-                  layout.viewport),
+            const byCorner: Record<DockCorner, DockEntrySeed[]> = {
+              'top-left': [],
+              'top-right': [],
+              'bottom-left': [],
+              'bottom-right': [],
             };
-          }
-        }
 
-        return {
-          layouts: {
-            ...state.layouts,
-            [layoutId]: {...layout, panels},
-          },
-        };
-      }),
+            for (const entry of entries) {
+              byCorner[entry.corner].push(entry);
+            }
+
+            for (const entry of entries) {
+              const cornerIndex = byCorner[entry.corner].findIndex(
+                  (candidate) => candidate.id === entry.id);
+              const baseRect = getDefaultRect(entry, cornerIndex, viewport);
+              const previous = current?.panels[entry.id];
+              const resetToken = entry.resetToken ?? 0;
+              const rect = !previous || previous.resetToken !== resetToken ?
+                  baseRect :
+                  clampRectToViewport(previous, viewport);
+
+              nextPanels[entry.id] = {
+                ...rect,
+                corner: entry.corner,
+                zIndex: previous?.zIndex ?? 10 + nextFocusOrder.length,
+                resetToken,
+              };
+
+              if (!nextFocusOrder.includes(entry.id)) {
+                nextFocusOrder.push(entry.id);
+              }
+            }
+
+            nextFocusOrder.forEach((id, index) => {
+              if (nextPanels[id]) {
+                nextPanels[id].zIndex = 10 + index;
+              }
+            });
+
+            const nextAnchorLinks: Record<string, DockAnchorLink[]> = {};
+            const currentAnchorLinks: Record<string, DockAnchorLink[]> =
+                current?.anchorLinks ?? {};
+            for (const [id, links] of Object.entries(
+                     currentAnchorLinks) as [string, DockAnchorLink[]][]) {
+              if (!nextPanels[id]) {
+                continue;
+              }
+              const validLinks = links.filter(
+                  (link: DockAnchorLink) => Boolean(nextPanels[link.id]));
+              if (validLinks.length > 0) {
+                nextAnchorLinks[id] = validLinks;
+              }
+            }
+
+            const nextResizeLocks: Record<string, boolean> = {};
+            const currentResizeLocks: Record<string, boolean> =
+                current?.resizeLockedByPanel ?? {};
+            for (const [id, locked] of Object.entries(
+                     currentResizeLocks) as [string, boolean][]) {
+              if (nextPanels[id]) {
+                nextResizeLocks[id] = locked;
+              }
+            }
+
+            return {
+              layouts: {
+                ...state.layouts,
+                [layoutId]: {
+                  panels: nextPanels,
+                  focusOrder: nextFocusOrder,
+                  anchorLinks: nextAnchorLinks,
+                  resizeLockedByPanel: nextResizeLocks,
+                  viewport,
+                },
+              },
+            };
+          }),
+
+      focusPanel: (layoutId: string, panelId: string) =>
+          set((state: DockLayoutsStore) => {
+            const layout = state.layouts[layoutId];
+            if (!layout?.panels[panelId]) {
+              return state;
+            }
+
+            const focusOrder = [
+              ...layout.focusOrder.filter((id: string) => id !== panelId),
+              panelId
+            ];
+            const panels = {...layout.panels};
+            focusOrder.forEach((id: string, index: number) => {
+              if (panels[id]) {
+                panels[id] = {...panels[id], zIndex: 10 + index};
+              }
+            });
+
+            return {
+              layouts: {
+                ...state.layouts,
+                [layoutId]: {...layout, focusOrder, panels},
+              },
+            };
+          }),
+
+      movePanelGroupBy:
+          (layoutId: string, panelId: string, delta: {x: number; y: number}) =>
+              set((state: DockLayoutsStore) => {
+                const layout = state.layouts[layoutId];
+                if (!layout?.panels[panelId]) {
+                  return state;
+                }
+
+                const members = getGroupMembers(layout, panelId);
+                const bounds = members.reduce((acc, memberId) => {
+                  const panel = layout.panels[memberId];
+                  if (!panel) {
+                    return acc;
+                  }
+                  return {
+                    left: Math.min(acc.left, panel.x),
+                    top: Math.min(acc.top, panel.y),
+                    right: Math.max(acc.right, panel.x + panel.width),
+                    bottom: Math.max(acc.bottom, panel.y + panel.height),
+                  };
+                }, {
+                  left: Number.POSITIVE_INFINITY,
+                  top: Number.POSITIVE_INFINITY,
+                  right: Number.NEGATIVE_INFINITY,
+                  bottom: Number.NEGATIVE_INFINITY,
+                });
+
+                const dx = clamp(
+                    delta.x, viewportPadding - bounds.left,
+                    layout.viewport.width - viewportPadding - bounds.right);
+                const dy = clamp(
+                    delta.y, viewportPadding - bounds.top,
+                    layout.viewport.height - viewportPadding - bounds.bottom);
+
+                if (dx === 0 && dy === 0) {
+                  return state;
+                }
+
+                const panels = {...layout.panels};
+                for (const memberId of members) {
+                  const panel = panels[memberId];
+                  if (!panel) {
+                    continue;
+                  }
+                  panels[memberId] = {
+                    ...panel,
+                    x: panel.x + dx,
+                    y: panel.y + dy,
+                  };
+                }
+
+                return {
+                  layouts: {
+                    ...state.layouts,
+                    [layoutId]: {...layout, panels},
+                  },
+                };
+              }),
+
+      resizePanel: (layoutId: string, panelId: string, rect: DockPanelRect) =>
+          set((state: DockLayoutsStore) => {
+            const layout = state.layouts[layoutId];
+            const panel = layout?.panels[panelId];
+            if (!layout || !panel) {
+              return state;
+            }
+
+            const nextRect = clampRectToViewport(rect, layout.viewport);
+            const dw = nextRect.width - panel.width;
+            const dh = nextRect.height - panel.height;
+
+            const panels = {
+              ...layout.panels,
+              [panelId]: {
+                ...panel,
+                ...nextRect,
+              },
+            };
+
+            if (layout.resizeLockedByPanel[panelId]) {
+              const members = getGroupMembers(layout, panelId)
+                                  .filter((id: string) => id !== panelId);
+              for (const memberId of members) {
+                const member = panels[memberId];
+                if (!member) {
+                  continue;
+                }
+                panels[memberId] = {
+                  ...member,
+                  ...clampRectToViewport(
+                      {
+                        x: member.x,
+                        y: member.y,
+                        width: member.width + dw,
+                        height: member.height + dh,
+                      },
+                      layout.viewport),
+                };
+              }
+            }
+
+            return {
+              layouts: {
+                ...state.layouts,
+                [layoutId]: {...layout, panels},
+              },
+            };
+          }),
 
       addAnchorLink: (
-          layoutId, sourceId, targetId, sourceSide) => set((state) => {
+          layoutId: string, sourceId: string, targetId: string,
+          sourceSide: DockAnchorSide) => set((state: DockLayoutsStore) => {
         const layout = state.layouts[layoutId];
         if (!layout?.panels[sourceId] || !layout.panels[targetId]) {
           return state;
@@ -364,7 +378,8 @@ export const useResizableDockLayoutStore = create<DockLayoutsStore>(
         const anchorLinks = {...layout.anchorLinks};
         const put = (fromId: string, toId: string, side: DockAnchorSide) => {
           const next = [
-            ...(anchorLinks[fromId] ?? []).filter((link) => link.id !== toId),
+            ...(anchorLinks[fromId] ?? [])
+                .filter((link: DockAnchorLink) => link.id !== toId),
             {id: toId, side}
           ];
           anchorLinks[fromId] = next;
@@ -381,52 +396,56 @@ export const useResizableDockLayoutStore = create<DockLayoutsStore>(
         };
       }),
 
-      unlinkPanel: (layoutId, panelId) => set((state) => {
-        const layout = state.layouts[layoutId];
-        if (!layout?.panels[panelId]) {
-          return state;
-        }
+      unlinkPanel: (layoutId: string, panelId: string) =>
+          set((state: DockLayoutsStore) => {
+            const layout = state.layouts[layoutId];
+            if (!layout?.panels[panelId]) {
+              return state;
+            }
 
-        const anchorLinks: Record<string, DockAnchorLink[]> = {};
-        for (const [id, links] of Object.entries(layout.anchorLinks)) {
-          if (id === panelId) {
-            continue;
-          }
-          const filtered = links.filter((link) => link.id !== panelId);
-          if (filtered.length > 0) {
-            anchorLinks[id] = filtered;
-          }
-        }
+            const anchorLinks: Record<string, DockAnchorLink[]> = {};
+            for (const [id, links] of Object.entries(
+                     layout.anchorLinks) as [string, DockAnchorLink[]][]) {
+              if (id === panelId) {
+                continue;
+              }
+              const filtered =
+                  links.filter((link: DockAnchorLink) => link.id !== panelId);
+              if (filtered.length > 0) {
+                anchorLinks[id] = filtered;
+              }
+            }
 
-        const resizeLockedByPanel = {...layout.resizeLockedByPanel};
-        delete resizeLockedByPanel[panelId];
+            const resizeLockedByPanel = {...layout.resizeLockedByPanel};
+            delete resizeLockedByPanel[panelId];
 
-        return {
-          layouts: {
-            ...state.layouts,
-            [layoutId]: {...layout, anchorLinks, resizeLockedByPanel},
-          },
-        };
-      }),
+            return {
+              layouts: {
+                ...state.layouts,
+                [layoutId]: {...layout, anchorLinks, resizeLockedByPanel},
+              },
+            };
+          }),
 
-      toggleResizeLock: (layoutId, panelId) => set((state) => {
-        const layout = state.layouts[layoutId];
-        if (!layout?.panels[panelId]) {
-          return state;
-        }
+      toggleResizeLock: (layoutId: string, panelId: string) =>
+          set((state: DockLayoutsStore) => {
+            const layout = state.layouts[layoutId];
+            if (!layout?.panels[panelId]) {
+              return state;
+            }
 
-        const group = getGroupMembers(layout, panelId);
-        const locked = layout.resizeLockedByPanel[panelId] ?? false;
-        const resizeLockedByPanel = {...layout.resizeLockedByPanel};
-        for (const memberId of group) {
-          resizeLockedByPanel[memberId] = !locked;
-        }
+            const group = getGroupMembers(layout, panelId);
+            const locked = layout.resizeLockedByPanel[panelId] ?? false;
+            const resizeLockedByPanel = {...layout.resizeLockedByPanel};
+            for (const memberId of group) {
+              resizeLockedByPanel[memberId] = !locked;
+            }
 
-        return {
-          layouts: {
-            ...state.layouts,
-            [layoutId]: {...layout, resizeLockedByPanel},
-          },
-        };
-      }),
+            return {
+              layouts: {
+                ...state.layouts,
+                [layoutId]: {...layout, resizeLockedByPanel},
+              },
+            };
+          }),
     }));
