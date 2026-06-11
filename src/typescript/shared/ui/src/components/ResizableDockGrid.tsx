@@ -4,6 +4,7 @@ import { PanelOverlay } from './PanelOverlay';
 import { useResizableDockLayoutStore, type DockCorner } from '../hooks/useResizableDockLayoutStore';
 
 type AnchorLink = { id: string; side: AnchorSide; };
+type DockLayoutStoreState = ReturnType<typeof useResizableDockLayoutStore.getState>;
 
 const groupPalette = ['#22d3ee', '#f59e0b', '#a78bfa', '#34d399', '#f472b6', '#60a5fa'];
 
@@ -28,14 +29,14 @@ export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: 
     const layoutIdRef = useRef(`dock-${Math.random().toString(36).slice(2)}`);
     const layoutId = layoutIdRef.current;
     const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
-    const initializeLayout = useResizableDockLayoutStore((state) => state.initializeLayout);
-    const focusPanelInStore = useResizableDockLayoutStore((state) => state.focusPanel);
-    const movePanelGroupBy = useResizableDockLayoutStore((state) => state.movePanelGroupBy);
-    const resizePanel = useResizableDockLayoutStore((state) => state.resizePanel);
-    const addAnchorLinkToStore = useResizableDockLayoutStore((state) => state.addAnchorLink);
-    const unlinkPanelFromStore = useResizableDockLayoutStore((state) => state.unlinkPanel);
-    const toggleResizeLockInStore = useResizableDockLayoutStore((state) => state.toggleResizeLock);
-    const layout = useResizableDockLayoutStore((state) => state.layouts[layoutId]);
+    const initializeLayout = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.initializeLayout);
+    const focusPanelInStore = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.focusPanel);
+    const movePanelGroupBy = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.movePanelGroupBy);
+    const resizePanel = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.resizePanel);
+    const addAnchorLinkToStore = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.addAnchorLink);
+    const unlinkPanelFromStore = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.unlinkPanel);
+    const toggleResizeLockInStore = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.toggleResizeLock);
+    const layout = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.layouts[layoutId]);
 
     useEffect(() => {
         const toSeeds = () => entries.map((entry) => ({

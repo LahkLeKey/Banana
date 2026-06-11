@@ -135,12 +135,16 @@ export function ResizablePanel({
         });
     };
 
-    const flushResizeUpdate = () => {
+    const flushResizeUpdate = (commitPending: boolean = false) => {
         if (resizeRafRef.current !== null) {
             window.cancelAnimationFrame(resizeRafRef.current);
             resizeRafRef.current = null;
         }
+        const payload = pendingResizeRef.current;
         pendingResizeRef.current = null;
+        if (commitPending && payload) {
+            onResize?.(id, payload);
+        }
     };
 
     const startResize = (direction: ResizeDirection, event: ReactMouseEvent<HTMLDivElement>) => {
@@ -429,6 +433,8 @@ export function ResizablePanel({
         };
 
         const handleMouseUp = () => {
+            // Commit the latest buffered resize so mouseup never drops final size.
+            flushResizeUpdate(true);
             setActiveResize(null);
             resizeOriginRef.current = null;
             setGhostRect(null);
@@ -735,24 +741,38 @@ export function ResizablePanel({
 
     if (isCollapsed) {
         return (
-            <div style={{
-                position: 'fixed',
-                left: 0,
-                top: 0,
-                transform: `translate3d(${x}px, ${y}px, 0)`,
-                width: '40px',
-                height: '40px',
-                background: 'rgba(7, 19, 34, 0.9)',
-                border: '1px solid rgba(20, 184, 166, 0.2)',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                fontSize: '11px',
-                color: 'rgba(226, 232, 240, 0.6)',
-                overflow: 'hidden',
-            }}>
+            <div
+                style={{
+                    position: 'fixed',
+                    left: 0,
+                    top: 0,
+                    transform: `translate3d(${x}px, ${y}px, 0)`,
+                    width: '40px',
+                    height: '40px',
+                    background: 'rgba(7, 19, 34, 0.9)',
+                    border: '1px solid rgba(20, 184, 166, 0.2)',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: onExpand ? 'pointer' : 'default',
+                    fontSize: '11px',
+                    color: 'rgba(226, 232, 240, 0.6)',
+                    overflow: 'hidden',
+                }}
+                role={onExpand ? 'button' : undefined}
+                tabIndex={onExpand ? 0 : undefined}
+                onClick={onExpand}
+                onKeyDown={(event) => {
+                    if (!onExpand) {
+                        return;
+                    }
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        onExpand();
+                    }
+                }}
+            >
                 {id.charAt(0).toUpperCase()}
             </div>
         );

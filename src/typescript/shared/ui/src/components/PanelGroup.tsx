@@ -1,5 +1,5 @@
-import { useState, type ReactNode, type CSSProperties } from 'react';
-import { ResizablePanel, type ResizablePanelProps } from './ResizablePanel';
+import { useEffect, useState, type ReactNode, type CSSProperties } from 'react';
+import { ResizablePanel } from './ResizablePanel';
 
 export type PanelGroupEntry = {
     readonly id: string;
@@ -28,6 +28,21 @@ export function PanelGroup({
 }: PanelGroupProps) {
     const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set());
     const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
+    const [panelSizeById, setPanelSizeById] = useState<Record<string, { width: number; height: number }>>({});
+
+    useEffect(() => {
+        setPanelSizeById((previous) => {
+            const next: Record<string, { width: number; height: number }> = {};
+            for (const entry of entries) {
+                const prior = previous[entry.id];
+                next[entry.id] = prior ?? {
+                    width: entry.defaultWidth ?? 360,
+                    height: entry.defaultHeight ?? 280,
+                };
+            }
+            return next;
+        });
+    }, [entries]);
 
     const toggleCollapse = (panelId: string) => {
         setCollapsedPanels((prev) => {
@@ -90,21 +105,41 @@ export function PanelGroup({
         }}>
             {/* Main panel area */}
             <div style={activeLayoutStyle}>
-                {activePanels.map((entry) => (
-                    <ResizablePanel
-                        key={entry.id}
-                        id={entry.id}
-                        title={entry.title}
-                        defaultWidth={entry.defaultWidth}
-                        defaultHeight={entry.defaultHeight}
-                        isCollapsed={expandedPanel === entry.id}
-                        onCollapse={() => toggleCollapse(entry.id)}
-                        onResize={(w, h) => onPanelSizeChange?.(entry.id, w, h)}
-                        corner={corner}
-                    >
-                        {entry.children}
-                    </ResizablePanel>
-                ))}
+                {activePanels.map((entry, index) => {
+                    const width = panelSizeById[entry.id]?.width ?? entry.defaultWidth ?? 360;
+                    const height = panelSizeById[entry.id]?.height ?? entry.defaultHeight ?? 280;
+                    const column = layout === 'grid' ? index % Math.max(1, maxColumns) : 0;
+                    const row = layout === 'grid' ? Math.floor(index / Math.max(1, maxColumns)) : index;
+                    const x = 16 + (column * (width + gap));
+                    const y = 52 + (row * (height + gap));
+
+                    return (
+                        <ResizablePanel
+                            key={entry.id}
+                            id={entry.id}
+                            title={entry.title}
+                            x={x}
+                            y={y}
+                            width={width}
+                            height={height}
+                            isCollapsed={expandedPanel === entry.id}
+                            onCollapse={() => toggleCollapse(entry.id)}
+                            onResize={(_, rect) => {
+                                setPanelSizeById((previous) => ({
+                                    ...previous,
+                                    [entry.id]: {
+                                        width: rect.width,
+                                        height: rect.height,
+                                    },
+                                }));
+                                onPanelSizeChange?.(entry.id, rect.width, rect.height);
+                            }}
+                            corner={corner}
+                        >
+                            {entry.children}
+                        </ResizablePanel>
+                    );
+                })}
             </div>
 
             {/* Collapsed tabs sidebar */}
