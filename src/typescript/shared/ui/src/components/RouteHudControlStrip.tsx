@@ -25,6 +25,7 @@ type RouteHudControlStripProps = {
     readonly onToggleNodeOps?: () => void;
     readonly pinnedPanels?: readonly PanelId[];
     readonly onTogglePanelPin?: (panel: PanelId) => void;
+    readonly onResetPanel?: (panel: PanelId) => void;
     readonly onFocusViewport: () => void;
     readonly onResetHud: () => void;
     readonly onCloseAllPanels?: () => void;
@@ -181,6 +182,7 @@ export function RouteHudControlStrip({
     onToggleNodeOps,
     pinnedPanels = ['explorer', 'menu', 'operations', 'status', 'intelNode', 'objectiveNode', 'playerNode', 'questLog', 'nodeOps'],
     onTogglePanelPin,
+    onResetPanel,
     onFocusViewport,
     onResetHud,
     onCloseAllPanels,
@@ -337,7 +339,7 @@ export function RouteHudControlStrip({
                             return (
                                 <div key={panel.id} style={{
                                     display: 'grid',
-                                    gridTemplateColumns: 'auto 1fr auto auto',
+                                    gridTemplateColumns: 'auto 1fr auto auto auto',
                                     alignItems: 'center',
                                     gap: 8,
                                     borderRadius: 8,
@@ -375,6 +377,28 @@ export function RouteHudControlStrip({
                                         }}
                                     >
                                         {panel.active ? 'Shown' : 'Show'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            onResetPanel?.(panel.id);
+                                            setIsDropupOpen(false);
+                                        }}
+                                        aria-label={`Reset ${panel.label} window`}
+                                        title={`Reset ${panel.label} window size and position`}
+                                        style={{
+                                            borderRadius: 999,
+                                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                                            background: 'rgba(12, 74, 110, 0.35)',
+                                            color: '#bae6fd',
+                                            fontSize: 10,
+                                            fontWeight: 700,
+                                            padding: '4px 8px',
+                                            cursor: 'pointer',
+                                            minWidth: 46,
+                                        }}
+                                    >
+                                        Reset
                                     </button>
                                     <button
                                         type="button"

@@ -22,7 +22,7 @@ import {
 } from '../lib/notebook-client/gamification';
 import { useNotebookLayoutStore } from '../lib/notebook-client/layoutStore';
 import { resolveRouteHudPreset, type NotebookRouteMode } from '../lib/notebook-client/routeModeConfig';
-import { useNotebookWindowOrchestrator } from '../lib/notebook-client/useNotebookWindowOrchestrator';
+import { useNotebookWindowOrchestrator, type NotebookHudPanelId } from '../lib/notebook-client/useNotebookWindowOrchestrator';
 import { useNotebookClient } from '../lib/notebook-client/useNotebookClient';
 
 const SafeNotebookGameplaySurface =
@@ -60,6 +60,30 @@ const stageStyle: CSSProperties = {
     height: '100dvh',
     overflow: 'hidden',
     padding: 0,
+};
+
+const panelResetDefaults: Record<NotebookHudPanelId, number> = {
+    explorer: 0,
+    menu: 0,
+    status: 0,
+    operations: 0,
+    intelNode: 0,
+    objectiveNode: 0,
+    playerNode: 0,
+    questLog: 0,
+    nodeOps: 0,
+};
+
+const panelDefaultSizes: Record<NotebookHudPanelId, { width: number; height: number }> = {
+    menu: { width: 360, height: 260 },
+    playerNode: { width: 340, height: 180 },
+    explorer: { width: 360, height: 300 },
+    intelNode: { width: 340, height: 180 },
+    status: { width: 350, height: 220 },
+    questLog: { width: 360, height: 260 },
+    objectiveNode: { width: 360, height: 260 },
+    nodeOps: { width: 360, height: 220 },
+    operations: { width: 360, height: 240 },
 };
 
 export function DataSciencePlaygroundPage() {
@@ -101,6 +125,7 @@ export function DataSciencePlaygroundPage() {
     const [lastXpGain, setLastXpGain] = useState(0);
     const [questToast, setQuestToast] = useState('');
     const [announcedQuestIds, setAnnouncedQuestIds] = useState<string[]>([]);
+    const [panelResetTokens, setPanelResetTokens] = useState<Record<NotebookHudPanelId, number>>(panelResetDefaults);
 
     const routeHudPreset = useMemo(() => resolveRouteHudPreset(location.pathname), [location.pathname]);
 
@@ -131,9 +156,32 @@ export function DataSciencePlaygroundPage() {
         setLastXpGain(0);
         setQuestToast('');
         setAnnouncedQuestIds([]);
+        setPanelResetTokens(panelResetDefaults);
         resetHudPanels();
         closeForViewport();
     }, [closeForViewport, resetHudPanels]);
+
+    const resetPanelLayout = useCallback((panel: NotebookHudPanelId) => {
+        setPanelResetTokens((previous) => ({
+            ...previous,
+            [panel]: previous[panel] + 1,
+        }));
+    }, []);
+
+    const handleResetHud = useCallback(() => {
+        resetHudPanels();
+        setPanelResetTokens((previous) => ({
+            explorer: previous.explorer + 1,
+            menu: previous.menu + 1,
+            status: previous.status + 1,
+            operations: previous.operations + 1,
+            intelNode: previous.intelNode + 1,
+            objectiveNode: previous.objectiveNode + 1,
+            playerNode: previous.playerNode + 1,
+            questLog: previous.questLog + 1,
+            nodeOps: previous.nodeOps + 1,
+        }));
+    }, [resetHudPanels]);
 
     useEffect(() => {
         if (filteredFiles.length === 0) {
@@ -501,8 +549,9 @@ export function DataSciencePlaygroundPage() {
         visible: panelVisibility[dock.id],
         content: dockRenderers[dock.id],
         title: dock.title,
-        defaultWidth: 360,
-        defaultHeight: 320,
+        defaultWidth: panelDefaultSizes[dock.id].width,
+        defaultHeight: panelDefaultSizes[dock.id].height,
+        resetToken: panelResetTokens[dock.id],
     }));
 
     return (
@@ -589,8 +638,9 @@ export function DataSciencePlaygroundPage() {
                     onToggleQuestLog={() => togglePanel('questLog')}
                     onToggleNodeOps={() => togglePanel('nodeOps')}
                     onTogglePanelPin={togglePanelPin}
+                    onResetPanel={(panel) => resetPanelLayout(panel as NotebookHudPanelId)}
                     onFocusViewport={closeForViewport}
-                    onResetHud={resetHudPanels}
+                    onResetHud={handleResetHud}
                     onCloseAllPanels={closeAllWindows}
                     onReopenPanels={reopenAllWindows}
                 />

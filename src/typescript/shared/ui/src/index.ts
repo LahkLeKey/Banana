@@ -41,6 +41,8 @@ export {WorkflowCenterToolbar, WorkflowOverlayStack,} from './components/Workflo
 // Hooks for panel state management
 export type {PanelState, PanelStateActions} from './hooks/usePanelState';
 export {usePanelState} from './hooks/usePanelState';
+export type {DockAnchorLink, DockAnchorSide, DockCorner, DockEntrySeed, DockLayoutState, DockPanelRect, DockPanelState, DockViewport,} from './hooks/useResizableDockLayoutStore';
+export {useResizableDockLayoutStore} from './hooks/useResizableDockLayoutStore';
 export type {Tokens} from './tokens';
 export {tokens} from './tokens';
 

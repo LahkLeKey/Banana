@@ -44,6 +44,22 @@
       "request": "launch",
       "url": "http://localhost:5173/session-room",
       "webRoot": "${workspaceFolder}/src/typescript/react"
+    },
+    {
+      "name": "Banana: Website (Notebooks | Compose Full Stack)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:5173/notebooks",
+      "webRoot": "${workspaceFolder}/src/typescript/react",
+      "preLaunchTask": "Runtime: up (overworld compose)",
+      "postDebugTask": "Runtime: down (overworld compose)"
+    },
+    {
+      "name": "Banana: Website (Notebooks | Browser Only)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:5173/notebooks",
+      "webRoot": "${workspaceFolder}/src/typescript/react"
     }
   ]
 }
