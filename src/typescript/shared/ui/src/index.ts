@@ -7,23 +7,29 @@ export {ErrorText} from './components/ErrorText';
 // Game Engine UI — shared components for ARPG viewport
 export type {EngineStatus, RadialDirection,} from './components/GameEngineTypes';
 export {computeMoveAxes, getDirectionFromTouch, isMovementKey, MOVEMENT_KEYS, RADIAL_CONFIG,} from './components/GameEngineTypes';
+export type {EnhancedPanelProps} from './components/EnhancedPanel';
+export {EnhancedPanel} from './components/EnhancedPanel';
+export type {PanelBaseProps} from './components/PanelBase';
+export {PanelBase} from './components/PanelBase';
+export type {PanelGroupEntry, PanelGroupProps} from './components/PanelGroup';
+export {PanelGroup} from './components/PanelGroup';
+export type {PanelOverlayProps} from './components/PanelOverlay';
+export {PanelOverlay} from './components/PanelOverlay';
+export type {ResizableDockEntry, ResizableDockGridProps} from './components/ResizableDockGrid';
+export {ResizableDockGrid} from './components/ResizableDockGrid';
+export type {ResizablePanelProps} from './components/ResizablePanel';
+export {ResizablePanel} from './components/ResizablePanel';
 export type {RetryButtonProps} from './components/RetryButton';
 export {RETRY_BUTTON_COPY, RetryButton} from './components/RetryButton';
 export {RouteDeckTransition} from './components/RouteDeckTransition';
 export type {RouteDockCorner, RouteDockEntry} from './components/RouteDockGrid';
 export {RouteDockGrid} from './components/RouteDockGrid';
 export {RouteFilePickerOverlay} from './components/RouteFilePickerOverlay';
-export type {ResizablePanelProps} from './components/ResizablePanel';
-export {ResizablePanel} from './components/ResizablePanel';
-export type {PanelOverlayProps} from './components/PanelOverlay';
-export {PanelOverlay} from './components/PanelOverlay';
-export type {PanelGroupEntry, PanelGroupProps} from './components/PanelGroup';
-export {PanelGroup} from './components/PanelGroup';
-export type {ResizableDockEntry, ResizableDockGridProps} from './components/ResizableDockGrid';
-export {ResizableDockGrid} from './components/ResizableDockGrid';
 export {RouteHudControlStrip} from './components/RouteHudControlStrip';
 export type {RouteDescriptorAction} from './components/RouteModeDescriptorCard';
 export {RouteModeDescriptorCard} from './components/RouteModeDescriptorCard';
+export type {TabbedPanelEntry, TabbedPanelGroupProps} from './components/TabbedPanelGroup';
+export {TabbedPanelGroup} from './components/TabbedPanelGroup';
 export {RouteActionButton, RouteActionLink, RouteActionsRow, RouteBody, RouteEyebrow, RouteFieldLabel, RouteInfoCard, RouteInfoGrid, RouteMetaText, RoutePanel, RouteShell, RouteTextInput, RouteTitle,} from './components/RouteScaffold';
 export type {RouteSubActionTab} from './components/RouteSubActionBar';
 export {RouteSubActionBar, RouteSubActionLink} from './components/RouteSubActionBar';
@@ -34,6 +40,10 @@ export type {WorkflowDepth, WorkflowOverlayModel, WorkflowStepOption,} from './c
 export {WorkflowCenterToolbar, WorkflowOverlayStack,} from './components/WorkflowOrchestrator';
 export type {Tokens} from './tokens';
 export {tokens} from './tokens';
+
+// Hooks for panel state management
+export type {PanelState, PanelStateActions} from './hooks/usePanelState';
+export {usePanelState} from './hooks/usePanelState';
 
 export * from './domains/ConnectionManager';
 export * from './domains/GameEngineUIService';
