@@ -46,19 +46,19 @@ description: "Tasks for 035-native-hypersphere-kmeans"
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Add deterministic native compute repeatability test in tests/native/runtime/netcode/netcode_hypersphere_kmeans_determinism_test.c
-- [ ] T009 [P] [US1] Add native edge-case test for single-cluster and near-zero-radius handling in tests/native/runtime/netcode/netcode_hypersphere_kmeans_edge_cases_test.c
+- [x] T008 [P] [US1] Add deterministic native compute repeatability test in tests/native/runtime/netcode/netcode_hypersphere_kmeans_determinism_test.c
+- [x] T009 [P] [US1] Add native edge-case test for single-cluster and near-zero-radius handling in tests/native/runtime/netcode/netcode_hypersphere_kmeans_edge_cases_test.c
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Create fixed-point math and deterministic rounding helpers in src/native/engine/runtime/netcode/vector/netcode_fixed_point.h and src/native/engine/runtime/netcode/vector/netcode_fixed_point.c
-- [ ] T011 [P] [US1] Implement deterministic K-means iteration core and stable assignment ordering in src/native/engine/runtime/netcode/vector/netcode_kmeans.h and src/native/engine/runtime/netcode/vector/netcode_kmeans.c
-- [ ] T012 [US1] Integrate K-means core into vector compute orchestration in src/native/engine/runtime/netcode/vector/netcode_vector.c and src/native/engine/runtime/netcode/vector/netcode_vector.h
-- [ ] T013 [US1] Extend hypersphere output model with inscribed radius, weighted Voronoi scores, and spectral proxies in src/native/engine/runtime/netcode/hypersphere/netcode_hypersphere.h and src/native/engine/runtime/netcode/hypersphere/netcode_hypersphere.c
-- [ ] T014 [US1] Extend native ABI bridge structs for deterministic compute outputs in src/native/engine/runtime/abi/netcode/netcode_abi.h and src/native/engine/runtime/abi/netcode/netcode_abi.c
-- [ ] T015 [US1] Expose new compute outputs through exported ABI boundary in src/native/include/banana_native_v3.h and src/native/scaffold/native_entry.c
-- [ ] T016 [US1] Wire new netcode fixed-point and kmeans runtime modules into build in src/native/engine/CMakeLists.txt
-- [ ] T017 [US1] Register US1 deterministic native tests in tests/native/CMakeLists.txt
+- [x] T010 [P] [US1] Create fixed-point math and deterministic rounding helpers in src/native/engine/runtime/netcode/vector/netcode_fixed_point.h and src/native/engine/runtime/netcode/vector/netcode_fixed_point.c
+- [x] T011 [P] [US1] Implement deterministic K-means iteration core and stable assignment ordering in src/native/engine/runtime/netcode/vector/netcode_kmeans.h and src/native/engine/runtime/netcode/vector/netcode_kmeans.c
+- [x] T012 [US1] Integrate K-means core into vector compute orchestration in src/native/engine/runtime/netcode/vector/netcode_vector.c and src/native/engine/runtime/netcode/vector/netcode_vector.h
+- [x] T013 [US1] Extend hypersphere output model with inscribed radius, weighted Voronoi scores, and spectral proxies in src/native/engine/runtime/netcode/hypersphere/netcode_hypersphere.h and src/native/engine/runtime/netcode/hypersphere/netcode_hypersphere.c
+- [x] T014 [US1] Extend native ABI bridge structs for deterministic compute outputs in src/native/engine/runtime/abi/netcode/netcode_abi.h and src/native/engine/runtime/abi/netcode/netcode_abi.c
+- [x] T015 [US1] Expose new compute outputs through exported ABI boundary in src/native/include/banana_native_v3.h and src/native/scaffold/native_entry.c
+- [x] T016 [US1] Wire new netcode fixed-point and kmeans runtime modules into build in src/native/engine/CMakeLists.txt
+- [x] T017 [US1] Register US1 deterministic native tests in tests/native/CMakeLists.txt
 
 **Checkpoint**: Deterministic native compute is complete and independently testable.
 

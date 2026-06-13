@@ -7,8 +7,7 @@ type NetcodeRouteOptions = {
 };
 
 type NetcodeHypersphereRollout = {
-  enabled: boolean;
-  cohort: string;
+  enabled: boolean; cohort: string;
 };
 
 function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
@@ -16,8 +15,8 @@ function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
       (process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED ?? 'true')
           .trim()
           .toLowerCase();
-  const enabled = enabledRaw !== 'false' && enabledRaw !== '0' &&
-      enabledRaw !== 'off';
+  const enabled =
+      enabledRaw !== 'false' && enabledRaw !== '0' && enabledRaw !== 'off';
   const cohort =
       (process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT ?? 'all').trim() ||
       'all';
@@ -221,7 +220,23 @@ export async function registerNetcodeRoutes(
     const vector = await netcode.buildVector(vectorInput);
     const hypersphere = await netcode.buildHypersphere(vectorInput);
 
-    return {reward, link, vector, hypersphere, rollout};
+    const hypersphereKmeans = {
+      centers: hypersphere.centers,
+      radii: hypersphere.radii,
+      weightedVoronoiScores: hypersphere.weightedVoronoiScores,
+      spectralProxy: hypersphere.spectralProxy,
+      observability: hypersphere.observability,
+    };
+
+    return {
+      contractVersion: 1,
+      reward,
+      link,
+      vector,
+      hypersphere,
+      hypersphereKmeans,
+      rollout,
+    };
   });
 
   app.post<{

@@ -2,6 +2,8 @@
 
 #include "../../netcode/contract/netcode_contract.h"
 
+#include <string.h>
+
 void runtime_netcode_abi_reset(void)
 {
     runtime_netcode_contract_reset();
@@ -115,6 +117,9 @@ int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal
 
     if (!out_output)
         return -1;
+
+    memset(&vector_output, 0, sizeof(vector_output));
+    memset(out_output, 0, sizeof(*out_output));
 
     if (runtime_netcode_abi_build_vector(signal_input, &vector_output) != 0)
         return -1;

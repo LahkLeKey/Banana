@@ -111,6 +111,56 @@ function createFakeNetcode(captured: CapturedArgs): NativeNetcodeService {
         ],
         alignment: 42,
         radialStability: 73,
+        clusterCount: 2,
+        vectorCount: 4,
+        centers: [
+          {clusterId: 0, memberCount: 2, centerQ16: [65536, 32768, 16384]},
+          {clusterId: 1, memberCount: 2, centerQ16: [32768, 65536, 16384]},
+        ],
+        radii: [
+          {
+            clusterId: 0,
+            nearestNeighborDistanceQ16: 49152,
+            inscribedRadiusQ16: 24576,
+            radiusState: 'ok' as const,
+          },
+          {
+            clusterId: 1,
+            nearestNeighborDistanceQ16: 49152,
+            inscribedRadiusQ16: 24576,
+            radiusState: 'ok' as const,
+          },
+        ],
+        weightedVoronoiScores: [
+          {
+            vectorId: 0,
+            clusterId: 0,
+            distanceToCenterQ16: 12288,
+            weightedScoreQ16: 32768,
+            scoreValidity: 'valid' as const,
+          },
+        ],
+        spectralProxy: [
+          {
+            clusterId: 0,
+            frequencyProxyQ16: 131072,
+            amplitudeProxyQ16: 32768,
+            spectralState: 'ok' as const,
+          },
+          {
+            clusterId: 1,
+            frequencyProxyQ16: 131072,
+            amplitudeProxyQ16: 32768,
+            spectralState: 'ok' as const,
+          },
+        ],
+        observability: {
+          convergenceStatus: 0,
+          iterationCount: 3,
+          assignmentChangesLastIteration: 0,
+          deterministicHash: 123456,
+          endiannessDecodePath: 'little-endian' as const,
+        },
       };
     },
   };

@@ -99,11 +99,75 @@ typedef struct banana_native_v3_netcode_projection_node {
 	float nearest_neighbor_distance;
 } banana_native_v3_netcode_projection_node;
 
+typedef enum banana_native_v3_netcode_radius_state {
+	BANANA_NATIVE_V3_NETCODE_RADIUS_OK = 0,
+	BANANA_NATIVE_V3_NETCODE_RADIUS_SINGLE_CLUSTER = 1,
+	BANANA_NATIVE_V3_NETCODE_RADIUS_NEAR_ZERO_CLAMPED = 2,
+} banana_native_v3_netcode_radius_state;
+
+typedef enum banana_native_v3_netcode_score_validity {
+	BANANA_NATIVE_V3_NETCODE_SCORE_VALID = 0,
+	BANANA_NATIVE_V3_NETCODE_SCORE_INVALID_RADIUS = 1,
+} banana_native_v3_netcode_score_validity;
+
+typedef enum banana_native_v3_netcode_spectral_state {
+	BANANA_NATIVE_V3_NETCODE_SPECTRAL_OK = 0,
+	BANANA_NATIVE_V3_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED = 1,
+} banana_native_v3_netcode_spectral_state;
+
+typedef enum banana_native_v3_netcode_endianness_decode_path {
+	BANANA_NATIVE_V3_NETCODE_ENDIANNESS_LITTLE_ENDIAN = 0,
+	BANANA_NATIVE_V3_NETCODE_ENDIANNESS_BYTE_SWAPPED = 1,
+} banana_native_v3_netcode_endianness_decode_path;
+
+typedef struct banana_native_v3_netcode_kmeans_center {
+	int32_t cluster_id;
+	int32_t member_count;
+	int32_t center_q16[16];
+} banana_native_v3_netcode_kmeans_center;
+
+typedef struct banana_native_v3_netcode_kmeans_radius {
+	int32_t cluster_id;
+	int32_t nearest_neighbor_distance_q16;
+	int32_t inscribed_radius_q16;
+	int32_t radius_state;
+} banana_native_v3_netcode_kmeans_radius;
+
+typedef struct banana_native_v3_netcode_weighted_voronoi_score {
+	int32_t vector_id;
+	int32_t cluster_id;
+	int32_t distance_to_center_q16;
+	int32_t weighted_score_q16;
+	int32_t score_validity;
+} banana_native_v3_netcode_weighted_voronoi_score;
+
+typedef struct banana_native_v3_netcode_spectral_proxy {
+	int32_t cluster_id;
+	int32_t frequency_proxy_q16;
+	int32_t amplitude_proxy_q16;
+	int32_t spectral_state;
+} banana_native_v3_netcode_spectral_proxy;
+
+typedef struct banana_native_v3_netcode_kmeans_observability {
+	int32_t convergence_status;
+	int32_t iteration_count;
+	int32_t assignment_changes_last_iteration;
+	int32_t deterministic_hash;
+	int32_t endianness_decode_path;
+} banana_native_v3_netcode_kmeans_observability;
+
 typedef struct banana_native_v3_netcode_hypersphere_output {
 	int32_t dimensions;
 	banana_native_v3_netcode_projection_node nodes[4];
 	int32_t alignment;
 	int32_t radial_stability;
+	int32_t cluster_count;
+	int32_t vector_count;
+	banana_native_v3_netcode_kmeans_center centers[4];
+	banana_native_v3_netcode_kmeans_radius radii[4];
+	banana_native_v3_netcode_weighted_voronoi_score weighted_voronoi_scores[16];
+	banana_native_v3_netcode_spectral_proxy spectral_proxy[4];
+	banana_native_v3_netcode_kmeans_observability observability;
 } banana_native_v3_netcode_hypersphere_output;
 
 #define BANANA_NATIVE_V3_NETCODE_HYPERSPHERE_KMEANS_CONTRACT_VERSION 1

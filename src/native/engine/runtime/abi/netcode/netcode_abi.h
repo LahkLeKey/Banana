@@ -93,6 +93,12 @@ extern "C"
     int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal_input,
                                               RuntimeNetcodeHypersphereOutput *out_output);
 
+    /*
+     * RuntimeNetcodeHypersphereOutput now carries deterministic K-means
+     * sections (centers/radii/scores/spectral/observability) through the ABI
+     * bridge. The bridge keeps these fields as plain data pass-through.
+     */
+
 #ifdef __cplusplus
 }
 #endif
