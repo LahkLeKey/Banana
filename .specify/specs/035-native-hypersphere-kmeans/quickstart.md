@@ -1,0 +1,49 @@
+# Quickstart: Native Hypersphere K-Means Analytics
+
+## 1) Prerequisites
+- Branch: `035-native-hypersphere-kmeans`
+- Required env:
+  - `BANANA_NATIVE_PATH` points to compiled native library.
+  - `BANANA_NETCODE_ADAPTER=ffi`.
+  - `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=true` for staged feature validation.
+
+## 2) Build native runtime
+```bash
+cmake -S src/native -B out/v3-native
+cmake --build out/v3-native
+```
+
+## 3) Run focused native tests
+```bash
+ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|kmeans" --output-on-failure
+```
+
+## 4) Run API route/service contract tests
+```bash
+cd src/typescript/api
+bun test src/routes/netcode.contract.test.ts
+bun test src/services/nativeNetcode*.test.ts
+```
+
+## 5) Run React consumer tests (presentation-only assertions)
+```bash
+cd src/typescript/react
+bun test src/domain/notebook/**/*.test.ts
+```
+
+## 6) Smoke API orchestration path
+```bash
+cd /c/Github/Banana
+bun -e "import { registerNetcodeRoutes } from './src/typescript/api/src/routes/netcode.ts'; console.log(typeof registerNetcodeRoutes);"
+```
+
+## 7) Determinism verification loop
+1. Submit the same `/api/netcode/analytics` request 20 times.
+2. Collect response bodies.
+3. Assert byte-identical JSON after canonical key order normalization.
+4. Assert `observability.deterministicHash` is identical for all runs.
+
+## 8) Rollback drill
+1. Set `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=false`.
+2. Re-run API contract test for `/api/netcode/analytics`.
+3. Verify legacy payload path is preserved and UI shows unavailable state for K-means panel.
