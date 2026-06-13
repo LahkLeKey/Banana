@@ -1,8 +1,8 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-import {fetchNetcodeAnalytics, fetchNetcodeLearning, resolveApiBaseUrl,} from '../../lib/api';
+import {fetchNetcodeAnalytics, fetchNetcodeLearning, NetcodeAnalyticsError, resolveApiBaseUrl,} from '../../lib/api';
 
-import type {ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
+import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
 type NetcodeSignals = {
   readonly callDensity: number; readonly questPercent: number; readonly comboStreak: number; readonly branchPressure: number; readonly workflowDepth: 1 | 2 | 3; readonly playerLevel: number; readonly dependencyPulse: number; readonly networkDimensions:
@@ -83,6 +83,29 @@ const DEFAULT_HYPERSPHERE: ContractHypersphereProjectionModel = {
   radialStability: 0,
 };
 
+const DEFAULT_HYPERSPHERE_KMEANS: ContractHypersphereKmeansModel = {
+  centers: [],
+  radii: [],
+  weightedVoronoiScores: [],
+  spectralProxy: [],
+  observability: {
+    convergenceStatus: 'failed',
+    iterationCount: 0,
+    assignmentChangesLastIteration: 0,
+    scoringValidity: 'invalid',
+    deterministicHash: '',
+  },
+};
+
+const DEFAULT_ANALYTICS_AVAILABILITY: NetcodeAnalyticsAvailabilityModel = {
+  available: true,
+  reason: 'ok',
+  rollout: {
+    enabled: true,
+    cohort: 'default',
+  },
+};
+
 const NODE_ORDER: ContractNodeId[] = ['intel', 'objectives', 'player', 'ops'];
 
 function mapNativeNodeId(value: number): ContractNodeId {
@@ -124,8 +147,8 @@ type ApiLearningResponse = {
 };
 
 export type NetcodeSessionHook = {
-  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection:
-                                                                                                                                                                                                                                                                                                                                                                                               ContractHypersphereProjectionModel;
+  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly hypersphereKmeans: ContractHypersphereKmeansModel; readonly analyticsAvailability:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               NetcodeAnalyticsAvailabilityModel;
 };
 
 export function useNetcodeSession({
@@ -149,6 +172,11 @@ export function useNetcodeSession({
       useState<readonly ContractNodeVectorModel[]>([]);
   const [hypersphereProjection, setHypersphereProjection] =
       useState<ContractHypersphereProjectionModel>(DEFAULT_HYPERSPHERE);
+  const [hypersphereKmeans, setHypersphereKmeans] =
+      useState<ContractHypersphereKmeansModel>(DEFAULT_HYPERSPHERE_KMEANS);
+  const [analyticsAvailability, setAnalyticsAvailability] =
+      useState<NetcodeAnalyticsAvailabilityModel>(
+          DEFAULT_ANALYTICS_AVAILABILITY);
   const analyticsRequestRef = useRef(0);
 
   const signalsRef = useRef<NetcodeSignals>({
@@ -308,8 +336,100 @@ export function useNetcodeSession({
               alignment: analytics.hypersphere.alignment,
               radialStability: analytics.hypersphere.radialStability,
             });
-          } catch {
+
+            setHypersphereKmeans({
+              centers: analytics.hypersphereKmeans.centers.map(
+                  (center) => ({
+                    clusterId: center.clusterId,
+                    centerQ16: [...center.centerQ16],
+                    memberVectorIds: [...center.memberVectorIds],
+                    memberCount: center.memberCount,
+                  })),
+              radii: analytics.hypersphereKmeans.radii.map(
+                  (radius) => ({
+                    clusterId: radius.clusterId,
+                    nearestNeighborDistanceQ16:
+                        radius.nearestNeighborDistanceQ16,
+                    inscribedRadiusQ16: radius.inscribedRadiusQ16,
+                    radiusState: radius.radiusState,
+                  })),
+              weightedVoronoiScores:
+                  analytics.hypersphereKmeans.weightedVoronoiScores.map(
+                      (score) => ({
+                        vectorId: score.vectorId,
+                        clusterId: score.clusterId,
+                        distanceToCenterQ16: score.distanceToCenterQ16,
+                        weightedScoreQ16: score.weightedScoreQ16,
+                        scoreValidity: score.scoreValidity,
+                      })),
+              spectralProxy: analytics.hypersphereKmeans.spectralProxy.map(
+                  (entry) => ({
+                    clusterId: entry.clusterId,
+                    frequencyProxyQ16: entry.frequencyProxyQ16,
+                    amplitudeProxyQ16: entry.amplitudeProxyQ16,
+                    spectralState: entry.spectralState,
+                  })),
+              observability: {
+                convergenceStatus:
+                    analytics.hypersphereKmeans.observability.convergenceStatus,
+                iterationCount:
+                    analytics.hypersphereKmeans.observability.iterationCount,
+                assignmentChangesLastIteration:
+                    analytics.hypersphereKmeans.observability
+                        .assignmentChangesLastIteration,
+                scoringValidity:
+                    analytics.hypersphereKmeans.observability.scoringValidity,
+                deterministicHash:
+                    analytics.hypersphereKmeans.observability.deterministicHash,
+              },
+            });
+
+            const rollout = analytics.rollout;
+            setAnalyticsAvailability({
+              available: rollout.enabled,
+              reason: rollout.enabled ? 'ok' : 'rollout-disabled',
+              rollout: {
+                enabled: rollout.enabled,
+                cohort: rollout.cohort,
+              },
+              contractVersion: analytics.contractVersion,
+            });
+          } catch (error) {
+            if (analyticsRequestRef.current !== requestId) {
+              return;
+            }
+
             // Keep prior analytics values on transport failures.
+            if (error instanceof NetcodeAnalyticsError) {
+              const rollout = error.payload.rollout;
+              const isRolloutDisabled = rollout?.enabled === false ||
+                  (error.payload.error ?? error.message)
+                      .toLowerCase()
+                      .includes('rollout disabled');
+
+              setAnalyticsAvailability({
+                available: false,
+                reason: isRolloutDisabled ? 'rollout-disabled' :
+                                            'contract-error',
+                errorCode: error.payload.errorCode,
+                retryable: error.payload.retryable,
+                contractVersion: error.payload.contractVersion,
+                rollout: {
+                  enabled: rollout?.enabled ?? !isRolloutDisabled,
+                  cohort: rollout?.cohort ?? 'default',
+                },
+              });
+              return;
+            }
+
+            setAnalyticsAvailability({
+              available: false,
+              reason: 'transport-error',
+              rollout: {
+                enabled: true,
+                cohort: 'default',
+              },
+            });
           }
         };
 
@@ -337,5 +457,7 @@ export function useNetcodeSession({
     linkConfidence,
     contractVectors,
     hypersphereProjection,
+    hypersphereKmeans,
+    analyticsAvailability,
   };
 }

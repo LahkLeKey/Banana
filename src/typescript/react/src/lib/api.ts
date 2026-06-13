@@ -58,8 +58,51 @@ export type NetcodeLearningResponse = {
   };
 };
 
+export type NetcodeHypersphereKmeansCenter = {
+  clusterId: number; centerQ16: readonly number[];
+  memberVectorIds: readonly number[];
+  memberCount: number;
+};
+
+export type NetcodeHypersphereKmeansRadius = {
+  clusterId: number; nearestNeighborDistanceQ16: number;
+  inscribedRadiusQ16: number;
+  radiusState: 'ok' | 'degenerate' | 'invalid';
+};
+
+export type NetcodeHypersphereKmeansWeightedScore = {
+  vectorId: number; clusterId: number; distanceToCenterQ16: number;
+  weightedScoreQ16: number;
+  scoreValidity: 'valid' | 'clamped' | 'invalid';
+};
+
+export type NetcodeHypersphereKmeansSpectralProxy = {
+  clusterId: number; frequencyProxyQ16: number; amplitudeProxyQ16: number;
+  spectralState: 'ok' | 'low-signal' | 'invalid';
+};
+
+export type NetcodeHypersphereKmeansObservability = {
+  convergenceStatus: 'converged'|'max-iterations'|'failed';
+  iterationCount: number;
+  assignmentChangesLastIteration: number;
+  scoringValidity: 'valid' | 'degraded' | 'invalid';
+  deterministicHash: string;
+};
+
+export type NetcodeHypersphereKmeansPayload = {
+  centers: readonly NetcodeHypersphereKmeansCenter[];
+  radii: readonly NetcodeHypersphereKmeansRadius[];
+  weightedVoronoiScores: readonly NetcodeHypersphereKmeansWeightedScore[];
+  spectralProxy: readonly NetcodeHypersphereKmeansSpectralProxy[];
+  observability: NetcodeHypersphereKmeansObservability;
+};
+
+export type NetcodeAnalyticsRollout = {
+  enabled: boolean; cohort: string;
+};
+
 export type NetcodeAnalyticsResponse = {
-  reward: {
+  contractVersion: number; reward: {
     neuralRelevanceScore: number; projectedRewardXp: number; rewardTier: number;
   };
   link: {intel: number; objectives: number; player: number; ops: number;};
@@ -79,6 +122,31 @@ export type NetcodeAnalyticsResponse = {
     alignment: number;
     radialStability: number;
   };
+  hypersphereKmeans: NetcodeHypersphereKmeansPayload;
+  rollout: NetcodeAnalyticsRollout;
+};
+
+export type NetcodeAnalyticsErrorResponse = {
+  error?: string;
+  errorCode?: string;
+  message?: string;
+  contractVersion?: number;
+  retryable?: boolean;
+  rollout?: NetcodeAnalyticsRollout;
+};
+
+export class NetcodeAnalyticsError extends Error {
+  readonly status: number;
+  readonly payload: NetcodeAnalyticsErrorResponse;
+
+  constructor(status: number, payload: NetcodeAnalyticsErrorResponse) {
+    super(
+        payload.message ?? payload.error ?? `request failed (${status})`,
+    );
+    this.name = 'NetcodeAnalyticsError';
+    this.status = status;
+    this.payload = payload;
+  }
 };
 
 export type GuestAuthStartResponse = {
@@ -441,12 +509,23 @@ export async function fetchNetcodeAnalytics(
     baseUrl: string,
     payload: NetcodeAnalyticsRequest,
     ): Promise<NetcodeAnalyticsResponse> {
-  return requestJson<NetcodeAnalyticsResponse>(
-      baseUrl, '/api/netcode/analytics', {
-        method: 'POST',
-        headers: {'content-type': 'application/json'},
-        body: JSON.stringify(payload),
-      });
+  const response = await fetch(`${baseUrl}/api/netcode/analytics`, {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let errorPayload: NetcodeAnalyticsErrorResponse = {};
+    try {
+      errorPayload = (await response.json()) as NetcodeAnalyticsErrorResponse;
+    } catch {
+      throw new NetcodeAnalyticsError(response.status, {});
+    }
+    throw new NetcodeAnalyticsError(response.status, errorPayload);
+  }
+
+  return (await response.json()) as NetcodeAnalyticsResponse;
 }
 
 export async function fetchNetcodeLearning(

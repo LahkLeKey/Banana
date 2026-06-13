@@ -46,6 +46,14 @@ cd src/typescript/react
 bun test src/domain/notebook/**/*.test.ts
 ```
 
+Targeted US3 contract checks:
+
+```bash
+cd src/typescript/react
+bun test src/domain/notebook/useNetcodeSession.test.ts src/domain/notebook/network-domain.test.ts
+bunx tsc -p tsconfig.json --noEmit
+```
+
 ## 6) Smoke API orchestration path
 ```bash
 cd /c/Github/Banana
@@ -63,3 +71,23 @@ bun -e "import { registerNetcodeRoutes } from './src/typescript/api/src/routes/n
 2. Optionally set `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT=rollback` for evidence tagging.
 3. Re-run API contract test for `/api/netcode/analytics`.
 4. Verify legacy payload path is preserved and UI shows unavailable state for K-means panel.
+
+## 9) Evidence capture checklist
+
+Collect and store evidence in:
+
+- Native: `artifacts/native/hypersphere-kmeans/determinism/<timestamp>/`
+- API: `artifacts/api/035-native-hypersphere-kmeans/<timestamp>/`
+
+Recommended capture commands:
+
+```bash
+cd /c/Github/Banana
+ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|kmeans" --output-on-failure | tee artifacts/native/hypersphere-kmeans/determinism/<timestamp>/ctest.log
+
+cd src/typescript/api
+bun test src/routes/netcode.contract.test.ts src/routes/netcode.integration.test.ts src/services/nativeNetcode.fail-fast.test.ts | tee ../../../artifacts/api/035-native-hypersphere-kmeans/<timestamp>/api-contract.log
+
+cd ../react
+bun test src/domain/notebook/useNetcodeSession.test.ts src/domain/notebook/network-domain.test.ts | tee ../../../artifacts/api/035-native-hypersphere-kmeans/<timestamp>/react-consumer.log
+```

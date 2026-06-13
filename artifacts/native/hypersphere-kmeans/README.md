@@ -22,3 +22,15 @@ Use timestamped folders:
 - `rollout/YYYYMMDD-HHMMSS/`
 
 Include command transcripts and test outputs in each capture.
+
+## Validation Reference Set (Feature 035)
+
+- Native deterministic and ABI conformance:
+	- `ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|kmeans" --output-on-failure`
+	- Save logs under `determinism/<timestamp>/ctest.log`.
+- API contract reliability:
+	- `bun test src/routes/netcode.contract.test.ts src/routes/netcode.integration.test.ts src/services/nativeNetcode.fail-fast.test.ts`
+	- Save logs under `rollout/<timestamp>/api-contract.log`.
+- React presentation-only consumer checks:
+	- `bun test src/domain/notebook/useNetcodeSession.test.ts src/domain/notebook/network-domain.test.ts`
+	- Save logs under `rollout/<timestamp>/react-consumer.log`.

@@ -99,15 +99,15 @@ description: "Tasks for 035-native-hypersphere-kmeans"
 
 ### Tests for User Story 3
 
-- [ ] T029 [P] [US3] Add React consumer contract test for rendering API-provided hypersphereKmeans values in src/typescript/react/src/domain/notebook/useNetcodeSession.test.ts
-- [ ] T030 [P] [US3] Add React fallback-guard test proving no local production recompute in src/typescript/react/src/domain/notebook/network-domain.test.ts
+- [x] T029 [P] [US3] Add React consumer contract test for rendering API-provided hypersphereKmeans values in src/typescript/react/src/domain/notebook/useNetcodeSession.test.ts
+- [x] T030 [P] [US3] Add React fallback-guard test proving no local production recompute in src/typescript/react/src/domain/notebook/network-domain.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] Extend notebook domain contract types for centers/radii/weighted scores/spectral proxy/observability in src/typescript/react/src/domain/notebook/network-domain.ts
-- [ ] T032 [US3] Update session hook mapping for hypersphereKmeans payload consumption and unavailable-state handling in src/typescript/react/src/domain/notebook/useNetcodeSession.ts
-- [ ] T033 [US3] Update API client response typing for contractVersion and hypersphereKmeans payloads in src/typescript/react/src/lib/api.ts
-- [ ] T034 [US3] Update notebook presentation panels to consume orchestrated metrics only in src/typescript/react/src/components/notebook-client/NotebookOperationsPanel.tsx and src/typescript/react/src/components/notebook-client/NotebookGameplaySurface.tsx
+- [x] T031 [US3] Extend notebook domain contract types for centers/radii/weighted scores/spectral proxy/observability in src/typescript/react/src/domain/notebook/network-domain.ts
+- [x] T032 [US3] Update session hook mapping for hypersphereKmeans payload consumption and unavailable-state handling in src/typescript/react/src/domain/notebook/useNetcodeSession.ts
+- [x] T033 [US3] Update API client response typing for contractVersion and hypersphereKmeans payloads in src/typescript/react/src/lib/api.ts
+- [x] T034 [US3] Update notebook presentation panels to consume orchestrated metrics only in src/typescript/react/src/components/notebook-client/NotebookOperationsPanel.tsx and src/typescript/react/src/components/notebook-client/NotebookGameplaySurface.tsx
 
 **Checkpoint**: Presentation-only consumer behavior is complete and independently testable.
 
@@ -117,9 +117,9 @@ description: "Tasks for 035-native-hypersphere-kmeans"
 
 **Purpose**: Final validation, documentation alignment, and evidence capture across domains.
 
-- [ ] T035 Update feature runbook and rollout/rollback drill details in .specify/specs/035-native-hypersphere-kmeans/quickstart.md
-- [ ] T036 [P] Capture native/API/React validation evidence references in artifacts/native/hypersphere-kmeans/README.md and artifacts/api/README.md
-- [ ] T037 [P] Update onboarding and contract-flow documentation for deterministic netcode analytics in docs/developer-onboarding.md
+- [x] T035 Update feature runbook and rollout/rollback drill details in .specify/specs/035-native-hypersphere-kmeans/quickstart.md
+- [x] T036 [P] Capture native/API/React validation evidence references in artifacts/native/hypersphere-kmeans/README.md and artifacts/api/README.md
+- [x] T037 [P] Update onboarding and contract-flow documentation for deterministic netcode analytics in docs/developer-onboarding.md
 
 ---
 

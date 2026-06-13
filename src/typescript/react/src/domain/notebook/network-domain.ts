@@ -31,21 +31,59 @@ export type ContractHypersphereProjectionModel = {
                                                                                                                                       number;
 };
 
-export type ContractHypersphereKmeansContractStatus =
-    'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
-    'crc-mismatch';
+export type ContractHypersphereKmeansCenterModel = {
+  readonly clusterId: number; readonly centerQ16: readonly number[]; readonly memberVectorIds: readonly number[]; readonly memberCount:
+                                                                                                                               number;
+};
+
+export type ContractHypersphereKmeansRadiusModel = {
+  readonly clusterId: number; readonly nearestNeighborDistanceQ16: number; readonly inscribedRadiusQ16: number; readonly radiusState:
+                                                                                                                             'ok' |
+      'degenerate' | 'invalid';
+};
+
+export type ContractHypersphereKmeansWeightedScoreModel = {
+  readonly vectorId: number; readonly clusterId: number; readonly distanceToCenterQ16: number; readonly weightedScoreQ16: number; readonly scoreValidity:
+                                                                                                                                               'valid' |
+      'clamped' | 'invalid';
+};
+
+export type ContractHypersphereKmeansSpectralProxyModel = {
+  readonly clusterId: number; readonly frequencyProxyQ16: number; readonly amplitudeProxyQ16: number; readonly spectralState:
+                                                                                                                   'ok' |
+      'low-signal' | 'invalid';
+};
+
+export type ContractHypersphereKmeansObservabilityModel = {
+  readonly convergenceStatus: 'converged'|'max-iterations'|'failed'; readonly iterationCount: number; readonly assignmentChangesLastIteration: number; readonly scoringValidity: 'valid' | 'degraded' | 'invalid'; readonly deterministicHash:
+                                                                                                                                                                                                                                string;
+};
+
+export type ContractHypersphereKmeansModel = {
+  readonly centers: readonly ContractHypersphereKmeansCenterModel[]; readonly radii: readonly ContractHypersphereKmeansRadiusModel[]; readonly weightedVoronoiScores: readonly ContractHypersphereKmeansWeightedScoreModel[]; readonly spectralProxy: readonly ContractHypersphereKmeansSpectralProxyModel[]; readonly observability:
+                                                                                                                                                                                                                                                                                                                           ContractHypersphereKmeansObservabilityModel;
+};
+
+export type ContractHypersphereKmeansContractStatus = 'ok'|
+    'unsupported-version'|'invalid-payload'|'nonfinite-value'|'crc-mismatch';
 
 export type ContractHypersphereKmeansEnvelope = {
-  readonly contractVersion: number;
-  readonly byteOrderTag: number;
-  readonly payloadBytes: number;
-  readonly payloadCrc32: number;
-  readonly status: ContractHypersphereKmeansContractStatus;
+  readonly contractVersion: number; readonly byteOrderTag: number; readonly payloadBytes: number; readonly payloadCrc32: number; readonly status:
+                                                                                                                                              ContractHypersphereKmeansContractStatus;
 };
 
 export type ContractHypersphereKmeansRollout = {
-  readonly enabled: boolean;
-  readonly cohort: string;
+  readonly enabled: boolean; readonly cohort: string;
+};
+
+export type NetcodeAnalyticsAvailabilityModel = {
+  readonly available: boolean;
+  readonly reason:
+      'ok'|'rollout-disabled'|'transport-error'|'contract-error';
+  readonly errorCode?: string;
+  readonly retryable?: boolean;
+  readonly contractVersion?: number;
+  readonly rollout: ContractHypersphereKmeansRollout;
 };
 
 export type CFileContractNodeModel = {
