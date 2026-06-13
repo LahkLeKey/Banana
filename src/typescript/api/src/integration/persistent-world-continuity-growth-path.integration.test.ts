@@ -8,12 +8,13 @@ import {createContinuityPayloadService} from '../domains/persistent-world-orches
 import {registerFastifyErrorMapper} from '../lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from '../middleware/requestContext.ts';
 import {registerWorldRoutes} from '../routes/world.ts';
+import {createWorldServiceForTests} from '../routes/world.test-service.ts';
 
 async function createApp() {
   const app = Fastify({logger: false});
   await registerRequestContextMiddleware(app);
   registerFastifyErrorMapper(app);
-  await registerWorldRoutes(app);
+  await registerWorldRoutes(app, {worldService: createWorldServiceForTests()});
   await app.ready();
   return app;
 }

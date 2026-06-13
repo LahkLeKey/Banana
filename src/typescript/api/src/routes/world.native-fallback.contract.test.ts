@@ -9,7 +9,7 @@ import {registerRequestContextMiddleware} from '../middleware/requestContext.ts'
 
 import {registerWorldRoutes} from './world.ts';
 
-type EnvSnapshot = Record<string, string | undefined>;
+type EnvSnapshot = Record<string, string|undefined>;
 
 const tempDirs: string[] = [];
 
@@ -46,16 +46,16 @@ afterEach(() => {
   }
 });
 
-describe('world route native fallback contract', () => {
-  test('falls back to in-memory world service when native loader is unavailable', async () => {
-    const envSnapshot = snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+describe('world route native fail-fast contract', () => {
+  test('fails route registration when native loader is unavailable', async () => {
+    const envSnapshot =
+        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
     const originalCwd = process.cwd();
 
     try {
       const cwd = createTempDirectory();
       process.chdir(cwd);
 
-      // Force candidate resolution away from repository build outputs.
       const missingLibrary = path.join(cwd, 'missing-native-library.so');
       process.env.BANANA_NATIVE_PATH = missingLibrary;
       process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
@@ -63,19 +63,9 @@ describe('world route native fallback contract', () => {
       const app = Fastify({logger: false});
       await registerRequestContextMiddleware(app);
       registerFastifyErrorMapper(app);
-      await registerWorldRoutes(app);
-      await app.ready();
 
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/world/chunk/4/9',
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.headers['content-type']).toContain('application/octet-stream');
-      expect(response.headers['x-chunk-x']).toBe('4');
-      expect(response.headers['x-chunk-z']).toBe('9');
-      expect(response.body.length).toBeGreaterThan(0);
+      await expect(registerWorldRoutes(app)).rejects.toThrow(
+          'Unable to load Banana native library for world FFI');
 
       await app.close();
     } finally {
@@ -84,10 +74,10 @@ describe('world route native fallback contract', () => {
     }
   });
 
-  test('emits warning log payload when native loader bootstrap fails', async () => {
-    const envSnapshot = snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+  test('surfaces missing-library candidate details in startup failure', async () => {
+    const envSnapshot =
+        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
     const originalCwd = process.cwd();
-    const warningLogs: string[] = [];
 
     try {
       const cwd = createTempDirectory();
@@ -97,36 +87,12 @@ describe('world route native fallback contract', () => {
       process.env.BANANA_NATIVE_PATH = missingLibrary;
       process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
 
-      const app = Fastify({
-        logger: {
-          level: 'warn',
-          stream: {
-            write: (chunk: string | Uint8Array) => {
-              warningLogs.push(typeof chunk === 'string' ? chunk :
-                                                             Buffer.from(chunk).toString('utf8'));
-            },
-          },
-        },
-      });
+      const app = Fastify({logger: false});
       await registerRequestContextMiddleware(app);
       registerFastifyErrorMapper(app);
-      await registerWorldRoutes(app);
-      await app.ready();
 
-      // Trigger route execution to verify fallback remains active after warning.
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/world/chunk/1/2',
-      });
-
-      expect(response.statusCode).toBe(200);
-
-      const warningLine = warningLogs.find((line) =>
-          line.includes(
-              'Native world FFI unavailable, falling back to in-memory world service'));
-      expect(warningLine).toBeDefined();
-      expect(warningLine).toContain('Unable to load Banana native library for world FFI');
-      expect(warningLine).toContain('missing-native-library');
+      await expect(registerWorldRoutes(app)).rejects.toThrow(
+          'missing-native-library');
 
       await app.close();
     } finally {

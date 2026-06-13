@@ -43,51 +43,8 @@ type ContinuityCheckpointCommitBody = ContinuityCheckpointCommitRequest;
 
 type WorldRouteOptions = {
   persistentWorldOrchestrationDomain?: PersistentWorldOrchestrationDomain;
+  worldService?: WorldService;
 };
-
-class InMemoryWorldService implements WorldService {
-  public async getChunkBinary(chunkX: number, chunkZ: number): Promise<Buffer> {
-    const objectCount = 0;
-    const totalSize = 8222 + objectCount * 7;
-    const buffer = Buffer.alloc(totalSize);
-    const view =
-        new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-
-    let offset = 0;
-    view.setInt32(offset, chunkX, true);
-    offset += 4;
-    view.setInt32(offset, chunkZ, true);
-    offset += 4;
-    view.setUint32(offset, 1, true);
-    offset += 4;
-    view.setBigInt64(offset, 0n, true);
-    offset += 8;
-    view.setBigUint64(offset, 0n, true);
-    offset += 8;
-
-    for (let z = 0; z < 64; z++) {
-      for (let x = 0; x < 64; x++) {
-        const idx = z * 64 + x;
-        const h =
-            (Math.abs(chunkX * 17 + chunkZ * 31 + x * 7 + z * 13) % 120) + 40;
-        buffer[offset + idx] = h;
-      }
-    }
-    offset += 4096;
-
-    for (let z = 0; z < 64; z++) {
-      for (let x = 0; x < 64; x++) {
-        const idx = z * 64 + x;
-        const biome = Math.abs(chunkX + chunkZ + x + z) % 5;
-        buffer[offset + idx] = biome;
-      }
-    }
-    offset += 4096;
-
-    view.setUint16(offset, objectCount, true);
-    return buffer;
-  }
-}
 
 type WorldSymbols = {
   banana_native_v3_world_init: (seed: number, cache_size: number) => number;
@@ -173,15 +130,7 @@ export async function registerWorldRoutes(
     app: FastifyInstance,
     options: WorldRouteOptions = {},
     ): Promise<void> {
-  let worldService: WorldService;
-  try {
-    worldService = new NativeWorldService();
-  } catch (error) {
-    app.log.warn(
-        {err: error},
-        'Native world FFI unavailable, falling back to in-memory world service');
-    worldService = new InMemoryWorldService();
-  }
+  const worldService = options.worldService ?? new NativeWorldService();
 
   const persistentWorldDomain = options.persistentWorldOrchestrationDomain ??
       bootstrapPersistentWorldOrchestrationDomain(app);
