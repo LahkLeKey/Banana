@@ -207,7 +207,7 @@ describe('netcode analytics contract', () => {
         });
 
         expect(response.statusCode).toBe(200);
-  expect(captured.rewardSignal).toBe(73);
+        expect(captured.rewardSignal).toBe(73);
         expect(captured.linkSignal).toBe(66);
         const json = response.json();
         expect(json).toMatchObject({
