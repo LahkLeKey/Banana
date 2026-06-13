@@ -1,7 +1,8 @@
-import type {NativeNetcodeService} from './nativeNetcode.ts';
-import type {NetcodeAnalyticsAuthoritativeRequest, NetcodeAnalyticsAuthoritativeResult, NetcodeHypersphereRollout,} from './netcodeAuthoritativeComputeOrchestrator.ts';
 import {createK3h4ApplicationService, type K3h4ApplicationService,} from '../application/k3h4/k3h4ApplicationService.ts';
 import {createNativeK3h4AuthoritativeAnalyticsAdapter,} from '../infrastructure/k3h4/nativeK3h4AuthoritativeAnalyticsAdapter.ts';
+
+import type {NativeNetcodeService} from './nativeNetcode.ts';
+import type {NetcodeAnalyticsAuthoritativeRequest, NetcodeAnalyticsAuthoritativeResult, NetcodeHypersphereRollout,} from './netcodeAuthoritativeComputeOrchestrator.ts';
 
 export interface K3h4ApplicationOrchestrationLayer {
   compute(
@@ -13,7 +14,7 @@ export interface K3h4ApplicationOrchestrationLayer {
 class DefaultK3h4ApplicationOrchestrationLayer implements
     K3h4ApplicationOrchestrationLayer {
   constructor(
-    private readonly delegate: K3h4ApplicationService,
+      private readonly delegate: K3h4ApplicationService,
   ) {}
 
   public compute(

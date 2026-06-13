@@ -1,13 +1,13 @@
-import type {NetcodeAnalyticsResponse} from '../../../lib/api';
-import type {K3h4AnalyticsPresentationState} from '../../../domain/notebook/k3h4AnalyticsOrchestrationLayer';
 import type {K3h4PresentationMapperPort} from '../../../domain/notebook/k3h4/k3h4PresentationDomain';
+import type {K3h4AnalyticsPresentationState} from '../../../domain/notebook/k3h4AnalyticsOrchestrationLayer';
+import type {NetcodeAnalyticsResponse} from '../../../lib/api';
 
 export interface K3h4PresentationApplicationService {
   map(analytics: NetcodeAnalyticsResponse): K3h4AnalyticsPresentationState;
 }
 
-class DefaultK3h4PresentationApplicationService
-    implements K3h4PresentationApplicationService {
+class DefaultK3h4PresentationApplicationService implements
+    K3h4PresentationApplicationService {
   constructor(private readonly mapperPort: K3h4PresentationMapperPort) {}
 
   public map(
