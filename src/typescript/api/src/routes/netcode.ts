@@ -24,6 +24,15 @@ function isValidNetworkDimensions(value: unknown): boolean {
       value <= 16;
 }
 
+function isValidK3h4Mode(value: unknown): value is 'multiplicative'|'power' {
+  return value === 'multiplicative' || value === 'power';
+}
+
+function isValidSpectralMode(value: unknown): value is
+    'disabled'|'affinity-graph' {
+  return value === 'disabled' || value === 'affinity-graph';
+}
+
 function resolveNetcodeK3h4Rollout(): NetcodeK3h4Rollout {
   const enabledRaw =
       (process.env.BANANA_NETCODE_K3H4_ENABLED ?? 'true').trim().toLowerCase();
@@ -176,6 +185,8 @@ export async function registerNetcodeRoutes(
       modelConfidence: number;
       policyMomentum: number;
       interactionSignal?: number;
+      k3h4Mode?: 'multiplicative' | 'power';
+      spectralMode?: 'disabled' | 'affinity-graph';
     }
   }>('/api/netcode/analytics', async (request, reply) => {
     const rollout = resolveNetcodeK3h4Rollout();
@@ -196,7 +207,10 @@ export async function registerNetcodeRoutes(
         !isValidWorkflowDepth(body.workflowDepth) ||
         !isValidNetworkDimensions(body.networkDimensions) ||
         !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum)) {
+        !isFiniteNumber(body.policyMomentum) ||
+        (body.k3h4Mode !== undefined && !isValidK3h4Mode(body.k3h4Mode)) ||
+        (body.spectralMode !== undefined &&
+         !isValidSpectralMode(body.spectralMode))) {
       return reply.status(400).send(
           {error: 'Invalid netcode analytics payload'});
     }
@@ -232,6 +246,8 @@ export async function registerNetcodeRoutes(
       networkDimensions: number;
       modelConfidence: number;
       policyMomentum: number;
+      k3h4Mode?: 'multiplicative' | 'power';
+      spectralMode?: 'disabled' | 'affinity-graph';
     }
   }>('/api/netcode/vector', async (request, reply) => {
     const body = request.body;
@@ -245,7 +261,10 @@ export async function registerNetcodeRoutes(
         !isFiniteNumber(body.neuralRelevanceScore) ||
         !isValidNetworkDimensions(body.networkDimensions) ||
         !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum)) {
+        !isFiniteNumber(body.policyMomentum) ||
+        (body.k3h4Mode !== undefined && !isValidK3h4Mode(body.k3h4Mode)) ||
+        (body.spectralMode !== undefined &&
+         !isValidSpectralMode(body.spectralMode))) {
       return reply.status(400).send({error: 'Invalid netcode vector payload'});
     }
 
@@ -261,6 +280,8 @@ export async function registerNetcodeRoutes(
       networkDimensions: body.networkDimensions,
       modelConfidence: body.modelConfidence,
       policyMomentum: body.policyMomentum,
+      k3h4Mode: body.k3h4Mode,
+      spectralMode: body.spectralMode,
     });
     return {vector};
   });
@@ -276,6 +297,8 @@ export async function registerNetcodeRoutes(
       networkDimensions: number;
       modelConfidence: number;
       policyMomentum: number;
+      k3h4Mode?: 'multiplicative' | 'power';
+      spectralMode?: 'disabled' | 'affinity-graph';
     }
   }>('/api/netcode/k3h4', async (request, reply) => {
     const body = request.body;
@@ -289,7 +312,10 @@ export async function registerNetcodeRoutes(
         !isFiniteNumber(body.neuralRelevanceScore) ||
         !isValidNetworkDimensions(body.networkDimensions) ||
         !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum)) {
+        !isFiniteNumber(body.policyMomentum) ||
+        (body.k3h4Mode !== undefined && !isValidK3h4Mode(body.k3h4Mode)) ||
+        (body.spectralMode !== undefined &&
+         !isValidSpectralMode(body.spectralMode))) {
       return reply.status(400).send({error: 'Invalid netcode k3h4 payload'});
     }
 
@@ -305,6 +331,8 @@ export async function registerNetcodeRoutes(
       networkDimensions: body.networkDimensions,
       modelConfidence: body.modelConfidence,
       policyMomentum: body.policyMomentum,
+      k3h4Mode: body.k3h4Mode,
+      spectralMode: body.spectralMode,
     });
     return {k3h4};
   });

@@ -68,6 +68,11 @@ int main(void)
     vector_input.network_dimensions = 10;
     vector_input.model_confidence = 76;
     vector_input.policy_momentum = 63;
+    vector_input.assignment_family = RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER;
+    vector_input.spectral_mode = RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH;
+    vector_input.hardware_byte_order_tag = RUNTIME_K3H4_BYTE_ORDER_TAG;
+    vector_input.hardware_dtype_tag = RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED;
+    vector_input.hardware_alignment_bytes = RUNTIME_K3H4_ALIGNMENT_BYTES_4;
 
     if (runtime_k3h4_abi_build_learning(signal_input, &abi_learning) != 0)
         return fail("runtime_k3h4_abi_build_learning failed");
@@ -97,6 +102,11 @@ int main(void)
     request.network_dimensions = vector_input.network_dimensions;
     request.model_confidence = vector_input.model_confidence;
     request.policy_momentum = vector_input.policy_momentum;
+    request.assignment_family = vector_input.assignment_family;
+    request.spectral_mode = vector_input.spectral_mode;
+    request.hardware_byte_order_tag = vector_input.hardware_byte_order_tag;
+    request.hardware_dtype_tag = vector_input.hardware_dtype_tag;
+    request.hardware_alignment_bytes = vector_input.hardware_alignment_bytes;
 
     if (runtime_netcode_k3h4_orchestrate_full(&request, &orchestrated) != 0)
         return fail("runtime_netcode_k3h4_orchestrate_full failed");

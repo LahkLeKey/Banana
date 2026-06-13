@@ -85,6 +85,10 @@ const DEFAULT_K3H4: ContractK3h4Model = {
     scoringValidity: 'invalid',
     deterministicHash: '',
   },
+  runtime: {
+    mode: 'multiplicative',
+    spectralActivation: 'disabled',
+  },
 };
 
 const DEFAULT_ANALYTICS_AVAILABILITY: NetcodeAnalyticsAvailabilityModel = {

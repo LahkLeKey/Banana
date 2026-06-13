@@ -22,6 +22,11 @@ int main(void)
         .network_dimensions = 8,
         .model_confidence = 69,
         .policy_momentum = 61,
+        .assignment_family = RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER,
+        .spectral_mode = RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH,
+        .hardware_byte_order_tag = RUNTIME_K3H4_BYTE_ORDER_TAG,
+        .hardware_dtype_tag = RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED,
+        .hardware_alignment_bytes = RUNTIME_K3H4_ALIGNMENT_BYTES_4,
     };
     RuntimeNetcodeK3h4Output output;
     RuntimeK3h4ContractEnvelopeHeader header;
@@ -49,6 +54,10 @@ int main(void)
     status = runtime_k3h4_abi_validate_k3h4_envelope(&header, &output, 1);
     if (status != RUNTIME_K3H4_CONTRACT_CRC_MISMATCH)
         return fail("expected CRC mismatch contract error");
+
+    input.hardware_alignment_bytes = 8;
+    if (runtime_k3h4_abi_build_k3h4(input, &output) != RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD)
+        return fail("expected invalid payload when hardware preflight alignment mismatches");
 
     return 0;
 }

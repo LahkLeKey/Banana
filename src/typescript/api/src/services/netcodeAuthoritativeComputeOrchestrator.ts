@@ -46,6 +46,13 @@ export type NetcodeAnalyticsAuthoritativeRequest = {
   modelConfidence: number;
   policyMomentum: number;
   interactionSignal?: number;
+  k3h4Mode?: 'multiplicative' | 'power';
+  spectralMode?: 'disabled' | 'affinity-graph';
+};
+
+export type NetcodeK3h4RuntimeMetadata = {
+  mode: 'multiplicative'|'power';
+  spectralActivation: 'disabled' | 'affinity-graph';
 };
 
 export type NetcodeK3h4Projection = {
@@ -69,6 +76,7 @@ export type NetcodeAnalyticsAuthoritativeResult = {
   vector: NetcodeVectorOutput;
   k3h4Projection: NetcodeK3h4Output;
   k3h4: NetcodeK3h4Projection;
+  k3h4Runtime: NetcodeK3h4RuntimeMetadata;
   abiLayers: readonly NetcodeAbiLayerSnapshot[];
   abiLayerCoverage: NetcodeAbiLayerCoverage;
   abiLayerLedger: NetcodeAbiLayerLedger;
@@ -283,6 +291,8 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       networkDimensions: request.networkDimensions,
       modelConfidence: request.modelConfidence,
       policyMomentum: request.policyMomentum,
+      k3h4Mode: request.k3h4Mode ?? 'multiplicative',
+      spectralMode: request.spectralMode ?? 'disabled',
     };
 
     const vector = await this.netcode.buildVector(vectorInput);
@@ -305,6 +315,10 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       spectralProxy: k3h4Projection.spectralProxy,
       observability: k3h4Projection.observability,
     };
+    const k3h4Runtime: NetcodeK3h4RuntimeMetadata = {
+      mode: vectorInput.k3h4Mode,
+      spectralActivation: vectorInput.spectralMode,
+    };
     const abiLayers =
         buildAbiLayerCatalog(reward, link, vector, k3h4Projection);
     const abiLayerCoverage = summarizeAbiLayerCoverage(abiLayers);
@@ -317,6 +331,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       vector,
       k3h4Projection,
       k3h4,
+      k3h4Runtime,
       abiLayers,
       abiLayerCoverage,
       abiLayerLedger,

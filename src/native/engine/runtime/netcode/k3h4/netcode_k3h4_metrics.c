@@ -6,3 +6,16 @@ int runtime_netcode_k3h4_build(const RuntimeNetcodeVectorOutput *input,
 {
     return runtime_netcode_k3h4_pipeline_execute(input, out_output);
 }
+
+int runtime_netcode_k3h4_build_with_config(
+    const RuntimeNetcodeVectorOutput *input,
+    RuntimeNetcodeK3h4Output *out_output,
+    int assignment_family,
+    int spectral_mode)
+{
+    return runtime_netcode_k3h4_pipeline_execute_with_config(
+        input,
+        out_output,
+        assignment_family,
+        spectral_mode);
+}

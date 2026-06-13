@@ -131,12 +131,14 @@ Outputs:
 - `.specify/specs/035-native-k3h4/contracts/native-k3h4-abi.md`
 - `.specify/specs/035-native-k3h4/contracts/api-netcode-k3h4.md`
 - `.specify/specs/035-native-k3h4/quickstart.md`
+- `.specify/specs/035-native-k3h4/reorchestration-next-steps.md`
 
 Design outcomes:
 - Data entities and state transitions defined for batch, centers, radii, scores, spectral proxies, and observability.
 - Native ABI envelope layout/version/error semantics specified for endianness-safe transport.
 - API request/response/error contract defined with rollout-aware behavior.
 - Validation entry points documented for native/API/React deterministic checks.
+- Follow-up reorchestration direction documented for dual assignment modes, spectral gating, and hardware preflight ordering.
 
 ### Phase 2: Implementation Planning (Ready for `/speckit.tasks`)
 

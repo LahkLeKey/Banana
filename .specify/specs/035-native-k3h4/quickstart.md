@@ -8,6 +8,28 @@
   - `BANANA_NETCODE_K3H4_ENABLED=true` for staged feature validation.
   - `BANANA_NETCODE_K3H4_COHORT=<cohort-name>` (for staged cohorts, default `all`).
 
+### Explicit Runtime Controls
+
+Request-level controls for `/api/netcode/analytics`, `/api/netcode/vector`, and `/api/netcode/k3h4`:
+
+- `k3h4Mode`: `multiplicative | power`
+- `spectralMode`: `disabled | affinity-graph`
+
+If omitted, defaults are:
+
+- `k3h4Mode=multiplicative`
+- `spectralMode=disabled`
+
+### Native Hardware Preflight Contract
+
+Before native K3H4 clustering executes, preflight declarations must match:
+
+- `hardwareByteOrderTag=0x01020304`
+- `hardwareDtypeTag=1` (`f32/q16 mixed`)
+- `hardwareAlignmentBytes=4`
+
+Mismatches fail fast with deterministic invalid-payload contract status.
+
 ### Rollout Matrix
 
 | Mode | `BANANA_NETCODE_K3H4_ENABLED` | `BANANA_NETCODE_K3H4_COHORT` | Expected `/api/netcode/analytics` behavior |
@@ -65,6 +87,7 @@ bun -e "import { registerNetcodeRoutes } from './src/typescript/api/src/routes/n
 2. Collect response bodies.
 3. Assert byte-identical JSON after canonical key order normalization.
 4. Assert `observability.deterministicHash` is identical for all runs.
+5. Assert `k3h4Runtime.mode` and `k3h4Runtime.spectralActivation` remain unchanged across repeated runs.
 
 ## 8) Rollback drill
 1. Set `BANANA_NETCODE_K3H4_ENABLED=false`.

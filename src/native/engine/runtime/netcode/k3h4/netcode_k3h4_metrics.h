@@ -34,7 +34,8 @@ extern "C"
     typedef enum RuntimeNetcodeSpectralState
     {
         RUNTIME_NETCODE_SPECTRAL_OK = 0,
-        RUNTIME_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED = 1
+        RUNTIME_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED = 1,
+        RUNTIME_NETCODE_SPECTRAL_DISABLED = 2
     } RuntimeNetcodeSpectralState;
 
     typedef enum RuntimeNetcodeEndiannessDecodePath
@@ -48,6 +49,12 @@ extern "C"
         RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE = 0,
         RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER = 1
     } RuntimeNetcodeK3h4AssignmentFamily;
+
+    typedef enum RuntimeNetcodeK3h4SpectralMode
+    {
+        RUNTIME_NETCODE_K3H4_SPECTRAL_DISABLED = 0,
+        RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH = 1
+    } RuntimeNetcodeK3h4SpectralMode;
 
     typedef struct RuntimeNetcodeK3h4Center
     {
@@ -118,6 +125,12 @@ extern "C"
 
     int runtime_netcode_k3h4_build(const RuntimeNetcodeVectorOutput *input,
                                           RuntimeNetcodeK3h4Output *out_output);
+
+    int runtime_netcode_k3h4_build_with_config(
+        const RuntimeNetcodeVectorOutput *input,
+        RuntimeNetcodeK3h4Output *out_output,
+        int assignment_family,
+        int spectral_mode);
 
 #ifdef __cplusplus
 }

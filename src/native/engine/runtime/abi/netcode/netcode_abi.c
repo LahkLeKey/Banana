@@ -241,6 +241,11 @@ int runtime_netcode_abi_build_vector(RuntimeNetcodeVectorSignalInput signal_inpu
     request.network_dimensions = signal_input.network_dimensions;
     request.model_confidence = signal_input.model_confidence;
     request.policy_momentum = signal_input.policy_momentum;
+    request.assignment_family = signal_input.assignment_family;
+    request.spectral_mode = signal_input.spectral_mode;
+    request.hardware_byte_order_tag = signal_input.hardware_byte_order_tag;
+    request.hardware_dtype_tag = signal_input.hardware_dtype_tag;
+    request.hardware_alignment_bytes = signal_input.hardware_alignment_bytes;
 
     if (runtime_netcode_k3h4_orchestrate_full(&request, &full_output) != 0)
         return -1;
@@ -257,6 +262,19 @@ int runtime_netcode_abi_build_k3h4(RuntimeNetcodeVectorSignalInput signal_input,
 
     if (!out_output)
         return -1;
+
+    if (signal_input.hardware_byte_order_tag != RUNTIME_K3H4_BYTE_ORDER_TAG ||
+        signal_input.hardware_dtype_tag != RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED ||
+        signal_input.hardware_alignment_bytes != RUNTIME_K3H4_ALIGNMENT_BYTES_4)
+    {
+        memset(out_output, 0, sizeof(*out_output));
+        out_output->envelope.contract_version = RUNTIME_NETCODE_K3H4_CONTRACT_VERSION;
+        out_output->envelope.byte_order_tag = RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG;
+        out_output->envelope.payload_bytes = runtime_netcode_abi_k3h4_payload_bytes();
+        out_output->envelope.payload_crc32 = 0;
+        out_output->envelope.contract_status = RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD;
+        return out_output->envelope.contract_status;
+    }
 
     memset(&request, 0, sizeof(request));
     if (runtime_netcode_contract_get_ledger(&request.ledger) != 0)
@@ -275,6 +293,11 @@ int runtime_netcode_abi_build_k3h4(RuntimeNetcodeVectorSignalInput signal_input,
     request.network_dimensions = signal_input.network_dimensions;
     request.model_confidence = signal_input.model_confidence;
     request.policy_momentum = signal_input.policy_momentum;
+    request.assignment_family = signal_input.assignment_family;
+    request.spectral_mode = signal_input.spectral_mode;
+    request.hardware_byte_order_tag = signal_input.hardware_byte_order_tag;
+    request.hardware_dtype_tag = signal_input.hardware_dtype_tag;
+    request.hardware_alignment_bytes = signal_input.hardware_alignment_bytes;
 
     if (runtime_netcode_k3h4_orchestrate_full(&request, &full_output) != 0)
         return -1;

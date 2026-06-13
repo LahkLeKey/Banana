@@ -10,6 +10,8 @@ import {registerNetcodeRoutes} from './netcode.ts';
 type CapturedArgs = {
   rewardSignal?: number;
   linkSignal?: number;
+  k3h4Mode?: string;
+  spectralMode?: string;
 };
 
 function createFakeNetcode(captured: CapturedArgs): NativeNetcodeService {
@@ -72,7 +74,9 @@ function createFakeNetcode(captured: CapturedArgs): NativeNetcodeService {
         contractStrength: [11, 22, 33, 44] as const,
       };
     },
-    async buildK3h4() {
+    async buildK3h4(input) {
+      captured.k3h4Mode = input.k3h4Mode;
+      captured.spectralMode = input.spectralMode;
       return {
         dimensions: 3,
         nodes: [
@@ -203,12 +207,16 @@ describe('netcode analytics contract', () => {
             networkDimensions: 6,
             modelConfidence: 77,
             policyMomentum: 66,
+            k3h4Mode: 'power',
+            spectralMode: 'affinity-graph',
           },
         });
 
         expect(response.statusCode).toBe(200);
         expect(captured.rewardSignal).toBe(73);
         expect(captured.linkSignal).toBe(66);
+        expect(captured.k3h4Mode).toBe('power');
+        expect(captured.spectralMode).toBe('affinity-graph');
         const json = response.json();
         expect(json).toMatchObject({
           contractVersion: 1,
@@ -217,6 +225,10 @@ describe('netcode analytics contract', () => {
           link: {intel: 9, objectives: 8, player: 7, ops: 6},
           vector: {dimensions: 3, contractStrength: [11, 22, 33, 44]},
           k3h4Projection: {dimensions: 3, alignment: 42, radialStability: 73},
+          k3h4Runtime: {
+            mode: 'power',
+            spectralActivation: 'affinity-graph',
+          },
           lspRepresentation: {
             language: 'netcode.analytics.v1',
             boundedContext: 'netcode',
@@ -363,6 +375,36 @@ describe('netcode analytics contract', () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toMatchObject({
       error: 'Invalid netcode analytics payload'
+    });
+
+    await app.close();
+  });
+
+  test('rejects unsupported k3h4 mode and spectral mode values', async () => {
+    const app = await createApp(createFakeNetcode({}));
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/analytics',
+      payload: {
+        callDensity: 10,
+        questPercent: 20,
+        playerLevel: 30,
+        comboStreak: 40,
+        branchPressure: 50,
+        dependencyPulse: 60,
+        workflowDepth: 2,
+        networkDimensions: 6,
+        modelConfidence: 77,
+        policyMomentum: 66,
+        k3h4Mode: 'bad-mode',
+        spectralMode: 'bad-spectral',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: 'Invalid netcode analytics payload',
     });
 
     await app.close();

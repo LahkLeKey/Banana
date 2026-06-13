@@ -15,6 +15,8 @@ extern "C"
     #define RUNTIME_K3H4_CONTRACT_VERSION 1
     #define RUNTIME_K3H4_BYTE_ORDER_TAG 0x01020304
     #define RUNTIME_K3H4_BYTE_ORDER_TAG_SWAPPED 0x04030201
+    #define RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED 1
+    #define RUNTIME_K3H4_ALIGNMENT_BYTES_4 4
 
     typedef enum RuntimeK3h4ContractStatus
     {
@@ -66,6 +68,11 @@ extern "C"
         int network_dimensions;
         int model_confidence;
         int policy_momentum;
+        int assignment_family;
+        int spectral_mode;
+        int hardware_byte_order_tag;
+        int hardware_dtype_tag;
+        int hardware_alignment_bytes;
     } RuntimeK3h4VectorSignalInput;
 
     /* Compatibility aliases for existing netcode-prefixed declarations. */

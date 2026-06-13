@@ -153,6 +153,10 @@ describe('useNetcodeSession contract consumer', () => {
           deterministicHash: 'a1b2c3d4e5',
         },
       },
+      k3h4Runtime: {
+        mode: 'power',
+        spectralActivation: 'affinity-graph',
+      },
       abiLayers: [
         {
           layer: 'learning',
@@ -286,6 +290,10 @@ describe('useNetcodeSession contract consumer', () => {
     expect(result.current.k3h4.radii[0]?.inscribedRadiusQ16).toBe(24576);
     expect(result.current.k3h4.observability.convergenceStatus)
         .toBe('converged');
+    expect(result.current.k3h4.runtime).toEqual({
+      mode: 'power',
+      spectralActivation: 'affinity-graph',
+    });
     expect(result.current.abiLayers).toHaveLength(5);
     expect(result.current.abiLayers[4]).toMatchObject({
       layer: 'k3h4',
@@ -455,6 +463,10 @@ describe('useNetcodeSession contract consumer', () => {
              scoringValidity: 'valid',
              deterministicHash: 'f00baa55',
            },
+         },
+         k3h4Runtime: {
+           mode: 'multiplicative',
+           spectralActivation: 'disabled',
          },
          abiLayers: [
            {

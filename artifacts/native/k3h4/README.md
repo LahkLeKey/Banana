@@ -2,6 +2,10 @@
 
 This directory tracks deterministic and rollout evidence artifacts for feature 035.
 
+## Reference Artifact
+
+- `k3h4-refactoring-report.md`: canonical architecture brief describing the K3H4 fixed-point, radius-aware, spectral, and ABI model.
+
 ## Determinism Captures
 
 - Native deterministic run logs (repeat-run payload hash comparisons)
@@ -34,3 +38,9 @@ Include command transcripts and test outputs in each capture.
 - React presentation-only consumer checks:
 	- `bun test src/domain/notebook/useNetcodeSession.test.ts src/domain/notebook/network-domain.test.ts`
 	- Save logs under `rollout/<timestamp>/react-consumer.log`.
+
+## Latest Run
+
+- Timestamp: `20260613-074821`
+- Build log: `determinism/20260613-074821/build.log`
+- Native ctest log: `determinism/20260613-074821/ctest-netcode.log`

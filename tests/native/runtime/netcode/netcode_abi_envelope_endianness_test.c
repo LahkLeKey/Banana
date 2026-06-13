@@ -22,6 +22,11 @@ int main(void)
         .network_dimensions = 10,
         .model_confidence = 71,
         .policy_momentum = 65,
+        .assignment_family = RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE,
+        .spectral_mode = RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH,
+        .hardware_byte_order_tag = RUNTIME_K3H4_BYTE_ORDER_TAG,
+        .hardware_dtype_tag = RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED,
+        .hardware_alignment_bytes = RUNTIME_K3H4_ALIGNMENT_BYTES_4,
     };
     RuntimeNetcodeK3h4Output output;
     RuntimeK3h4ContractEnvelopeHeader swapped_header;

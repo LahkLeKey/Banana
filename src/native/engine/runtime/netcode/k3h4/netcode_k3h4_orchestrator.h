@@ -45,6 +45,11 @@ extern "C"
         int network_dimensions;
         int model_confidence;
         int policy_momentum;
+        int assignment_family;
+        int spectral_mode;
+        int hardware_byte_order_tag;
+        int hardware_dtype_tag;
+        int hardware_alignment_bytes;
     } RuntimeNetcodeK3h4VectorSignalInput;
 
     typedef struct RuntimeNetcodeK3h4OrchestrationOutput
@@ -68,6 +73,11 @@ extern "C"
         int network_dimensions;
         int model_confidence;
         int policy_momentum;
+        int assignment_family;
+        int spectral_mode;
+        int hardware_byte_order_tag;
+        int hardware_dtype_tag;
+        int hardware_alignment_bytes;
     } RuntimeNetcodeK3h4Request;
 
     typedef struct RuntimeNetcodeK3h4FullOutput

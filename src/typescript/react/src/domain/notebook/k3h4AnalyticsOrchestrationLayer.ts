@@ -112,6 +112,10 @@ export function mapK3h4AnalyticsToPresentationState(
       scoringValidity: analytics.k3h4.observability.scoringValidity,
       deterministicHash: analytics.k3h4.observability.deterministicHash,
     },
+    runtime: {
+      mode: analytics.k3h4Runtime.mode,
+      spectralActivation: analytics.k3h4Runtime.spectralActivation,
+    },
   };
 
   const abiLayers = analytics.abiLayers.map((layer) => ({...layer}));

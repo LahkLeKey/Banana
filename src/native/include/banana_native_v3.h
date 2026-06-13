@@ -82,7 +82,25 @@ typedef struct banana_native_v3_netcode_vector_input {
 	int32_t network_dimensions;
 	int32_t model_confidence;
 	int32_t policy_momentum;
+	int32_t assignment_family;
+	int32_t spectral_mode;
+	int32_t hardware_byte_order_tag;
+	int32_t hardware_dtype_tag;
+	int32_t hardware_alignment_bytes;
 } banana_native_v3_netcode_vector_input;
+
+typedef enum banana_native_v3_netcode_k3h4_assignment_family {
+	BANANA_NATIVE_V3_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE = 0,
+	BANANA_NATIVE_V3_NETCODE_K3H4_ASSIGNMENT_POWER = 1,
+} banana_native_v3_netcode_k3h4_assignment_family;
+
+typedef enum banana_native_v3_netcode_k3h4_spectral_mode {
+	BANANA_NATIVE_V3_NETCODE_K3H4_SPECTRAL_DISABLED = 0,
+	BANANA_NATIVE_V3_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH = 1,
+} banana_native_v3_netcode_k3h4_spectral_mode;
+
+#define BANANA_NATIVE_V3_NETCODE_K3H4_DTYPE_TAG_F32_Q16_MIXED 1
+#define BANANA_NATIVE_V3_NETCODE_K3H4_ALIGNMENT_BYTES_4 4
 
 typedef struct banana_native_v3_netcode_vector_output {
 	int32_t dimensions;
@@ -113,6 +131,7 @@ typedef enum banana_native_v3_netcode_score_validity {
 typedef enum banana_native_v3_netcode_spectral_state {
 	BANANA_NATIVE_V3_NETCODE_SPECTRAL_OK = 0,
 	BANANA_NATIVE_V3_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED = 1,
+	BANANA_NATIVE_V3_NETCODE_SPECTRAL_DISABLED = 2,
 } banana_native_v3_netcode_spectral_state;
 
 typedef enum banana_native_v3_netcode_endianness_decode_path {

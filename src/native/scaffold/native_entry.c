@@ -350,6 +350,11 @@ int banana_native_v3_netcode_build_vector(const banana_native_v3_netcode_vector_
 	native_input.network_dimensions = signal_input->network_dimensions;
 	native_input.model_confidence = signal_input->model_confidence;
 	native_input.policy_momentum = signal_input->policy_momentum;
+	native_input.assignment_family = signal_input->assignment_family;
+	native_input.spectral_mode = signal_input->spectral_mode;
+	native_input.hardware_byte_order_tag = signal_input->hardware_byte_order_tag;
+	native_input.hardware_dtype_tag = signal_input->hardware_dtype_tag;
+	native_input.hardware_alignment_bytes = signal_input->hardware_alignment_bytes;
 
 	if (banana_native_k3h4_layer_build_vector(native_input, &native_output) != 0)
 	{
@@ -395,6 +400,11 @@ int banana_native_v3_netcode_build_k3h4(const banana_native_v3_netcode_vector_in
 	native_input.network_dimensions = signal_input->network_dimensions;
 	native_input.model_confidence = signal_input->model_confidence;
 	native_input.policy_momentum = signal_input->policy_momentum;
+	native_input.assignment_family = signal_input->assignment_family;
+	native_input.spectral_mode = signal_input->spectral_mode;
+	native_input.hardware_byte_order_tag = signal_input->hardware_byte_order_tag;
+	native_input.hardware_dtype_tag = signal_input->hardware_dtype_tag;
+	native_input.hardware_alignment_bytes = signal_input->hardware_alignment_bytes;
 
 	if (banana_native_k3h4_layer_build_k3h4(native_input, &native_output) != 0)
 	{

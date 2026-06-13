@@ -123,6 +123,20 @@ description: "Tasks for 035-native-k3h4"
 
 ---
 
+## Phase 7: Reorchestration Follow-Up
+
+**Purpose**: Align the implemented K3H4 pipeline with the dual-mode, spectral-gated, hardware-first operating model from the refactoring report.
+
+- [x] T038 Define explicit K3H4 mode selection contract (`multiplicative | power`) in native request structs, FFI types, and API request shaping.
+- [x] T039 Move byte-order, dtype, and alignment declaration checks into a required preflight stage before any clustering entrypoint executes.
+- [x] T040 Split multiplicative and power scoring into explicit native scoring paths with deterministic mode-specific tests.
+- [x] T041 Add orchestration gating so spectral embedding runs only when an affinity-graph-backed mode requests it.
+- [x] T042 Extend API analytics responses with selected K3H4 mode and spectral activation metadata.
+- [x] T043 Update React notebook consumer models to display returned mode/spectral metadata without local decision-making.
+- [x] T044 Add validation coverage for hardware-preflight failures, multiplicative vs power divergence, and spectral-bypass vs spectral-enabled flows.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

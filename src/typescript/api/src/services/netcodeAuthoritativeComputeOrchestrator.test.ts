@@ -3,7 +3,9 @@ import {describe, expect, test} from 'bun:test';
 import type {NativeNetcodeService} from './nativeNetcode.ts';
 import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError,} from './netcodeAuthoritativeComputeOrchestrator.ts';
 
-function createFakeNativeNetcodeService(): NativeNetcodeService {
+function createFakeNativeNetcodeService(
+    captured?: {buildVectorInput?: unknown; buildK3h4Input?: unknown;}):
+    NativeNetcodeService {
   return {
     async reset(): Promise<void> {
       return;
@@ -49,14 +51,20 @@ function createFakeNativeNetcodeService(): NativeNetcodeService {
         ops: 6,
       };
     },
-    async buildVector() {
+    async buildVector(input) {
+      if (captured) {
+        captured.buildVectorInput = input;
+      }
       return {
         dimensions: 3,
         nodeVectors: [[1, 2, 3], [4, 5, 6], [7, 8, 9], [2, 4, 6]],
         contractStrength: [11, 22, 33, 44] as const,
       };
     },
-    async buildK3h4() {
+    async buildK3h4(input) {
+      if (captured) {
+        captured.buildK3h4Input = input;
+      }
       return {
         dimensions: 3,
         nodes: [
@@ -161,9 +169,10 @@ describe('netcode authoritative compute orchestrator', () => {
   test(
       'returns server-authoritative analytics with LSP representation',
       async () => {
+        const captured: {buildK3h4Input?: unknown;} = {};
         const orchestrator =
             createNetcodeAnalyticsAuthoritativeComputeOrchestrator(
-                createFakeNativeNetcodeService());
+                createFakeNativeNetcodeService(captured));
 
         const result = await orchestrator.compute(
             {
@@ -177,6 +186,8 @@ describe('netcode authoritative compute orchestrator', () => {
               networkDimensions: 6,
               modelConfidence: 77,
               policyMomentum: 66,
+              k3h4Mode: 'power',
+              spectralMode: 'affinity-graph',
             },
             {enabled: true, cohort: 'all'},
         );
@@ -259,6 +270,14 @@ describe('netcode authoritative compute orchestrator', () => {
           contractVersion: 1,
           deterministicHash: 123456,
           rollout: {enabled: true, cohort: 'all'},
+        });
+        expect(result.k3h4Runtime).toEqual({
+          mode: 'power',
+          spectralActivation: 'affinity-graph',
+        });
+        expect(captured.buildK3h4Input).toMatchObject({
+          k3h4Mode: 'power',
+          spectralMode: 'affinity-graph',
         });
       });
 

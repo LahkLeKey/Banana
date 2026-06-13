@@ -12,6 +12,12 @@ extern "C"
         const RuntimeNetcodeVectorOutput *input,
         RuntimeNetcodeK3h4Output *out_output);
 
+    int runtime_netcode_k3h4_pipeline_execute_with_config(
+        const RuntimeNetcodeVectorOutput *input,
+        RuntimeNetcodeK3h4Output *out_output,
+        int assignment_family,
+        int spectral_mode);
+
 #ifdef __cplusplus
 }
 #endif

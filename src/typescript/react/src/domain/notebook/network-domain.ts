@@ -59,10 +59,16 @@ export type ContractK3h4ObservabilityModel = {
                                                                                                                                                                                                                                 string;
 };
 
-export type ContractK3h4Model = {
-  readonly centers: readonly ContractK3h4CenterModel[]; readonly radii: readonly ContractK3h4RadiusModel[]; readonly weightedVoronoiScores: readonly ContractK3h4WeightedScoreModel[]; readonly spectralProxy: readonly ContractK3h4SpectralProxyModel[]; readonly observability:
-                                                                                                                                                                                                                                                                       ContractK3h4ObservabilityModel;
+export type ContractK3h4RuntimeMetadataModel = {
+  readonly mode: 'multiplicative'|'power'; readonly spectralActivation:
+                                                        'disabled' |
+      'affinity-graph';
 };
+
+export type ContractK3h4Model =
+    {
+      readonly centers: readonly ContractK3h4CenterModel[]; readonly radii: readonly ContractK3h4RadiusModel[]; readonly weightedVoronoiScores: readonly ContractK3h4WeightedScoreModel[]; readonly spectralProxy: readonly ContractK3h4SpectralProxyModel[]; readonly observability: ContractK3h4ObservabilityModel; readonly runtime: ContractK3h4RuntimeMetadataModel;
+    };
 
 export type ContractK3h4ContractStatus = 'ok'|'unsupported-version'|
     'invalid-payload'|'nonfinite-value'|'crc-mismatch';

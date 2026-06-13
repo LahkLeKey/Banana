@@ -4,21 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(_WIN32)
-#include <stdlib.h>
-static int set_assignment_family(const char *value)
-{
-    return _putenv_s("BANANA_K3H4_ASSIGNMENT_FAMILY", value ? value : "");
-}
-#else
-#include <stdlib.h>
-static int set_assignment_family(const char *value)
-{
-    if (!value) return unsetenv("BANANA_K3H4_ASSIGNMENT_FAMILY");
-    return setenv("BANANA_K3H4_ASSIGNMENT_FAMILY", value, 1);
-}
-#endif
-
 static int fail(const char *message)
 {
     fprintf(stderr, "[netcode-k3h4-assignment-family] %s\n", message);
@@ -66,10 +51,11 @@ int main(void)
 
     write_input(&vector_output);
 
-    if (set_assignment_family("multiplicative") != 0)
-        return fail("failed to set multiplicative assignment family");
-
-    if (runtime_netcode_k3h4_build(&vector_output, &multiplicative_output) != 0)
+    if (runtime_netcode_k3h4_build_with_config(
+            &vector_output,
+            &multiplicative_output,
+            RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE,
+            RUNTIME_NETCODE_K3H4_SPECTRAL_DISABLED) != 0)
         return fail("failed to build multiplicative k3h4 output");
 
     distance_q16 = multiplicative_output.weighted_voronoi_scores[score_index].distance_to_center_q16;
@@ -79,10 +65,11 @@ int main(void)
     if (multiplicative_output.weighted_voronoi_scores[score_index].weighted_score_q16 != expected_mul_q16)
         return fail("multiplicative weighted score formula mismatch");
 
-    if (set_assignment_family("power") != 0)
-        return fail("failed to set power assignment family");
-
-    if (runtime_netcode_k3h4_build(&vector_output, &power_output) != 0)
+    if (runtime_netcode_k3h4_build_with_config(
+            &vector_output,
+            &power_output,
+            RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER,
+            RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH) != 0)
         return fail("failed to build power k3h4 output");
 
     distance_q16 = power_output.weighted_voronoi_scores[score_index].distance_to_center_q16;
@@ -100,6 +87,11 @@ int main(void)
         return fail("assignment family should change weighted score semantics");
     }
 
-    (void)set_assignment_family(NULL);
+    if (multiplicative_output.spectral_proxy[0].spectral_state != RUNTIME_NETCODE_SPECTRAL_DISABLED)
+        return fail("expected spectral state to be disabled when spectral mode is bypassed");
+
+    if (power_output.spectral_proxy[0].spectral_state == RUNTIME_NETCODE_SPECTRAL_DISABLED)
+        return fail("expected spectral state to be active when affinity-graph spectral mode is requested");
+
     return 0;
 }

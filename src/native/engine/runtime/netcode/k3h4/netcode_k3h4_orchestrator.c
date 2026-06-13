@@ -41,6 +41,11 @@ int runtime_netcode_k3h4_orchestrate_full(const RuntimeNetcodeK3h4Request *reque
     vector_input.network_dimensions = request->network_dimensions;
     vector_input.model_confidence = request->model_confidence;
     vector_input.policy_momentum = request->policy_momentum;
+    vector_input.assignment_family = request->assignment_family;
+    vector_input.spectral_mode = request->spectral_mode;
+    vector_input.hardware_byte_order_tag = request->hardware_byte_order_tag;
+    vector_input.hardware_dtype_tag = request->hardware_dtype_tag;
+    vector_input.hardware_alignment_bytes = request->hardware_alignment_bytes;
 
     if (runtime_netcode_k3h4_build_learning(&request->ledger, &signal_input, &out_output->learning) != 0)
         return -1;
@@ -54,7 +59,11 @@ int runtime_netcode_k3h4_orchestrate_full(const RuntimeNetcodeK3h4Request *reque
     if (runtime_netcode_k3h4_build_vector(&vector_input, &out_output->vector) != 0)
         return -1;
 
-    if (runtime_netcode_k3h4_build(&out_output->vector, &out_output->k3h4) != 0)
+    if (runtime_netcode_k3h4_build_with_config(
+            &out_output->vector,
+            &out_output->k3h4,
+            vector_input.assignment_family,
+            vector_input.spectral_mode) != 0)
         return -1;
 
     return 0;
@@ -155,7 +164,11 @@ int runtime_netcode_k3h4_orchestrate(const RuntimeNetcodeVectorInput *input,
     if (runtime_netcode_vector_build(input, &out_output->vector) != 0)
         return -1;
 
-    if (runtime_netcode_k3h4_build(&out_output->vector, &out_output->k3h4) != 0)
+    if (runtime_netcode_k3h4_build_with_config(
+            &out_output->vector,
+            &out_output->k3h4,
+            RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE,
+            RUNTIME_NETCODE_K3H4_SPECTRAL_DISABLED) != 0)
         return -1;
 
     return 0;
@@ -183,7 +196,14 @@ int runtime_netcode_k3h4_build_k3h4(const RuntimeNetcodeK3h4VectorSignalInput *i
     vector_input.model_confidence = input->model_confidence;
     vector_input.policy_momentum = input->policy_momentum;
 
-    if (runtime_netcode_k3h4_orchestrate(&vector_input, &orchestration_output) != 0)
+    if (runtime_netcode_vector_build(&vector_input, &orchestration_output.vector) != 0)
+        return -1;
+
+    if (runtime_netcode_k3h4_build_with_config(
+            &orchestration_output.vector,
+            &orchestration_output.k3h4,
+            input->assignment_family,
+            input->spectral_mode) != 0)
         return -1;
 
     *out_output = orchestration_output.k3h4;

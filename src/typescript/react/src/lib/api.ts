@@ -35,6 +35,8 @@ export type NetcodeAnalyticsRequest = {
   modelConfidence: number;
   policyMomentum: number;
   interactionSignal?: number;
+  k3h4Mode?: 'multiplicative' | 'power';
+  spectralMode?: 'disabled' | 'affinity-graph';
 };
 
 export type NetcodeLearningRequest = {
@@ -141,6 +143,10 @@ export type NetcodeAnalyticsResponse = {
     radialStability: number;
   };
   k3h4: NetcodeK3h4Payload;
+  k3h4Runtime: {
+    mode: 'multiplicative' | 'power';
+    spectralActivation: 'disabled' | 'affinity-graph';
+  };
   abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
   abiLayerCoverage: NetcodeAnalyticsAbiLayerCoverage;
   abiLayerLedger: NetcodeAnalyticsAbiLayerLedger;

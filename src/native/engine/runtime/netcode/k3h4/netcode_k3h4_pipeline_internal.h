@@ -19,6 +19,7 @@ typedef struct RuntimeNetcodeK3h4PipelineContext
     int dimensions;
     int radius_floor_q16;
     int assignment_family;
+    int spectral_enabled;
 } RuntimeNetcodeK3h4PipelineContext;
 
 #endif

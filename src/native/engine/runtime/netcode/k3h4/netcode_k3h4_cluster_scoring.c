@@ -221,6 +221,18 @@ static unsigned int hash_append_u32(unsigned int hash, unsigned int value)
     return hash;
 }
 
+static int score_multiplicative_q16(int distance_q16, int radius_q16)
+{
+    return runtime_netcode_q16_div(distance_q16, radius_q16);
+}
+
+static int score_power_q16(int distance_q16, int radius_q16)
+{
+    int distance_sq_q16 = runtime_netcode_q16_mul(distance_q16, distance_q16);
+    int radius_sq_q16 = runtime_netcode_q16_mul(radius_q16, radius_q16);
+    return distance_sq_q16 - radius_sq_q16;
+}
+
 void runtime_netcode_k3h4_build_cluster_models(
     RuntimeNetcodeK3h4PipelineContext *context)
 {
@@ -296,14 +308,24 @@ void runtime_netcode_k3h4_build_cluster_radii_and_spectral(
         context->output->radii[i].radius_state = radius_state;
 
         context->output->spectral_proxy[i].cluster_id = i;
-        context->output->spectral_proxy[i].frequency_proxy_q16 = runtime_netcode_q16_div(NETCODE_Q16_ONE, inscribed_q16);
-        context->output->spectral_proxy[i].amplitude_proxy_q16 = runtime_netcode_q16_round_div(
-            ((int64_t)context->output->centers[i].member_count) << NETCODE_Q16_SHIFT,
-            context->output->vector_count);
-        context->output->spectral_proxy[i].spectral_state =
-            radius_state == RUNTIME_NETCODE_RADIUS_NEAR_ZERO_CLAMPED
-                ? RUNTIME_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED
-                : RUNTIME_NETCODE_SPECTRAL_OK;
+        if (context->spectral_enabled)
+        {
+            context->output->spectral_proxy[i].frequency_proxy_q16 =
+                runtime_netcode_q16_div(NETCODE_Q16_ONE, inscribed_q16);
+            context->output->spectral_proxy[i].amplitude_proxy_q16 = runtime_netcode_q16_round_div(
+                ((int64_t)context->output->centers[i].member_count) << NETCODE_Q16_SHIFT,
+                context->output->vector_count);
+            context->output->spectral_proxy[i].spectral_state =
+                radius_state == RUNTIME_NETCODE_RADIUS_NEAR_ZERO_CLAMPED
+                    ? RUNTIME_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED
+                    : RUNTIME_NETCODE_SPECTRAL_OK;
+        }
+        else
+        {
+            context->output->spectral_proxy[i].frequency_proxy_q16 = 0;
+            context->output->spectral_proxy[i].amplitude_proxy_q16 = 0;
+            context->output->spectral_proxy[i].spectral_state = RUNTIME_NETCODE_SPECTRAL_DISABLED;
+        }
     }
 }
 
@@ -345,15 +367,13 @@ void runtime_netcode_k3h4_build_weighted_voronoi_scores(
             {
                 if (context->assignment_family == RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER)
                 {
-                    int distance_sq_q16 = runtime_netcode_q16_mul(mahalanobis_q16, mahalanobis_q16);
-                    int radius_sq_q16 = runtime_netcode_q16_mul(radius_q16, radius_q16);
                     context->output->weighted_voronoi_scores[score_index].weighted_score_q16 =
-                        distance_sq_q16 - radius_sq_q16;
+                        score_power_q16(mahalanobis_q16, radius_q16);
                 }
                 else
                 {
                     context->output->weighted_voronoi_scores[score_index].weighted_score_q16 =
-                        runtime_netcode_q16_div(mahalanobis_q16, radius_q16);
+                        score_multiplicative_q16(mahalanobis_q16, radius_q16);
                 }
                 context->output->weighted_voronoi_scores[score_index].score_validity =
                     RUNTIME_NETCODE_SCORE_VALID;

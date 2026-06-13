@@ -33,10 +33,19 @@ export type NetcodeLinkOutput = {
                                                                                              number;
 };
 
+export type NetcodeK3h4Mode = 'multiplicative'|'power';
+
+export type NetcodeK3h4SpectralMode = 'disabled'|'affinity-graph';
+
 export type NetcodeVectorInput =
     {
       readonly callDensity: number; readonly questPercent: number; readonly playerLevel: number; readonly comboStreak: number; readonly branchPressure: number; readonly dependencyPulse: number; readonly workflowDepth: 1 | 2 | 3; readonly neuralRelevanceScore: number; readonly networkDimensions: number; readonly modelConfidence: number; readonly policyMomentum:
                                                                                                                                                                                                                                                                                                                                                                number;
+      readonly k3h4Mode?: NetcodeK3h4Mode;
+      readonly spectralMode?: NetcodeK3h4SpectralMode;
+      readonly hardwareByteOrderTag?: number;
+      readonly hardwareDtypeTag?: number;
+      readonly hardwareAlignmentBytes?: number;
     };
 
 export type NetcodeVectorOutput = {
@@ -61,7 +70,7 @@ export type NetcodeK3h4RadiusState = 'ok'|'single-cluster'|'near-zero-clamped';
 
 export type NetcodeK3h4ScoreValidity = 'valid'|'invalid-radius';
 
-export type NetcodeK3h4SpectralState = 'ok'|'radius-floor-applied';
+export type NetcodeK3h4SpectralState = 'ok'|'radius-floor-applied'|'disabled';
 
 export type NetcodeK3h4EndiannessDecodePath = 'little-endian'|'byte-swapped';
 
@@ -116,6 +125,18 @@ const BANANA_NETCODE_K3H4_PAYLOAD_BYTES = 872;
 const BANANA_NETCODE_K3H4_ENVELOPE_BYTES = 20;
 const BANANA_NETCODE_K3H4_BUFFER_BYTES =
     BANANA_NETCODE_K3H4_PAYLOAD_BYTES + BANANA_NETCODE_K3H4_ENVELOPE_BYTES;
+const BANANA_NETCODE_VECTOR_SIGNAL_BYTES = 64;
+const BANANA_NETCODE_K3H4_BYTE_ORDER_TAG = 0x01020304;
+const BANANA_NETCODE_K3H4_DTYPE_TAG_F32_Q16_MIXED = 1;
+const BANANA_NETCODE_K3H4_ALIGNMENT_BYTES_4 = 4;
+
+function encodeK3h4Mode(mode: NetcodeK3h4Mode|undefined): number {
+  return mode === 'power' ? 1 : 0;
+}
+
+function encodeSpectralMode(mode: NetcodeK3h4SpectralMode|undefined): number {
+  return mode === 'affinity-graph' ? 1 : 0;
+}
 
 function mapRadiusState(value: number): NetcodeK3h4RadiusState {
   if (value === 1) return 'single-cluster';
@@ -130,6 +151,7 @@ function mapScoreValidity(value: number): NetcodeK3h4ScoreValidity {
 
 function mapSpectralState(value: number): NetcodeK3h4SpectralState {
   if (value === 1) return 'radius-floor-applied';
+  if (value === 2) return 'disabled';
   return 'ok';
 }
 
@@ -507,7 +529,7 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
 
   public async buildVector(input: NetcodeVectorInput):
       Promise<NetcodeVectorOutput> {
-    const signalBuffer = Buffer.alloc(44);
+    const signalBuffer = Buffer.alloc(BANANA_NETCODE_VECTOR_SIGNAL_BYTES);
     signalBuffer.writeInt32LE(input.callDensity, 0);
     signalBuffer.writeInt32LE(input.questPercent, 4);
     signalBuffer.writeInt32LE(input.playerLevel, 8);
@@ -519,6 +541,16 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
     signalBuffer.writeInt32LE(input.networkDimensions, 32);
     signalBuffer.writeInt32LE(input.modelConfidence, 36);
     signalBuffer.writeInt32LE(input.policyMomentum, 40);
+    signalBuffer.writeInt32LE(encodeK3h4Mode(input.k3h4Mode), 44);
+    signalBuffer.writeInt32LE(encodeSpectralMode(input.spectralMode), 48);
+    signalBuffer.writeInt32LE(
+        input.hardwareByteOrderTag ?? BANANA_NETCODE_K3H4_BYTE_ORDER_TAG, 52);
+    signalBuffer.writeInt32LE(
+        input.hardwareDtypeTag ?? BANANA_NETCODE_K3H4_DTYPE_TAG_F32_Q16_MIXED,
+        56);
+    signalBuffer.writeInt32LE(
+        input.hardwareAlignmentBytes ?? BANANA_NETCODE_K3H4_ALIGNMENT_BYTES_4,
+        60);
 
     const outputBuffer = Buffer.alloc(276);
     const rc = this.symbols.banana_native_v3_netcode_build_vector(
@@ -554,7 +586,7 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
 
   public async buildK3h4(input: NetcodeVectorInput):
       Promise<NetcodeK3h4Output> {
-    const signalBuffer = Buffer.alloc(44);
+    const signalBuffer = Buffer.alloc(BANANA_NETCODE_VECTOR_SIGNAL_BYTES);
     signalBuffer.writeInt32LE(input.callDensity, 0);
     signalBuffer.writeInt32LE(input.questPercent, 4);
     signalBuffer.writeInt32LE(input.playerLevel, 8);
@@ -566,6 +598,16 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
     signalBuffer.writeInt32LE(input.networkDimensions, 32);
     signalBuffer.writeInt32LE(input.modelConfidence, 36);
     signalBuffer.writeInt32LE(input.policyMomentum, 40);
+    signalBuffer.writeInt32LE(encodeK3h4Mode(input.k3h4Mode), 44);
+    signalBuffer.writeInt32LE(encodeSpectralMode(input.spectralMode), 48);
+    signalBuffer.writeInt32LE(
+        input.hardwareByteOrderTag ?? BANANA_NETCODE_K3H4_BYTE_ORDER_TAG, 52);
+    signalBuffer.writeInt32LE(
+        input.hardwareDtypeTag ?? BANANA_NETCODE_K3H4_DTYPE_TAG_F32_Q16_MIXED,
+        56);
+    signalBuffer.writeInt32LE(
+        input.hardwareAlignmentBytes ?? BANANA_NETCODE_K3H4_ALIGNMENT_BYTES_4,
+        60);
 
     const outputBuffer = Buffer.alloc(BANANA_NETCODE_K3H4_BUFFER_BYTES);
     const rc = this.symbols.banana_native_v3_netcode_build_k3h4(
