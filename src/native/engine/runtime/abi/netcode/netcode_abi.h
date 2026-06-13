@@ -122,21 +122,6 @@ extern "C"
         const RuntimeNetcodeK3h4Output *payload,
         int allow_byte_swapped_tag);
 
-    /* Compatibility surface retained while callers migrate to k3h4 naming. */
-    int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal_input,
-                                              RuntimeNetcodeK3h4Output *out_output);
-
-    int runtime_netcode_abi_hypersphere_payload_bytes(void);
-
-    int runtime_netcode_abi_encode_hypersphere_envelope(
-        const RuntimeNetcodeK3h4Output *payload,
-        RuntimeNetcodeContractEnvelopeHeader *out_header);
-
-    RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
-        const RuntimeNetcodeContractEnvelopeHeader *header,
-        const RuntimeNetcodeK3h4Output *payload,
-        int allow_byte_swapped_tag);
-
     /*
      * K3H4 wrapper helpers are preferred call sites.
      * Netcode-prefixed function symbols remain the ABI implementation.
@@ -216,32 +201,6 @@ extern "C"
         int allow_byte_swapped_tag)
     {
         return runtime_netcode_abi_validate_k3h4_envelope(header, payload, allow_byte_swapped_tag);
-    }
-
-    static inline int runtime_k3h4_abi_build_hypersphere(RuntimeK3h4VectorSignalInput signal_input,
-                                                         RuntimeNetcodeK3h4Output *out_output)
-    {
-        return runtime_k3h4_abi_build_k3h4(signal_input, out_output);
-    }
-
-    static inline int runtime_k3h4_abi_hypersphere_payload_bytes(void)
-    {
-        return runtime_k3h4_abi_k3h4_payload_bytes();
-    }
-
-    static inline int runtime_k3h4_abi_encode_hypersphere_envelope(
-        const RuntimeNetcodeK3h4Output *payload,
-        RuntimeK3h4ContractEnvelopeHeader *out_header)
-    {
-        return runtime_k3h4_abi_encode_k3h4_envelope(payload, out_header);
-    }
-
-    static inline RuntimeK3h4ContractStatus runtime_k3h4_abi_validate_hypersphere_envelope(
-        const RuntimeK3h4ContractEnvelopeHeader *header,
-        const RuntimeNetcodeK3h4Output *payload,
-        int allow_byte_swapped_tag)
-    {
-        return runtime_k3h4_abi_validate_k3h4_envelope(header, payload, allow_byte_swapped_tag);
     }
 
     /*

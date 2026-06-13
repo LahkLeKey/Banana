@@ -464,12 +464,6 @@ int banana_native_v3_netcode_build_k3h4(const banana_native_v3_netcode_vector_in
 	return 0;
 }
 
-int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_vector_input *signal_input,
-							 banana_native_v3_netcode_hypersphere_output *out_output)
-{
-	return banana_native_v3_netcode_build_k3h4(signal_input, out_output);
-}
-
 int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
 										 banana_launch_gate_policy *out_policy)
 {

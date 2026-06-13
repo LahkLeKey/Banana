@@ -8,7 +8,7 @@
 
 static int fail(const char *message)
 {
-    fprintf(stderr, "[netcode-hypersphere-pipeline-equivalence] %s\n", message);
+    fprintf(stderr, "[netcode-k3h4-pipeline-equivalence] %s\n", message);
     return 1;
 }
 
@@ -22,7 +22,7 @@ static int assert_envelope_zero(const RuntimeNetcodeK3h4Output *output,
         output->envelope.contract_status != 0)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s should keep envelope metadata zeroed\n",
+            "[netcode-k3h4-pipeline-equivalence] %s should keep envelope metadata zeroed\n",
                 label);
         return 1;
     }
@@ -36,7 +36,7 @@ static int assert_outputs_equal(const RuntimeNetcodeK3h4Output *lhs,
     if (memcmp(lhs, rhs, sizeof(RuntimeNetcodeK3h4Output)) != 0)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s\n",
+            "[netcode-k3h4-pipeline-equivalence] %s\n",
                 label);
         return 1;
     }
@@ -52,7 +52,7 @@ static int assert_coherence_bounds(const RuntimeNetcodeK3h4Output *output,
         if (output->nodes[node].coherence < 0 || output->nodes[node].coherence > 100)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s coherence out of bounds at node %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s coherence out of bounds at node %d\n",
                     label,
                     node);
             return 1;
@@ -68,19 +68,19 @@ static int assert_output_unchanged(const RuntimeNetcodeK3h4Output *actual,
     if (memcmp(actual, expected, sizeof(RuntimeNetcodeK3h4Output)) != 0)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s\n",
+            "[netcode-k3h4-pipeline-equivalence] %s\n",
                 label);
         return 1;
     }
     return 0;
 }
 
-typedef int (*RuntimeNetcodeHypersphereBuildFn)(
+typedef int (*RuntimeNetcodeK3h4BuildFn)(
     const RuntimeNetcodeVectorOutput *input,
     RuntimeNetcodeK3h4Output *out_output);
 
 static int assert_failure_output_unchanged(
-    RuntimeNetcodeHypersphereBuildFn build_fn,
+    RuntimeNetcodeK3h4BuildFn build_fn,
     const RuntimeNetcodeVectorOutput *input,
     RuntimeNetcodeK3h4Output *output,
     const RuntimeNetcodeK3h4Output *expected_output,
@@ -90,7 +90,7 @@ static int assert_failure_output_unchanged(
     if (build_fn(input, output) != -1)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s\n",
+            "[netcode-k3h4-pipeline-equivalence] %s\n",
                 failure_label);
         return 1;
     }
@@ -107,7 +107,7 @@ static int assert_node_geometry_sanity(const RuntimeNetcodeK3h4Output *output,
         if (output->nodes[node].nearest_neighbor_distance < 0.0f)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s nearest-neighbor distance negative at node %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s nearest-neighbor distance negative at node %d\n",
                     label,
                     node);
             return 1;
@@ -116,7 +116,7 @@ static int assert_node_geometry_sanity(const RuntimeNetcodeK3h4Output *output,
         if (output->nodes[node].inradius < 0.0f)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s inradius negative at node %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s inradius negative at node %d\n",
                     label,
                     node);
             return 1;
@@ -125,7 +125,7 @@ static int assert_node_geometry_sanity(const RuntimeNetcodeK3h4Output *output,
         if (output->nodes[node].inradius > output->nodes[node].nearest_neighbor_distance)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s inradius exceeds nearest-neighbor distance at node %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s inradius exceeds nearest-neighbor distance at node %d\n",
                     label,
                     node);
             return 1;
@@ -140,7 +140,7 @@ static int assert_summary_metric_bounds(const RuntimeNetcodeK3h4Output *output,
     if (output->alignment < 0 || output->alignment > 100)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s alignment out of bounds\n",
+            "[netcode-k3h4-pipeline-equivalence] %s alignment out of bounds\n",
                 label);
         return 1;
     }
@@ -148,7 +148,7 @@ static int assert_summary_metric_bounds(const RuntimeNetcodeK3h4Output *output,
     if (output->radial_stability < 0 || output->radial_stability > 100)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s radial_stability out of bounds\n",
+            "[netcode-k3h4-pipeline-equivalence] %s radial_stability out of bounds\n",
                 label);
         return 1;
     }
@@ -166,7 +166,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
     if (output->cluster_count < 1 || output->cluster_count > RUNTIME_NETCODE_VECTOR_NODE_COUNT)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s cluster_count out of bounds\n",
+            "[netcode-k3h4-pipeline-equivalence] %s cluster_count out of bounds\n",
                 label);
         return 1;
     }
@@ -180,7 +180,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (center->cluster_id != cluster)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s center cluster_id mismatch at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s center cluster_id mismatch at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -189,7 +189,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (center->member_count < 0)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s center member_count negative at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s center member_count negative at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -198,7 +198,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (center->member_count > output->vector_count)
         {
             fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s center member_count exceeds vector_count at cluster %d\n",
+                "[netcode-k3h4-pipeline-equivalence] %s center member_count exceeds vector_count at cluster %d\n",
                 label,
                 cluster);
             return 1;
@@ -209,7 +209,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (radius->cluster_id != cluster)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s radius cluster_id mismatch at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s radius cluster_id mismatch at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -219,7 +219,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
             radius->radius_state > RUNTIME_NETCODE_RADIUS_NEAR_ZERO_CLAMPED)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s radius_state out of enum bounds at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s radius_state out of enum bounds at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -228,7 +228,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (radius->inscribed_radius_q16 <= 0)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s inscribed_radius_q16 must be positive at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s inscribed_radius_q16 must be positive at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -237,7 +237,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (spectral->cluster_id != cluster)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s spectral cluster_id mismatch at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s spectral cluster_id mismatch at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -247,7 +247,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
             spectral->spectral_state > RUNTIME_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s spectral_state out of enum bounds at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s spectral_state out of enum bounds at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -256,7 +256,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (spectral->frequency_proxy_q16 < 0 || spectral->amplitude_proxy_q16 < 0)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s spectral proxy values must be non-negative at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s spectral proxy values must be non-negative at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -267,7 +267,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
             if (spectral->spectral_state != RUNTIME_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED)
             {
                 fprintf(stderr,
-                        "[netcode-hypersphere-pipeline-equivalence] %s near-zero-clamped radius must map to radius-floor-applied spectral state at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s near-zero-clamped radius must map to radius-floor-applied spectral state at cluster %d\n",
                         label,
                         cluster);
                 return 1;
@@ -276,7 +276,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         else if (spectral->spectral_state != RUNTIME_NETCODE_SPECTRAL_OK)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s non-clamped radius must map to spectral ok state at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s non-clamped radius must map to spectral ok state at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -285,7 +285,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (spectral->amplitude_proxy_q16 > NETCODE_Q16_ONE)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s spectral amplitude proxy exceeds q16 unit range at cluster %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s spectral amplitude proxy exceeds q16 unit range at cluster %d\n",
                     label,
                     cluster);
             return 1;
@@ -295,7 +295,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
     if (member_count_sum < 0 || member_count_sum > output->vector_count)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s member_count sum out of bounds\n",
+            "[netcode-k3h4-pipeline-equivalence] %s member_count sum out of bounds\n",
                 label);
         return 1;
     }
@@ -310,7 +310,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (score->vector_id < 0 || score->vector_id >= output->vector_count)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s weighted score vector_id out of bounds at index %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s weighted score vector_id out of bounds at index %d\n",
                     label,
                     score_index);
             return 1;
@@ -319,7 +319,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (score->cluster_id < 0 || score->cluster_id >= output->cluster_count)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s weighted score cluster_id out of bounds at index %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s weighted score cluster_id out of bounds at index %d\n",
                     label,
                     score_index);
             return 1;
@@ -328,7 +328,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (score->distance_to_center_q16 < 0)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s weighted score distance negative at index %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s weighted score distance negative at index %d\n",
                     label,
                     score_index);
             return 1;
@@ -337,7 +337,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         if (score->weighted_score_q16 < 0)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s weighted score value negative at index %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s weighted score value negative at index %d\n",
                     label,
                     score_index);
             return 1;
@@ -347,7 +347,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
             score->score_validity > RUNTIME_NETCODE_SCORE_INVALID_RADIUS)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s weighted score validity out of enum bounds at index %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s weighted score validity out of enum bounds at index %d\n",
                     label,
                     score_index);
             return 1;
@@ -360,7 +360,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
             if (radius->radius_state != RUNTIME_NETCODE_RADIUS_SINGLE_CLUSTER)
             {
                 fprintf(stderr,
-                        "[netcode-hypersphere-pipeline-equivalence] %s invalid-radius score referenced non-single-cluster radius at index %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s invalid-radius score referenced non-single-cluster radius at index %d\n",
                         label,
                         score_index);
                 return 1;
@@ -369,7 +369,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
             if (score->weighted_score_q16 != 0)
             {
                 fprintf(stderr,
-                        "[netcode-hypersphere-pipeline-equivalence] %s invalid-radius score should have zero weighted_score_q16 at index %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s invalid-radius score should have zero weighted_score_q16 at index %d\n",
                         label,
                         score_index);
                 return 1;
@@ -378,7 +378,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output
         else if (radius->radius_state == RUNTIME_NETCODE_RADIUS_SINGLE_CLUSTER)
         {
             fprintf(stderr,
-                    "[netcode-hypersphere-pipeline-equivalence] %s valid score referenced single-cluster radius at index %d\n",
+                    "[netcode-k3h4-pipeline-equivalence] %s valid score referenced single-cluster radius at index %d\n",
                     label,
                     score_index);
             return 1;
@@ -395,7 +395,7 @@ static int assert_observability_contract_sanity(
     if (output->observability.iteration_count < 0)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s observability iteration_count negative\n",
+            "[netcode-k3h4-pipeline-equivalence] %s observability iteration_count negative\n",
                 label);
         return 1;
     }
@@ -404,7 +404,7 @@ static int assert_observability_contract_sanity(
         output->observability.assignment_changes_last_iteration > output->vector_count)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s assignment_changes_last_iteration out of bounds\n",
+            "[netcode-k3h4-pipeline-equivalence] %s assignment_changes_last_iteration out of bounds\n",
                 label);
         return 1;
     }
@@ -413,7 +413,7 @@ static int assert_observability_contract_sanity(
         output->observability.endianness_decode_path > RUNTIME_NETCODE_ENDIANNESS_BYTE_SWAPPED)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s endianness_decode_path out of enum bounds\n",
+            "[netcode-k3h4-pipeline-equivalence] %s endianness_decode_path out of enum bounds\n",
                 label);
         return 1;
     }
@@ -422,7 +422,7 @@ static int assert_observability_contract_sanity(
         RUNTIME_NETCODE_ENDIANNESS_LITTLE_ENDIAN)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s raw hypersphere compute should report little-endian decode path\n",
+            "[netcode-k3h4-pipeline-equivalence] %s raw k3h4 compute should report little-endian decode path\n",
                 label);
         return 1;
     }
@@ -430,7 +430,7 @@ static int assert_observability_contract_sanity(
     if (output->observability.deterministic_hash == 0)
     {
         fprintf(stderr,
-                "[netcode-hypersphere-pipeline-equivalence] %s deterministic_hash should be non-zero\n",
+            "[netcode-k3h4-pipeline-equivalence] %s deterministic_hash should be non-zero\n",
                 label);
         return 1;
     }
@@ -535,16 +535,16 @@ int main(void)
     memset(&facade_output, 0xAA, sizeof(facade_output));
     memset(&pipeline_output, 0x55, sizeof(pipeline_output));
     if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
-        return fail("facade hypersphere build failed");
+        return fail("facade k3h4 build failed");
 
     if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
-        return fail("pipeline hypersphere execution failed");
+        return fail("pipeline k3h4 execution failed");
 
     if (assert_success_contract_pair(&facade_output,
                                      &pipeline_output,
                                      "facade and pipeline outputs diverged",
-                                     "raw hypersphere facade output",
-                                     "raw hypersphere pipeline output"))
+                                     "raw k3h4 facade output",
+                                     "raw k3h4 pipeline output"))
         return 1;
 
     memcpy(&canonical_output, &facade_output, sizeof(canonical_output));

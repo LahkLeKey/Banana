@@ -175,8 +175,6 @@ typedef struct banana_native_v3_netcode_k3h4_output {
 	int32_t contract_status;
 } banana_native_v3_netcode_k3h4_output;
 
-typedef banana_native_v3_netcode_k3h4_output banana_native_v3_netcode_hypersphere_output;
-
 #define BANANA_NATIVE_V3_NETCODE_K3H4_CONTRACT_VERSION 1
 #define BANANA_NATIVE_V3_NETCODE_K3H4_BYTE_ORDER_TAG 0x01020304
 
@@ -233,8 +231,6 @@ BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_vector(const banana_n
 						   banana_native_v3_netcode_vector_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_k3h4(const banana_native_v3_netcode_vector_input *signal_input,
 							banana_native_v3_netcode_k3h4_output *out_output);
-BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_vector_input *signal_input,
-							banana_native_v3_netcode_hypersphere_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
 												 banana_launch_gate_policy *out_policy);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_decide(const char *mode_label,

@@ -292,28 +292,3 @@ int runtime_netcode_abi_build_k3h4(RuntimeNetcodeVectorSignalInput signal_input,
     return out_output->envelope.contract_status;
 }
 
-int runtime_netcode_abi_hypersphere_payload_bytes(void)
-{
-    return runtime_netcode_abi_k3h4_payload_bytes();
-}
-
-int runtime_netcode_abi_encode_hypersphere_envelope(
-    const RuntimeNetcodeK3h4Output *payload,
-    RuntimeNetcodeContractEnvelopeHeader *out_header)
-{
-    return runtime_netcode_abi_encode_k3h4_envelope(payload, out_header);
-}
-
-RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
-    const RuntimeNetcodeContractEnvelopeHeader *header,
-    const RuntimeNetcodeK3h4Output *payload,
-    int allow_byte_swapped_tag)
-{
-    return runtime_netcode_abi_validate_k3h4_envelope(header, payload, allow_byte_swapped_tag);
-}
-
-int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal_input,
-                                          RuntimeNetcodeK3h4Output *out_output)
-{
-    return runtime_netcode_abi_build_k3h4(signal_input, out_output);
-}
