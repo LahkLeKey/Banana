@@ -83,4 +83,55 @@ describe('world route native fallback contract', () => {
       restoreEnv(envSnapshot);
     }
   });
+
+  test('emits warning log payload when native loader bootstrap fails', async () => {
+    const envSnapshot = snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+    const originalCwd = process.cwd();
+    const warningLogs: string[] = [];
+
+    try {
+      const cwd = createTempDirectory();
+      process.chdir(cwd);
+
+      const missingLibrary = path.join(cwd, 'missing-native-library.so');
+      process.env.BANANA_NATIVE_PATH = missingLibrary;
+      process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
+
+      const app = Fastify({
+        logger: {
+          level: 'warn',
+          stream: {
+            write: (chunk: string | Uint8Array) => {
+              warningLogs.push(typeof chunk === 'string' ? chunk :
+                                                             Buffer.from(chunk).toString('utf8'));
+            },
+          },
+        },
+      });
+      await registerRequestContextMiddleware(app);
+      registerFastifyErrorMapper(app);
+      await registerWorldRoutes(app);
+      await app.ready();
+
+      // Trigger route execution to verify fallback remains active after warning.
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/world/chunk/1/2',
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const warningLine = warningLogs.find((line) =>
+          line.includes(
+              'Native world FFI unavailable, falling back to in-memory world service'));
+      expect(warningLine).toBeDefined();
+      expect(warningLine).toContain('Unable to load Banana native library for world FFI');
+      expect(warningLine).toContain('missing-native-library');
+
+      await app.close();
+    } finally {
+      process.chdir(originalCwd);
+      restoreEnv(envSnapshot);
+    }
+  });
 });
