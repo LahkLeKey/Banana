@@ -381,9 +381,11 @@ if(BUILD_TESTING)
   add_executable(banana_native_feedback_loop_factory
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/native_feedback_loop_factory.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../scaffold/native_entry.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_native_orchestrator.c
   )
   target_link_libraries(banana_native_feedback_loop_factory PRIVATE banana_engine_core)
   target_include_directories(banana_native_feedback_loop_factory PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_CURRENT_SOURCE_DIR}/../include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/render
