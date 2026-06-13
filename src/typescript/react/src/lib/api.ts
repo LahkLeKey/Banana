@@ -36,6 +36,28 @@ export type NetcodeAnalyticsRequest = {
   interactionSignal?: number;
 };
 
+export type NetcodeLearningRequest = {
+  callDensity: number; questPercent: number; comboStreak: number;
+  branchPressure: number;
+  workflowDepth: 1 | 2 | 3;
+  nodeTap?: number;
+  action?: number;
+};
+
+export type NetcodeLearningResponse = {
+  ledger: {
+    snapshots: number; inspections: number; trainings: number; routes: number;
+    nodeTaps: number;
+  };
+  learning: {
+    modelConfidence: number; trainingAccuracy: number; policyMomentum: number;
+    nodeWeights: readonly[number, number, number, number];
+    recommendedNode: number;
+    recommendedAction: number;
+    xpByAction: readonly[number, number, number, number];
+  };
+};
+
 export type NetcodeAnalyticsResponse = {
   reward: {
     neuralRelevanceScore: number; projectedRewardXp: number; rewardTier: number;
@@ -407,11 +429,24 @@ export async function fetchNetcodeAnalytics(
     baseUrl: string,
     payload: NetcodeAnalyticsRequest,
     ): Promise<NetcodeAnalyticsResponse> {
-  return requestJson<NetcodeAnalyticsResponse>(baseUrl, '/api/netcode/analytics', {
-    method: 'POST',
-    headers: {'content-type': 'application/json'},
-    body: JSON.stringify(payload),
-  });
+  return requestJson<NetcodeAnalyticsResponse>(
+      baseUrl, '/api/netcode/analytics', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(payload),
+      });
+}
+
+export async function fetchNetcodeLearning(
+    baseUrl: string,
+    payload: NetcodeLearningRequest,
+    ): Promise<NetcodeLearningResponse> {
+  return requestJson<NetcodeLearningResponse>(
+      baseUrl, '/api/netcode/learning', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(payload),
+      });
 }
 
 export async function startGuestAuthSession(

@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-import {fetchNetcodeAnalytics, resolveApiBaseUrl,} from '../../lib/api';
+import {fetchNetcodeAnalytics, fetchNetcodeLearning, resolveApiBaseUrl,} from '../../lib/api';
 
 import type {ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
@@ -105,14 +105,6 @@ function actionToIndex(action: NodeInteractionAction): number {
   return 0;
 }
 
-type ApiLearningBody = {
-  callDensity: number; questPercent: number; comboStreak: number;
-  branchPressure: number;
-  workflowDepth: 1 | 2 | 3;
-  nodeTap?: number;
-  action?: number;
-};
-
 type ApiLearningResponse = {
   ledger: NodeInteractionLedger; learning: {
     modelConfidence: number; trainingAccuracy: number; policyMomentum: number;
@@ -200,22 +192,14 @@ export function useNetcodeSession({
         const baseUrl = resolveApiBaseUrl();
         if (!baseUrl) return;
 
-        const body: ApiLearningBody = {
+        const body = {
           ...signalsRef.current,
           ...extra,
         };
 
         try {
-          const response = await fetch(`${baseUrl}/api/netcode/learning`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(body),
-          });
-
-          if (!response.ok) return;
-
-          const data = await response.json() as ApiLearningResponse;
-          applyResponse(data);
+          const data = await fetchNetcodeLearning(baseUrl, body);
+          applyResponse(data as ApiLearningResponse);
         } catch {
           // API unreachable — retain current model values
         }
@@ -293,8 +277,8 @@ export function useNetcodeSession({
                 (id, index) => ({
                   id,
                   dimensions: [...(analytics.vector.nodeVectors[index] ?? [])],
-                  contractStrength: analytics.vector.contractStrength[index] ??
-                      0,
+                  contractStrength:
+                      analytics.vector.contractStrength[index] ?? 0,
                 }));
             setContractVectors(mappedVectors);
 
@@ -304,8 +288,7 @@ export function useNetcodeSession({
                   x: analytics.hypersphere.nodes[index]?.x ?? 0,
                   y: analytics.hypersphere.nodes[index]?.y ?? 0,
                   z: analytics.hypersphere.nodes[index]?.z ?? 0,
-                  coherence:
-                      analytics.hypersphere.nodes[index]?.coherence ?? 0,
+                  coherence: analytics.hypersphere.nodes[index]?.coherence ?? 0,
                 }));
             setHypersphereProjection({
               dimensions: analytics.hypersphere.dimensions,
