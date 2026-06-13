@@ -26,6 +26,19 @@ Runtime contract notes:
 - `react-overworld` runs the portal on `:5173` and targets `http://localhost:8081`.
 - Session model is single-room overworld (`sessionId=overworld`) with server tick metrics in snapshot payloads.
 
+## Fly Postgres pg_durable Image
+
+Build and push the repo-owned Fly database image with `pg_durable` baked in:
+
+```bash
+bash scripts/build-fly-pg-durable-image.sh
+```
+
+Image source and init artifacts:
+
+- `docker/postgres-pg-durable.Dockerfile`
+- `docker/pg-durable/initdb/010-create-extension.sh`
+
 ## Native-To-Neon Integration (Containerized)
 
 Run the native + API Neon integration lane inside Docker:

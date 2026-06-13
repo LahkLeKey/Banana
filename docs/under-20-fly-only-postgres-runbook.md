@@ -1,10 +1,11 @@
-# Banana under $20 runbook: Fly-only API + Postgres volume
+# Banana under $20 runbook: Fly-only API + pg_durable Postgres volume
 
 ## Goal
 
 Keep the stack Fly-only while staying near or under $20/month:
 - `banana-api` app on Fly
-- one low-cost Postgres instance on Fly with a single volume
+- one low-cost Postgres 17 instance on Fly with a single volume
+- `pg_durable` installed so durable controller-training workflows can run close to data
 - API wired via Banana DB alias contract
 
 ## Reality check on budget
@@ -35,10 +36,23 @@ From repo root terminal:
 fly apps create banana-db
 ```
 
+Build and push the repo-owned Fly image with `pg_durable` baked in:
+
+```bash
+bash scripts/build-fly-pg-durable-image.sh
+```
+
+Override image version/tag when needed:
+
+```bash
+PG_DURABLE_VERSION=0.2.2 FLY_DB_IMAGE_TAG=pg17-durable-v0.2.2 \
+  bash scripts/build-fly-pg-durable-image.sh
+```
+
 Provision a small machine and volume (example defaults):
 
 ```bash
-fly machine run flyio/postgres:15 \
+fly machine run registry.fly.io/banana-db:pg17-durable-v0.2.2 \
   --app banana-db \
   --region iad \
   --name banana-db-1 \
@@ -53,6 +67,7 @@ fly machine run flyio/postgres:15 \
 Notes:
 - Keep volume small at first (10GB) for cost control.
 - This is single-node and not HA.
+- Keep image tags immutable (for example `pg17-durable-v0.2.2`) so rollbacks are deterministic.
 
 ## 2) Validate DB machine is healthy
 
@@ -71,6 +86,19 @@ postgresql://banana_app:REPLACE_WITH_STRONG_PASSWORD@banana-db.internal:5432/ban
 ```
 
 For tighter security later, move to private networking only and rotated credentials.
+
+On first boot, ensure the database creates the extension:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_durable;
+```
+
+If your app role needs durable workflow access, grant usage after bootstrap.
+
+The repo-owned image already runs with:
+
+- `shared_preload_libraries=pg_durable`
+- init script `docker/pg-durable/initdb/010-create-extension.sh`
 
 ## 4) Set Banana API Fly secrets
 

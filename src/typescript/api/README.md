@@ -56,22 +56,37 @@ set `BANANA_FLY_SKIP_PARITY_GATE=true` before running deploy.
 `banana` project. To rotate it later, add the new value with `vercel env add`
 or replace the secret through the Vercel project settings, then redeploy.
 
-This repository does not provision Neon itself; it deploys the app against a
-self-hosted Neon-backed PostgreSQL endpoint.
+This repository does not provision PostgreSQL itself; it deploys the app
+against a self-hosted authoritative PostgreSQL endpoint.
 
-Recommended database hostname for the self-hosted Neon instance:
+For Fly production, that endpoint can be a Fly-hosted PostgreSQL 17 instance
+using the repo-owned image built from `docker/postgres-pg-durable.Dockerfile`
+with `pg_durable` installed and `BANANA_PG_CONNECTION` pointing at the Fly
+private DNS host.
+
+Recommended database hostname for the self-hosted instance:
 
 - `db.banana.engineer`
 
 Use that hostname in the connection string that you pass via
 `NEON_DATABASE_URL`.
 
+If the Fly database is running `pg_durable`, create the extension during
+bootstrap and keep the app pointed at the same authoritative URL through all
+three aliases.
+
+Build and publish the DB image to Fly registry from repo root:
+
+```bash
+bash scripts/build-fly-pg-durable-image.sh
+```
+
 ```bash
 bash scripts/deploy-api-fly.sh
 ```
 
-For the database cutover, set `NEON_DATABASE_URL` from your self-hosted Neon
-instance before invoking the script.
+For the database cutover, set `NEON_DATABASE_URL` from your self-hosted
+PostgreSQL instance before invoking the script.
 The deploy helper exits with an error if no replacement connection string is
 provided.
 
@@ -92,11 +107,11 @@ fly releases rollback <version> -a banana-api
 - `GET /auth/session` validates active session state.
 - `POST /auth/logout` revokes active session state.
 
-Session persistence uses Neon/PostgreSQL when `NEON_DATABASE_URL` (or
+Session persistence uses PostgreSQL when `NEON_DATABASE_URL` (or
 `DATABASE_URL` / `BANANA_PG_CONNECTION`) is present, with a memory fallback for
 local/non-strict development.
 
-## Authoritative Neon Runtime Contract
+## Authoritative PostgreSQL Runtime Contract
 
 The API now resolves a single authoritative database URL at startup in this
 order:
@@ -106,7 +121,7 @@ order:
 3. `BANANA_PG_CONNECTION`
 
 When any one of these is present, startup syncs all three env aliases to the
-same value so route/services/native integrations use one consistent Neon
+same value so route/services/native integrations use one consistent PostgreSQL
 endpoint.
 
 Optional runtime controls:
