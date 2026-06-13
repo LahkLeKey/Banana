@@ -1,6 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr} from 'bun:ffi';
+import {FFIType, type Pointer, ptr} from 'bun:ffi';
 
-import {resolveBananaNativeLibraryCandidates,} from '../lib/native-library-candidates.ts';
+import {loadBananaNativeSymbols,} from '../lib/native-interop-loader.ts';
 
 export interface NativeEngineInput {
   readonly moveX: -1|0|1;
@@ -141,21 +141,8 @@ function normalizeCString(snapshot: string|{toString(): string}): string {
 }
 
 function createNativeBinding(): NativeEngineSymbols {
-  const candidates = resolveBananaNativeLibraryCandidates({
-    fallbackDirs: [
-      'out/native/bin',
-      'out/v3-native/Debug',
-      'out/v3-native/Release',
-      'out/v3-native-baseline/Debug',
-      'build/native/bin',
-      'build/native',
-    ],
-  });
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const library = dlopen(candidate, {
+  return loadBananaNativeSymbols<NativeEngineSymbols>(
+      {
         engine_init: {
           args: [FFIType.i32, FFIType.i32],
           returns: FFIType.i32,
@@ -233,17 +220,19 @@ function createNativeBinding(): NativeEngineSymbols {
           args: [],
           returns: FFIType.void,
         },
-      });
-
-      return library.symbols as unknown as NativeEngineSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for engine FFI. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`);
+      },
+      'engine FFI',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'out/v3-native/Debug',
+          'out/v3-native/Release',
+          'out/v3-native-baseline/Debug',
+          'build/native/bin',
+          'build/native',
+        ],
+      },
+  );
 }
 
 export class NativeFFIEngineService implements NativeEngineService {

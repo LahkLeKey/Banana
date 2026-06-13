@@ -1,6 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr} from 'bun:ffi';
+import {FFIType, type Pointer, ptr} from 'bun:ffi';
 
-import {resolveBananaNativeLibraryCandidates,} from '../lib/native-library-candidates.ts';
+import {loadBananaNativeSymbols,} from '../lib/native-interop-loader.ts';
 
 export type NetcodeSignalInput = {
   readonly callDensity: number; readonly questPercent: number; readonly comboStreak: number; readonly branchPressure: number; readonly workflowDepth:
@@ -95,20 +95,8 @@ type NativeNetcodeSymbols = {
 };
 
 function createNativeBinding(): NativeNetcodeSymbols {
-  const candidates = resolveBananaNativeLibraryCandidates({
-    fallbackDirs: [
-      'out/native/bin',
-      'out/v3-native/Debug',
-      'out/v3-native/Release',
-      'build/native/bin',
-      'build/native',
-    ],
-  });
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const library = dlopen(candidate, {
+  return loadBananaNativeSymbols<NativeNetcodeSymbols>(
+      {
         banana_native_v3_netcode_reset: {
           args: [],
           returns: FFIType.void,
@@ -145,17 +133,18 @@ function createNativeBinding(): NativeNetcodeSymbols {
           args: [FFIType.ptr, FFIType.ptr],
           returns: FFIType.i32,
         },
-      });
-
-      return library.symbols as unknown as NativeNetcodeSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for netcode FFI. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`);
+      },
+      'netcode FFI',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'out/v3-native/Debug',
+          'out/v3-native/Release',
+          'build/native/bin',
+          'build/native',
+        ],
+      },
+  );
 }
 
 export class NativeFFINetcodeService implements NativeNetcodeService {

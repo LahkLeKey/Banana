@@ -32,7 +32,7 @@ function expandSearchRoots(cwd: string): string[] {
 function pushFromNativePath(
     target: string[],
     names: readonly string[],
-): void {
+    ): void {
   const envPath = process.env.BANANA_NATIVE_PATH;
   if (!envPath || envPath.trim().length === 0) {
     return;
@@ -62,7 +62,7 @@ export type NativeLibraryCandidateOptions = {
 
 export function resolveBananaNativeLibraryCandidates(
     options: NativeLibraryCandidateOptions = {},
-): string[] {
+    ): string[] {
   const names = [`libbanana_native.${suffix}`, `banana_native.${suffix}`];
   const cwd = process.cwd();
   const fallbackDirs = options.fallbackDirs ?? DEFAULT_FALLBACK_DIRS;

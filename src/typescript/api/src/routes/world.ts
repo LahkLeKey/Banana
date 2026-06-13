@@ -13,7 +13,7 @@ import type {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import {bootstrapPersistentWorldOrchestrationDomain, type PersistentWorldOrchestrationDomain,} from '../domains/persistent-world-orchestration/index.ts';
 import type {ContinuityCheckpointCommitRequest, ContinuityPayload} from '../lib/contracts/v1/persistentWorld.ts';
 import {persistentWorldRevisitBaselineUnavailable,} from '../lib/errors/domainErrors.ts';
-import {resolveBananaNativeLibraryCandidates,} from '../lib/native-library-candidates.ts';
+import {loadBananaNativeSymbols,} from '../lib/native-interop-loader.ts';
 
 /**
  * ChunkStreamPacket binary format (from C):
@@ -98,21 +98,8 @@ type WorldSymbols = {
 };
 
 function createWorldBinding(): WorldSymbols {
-  const candidates = resolveBananaNativeLibraryCandidates({
-    fallbackDirs: [
-      'out/native/bin',
-      'out/v3-native/Debug',
-      'out/v3-native/Release',
-      'out/v3-native-baseline/Debug',
-      'build/native/bin',
-      'build/native',
-    ],
-  });
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const library = dlopen(candidate, {
+  return loadBananaNativeSymbols<WorldSymbols>(
+      {
         banana_native_v3_world_init: {
           args: [FFIType.u32, FFIType.i32],
           returns: FFIType.i32,
@@ -125,17 +112,19 @@ function createWorldBinding(): WorldSymbols {
           args: [FFIType.i32, FFIType.i32, FFIType.ptr, FFIType.i32],
           returns: FFIType.i32,
         },
-      });
-
-      return library.symbols as unknown as WorldSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for world FFI. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`);
+      },
+      'world FFI',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'out/v3-native/Debug',
+          'out/v3-native/Release',
+          'out/v3-native-baseline/Debug',
+          'build/native/bin',
+          'build/native',
+        ],
+      },
+  );
 }
 
 export class NativeWorldService implements WorldService {

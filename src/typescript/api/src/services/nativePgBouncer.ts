@@ -1,6 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr} from 'bun:ffi';
+import {FFIType, type Pointer, ptr} from 'bun:ffi';
 
-import {resolveBananaNativeLibraryCandidates,} from '../lib/native-library-candidates.ts';
+import {loadBananaNativeSymbols,} from '../lib/native-interop-loader.ts';
 
 export type NativePgBouncerConfig = {
   connectionUri: string;
@@ -27,20 +27,8 @@ type NativePgBouncerSymbols = {
 };
 
 function createNativeBinding(): NativePgBouncerSymbols {
-  const candidates = resolveBananaNativeLibraryCandidates({
-    fallbackDirs: [
-      'out/native/bin',
-      'out/v3-native/Debug',
-      'out/v3-native/Release',
-      'build/native/bin',
-      'build/native',
-    ],
-  });
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const library = dlopen(candidate, {
+  return loadBananaNativeSymbols<NativePgBouncerSymbols>(
+      {
         banana_native_v3_pgbouncer_available: {
           args: [],
           returns: FFIType.i32,
@@ -53,17 +41,17 @@ function createNativeBinding(): NativePgBouncerSymbols {
           args: [FFIType.ptr, FFIType.i32],
           returns: FFIType.i32,
         },
-      });
-
-      return library.symbols as unknown as NativePgBouncerSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for PgBouncer bridge. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`,
+      },
+      'PgBouncer bridge',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'out/v3-native/Debug',
+          'out/v3-native/Release',
+          'build/native/bin',
+          'build/native',
+        ],
+      },
   );
 }
 

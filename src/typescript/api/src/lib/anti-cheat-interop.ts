@@ -1,6 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr} from 'bun:ffi';
+import {FFIType, type Pointer, ptr} from 'bun:ffi';
 
-import {resolveBananaNativeLibraryCandidates,} from './native-library-candidates.ts';
+import {loadBananaNativeSymbols,} from './native-interop-loader.ts';
 
 export interface AntiCheatScoreResult {
   readonly score: number;
@@ -63,25 +63,8 @@ function boolToInt(value: boolean): number {
 }
 
 function createNativeBinding(): NativeAntiCheatSymbols {
-  const candidates = resolveBananaNativeLibraryCandidates({
-    fallbackDirs: [
-      'out/native/bin',
-      'build/native/bin',
-      'build/native',
-      'build/native/Debug',
-      'build/native/Release',
-      'build/cmake-tools',
-      'build/Release',
-      'build/sanitizers',
-      'build/native-static-analysis',
-      'out/native-anticheat-check/Release',
-    ],
-  });
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const symbols = dlopen(candidate, {
+  return loadBananaNativeSymbols<NativeAntiCheatSymbols>(
+      {
         banana_anticheat_reset_session: {
           args: [FFIType.ptr],
           returns: FFIType.i32,
@@ -116,16 +99,23 @@ function createNativeBinding(): NativeAntiCheatSymbols {
           args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr],
           returns: FFIType.i32,
         },
-      });
-      return symbols.symbols as unknown as NativeAntiCheatSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for anti-cheat FFI. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`);
+      },
+      'anti-cheat FFI',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'build/native/bin',
+          'build/native',
+          'build/native/Debug',
+          'build/native/Release',
+          'build/cmake-tools',
+          'build/Release',
+          'build/sanitizers',
+          'build/native-static-analysis',
+          'out/native-anticheat-check/Release',
+        ],
+      },
+  );
 }
 
 function assertStatus(operation: string, statusCode: number): void {
