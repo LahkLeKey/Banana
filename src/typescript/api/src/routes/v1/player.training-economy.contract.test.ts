@@ -221,6 +221,20 @@ describe('v1 player training economy contracts', () => {
     expect(executePayload.rewards.length).toBeGreaterThan(0);
     expect(executePayload.leaderboard.length).toBeGreaterThan(0);
 
+    const events = await app.inject({
+      method: 'GET',
+      url: '/v1/player/training/telemetry/transitions?limit=20',
+      headers: {'x-actor-id': 'training-player-4'},
+    });
+    expect(events.statusCode).toBe(200);
+    const eventPayload = events.json() as {
+      events: Array<{eventType: string}>;
+    };
+    const eventTypes = eventPayload.events.map((event) => event.eventType);
+    expect(eventTypes.includes('queue.scaffolded')).toBe(true);
+    expect(eventTypes.includes('queue.execution.started')).toBe(true);
+    expect(eventTypes.includes('queue.execution.completed')).toBe(true);
+
     await app.close();
   });
 });

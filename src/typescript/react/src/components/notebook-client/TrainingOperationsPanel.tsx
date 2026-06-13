@@ -166,15 +166,6 @@ export function TrainingOperationsPanel(
                 indexedFileCount,
             });
             setQueue(response.jobs);
-            await recordTrainingTransitionEvent(apiBaseUrl, token, {
-                eventType: 'queue.scaffolded',
-                correlationId: makeCorrelationId('queue-scaffold'),
-                details: {
-                    jobCount: response.jobs.length,
-                    selectedFile,
-                    workflowMode: mode,
-                },
-            });
             setStatusMessage(
                 mode === 'controller' ?
                     `Scaffolded ${response.jobs.length} AI controller drills in persistent queue.` :
@@ -199,18 +190,8 @@ export function TrainingOperationsPanel(
         setStatusMessage(mode === 'controller' ? 'Running AI controller training cycle...' : 'Running operations cycle...');
 
         setIsBusy(true);
-        const correlationId = makeCorrelationId(mode === 'controller' ? 'controller-execute' : 'queue-execute');
 
         try {
-            await recordTrainingTransitionEvent(apiBaseUrl, token, {
-                eventType: 'queue.execution.started',
-                correlationId,
-                details: {
-                    requestedJobs: queue.length,
-                    workflowMode: mode,
-                },
-            });
-
             const execution = await executeTrainingCycle(apiBaseUrl, token, {
                 mode,
                 selectedFile,
@@ -221,17 +202,6 @@ export function TrainingOperationsPanel(
             setQueue(execution.jobs);
             setLeaderboard(execution.leaderboard);
             setRewards(execution.rewards);
-
-            await recordTrainingTransitionEvent(apiBaseUrl, token, {
-                eventType: 'queue.execution.completed',
-                correlationId,
-                details: {
-                    completedJobs: execution.completedJobs,
-                    attemptedJobs: execution.attemptedJobs,
-                    selectedFile,
-                    workflowMode: mode,
-                },
-            });
             setStatusMessage(
                 mode === 'controller' ?
                     `Controller cycle complete: ${execution.completedJobs} drills processed.` :

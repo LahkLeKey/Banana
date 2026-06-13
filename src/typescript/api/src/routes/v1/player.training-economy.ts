@@ -1,4 +1,4 @@
-import type {FastifyInstance} from 'fastify';
+import type {FastifyInstance, FastifyRequest} from 'fastify';
 import {z} from 'zod';
 
 import {validationError} from '../../lib/errors/domainErrors.ts';
@@ -50,13 +50,8 @@ const transitionEventRequestSchema = z.object({
 });
 
 function buildBulkQueueTemplate(
-    selectedFile: string,
-    indexedFileCount: number,
-    mode: TrainingTemplateMode): Array<{
-  title: string;
-  sector: string;
-  rewardXp: number;
-}> {
+    selectedFile: string, indexedFileCount: number, mode: TrainingTemplateMode):
+    Array<{title: string; sector: string; rewardXp: number;}> {
   const normalized = selectedFile.replace(/\\/g, '/');
   const lane = normalized.split('/').filter(Boolean).pop() ?? selectedFile;
   const sectorLabel = lane.replace(/\.[^.]+$/, '')
@@ -80,8 +75,8 @@ function buildBulkQueueTemplate(
         rewardXp: 190 + controllerScale * 20,
       },
       {
-        title:
-            `Validate controller policies against ${indexedFileCount} indexed files`,
+        title: `Validate controller policies against ${
+            indexedFileCount} indexed files`,
         sector: controllerSector,
         rewardXp: 260 + controllerScale * 30,
       },
@@ -119,20 +114,18 @@ function buildBulkQueueTemplate(
 }
 
 function buildExecutionInput(args: {
-  selectedFile: string;
-  selectedLineCount: number;
-  indexedFileCount: number;
+  selectedFile: string; selectedLineCount: number; indexedFileCount: number;
   index: number;
   jobId: string;
 }): {score: number; durationMs: number; integrityProof: string} {
-  const durationMs =
-      5_000 + args.selectedLineCount * 25 + args.index * 300;
+  const durationMs = 5_000 + args.selectedLineCount * 25 + args.index * 300;
   const scoreCap = Math.floor(durationMs / 5) + 4_500;
   const score = Math.max(
       600,
       Math.min(
           scoreCap,
-          args.selectedLineCount * 28 + args.indexedFileCount + args.index * 120,
+          args.selectedLineCount * 28 + args.indexedFileCount +
+              args.index * 120,
           ),
   );
   const integritySector = args.selectedFile.trim().length > 0 ?
@@ -141,6 +134,11 @@ function buildExecutionInput(args: {
   const integrityProof =
       `${integritySector}:${args.jobId}:${durationMs}:${score}`;
   return {score, durationMs, integrityProof};
+}
+
+function buildTransitionCorrelationId(
+    request: FastifyRequest, eventType: string): string {
+  return `${request.requestContext.correlationId}-${eventType}-${Date.now()}`;
 }
 
 export async function registerV1PlayerTrainingEconomyRoutes(
@@ -184,6 +182,18 @@ export async function registerV1PlayerTrainingEconomyRoutes(
         buildBulkQueueTemplate(
             selectedFile, indexedFileCount, parseResult.data.mode),
     );
+
+    await store.storeTransitionEvent({
+      playerId: actorId,
+      eventType: 'queue.scaffolded',
+      correlationId: buildTransitionCorrelationId(request, 'queue-scaffolded'),
+      details: {
+        jobCount: jobs.length,
+        selectedFile,
+        workflowMode: parseResult.data.mode,
+        indexedFileCount,
+      },
+    });
 
     reply.status(201).send({
       playerId: actorId,
@@ -269,6 +279,17 @@ export async function registerV1PlayerTrainingEconomyRoutes(
       );
     }
 
+    await store.storeTransitionEvent({
+      playerId: actorId,
+      eventType: 'queue.execution.started',
+      correlationId: buildTransitionCorrelationId(
+          request, 'queue-execution-started'),
+      details: {
+        requestedJobs: pending.length,
+        workflowMode: parseResult.data.mode,
+      },
+    });
+
     const completedJobIds: string[] = [];
     for (let index = 0; index < pending.length; index += 1) {
       const job = pending[index];
@@ -297,6 +318,19 @@ export async function registerV1PlayerTrainingEconomyRoutes(
     queue = await store.listJobs(actorId);
     const leaderboard = await store.listLeaderboard(12);
     const rewards = await store.listRewards(actorId);
+
+    await store.storeTransitionEvent({
+      playerId: actorId,
+      eventType: 'queue.execution.completed',
+      correlationId: buildTransitionCorrelationId(
+          request, 'queue-execution-completed'),
+      details: {
+        attemptedJobs: pending.length,
+        completedJobs: completedJobIds.length,
+        selectedFile,
+        workflowMode: parseResult.data.mode,
+      },
+    });
 
     reply.send({
       playerId: actorId,
