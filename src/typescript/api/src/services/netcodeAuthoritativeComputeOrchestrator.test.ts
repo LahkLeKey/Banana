@@ -145,6 +145,13 @@ function createFakeNativeNetcodeService(): NativeNetcodeService {
           deterministicHash: 123456,
           endiannessDecodePath: 'little-endian' as const,
         },
+          envelope: {
+            contractVersion: 1,
+            byteOrderTag: 0x01020304,
+            payloadBytes: 892,
+            payloadCrc32: 987654321,
+            status: 'ok' as const,
+          },
       };
     },
   };
@@ -177,6 +184,15 @@ describe('netcode authoritative compute orchestrator', () => {
         expect(result.contractVersion).toBe(1);
         expect(result.k3h4.observability.deterministicHash)
             .toBe(123456);
+        expect(result.abiLayers).toHaveLength(5);
+        expect(result.abiLayers[4]).toMatchObject({
+          layer: 'hypersphere',
+          contractVersion: 1,
+          status: 'ok',
+          payloadBytes: 892,
+          byteOrderTag: 0x01020304,
+          deterministicHash: 123456,
+        });
         expect(result.lspRepresentation).toMatchObject({
           language: 'netcode.analytics.v1',
           boundedContext: 'netcode',

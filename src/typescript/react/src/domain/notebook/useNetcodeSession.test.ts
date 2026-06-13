@@ -154,6 +154,48 @@ describe('useNetcodeSession contract consumer', () => {
              deterministicHash: 'a1b2c3d4e5',
            },
          },
+         abiLayers: [
+           {
+             layer: 'learning',
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 91,
+           },
+           {
+             layer: 'reward',
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 42,
+           },
+           {
+             layer: 'link',
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 30,
+           },
+           {
+             layer: 'vector',
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 3,
+           },
+           {
+             layer: 'hypersphere',
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 892,
+             byteOrderTag: 0x01020304,
+             deterministicHash: 'a1b2c3d4e5',
+           },
+         ],
          rollout: {enabled: true, cohort: 'canary'},
        };
 
@@ -180,6 +222,12 @@ describe('useNetcodeSession contract consumer', () => {
            .toBe(24576);
        expect(result.current.k3h4.observability.convergenceStatus)
            .toBe('converged');
+       expect(result.current.abiLayers).toHaveLength(5);
+       expect(result.current.abiLayers[4]).toMatchObject({
+         layer: 'hypersphere',
+         payloadBytes: 892,
+         byteOrderTag: 0x01020304,
+       });
        expect(result.current.analyticsAvailability).toMatchObject({
          available: true,
          reason: 'ok',

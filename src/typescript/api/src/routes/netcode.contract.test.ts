@@ -161,6 +161,13 @@ function createFakeNetcode(captured: CapturedArgs): NativeNetcodeService {
           deterministicHash: 123456,
           endiannessDecodePath: 'little-endian' as const,
         },
+        envelope: {
+          contractVersion: 1,
+          byteOrderTag: 0x01020304,
+          payloadBytes: 892,
+          payloadCrc32: 987654321,
+          status: 'ok' as const,
+        },
       };
     },
   };
@@ -200,7 +207,7 @@ describe('netcode analytics contract', () => {
         });
 
         expect(response.statusCode).toBe(200);
-  expect(captured.rewardSignal).toBe(73);
+        expect(captured.rewardSignal).toBe(73);
         expect(captured.linkSignal).toBe(66);
         const json = response.json();
         expect(json).toMatchObject({
@@ -224,6 +231,16 @@ describe('netcode analytics contract', () => {
         expect(json.k3h4.observability).toMatchObject({
           deterministicHash: 123456
         });
+        expect(json.abiLayers).toEqual(expect.arrayContaining([
+          expect.objectContaining({
+            layer: 'hypersphere',
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 892,
+            byteOrderTag: 0x01020304,
+            deterministicHash: 123456,
+          }),
+        ]));
         const payload = response.json() as {
           hypersphere: {
             nodes: Array<{inradius: number; nearestNeighborDistance: number;}>;
