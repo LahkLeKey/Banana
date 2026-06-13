@@ -2,8 +2,8 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 
 import {fetchNetcodeAnalytics, fetchNetcodeLearning, NetcodeAnalyticsError, resolveApiBaseUrl,} from '../../lib/api';
 
-import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 import {mapK3h4AnalyticsToPresentationState,} from './k3h4AnalyticsOrchestrationLayer';
+import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
 type NetcodeSignals = {
   readonly callDensity: number; readonly questPercent: number; readonly comboStreak: number; readonly branchPressure: number; readonly workflowDepth: 1 | 2 | 3; readonly playerLevel: number; readonly dependencyPulse: number; readonly networkDimensions:
@@ -135,7 +135,7 @@ type ApiLearningResponse = {
 
 export type NetcodeSessionHook = {
   readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly k3h4: ContractHypersphereKmeansModel; readonly analyticsAvailability:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               NetcodeAnalyticsAvailabilityModel;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  NetcodeAnalyticsAvailabilityModel;
 };
 
 export function useNetcodeSession({

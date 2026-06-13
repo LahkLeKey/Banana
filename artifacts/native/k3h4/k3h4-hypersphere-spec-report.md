@@ -1,64 +1,114 @@
-# K3H4 Hypersphere Architecture Report
+# K3H4 Endianness, Geometry, and Harmonic Recap Report
 
-## Scope
-This report ties together the k3h4 model intent across native, API, and frontend layers, with focus on:
-- hypersphere-first orchestration
-- endianness-safe contract transport
-- harmonic/spectral interpretation
+## Purpose
+This report summarizes how the full discussion ties together mathematically and architecturally, and how that maps to the Banana k3h4 implementation from native to API to frontend.
 
-## Executive Summary
-- Native now has a top-level k3h4 layer under `src/native/k3h4` used by API-facing scaffold exports.
-- Runtime netcode orchestration uses k3h4 pipeline paths that produce deterministic hypersphere outputs and contract metadata.
-- API and frontend surfaces were renamed from hypersphere-kmeans terminology to k3h4 for contract alignment.
-- Endianness is handled as serialization/transport correctness, not as geometry semantics.
-- Harmonic interpretation is represented by spectral proxy outputs derived from hypersphere radius behavior.
+## Core Conclusion
+At the mathematical layer, endianness does not change k-means, Voronoi partitions, hyperspheres, or fixed-point convergence.
+At the representation layer, endianness is critical because bytes must be interpreted correctly before geometry exists.
 
-## Architecture Flow
-1. Native API export (`src/native/scaffold/native_entry.c`) receives request input.
-2. Export calls top-level k3h4 bridge (`src/native/k3h4/k3h4_native_orchestrator.c`).
-3. Bridge delegates into runtime netcode ABI/orchestration (`src/native/engine/runtime/abi/netcode/netcode_abi.c`).
-4. Runtime k3h4 orchestration computes vector + hypersphere + observability and envelope metadata.
-5. API consumes native outputs and exposes k3h4 contract payloads.
-6. Frontend renders orchestrated values only (no production recompute fallback).
+Short form:
+- Geometry is invariant under correct decode.
+- Geometry collapses under incorrect decode.
+- Therefore endianness belongs to transport and contract integrity, not clustering semantics.
 
-## Endianness Interpretation
-### Mathematical intent
-- K3h4 geometry is defined over interpreted numeric values.
-- Endianness does not alter geometry if bytes are decoded with the correct byte order contract.
+## Conversation Thread, Unified
 
-### Engineering contract
-- Envelope/version/CRC validation protects interpretation correctness.
-- Mixed-endianness handling is explicit via decode-path metadata and validation behavior.
-- Invalid version, malformed payload, and CRC mismatch paths fail deterministically.
+### 1) Geometry and k3h4
+The geometric objects are defined on numeric vectors and distances:
+- coordinates
+- centroids
+- Voronoi cells
+- inscribed hypersphere radii
 
-## Harmonic Interpretation
-- Spectral proxy fields provide harmonic interpretation of cluster/hypersphere state.
-- Radius-derived spectral values are deterministic and ordered by stable cluster identity.
-- This supports a resonance-style interpretation without coupling harmonic semantics to byte order.
+Whether `1.0` is encoded as little-endian or big-endian bytes does not matter once it is decoded into the same numeric value.
 
-## DDD and SOLID Alignment
-### Domain boundaries
-- Native domain: deterministic k3h4 compute and contract envelope formation.
-- API application boundary: orchestration and transport mapping to HTTP contract.
-- Frontend presentation boundary: render-only consumption of authoritative outputs.
+### 2) Where Endianness Actually Enters
+Endianness appears when moving between:
+- memory bytes
+- wire payload bytes
+- interpreted numeric types
 
-### SOLID mapping
-- Single Responsibility: k3h4 native layer isolates API-facing orchestration entrypoints.
-- Open/Closed: runtime k3h4 internals can evolve while preserving stable bridge contracts.
-- Liskov Substitution: deterministic contract behavior is preserved across callers.
-- Interface Segregation: scaffold uses focused build functions rather than cross-domain dependencies.
-- Dependency Inversion: higher layers depend on k3h4 abstraction, not raw runtime internals.
+Conceptually:
+- `ByteString -> interpreted numbers -> vector space -> geometry`
 
-## Validation Signals
-- Native build and focused k3h4/netcode test suites pass for determinism, edge cases, orchestrator parity, and ABI envelope checks.
-- Contract naming parity was migrated to k3h4 across native/API/frontend/spec artifacts.
+If byte order is misinterpreted, decoded numbers are wrong and all downstream geometry (distance, assignment, radius, score) becomes invalid.
 
-## Operational Guidance
-- New native model work should enter via `src/native/k3h4` first.
-- API-facing scaffold exports should continue using the k3h4 bridge.
-- ABI envelope and endianness tests remain mandatory gates for transport integrity.
-- Frontend should treat k3h4 values as authoritative render inputs.
+### 3) Lambda Calculus and Stack Positioning
+Pure lambda calculus has no native byte-order concern.
+Endianness appears only after compilation/runtime lowers values into machine words and byte sequences.
 
-## Note on Term Naming
-- This repository uses `k3h4` as the canonical model identifier.
-- If `k34h` is preferred as an alias in external docs, it should be documented as an alias while keeping code symbols stable under `k3h4`.
+Stack view:
+- lambda/fixed-point semantics
+- typed numeric values
+- machine representation
+- bytes in memory/transport
+
+So endianness is a lower-layer implementation contract, not a higher-layer mathematical law.
+
+### 4) Harmonic Analogy
+Big-endian vs little-endian are not harmonics by themselves.
+But if a byte sequence is treated as a sampled signal, reversing bit order resembles time reversal:
+- magnitude spectrum can remain similar
+- phase relationships change
+
+This gives a useful analogy:
+- byte-order convention affects representation phase
+- cluster/hypersphere structure reflects geometric invariants after correct interpretation
+
+### 5) Hypersphere and Spectral Interpretation
+The discussion linked hypersphere radius to a resonance-style interpretation:
+- larger radius -> lower characteristic frequency proxy
+- smaller radius -> higher characteristic frequency proxy
+
+In k3h4, this maps to deterministic spectral proxy outputs derived from hypersphere metrics.
+
+## How This Maps to Banana Implementation
+
+### Native Layering
+Native is now explicit about top-level model orchestration:
+- `src/native/k3h4` is the API-facing native orchestration layer.
+- Scaffold exports route through k3h4 bridge functions.
+- Runtime netcode orchestration computes deterministic k3h4 outputs and envelope metadata.
+
+### Contract Integrity
+Endianness and payload correctness are enforced by the ABI envelope path:
+- contract version checks
+- payload length checks
+- CRC checks
+- deterministic error status mapping
+
+This enforces the exact boundary where representation correctness must be guaranteed before geometry is trusted.
+
+### API and Frontend Role
+- API remains orchestration/transport boundary for contract-safe outputs.
+- Frontend remains presentation-only for authoritative k3h4 values.
+
+This preserves the intended ownership chain:
+- native compute authority
+- API contract authority
+- frontend render authority
+
+## DDD / SOLID Recap
+
+### Domain Breakdown
+- Native domain: compute, determinism, envelope integrity.
+- API application domain: request orchestration and response shaping.
+- Frontend presentation domain: rendering and UX state only.
+
+### SOLID Interpretation
+- SRP: k3h4 bridge isolates model orchestration responsibilities.
+- OCP: runtime internals can evolve while preserving bridge/ABI contracts.
+- LSP: callers see stable behavior for supported contract versions.
+- ISP: consumers call focused build endpoints.
+- DIP: upper layers depend on stable k3h4 abstractions, not low-level internals.
+
+## Operational Rules Going Forward
+- Treat endianness as a contract-gate concern, never a geometry concern.
+- Keep k3h4 model integration entering through `src/native/k3h4` for API-facing paths.
+- Keep ABI validation and mixed-endian tests as mandatory for release safety.
+- Keep frontend free of production recompute and tied to authoritative payloads.
+
+## Final Recap Statement
+The entire conversation converges on one system principle:
+math and geometry define what should happen, while endianness and ABI contracts ensure every machine agrees on the same numbers so that geometry can exist reliably in production.

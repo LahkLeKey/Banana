@@ -1,5 +1,6 @@
 import type {NetcodeAnalyticsResponse} from '../../lib/api';
-import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, RewardSignalModel, NodeLinkConfidenceModel,} from './network-domain';
+
+import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
 const NODE_ORDER: ContractNodeId[] = ['intel', 'objectives', 'player', 'ops'];
 
@@ -22,8 +23,7 @@ const LABELING_BAND = {
 } as const;
 
 export type K3h4AnalyticsPresentationState = {
-  rewardSignal: RewardSignalModel;
-  linkConfidence: NodeLinkConfidenceModel;
+  rewardSignal: RewardSignalModel; linkConfidence: NodeLinkConfidenceModel;
   contractVectors: readonly ContractNodeVectorModel[];
   hypersphereProjection: ContractHypersphereProjectionModel;
   k3h4: ContractHypersphereKmeansModel;
@@ -32,62 +32,67 @@ export type K3h4AnalyticsPresentationState = {
 export function mapK3h4AnalyticsToPresentationState(
     analytics: NetcodeAnalyticsResponse,
     ): K3h4AnalyticsPresentationState {
-  const rewardTier = analytics.reward.rewardTier === 0 ?
-      'Elite Signal' :
-      analytics.reward.rewardTier === 1 ? 'Relevant' :
-                                          'Needs Labeling';
+  const rewardTier = analytics.reward.rewardTier === 0 ? 'Elite Signal' :
+      analytics.reward.rewardTier === 1                ? 'Relevant' :
+                                                         'Needs Labeling';
   const rewardBand = rewardTier === 'Elite Signal' ? ELITE_BAND :
       rewardTier === 'Relevant'                    ? RELEVANT_BAND :
                                                      LABELING_BAND;
 
-  const contractVectors = NODE_ORDER.map((id, index) => ({
-    id,
-    dimensions: [...(analytics.vector.nodeVectors[index] ?? [])],
-    contractStrength: analytics.vector.contractStrength[index] ?? 0,
-  }));
+  const contractVectors = NODE_ORDER.map(
+      (id, index) => ({
+        id,
+        dimensions: [...(analytics.vector.nodeVectors[index] ?? [])],
+        contractStrength: analytics.vector.contractStrength[index] ?? 0,
+      }));
 
   const hypersphereProjection = {
     dimensions: analytics.hypersphere.dimensions,
-    nodes: NODE_ORDER.map((id, index) => ({
-      id,
-      x: analytics.hypersphere.nodes[index]?.x ?? 0,
-      y: analytics.hypersphere.nodes[index]?.y ?? 0,
-      z: analytics.hypersphere.nodes[index]?.z ?? 0,
-      coherence: analytics.hypersphere.nodes[index]?.coherence ?? 0,
-      inradius: analytics.hypersphere.nodes[index]?.inradius ?? 0,
-      nearestNeighborDistance:
-          analytics.hypersphere.nodes[index]?.nearestNeighborDistance ?? 0,
-    })),
+    nodes: NODE_ORDER.map(
+        (id, index) => ({
+          id,
+          x: analytics.hypersphere.nodes[index]?.x ?? 0,
+          y: analytics.hypersphere.nodes[index]?.y ?? 0,
+          z: analytics.hypersphere.nodes[index]?.z ?? 0,
+          coherence: analytics.hypersphere.nodes[index]?.coherence ?? 0,
+          inradius: analytics.hypersphere.nodes[index]?.inradius ?? 0,
+          nearestNeighborDistance:
+              analytics.hypersphere.nodes[index]?.nearestNeighborDistance ?? 0,
+        })),
     alignment: analytics.hypersphere.alignment,
     radialStability: analytics.hypersphere.radialStability,
   };
 
   const k3h4 = {
-    centers: analytics.k3h4.centers.map((center) => ({
-      clusterId: center.clusterId,
-      centerQ16: [...center.centerQ16],
-      memberVectorIds: [...center.memberVectorIds],
-      memberCount: center.memberCount,
-    })),
-    radii: analytics.k3h4.radii.map((radius) => ({
-      clusterId: radius.clusterId,
-      nearestNeighborDistanceQ16: radius.nearestNeighborDistanceQ16,
-      inscribedRadiusQ16: radius.inscribedRadiusQ16,
-      radiusState: radius.radiusState,
-    })),
-    weightedVoronoiScores: analytics.k3h4.weightedVoronoiScores.map((score) => ({
-      vectorId: score.vectorId,
-      clusterId: score.clusterId,
-      distanceToCenterQ16: score.distanceToCenterQ16,
-      weightedScoreQ16: score.weightedScoreQ16,
-      scoreValidity: score.scoreValidity,
-    })),
-    spectralProxy: analytics.k3h4.spectralProxy.map((entry) => ({
-      clusterId: entry.clusterId,
-      frequencyProxyQ16: entry.frequencyProxyQ16,
-      amplitudeProxyQ16: entry.amplitudeProxyQ16,
-      spectralState: entry.spectralState,
-    })),
+    centers: analytics.k3h4.centers.map(
+        (center) => ({
+          clusterId: center.clusterId,
+          centerQ16: [...center.centerQ16],
+          memberVectorIds: [...center.memberVectorIds],
+          memberCount: center.memberCount,
+        })),
+    radii: analytics.k3h4.radii.map(
+        (radius) => ({
+          clusterId: radius.clusterId,
+          nearestNeighborDistanceQ16: radius.nearestNeighborDistanceQ16,
+          inscribedRadiusQ16: radius.inscribedRadiusQ16,
+          radiusState: radius.radiusState,
+        })),
+    weightedVoronoiScores: analytics.k3h4.weightedVoronoiScores.map(
+        (score) => ({
+          vectorId: score.vectorId,
+          clusterId: score.clusterId,
+          distanceToCenterQ16: score.distanceToCenterQ16,
+          weightedScoreQ16: score.weightedScoreQ16,
+          scoreValidity: score.scoreValidity,
+        })),
+    spectralProxy: analytics.k3h4.spectralProxy.map(
+        (entry) => ({
+          clusterId: entry.clusterId,
+          frequencyProxyQ16: entry.frequencyProxyQ16,
+          amplitudeProxyQ16: entry.amplitudeProxyQ16,
+          spectralState: entry.spectralState,
+        })),
     observability: {
       convergenceStatus: analytics.k3h4.observability.convergenceStatus,
       iterationCount: analytics.k3h4.observability.iterationCount,
