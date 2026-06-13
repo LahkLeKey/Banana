@@ -7,13 +7,13 @@
  * chunk
  */
 
-import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
+import {dlopen, FFIType, type Pointer, ptr} from 'bun:ffi';
 import type {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
-import path from 'node:path';
 
 import {bootstrapPersistentWorldOrchestrationDomain, type PersistentWorldOrchestrationDomain,} from '../domains/persistent-world-orchestration/index.ts';
 import type {ContinuityCheckpointCommitRequest, ContinuityPayload} from '../lib/contracts/v1/persistentWorld.ts';
 import {persistentWorldRevisitBaselineUnavailable,} from '../lib/errors/domainErrors.ts';
+import {resolveBananaNativeLibraryCandidates,} from '../lib/native-library-candidates.ts';
 
 /**
  * ChunkStreamPacket binary format (from C):
@@ -97,44 +97,17 @@ type WorldSymbols = {
           number;
 };
 
-function resolveWorldLibraryCandidates(): string[] {
-  const ext = suffix;
-  const names = [`libbanana_native.${ext}`, `banana_native.${ext}`];
-  const envPath = process.env.BANANA_NATIVE_PATH;
-  const candidates: string[] = [];
-
-  if (envPath && envPath.trim().length > 0) {
-    const trimmed = envPath.trim();
-    if (trimmed.endsWith(`.${ext}`)) {
-      candidates.push(trimmed);
-    } else {
-      for (const name of names) {
-        candidates.push(path.join(trimmed, name));
-      }
-    }
-  }
-
-  const repoRoot = path.resolve(process.cwd(), '../../..');
-  const fallbackDirs = [
-    'out/native/bin',
-    'out/v3-native/Debug',
-    'out/v3-native/Release',
-    'out/v3-native-baseline/Debug',
-    'build/native/bin',
-    'build/native',
-  ];
-
-  for (const name of names) {
-    for (const dir of fallbackDirs) {
-      candidates.push(path.join(repoRoot, dir, name));
-    }
-  }
-
-  return Array.from(new Set(candidates));
-}
-
 function createWorldBinding(): WorldSymbols {
-  const candidates = resolveWorldLibraryCandidates();
+  const candidates = resolveBananaNativeLibraryCandidates({
+    fallbackDirs: [
+      'out/native/bin',
+      'out/v3-native/Debug',
+      'out/v3-native/Release',
+      'out/v3-native-baseline/Debug',
+      'build/native/bin',
+      'build/native',
+    ],
+  });
   let lastError: unknown = null;
 
   for (const candidate of candidates) {

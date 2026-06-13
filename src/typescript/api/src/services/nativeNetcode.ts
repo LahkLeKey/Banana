@@ -1,5 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
-import path from 'node:path';
+import {dlopen, FFIType, type Pointer, ptr} from 'bun:ffi';
+
+import {resolveBananaNativeLibraryCandidates,} from '../lib/native-library-candidates.ts';
 
 export type NetcodeSignalInput = {
   readonly callDensity: number; readonly questPercent: number; readonly comboStreak: number; readonly branchPressure: number; readonly workflowDepth:
@@ -93,49 +94,16 @@ type NativeNetcodeSymbols = {
       (signalInputPtr: Pointer, outOutputPtr: Pointer) => number;
 };
 
-function resolveNativeLibraryCandidates(): string[] {
-  const ext = suffix;
-  const names = [`libbanana_native.${ext}`, `banana_native.${ext}`];
-  const envPath = process.env.BANANA_NATIVE_PATH;
-  const candidates: string[] = [];
-
-  if (envPath && envPath.trim().length > 0) {
-    const trimmed = envPath.trim();
-    if (trimmed.endsWith(`.${ext}`)) {
-      candidates.push(trimmed);
-    } else {
-      for (const name of names) {
-        candidates.push(path.join(trimmed, name));
-      }
-    }
-  }
-
-  const rootCandidates = [
-    process.cwd(),
-    path.resolve(process.cwd(), '..'),
-    path.resolve(process.cwd(), '../../..'),
-  ];
-  const fallbackDirs = [
-    'out/native/bin',
-    'out/v3-native/Debug',
-    'out/v3-native/Release',
-    'build/native/bin',
-    'build/native',
-  ];
-
-  for (const root of rootCandidates) {
-    for (const name of names) {
-      for (const dir of fallbackDirs) {
-        candidates.push(path.join(root, dir, name));
-      }
-    }
-  }
-
-  return Array.from(new Set(candidates));
-}
-
 function createNativeBinding(): NativeNetcodeSymbols {
-  const candidates = resolveNativeLibraryCandidates();
+  const candidates = resolveBananaNativeLibraryCandidates({
+    fallbackDirs: [
+      'out/native/bin',
+      'out/v3-native/Debug',
+      'out/v3-native/Release',
+      'build/native/bin',
+      'build/native',
+    ],
+  });
   let lastError: unknown = null;
 
   for (const candidate of candidates) {

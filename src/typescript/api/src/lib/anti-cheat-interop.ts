@@ -1,5 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
-import path from 'node:path';
+import {dlopen, FFIType, type Pointer, ptr} from 'bun:ffi';
+
+import {resolveBananaNativeLibraryCandidates,} from './native-library-candidates.ts';
 
 export interface AntiCheatScoreResult {
   readonly score: number;
@@ -61,48 +62,21 @@ function boolToInt(value: boolean): number {
   return value ? 1 : 0;
 }
 
-function resolveNativeLibraryCandidates(): string[] {
-  const ext = suffix;
-  const names = [`libbanana_native.${ext}`, `banana_native.${ext}`];
-
-  const envPath = process.env.BANANA_NATIVE_PATH;
-  const candidates: string[] = [];
-
-  if (envPath && envPath.trim().length > 0) {
-    const trimmed = envPath.trim();
-    if (trimmed.endsWith(`.${ext}`)) {
-      candidates.push(trimmed);
-    } else {
-      for (const name of names) {
-        candidates.push(path.join(trimmed, name));
-      }
-    }
-  }
-
-  const repoRoot = path.resolve(process.cwd(), '../../..');
-  const fallbackDirs = [
-    'out/native/bin',
-    'build/native/bin',
-    'build/native',
-    'build/native/Debug',
-    'build/native/Release',
-    'build/cmake-tools',
-    'build/Release',
-    'build/sanitizers',
-    'build/native-static-analysis',
-    'out/native-anticheat-check/Release',
-  ];
-  for (const name of names) {
-    for (const dir of fallbackDirs) {
-      candidates.push(path.join(repoRoot, dir, name));
-    }
-  }
-
-  return Array.from(new Set(candidates));
-}
-
 function createNativeBinding(): NativeAntiCheatSymbols {
-  const candidates = resolveNativeLibraryCandidates();
+  const candidates = resolveBananaNativeLibraryCandidates({
+    fallbackDirs: [
+      'out/native/bin',
+      'build/native/bin',
+      'build/native',
+      'build/native/Debug',
+      'build/native/Release',
+      'build/cmake-tools',
+      'build/Release',
+      'build/sanitizers',
+      'build/native-static-analysis',
+      'out/native-anticheat-check/Release',
+    ],
+  });
   let lastError: unknown = null;
 
   for (const candidate of candidates) {
