@@ -1,7 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-import {createK3h4PresentationApplicationService,} from '../../application/notebook/k3h4/k3h4PresentationApplicationService';
-import {createK3h4PresentationMapperAdapter,} from '../../infrastructure/notebook/k3h4/k3h4PresentationMapperAdapter';
+import {composeK3h4PresentationApplicationService,} from '../../application/notebook/k3h4/k3h4PresentationCompositionRoot';
 import {fetchNetcodeAnalytics, fetchNetcodeLearning, NetcodeAnalyticsError, resolveApiBaseUrl,} from '../../lib/api';
 
 import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
@@ -97,8 +96,7 @@ const DEFAULT_ANALYTICS_AVAILABILITY: NetcodeAnalyticsAvailabilityModel = {
 };
 
 const k3h4PresentationApplicationService =
-    createK3h4PresentationApplicationService(
-        createK3h4PresentationMapperAdapter());
+    composeK3h4PresentationApplicationService();
 
 function mapNativeNodeId(value: number): ContractNodeId {
   if (value === 1) return 'objectives';

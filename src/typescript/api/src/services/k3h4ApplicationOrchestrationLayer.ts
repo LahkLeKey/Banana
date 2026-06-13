@@ -1,5 +1,5 @@
-import {createK3h4ApplicationService, type K3h4ApplicationService,} from '../application/k3h4/k3h4ApplicationService.ts';
-import {createNativeK3h4AuthoritativeAnalyticsAdapter,} from '../infrastructure/k3h4/nativeK3h4AuthoritativeAnalyticsAdapter.ts';
+import type {K3h4ApplicationService} from '../application/k3h4/k3h4ApplicationService.ts';
+import {composeK3h4ApplicationService,} from '../composition/k3h4/k3h4CompositionRoot.ts';
 
 import type {NativeNetcodeService} from './nativeNetcode.ts';
 import type {NetcodeAnalyticsAuthoritativeRequest, NetcodeAnalyticsAuthoritativeResult, NetcodeHypersphereRollout,} from './netcodeAuthoritativeComputeOrchestrator.ts';
@@ -28,7 +28,6 @@ class DefaultK3h4ApplicationOrchestrationLayer implements
 export function createK3h4ApplicationOrchestrationLayer(
     netcode: NativeNetcodeService,
     ): K3h4ApplicationOrchestrationLayer {
-  const analyticsPort = createNativeK3h4AuthoritativeAnalyticsAdapter(netcode);
-  const applicationService = createK3h4ApplicationService(analyticsPort);
+  const applicationService = composeK3h4ApplicationService(netcode);
   return new DefaultK3h4ApplicationOrchestrationLayer(applicationService);
 }
