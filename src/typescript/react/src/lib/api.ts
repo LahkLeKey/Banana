@@ -390,6 +390,14 @@ async function requestJson<T>(
   return (await response.json()) as T;
 }
 
+export async function fetchApiJson<T>(
+    baseUrl: string,
+    path: string,
+    init?: RequestInit,
+    ): Promise<T> {
+  return requestJson<T>(baseUrl, path, init);
+}
+
 function withBearerAuth(token: string): Record<string, string> {
   return {
     authorization: `Bearer ${token}`,

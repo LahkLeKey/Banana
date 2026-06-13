@@ -19,24 +19,11 @@ export function resolveNotebookApiBaseUrl(): string {
 }
 
 function manifestCandidates(apiBaseUrl: string): string[] {
-  // Live API endpoint is always preferred so the explorer reflects the current
-  // native source tree without a manual rebuild. Static asset is the fallback.
-  const candidates: string[] = [];
-  if (apiBaseUrl.length > 0) {
-    candidates.push(joinUrl(apiBaseUrl, '/api/notebooks/catalog-index.json'));
-  }
-  candidates.push('/notebooks/catalog-index.json');
-  return candidates;
+  return [joinUrl(apiBaseUrl, '/api/notebooks/catalog-index.json')];
 }
 
 function notebookCandidates(apiBaseUrl: string): string[] {
-  const candidates: string[] = ['/notebooks/native-c-catalog.ipynb'];
-  if (apiBaseUrl.length > 0) {
-    candidates.push(
-        joinUrl(apiBaseUrl, '/api/notebooks/native-c-catalog.ipynb'));
-    candidates.push(joinUrl(apiBaseUrl, '/notebooks/native-c-catalog.ipynb'));
-  }
-  return candidates;
+  return [joinUrl(apiBaseUrl, '/api/notebooks/native-c-catalog.ipynb')];
 }
 
 async function fetchFirstJson<T>(candidates: string[]):
@@ -77,11 +64,19 @@ export async function fetchNotebookDocument(): Promise<NotebookDocument> {
 export async function fetchNotebookManifestWithSource(
     apiBaseUrl = resolveNotebookApiBaseUrl()):
     Promise<{payload: NotebookManifest; source: string}> {
+  if (apiBaseUrl.length === 0) {
+    throw new Error(
+        'Notebook API base URL is unavailable. Configure VITE_BANANA_API_BASE_URL.');
+  }
   return fetchFirstJson<NotebookManifest>(manifestCandidates(apiBaseUrl));
 }
 
 export async function fetchNotebookDocumentWithSource(
     apiBaseUrl = resolveNotebookApiBaseUrl()):
     Promise<{payload: NotebookDocument; source: string}> {
+  if (apiBaseUrl.length === 0) {
+    throw new Error(
+        'Notebook API base URL is unavailable. Configure VITE_BANANA_API_BASE_URL.');
+  }
   return fetchFirstJson<NotebookDocument>(notebookCandidates(apiBaseUrl));
 }
