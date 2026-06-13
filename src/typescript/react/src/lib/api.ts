@@ -105,14 +105,8 @@ export type NetcodeAnalyticsAbiLayerKind =
     'learning'|'reward'|'link'|'vector'|'hypersphere';
 
 export type NetcodeAnalyticsAbiLayerSnapshot = {
-  readonly layer: NetcodeAnalyticsAbiLayerKind;
-  readonly contractVersion: number;
-  readonly status:
-      'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
-      'crc-mismatch';
-  readonly payloadBytes: number;
-  readonly byteOrderTag: number;
-  readonly deterministicHash: number;
+  readonly layer: NetcodeAnalyticsAbiLayerKind; readonly contractVersion: number; readonly status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch'; readonly payloadBytes: number; readonly byteOrderTag: number; readonly deterministicHash:
+                                                                                                                                                                                                                                                                     number;
 };
 
 export type NetcodeAnalyticsLspRepresentation = {

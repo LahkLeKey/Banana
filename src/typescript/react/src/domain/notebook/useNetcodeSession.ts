@@ -138,9 +138,7 @@ type ApiLearningResponse = {
 };
 
 export type NetcodeSessionHook = {
-  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly k3h4: ContractHypersphereKmeansModel; readonly analyticsAvailability:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  NetcodeAnalyticsAvailabilityModel;
-  readonly abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
+  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly k3h4: ContractHypersphereKmeansModel; readonly analyticsAvailability: NetcodeAnalyticsAvailabilityModel; readonly abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
 };
 
 export function useNetcodeSession({
@@ -166,7 +164,7 @@ export function useNetcodeSession({
       useState<ContractHypersphereProjectionModel>(DEFAULT_HYPERSPHERE);
   const [k3h4, setHypersphereKmeans] =
       useState<ContractHypersphereKmeansModel>(DEFAULT_K3H4);
-    const [abiLayers, setAbiLayers] =
+  const [abiLayers, setAbiLayers] =
       useState<readonly NetcodeAnalyticsAbiLayerSnapshot[]>([]);
   const [analyticsAvailability, setAnalyticsAvailability] =
       useState<NetcodeAnalyticsAvailabilityModel>(

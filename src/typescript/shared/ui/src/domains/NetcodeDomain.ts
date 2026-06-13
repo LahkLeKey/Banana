@@ -1,5 +1,21 @@
 import type {InputAggregator} from './InputDomain';
 
+export type NetcodeAbiLayerKind =
+    'learning'|'reward'|'link'|'vector'|'hypersphere';
+
+export type NetcodeAbiLayerSnapshot = {
+  readonly layer: NetcodeAbiLayerKind;
+  readonly contractVersion: number;
+  readonly status:
+      'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
+      'crc-mismatch';
+  readonly payloadBytes: number;
+  readonly byteOrderTag: number;
+  readonly deterministicHash: number;
+};
+
+export type NetcodeAbiLayerCatalog = readonly NetcodeAbiLayerSnapshot[];
+
 export type AntiCheatViolationReason =|'sequence_regression'|'sequence_gap'|
     'tick_ahead'|'tick_behind'|'clock_skew'|'invalid_axis';
 

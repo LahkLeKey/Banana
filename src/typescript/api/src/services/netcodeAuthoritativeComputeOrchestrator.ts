@@ -8,9 +8,8 @@ export type NetcodeAbiLayerName =
     'learning'|'reward'|'link'|'vector'|'hypersphere';
 
 export type NetcodeAbiLayerSnapshot = {
-  layer: NetcodeAbiLayerName;
-  contractVersion: 1;
-  status: 'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
+  layer: NetcodeAbiLayerName; contractVersion: 1;
+  status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' |
       'crc-mismatch';
   payloadBytes: number;
   byteOrderTag: number;

@@ -1,7 +1,4 @@
-import type {
-  NetcodeAnalyticsAbiLayerSnapshot,
-  NetcodeAnalyticsResponse,
-} from '../../lib/api';
+import type {NetcodeAnalyticsAbiLayerSnapshot, NetcodeAnalyticsResponse,} from '../../lib/api';
 
 import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 

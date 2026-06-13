@@ -218,8 +218,7 @@ describe('useNetcodeSession contract consumer', () => {
          65536,
          32768,
        ]);
-       expect(result.current.k3h4.radii[0]?.inscribedRadiusQ16)
-           .toBe(24576);
+       expect(result.current.k3h4.radii[0]?.inscribedRadiusQ16).toBe(24576);
        expect(result.current.k3h4.observability.convergenceStatus)
            .toBe('converged');
        expect(result.current.abiLayers).toHaveLength(5);
