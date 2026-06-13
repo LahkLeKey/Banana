@@ -112,57 +112,6 @@ function resolveRewardInteractionSignal(
   return Math.round((request.modelConfidence * 2 + request.policyMomentum) / 3);
 }
 
-function buildAbiLayerCatalog(
-    reward: NetcodeRewardOutput,
-    link: NetcodeLinkOutput,
-    vector: NetcodeVectorOutput,
-    hypersphere: NetcodeHypersphereOutput,
-    ): readonly NetcodeAbiLayerSnapshot[] {
-  const hypersphereEnvelope = hypersphere.envelope;
-  return [
-    {
-      layer: 'learning',
-      contractVersion: 1,
-      status: 'ok',
-      payloadBytes: 0,
-      byteOrderTag: 0,
-      deterministicHash: reward.neuralRelevanceScore,
-    },
-    {
-      layer: 'reward',
-      contractVersion: 1,
-      status: 'ok',
-      payloadBytes: 0,
-      byteOrderTag: 0,
-      deterministicHash: reward.projectedRewardXp,
-    },
-    {
-      layer: 'link',
-      contractVersion: 1,
-      status: 'ok',
-      payloadBytes: 0,
-      byteOrderTag: 0,
-      deterministicHash: link.intel + link.objectives + link.player + link.ops,
-    },
-    {
-      layer: 'vector',
-      contractVersion: 1,
-      status: 'ok',
-      payloadBytes: 0,
-      byteOrderTag: 0,
-      deterministicHash: vector.dimensions,
-    },
-    {
-      layer: 'hypersphere',
-      contractVersion: 1,
-      status: hypersphereEnvelope?.status ?? 'ok',
-      payloadBytes: hypersphereEnvelope?.payloadBytes ?? 0,
-      byteOrderTag: hypersphereEnvelope?.byteOrderTag ?? 0,
-      deterministicHash: hypersphere.observability.deterministicHash,
-    },
-  ];
-}
-
 class NativeNetcodeAuthoritativeComputeOrchestrator implements
     NetcodeAnalyticsAuthoritativeComputeOrchestrator {
   constructor(private readonly netcode: NativeNetcodeService) {}
