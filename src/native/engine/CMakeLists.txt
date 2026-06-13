@@ -139,6 +139,11 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/netcode/vector/netcode_kmeans.c
   runtime/netcode/vector/netcode_vector.c
   runtime/netcode/hypersphere/netcode_hypersphere.c
+  runtime/netcode/hypersphere/netcode_hypersphere_pipeline.c
+  runtime/netcode/hypersphere/netcode_hypersphere_pipeline_setup.c
+  runtime/netcode/hypersphere/netcode_hypersphere_geometry.c
+  runtime/netcode/hypersphere/netcode_hypersphere_cluster_scoring.c
+  runtime/netcode/hypersphere/netcode_hypersphere_observability.c
   runtime/netcode/contract/netcode_contract.c
   runtime/abi/netcode/netcode_abi.c
   runtime/abi/physics/physics_abi.c

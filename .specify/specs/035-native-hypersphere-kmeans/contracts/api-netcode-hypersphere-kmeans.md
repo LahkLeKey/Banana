@@ -30,6 +30,18 @@
 ```json
 {
   "contractVersion": 1,
+  "lspRepresentation": {
+    "language": "netcode.analytics.v1",
+    "boundedContext": "netcode",
+    "aggregate": "hypersphere-kmeans",
+    "authority": "server-native",
+    "contractVersion": 1,
+    "deterministicHash": 123456,
+    "rollout": {
+      "enabled": true,
+      "cohort": "all"
+    }
+  },
   "reward": {
     "neuralRelevanceScore": 88,
     "projectedRewardXp": 144,

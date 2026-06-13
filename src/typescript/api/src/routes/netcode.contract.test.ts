@@ -210,6 +210,13 @@ describe('netcode analytics contract', () => {
           link: {intel: 9, objectives: 8, player: 7, ops: 6},
           vector: {dimensions: 3, contractStrength: [11, 22, 33, 44]},
           hypersphere: {dimensions: 3, alignment: 42, radialStability: 73},
+          lspRepresentation: {
+            language: 'netcode.analytics.v1',
+            boundedContext: 'netcode',
+            aggregate: 'hypersphere-kmeans',
+            authority: 'server-native',
+            contractVersion: 1,
+          },
         });
         expect(json.hypersphereKmeans.centers).toEqual(expect.arrayContaining([
           expect.objectContaining({clusterId: 0, memberCount: 2}),

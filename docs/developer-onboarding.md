@@ -24,7 +24,7 @@ Preserve this flow for gameplay and analytics contracts:
 
 The `/api/netcode/analytics` route is authoritative for hypersphere K-means metrics.
 
-- Contract fields include `contractVersion`, `reward`, `link`, `vector`, `hypersphere`, `hypersphereKmeans`, and `rollout`.
+- Contract fields include `contractVersion`, `lspRepresentation`, `reward`, `link`, `vector`, `hypersphere`, `hypersphereKmeans`, and `rollout`.
 - `hypersphereKmeans` includes centers, radii, weighted Voronoi scores, spectral proxy, and observability fields.
 - ABI reliability failures are mapped to deterministic API errors:
   - `ERR_UNSUPPORTED_VERSION`
