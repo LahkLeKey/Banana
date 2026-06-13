@@ -106,6 +106,24 @@ typedef struct banana_native_v3_netcode_hypersphere_output {
 	int32_t radial_stability;
 } banana_native_v3_netcode_hypersphere_output;
 
+#define BANANA_NATIVE_V3_NETCODE_HYPERSPHERE_KMEANS_CONTRACT_VERSION 1
+#define BANANA_NATIVE_V3_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG 0x01020304
+
+typedef enum banana_native_v3_netcode_contract_status {
+	BANANA_NATIVE_V3_NETCODE_CONTRACT_OK = 0,
+	BANANA_NATIVE_V3_NETCODE_CONTRACT_UNSUPPORTED_VERSION = -2001,
+	BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD = -2002,
+	BANANA_NATIVE_V3_NETCODE_CONTRACT_NONFINITE_VALUE = -2003,
+	BANANA_NATIVE_V3_NETCODE_CONTRACT_CRC_MISMATCH = -2004
+} banana_native_v3_netcode_contract_status;
+
+typedef struct banana_native_v3_netcode_contract_envelope_header {
+	int32_t contract_version;
+	int32_t byte_order_tag;
+	int32_t payload_bytes;
+	int32_t payload_crc32;
+} banana_native_v3_netcode_contract_envelope_header;
+
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_abi_version(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_ping(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_pgbouncer_available(void);

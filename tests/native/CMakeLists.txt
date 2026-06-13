@@ -16,3 +16,63 @@ target_include_directories(banana_runtime_netcode_model_test PRIVATE
 add_test(NAME banana_runtime_netcode_model_test
 	COMMAND banana_runtime_netcode_model_test
 )
+
+add_executable(banana_runtime_netcode_hypersphere_kmeans_determinism_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_hypersphere_kmeans_determinism_test.c
+)
+
+target_link_libraries(banana_runtime_netcode_hypersphere_kmeans_determinism_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_netcode_hypersphere_kmeans_determinism_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_netcode_hypersphere_kmeans_determinism_test
+	COMMAND banana_runtime_netcode_hypersphere_kmeans_determinism_test
+)
+
+add_executable(banana_runtime_netcode_hypersphere_kmeans_edge_cases_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_hypersphere_kmeans_edge_cases_test.c
+)
+
+target_link_libraries(banana_runtime_netcode_hypersphere_kmeans_edge_cases_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_netcode_hypersphere_kmeans_edge_cases_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_netcode_hypersphere_kmeans_edge_cases_test
+	COMMAND banana_runtime_netcode_hypersphere_kmeans_edge_cases_test
+)
+
+add_executable(banana_runtime_netcode_abi_envelope_endianness_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_abi_envelope_endianness_test.c
+)
+
+target_link_libraries(banana_runtime_netcode_abi_envelope_endianness_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_netcode_abi_envelope_endianness_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_netcode_abi_envelope_endianness_test
+	COMMAND banana_runtime_netcode_abi_envelope_endianness_test
+)
+
+add_executable(banana_runtime_netcode_abi_error_contract_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_abi_error_contract_test.c
+)
+
+target_link_libraries(banana_runtime_netcode_abi_error_contract_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_netcode_abi_error_contract_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_netcode_abi_error_contract_test
+	COMMAND banana_runtime_netcode_abi_error_contract_test
+)

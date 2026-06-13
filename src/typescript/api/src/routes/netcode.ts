@@ -6,6 +6,24 @@ type NetcodeRouteOptions = {
   netcodeService?: NativeNetcodeService;
 };
 
+type NetcodeHypersphereRollout = {
+  enabled: boolean;
+  cohort: string;
+};
+
+function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
+  const enabledRaw =
+      (process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED ?? 'true')
+          .trim()
+          .toLowerCase();
+  const enabled = enabledRaw !== 'false' && enabledRaw !== '0' &&
+      enabledRaw !== 'off';
+  const cohort =
+      (process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT ?? 'all').trim() ||
+      'all';
+  return {enabled, cohort};
+}
+
 export async function registerNetcodeRoutes(
     app: FastifyInstance,
     options: NetcodeRouteOptions = {},
@@ -140,6 +158,14 @@ export async function registerNetcodeRoutes(
       interactionSignal?: number;
     }
   }>('/api/netcode/analytics', async (request, reply) => {
+    const rollout = resolveNetcodeHypersphereKmeansRollout();
+    if (!rollout.enabled) {
+      return reply.status(503).send({
+        error: 'Netcode hypersphere kmeans analytics rollout disabled',
+        rollout,
+      });
+    }
+
     const body = request.body;
     if (!body || typeof body.callDensity !== 'number' ||
         typeof body.questPercent !== 'number' ||
@@ -195,7 +221,7 @@ export async function registerNetcodeRoutes(
     const vector = await netcode.buildVector(vectorInput);
     const hypersphere = await netcode.buildHypersphere(vectorInput);
 
-    return {reward, link, vector, hypersphere};
+    return {reward, link, vector, hypersphere, rollout};
   });
 
   app.post<{

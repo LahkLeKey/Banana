@@ -17,9 +17,9 @@ description: "Tasks for 035-native-hypersphere-kmeans"
 
 **Purpose**: Establish feature scaffolding and validation entry points.
 
-- [ ] T001 Create feature fixture directories for native/API/React validation in tests/native/runtime/netcode/fixtures/, src/typescript/api/src/routes/__fixtures__/netcode/, and src/typescript/react/src/domain/notebook/__fixtures__/
-- [ ] T002 [P] Add feature rollout environment variable notes and command matrix updates in .specify/specs/035-native-hypersphere-kmeans/quickstart.md
-- [ ] T003 [P] Add feature evidence artifact index for deterministic and rollout captures in artifacts/native/hypersphere-kmeans/README.md
+- [x] T001 Create feature fixture directories for native/API/React validation in tests/native/runtime/netcode/fixtures/, src/typescript/api/src/routes/__fixtures__/netcode/, and src/typescript/react/src/domain/notebook/__fixtures__/
+- [x] T002 [P] Add feature rollout environment variable notes and command matrix updates in .specify/specs/035-native-hypersphere-kmeans/quickstart.md
+- [x] T003 [P] Add feature evidence artifact index for deterministic and rollout captures in artifacts/native/hypersphere-kmeans/README.md
 
 ---
 
@@ -29,10 +29,10 @@ description: "Tasks for 035-native-hypersphere-kmeans"
 
 **CRITICAL**: No US1/US2/US3 implementation tasks start before this phase completes.
 
-- [ ] T004 Define shared native envelope/version/error declarations in src/native/include/banana_native_v3.h and src/native/engine/runtime/abi/netcode/netcode_abi.h
-- [ ] T005 [P] Introduce API rollout gate plumbing for BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED and BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT in src/typescript/api/src/routes/netcode.ts
-- [ ] T006 [P] Add baseline TypeScript contract placeholders for hypersphereKmeans payload shapes in src/typescript/api/src/services/nativeNetcode.ts and src/typescript/react/src/domain/notebook/network-domain.ts
-- [ ] T007 Register new native test executables and ctest entries for hypersphere-kmeans suites in tests/native/CMakeLists.txt
+- [x] T004 Define shared native envelope/version/error declarations in src/native/include/banana_native_v3.h and src/native/engine/runtime/abi/netcode/netcode_abi.h
+- [x] T005 [P] Introduce API rollout gate plumbing for BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED and BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT in src/typescript/api/src/routes/netcode.ts
+- [x] T006 [P] Add baseline TypeScript contract placeholders for hypersphereKmeans payload shapes in src/typescript/api/src/services/nativeNetcode.ts and src/typescript/react/src/domain/notebook/network-domain.ts
+- [x] T007 Register new native test executables and ctest entries for hypersphere-kmeans suites in tests/native/CMakeLists.txt
 
 **Checkpoint**: Shared scaffolding is ready; user stories can proceed in priority order.
 

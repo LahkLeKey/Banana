@@ -31,6 +31,23 @@ export type ContractHypersphereProjectionModel = {
                                                                                                                                       number;
 };
 
+export type ContractHypersphereKmeansContractStatus =
+    'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
+    'crc-mismatch';
+
+export type ContractHypersphereKmeansEnvelope = {
+  readonly contractVersion: number;
+  readonly byteOrderTag: number;
+  readonly payloadBytes: number;
+  readonly payloadCrc32: number;
+  readonly status: ContractHypersphereKmeansContractStatus;
+};
+
+export type ContractHypersphereKmeansRollout = {
+  readonly enabled: boolean;
+  readonly cohort: string;
+};
+
 export type CFileContractNodeModel = {
   readonly filePath: string; readonly signal: number; readonly coupling: number; readonly layerHint:
                                                                                               number;

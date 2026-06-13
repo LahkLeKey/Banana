@@ -44,6 +44,18 @@ export type NetcodeVectorOutput = {
                                                                                                  readonly[number, number, number, number];
 };
 
+export type NetcodeHypersphereKmeansContractStatus =
+    'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
+    'crc-mismatch';
+
+export type NetcodeHypersphereKmeansEnvelope = {
+  readonly contractVersion: number;
+  readonly byteOrderTag: number;
+  readonly payloadBytes: number;
+  readonly payloadCrc32: number;
+  readonly status: NetcodeHypersphereKmeansContractStatus;
+};
+
 export type NetcodeHypersphereNode = {
   readonly x: number; readonly y: number; readonly z: number; readonly coherence: number; readonly inradius: number; readonly nearestNeighborDistance:
                                                                                                                                   number;
@@ -59,6 +71,7 @@ export type NetcodeHypersphereOutput = {
   ];
   readonly alignment: number;
   readonly radialStability: number;
+  readonly envelope?: NetcodeHypersphereKmeansEnvelope;
 };
 
 export interface NativeNetcodeService {

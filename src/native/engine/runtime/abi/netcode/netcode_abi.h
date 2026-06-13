@@ -12,6 +12,26 @@ extern "C"
 {
 #endif
 
+    #define RUNTIME_NETCODE_HYPERSPHERE_KMEANS_CONTRACT_VERSION 1
+    #define RUNTIME_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG 0x01020304
+
+    typedef enum RuntimeNetcodeContractStatus
+    {
+        RUNTIME_NETCODE_CONTRACT_OK = 0,
+        RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION = -3001,
+        RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD = -3002,
+        RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE = -3003,
+        RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH = -3004
+    } RuntimeNetcodeContractStatus;
+
+    typedef struct RuntimeNetcodeContractEnvelopeHeader
+    {
+        int contract_version;
+        int byte_order_tag;
+        int payload_bytes;
+        int payload_crc32;
+    } RuntimeNetcodeContractEnvelopeHeader;
+
     typedef struct RuntimeNetcodeSignalInput
     {
         int call_density;

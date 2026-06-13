@@ -6,6 +6,16 @@
   - `BANANA_NATIVE_PATH` points to compiled native library.
   - `BANANA_NETCODE_ADAPTER=ffi`.
   - `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=true` for staged feature validation.
+  - `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT=<cohort-name>` (for staged cohorts, default `all`).
+
+### Rollout Matrix
+
+| Mode | `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED` | `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT` | Expected `/api/netcode/analytics` behavior |
+|------|----------------------------------------------|---------------------------------------------|--------------------------------------------|
+| Legacy fallback | `false` | any | HTTP `503` with rollout-disabled contract |
+| Internal validation | `true` | `internal` | Full analytics payload with rollout metadata |
+| Cohort staged | `true` | `<cohort>` | Full analytics payload with cohort marker |
+| General rollout | `true` | `all` | Full analytics payload for all callers |
 
 ## 2) Build native runtime
 ```bash
@@ -45,5 +55,6 @@ bun -e "import { registerNetcodeRoutes } from './src/typescript/api/src/routes/n
 
 ## 8) Rollback drill
 1. Set `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=false`.
-2. Re-run API contract test for `/api/netcode/analytics`.
-3. Verify legacy payload path is preserved and UI shows unavailable state for K-means panel.
+2. Optionally set `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT=rollback` for evidence tagging.
+3. Re-run API contract test for `/api/netcode/analytics`.
+4. Verify legacy payload path is preserved and UI shows unavailable state for K-means panel.
