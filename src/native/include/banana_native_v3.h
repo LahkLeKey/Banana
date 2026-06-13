@@ -168,6 +168,11 @@ typedef struct banana_native_v3_netcode_hypersphere_output {
 	banana_native_v3_netcode_weighted_voronoi_score weighted_voronoi_scores[16];
 	banana_native_v3_netcode_spectral_proxy spectral_proxy[4];
 	banana_native_v3_netcode_kmeans_observability observability;
+	int32_t envelope_contract_version;
+	int32_t envelope_byte_order_tag;
+	int32_t envelope_payload_bytes;
+	int32_t envelope_payload_crc32;
+	int32_t contract_status;
 } banana_native_v3_netcode_hypersphere_output;
 
 #define BANANA_NATIVE_V3_NETCODE_HYPERSPHERE_KMEANS_CONTRACT_VERSION 1

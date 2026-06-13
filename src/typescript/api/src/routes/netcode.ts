@@ -218,7 +218,42 @@ export async function registerNetcodeRoutes(
     };
 
     const vector = await netcode.buildVector(vectorInput);
-    const hypersphere = await netcode.buildHypersphere(vectorInput);
+
+    let hypersphere;
+    try {
+      hypersphere = await netcode.buildHypersphere(vectorInput);
+    } catch (error) {
+      const message =
+          error instanceof Error ? error.message : 'Unknown hypersphere error';
+      if (message.includes('Unsupported native hypersphere contract version')) {
+        return reply.status(502).send({
+          errorCode: 'ERR_UNSUPPORTED_VERSION',
+          message,
+          contractVersion: 1,
+          retryable: false,
+          rollout,
+        });
+      }
+      if (message.includes('CRC mismatch')) {
+        return reply.status(502).send({
+          errorCode: 'ERR_BAD_CRC',
+          message,
+          contractVersion: 1,
+          retryable: true,
+          rollout,
+        });
+      }
+      if (message.includes('truncated payload')) {
+        return reply.status(502).send({
+          errorCode: 'ERR_PAYLOAD_TRUNCATED',
+          message,
+          contractVersion: 1,
+          retryable: true,
+          rollout,
+        });
+      }
+      throw error;
+    }
 
     const hypersphereKmeans = {
       centers: hypersphere.centers,

@@ -202,13 +202,21 @@ describe('netcode analytics contract', () => {
         expect(response.statusCode).toBe(200);
         expect(captured.rewardSignal).toBe(77);
         expect(captured.linkSignal).toBe(66);
-        expect(response.json()).toMatchObject({
+        const json = response.json();
+        expect(json).toMatchObject({
+          contractVersion: 1,
           reward:
               {neuralRelevanceScore: 88, projectedRewardXp: 144, rewardTier: 1},
           link: {intel: 9, objectives: 8, player: 7, ops: 6},
           vector: {dimensions: 3, contractStrength: [11, 22, 33, 44]},
           hypersphere: {dimensions: 3, alignment: 42, radialStability: 73},
         });
+        expect(json.hypersphereKmeans.centers)
+            .toEqual(expect.arrayContaining([
+              expect.objectContaining({clusterId: 0, memberCount: 2}),
+            ]));
+        expect(json.hypersphereKmeans.observability)
+            .toMatchObject({deterministicHash: 123456});
         const payload = response.json() as {
           hypersphere: {
             nodes: Array<{inradius: number; nearestNeighborDistance: number;}>;
@@ -242,6 +250,43 @@ describe('netcode analytics contract', () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toMatchObject({
       error: 'Invalid netcode analytics payload'
+    });
+
+    await app.close();
+  });
+
+  test('returns deterministic unsupported-version error payload', async () => {
+    const captured: CapturedArgs = {};
+    const failingService: NativeNetcodeService = {
+      ...createFakeNetcode(captured),
+      async buildHypersphere() {
+        throw new Error('Unsupported native hypersphere contract version');
+      },
+    };
+    const app = await createApp(failingService);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/analytics',
+      payload: {
+        callDensity: 10,
+        questPercent: 20,
+        playerLevel: 30,
+        comboStreak: 40,
+        branchPressure: 50,
+        dependencyPulse: 60,
+        workflowDepth: 2,
+        networkDimensions: 6,
+        modelConfidence: 77,
+        policyMomentum: 66,
+      },
+    });
+
+    expect(response.statusCode).toBe(502);
+    expect(response.json()).toMatchObject({
+      errorCode: 'ERR_UNSUPPORTED_VERSION',
+      contractVersion: 1,
+      retryable: false,
     });
 
     await app.close();

@@ -72,20 +72,20 @@ description: "Tasks for 035-native-hypersphere-kmeans"
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Add native mixed-endianness envelope conformance test in tests/native/runtime/netcode/netcode_abi_envelope_endianness_test.c
-- [ ] T019 [P] [US2] Add native malformed payload and unsupported version test in tests/native/runtime/netcode/netcode_abi_error_contract_test.c
-- [ ] T020 [P] [US2] Expand API contract tests for /api/netcode/analytics hypersphereKmeans success/error payloads in src/typescript/api/src/routes/netcode.contract.test.ts
-- [ ] T021 [P] [US2] Add API integration test for FFI decode failures and rollout-off fallback behavior in src/typescript/api/src/routes/netcode.integration.test.ts
+- [x] T018 [P] [US2] Add native mixed-endianness envelope conformance test in tests/native/runtime/netcode/netcode_abi_envelope_endianness_test.c
+- [x] T019 [P] [US2] Add native malformed payload and unsupported version test in tests/native/runtime/netcode/netcode_abi_error_contract_test.c
+- [x] T020 [P] [US2] Expand API contract tests for /api/netcode/analytics hypersphereKmeans success/error payloads in src/typescript/api/src/routes/netcode.contract.test.ts
+- [x] T021 [P] [US2] Add API integration test for FFI decode failures and rollout-off fallback behavior in src/typescript/api/src/routes/netcode.integration.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Implement little-endian envelope encode/decode with CRC, payload length, and deterministic status handling in src/native/engine/runtime/abi/netcode/netcode_abi.c
-- [ ] T023 [US2] Finalize ABI envelope constants, status enums, and payload section structs in src/native/engine/runtime/abi/netcode/netcode_abi.h
-- [ ] T024 [US2] Propagate contract version/error states through exported native entrypoints in src/native/include/banana_native_v3.h and src/native/scaffold/native_entry.c
-- [ ] T025 [US2] Update FFI decoding and type mapping for hypersphereKmeans envelope payloads in src/typescript/api/src/services/nativeNetcode.ts
-- [ ] T026 [US2] Add fail-fast coverage for unsupported version, CRC mismatch, and truncated payload handling in src/typescript/api/src/services/nativeNetcode.fail-fast.test.ts
-- [ ] T027 [US2] Update /api/netcode/analytics response shaping, deterministic ordering, and rollout controls in src/typescript/api/src/routes/netcode.ts
-- [ ] T028 [US2] Register US2 ABI reliability native tests in tests/native/CMakeLists.txt
+- [x] T022 [US2] Implement little-endian envelope encode/decode with CRC, payload length, and deterministic status handling in src/native/engine/runtime/abi/netcode/netcode_abi.c
+- [x] T023 [US2] Finalize ABI envelope constants, status enums, and payload section structs in src/native/engine/runtime/abi/netcode/netcode_abi.h
+- [x] T024 [US2] Propagate contract version/error states through exported native entrypoints in src/native/include/banana_native_v3.h and src/native/scaffold/native_entry.c
+- [x] T025 [US2] Update FFI decoding and type mapping for hypersphereKmeans envelope payloads in src/typescript/api/src/services/nativeNetcode.ts
+- [x] T026 [US2] Add fail-fast coverage for unsupported version, CRC mismatch, and truncated payload handling in src/typescript/api/src/services/nativeNetcode.fail-fast.test.ts
+- [x] T027 [US2] Update /api/netcode/analytics response shaping, deterministic ordering, and rollout controls in src/typescript/api/src/routes/netcode.ts
+- [x] T028 [US2] Register US2 ABI reliability native tests in tests/native/CMakeLists.txt
 
 **Checkpoint**: Cross-boundary contract reliability and deterministic error behavior are independently validated.
 

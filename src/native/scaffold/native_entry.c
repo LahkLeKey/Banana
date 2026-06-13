@@ -14,6 +14,25 @@ static char s_pgbouncer_pool_mode[32] = "transaction";
 static int s_pgbouncer_default_pool_size = 20;
 static int s_world_initialized = 0;
 
+static int32_t map_runtime_contract_status(int status)
+{
+	switch (status)
+	{
+	case RUNTIME_NETCODE_CONTRACT_OK:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_OK;
+	case RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_UNSUPPORTED_VERSION;
+	case RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD;
+	case RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_NONFINITE_VALUE;
+	case RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_CRC_MISMATCH;
+	default:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD;
+	}
+}
+
 static int ensure_world_initialized(void)
 {
 	if (s_world_initialized)
@@ -429,6 +448,16 @@ int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_ve
 	out_output->observability.assignment_changes_last_iteration = native_output.observability.assignment_changes_last_iteration;
 	out_output->observability.deterministic_hash = native_output.observability.deterministic_hash;
 	out_output->observability.endianness_decode_path = native_output.observability.endianness_decode_path;
+	out_output->envelope_contract_version = native_output.envelope.contract_version;
+	out_output->envelope_byte_order_tag = native_output.envelope.byte_order_tag;
+	out_output->envelope_payload_bytes = native_output.envelope.payload_bytes;
+	out_output->envelope_payload_crc32 = native_output.envelope.payload_crc32;
+	out_output->contract_status = map_runtime_contract_status(native_output.envelope.contract_status);
+
+	if (native_output.envelope.contract_status != RUNTIME_NETCODE_CONTRACT_OK)
+	{
+		return native_output.envelope.contract_status;
+	}
 
 	return 0;
 }

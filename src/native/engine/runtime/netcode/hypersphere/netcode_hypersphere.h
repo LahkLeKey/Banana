@@ -84,6 +84,15 @@ extern "C"
         int endianness_decode_path;
     } RuntimeNetcodeKmeansObservability;
 
+    typedef struct RuntimeNetcodeEnvelopeMetadata
+    {
+        int contract_version;
+        int byte_order_tag;
+        int payload_bytes;
+        int payload_crc32;
+        int contract_status;
+    } RuntimeNetcodeEnvelopeMetadata;
+
     typedef struct RuntimeNetcodeHypersphereOutput
     {
         int dimensions;
@@ -98,6 +107,7 @@ extern "C"
             RUNTIME_NETCODE_VECTOR_NODE_COUNT * RUNTIME_NETCODE_VECTOR_NODE_COUNT];
         RuntimeNetcodeSpectralProxy spectral_proxy[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
         RuntimeNetcodeKmeansObservability observability;
+        RuntimeNetcodeEnvelopeMetadata envelope;
     } RuntimeNetcodeHypersphereOutput;
 
     int runtime_netcode_hypersphere_build(const RuntimeNetcodeVectorOutput *input,
