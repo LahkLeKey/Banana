@@ -70,9 +70,8 @@ export type NetcodeHypersphereEndiannessDecodePath =
 type NetcodeQ16Vector = readonly number[];
 
 export type NetcodeHypersphereKmeansCenter = {
-  readonly clusterId: number;
-  readonly memberCount: number;
-  readonly centerQ16: NetcodeQ16Vector;
+  readonly clusterId: number; readonly memberCount: number; readonly centerQ16:
+                                                                         NetcodeQ16Vector;
 };
 
 export type NetcodeHypersphereKmeansRadius = {
