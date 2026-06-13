@@ -1,5 +1,5 @@
-import {composeK3h4ApplicationService,} from '../composition/k3h4/k3h4CompositionRoot.ts';
 import type {K3h4ApplicationService} from '../application/k3h4/k3h4ApplicationService.ts';
+import {composeK3h4ApplicationService,} from '../composition/k3h4/k3h4CompositionRoot.ts';
 
 import type {NativeNetcodeService} from './nativeNetcode.ts';
 import type {NetcodeAnalyticsAuthoritativeRequest, NetcodeAnalyticsAuthoritativeResult, NetcodeHypersphereRollout,} from './netcodeAuthoritativeComputeOrchestrator.ts';

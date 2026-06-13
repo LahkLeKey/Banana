@@ -96,7 +96,7 @@ const DEFAULT_ANALYTICS_AVAILABILITY: NetcodeAnalyticsAvailabilityModel = {
 };
 
 const k3h4PresentationApplicationService =
-  composeK3h4PresentationApplicationService();
+    composeK3h4PresentationApplicationService();
 
 function mapNativeNodeId(value: number): ContractNodeId {
   if (value === 1) return 'objectives';
