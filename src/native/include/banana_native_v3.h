@@ -120,18 +120,18 @@ typedef enum banana_native_v3_netcode_endianness_decode_path {
 	BANANA_NATIVE_V3_NETCODE_ENDIANNESS_BYTE_SWAPPED = 1,
 } banana_native_v3_netcode_endianness_decode_path;
 
-typedef struct banana_native_v3_netcode_kmeans_center {
+typedef struct banana_native_v3_netcode_k3h4_center {
 	int32_t cluster_id;
 	int32_t member_count;
 	int32_t center_q16[16];
-} banana_native_v3_netcode_kmeans_center;
+} banana_native_v3_netcode_k3h4_center;
 
-typedef struct banana_native_v3_netcode_kmeans_radius {
+typedef struct banana_native_v3_netcode_k3h4_radius {
 	int32_t cluster_id;
 	int32_t nearest_neighbor_distance_q16;
 	int32_t inscribed_radius_q16;
 	int32_t radius_state;
-} banana_native_v3_netcode_kmeans_radius;
+} banana_native_v3_netcode_k3h4_radius;
 
 typedef struct banana_native_v3_netcode_weighted_voronoi_score {
 	int32_t vector_id;
@@ -148,13 +148,13 @@ typedef struct banana_native_v3_netcode_spectral_proxy {
 	int32_t spectral_state;
 } banana_native_v3_netcode_spectral_proxy;
 
-typedef struct banana_native_v3_netcode_kmeans_observability {
+typedef struct banana_native_v3_netcode_k3h4_observability {
 	int32_t convergence_status;
 	int32_t iteration_count;
 	int32_t assignment_changes_last_iteration;
 	int32_t deterministic_hash;
 	int32_t endianness_decode_path;
-} banana_native_v3_netcode_kmeans_observability;
+} banana_native_v3_netcode_k3h4_observability;
 
 typedef struct banana_native_v3_netcode_hypersphere_output {
 	int32_t dimensions;
@@ -163,11 +163,11 @@ typedef struct banana_native_v3_netcode_hypersphere_output {
 	int32_t radial_stability;
 	int32_t cluster_count;
 	int32_t vector_count;
-	banana_native_v3_netcode_kmeans_center centers[4];
-	banana_native_v3_netcode_kmeans_radius radii[4];
+	banana_native_v3_netcode_k3h4_center centers[4];
+	banana_native_v3_netcode_k3h4_radius radii[4];
 	banana_native_v3_netcode_weighted_voronoi_score weighted_voronoi_scores[16];
 	banana_native_v3_netcode_spectral_proxy spectral_proxy[4];
-	banana_native_v3_netcode_kmeans_observability observability;
+	banana_native_v3_netcode_k3h4_observability observability;
 	int32_t envelope_contract_version;
 	int32_t envelope_byte_order_tag;
 	int32_t envelope_payload_bytes;
@@ -175,8 +175,8 @@ typedef struct banana_native_v3_netcode_hypersphere_output {
 	int32_t contract_status;
 } banana_native_v3_netcode_hypersphere_output;
 
-#define BANANA_NATIVE_V3_NETCODE_HYPERSPHERE_KMEANS_CONTRACT_VERSION 1
-#define BANANA_NATIVE_V3_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG 0x01020304
+#define BANANA_NATIVE_V3_NETCODE_K3H4_CONTRACT_VERSION 1
+#define BANANA_NATIVE_V3_NETCODE_K3H4_BYTE_ORDER_TAG 0x01020304
 
 typedef enum banana_native_v3_netcode_contract_status {
 	BANANA_NATIVE_V3_NETCODE_CONTRACT_OK = 0,

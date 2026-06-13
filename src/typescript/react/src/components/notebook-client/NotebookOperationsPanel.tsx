@@ -18,8 +18,8 @@ type NotebookOperationsPanelProps = {
     overlay?: boolean;
     analyticsAvailable?: boolean;
     analyticsCohort?: string;
-    kmeansClusters?: number;
-    kmeansConvergence?: string;
+    k3h4Clusters?: number;
+    k3h4Convergence?: string;
 };
 
 function deriveThreatIndex(selectedFile: string): string {
@@ -65,8 +65,8 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
         overlay = false,
         analyticsAvailable = true,
         analyticsCohort = 'default',
-        kmeansClusters = 0,
-        kmeansConvergence = 'unknown',
+        k3h4Clusters = 0,
+        k3h4Convergence = 'unknown',
     } = props;
 
     const threatIndex = useMemo(() => deriveThreatIndex(selectedFile), [selectedFile]);
@@ -341,8 +341,8 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
                                 <HudStatusChip label="Mode" value={overlayModeLabel} color="#67e8f9" borderColor="rgba(45, 212, 191, 0.32)" />
                                 <HudStatusChip label="Net" value={networkStatusLabel} color="#93c5fd" borderColor="rgba(148, 163, 184, 0.26)" />
                                 <HudStatusChip label="Auth" value="Server" color="#fcd34d" borderColor="rgba(251, 191, 36, 0.28)" />
-                                <HudStatusChip label="KMeans" value={`${kmeansClusters} clusters`} color="#a7f3d0" borderColor="rgba(16, 185, 129, 0.28)" />
-                                <HudStatusChip label="Converge" value={kmeansConvergence} color="#bae6fd" borderColor="rgba(56, 189, 248, 0.3)" />
+                                <HudStatusChip label="K3H4" value={`${k3h4Clusters} clusters`} color="#a7f3d0" borderColor="rgba(16, 185, 129, 0.28)" />
+                                <HudStatusChip label="Converge" value={k3h4Convergence} color="#bae6fd" borderColor="rgba(56, 189, 248, 0.3)" />
                                 <HudStatusChip label="Analytics" value={analyticsStatusLabel} color={analyticsAvailable ? '#86efac' : '#fda4af'} borderColor={analyticsAvailable ? 'rgba(34, 197, 94, 0.28)' : 'rgba(244, 63, 94, 0.3)'} />
                                 <HudStatusChip label="Deck" value={deckStatusLabel} color="#99f6e4" borderColor="rgba(45, 212, 191, 0.3)" />
                             </div>
@@ -376,8 +376,8 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
                 <Pill color="#86efac" borderColor="rgba(34, 197, 94, 0.35)">{selectedLineCount} lines</Pill>
                 <Pill color={loading ? '#fcd34d' : '#86efac'} borderColor={loading ? 'rgba(251, 191, 36, 0.3)' : 'rgba(34, 197, 94, 0.3)'}>{networkStatusLabel}</Pill>
                 <Pill color={analyticsAvailable ? '#86efac' : '#fda4af'} borderColor={analyticsAvailable ? 'rgba(34, 197, 94, 0.28)' : 'rgba(244, 63, 94, 0.3)'}>{analyticsStatusLabel}</Pill>
-                <Pill color="#a7f3d0" borderColor="rgba(16, 185, 129, 0.28)">KMeans: {kmeansClusters}</Pill>
-                <Pill color="#bae6fd" borderColor="rgba(56, 189, 248, 0.3)">Convergence: {kmeansConvergence}</Pill>
+                <Pill color="#a7f3d0" borderColor="rgba(16, 185, 129, 0.28)">K3H4: {k3h4Clusters}</Pill>
+                <Pill color="#bae6fd" borderColor="rgba(56, 189, 248, 0.3)">Convergence: {k3h4Convergence}</Pill>
                 <Pill color="#e9d5ff" borderColor="rgba(168, 85, 247, 0.26)">Cohort: {analyticsCohort}</Pill>
             </div>
 

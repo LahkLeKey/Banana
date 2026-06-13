@@ -83,7 +83,7 @@ const DEFAULT_HYPERSPHERE: ContractHypersphereProjectionModel = {
   radialStability: 0,
 };
 
-const DEFAULT_HYPERSPHERE_KMEANS: ContractHypersphereKmeansModel = {
+const DEFAULT_K3H4: ContractHypersphereKmeansModel = {
   centers: [],
   radii: [],
   weightedVoronoiScores: [],
@@ -147,7 +147,7 @@ type ApiLearningResponse = {
 };
 
 export type NetcodeSessionHook = {
-  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly hypersphereKmeans: ContractHypersphereKmeansModel; readonly analyticsAvailability:
+  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly k3h4: ContractHypersphereKmeansModel; readonly analyticsAvailability:
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                NetcodeAnalyticsAvailabilityModel;
 };
 
@@ -172,8 +172,8 @@ export function useNetcodeSession({
       useState<readonly ContractNodeVectorModel[]>([]);
   const [hypersphereProjection, setHypersphereProjection] =
       useState<ContractHypersphereProjectionModel>(DEFAULT_HYPERSPHERE);
-  const [hypersphereKmeans, setHypersphereKmeans] =
-      useState<ContractHypersphereKmeansModel>(DEFAULT_HYPERSPHERE_KMEANS);
+  const [k3h4, setHypersphereKmeans] =
+      useState<ContractHypersphereKmeansModel>(DEFAULT_K3H4);
   const [analyticsAvailability, setAnalyticsAvailability] =
       useState<NetcodeAnalyticsAvailabilityModel>(
           DEFAULT_ANALYTICS_AVAILABILITY);
@@ -338,14 +338,14 @@ export function useNetcodeSession({
             });
 
             setHypersphereKmeans({
-              centers: analytics.hypersphereKmeans.centers.map(
+              centers: analytics.k3h4.centers.map(
                   (center) => ({
                     clusterId: center.clusterId,
                     centerQ16: [...center.centerQ16],
                     memberVectorIds: [...center.memberVectorIds],
                     memberCount: center.memberCount,
                   })),
-              radii: analytics.hypersphereKmeans.radii.map(
+              radii: analytics.k3h4.radii.map(
                   (radius) => ({
                     clusterId: radius.clusterId,
                     nearestNeighborDistanceQ16:
@@ -354,7 +354,7 @@ export function useNetcodeSession({
                     radiusState: radius.radiusState,
                   })),
               weightedVoronoiScores:
-                  analytics.hypersphereKmeans.weightedVoronoiScores.map(
+                  analytics.k3h4.weightedVoronoiScores.map(
                       (score) => ({
                         vectorId: score.vectorId,
                         clusterId: score.clusterId,
@@ -362,7 +362,7 @@ export function useNetcodeSession({
                         weightedScoreQ16: score.weightedScoreQ16,
                         scoreValidity: score.scoreValidity,
                       })),
-              spectralProxy: analytics.hypersphereKmeans.spectralProxy.map(
+              spectralProxy: analytics.k3h4.spectralProxy.map(
                   (entry) => ({
                     clusterId: entry.clusterId,
                     frequencyProxyQ16: entry.frequencyProxyQ16,
@@ -371,16 +371,16 @@ export function useNetcodeSession({
                   })),
               observability: {
                 convergenceStatus:
-                    analytics.hypersphereKmeans.observability.convergenceStatus,
+                    analytics.k3h4.observability.convergenceStatus,
                 iterationCount:
-                    analytics.hypersphereKmeans.observability.iterationCount,
+                    analytics.k3h4.observability.iterationCount,
                 assignmentChangesLastIteration:
-                    analytics.hypersphereKmeans.observability
+                    analytics.k3h4.observability
                         .assignmentChangesLastIteration,
                 scoringValidity:
-                    analytics.hypersphereKmeans.observability.scoringValidity,
+                    analytics.k3h4.observability.scoringValidity,
                 deterministicHash:
-                    analytics.hypersphereKmeans.observability.deterministicHash,
+                    analytics.k3h4.observability.deterministicHash,
               },
             });
 
@@ -457,7 +457,7 @@ export function useNetcodeSession({
     linkConfidence,
     contractVectors,
     hypersphereProjection,
-    hypersphereKmeans,
+    k3h4,
     analyticsAvailability,
   };
 }

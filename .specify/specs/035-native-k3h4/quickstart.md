@@ -1,16 +1,16 @@
 # Quickstart: Native Hypersphere K-Means Analytics
 
 ## 1) Prerequisites
-- Branch: `035-native-hypersphere-kmeans`
+- Branch: `035-native-k3h4`
 - Required env:
   - `BANANA_NATIVE_PATH` points to compiled native library.
   - `BANANA_NETCODE_ADAPTER=ffi`.
-  - `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=true` for staged feature validation.
-  - `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT=<cohort-name>` (for staged cohorts, default `all`).
+  - `BANANA_NETCODE_K3H4_ENABLED=true` for staged feature validation.
+  - `BANANA_NETCODE_K3H4_COHORT=<cohort-name>` (for staged cohorts, default `all`).
 
 ### Rollout Matrix
 
-| Mode | `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED` | `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT` | Expected `/api/netcode/analytics` behavior |
+| Mode | `BANANA_NETCODE_K3H4_ENABLED` | `BANANA_NETCODE_K3H4_COHORT` | Expected `/api/netcode/analytics` behavior |
 |------|----------------------------------------------|---------------------------------------------|--------------------------------------------|
 | Legacy fallback | `false` | any | HTTP `503` with rollout-disabled contract |
 | Internal validation | `true` | `internal` | Full analytics payload with rollout metadata |
@@ -25,12 +25,12 @@ cmake --build out/v3-native
 
 ### Optional high-performance backend knobs
 - `BANANA_NETCODE_ENABLE_BLAS=ON|OFF` (CMake option, default `ON`): enables CBLAS path when `cblas.h` and BLAS libs are available.
-- `BANANA_NETCODE_KMEANS_BACKEND=auto|blas|scalar` (runtime env): selects distance kernel backend. `auto` prefers BLAS when compiled in; otherwise deterministic scalar path.
+- `BANANA_NETCODE_K3H4_BACKEND=auto|blas|scalar` (runtime env): selects distance kernel backend. `auto` prefers BLAS when compiled in; otherwise deterministic scalar path.
 - Production contract is CPU-only (scalar/BLAS). GPU backends are intentionally out of scope for this feature.
 
 ## 3) Run focused native tests
 ```bash
-ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|kmeans" --output-on-failure
+ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure
 ```
 
 ## 4) Run API route/service contract tests
@@ -67,8 +67,8 @@ bun -e "import { registerNetcodeRoutes } from './src/typescript/api/src/routes/n
 4. Assert `observability.deterministicHash` is identical for all runs.
 
 ## 8) Rollback drill
-1. Set `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=false`.
-2. Optionally set `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT=rollback` for evidence tagging.
+1. Set `BANANA_NETCODE_K3H4_ENABLED=false`.
+2. Optionally set `BANANA_NETCODE_K3H4_COHORT=rollback` for evidence tagging.
 3. Re-run API contract test for `/api/netcode/analytics`.
 4. Verify legacy payload path is preserved and UI shows unavailable state for K-means panel.
 
@@ -76,18 +76,18 @@ bun -e "import { registerNetcodeRoutes } from './src/typescript/api/src/routes/n
 
 Collect and store evidence in:
 
-- Native: `artifacts/native/hypersphere-kmeans/determinism/<timestamp>/`
-- API: `artifacts/api/035-native-hypersphere-kmeans/<timestamp>/`
+- Native: `artifacts/native/k3h4/determinism/<timestamp>/`
+- API: `artifacts/api/035-native-k3h4/<timestamp>/`
 
 Recommended capture commands:
 
 ```bash
 cd /c/Github/Banana
-ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|kmeans" --output-on-failure | tee artifacts/native/hypersphere-kmeans/determinism/<timestamp>/ctest.log
+ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure | tee artifacts/native/k3h4/determinism/<timestamp>/ctest.log
 
 cd src/typescript/api
-bun test src/routes/netcode.contract.test.ts src/routes/netcode.integration.test.ts src/services/nativeNetcode.fail-fast.test.ts | tee ../../../artifacts/api/035-native-hypersphere-kmeans/<timestamp>/api-contract.log
+bun test src/routes/netcode.contract.test.ts src/routes/netcode.integration.test.ts src/services/nativeNetcode.fail-fast.test.ts | tee ../../../artifacts/api/035-native-k3h4/<timestamp>/api-contract.log
 
 cd ../react
-bun test src/domain/notebook/useNetcodeSession.test.ts src/domain/notebook/network-domain.test.ts | tee ../../../artifacts/api/035-native-hypersphere-kmeans/<timestamp>/react-consumer.log
+bun test src/domain/notebook/useNetcodeSession.test.ts src/domain/notebook/network-domain.test.ts | tee ../../../artifacts/api/035-native-k3h4/<timestamp>/react-consumer.log
 ```

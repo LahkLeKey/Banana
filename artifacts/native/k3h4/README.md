@@ -10,8 +10,8 @@ This directory tracks deterministic and rollout evidence artifacts for feature 0
 
 ## Rollout Captures
 
-- `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=true` validation logs
-- Cohort marker captures for `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT`
+- `BANANA_NETCODE_K3H4_ENABLED=true` validation logs
+- Cohort marker captures for `BANANA_NETCODE_K3H4_COHORT`
 - Rollback drill evidence with rollout-disabled API response contracts
 
 ## Naming Guidance
@@ -26,7 +26,7 @@ Include command transcripts and test outputs in each capture.
 ## Validation Reference Set (Feature 035)
 
 - Native deterministic and ABI conformance:
-	- `ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|kmeans" --output-on-failure`
+	- `ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure`
 	- Save logs under `determinism/<timestamp>/ctest.log`.
 - API contract reliability:
 	- `bun test src/routes/netcode.contract.test.ts src/routes/netcode.integration.test.ts src/services/nativeNetcode.fail-fast.test.ts`

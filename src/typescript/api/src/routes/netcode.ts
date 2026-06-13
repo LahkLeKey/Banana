@@ -11,13 +11,13 @@ type NetcodeRouteOptions = {
 
 function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
   const enabledRaw =
-      (process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED ?? 'true')
+      (process.env.BANANA_NETCODE_K3H4_ENABLED ?? 'true')
           .trim()
           .toLowerCase();
   const enabled =
       enabledRaw !== 'false' && enabledRaw !== '0' && enabledRaw !== 'off';
   const cohort =
-      (process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT ?? 'all').trim() ||
+      (process.env.BANANA_NETCODE_K3H4_COHORT ?? 'all').trim() ||
       'all';
   return {enabled, cohort};
 }
@@ -162,7 +162,7 @@ export async function registerNetcodeRoutes(
     const rollout = resolveNetcodeHypersphereKmeansRollout();
     if (!rollout.enabled) {
       return reply.status(503).send({
-        error: 'Netcode hypersphere kmeans analytics rollout disabled',
+        error: 'Netcode hypersphere k3h4 analytics rollout disabled',
         rollout,
       });
     }

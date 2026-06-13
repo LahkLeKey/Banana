@@ -10,10 +10,14 @@ option(BANANA_ENABLE_DETERMINISTIC_PERSISTENCE_TESTS
 
 add_subdirectory(engine)
 
-add_library(banana_native SHARED scaffold/native_entry.c)
+add_library(banana_native SHARED
+	scaffold/native_entry.c
+	k3h4/k3h4_native_orchestrator.c
+)
 set_target_properties(banana_native PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 target_include_directories(banana_native PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/engine
 	${CMAKE_CURRENT_SOURCE_DIR}/engine/runtime

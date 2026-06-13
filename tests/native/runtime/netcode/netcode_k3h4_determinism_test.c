@@ -5,7 +5,7 @@
 
 static int fail(const char *message)
 {
-    fprintf(stderr, "[netcode-kmeans-determinism] %s\n", message);
+    fprintf(stderr, "[netcode-k3h4-determinism] %s\n", message);
     return 1;
 }
 

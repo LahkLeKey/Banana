@@ -1,0 +1,33 @@
+{
+  "folders": [
+    {
+      "path": "src/native"
+    },
+    {
+      "path": "tests/native"
+    },
+    {
+      "path": "artifacts/native"
+    },
+    {
+      "path": ".specify/specs/035-native-hypersphere-kmeans"
+    }
+  ],
+  "settings": {
+    "cmake.sourceDirectory": "${workspaceFolder:src/native}",
+    "cmake.buildDirectory": "${workspaceFolder:src/native}/../../out/v3-native",
+    "cmake.configureOnOpen": true,
+    "files.exclude": {
+      "**/.git": true,
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/coverage": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.cmake-tools",
+      "ms-vscode.cpptools"
+    ]
+  }
+}

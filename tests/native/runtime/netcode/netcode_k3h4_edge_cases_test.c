@@ -6,7 +6,7 @@
 
 static int fail(const char *message)
 {
-    fprintf(stderr, "[netcode-kmeans-edge] %s\n", message);
+    fprintf(stderr, "[netcode-k3h4-edge] %s\n", message);
     return 1;
 }
 
@@ -31,11 +31,11 @@ int main(void)
     RuntimeNetcodeHypersphereOutput hypersphere_output;
 
     write_uniform_input(&vector_output, 6, 0.25f);
-    vector_output.kmeans_cluster_count = 1;
-    vector_output.kmeans_member_counts[0] = 4;
+    vector_output.k3h4_cluster_count = 1;
+    vector_output.k3h4_member_counts[0] = 4;
     for (int dim = 0; dim < 6; dim++)
     {
-        vector_output.kmeans_centers_q16[0][dim] = runtime_netcode_q16_from_float(0.25f);
+        vector_output.k3h4_centers_q16[0][dim] = runtime_netcode_q16_from_float(0.25f);
     }
 
     if (runtime_netcode_hypersphere_build(&vector_output, &hypersphere_output) != 0)
@@ -47,14 +47,14 @@ int main(void)
         return fail("single-cluster score validity should be invalid-radius");
 
     write_uniform_input(&vector_output, 6, 0.35f);
-    vector_output.kmeans_cluster_count = 2;
-    vector_output.kmeans_member_counts[0] = 2;
-    vector_output.kmeans_member_counts[1] = 2;
+    vector_output.k3h4_cluster_count = 2;
+    vector_output.k3h4_member_counts[0] = 2;
+    vector_output.k3h4_member_counts[1] = 2;
     for (int dim = 0; dim < 6; dim++)
     {
         int q16 = runtime_netcode_q16_from_float(0.35f);
-        vector_output.kmeans_centers_q16[0][dim] = q16;
-        vector_output.kmeans_centers_q16[1][dim] = q16;
+        vector_output.k3h4_centers_q16[0][dim] = q16;
+        vector_output.k3h4_centers_q16[1][dim] = q16;
     }
 
     if (runtime_netcode_hypersphere_build(&vector_output, &hypersphere_output) != 0)

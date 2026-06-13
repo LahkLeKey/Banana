@@ -103,7 +103,7 @@ export type NetcodeAnalyticsRollout = {
 
 export type NetcodeAnalyticsLspRepresentation = {
   language: 'netcode.analytics.v1'; boundedContext: 'netcode';
-  aggregate: 'hypersphere-kmeans';
+  aggregate: 'k3h4';
   authority: 'server-native';
   contractVersion: 1;
   deterministicHash: number;
@@ -132,7 +132,7 @@ export type NetcodeAnalyticsResponse = {
     alignment: number;
     radialStability: number;
   };
-  hypersphereKmeans: NetcodeHypersphereKmeansPayload;
+  k3h4: NetcodeHypersphereKmeansPayload;
   rollout: NetcodeAnalyticsRollout;
 };
 

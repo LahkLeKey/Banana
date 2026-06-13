@@ -129,7 +129,7 @@ static void build_cluster_inverse_covariance(
 
     for (node = 0; node < output->vector_count; node++)
     {
-        if (input->kmeans_assignments[node] != cluster_id)
+        if (input->k3h4_assignments[node] != cluster_id)
             continue;
 
         member_count += 1;
@@ -230,10 +230,10 @@ void runtime_netcode_hypersphere_build_cluster_models(
     for (i = 0; i < context->cluster_count; i++)
     {
         context->output->centers[i].cluster_id = i;
-        context->output->centers[i].member_count = context->input->kmeans_member_counts[i];
+        context->output->centers[i].member_count = context->input->k3h4_member_counts[i];
 
         for (j = 0; j < context->dimensions; j++)
-            context->output->centers[i].center_q16[j] = context->input->kmeans_centers_q16[i][j];
+            context->output->centers[i].center_q16[j] = context->input->k3h4_centers_q16[i][j];
 
         build_cluster_inverse_covariance(
             context->input,

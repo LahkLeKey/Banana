@@ -30,5 +30,5 @@
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read .specify/specs/035-native-hypersphere-kmeans/plan.md
+shell commands, and other important information, read .specify/specs/035-native-k3h4/plan.md
 <!-- SPECKIT END -->

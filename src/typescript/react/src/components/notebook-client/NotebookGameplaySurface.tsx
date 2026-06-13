@@ -283,7 +283,7 @@ export function NotebookGameplaySurface({
         rewardSignal,
         linkConfidence,
         hypersphereProjection,
-        hypersphereKmeans,
+        k3h4,
         analyticsAvailability,
     } = useNetcodeSession({
         callDensity,
@@ -337,10 +337,10 @@ export function NotebookGameplaySurface({
         riskLabel,
     ]);
     const { neuralRelevanceScore, projectedRewardXp, rewardTier, rewardBand } = rewardSignal;
-    const kmeansClusterCount = hypersphereKmeans.centers.length;
-    const kmeansConvergence = hypersphereKmeans.observability.convergenceStatus;
-    const kmeansHashPreview = hypersphereKmeans.observability.deterministicHash.length > 0
-        ? hypersphereKmeans.observability.deterministicHash.slice(0, 8)
+    const k3h4ClusterCount = k3h4.centers.length;
+    const k3h4Convergence = k3h4.observability.convergenceStatus;
+    const k3h4HashPreview = k3h4.observability.deterministicHash.length > 0
+        ? k3h4.observability.deterministicHash.slice(0, 8)
         : 'n/a';
     const laneContractCoherence = useMemo(() => {
         const coherenceMap = new Map<ContractNodeId, number>();
@@ -981,9 +981,9 @@ export function NotebookGameplaySurface({
                             cFileCount={cFileCount}
                             modelConfidence={learningModel.modelConfidence}
                             extraLines={[
-                                `KMeans: ${kmeansClusterCount} clusters`,
-                                `Convergence: ${kmeansConvergence}`,
-                                `Hash: ${kmeansHashPreview}`,
+                                `K3H4: ${k3h4ClusterCount} clusters`,
+                                `Convergence: ${k3h4Convergence}`,
+                                `Hash: ${k3h4HashPreview}`,
                             ]}
                         />
                     ) : null}
@@ -1006,7 +1006,7 @@ export function NotebookGameplaySurface({
                             rewardBand={rewardBand}
                             questListMaxHeight={expandedQuestRail ? '34dvh' : (hasOpenDock ? '18dvh' : '24dvh')}
                             projectedRewardXp={projectedRewardXp}
-                            statusLine={`KMeans ${kmeansClusterCount} · ${kmeansConvergence} · ${analyticsAvailability.rollout.cohort}`}
+                            statusLine={`K3H4 ${k3h4ClusterCount} · ${k3h4Convergence} · ${analyticsAvailability.rollout.cohort}`}
                             onMainAction={() => {
                                 setActiveWorkflowStep('commit');
                                 setWorkflowDepth(3);

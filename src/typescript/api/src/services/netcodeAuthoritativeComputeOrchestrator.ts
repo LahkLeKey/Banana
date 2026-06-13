@@ -26,7 +26,7 @@ export type NetcodeHypersphereKmeansProjection = {
 
 export type NetcodeLspRepresentation = {
   language: 'netcode.analytics.v1'; boundedContext: 'netcode';
-  aggregate: 'hypersphere-kmeans';
+  aggregate: 'k3h4';
   authority: 'server-native';
   contractVersion: 1;
   deterministicHash: number;
@@ -37,7 +37,7 @@ export type NetcodeAnalyticsAuthoritativeResult = {
   contractVersion: 1; reward: NetcodeRewardOutput; link: NetcodeLinkOutput;
   vector: NetcodeVectorOutput;
   hypersphere: NetcodeHypersphereOutput;
-  hypersphereKmeans: NetcodeHypersphereKmeansProjection;
+  k3h4: NetcodeHypersphereKmeansProjection;
   lspRepresentation: NetcodeLspRepresentation;
 };
 
@@ -146,7 +146,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       throw error;
     }
 
-    const hypersphereKmeans = {
+    const k3h4 = {
       centers: hypersphere.centers,
       radii: hypersphere.radii,
       weightedVoronoiScores: hypersphere.weightedVoronoiScores,
@@ -160,11 +160,11 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       link,
       vector,
       hypersphere,
-      hypersphereKmeans,
+      k3h4,
       lspRepresentation: {
         language: 'netcode.analytics.v1',
         boundedContext: 'netcode',
-        aggregate: 'hypersphere-kmeans',
+        aggregate: 'k3h4',
         authority: 'server-native',
         contractVersion: 1,
         deterministicHash: hypersphere.observability.deterministicHash,

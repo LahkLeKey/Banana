@@ -1,5 +1,5 @@
-#ifndef BANANA_ENGINE_RUNTIME_NETCODE_KMEANS_H
-#define BANANA_ENGINE_RUNTIME_NETCODE_KMEANS_H
+#ifndef BANANA_ENGINE_RUNTIME_NETCODE_K3H4_H
+#define BANANA_ENGINE_RUNTIME_NETCODE_K3H4_H
 
 #include "netcode_vector.h"
 
@@ -8,14 +8,14 @@ extern "C"
 {
 #endif
 
-    typedef enum RuntimeNetcodeKmeansConvergenceStatus
+    typedef enum RuntimeNetcodeK3h4ConvergenceStatus
     {
-        RUNTIME_NETCODE_KMEANS_CONVERGED = 0,
-        RUNTIME_NETCODE_KMEANS_MAX_ITERATIONS_EXCEEDED = 1,
-        RUNTIME_NETCODE_KMEANS_INVALID_INPUT = 2
-    } RuntimeNetcodeKmeansConvergenceStatus;
+        RUNTIME_NETCODE_K3H4_CONVERGED = 0,
+        RUNTIME_NETCODE_K3H4_MAX_ITERATIONS_EXCEEDED = 1,
+        RUNTIME_NETCODE_K3H4_INVALID_INPUT = 2
+    } RuntimeNetcodeK3h4ConvergenceStatus;
 
-    typedef struct RuntimeNetcodeKmeansResult
+    typedef struct RuntimeNetcodeK3h4Result
     {
         int cluster_count;
         int vector_count;
@@ -25,16 +25,16 @@ extern "C"
         int assignments[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
         int member_counts[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
         int centers_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
-    } RuntimeNetcodeKmeansResult;
+    } RuntimeNetcodeK3h4Result;
 
-    int runtime_netcode_kmeans_compute(
+    int runtime_netcode_k3h4_compute(
         const float vectors[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
         int vector_count,
         int dimensions,
         int cluster_count,
         int max_iterations,
         int convergence_threshold_q16,
-        RuntimeNetcodeKmeansResult *out_result);
+        RuntimeNetcodeK3h4Result *out_result);
 
 #ifdef __cplusplus
 }

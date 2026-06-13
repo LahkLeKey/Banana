@@ -26,7 +26,7 @@ int runtime_netcode_hypersphere_initialize_pipeline_context(
     context->input = input;
     context->output = out_output;
     context->dimensions = input->dimensions;
-    context->cluster_count = clamp_cluster_count(input->kmeans_cluster_count);
+    context->cluster_count = clamp_cluster_count(input->k3h4_cluster_count);
     context->radius_floor_q16 = 64;
 
     context->output->dimensions = context->dimensions;

@@ -31,7 +31,7 @@
 - Alternatives considered: Client fallback production compute (rejected due to determinism drift and policy mismatch).
 
 ## Decision 7: Rollout strategy and rollback controls
-- Decision: Gate new analytics contract behind staged flags (`BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED`, cohort routing in API), with hard rollback to existing analytics payload shape.
+- Decision: Gate new analytics contract behind staged flags (`BANANA_NETCODE_K3H4_ENABLED`, cohort routing in API), with hard rollback to existing analytics payload shape.
 - Rationale: Supports FR-013 and SC-005 with low-risk deployment.
 - Alternatives considered: Big-bang rollout (rejected for operational risk).
 

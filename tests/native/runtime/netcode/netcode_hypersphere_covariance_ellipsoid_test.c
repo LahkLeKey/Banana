@@ -21,9 +21,9 @@ int main(void)
 
     memset(&vector_output, 0, sizeof(vector_output));
     vector_output.dimensions = dimensions;
-    vector_output.kmeans_cluster_count = 2;
-    vector_output.kmeans_member_counts[0] = 2;
-    vector_output.kmeans_member_counts[1] = 2;
+    vector_output.k3h4_cluster_count = 2;
+    vector_output.k3h4_member_counts[0] = 2;
+    vector_output.k3h4_member_counts[1] = 2;
 
     /* Two elongated directional clusters to exercise anisotropic covariance. */
     vector_output.node_vectors[0][0] = 1.00f;
@@ -35,15 +35,15 @@ int main(void)
     vector_output.node_vectors[3][0] = 0.25f;
     vector_output.node_vectors[3][1] = 1.00f;
 
-    vector_output.kmeans_assignments[0] = 0;
-    vector_output.kmeans_assignments[1] = 0;
-    vector_output.kmeans_assignments[2] = 1;
-    vector_output.kmeans_assignments[3] = 1;
+    vector_output.k3h4_assignments[0] = 0;
+    vector_output.k3h4_assignments[1] = 0;
+    vector_output.k3h4_assignments[2] = 1;
+    vector_output.k3h4_assignments[3] = 1;
 
-    vector_output.kmeans_centers_q16[0][0] = runtime_netcode_q16_from_float(0.99f);
-    vector_output.kmeans_centers_q16[0][1] = runtime_netcode_q16_from_float(0.15f);
-    vector_output.kmeans_centers_q16[1][0] = runtime_netcode_q16_from_float(0.15f);
-    vector_output.kmeans_centers_q16[1][1] = runtime_netcode_q16_from_float(0.99f);
+    vector_output.k3h4_centers_q16[0][0] = runtime_netcode_q16_from_float(0.99f);
+    vector_output.k3h4_centers_q16[0][1] = runtime_netcode_q16_from_float(0.15f);
+    vector_output.k3h4_centers_q16[1][0] = runtime_netcode_q16_from_float(0.15f);
+    vector_output.k3h4_centers_q16[1][1] = runtime_netcode_q16_from_float(0.99f);
 
     if (runtime_netcode_hypersphere_build(&vector_output, &hypersphere_output) != 0)
         return fail("failed to build covariance ellipsoid output");

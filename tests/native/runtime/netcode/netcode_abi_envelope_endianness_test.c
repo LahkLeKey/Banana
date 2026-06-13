@@ -34,7 +34,7 @@ int main(void)
         return fail("expected runtime envelope status to be OK");
 
     swapped_header.contract_version = output.envelope.contract_version;
-    swapped_header.byte_order_tag = RUNTIME_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG_SWAPPED;
+    swapped_header.byte_order_tag = RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG_SWAPPED;
     swapped_header.payload_bytes = output.envelope.payload_bytes;
     swapped_header.payload_crc32 = output.envelope.payload_crc32;
 
