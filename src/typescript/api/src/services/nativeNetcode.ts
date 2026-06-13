@@ -364,7 +364,23 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
 
 let cachedService: NativeNetcodeService|null = null;
 
+function resolveNetcodeAdapterMode(): 'ffi' {
+  const adapterMode = (process.env.BANANA_NETCODE_ADAPTER ?? 'ffi').toLowerCase();
+  if (adapterMode !== 'ffi' && adapterMode !== 'ffi-only') {
+    throw new Error(
+        `Unsupported BANANA_NETCODE_ADAPTER mode "${adapterMode}". ` +
+        'Use "ffi" to enforce native netcode bindings.');
+  }
+  return 'ffi';
+}
+
+export function __resetNativeNetcodeServiceForTests(): void {
+  cachedService = null;
+}
+
 export function getNativeNetcodeService(): NativeNetcodeService {
+  resolveNetcodeAdapterMode();
+
   if (!cachedService) {
     cachedService = new NativeFFINetcodeService();
   }
