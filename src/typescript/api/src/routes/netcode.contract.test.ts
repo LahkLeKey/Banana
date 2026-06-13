@@ -241,6 +241,18 @@ describe('netcode analytics contract', () => {
             deterministicHash: 123456,
           }),
         ]));
+        expect(json.abiLayerCoverage).toMatchObject({
+          complete: true,
+          completeness: 1,
+          presentLayers: [
+            'learning',
+            'reward',
+            'link',
+            'vector',
+            'hypersphere',
+          ],
+          missingLayers: [],
+        });
         const payload = response.json() as {
           hypersphere: {
             nodes: Array<{inradius: number; nearestNeighborDistance: number;}>;

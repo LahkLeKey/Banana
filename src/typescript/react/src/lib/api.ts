@@ -3,6 +3,7 @@ type ErrorPayload = {
 };
 
 import type {LaunchGateReasonCode, LaunchGateStatusResponse, LaunchGateVerifyResponse} from './launchGateTypes';
+import type {NetcodeAbiLayerCoverage, NetcodeAbiLayerKind, NetcodeAbiLayerSnapshot} from '@banana/ui';
 
 type BananaSummaryResponse = {
   banana: number;
@@ -101,13 +102,11 @@ export type NetcodeAnalyticsRollout = {
   enabled: boolean; cohort: string;
 };
 
-export type NetcodeAnalyticsAbiLayerKind =
-    'learning'|'reward'|'link'|'vector'|'hypersphere';
+export type NetcodeAnalyticsAbiLayerKind = NetcodeAbiLayerKind;
 
-export type NetcodeAnalyticsAbiLayerSnapshot = {
-  readonly layer: NetcodeAnalyticsAbiLayerKind; readonly contractVersion: number; readonly status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch'; readonly payloadBytes: number; readonly byteOrderTag: number; readonly deterministicHash:
-                                                                                                                                                                                                                                                                     number;
-};
+export type NetcodeAnalyticsAbiLayerSnapshot = NetcodeAbiLayerSnapshot;
+
+export type NetcodeAnalyticsAbiLayerCoverage = NetcodeAbiLayerCoverage;
 
 export type NetcodeAnalyticsLspRepresentation = {
   language: 'netcode.analytics.v1'; boundedContext: 'netcode';
@@ -142,6 +141,8 @@ export type NetcodeAnalyticsResponse = {
   };
   k3h4: NetcodeHypersphereKmeansPayload;
   abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
+  // Optional for compatibility with older API payloads.
+  abiLayerCoverage?: NetcodeAnalyticsAbiLayerCoverage;
   rollout: NetcodeAnalyticsRollout;
 };
 

@@ -54,6 +54,26 @@ type NotebookGameplaySurfaceProps = {
     readonly onToggleObjectiveNodeWindow?: () => void;
     readonly onTogglePlayerNodeWindow?: () => void;
     readonly onToggleNodeOpsWindow?: () => void;
+    readonly onAnalyticsTelemetryChange?: (telemetry: {
+        analyticsAvailable: boolean;
+        analyticsCohort: string;
+        k3h4Clusters: number;
+        k3h4Convergence: string;
+        abiCoveragePresent: number;
+        abiCoverageExpected: number;
+        abiCoveragePercent: number;
+        abiCoverageComplete: boolean;
+        abiCoverageMissing: readonly string[];
+        abiLayerLedger: readonly {
+            layer: 'learning' | 'reward' | 'link' | 'vector' | 'hypersphere';
+            present: boolean;
+            contractVersion: number;
+            status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch' | 'missing';
+            payloadBytes: number;
+            byteOrderTag: number;
+            deterministicHash: number | string | null;
+        }[];
+    }) => void;
 };
 
 // Scanline overlay for the fullBleed stage
@@ -162,6 +182,7 @@ export function NotebookGameplaySurface({
     onToggleObjectiveNodeWindow,
     onTogglePlayerNodeWindow,
     onToggleNodeOpsWindow,
+    onAnalyticsTelemetryChange,
 }: NotebookGameplaySurfaceProps) {
     const [intelMode, setIntelMode] = useState<'summary' | 'raw'>('summary');
     const [developerIntelUnlocked, setDeveloperIntelUnlocked] = useState(false);
@@ -284,6 +305,8 @@ export function NotebookGameplaySurface({
         linkConfidence,
         hypersphereProjection,
         k3h4,
+        abiLayerLedger,
+        abiLayerCoverage,
         analyticsAvailability,
     } = useNetcodeSession({
         callDensity,
@@ -342,6 +365,45 @@ export function NotebookGameplaySurface({
     const k3h4HashPreview = k3h4.observability.deterministicHash.length > 0
         ? k3h4.observability.deterministicHash.slice(0, 8)
         : 'n/a';
+    const abiCoveragePresent = abiLayerCoverage.presentLayers.length;
+    const abiCoverageExpected = abiLayerCoverage.expectedLayers.length;
+    const abiCoveragePercent = Math.round(abiLayerCoverage.completeness * 100);
+    const abiCoverageSummary = `${abiCoveragePresent}/${abiCoverageExpected}`;
+    const abiCoverageState = abiLayerCoverage.complete ? 'complete' : 'partial';
+    const abiCoverageMissing = abiLayerCoverage.missingLayers.length > 0
+        ? abiLayerCoverage.missingLayers.join(', ')
+        : 'none';
+
+    useEffect(() => {
+        if (!onAnalyticsTelemetryChange) {
+            return;
+        }
+
+        onAnalyticsTelemetryChange({
+            analyticsAvailable: analyticsAvailability.available,
+            analyticsCohort: analyticsAvailability.rollout.cohort,
+            k3h4Clusters: k3h4ClusterCount,
+            k3h4Convergence,
+            abiCoveragePresent,
+            abiCoverageExpected,
+            abiCoveragePercent,
+            abiCoverageComplete: abiLayerCoverage.complete,
+            abiCoverageMissing: [...abiLayerCoverage.missingLayers],
+            abiLayerLedger: abiLayerLedger.map((entry) => ({ ...entry })),
+        });
+    }, [
+        abiLayerLedger,
+        abiCoverageExpected,
+        abiCoveragePercent,
+        abiCoveragePresent,
+        analyticsAvailability.available,
+        analyticsAvailability.rollout.cohort,
+        k3h4ClusterCount,
+        k3h4Convergence,
+        onAnalyticsTelemetryChange,
+        abiLayerCoverage.complete,
+        abiLayerCoverage.missingLayers,
+    ]);
     const laneContractCoherence = useMemo(() => {
         const coherenceMap = new Map<ContractNodeId, number>();
         hypersphereProjection.nodes.forEach((node) => {
@@ -832,6 +894,37 @@ export function NotebookGameplaySurface({
                     </div>
                 ) : null}
 
+                {analyticsAvailability.available ? (
+                    <div style={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        zIndex: 5,
+                        borderRadius: 12,
+                        border: `1px solid ${abiLayerCoverage.complete ? 'rgba(16, 185, 129, 0.52)' : 'rgba(251, 191, 36, 0.55)'}`,
+                        background: abiLayerCoverage.complete
+                            ? 'linear-gradient(140deg, rgba(6, 78, 59, 0.9), rgba(6, 95, 70, 0.82))'
+                            : 'linear-gradient(140deg, rgba(120, 53, 15, 0.9), rgba(146, 64, 14, 0.82))',
+                        color: abiLayerCoverage.complete ? '#d1fae5' : '#fef3c7',
+                        padding: '10px 12px',
+                        fontSize: 11,
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        fontWeight: 700,
+                        boxShadow: abiLayerCoverage.complete
+                            ? '0 12px 24px rgba(6, 78, 59, 0.35)'
+                            : '0 12px 24px rgba(120, 53, 15, 0.35)',
+                        display: 'grid',
+                        gap: 4,
+                        maxWidth: 340,
+                    }}>
+                        <span>ABI coverage {abiCoverageSummary} · {abiCoveragePercent}% · {abiCoverageState}</span>
+                        <span style={{ fontSize: 10, color: abiLayerCoverage.complete ? 'rgba(187, 247, 208, 0.92)' : 'rgba(254, 240, 138, 0.92)' }}>
+                            missing: {abiCoverageMissing}
+                        </span>
+                    </div>
+                ) : null}
+
                 <GameplayTopHud
                     selectedFile={selectedFile}
                     missionCode={missionSector.code}
@@ -983,6 +1076,7 @@ export function NotebookGameplaySurface({
                             extraLines={[
                                 `K3H4: ${k3h4ClusterCount} clusters`,
                                 `Convergence: ${k3h4Convergence}`,
+                                `ABI: ${abiCoverageSummary} (${abiCoveragePercent}%)`,
                                 `Hash: ${k3h4HashPreview}`,
                             ]}
                         />
@@ -1006,7 +1100,7 @@ export function NotebookGameplaySurface({
                             rewardBand={rewardBand}
                             questListMaxHeight={expandedQuestRail ? '34dvh' : (hasOpenDock ? '18dvh' : '24dvh')}
                             projectedRewardXp={projectedRewardXp}
-                            statusLine={`K3H4 ${k3h4ClusterCount} · ${k3h4Convergence} · ${analyticsAvailability.rollout.cohort}`}
+                            statusLine={`K3H4 ${k3h4ClusterCount} · ${k3h4Convergence} · ABI ${abiCoverageSummary} · ${analyticsAvailability.rollout.cohort}`}
                             onMainAction={() => {
                                 setActiveWorkflowStep('commit');
                                 setWorkflowDepth(3);

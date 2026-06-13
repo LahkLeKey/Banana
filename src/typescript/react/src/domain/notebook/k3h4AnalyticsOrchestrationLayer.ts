@@ -1,3 +1,5 @@
+import {buildNetcodeAbiLayerLedger, type NetcodeAbiLayerCoverage, type NetcodeAbiLayerLedger, summarizeNetcodeAbiLayers} from '@banana/ui';
+
 import type {NetcodeAnalyticsAbiLayerSnapshot, NetcodeAnalyticsResponse,} from '../../lib/api';
 
 import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
@@ -28,6 +30,8 @@ export type K3h4AnalyticsPresentationState = {
   hypersphereProjection: ContractHypersphereProjectionModel;
   k3h4: ContractHypersphereKmeansModel;
   abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
+  abiLayerCoverage: NetcodeAbiLayerCoverage;
+  abiLayerLedger: NetcodeAbiLayerLedger;
 };
 
 export function mapK3h4AnalyticsToPresentationState(
@@ -104,6 +108,18 @@ export function mapK3h4AnalyticsToPresentationState(
     },
   };
 
+  const abiLayers = analytics.abiLayers.map((layer) => ({...layer}));
+  const abiLayerCoverage = analytics.abiLayerCoverage ?
+      {
+        expectedLayers: [...analytics.abiLayerCoverage.expectedLayers],
+        presentLayers: [...analytics.abiLayerCoverage.presentLayers],
+        missingLayers: [...analytics.abiLayerCoverage.missingLayers],
+        completeness: analytics.abiLayerCoverage.completeness,
+        complete: analytics.abiLayerCoverage.complete,
+      } :
+      summarizeNetcodeAbiLayers(abiLayers);
+  const abiLayerLedger = buildNetcodeAbiLayerLedger(abiLayers);
+
   return {
     rewardSignal: {
       neuralRelevanceScore: analytics.reward.neuralRelevanceScore,
@@ -120,6 +136,8 @@ export function mapK3h4AnalyticsToPresentationState(
     contractVectors,
     hypersphereProjection,
     k3h4,
-    abiLayers: analytics.abiLayers.map((layer) => ({...layer})),
+    abiLayers,
+    abiLayerCoverage,
+    abiLayerLedger,
   };
 }

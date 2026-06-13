@@ -1,7 +1,7 @@
+import {buildNetcodeAbiLayerLedger, type NetcodeAbiLayerCoverage, type NetcodeAbiLayerLedger, type NetcodeAbiLayerSnapshot, summarizeNetcodeAbiLayers,} from '@banana/ui';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 import {composeK3h4PresentationApplicationService,} from '../../application/notebook/k3h4/k3h4PresentationCompositionRoot';
-import type {NetcodeAnalyticsAbiLayerSnapshot,} from '../../lib/api';
 import {fetchNetcodeAnalytics, fetchNetcodeLearning, NetcodeAnalyticsError, resolveApiBaseUrl,} from '../../lib/api';
 
 import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
@@ -138,7 +138,8 @@ type ApiLearningResponse = {
 };
 
 export type NetcodeSessionHook = {
-  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly k3h4: ContractHypersphereKmeansModel; readonly analyticsAvailability: NetcodeAnalyticsAvailabilityModel; readonly abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
+  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly k3h4: ContractHypersphereKmeansModel; readonly analyticsAvailability: NetcodeAnalyticsAvailabilityModel; readonly abiLayers: readonly NetcodeAbiLayerSnapshot[]; readonly abiLayerCoverage: NetcodeAbiLayerCoverage; readonly abiLayerLedger:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 NetcodeAbiLayerLedger;
 };
 
 export function useNetcodeSession({
@@ -165,7 +166,11 @@ export function useNetcodeSession({
   const [k3h4, setHypersphereKmeans] =
       useState<ContractHypersphereKmeansModel>(DEFAULT_K3H4);
   const [abiLayers, setAbiLayers] =
-      useState<readonly NetcodeAnalyticsAbiLayerSnapshot[]>([]);
+      useState<readonly NetcodeAbiLayerSnapshot[]>([]);
+  const [abiLayerCoverage, setAbiLayerCoverage] =
+      useState<NetcodeAbiLayerCoverage>(() => summarizeNetcodeAbiLayers([]));
+  const [abiLayerLedger, setAbiLayerLedger] =
+      useState<NetcodeAbiLayerLedger>(() => buildNetcodeAbiLayerLedger([]));
   const [analyticsAvailability, setAnalyticsAvailability] =
       useState<NetcodeAnalyticsAvailabilityModel>(
           DEFAULT_ANALYTICS_AVAILABILITY);
@@ -288,6 +293,8 @@ export function useNetcodeSession({
             setHypersphereProjection(presentationState.hypersphereProjection);
             setHypersphereKmeans(presentationState.k3h4);
             setAbiLayers(presentationState.abiLayers);
+            setAbiLayerCoverage(presentationState.abiLayerCoverage);
+            setAbiLayerLedger(presentationState.abiLayerLedger);
 
             const rollout = analytics.rollout;
             setAnalyticsAvailability({
@@ -365,5 +372,7 @@ export function useNetcodeSession({
     k3h4,
     analyticsAvailability,
     abiLayers,
+    abiLayerCoverage,
+    abiLayerLedger,
   };
 }

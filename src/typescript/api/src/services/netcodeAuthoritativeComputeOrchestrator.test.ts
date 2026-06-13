@@ -192,6 +192,18 @@ describe('netcode authoritative compute orchestrator', () => {
           byteOrderTag: 0x01020304,
           deterministicHash: 123456,
         });
+        expect(result.abiLayerCoverage).toMatchObject({
+          complete: true,
+          completeness: 1,
+          presentLayers: [
+            'learning',
+            'reward',
+            'link',
+            'vector',
+            'hypersphere',
+          ],
+          missingLayers: [],
+        });
         expect(result.lspRepresentation).toMatchObject({
           language: 'netcode.analytics.v1',
           boundedContext: 'netcode',
