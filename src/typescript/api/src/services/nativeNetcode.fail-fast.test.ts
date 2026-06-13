@@ -37,16 +37,18 @@ describe('native netcode fail-fast bootstrap', () => {
       'BANANA_NETCODE_ADAPTER',
     ]);
     const originalCwd = process.cwd();
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'banana-netcode-fail-fast-'));
+    const tempDir =
+        fs.mkdtempSync(path.join(os.tmpdir(), 'banana-netcode-fail-fast-'));
 
     try {
       process.chdir(tempDir);
       process.env.BANANA_NETCODE_ADAPTER = 'ffi';
-      process.env.BANANA_NATIVE_PATH = path.join(tempDir, 'missing-native-library.so');
+      process.env.BANANA_NATIVE_PATH =
+          path.join(tempDir, 'missing-native-library.so');
       process.env.BANANA_NATIVE_SEARCH_ROOTS = tempDir;
 
-      expect(() => getNativeNetcodeService()).toThrow(
-          'Unable to load Banana native library for netcode FFI');
+      expect(() => getNativeNetcodeService())
+          .toThrow('Unable to load Banana native library for netcode FFI');
     } finally {
       process.chdir(originalCwd);
       restoreEnv(envSnapshot);
@@ -58,8 +60,8 @@ describe('native netcode fail-fast bootstrap', () => {
     const envSnapshot = snapshotEnv(['BANANA_NETCODE_ADAPTER']);
     try {
       process.env.BANANA_NETCODE_ADAPTER = 'inmemory';
-      expect(() => getNativeNetcodeService()).toThrow(
-          'Unsupported BANANA_NETCODE_ADAPTER mode');
+      expect(() => getNativeNetcodeService())
+          .toThrow('Unsupported BANANA_NETCODE_ADAPTER mode');
     } finally {
       restoreEnv(envSnapshot);
     }

@@ -6,8 +6,8 @@ import {persistentWorldRevisitPathConflict, persistentWorldRevisitValidationErro
 import {registerFastifyErrorMapper} from '../lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from '../middleware/requestContext.ts';
 
-import {registerWorldRoutes} from './world.ts';
 import {createWorldServiceForTests} from './world.test-service.ts';
+import {registerWorldRoutes} from './world.ts';
 
 function createMockDomainWithError(error: Error):
     PersistentWorldOrchestrationDomain {

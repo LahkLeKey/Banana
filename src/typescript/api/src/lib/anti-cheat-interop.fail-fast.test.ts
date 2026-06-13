@@ -26,29 +26,34 @@ function restoreEnv(snapshot: EnvSnapshot): void {
 }
 
 describe('anti-cheat adapter fail-fast bootstrap', () => {
-  test('fails fast by default when native anti-cheat bindings are unavailable', () => {
-    const envSnapshot = snapshotEnv([
-      'BANANA_NATIVE_PATH',
-      'BANANA_NATIVE_SEARCH_ROOTS',
-      'BANANA_ANTICHEAT_ADAPTER',
-    ]);
-    const originalCwd = process.cwd();
+  test(
+      'fails fast by default when native anti-cheat bindings are unavailable',
+      () => {
+        const envSnapshot = snapshotEnv([
+          'BANANA_NATIVE_PATH',
+          'BANANA_NATIVE_SEARCH_ROOTS',
+          'BANANA_ANTICHEAT_ADAPTER',
+        ]);
+        const originalCwd = process.cwd();
 
-    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'banana-anti-cheat-fail-fast-'));
-    try {
-      process.chdir(cwd);
-      process.env.BANANA_ANTICHEAT_ADAPTER = 'ffi';
-      process.env.BANANA_NATIVE_PATH = path.join(cwd, 'missing-native-library.so');
-      process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
+        const cwd = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'banana-anti-cheat-fail-fast-'));
+        try {
+          process.chdir(cwd);
+          process.env.BANANA_ANTICHEAT_ADAPTER = 'ffi';
+          process.env.BANANA_NATIVE_PATH =
+              path.join(cwd, 'missing-native-library.so');
+          process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
 
-      expect(() => createDefaultAntiCheatInteropAdapter()).toThrow(
-          'Unable to load Banana native library for anti-cheat FFI');
-    } finally {
-      process.chdir(originalCwd);
-      restoreEnv(envSnapshot);
-      fs.rmSync(cwd, {recursive: true, force: true});
-    }
-  });
+          expect(() => createDefaultAntiCheatInteropAdapter())
+              .toThrow(
+                  'Unable to load Banana native library for anti-cheat FFI');
+        } finally {
+          process.chdir(originalCwd);
+          restoreEnv(envSnapshot);
+          fs.rmSync(cwd, {recursive: true, force: true});
+        }
+      });
 
   test('supports explicit in-memory adapter mode when requested', () => {
     const envSnapshot = snapshotEnv(['BANANA_ANTICHEAT_ADAPTER']);

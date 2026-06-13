@@ -4,8 +4,8 @@ import Fastify from 'fastify';
 import {registerFastifyErrorMapper} from '../lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from '../middleware/requestContext.ts';
 
-import {registerWorldRoutes} from './world.ts';
 import {createWorldServiceForTests} from './world.test-service.ts';
+import {registerWorldRoutes} from './world.ts';
 
 async function createApp() {
   const app = Fastify({logger: false});

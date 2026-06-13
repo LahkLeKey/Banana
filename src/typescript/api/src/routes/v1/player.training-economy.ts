@@ -282,8 +282,8 @@ export async function registerV1PlayerTrainingEconomyRoutes(
     await store.storeTransitionEvent({
       playerId: actorId,
       eventType: 'queue.execution.started',
-      correlationId: buildTransitionCorrelationId(
-          request, 'queue-execution-started'),
+      correlationId:
+          buildTransitionCorrelationId(request, 'queue-execution-started'),
       details: {
         requestedJobs: pending.length,
         workflowMode: parseResult.data.mode,
@@ -322,8 +322,8 @@ export async function registerV1PlayerTrainingEconomyRoutes(
     await store.storeTransitionEvent({
       playerId: actorId,
       eventType: 'queue.execution.completed',
-      correlationId: buildTransitionCorrelationId(
-          request, 'queue-execution-completed'),
+      correlationId:
+          buildTransitionCorrelationId(request, 'queue-execution-completed'),
       details: {
         attemptedJobs: pending.length,
         completedJobs: completedJobIds.length,
@@ -404,13 +404,14 @@ export async function registerV1PlayerTrainingEconomyRoutes(
     assertPlayerSelfScope(request, actorId);
 
     const rewards = await store.listRewards(actorId);
-    const pendingRewards = rewards.filter((reward) => reward.status === 'pending');
+    const pendingRewards =
+        rewards.filter((reward) => reward.status === 'pending');
     const claimedRewards: typeof rewards = [];
     const failedRewards: Array<{rewardId: string; error: string}> = [];
 
     for (const reward of pendingRewards) {
-      const attemptedCorrelationId = buildTransitionCorrelationId(
-          request, 'reward-claim-attempted');
+      const attemptedCorrelationId =
+          buildTransitionCorrelationId(request, 'reward-claim-attempted');
       await store.storeTransitionEvent({
         playerId: actorId,
         eventType: 'reward.claim.attempted',
@@ -427,22 +428,22 @@ export async function registerV1PlayerTrainingEconomyRoutes(
         await store.storeTransitionEvent({
           playerId: actorId,
           eventType: 'reward.claim.succeeded',
-          correlationId: buildTransitionCorrelationId(
-              request, 'reward-claim-succeeded'),
+          correlationId:
+              buildTransitionCorrelationId(request, 'reward-claim-succeeded'),
           details: {
             rewardId: claimedReward.rewardId,
             xp: claimedReward.xp,
           },
         });
       } catch (error) {
-        const code =
-            error instanceof Error ? error.message : 'training_reward_claim_failed';
+        const code = error instanceof Error ? error.message :
+                                              'training_reward_claim_failed';
         failedRewards.push({rewardId: reward.rewardId, error: code});
         await store.storeTransitionEvent({
           playerId: actorId,
           eventType: 'reward.claim.failed',
-          correlationId: buildTransitionCorrelationId(
-              request, 'reward-claim-failed'),
+          correlationId:
+              buildTransitionCorrelationId(request, 'reward-claim-failed'),
           details: {
             rewardId: reward.rewardId,
             error: code,

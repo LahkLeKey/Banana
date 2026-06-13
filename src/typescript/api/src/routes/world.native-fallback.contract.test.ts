@@ -47,57 +47,62 @@ afterEach(() => {
 });
 
 describe('world route native fail-fast contract', () => {
-  test('fails route registration when native loader is unavailable', async () => {
-    const envSnapshot =
-        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
-    const originalCwd = process.cwd();
+  test(
+      'fails route registration when native loader is unavailable',
+      async () => {
+        const envSnapshot =
+            snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+        const originalCwd = process.cwd();
 
-    try {
-      const cwd = createTempDirectory();
-      process.chdir(cwd);
+        try {
+          const cwd = createTempDirectory();
+          process.chdir(cwd);
 
-      const missingLibrary = path.join(cwd, 'missing-native-library.so');
-      process.env.BANANA_NATIVE_PATH = missingLibrary;
-      process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
+          const missingLibrary = path.join(cwd, 'missing-native-library.so');
+          process.env.BANANA_NATIVE_PATH = missingLibrary;
+          process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
 
-      const app = Fastify({logger: false});
-      await registerRequestContextMiddleware(app);
-      registerFastifyErrorMapper(app);
+          const app = Fastify({logger: false});
+          await registerRequestContextMiddleware(app);
+          registerFastifyErrorMapper(app);
 
-      await expect(registerWorldRoutes(app)).rejects.toThrow(
-          'Unable to load Banana native library for world FFI');
+          await expect(registerWorldRoutes(app))
+              .rejects.toThrow(
+                  'Unable to load Banana native library for world FFI');
 
-      await app.close();
-    } finally {
-      process.chdir(originalCwd);
-      restoreEnv(envSnapshot);
-    }
-  });
+          await app.close();
+        } finally {
+          process.chdir(originalCwd);
+          restoreEnv(envSnapshot);
+        }
+      });
 
-  test('surfaces missing-library candidate details in startup failure', async () => {
-    const envSnapshot =
-        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
-    const originalCwd = process.cwd();
+  test(
+      'surfaces missing-library candidate details in startup failure',
+      async () => {
+        const envSnapshot =
+            snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+        const originalCwd = process.cwd();
 
-    try {
-      const cwd = createTempDirectory();
-      process.chdir(cwd);
+        try {
+          const cwd = createTempDirectory();
+          process.chdir(cwd);
 
-      const missingLibrary = path.join(cwd, 'missing-native-library.so');
-      process.env.BANANA_NATIVE_PATH = missingLibrary;
-      process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
+          const missingLibrary = path.join(cwd, 'missing-native-library.so');
+          process.env.BANANA_NATIVE_PATH = missingLibrary;
+          process.env.BANANA_NATIVE_SEARCH_ROOTS = cwd;
 
-      const app = Fastify({logger: false});
-      await registerRequestContextMiddleware(app);
-      registerFastifyErrorMapper(app);
+          const app = Fastify({logger: false});
+          await registerRequestContextMiddleware(app);
+          registerFastifyErrorMapper(app);
 
-      await expect(registerWorldRoutes(app)).rejects.toThrow(
-          'missing-native-library');
+          await expect(registerWorldRoutes(app))
+              .rejects.toThrow('missing-native-library');
 
-      await app.close();
-    } finally {
-      process.chdir(originalCwd);
-      restoreEnv(envSnapshot);
-    }
-  });
+          await app.close();
+        } finally {
+          process.chdir(originalCwd);
+          restoreEnv(envSnapshot);
+        }
+      });
 });

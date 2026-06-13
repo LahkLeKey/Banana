@@ -161,10 +161,7 @@ describe('netcode analytics contract', () => {
         });
         const payload = response.json() as {
           hypersphere: {
-            nodes: Array<{
-              inradius: number;
-              nearestNeighborDistance: number;
-            }>;
+            nodes: Array<{inradius: number; nearestNeighborDistance: number;}>;
           };
         };
         expect(payload.hypersphere.nodes[0]?.inradius).toBe(0.5);
