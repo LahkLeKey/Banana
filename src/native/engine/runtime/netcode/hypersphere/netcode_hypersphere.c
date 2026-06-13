@@ -41,6 +41,18 @@ static float dot(const float *a, const float *b, int dimensions)
     return result;
 }
 
+static float euclidean_distance(const float *a, const float *b, int dimensions)
+{
+    int i;
+    float sum = 0.0f;
+    for (i = 0; i < dimensions; i++)
+    {
+        float delta = a[i] - b[i];
+        sum += delta * delta;
+    }
+    return sqrtf(sum);
+}
+
 static void project_vector(const float *vector,
                            int dimensions,
                            float *out_x,
@@ -114,14 +126,35 @@ int runtime_netcode_hypersphere_build(const RuntimeNetcodeVectorOutput *input,
         float x, y, z;
         float coherence = ((dot(normalized[i], centroid_normalized, dimensions) + 1.0f) / 2.0f) * 100.0f;
         float radius;
+        float nearest_neighbor_distance = 0.0f;
+        float inradius = 0.0f;
+        int nearest_set = 0;
+        int neighbor;
 
         project_vector(normalized[i], dimensions, &x, &y, &z);
         radius = sqrtf(x * x + y * y);
+
+        for (neighbor = 0; neighbor < RUNTIME_NETCODE_VECTOR_NODE_COUNT; neighbor++)
+        {
+            float candidate_distance;
+            if (neighbor == i) continue;
+
+            candidate_distance = euclidean_distance(normalized[i], normalized[neighbor], dimensions);
+            if (!nearest_set || candidate_distance < nearest_neighbor_distance)
+            {
+                nearest_neighbor_distance = candidate_distance;
+                nearest_set = 1;
+            }
+        }
+
+        inradius = nearest_neighbor_distance * 0.5f;
 
         out_output->nodes[i].x = x;
         out_output->nodes[i].y = y;
         out_output->nodes[i].z = z;
         out_output->nodes[i].coherence = clamp_percent((int)lroundf(coherence));
+        out_output->nodes[i].nearest_neighbor_distance = nearest_neighbor_distance;
+        out_output->nodes[i].inradius = inradius;
 
         total_coherence += (float)out_output->nodes[i].coherence;
         total_radius += radius;

@@ -60,7 +60,15 @@ const DEFAULT_LINK_CONFIDENCE: NodeLinkConfidenceModel = {
 };
 
 function makeDefaultProjectionNode(id: ContractNodeId) {
-  return {id, x: 0, y: 0, z: 0, coherence: 0};
+  return {
+    id,
+    x: 0,
+    y: 0,
+    z: 0,
+    coherence: 0,
+    inradius: 0,
+    nearestNeighborDistance: 0,
+  };
 }
 
 const DEFAULT_HYPERSPHERE: ContractHypersphereProjectionModel = {
@@ -289,6 +297,10 @@ export function useNetcodeSession({
                   y: analytics.hypersphere.nodes[index]?.y ?? 0,
                   z: analytics.hypersphere.nodes[index]?.z ?? 0,
                   coherence: analytics.hypersphere.nodes[index]?.coherence ?? 0,
+                  inradius: analytics.hypersphere.nodes[index]?.inradius ?? 0,
+                  nearestNeighborDistance: analytics.hypersphere.nodes[index]
+                                               ?.nearestNeighborDistance ??
+                      0,
                 }));
             setHypersphereProjection({
               dimensions: analytics.hypersphere.dimensions,

@@ -73,6 +73,8 @@ export type NetcodeAnalyticsResponse = {
       y: number;
       z: number;
       coherence: number;
+      inradius: number;
+      nearestNeighborDistance: number;
     }[];
     alignment: number;
     radialStability: number;
@@ -615,15 +617,13 @@ export async function claimTrainingReward(
       });
 }
 
-export async function claimAllTrainingRewards(baseUrl: string, token: string):
-    Promise<{
-      playerId: string;
-      attemptedRewards: number;
-      claimedRewards: TrainingReward[];
-      failedRewards: Array<{rewardId: string; error: string}>;
-      rewards: TrainingReward[];
-      leaderboard: TrainingLeaderboardEntry[];
-    }> {
+export async function claimAllTrainingRewards(
+    baseUrl: string, token: string): Promise<{
+  playerId: string; attemptedRewards: number; claimedRewards: TrainingReward[];
+  failedRewards: Array<{rewardId: string; error: string}>;
+  rewards: TrainingReward[];
+  leaderboard: TrainingLeaderboardEntry[];
+}> {
   return requestJson(
       baseUrl,
       '/v1/player/training/rewards/claim-all',

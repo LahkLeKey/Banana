@@ -22,8 +22,8 @@ export type ContractNodeVectorModel = {
 };
 
 export type ContractHypersphereProjectionNode = {
-  readonly id: ContractNodeId; readonly x: number; readonly y: number; readonly z: number; readonly coherence:
-                                                                                                        number;
+  readonly id: ContractNodeId; readonly x: number; readonly y: number; readonly z: number; readonly coherence: number; readonly inradius: number; readonly nearestNeighborDistance:
+                                                                                                                                                               number;
 };
 
 export type ContractHypersphereProjectionModel = {
@@ -94,6 +94,16 @@ function dot(a: readonly number[], b: readonly number[]): number {
     result += (a[index] ?? 0) * (b[index] ?? 0);
   }
   return result;
+}
+
+function euclideanDistance(a: readonly number[], b: readonly number[]): number {
+  const maxLength = Math.max(a.length, b.length);
+  let sum = 0;
+  for (let index = 0; index < maxLength; index += 1) {
+    const delta = (a[index] ?? 0) - (b[index] ?? 0);
+    sum += delta * delta;
+  }
+  return Math.sqrt(sum);
 }
 
 function projectNormalizedVector(normalizedVector: readonly number[]):
@@ -339,8 +349,33 @@ export function buildContractHypersphereProjectionModel(
       y: projection.y,
       z: projection.z,
       coherence,
+      inradius: 0,
+      nearestNeighborDistance: 0,
     };
   });
+
+  for (let index = 0; index < nodes.length; index += 1) {
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    for (let neighbor = 0; neighbor < normalizedNodes.length; neighbor += 1) {
+      if (neighbor === index) {
+        continue;
+      }
+      const candidate = euclideanDistance(
+          normalizedNodes[index]?.vector ?? [],
+          normalizedNodes[neighbor]?.vector ?? [],
+      );
+      if (candidate < nearestDistance) {
+        nearestDistance = candidate;
+      }
+    }
+
+    const safeDistance = Number.isFinite(nearestDistance) ? nearestDistance : 0;
+    nodes[index] = {
+      ...nodes[index],
+      nearestNeighborDistance: safeDistance,
+      inradius: safeDistance * 0.5,
+    };
+  }
 
   const averageRadius = totalRadius / nodes.length;
   const radiusVariance = nodes.reduce((sum, node) => {

@@ -386,6 +386,8 @@ int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_ve
 		out_output->nodes[index].y = native_output.nodes[index].y;
 		out_output->nodes[index].z = native_output.nodes[index].z;
 		out_output->nodes[index].coherence = native_output.nodes[index].coherence;
+		out_output->nodes[index].inradius = native_output.nodes[index].inradius;
+		out_output->nodes[index].nearest_neighbor_distance = native_output.nodes[index].nearest_neighbor_distance;
 	}
 
 	return 0;

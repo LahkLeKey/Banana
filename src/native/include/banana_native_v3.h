@@ -95,6 +95,8 @@ typedef struct banana_native_v3_netcode_projection_node {
 	float y;
 	float z;
 	int32_t coherence;
+	float inradius;
+	float nearest_neighbor_distance;
 } banana_native_v3_netcode_projection_node;
 
 typedef struct banana_native_v3_netcode_hypersphere_output {

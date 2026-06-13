@@ -45,8 +45,8 @@ export type NetcodeVectorOutput = {
 };
 
 export type NetcodeHypersphereNode = {
-  readonly x: number; readonly y: number; readonly z: number; readonly coherence:
-                                                                           number;
+  readonly x: number; readonly y: number; readonly z: number; readonly coherence: number; readonly inradius: number; readonly nearestNeighborDistance:
+                                                                                                                                  number;
 };
 
 export type NetcodeHypersphereOutput = {
@@ -331,7 +331,7 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
     signalBuffer.writeInt32LE(input.modelConfidence, 36);
     signalBuffer.writeInt32LE(input.policyMomentum, 40);
 
-    const outputBuffer = Buffer.alloc(76);
+    const outputBuffer = Buffer.alloc(108);
     const rc = this.symbols.banana_native_v3_netcode_build_hypersphere(
         ptr(signalBuffer), ptr(outputBuffer));
     if (rc !== 0) {
@@ -342,12 +342,14 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
 
     const nodes: NetcodeHypersphereNode[] = [];
     for (let node = 0; node < 4; node += 1) {
-      const base = 4 + node * 16;
+      const base = 4 + node * 24;
       nodes.push({
         x: outputBuffer.readFloatLE(base + 0),
         y: outputBuffer.readFloatLE(base + 4),
         z: outputBuffer.readFloatLE(base + 8),
         coherence: outputBuffer.readInt32LE(base + 12),
+        inradius: outputBuffer.readFloatLE(base + 16),
+        nearestNeighborDistance: outputBuffer.readFloatLE(base + 20),
       });
     }
 
@@ -356,8 +358,8 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
       nodes: nodes as
                  [NetcodeHypersphereNode, NetcodeHypersphereNode,
                   NetcodeHypersphereNode, NetcodeHypersphereNode],
-      alignment: outputBuffer.readInt32LE(68),
-      radialStability: outputBuffer.readInt32LE(72),
+      alignment: outputBuffer.readInt32LE(100),
+      radialStability: outputBuffer.readInt32LE(104),
     };
   }
 }
@@ -365,7 +367,8 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
 let cachedService: NativeNetcodeService|null = null;
 
 function resolveNetcodeAdapterMode(): 'ffi' {
-  const adapterMode = (process.env.BANANA_NETCODE_ADAPTER ?? 'ffi').toLowerCase();
+  const adapterMode =
+      (process.env.BANANA_NETCODE_ADAPTER ?? 'ffi').toLowerCase();
   if (adapterMode !== 'ffi' && adapterMode !== 'ffi-only') {
     throw new Error(
         `Unsupported BANANA_NETCODE_ADAPTER mode "${adapterMode}". ` +

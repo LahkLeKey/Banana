@@ -156,5 +156,16 @@ int main(void)
                     "hypersphere radial stability out of range") != 0)
         return 1;
 
+    if (assert_true(hypersphere_output.nodes[0].inradius >= 0.0f,
+                    "hypersphere inradius should be non-negative") != 0)
+        return 1;
+    if (assert_true(hypersphere_output.nodes[0].nearest_neighbor_distance >= 0.0f,
+                    "hypersphere nearest-neighbor distance should be non-negative") != 0)
+        return 1;
+    if (assert_true(hypersphere_output.nodes[0].nearest_neighbor_distance >=
+                        hypersphere_output.nodes[0].inradius,
+                    "hypersphere inradius should be bounded by nearest-neighbor distance") != 0)
+        return 1;
+
     return 0;
 }

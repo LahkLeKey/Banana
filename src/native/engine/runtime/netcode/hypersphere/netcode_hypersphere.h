@@ -14,6 +14,8 @@ extern "C"
         float y;
         float z;
         int coherence;
+        float inradius;
+        float nearest_neighbor_distance;
     } RuntimeNetcodeProjectionNode;
 
     typedef struct RuntimeNetcodeHypersphereOutput
