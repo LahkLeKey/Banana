@@ -39,7 +39,13 @@ function createBaseService(): NativeNetcodeService {
       return;
     },
     async getLedger() {
-      return {snapshots: 0, inspections: 0, trainings: 0, routes: 0, nodeTaps: 0};
+      return {
+        snapshots: 0,
+        inspections: 0,
+        trainings: 0,
+        routes: 0,
+        nodeTaps: 0
+      };
     },
     async buildLearning() {
       return {
@@ -69,10 +75,38 @@ function createBaseService(): NativeNetcodeService {
       return {
         dimensions: 3,
         nodes: [
-          {x: 1, y: 0, z: 0, coherence: 90, inradius: 0.5, nearestNeighborDistance: 1},
-          {x: 0, y: 1, z: 0, coherence: 80, inradius: 0.4, nearestNeighborDistance: 0.8},
-          {x: 0, y: 0, z: 1, coherence: 70, inradius: 0.3, nearestNeighborDistance: 0.6},
-          {x: -1, y: -1, z: -1, coherence: 60, inradius: 0.2, nearestNeighborDistance: 0.4},
+          {
+            x: 1,
+            y: 0,
+            z: 0,
+            coherence: 90,
+            inradius: 0.5,
+            nearestNeighborDistance: 1
+          },
+          {
+            x: 0,
+            y: 1,
+            z: 0,
+            coherence: 80,
+            inradius: 0.4,
+            nearestNeighborDistance: 0.8
+          },
+          {
+            x: 0,
+            y: 0,
+            z: 1,
+            coherence: 70,
+            inradius: 0.3,
+            nearestNeighborDistance: 0.6
+          },
+          {
+            x: -1,
+            y: -1,
+            z: -1,
+            coherence: 60,
+            inradius: 0.2,
+            nearestNeighborDistance: 0.4
+          },
         ],
         alignment: 42,
         radialStability: 73,
@@ -159,55 +193,59 @@ afterEach(() => {
 });
 
 describe('netcode integration', () => {
-  test('maps CRC mismatch decode failures to deterministic error contract', async () => {
-    const service: NativeNetcodeService = {
-      ...createBaseService(),
-      async buildHypersphere() {
-        throw new Error('Native hypersphere payload CRC mismatch');
-      },
-    };
-    const app = await createApp(service);
+  test(
+      'maps CRC mismatch decode failures to deterministic error contract',
+      async () => {
+        const service: NativeNetcodeService = {
+          ...createBaseService(),
+          async buildHypersphere() {
+            throw new Error('Native hypersphere payload CRC mismatch');
+          },
+        };
+        const app = await createApp(service);
 
-    const response = await app.inject({
-      method: 'POST',
-      url: '/api/netcode/analytics',
-      payload: analyticsPayload,
-    });
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/netcode/analytics',
+          payload: analyticsPayload,
+        });
 
-    expect(response.statusCode).toBe(502);
-    expect(response.json()).toMatchObject({
-      errorCode: 'ERR_BAD_CRC',
-      contractVersion: 1,
-      retryable: true,
-    });
+        expect(response.statusCode).toBe(502);
+        expect(response.json()).toMatchObject({
+          errorCode: 'ERR_BAD_CRC',
+          contractVersion: 1,
+          retryable: true,
+        });
 
-    await app.close();
-  });
+        await app.close();
+      });
 
-  test('returns rollout-off fallback payload when feature disabled', async () => {
-    const envSnapshot = snapshotEnv([
-      'BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED',
-      'BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT',
-    ]);
-    const app = await createApp(createBaseService());
-    try {
-      process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED = 'false';
-      process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT = 'rollback';
+  test(
+      'returns rollout-off fallback payload when feature disabled',
+      async () => {
+        const envSnapshot = snapshotEnv([
+          'BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED',
+          'BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT',
+        ]);
+        const app = await createApp(createBaseService());
+        try {
+          process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED = 'false';
+          process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT = 'rollback';
 
-       const response = await app.inject({
-         method: 'POST',
-         url: '/api/netcode/analytics',
-         payload: analyticsPayload,
-       });
+          const response = await app.inject({
+            method: 'POST',
+            url: '/api/netcode/analytics',
+            payload: analyticsPayload,
+          });
 
-       expect(response.statusCode).toBe(503);
-       expect(response.json()).toMatchObject({
-         error: 'Netcode hypersphere kmeans analytics rollout disabled',
-         rollout: {enabled: false, cohort: 'rollback'},
-       });
-     } finally {
-      await app.close();
-       restoreEnv(envSnapshot);
-     }
-   });
- });
+          expect(response.statusCode).toBe(503);
+          expect(response.json()).toMatchObject({
+            error: 'Netcode hypersphere kmeans analytics rollout disabled',
+            rollout: {enabled: false, cohort: 'rollback'},
+          });
+        } finally {
+          await app.close();
+          restoreEnv(envSnapshot);
+        }
+      });
+});

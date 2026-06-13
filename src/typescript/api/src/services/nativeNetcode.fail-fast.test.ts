@@ -3,11 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import {
-  __decodeHypersphereBufferForTests,
-  __resetNativeNetcodeServiceForTests,
-  getNativeNetcodeService,
-} from './nativeNetcode';
+import {__decodeHypersphereBufferForTests, __resetNativeNetcodeServiceForTests, getNativeNetcodeService,} from './nativeNetcode';
 
 type EnvSnapshot = Record<string, string|undefined>;
 
@@ -71,17 +67,18 @@ describe('native netcode fail-fast bootstrap', () => {
     }
   });
 
-  test('fails fast on unsupported hypersphere envelope contract version', () => {
-    const buffer = Buffer.alloc(892);
-    buffer.writeInt32LE(2, 872);
-    buffer.writeInt32LE(0x01020304, 876);
-    buffer.writeInt32LE(872, 880);
-    buffer.writeInt32LE(0, 884);
-    buffer.writeInt32LE(0, 888);
+  test(
+      'fails fast on unsupported hypersphere envelope contract version', () => {
+        const buffer = Buffer.alloc(892);
+        buffer.writeInt32LE(2, 872);
+        buffer.writeInt32LE(0x01020304, 876);
+        buffer.writeInt32LE(872, 880);
+        buffer.writeInt32LE(0, 884);
+        buffer.writeInt32LE(0, 888);
 
-    expect(() => __decodeHypersphereBufferForTests(buffer))
-        .toThrow('Unsupported native hypersphere contract version');
-  });
+        expect(() => __decodeHypersphereBufferForTests(buffer))
+            .toThrow('Unsupported native hypersphere contract version');
+      });
 
   test('fails fast on hypersphere payload CRC mismatch', () => {
     const buffer = Buffer.alloc(892);

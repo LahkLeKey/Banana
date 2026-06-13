@@ -211,12 +211,12 @@ describe('netcode analytics contract', () => {
           vector: {dimensions: 3, contractStrength: [11, 22, 33, 44]},
           hypersphere: {dimensions: 3, alignment: 42, radialStability: 73},
         });
-        expect(json.hypersphereKmeans.centers)
-            .toEqual(expect.arrayContaining([
-              expect.objectContaining({clusterId: 0, memberCount: 2}),
-            ]));
-        expect(json.hypersphereKmeans.observability)
-            .toMatchObject({deterministicHash: 123456});
+        expect(json.hypersphereKmeans.centers).toEqual(expect.arrayContaining([
+          expect.objectContaining({clusterId: 0, memberCount: 2}),
+        ]));
+        expect(json.hypersphereKmeans.observability).toMatchObject({
+          deterministicHash: 123456
+        });
         const payload = response.json() as {
           hypersphere: {
             nodes: Array<{inradius: number; nearestNeighborDistance: number;}>;

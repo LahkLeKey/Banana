@@ -68,8 +68,9 @@ export type NetcodeHypersphereEndiannessDecodePath =
     'little-endian'|'byte-swapped';
 
 export type NetcodeHypersphereKmeansCenter = {
-  readonly clusterId: number; readonly memberCount: number; readonly centerQ16:
-                                                                         readonly number[];
+  readonly clusterId: number;
+  readonly memberCount: number;
+  readonly centerQ16: readonly number[];
 };
 
 export type NetcodeHypersphereKmeansRadius = {
@@ -115,8 +116,8 @@ export type NetcodeHypersphereOutput = {
 const BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES = 872;
 const BANANA_NETCODE_HYPERSPHERE_ENVELOPE_BYTES = 20;
 const BANANA_NETCODE_HYPERSPHERE_BUFFER_BYTES =
-  BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES +
-  BANANA_NETCODE_HYPERSPHERE_ENVELOPE_BYTES;
+    BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES +
+    BANANA_NETCODE_HYPERSPHERE_ENVELOPE_BYTES;
 
 function mapRadiusState(value: number): NetcodeHypersphereRadiusState {
   if (value === 1) return 'single-cluster';
@@ -140,7 +141,8 @@ function mapEndiannessPath(value: number):
   return 'little-endian';
 }
 
-function mapContractStatus(value: number): NetcodeHypersphereKmeansContractStatus {
+function mapContractStatus(value: number):
+    NetcodeHypersphereKmeansContractStatus {
   if (value === -3001 || value === -2001) return 'unsupported-version';
   if (value === -3002 || value === -2002) return 'invalid-payload';
   if (value === -3003 || value === -2003) return 'nonfinite-value';
@@ -160,8 +162,8 @@ function computeCrc32(payload: Buffer): number {
   return (~crc) >>> 0;
 }
 
-export function __decodeHypersphereBufferForTests(
-    outputBuffer: Buffer): NetcodeHypersphereOutput {
+export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
+    NetcodeHypersphereOutput {
   if (outputBuffer.length < BANANA_NETCODE_HYPERSPHERE_BUFFER_BYTES) {
     throw new Error(
         'banana_native_v3_netcode_build_hypersphere returned truncated payload');
@@ -175,7 +177,8 @@ export function __decodeHypersphereBufferForTests(
   const envelopeContractStatus = outputBuffer.readInt32LE(envelopeOffset + 16);
   const envelopeStatus = mapContractStatus(envelopeContractStatus);
 
-  if (envelopeContractVersion !== 1 || envelopeStatus === 'unsupported-version') {
+  if (envelopeContractVersion !== 1 ||
+      envelopeStatus === 'unsupported-version') {
     throw new Error('Unsupported native hypersphere contract version');
   }
   if (envelopeByteOrderTag !== 0x01020304) {
@@ -216,8 +219,7 @@ export function __decodeHypersphereBufferForTests(
   }
 
   const dimensions = outputBuffer.readInt32LE(0);
-  const clusterCount =
-      Math.max(0, Math.min(4, outputBuffer.readInt32LE(108)));
+  const clusterCount = Math.max(0, Math.min(4, outputBuffer.readInt32LE(108)));
   const vectorCount = Math.max(0, Math.min(4, outputBuffer.readInt32LE(112)));
 
   const centers: NetcodeHypersphereKmeansCenter[] = [];
