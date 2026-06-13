@@ -65,7 +65,7 @@ const {useNetcodeSession} = await import('./useNetcodeSession');
 const {NetcodeAnalyticsError} = await import('../../lib/api');
 
 describe('useNetcodeSession contract consumer', () => {
-  it('maps API-provided hypersphere kmeans payload without local recompute',
+  it('maps API-provided hypersphere k3h4 payload without local recompute',
      async () => {
        analyticsError = null;
        analyticsResponse = {
@@ -120,7 +120,7 @@ describe('useNetcodeSession contract consumer', () => {
            alignment: 88,
            radialStability: 77,
          },
-         hypersphereKmeans: {
+         k3h4: {
            centers: [{
              clusterId: 0,
              centerQ16: [65536, 32768],
@@ -169,16 +169,16 @@ describe('useNetcodeSession contract consumer', () => {
                                    }));
 
        await waitFor(() => {
-         expect(result.current.hypersphereKmeans.centers.length).toBe(1);
+         expect(result.current.k3h4.centers.length).toBe(1);
        });
 
-       expect(result.current.hypersphereKmeans.centers[0]?.centerQ16).toEqual([
+       expect(result.current.k3h4.centers[0]?.centerQ16).toEqual([
          65536,
          32768,
        ]);
-       expect(result.current.hypersphereKmeans.radii[0]?.inscribedRadiusQ16)
+       expect(result.current.k3h4.radii[0]?.inscribedRadiusQ16)
            .toBe(24576);
-       expect(result.current.hypersphereKmeans.observability.convergenceStatus)
+       expect(result.current.k3h4.observability.convergenceStatus)
            .toBe('converged');
        expect(result.current.analyticsAvailability).toMatchObject({
          available: true,
@@ -191,7 +191,7 @@ describe('useNetcodeSession contract consumer', () => {
   it('surfaces rollout-disabled analytics as unavailable state', async () => {
     analyticsResponse = null;
     analyticsError = new NetcodeAnalyticsError(503, {
-      error: 'Netcode hypersphere kmeans analytics rollout disabled',
+      error: 'Netcode hypersphere k3h4 analytics rollout disabled',
       errorCode: 'ERR_ROLLOUT_DISABLED',
       contractVersion: 1,
       retryable: false,

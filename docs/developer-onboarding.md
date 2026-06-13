@@ -24,8 +24,8 @@ Preserve this flow for gameplay and analytics contracts:
 
 The `/api/netcode/analytics` route is authoritative for hypersphere K-means metrics.
 
-- Contract fields include `contractVersion`, `lspRepresentation`, `reward`, `link`, `vector`, `hypersphere`, `hypersphereKmeans`, and `rollout`.
-- `hypersphereKmeans` includes centers, radii, weighted Voronoi scores, spectral proxy, and observability fields.
+- Contract fields include `contractVersion`, `lspRepresentation`, `reward`, `link`, `vector`, `hypersphere`, `k3h4`, and `rollout`.
+- `k3h4` includes centers, radii, weighted Voronoi scores, spectral proxy, and observability fields.
 - ABI reliability failures are mapped to deterministic API errors:
   - `ERR_UNSUPPORTED_VERSION`
   - `ERR_BAD_CRC`
@@ -36,8 +36,8 @@ The `/api/netcode/analytics` route is authoritative for hypersphere K-means metr
 
 - `BANANA_NATIVE_PATH`: explicit native library location for API FFI.
 - `BANANA_NETCODE_ADAPTER=ffi`: enables native FFI path.
-- `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=true|false`: rollout gate.
-- `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT=<cohort>`: staged rollout marker.
+- `BANANA_NETCODE_K3H4_ENABLED=true|false`: rollout gate.
+- `BANANA_NETCODE_K3H4_COHORT=<cohort>`: staged rollout marker.
 - `VITE_BANANA_API_BASE_URL`: React API base URL contract.
 
 ## Validation Entry Points
@@ -47,7 +47,7 @@ Native:
 ```bash
 cmake -S src/native -B out/v3-native
 cmake --build out/v3-native
-ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|kmeans" --output-on-failure
+ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure
 ```
 
 API:

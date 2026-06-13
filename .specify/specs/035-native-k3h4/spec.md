@@ -1,6 +1,6 @@
 # Feature Specification: Native Hypersphere K-Means Analytics
 
-**Feature Branch**: `035-native-hypersphere-kmeans`
+**Feature Branch**: `035-native-k3h4`
 
 **Created**: 2026-06-13
 

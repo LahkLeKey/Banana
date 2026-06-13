@@ -1,8 +1,8 @@
 # Implementation Plan: Native Hypersphere K-Means Analytics
 
-**Branch**: `035-native-hypersphere-kmeans` | **Date**: 2026-06-13 | **Spec**: `.specify/specs/035-native-hypersphere-kmeans/spec.md`
+**Branch**: `035-native-k3h4` | **Date**: 2026-06-13 | **Spec**: `.specify/specs/035-native-k3h4/spec.md`
 
-**Input**: Feature specification from `.specify/specs/035-native-hypersphere-kmeans/spec.md`
+**Input**: Feature specification from `.specify/specs/035-native-k3h4/spec.md`
 
 ## Summary
 
@@ -20,7 +20,7 @@ Implement deterministic fixed-point K-means compute in Banana native netcode run
 **Storage**: N/A for primary compute path (in-memory deterministic compute). Existing service persistence remains unchanged.
 
 **Testing**:
-- Native: CTest suites in `out/v3-native` with focused `netcode|hypersphere|kmeans` coverage additions
+- Native: CTest suites in `out/v3-native` with focused `netcode|hypersphere|k3h4` coverage additions
 - API: Bun route/service contract tests (e.g., `src/typescript/api/src/routes/netcode.contract.test.ts`)
 - React: Bun consumer tests in `src/typescript/react/src/domain/notebook`
 
@@ -74,14 +74,14 @@ Implement deterministic fixed-point K-means compute in Banana native netcode run
 ### Documentation (this feature)
 
 ```text
-.specify/specs/035-native-hypersphere-kmeans/
+.specify/specs/035-native-k3h4/
 ├── plan.md
 ├── research.md
 ├── data-model.md
 ├── quickstart.md
 ├── contracts/
-│   ├── native-hypersphere-kmeans-abi.md
-│   └── api-netcode-hypersphere-kmeans.md
+│   ├── native-k3h4-abi.md
+│   └── api-netcode-k3h4.md
 └── tasks.md
 ```
 
@@ -117,7 +117,7 @@ tests/
 
 ### Phase 0: Research and Clarification (Completed)
 
-Output: `.specify/specs/035-native-hypersphere-kmeans/research.md`
+Output: `.specify/specs/035-native-k3h4/research.md`
 
 - Finalized fixed-point representation and deterministic tie-break/order policies.
 - Defined inscribed hypersphere radius guardrails for single-cluster and near-zero radius edge cases.
@@ -127,10 +127,10 @@ Output: `.specify/specs/035-native-hypersphere-kmeans/research.md`
 ### Phase 1: Design and Contracts (Completed)
 
 Outputs:
-- `.specify/specs/035-native-hypersphere-kmeans/data-model.md`
-- `.specify/specs/035-native-hypersphere-kmeans/contracts/native-hypersphere-kmeans-abi.md`
-- `.specify/specs/035-native-hypersphere-kmeans/contracts/api-netcode-hypersphere-kmeans.md`
-- `.specify/specs/035-native-hypersphere-kmeans/quickstart.md`
+- `.specify/specs/035-native-k3h4/data-model.md`
+- `.specify/specs/035-native-k3h4/contracts/native-k3h4-abi.md`
+- `.specify/specs/035-native-k3h4/contracts/api-netcode-k3h4.md`
+- `.specify/specs/035-native-k3h4/quickstart.md`
 
 Design outcomes:
 - Data entities and state transitions defined for batch, centers, radii, scores, spectral proxies, and observability.

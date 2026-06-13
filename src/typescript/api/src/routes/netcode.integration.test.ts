@@ -188,8 +188,8 @@ const analyticsPayload = {
 };
 
 afterEach(() => {
-  delete process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED;
-  delete process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT;
+  delete process.env.BANANA_NETCODE_K3H4_ENABLED;
+  delete process.env.BANANA_NETCODE_K3H4_COHORT;
 });
 
 describe('netcode integration', () => {
@@ -224,13 +224,13 @@ describe('netcode integration', () => {
       'returns rollout-off fallback payload when feature disabled',
       async () => {
         const envSnapshot = snapshotEnv([
-          'BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED',
-          'BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT',
+          'BANANA_NETCODE_K3H4_ENABLED',
+          'BANANA_NETCODE_K3H4_COHORT',
         ]);
         const app = await createApp(createBaseService());
         try {
-          process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED = 'false';
-          process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT = 'rollback';
+          process.env.BANANA_NETCODE_K3H4_ENABLED = 'false';
+          process.env.BANANA_NETCODE_K3H4_COHORT = 'rollback';
 
           const response = await app.inject({
             method: 'POST',
@@ -240,7 +240,7 @@ describe('netcode integration', () => {
 
           expect(response.statusCode).toBe(503);
           expect(response.json()).toMatchObject({
-            error: 'Netcode hypersphere kmeans analytics rollout disabled',
+            error: 'Netcode hypersphere k3h4 analytics rollout disabled',
             rollout: {enabled: false, cohort: 'rollback'},
           });
         } finally {

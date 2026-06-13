@@ -213,15 +213,15 @@ describe('netcode analytics contract', () => {
           lspRepresentation: {
             language: 'netcode.analytics.v1',
             boundedContext: 'netcode',
-            aggregate: 'hypersphere-kmeans',
+            aggregate: 'k3h4',
             authority: 'server-native',
             contractVersion: 1,
           },
         });
-        expect(json.hypersphereKmeans.centers).toEqual(expect.arrayContaining([
+        expect(json.k3h4.centers).toEqual(expect.arrayContaining([
           expect.objectContaining({clusterId: 0, memberCount: 2}),
         ]));
-        expect(json.hypersphereKmeans.observability).toMatchObject({
+        expect(json.k3h4.observability).toMatchObject({
           deterministicHash: 123456
         });
         const payload = response.json() as {

@@ -18,7 +18,7 @@
   "networkDimensions": 8,
   "modelConfidence": 77,
   "policyMomentum": 66,
-  "kmeans": {
+  "k3h4": {
     "clusterCount": 4,
     "maxIterations": 32,
     "convergenceThresholdQ16": 8
@@ -33,7 +33,7 @@
   "lspRepresentation": {
     "language": "netcode.analytics.v1",
     "boundedContext": "netcode",
-    "aggregate": "hypersphere-kmeans",
+    "aggregate": "k3h4",
     "authority": "server-native",
     "contractVersion": 1,
     "deterministicHash": 123456,
@@ -58,7 +58,7 @@
     "nodeVectors": [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6], [0.7, 0.8]],
     "contractStrength": [11, 22, 33, 44]
   },
-  "hypersphereKmeans": {
+  "k3h4": {
     "centers": [
       {
         "clusterId": 0,
@@ -120,6 +120,6 @@
 - When convergence fails, response includes observability metadata and excludes promotable score payloads.
 
 ## Rollout Controls
-- `BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED=true|false`
-- `BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT` for staged activation.
-- Disabled flag returns existing `reward/link/vector/hypersphere` payload without `hypersphereKmeans`.
+- `BANANA_NETCODE_K3H4_ENABLED=true|false`
+- `BANANA_NETCODE_K3H4_COHORT` for staged activation.
+- Disabled flag returns existing `reward/link/vector/hypersphere` payload without `k3h4`.

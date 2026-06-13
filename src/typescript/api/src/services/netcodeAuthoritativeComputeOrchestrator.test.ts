@@ -175,12 +175,12 @@ describe('netcode authoritative compute orchestrator', () => {
         );
 
         expect(result.contractVersion).toBe(1);
-        expect(result.hypersphereKmeans.observability.deterministicHash)
+        expect(result.k3h4.observability.deterministicHash)
             .toBe(123456);
         expect(result.lspRepresentation).toMatchObject({
           language: 'netcode.analytics.v1',
           boundedContext: 'netcode',
-          aggregate: 'hypersphere-kmeans',
+          aggregate: 'k3h4',
           authority: 'server-native',
           contractVersion: 1,
           deterministicHash: 123456,
