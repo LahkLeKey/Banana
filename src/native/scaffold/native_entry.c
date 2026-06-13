@@ -1,4 +1,5 @@
 #include "banana_native_v3.h"
+#include "k3h4/k3h4_hypersphere_orchestration_layer.h"
 #include "k3h4/k3h4_native_orchestrator.h"
 #include "runtime/engine/engine_aux_abi.h"
 #include "runtime/engine/engine_host.h"
@@ -241,7 +242,7 @@ int banana_native_v3_netcode_build_learning(const banana_native_v3_netcode_signa
 	native_input.branch_pressure = signal_input->branch_pressure;
 	native_input.workflow_depth = signal_input->workflow_depth;
 
-	if (banana_native_k3h4_build_learning(native_input, &native_output) != 0)
+	if (banana_native_k3h4_layer_build_learning(native_input, &native_output) != 0)
 	{
 		return -1;
 	}
@@ -281,7 +282,7 @@ int banana_native_v3_netcode_build_reward(const banana_native_v3_netcode_signal_
 	native_input.branch_pressure = signal_input->branch_pressure;
 	native_input.workflow_depth = signal_input->workflow_depth;
 
-	if (banana_native_k3h4_build_reward(native_input, interaction_signal, &native_output) != 0)
+	if (banana_native_k3h4_layer_build_reward(native_input, interaction_signal, &native_output) != 0)
 	{
 		return -1;
 	}
@@ -312,7 +313,7 @@ int banana_native_v3_netcode_build_link(const banana_native_v3_netcode_link_inpu
 	native_input.dependency_pulse = signal_input->dependency_pulse;
 	native_input.interaction_signal = signal_input->interaction_signal;
 
-	if (banana_native_k3h4_build_link(native_input, &native_output) != 0)
+	if (banana_native_k3h4_layer_build_link(native_input, &native_output) != 0)
 	{
 		return -1;
 	}
@@ -350,7 +351,7 @@ int banana_native_v3_netcode_build_vector(const banana_native_v3_netcode_vector_
 	native_input.model_confidence = signal_input->model_confidence;
 	native_input.policy_momentum = signal_input->policy_momentum;
 
-	if (banana_native_k3h4_build_vector(native_input, &native_output) != 0)
+	if (banana_native_k3h4_layer_build_vector(native_input, &native_output) != 0)
 	{
 		return -1;
 	}
@@ -395,7 +396,7 @@ int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_ve
 	native_input.model_confidence = signal_input->model_confidence;
 	native_input.policy_momentum = signal_input->policy_momentum;
 
-	if (banana_native_k3h4_build_hypersphere(native_input, &native_output) != 0)
+	if (banana_native_k3h4_layer_build_hypersphere(native_input, &native_output) != 0)
 	{
 		return -1;
 	}
