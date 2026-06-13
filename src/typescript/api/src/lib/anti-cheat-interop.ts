@@ -357,18 +357,10 @@ export function createDefaultAntiCheatInteropAdapter():
     AntiCheatInteropAdapter {
   const adapterMode =
       (process.env.BANANA_ANTICHEAT_ADAPTER ?? 'ffi').toLowerCase();
-  const requireNative = process.env.BANANA_ANTICHEAT_REQUIRE_NATIVE === 'true';
 
   if (adapterMode === 'inmemory') {
     return new InMemoryAntiCheatInteropAdapter();
   }
 
-  try {
-    return new NativeFFIAntiCheatInteropAdapter();
-  } catch (error) {
-    if (adapterMode === 'ffi-only' || requireNative) {
-      throw error;
-    }
-    return new InMemoryAntiCheatInteropAdapter();
-  }
+  return new NativeFFIAntiCheatInteropAdapter();
 }
