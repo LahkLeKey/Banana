@@ -13,6 +13,7 @@ add_subdirectory(engine)
 add_library(banana_native SHARED
 	scaffold/native_entry.c
 	k3h4/k3h4_native_orchestrator.c
+	k3h4/k3h4_hypersphere_orchestration_layer.c
 )
 set_target_properties(banana_native PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 

@@ -2,10 +2,12 @@ import type {FastifyInstance} from 'fastify';
 
 import {getNativeNetcodeService, type NativeNetcodeService,} from '../services/nativeNetcode.ts';
 import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, type NetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError, type NetcodeHypersphereRollout,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
+import {createK3h4ApplicationOrchestrationLayer, type K3h4ApplicationOrchestrationLayer,} from '../services/k3h4ApplicationOrchestrationLayer.ts';
 
 type NetcodeRouteOptions = {
   netcodeAuthoritativeComputeOrchestrator?:
       NetcodeAnalyticsAuthoritativeComputeOrchestrator;
+  k3h4ApplicationOrchestrationLayer?: K3h4ApplicationOrchestrationLayer;
   netcodeService?: NativeNetcodeService;
 };
 
@@ -30,6 +32,12 @@ export async function registerNetcodeRoutes(
   const netcodeAuthoritativeComputeOrchestrator =
       options.netcodeAuthoritativeComputeOrchestrator ??
       createNetcodeAnalyticsAuthoritativeComputeOrchestrator(netcode);
+    const k3h4ApplicationOrchestrationLayer =
+      options.k3h4ApplicationOrchestrationLayer ??
+      (options.netcodeAuthoritativeComputeOrchestrator ? {
+      compute: (request, rollout) =>
+        netcodeAuthoritativeComputeOrchestrator.compute(request, rollout),
+      } : createK3h4ApplicationOrchestrationLayer(netcode));
 
   app.post<{
     Body: {
@@ -185,8 +193,8 @@ export async function registerNetcodeRoutes(
 
     let orchestratedAnalytics;
     try {
-      orchestratedAnalytics =
-          await netcodeAuthoritativeComputeOrchestrator.compute(body, rollout);
+        orchestratedAnalytics =
+          await k3h4ApplicationOrchestrationLayer.compute(body, rollout);
     } catch (error) {
       if (error instanceof NetcodeAnalyticsOrchestrationError) {
         return reply.status(502).send({
