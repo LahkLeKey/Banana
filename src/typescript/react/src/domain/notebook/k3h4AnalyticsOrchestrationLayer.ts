@@ -1,4 +1,7 @@
-import type {NetcodeAnalyticsResponse} from '../../lib/api';
+import type {
+  NetcodeAnalyticsAbiLayerSnapshot,
+  NetcodeAnalyticsResponse,
+} from '../../lib/api';
 
 import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
@@ -27,6 +30,7 @@ export type K3h4AnalyticsPresentationState = {
   contractVectors: readonly ContractNodeVectorModel[];
   hypersphereProjection: ContractHypersphereProjectionModel;
   k3h4: ContractHypersphereKmeansModel;
+  abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
 };
 
 export function mapK3h4AnalyticsToPresentationState(
@@ -119,5 +123,6 @@ export function mapK3h4AnalyticsToPresentationState(
     contractVectors,
     hypersphereProjection,
     k3h4,
+    abiLayers: analytics.abiLayers.map((layer) => ({...layer})),
   };
 }

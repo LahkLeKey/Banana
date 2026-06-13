@@ -4,6 +4,19 @@ export type NetcodeHypersphereRollout = {
   enabled: boolean; cohort: string;
 };
 
+export type NetcodeAbiLayerName =
+    'learning'|'reward'|'link'|'vector'|'hypersphere';
+
+export type NetcodeAbiLayerSnapshot = {
+  layer: NetcodeAbiLayerName;
+  contractVersion: 1;
+  status: 'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
+      'crc-mismatch';
+  payloadBytes: number;
+  byteOrderTag: number;
+  deterministicHash: number;
+};
+
 export type NetcodeAnalyticsAuthoritativeRequest = {
   callDensity: number; questPercent: number; playerLevel: number;
   comboStreak: number;
@@ -38,6 +51,7 @@ export type NetcodeAnalyticsAuthoritativeResult = {
   vector: NetcodeVectorOutput;
   hypersphere: NetcodeHypersphereOutput;
   k3h4: NetcodeHypersphereKmeansProjection;
+  abiLayers: readonly NetcodeAbiLayerSnapshot[];
   lspRepresentation: NetcodeLspRepresentation;
 };
 
@@ -161,6 +175,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       spectralProxy: hypersphere.spectralProxy,
       observability: hypersphere.observability,
     };
+    const abiLayers = buildAbiLayerCatalog(reward, link, vector, hypersphere);
 
     return {
       contractVersion: 1,
@@ -169,6 +184,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       vector,
       hypersphere,
       k3h4,
+      abiLayers,
       lspRepresentation: {
         language: 'netcode.analytics.v1',
         boundedContext: 'netcode',
