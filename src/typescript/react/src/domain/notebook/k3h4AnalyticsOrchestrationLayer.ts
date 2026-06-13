@@ -2,7 +2,7 @@ import {type NetcodeAbiLayerCoverage, type NetcodeAbiLayerLedger} from '@banana/
 
 import type {NetcodeAnalyticsAbiLayerSnapshot, NetcodeAnalyticsResponse,} from '../../lib/api';
 
-import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
+import type {ContractK3h4Model, ContractK3h4ProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
 const NODE_ORDER: ContractNodeId[] = ['intel', 'objectives', 'player', 'ops'];
 
@@ -27,8 +27,8 @@ const LABELING_BAND = {
 export type K3h4AnalyticsPresentationState = {
   rewardSignal: RewardSignalModel; linkConfidence: NodeLinkConfidenceModel;
   contractVectors: readonly ContractNodeVectorModel[];
-  hypersphereProjection: ContractHypersphereProjectionModel;
-  k3h4: ContractHypersphereKmeansModel;
+  k3h4Projection: ContractK3h4ProjectionModel;
+  k3h4: ContractK3h4Model;
   abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
   abiLayerCoverage: NetcodeAbiLayerCoverage;
   abiLayerLedger: NetcodeAbiLayerLedger;
@@ -56,21 +56,22 @@ export function mapK3h4AnalyticsToPresentationState(
         contractStrength: analytics.vector.contractStrength[index] ?? 0,
       }));
 
-  const hypersphereProjection = {
-    dimensions: analytics.hypersphere.dimensions,
+  const k3h4Projection = {
+    dimensions: analytics.k3h4Projection.dimensions,
     nodes: NODE_ORDER.map(
         (id, index) => ({
           id,
-          x: analytics.hypersphere.nodes[index]?.x ?? 0,
-          y: analytics.hypersphere.nodes[index]?.y ?? 0,
-          z: analytics.hypersphere.nodes[index]?.z ?? 0,
-          coherence: analytics.hypersphere.nodes[index]?.coherence ?? 0,
-          inradius: analytics.hypersphere.nodes[index]?.inradius ?? 0,
+          x: analytics.k3h4Projection.nodes[index]?.x ?? 0,
+          y: analytics.k3h4Projection.nodes[index]?.y ?? 0,
+          z: analytics.k3h4Projection.nodes[index]?.z ?? 0,
+          coherence: analytics.k3h4Projection.nodes[index]?.coherence ?? 0,
+          inradius: analytics.k3h4Projection.nodes[index]?.inradius ?? 0,
           nearestNeighborDistance:
-              analytics.hypersphere.nodes[index]?.nearestNeighborDistance ?? 0,
+              analytics.k3h4Projection.nodes[index]?.nearestNeighborDistance ??
+              0,
         })),
-    alignment: analytics.hypersphere.alignment,
-    radialStability: analytics.hypersphere.radialStability,
+    alignment: analytics.k3h4Projection.alignment,
+    radialStability: analytics.k3h4Projection.radialStability,
   };
 
   const k3h4 = {
@@ -137,7 +138,7 @@ export function mapK3h4AnalyticsToPresentationState(
       ops: analytics.link.ops,
     },
     contractVectors,
-    hypersphereProjection,
+    k3h4Projection,
     k3h4,
     abiLayers,
     abiLayerCoverage,

@@ -65,7 +65,7 @@ type NotebookGameplaySurfaceProps = {
         abiCoverageComplete: boolean;
         abiCoverageMissing: readonly string[];
         abiLayerLedger: readonly {
-            layer: 'learning' | 'reward' | 'link' | 'vector' | 'hypersphere';
+            layer: 'learning' | 'reward' | 'link' | 'vector' | 'k3h4';
             present: boolean;
             contractVersion: number;
             status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch' | 'missing';
@@ -293,7 +293,7 @@ export function NotebookGameplaySurface({
             return 6;
         }
 
-        // Expand hypersphere dimensionality as C-file evidence increases.
+        // Expand K3H4 projection dimensionality as C-file evidence increases.
         return Math.min(16, Math.max(8, 6 + Math.floor(Math.log2(cFileCount + 1))));
     }, [cFileCount]);
     const {
@@ -303,7 +303,7 @@ export function NotebookGameplaySurface({
         recordAction,
         rewardSignal,
         linkConfidence,
-        hypersphereProjection,
+        k3h4Projection,
         k3h4,
         abiLayerLedger,
         abiLayerCoverage,
@@ -406,7 +406,7 @@ export function NotebookGameplaySurface({
     ]);
     const laneContractCoherence = useMemo(() => {
         const coherenceMap = new Map<ContractNodeId, number>();
-        hypersphereProjection.nodes.forEach((node) => {
+        k3h4Projection.nodes.forEach((node) => {
             coherenceMap.set(node.id, node.coherence);
         });
 
@@ -416,11 +416,11 @@ export function NotebookGameplaySurface({
             player: coherenceMap.get('player') ?? 50,
             ops: coherenceMap.get('ops') ?? 50,
         };
-    }, [hypersphereProjection.nodes]);
+    }, [k3h4Projection.nodes]);
     const hasOpenDock = activeDock !== null;
     const orbitLayerCount = useMemo(
-        () => Math.max(2, Math.ceil(hypersphereProjection.dimensions / 2)),
-        [hypersphereProjection.dimensions],
+        () => Math.max(2, Math.ceil(k3h4Projection.dimensions / 2)),
+        [k3h4Projection.dimensions],
     );
     const cFileContractNodes = useMemo(() => {
         if (!contentByFile || allIndexedFiles.length === 0) {
@@ -433,10 +433,10 @@ export function NotebookGameplaySurface({
             orbitLayerCount,
         });
     }, [allIndexedFiles, contentByFile, orbitLayerCount]);
-    const hypersphereOrbitLayers: OrbitLayerSpec[] = useMemo(() => {
+    const k3h4OrbitLayers: OrbitLayerSpec[] = useMemo(() => {
         const layerCount = orbitLayerCount;
-        const alignmentWeight = 0.5 + hypersphereProjection.alignment / 250;
-        const stabilityWeight = 0.5 + hypersphereProjection.radialStability / 250;
+        const alignmentWeight = 0.5 + k3h4Projection.alignment / 250;
+        const stabilityWeight = 0.5 + k3h4Projection.radialStability / 250;
         const orbitProfile = routeModeOrbitProfile[routeMode];
         const hudHorizontalLoad = isCompactViewport ? 0.08 : 0.36;
         const hudVerticalLoad = (hasOpenDock ? 0.18 : 0) + 0.14;
@@ -459,9 +459,9 @@ export function NotebookGameplaySurface({
         });
     }, [
         hasOpenDock,
-        hypersphereProjection.alignment,
-        hypersphereProjection.dimensions,
-        hypersphereProjection.radialStability,
+        k3h4Projection.alignment,
+        k3h4Projection.dimensions,
+        k3h4Projection.radialStability,
         isCompactViewport,
         routeMode,
         orbitLayerCount,
@@ -518,7 +518,7 @@ export function NotebookGameplaySurface({
         const rightBottomSpan = Math.max(8, bottomRightX - center.x);
 
         const projectionById = new Map<ContractNodeId, { x: number; y: number; z: number; }>();
-        hypersphereProjection.nodes.forEach((node) => {
+        k3h4Projection.nodes.forEach((node) => {
             projectionById.set(node.id, { x: node.x, y: node.y, z: node.z });
         });
 
@@ -550,9 +550,9 @@ export function NotebookGameplaySurface({
             player: projectAnchor('player', 'right', 'top'),
             ops: projectAnchor('ops', 'right', 'bottom'),
         };
-    }, [hasOpenDock, hypersphereProjection.nodes]);
+    }, [hasOpenDock, k3h4Projection.nodes]);
     const cFileVisualNodes = useMemo(() => {
-        if (cFileContractNodes.length === 0 || hypersphereOrbitLayers.length === 0) {
+        if (cFileContractNodes.length === 0 || k3h4OrbitLayers.length === 0) {
             return [] as Array<{
                 key: string;
                 x: number;
@@ -572,7 +572,7 @@ export function NotebookGameplaySurface({
         const spiralTightness = 0.78;
 
         return cFileContractNodes.map((node, index) => {
-            const layer = hypersphereOrbitLayers[node.layerHint % hypersphereOrbitLayers.length];
+            const layer = k3h4OrbitLayers[node.layerHint % k3h4OrbitLayers.length];
             const armIndex = index % armCount;
             const armAngle = (Math.PI * 2 * armIndex) / armCount;
             const radialRatio = (node.layerHint + 1) / Math.max(1, orbitLayerCount);
@@ -611,9 +611,9 @@ export function NotebookGameplaySurface({
                 depthBand,
             };
         });
-    }, [cFileContractNodes, hypersphereOrbitLayers, nodeAnchors.center.x, nodeAnchors.center.y, orbitLayerCount]);
+    }, [cFileContractNodes, k3h4OrbitLayers, nodeAnchors.center.x, nodeAnchors.center.y, orbitLayerCount]);
     const ambientGalaxyNodes = useMemo(() => {
-        if (hypersphereOrbitLayers.length === 0) {
+        if (k3h4OrbitLayers.length === 0) {
             return [] as Array<{
                 key: string;
                 x: number;
@@ -631,7 +631,7 @@ export function NotebookGameplaySurface({
 
         const count = 140;
         return Array.from({ length: count }, (_, index) => {
-            const layer = hypersphereOrbitLayers[index % hypersphereOrbitLayers.length];
+            const layer = k3h4OrbitLayers[index % k3h4OrbitLayers.length];
             const seed = Math.sin(index * 12.9898) * 43758.5453;
             const frac = seed - Math.floor(seed);
             const theta = frac * Math.PI * 2 + index * 0.17;
@@ -657,7 +657,7 @@ export function NotebookGameplaySurface({
                 depthBand,
             };
         });
-    }, [hypersphereOrbitLayers, nodeAnchors.center.x, nodeAnchors.center.y]);
+    }, [k3h4OrbitLayers, nodeAnchors.center.x, nodeAnchors.center.y]);
     const renderedGalaxyNodes = cFileVisualNodes.length > 0 ? cFileVisualNodes : ambientGalaxyNodes;
     const lanePulsePhase = useMemo(() => ({
         intel: { forward: 0, reverse: 0.66 },
@@ -931,7 +931,7 @@ export function NotebookGameplaySurface({
                     missionTitle={missionSector.title}
                     routeMode={routeMode}
                     isCompactViewport={isCompactViewport}
-                    hypersphereDimensions={hypersphereProjection.dimensions}
+                    k3h4Dimensions={k3h4Projection.dimensions}
                 />
 
                 <div style={{
@@ -957,7 +957,7 @@ export function NotebookGameplaySurface({
 
                     <GameplayGalaxyField
                         nodeAnchors={nodeAnchors}
-                        hypersphereOrbitLayers={hypersphereOrbitLayers}
+                        k3h4OrbitLayers={k3h4OrbitLayers}
                         routeModeOrbitAccent={routeModeOrbitAccent[routeMode]}
                         renderedGalaxyNodes={renderedGalaxyNodes}
                         peripheralBranchMesh={peripheralBranchMesh}
@@ -1069,8 +1069,8 @@ export function NotebookGameplaySurface({
                             includeCount={includeCount}
                             callDensity={callDensity}
                             riskLabel={riskLabel}
-                            hypersphereDimensions={hypersphereProjection.dimensions}
-                            hypersphereAlignment={hypersphereProjection.alignment}
+                            k3h4Dimensions={k3h4Projection.dimensions}
+                            k3h4Alignment={k3h4Projection.alignment}
                             cFileCount={cFileCount}
                             modelConfidence={learningModel.modelConfidence}
                             extraLines={[

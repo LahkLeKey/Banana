@@ -1,9 +1,9 @@
-#ifndef BANANA_ENGINE_RUNTIME_NETCODE_HYPERSPHERE_PIPELINE_INTERNAL_H
-#define BANANA_ENGINE_RUNTIME_NETCODE_HYPERSPHERE_PIPELINE_INTERNAL_H
+#ifndef BANANA_ENGINE_RUNTIME_NETCODE_K3H4_PIPELINE_INTERNAL_H
+#define BANANA_ENGINE_RUNTIME_NETCODE_K3H4_PIPELINE_INTERNAL_H
 
 #include "netcode_k3h4_pipeline.h"
 
-typedef struct RuntimeNetcodeHyperspherePipelineContext
+typedef struct RuntimeNetcodeK3h4PipelineContext
 {
     const RuntimeNetcodeVectorOutput *input;
     RuntimeNetcodeK3h4Output *output;
@@ -19,6 +19,6 @@ typedef struct RuntimeNetcodeHyperspherePipelineContext
     int dimensions;
     int radius_floor_q16;
     int assignment_family;
-} RuntimeNetcodeHyperspherePipelineContext;
+} RuntimeNetcodeK3h4PipelineContext;
 
 #endif

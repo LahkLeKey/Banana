@@ -2,7 +2,7 @@
 
 This directory stores API validation evidence artifacts by feature.
 
-## Feature 035: Native Hypersphere K-Means
+## Feature 035: Native K3H4 Analytics
 
 Capture API and React presentation-consumer evidence under:
 

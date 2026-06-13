@@ -26,7 +26,7 @@ type NotebookOperationsPanelProps = {
     abiCoverageComplete?: boolean;
     abiCoverageMissing?: readonly string[];
     abiLayerLedger?: readonly {
-        layer: 'learning' | 'reward' | 'link' | 'vector' | 'hypersphere';
+        layer: 'learning' | 'reward' | 'link' | 'vector' | 'k3h4';
         present: boolean;
         contractVersion: number;
         status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch' | 'missing';

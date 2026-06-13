@@ -26,7 +26,7 @@ static void seed_low_cluster_vector_output(RuntimeNetcodeVectorOutput *output)
 
 int main(void)
 {
-    RuntimeNetcodeHyperspherePipelineContext context;
+    RuntimeNetcodeK3h4PipelineContext context;
     RuntimeNetcodeVectorOutput vector_output;
     RuntimeNetcodeK3h4Output k3h4_output;
 

@@ -23,7 +23,7 @@ static int resolve_assignment_family(void)
 }
 
 int runtime_netcode_k3h4_initialize_pipeline_context(
-    RuntimeNetcodeHyperspherePipelineContext *context,
+    RuntimeNetcodeK3h4PipelineContext *context,
     const RuntimeNetcodeVectorOutput *input,
     RuntimeNetcodeK3h4Output *out_output)
 {

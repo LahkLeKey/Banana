@@ -59,30 +59,30 @@ export type NetcodeLearningResponse = {
   };
 };
 
-export type NetcodeHypersphereKmeansCenter = {
+export type NetcodeK3h4Center = {
   clusterId: number; centerQ16: readonly number[];
   memberVectorIds: readonly number[];
   memberCount: number;
 };
 
-export type NetcodeHypersphereKmeansRadius = {
+export type NetcodeK3h4Radius = {
   clusterId: number; nearestNeighborDistanceQ16: number;
   inscribedRadiusQ16: number;
   radiusState: 'ok' | 'degenerate' | 'invalid';
 };
 
-export type NetcodeHypersphereKmeansWeightedScore = {
+export type NetcodeK3h4WeightedScore = {
   vectorId: number; clusterId: number; distanceToCenterQ16: number;
   weightedScoreQ16: number;
   scoreValidity: 'valid' | 'clamped' | 'invalid';
 };
 
-export type NetcodeHypersphereKmeansSpectralProxy = {
+export type NetcodeK3h4SpectralProxy = {
   clusterId: number; frequencyProxyQ16: number; amplitudeProxyQ16: number;
   spectralState: 'ok' | 'low-signal' | 'invalid';
 };
 
-export type NetcodeHypersphereKmeansObservability = {
+export type NetcodeK3h4Observability = {
   convergenceStatus: 'converged'|'max-iterations'|'failed';
   iterationCount: number;
   assignmentChangesLastIteration: number;
@@ -90,12 +90,11 @@ export type NetcodeHypersphereKmeansObservability = {
   deterministicHash: string;
 };
 
-export type NetcodeHypersphereKmeansPayload = {
-  centers: readonly NetcodeHypersphereKmeansCenter[];
-  radii: readonly NetcodeHypersphereKmeansRadius[];
-  weightedVoronoiScores: readonly NetcodeHypersphereKmeansWeightedScore[];
-  spectralProxy: readonly NetcodeHypersphereKmeansSpectralProxy[];
-  observability: NetcodeHypersphereKmeansObservability;
+export type NetcodeK3h4Payload = {
+  centers: readonly NetcodeK3h4Center[]; radii: readonly NetcodeK3h4Radius[];
+  weightedVoronoiScores: readonly NetcodeK3h4WeightedScore[];
+  spectralProxy: readonly NetcodeK3h4SpectralProxy[];
+  observability: NetcodeK3h4Observability;
 };
 
 export type NetcodeAnalyticsRollout = {
@@ -129,7 +128,7 @@ export type NetcodeAnalyticsResponse = {
     dimensions: number; nodeVectors: readonly(readonly number[])[];
     contractStrength: readonly[number, number, number, number];
   };
-  hypersphere: {
+  k3h4Projection: {
     dimensions: number; nodes: readonly {
       x: number;
       y: number;
@@ -141,7 +140,7 @@ export type NetcodeAnalyticsResponse = {
     alignment: number;
     radialStability: number;
   };
-  k3h4: NetcodeHypersphereKmeansPayload;
+  k3h4: NetcodeK3h4Payload;
   abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
   abiLayerCoverage: NetcodeAnalyticsAbiLayerCoverage;
   abiLayerLedger: NetcodeAnalyticsAbiLayerLedger;

@@ -2,7 +2,7 @@ import type {FastifyInstance} from 'fastify';
 
 import {createK3h4ApplicationOrchestrationLayer, type K3h4ApplicationOrchestrationLayer,} from '../services/k3h4ApplicationOrchestrationLayer.ts';
 import {getNativeNetcodeService, type NativeNetcodeService,} from '../services/nativeNetcode.ts';
-import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, type NetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError, type NetcodeHypersphereRollout,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
+import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, type NetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError, type NetcodeK3h4Rollout,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
 
 type NetcodeRouteOptions = {
   netcodeAuthoritativeComputeOrchestrator?:
@@ -24,7 +24,7 @@ function isValidNetworkDimensions(value: unknown): boolean {
       value <= 16;
 }
 
-function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
+function resolveNetcodeK3h4Rollout(): NetcodeK3h4Rollout {
   const enabledRaw =
       (process.env.BANANA_NETCODE_K3H4_ENABLED ?? 'true').trim().toLowerCase();
   const enabled =
@@ -178,10 +178,10 @@ export async function registerNetcodeRoutes(
       interactionSignal?: number;
     }
   }>('/api/netcode/analytics', async (request, reply) => {
-    const rollout = resolveNetcodeHypersphereKmeansRollout();
+    const rollout = resolveNetcodeK3h4Rollout();
     if (!rollout.enabled) {
       return reply.status(503).send({
-        error: 'Netcode hypersphere k3h4 analytics rollout disabled',
+        error: 'Netcode k3h4 analytics rollout disabled',
         rollout,
       });
     }
@@ -277,7 +277,7 @@ export async function registerNetcodeRoutes(
       modelConfidence: number;
       policyMomentum: number;
     }
-  }>('/api/netcode/hypersphere', async (request, reply) => {
+  }>('/api/netcode/k3h4', async (request, reply) => {
     const body = request.body;
     if (!body || !isFiniteNumber(body.callDensity) ||
         !isFiniteNumber(body.questPercent) ||
@@ -290,11 +290,10 @@ export async function registerNetcodeRoutes(
         !isValidNetworkDimensions(body.networkDimensions) ||
         !isFiniteNumber(body.modelConfidence) ||
         !isFiniteNumber(body.policyMomentum)) {
-      return reply.status(400).send(
-          {error: 'Invalid netcode hypersphere payload'});
+      return reply.status(400).send({error: 'Invalid netcode k3h4 payload'});
     }
 
-    const hypersphere = await netcode.buildHypersphere({
+    const k3h4 = await netcode.buildK3h4({
       callDensity: body.callDensity,
       questPercent: body.questPercent,
       playerLevel: body.playerLevel,
@@ -307,6 +306,6 @@ export async function registerNetcodeRoutes(
       modelConfidence: body.modelConfidence,
       policyMomentum: body.policyMomentum,
     });
-    return {hypersphere};
+    return {k3h4};
   });
 }

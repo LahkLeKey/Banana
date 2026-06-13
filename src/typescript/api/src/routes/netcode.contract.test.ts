@@ -72,7 +72,7 @@ function createFakeNetcode(captured: CapturedArgs): NativeNetcodeService {
         contractStrength: [11, 22, 33, 44] as const,
       };
     },
-    async buildHypersphere() {
+    async buildK3h4() {
       return {
         dimensions: 3,
         nodes: [
@@ -216,7 +216,7 @@ describe('netcode analytics contract', () => {
               {neuralRelevanceScore: 88, projectedRewardXp: 144, rewardTier: 1},
           link: {intel: 9, objectives: 8, player: 7, ops: 6},
           vector: {dimensions: 3, contractStrength: [11, 22, 33, 44]},
-          hypersphere: {dimensions: 3, alignment: 42, radialStability: 73},
+          k3h4Projection: {dimensions: 3, alignment: 42, radialStability: 73},
           lspRepresentation: {
             language: 'netcode.analytics.v1',
             boundedContext: 'netcode',
@@ -233,7 +233,7 @@ describe('netcode analytics contract', () => {
         });
         expect(json.abiLayers).toEqual(expect.arrayContaining([
           expect.objectContaining({
-            layer: 'hypersphere',
+            layer: 'k3h4',
             contractVersion: 1,
             status: 'ok',
             payloadBytes: 892,
@@ -249,7 +249,7 @@ describe('netcode analytics contract', () => {
             'reward',
             'link',
             'vector',
-            'hypersphere',
+            'k3h4',
           ],
           missingLayers: [],
         });
@@ -291,7 +291,7 @@ describe('netcode analytics contract', () => {
             deterministicHash: 3,
           },
           {
-            layer: 'hypersphere',
+            layer: 'k3h4',
             present: true,
             contractVersion: 1,
             status: 'ok',
@@ -301,12 +301,13 @@ describe('netcode analytics contract', () => {
           },
         ]);
         const payload = response.json() as {
-          hypersphere: {
+          k3h4Projection: {
             nodes: Array<{inradius: number; nearestNeighborDistance: number;}>;
           };
         };
-        expect(payload.hypersphere.nodes[0]?.inradius).toBe(0.5);
-        expect(payload.hypersphere.nodes[0]?.nearestNeighborDistance).toBe(1);
+        expect(payload.k3h4Projection.nodes[0]?.inradius).toBe(0.5);
+        expect(payload.k3h4Projection.nodes[0]?.nearestNeighborDistance)
+            .toBe(1);
 
         await app.close();
       });
@@ -429,8 +430,8 @@ describe('netcode analytics contract', () => {
     const captured: CapturedArgs = {};
     const failingService: NativeNetcodeService = {
       ...createFakeNetcode(captured),
-      async buildHypersphere() {
-        throw new Error('Unsupported native hypersphere contract version');
+      async buildK3h4() {
+        throw new Error('Unsupported native k3h4 contract version');
       },
     };
     const app = await createApp(failingService);

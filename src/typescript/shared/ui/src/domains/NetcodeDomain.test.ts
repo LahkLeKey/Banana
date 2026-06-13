@@ -68,7 +68,7 @@ describe('NetcodeDomain', () => {
     expect(coverage.missingLayers).toEqual([
       'link',
       'vector',
-      'hypersphere',
+      'k3h4',
     ]);
   });
 
@@ -130,7 +130,7 @@ describe('NetcodeDomain', () => {
         deterministicHash: 22,
       },
       {
-        layer: 'hypersphere',
+        layer: 'k3h4',
         present: false,
         contractVersion: 1,
         status: 'missing',

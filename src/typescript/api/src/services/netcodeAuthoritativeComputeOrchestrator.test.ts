@@ -56,7 +56,7 @@ function createFakeNativeNetcodeService(): NativeNetcodeService {
         contractStrength: [11, 22, 33, 44] as const,
       };
     },
-    async buildHypersphere() {
+    async buildK3h4() {
       return {
         dimensions: 3,
         nodes: [
@@ -185,7 +185,7 @@ describe('netcode authoritative compute orchestrator', () => {
         expect(result.k3h4.observability.deterministicHash).toBe(123456);
         expect(result.abiLayers).toHaveLength(5);
         expect(result.abiLayers[4]).toMatchObject({
-          layer: 'hypersphere',
+          layer: 'k3h4',
           contractVersion: 1,
           status: 'ok',
           payloadBytes: 892,
@@ -200,7 +200,7 @@ describe('netcode authoritative compute orchestrator', () => {
             'reward',
             'link',
             'vector',
-            'hypersphere',
+            'k3h4',
           ],
           missingLayers: [],
         });
@@ -242,7 +242,7 @@ describe('netcode authoritative compute orchestrator', () => {
             deterministicHash: 3,
           },
           {
-            layer: 'hypersphere',
+            layer: 'k3h4',
             present: true,
             contractVersion: 1,
             status: 'ok',
@@ -267,8 +267,8 @@ describe('netcode authoritative compute orchestrator', () => {
       async () => {
         const failingNativeService: NativeNetcodeService = {
           ...createFakeNativeNetcodeService(),
-          async buildHypersphere() {
-            throw new Error('Native hypersphere payload CRC mismatch');
+          async buildK3h4() {
+            throw new Error('Native k3h4 payload CRC mismatch');
           },
         };
         const orchestrator =

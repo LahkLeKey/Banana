@@ -1,7 +1,7 @@
 # Banana Native V3
 Pure C gameplay/runtime scaffold.
 
-## Netcode Hypersphere Architecture
+## Netcode K3H4 Architecture
 The metrics netcode path is split into a thin facade plus focused orchestration modules so server-authoritative compute stays deterministic and ABI-safe.
 
 - `runtime/netcode/k3h4/netcode_k3h4.c`: public facade entrypoint.

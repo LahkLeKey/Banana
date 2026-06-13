@@ -1,4 +1,4 @@
-# Contract: API Netcode Hypersphere K-Means Response
+# Contract: API Netcode K3H4 Response
 
 ## Endpoint
 - Method: `POST`
@@ -107,7 +107,7 @@
 ```json
 {
   "errorCode": "ERR_UNSUPPORTED_VERSION",
-  "message": "Unsupported native hypersphere contract version",
+  "message": "Unsupported native k3h4 contract version",
   "contractVersion": 1,
   "retryable": false
 }
@@ -122,4 +122,4 @@
 ## Rollout Controls
 - `BANANA_NETCODE_K3H4_ENABLED=true|false`
 - `BANANA_NETCODE_K3H4_COHORT` for staged activation.
-- Disabled flag returns existing `reward/link/vector/hypersphere` payload without `k3h4`.
+- Disabled flag returns existing `reward/link/vector` payload without `k3h4`.

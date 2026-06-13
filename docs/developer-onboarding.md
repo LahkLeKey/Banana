@@ -22,9 +22,9 @@ Preserve this flow for gameplay and analytics contracts:
 
 ## Deterministic Netcode Analytics (Feature 035)
 
-The `/api/netcode/analytics` route is authoritative for hypersphere K-means metrics.
+The `/api/netcode/analytics` route is authoritative for K3H4 netcode metrics.
 
-- Contract fields include `contractVersion`, `lspRepresentation`, `reward`, `link`, `vector`, `hypersphere`, `k3h4`, and `rollout`.
+- Contract fields include `contractVersion`, `lspRepresentation`, `reward`, `link`, `vector`, `k3h4`, and `rollout`.
 - `k3h4` includes centers, radii, weighted Voronoi scores, spectral proxy, and observability fields.
 - ABI reliability failures are mapped to deterministic API errors:
   - `ERR_UNSUPPORTED_VERSION`
@@ -47,7 +47,7 @@ Native:
 ```bash
 cmake -S src/native -B out/v3-native
 cmake --build out/v3-native
-ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure
+ctest -C Debug --test-dir out/v3-native -R "netcode|k3h4" --output-on-failure
 ```
 
 API:

@@ -3,7 +3,7 @@
 description: "Tasks for 035-native-k3h4"
 ---
 
-# Tasks: Native Hypersphere K-Means Analytics
+# Tasks: Native K3H4 Analytics
 
 **Input**: Design documents from `.specify/specs/035-native-k3h4/`
 
@@ -40,7 +40,7 @@ description: "Tasks for 035-native-k3h4"
 
 ## Phase 3: User Story 1 - Deterministic Compute (Priority: P1) 🎯 MVP
 
-**Goal**: Deliver deterministic fixed-point K-means compute, inscribed hypersphere geometry, weighted Voronoi scoring, and spectral proxy outputs.
+**Goal**: Deliver deterministic fixed-point K-means compute, inscribed radius geometry, weighted Voronoi scoring, and spectral proxy outputs.
 
 **Independent Test**: Repeated identical requests produce byte-identical deterministic payload fields and deterministic hash values.
 
@@ -54,7 +54,7 @@ description: "Tasks for 035-native-k3h4"
 - [x] T010 [P] [US1] Create fixed-point math and deterministic rounding helpers in src/native/engine/runtime/netcode/vector/netcode_fixed_point.h and src/native/engine/runtime/netcode/vector/netcode_fixed_point.c
 - [x] T011 [P] [US1] Implement deterministic K-means iteration core and stable assignment ordering in src/native/engine/runtime/netcode/vector/netcode_k3h4.h and src/native/engine/runtime/netcode/vector/netcode_k3h4.c
 - [x] T012 [US1] Integrate K-means core into vector compute orchestration in src/native/engine/runtime/netcode/vector/netcode_vector.c and src/native/engine/runtime/netcode/vector/netcode_vector.h
-- [x] T013 [US1] Extend hypersphere output model with inscribed radius, weighted Voronoi scores, and spectral proxies in src/native/engine/runtime/netcode/hypersphere/netcode_hypersphere.h and src/native/engine/runtime/netcode/hypersphere/netcode_hypersphere.c
+- [x] T013 [US1] Extend K3H4 output model with inscribed radius, weighted Voronoi scores, and spectral proxies in src/native/engine/runtime/netcode/k3h4/netcode_k3h4_metrics.h and src/native/engine/runtime/netcode/k3h4/netcode_k3h4_metrics.c
 - [x] T014 [US1] Extend native ABI bridge structs for deterministic compute outputs in src/native/engine/runtime/abi/netcode/netcode_abi.h and src/native/engine/runtime/abi/netcode/netcode_abi.c
 - [x] T015 [US1] Expose new compute outputs through exported ABI boundary in src/native/include/banana_native_v3.h and src/native/scaffold/native_entry.c
 - [x] T016 [US1] Wire new netcode fixed-point and k3h4 runtime modules into build in src/native/engine/CMakeLists.txt

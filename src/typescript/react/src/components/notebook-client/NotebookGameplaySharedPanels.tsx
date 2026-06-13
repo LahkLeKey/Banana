@@ -25,8 +25,8 @@ type TelemetryRailProps = {
     readonly includeCount: number;
     readonly callDensity: number;
     readonly riskLabel: string;
-    readonly hypersphereDimensions: number;
-    readonly hypersphereAlignment: number;
+    readonly k3h4Dimensions: number;
+    readonly k3h4Alignment: number;
     readonly cFileCount: number;
     readonly modelConfidence: number;
     readonly extraLines?: readonly string[];
@@ -40,8 +40,8 @@ export function TelemetryRail(props: TelemetryRailProps) {
         includeCount,
         callDensity,
         riskLabel,
-        hypersphereDimensions,
-        hypersphereAlignment,
+        k3h4Dimensions,
+        k3h4Alignment,
         cFileCount,
         modelConfidence,
         extraLines = [],
@@ -80,9 +80,9 @@ export function TelemetryRail(props: TelemetryRailProps) {
                 display: 'grid',
                 gap: 6,
             }}>
-                <div style={{ fontSize: 9, color: '#a5b4fc', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Hypersphere</div>
-                <div style={{ fontSize: 10, color: '#e2e8f0' }}>D{hypersphereDimensions} · N/2 {Math.max(2, Math.ceil(hypersphereDimensions / 2))}</div>
-                <div style={{ fontSize: 10, color: '#e2e8f0' }}>Align {hypersphereAlignment}%</div>
+                <div style={{ fontSize: 9, color: '#a5b4fc', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>K3H4</div>
+                <div style={{ fontSize: 10, color: '#e2e8f0' }}>D{k3h4Dimensions} · N/2 {Math.max(2, Math.ceil(k3h4Dimensions / 2))}</div>
+                <div style={{ fontSize: 10, color: '#e2e8f0' }}>Align {k3h4Alignment}%</div>
                 <div style={{ fontSize: 10, color: '#7dd3fc' }}>C files {cFileCount}</div>
                 <div style={{ fontSize: 10, color: '#a7f3d0' }}>ML conf {modelConfidence}%</div>
                 {extraLines.map((line) => (
@@ -419,7 +419,7 @@ type GameplayTopHudProps = {
     readonly missionTitle: string;
     readonly routeMode: string;
     readonly isCompactViewport: boolean;
-    readonly hypersphereDimensions: number;
+    readonly k3h4Dimensions: number;
 };
 
 export function GameplayTopHud(props: GameplayTopHudProps) {
@@ -429,7 +429,7 @@ export function GameplayTopHud(props: GameplayTopHudProps) {
         missionTitle,
         routeMode,
         isCompactViewport,
-        hypersphereDimensions,
+        k3h4Dimensions,
     } = props;
 
     return (
@@ -480,7 +480,7 @@ export function GameplayTopHud(props: GameplayTopHudProps) {
                 textTransform: 'uppercase',
                 visibility: isCompactViewport ? 'hidden' : 'visible',
             }}>
-                Hyper D{hypersphereDimensions}
+                K3H4 D{k3h4Dimensions}
             </div>
         </div>
     );
@@ -706,7 +706,7 @@ type LanePulsePhaseSpec = {
 
 type GameplayGalaxyFieldProps = {
     readonly nodeAnchors: OrbAnchorSet;
-    readonly hypersphereOrbitLayers: readonly OrbitLayerSpec[];
+    readonly k3h4OrbitLayers: readonly OrbitLayerSpec[];
     readonly routeModeOrbitAccent: string;
     readonly renderedGalaxyNodes: readonly GalaxyNodeSpec[];
     readonly peripheralBranchMesh: readonly BranchLinkSpec[];
@@ -732,7 +732,7 @@ type GameplayGalaxyFieldProps = {
 export function GameplayGalaxyField(props: GameplayGalaxyFieldProps) {
     const {
         nodeAnchors,
-        hypersphereOrbitLayers,
+        k3h4OrbitLayers,
         routeModeOrbitAccent,
         renderedGalaxyNodes,
         peripheralBranchMesh,
@@ -771,7 +771,7 @@ export function GameplayGalaxyField(props: GameplayGalaxyFieldProps) {
             </defs>
             <rect width="100" height="100" fill="url(#bng-grid)" />
 
-            {hypersphereOrbitLayers.map((layer) => (
+            {k3h4OrbitLayers.map((layer) => (
                 <ellipse
                     key={layer.key}
                     cx={nodeAnchors.center.x}
@@ -789,16 +789,16 @@ export function GameplayGalaxyField(props: GameplayGalaxyFieldProps) {
             <ellipse
                 cx={nodeAnchors.center.x}
                 cy={nodeAnchors.center.y + 1.6}
-                rx={(hypersphereOrbitLayers[hypersphereOrbitLayers.length - 1]?.radius ?? 18) * 1.12}
-                ry={(hypersphereOrbitLayers[hypersphereOrbitLayers.length - 1]?.radius ?? 18) * 0.58}
+                rx={(k3h4OrbitLayers[k3h4OrbitLayers.length - 1]?.radius ?? 18) * 1.12}
+                ry={(k3h4OrbitLayers[k3h4OrbitLayers.length - 1]?.radius ?? 18) * 0.58}
                 fill="rgba(10, 25, 49, 0.18)"
             />
 
             <ellipse
                 cx={nodeAnchors.center.x}
                 cy={nodeAnchors.center.y}
-                rx={hypersphereOrbitLayers[hypersphereOrbitLayers.length - 1]?.radius ?? 18}
-                ry={(hypersphereOrbitLayers[hypersphereOrbitLayers.length - 1]?.radius ?? 18) * 0.52}
+                rx={k3h4OrbitLayers[k3h4OrbitLayers.length - 1]?.radius ?? 18}
+                ry={(k3h4OrbitLayers[k3h4OrbitLayers.length - 1]?.radius ?? 18) * 0.52}
                 fill="none"
                 stroke="rgba(59, 130, 246, 0.14)"
                 strokeWidth="1.2"
@@ -910,8 +910,8 @@ export function GameplayGalaxyField(props: GameplayGalaxyFieldProps) {
             <ellipse
                 cx={nodeAnchors.center.x}
                 cy={nodeAnchors.center.y + 2.4}
-                rx={(hypersphereOrbitLayers[Math.max(0, hypersphereOrbitLayers.length - 2)]?.radius ?? 14) * 0.9}
-                ry={(hypersphereOrbitLayers[Math.max(0, hypersphereOrbitLayers.length - 2)]?.radius ?? 14) * 0.24}
+                rx={(k3h4OrbitLayers[Math.max(0, k3h4OrbitLayers.length - 2)]?.radius ?? 14) * 0.9}
+                ry={(k3h4OrbitLayers[Math.max(0, k3h4OrbitLayers.length - 2)]?.radius ?? 14) * 0.24}
                 fill="rgba(2, 6, 23, 0.32)"
             />
 

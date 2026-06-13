@@ -44,106 +44,101 @@ export type NetcodeVectorOutput = {
                                                                                                  readonly[number, number, number, number];
 };
 
-export type NetcodeHypersphereKmeansContractStatus = 'ok'|'unsupported-version'|
+export type NetcodeK3h4ContractStatus = 'ok'|'unsupported-version'|
     'invalid-payload'|'nonfinite-value'|'crc-mismatch';
 
-export type NetcodeHypersphereKmeansEnvelope = {
+export type NetcodeK3h4Envelope = {
   readonly contractVersion: number; readonly byteOrderTag: number; readonly payloadBytes: number; readonly payloadCrc32: number; readonly status:
-                                                                                                                                              NetcodeHypersphereKmeansContractStatus;
+                                                                                                                                              NetcodeK3h4ContractStatus;
 };
 
-export type NetcodeHypersphereNode = {
+export type NetcodeK3h4Node = {
   readonly x: number; readonly y: number; readonly z: number; readonly coherence: number; readonly inradius: number; readonly nearestNeighborDistance:
                                                                                                                                   number;
 };
 
-export type NetcodeHypersphereRadiusState =
-    'ok'|'single-cluster'|'near-zero-clamped';
+export type NetcodeK3h4RadiusState = 'ok'|'single-cluster'|'near-zero-clamped';
 
-export type NetcodeHypersphereScoreValidity = 'valid'|'invalid-radius';
+export type NetcodeK3h4ScoreValidity = 'valid'|'invalid-radius';
 
-export type NetcodeHypersphereSpectralState = 'ok'|'radius-floor-applied';
+export type NetcodeK3h4SpectralState = 'ok'|'radius-floor-applied';
 
-export type NetcodeHypersphereEndiannessDecodePath =
-    'little-endian'|'byte-swapped';
+export type NetcodeK3h4EndiannessDecodePath = 'little-endian'|'byte-swapped';
 
 type NetcodeQ16Vector = readonly number[];
 
-export type NetcodeHypersphereKmeansCenter = {
+export type NetcodeK3h4Center = {
   readonly clusterId: number; readonly memberCount: number; readonly centerQ16:
                                                                          NetcodeQ16Vector;
 };
 
-export type NetcodeHypersphereKmeansRadius = {
+export type NetcodeK3h4Radius = {
   readonly clusterId: number; readonly nearestNeighborDistanceQ16: number; readonly inscribedRadiusQ16: number; readonly radiusState:
-                                                                                                                             NetcodeHypersphereRadiusState;
+                                                                                                                             NetcodeK3h4RadiusState;
 };
 
-export type NetcodeHypersphereWeightedVoronoiScore = {
+export type NetcodeK3h4WeightedVoronoiScore = {
   readonly vectorId: number; readonly clusterId: number; readonly distanceToCenterQ16: number; readonly weightedScoreQ16: number; readonly scoreValidity:
-                                                                                                                                               NetcodeHypersphereScoreValidity;
+                                                                                                                                               NetcodeK3h4ScoreValidity;
 };
 
-export type NetcodeHypersphereSpectralProxy = {
+export type NetcodeK3h4SpectralProxy = {
   readonly clusterId: number; readonly frequencyProxyQ16: number; readonly amplitudeProxyQ16: number; readonly spectralState:
-                                                                                                                   NetcodeHypersphereSpectralState;
+                                                                                                                   NetcodeK3h4SpectralState;
 };
 
-export type NetcodeHypersphereObservability = {
+export type NetcodeK3h4Observability = {
   readonly convergenceStatus: number; readonly iterationCount: number; readonly assignmentChangesLastIteration: number; readonly deterministicHash: number; readonly endiannessDecodePath:
-                                                                                                                                                                         NetcodeHypersphereEndiannessDecodePath;
+                                                                                                                                                                         NetcodeK3h4EndiannessDecodePath;
 };
 
-export type NetcodeHypersphereOutput = {
+export type NetcodeK3h4Output = {
   readonly dimensions: number;
   readonly nodes: readonly [
-    NetcodeHypersphereNode,
-    NetcodeHypersphereNode,
-    NetcodeHypersphereNode,
-    NetcodeHypersphereNode,
+    NetcodeK3h4Node,
+    NetcodeK3h4Node,
+    NetcodeK3h4Node,
+    NetcodeK3h4Node,
   ];
   readonly alignment: number;
   readonly radialStability: number;
   readonly clusterCount: number;
   readonly vectorCount: number;
-  readonly centers: readonly NetcodeHypersphereKmeansCenter[];
-  readonly radii: readonly NetcodeHypersphereKmeansRadius[];
-  readonly weightedVoronoiScores: readonly NetcodeHypersphereWeightedVoronoiScore[];
-  readonly spectralProxy: readonly NetcodeHypersphereSpectralProxy[];
-  readonly observability: NetcodeHypersphereObservability;
-  readonly envelope?: NetcodeHypersphereKmeansEnvelope;
+  readonly centers: readonly NetcodeK3h4Center[];
+  readonly radii: readonly NetcodeK3h4Radius[];
+  readonly weightedVoronoiScores: readonly NetcodeK3h4WeightedVoronoiScore[];
+  readonly spectralProxy: readonly NetcodeK3h4SpectralProxy[];
+  readonly observability: NetcodeK3h4Observability;
+  readonly envelope?: NetcodeK3h4Envelope;
 };
 
-const BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES = 872;
-const BANANA_NETCODE_HYPERSPHERE_ENVELOPE_BYTES = 20;
-const BANANA_NETCODE_HYPERSPHERE_BUFFER_BYTES =
-    BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES +
-    BANANA_NETCODE_HYPERSPHERE_ENVELOPE_BYTES;
+const BANANA_NETCODE_K3H4_PAYLOAD_BYTES = 872;
+const BANANA_NETCODE_K3H4_ENVELOPE_BYTES = 20;
+const BANANA_NETCODE_K3H4_BUFFER_BYTES =
+    BANANA_NETCODE_K3H4_PAYLOAD_BYTES + BANANA_NETCODE_K3H4_ENVELOPE_BYTES;
 
-function mapRadiusState(value: number): NetcodeHypersphereRadiusState {
+function mapRadiusState(value: number): NetcodeK3h4RadiusState {
   if (value === 1) return 'single-cluster';
   if (value === 2) return 'near-zero-clamped';
   return 'ok';
 }
 
-function mapScoreValidity(value: number): NetcodeHypersphereScoreValidity {
+function mapScoreValidity(value: number): NetcodeK3h4ScoreValidity {
   if (value === 1) return 'invalid-radius';
   return 'valid';
 }
 
-function mapSpectralState(value: number): NetcodeHypersphereSpectralState {
+function mapSpectralState(value: number): NetcodeK3h4SpectralState {
   if (value === 1) return 'radius-floor-applied';
   return 'ok';
 }
 
-function mapEndiannessPath(value: number):
-    NetcodeHypersphereEndiannessDecodePath {
+function mapEndiannessPath(value: number): NetcodeK3h4EndiannessDecodePath {
   if (value === 1) return 'byte-swapped';
   return 'little-endian';
 }
 
-function mapContractStatus(value: number):
-    NetcodeHypersphereKmeansContractStatus {
+function mapContractStatus(value: number): NetcodeK3h4ContractStatus {
   if (value === -3001 || value === -2001) return 'unsupported-version';
   if (value === -3002 || value === -2002) return 'invalid-payload';
   if (value === -3003 || value === -2003) return 'nonfinite-value';
@@ -163,14 +158,14 @@ function computeCrc32(payload: Buffer): number {
   return (~crc) >>> 0;
 }
 
-export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
-    NetcodeHypersphereOutput {
-  if (outputBuffer.length < BANANA_NETCODE_HYPERSPHERE_BUFFER_BYTES) {
+export function __decodeK3h4BufferForTests(outputBuffer: Buffer):
+    NetcodeK3h4Output {
+  if (outputBuffer.length < BANANA_NETCODE_K3H4_BUFFER_BYTES) {
     throw new Error(
-        'banana_native_v3_netcode_build_hypersphere returned truncated payload');
+        'banana_native_v3_netcode_build_k3h4 returned truncated payload');
   }
 
-  const envelopeOffset = BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES;
+  const envelopeOffset = BANANA_NETCODE_K3H4_PAYLOAD_BYTES;
   const envelopeContractVersion = outputBuffer.readInt32LE(envelopeOffset + 0);
   const envelopeByteOrderTag = outputBuffer.readInt32LE(envelopeOffset + 4);
   const envelopePayloadBytes = outputBuffer.readInt32LE(envelopeOffset + 8);
@@ -180,33 +175,33 @@ export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
 
   if (envelopeContractVersion !== 1 ||
       envelopeStatus === 'unsupported-version') {
-    throw new Error('Unsupported native hypersphere contract version');
+    throw new Error('Unsupported native k3h4 contract version');
   }
   if (envelopeByteOrderTag !== 0x01020304) {
-    throw new Error('Invalid native hypersphere payload header');
+    throw new Error('Invalid native k3h4 payload header');
   }
-  if (envelopePayloadBytes > BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES) {
+  if (envelopePayloadBytes > BANANA_NETCODE_K3H4_PAYLOAD_BYTES) {
     throw new Error(
-        'banana_native_v3_netcode_build_hypersphere returned truncated payload');
+        'banana_native_v3_netcode_build_k3h4 returned truncated payload');
   }
   if (envelopePayloadBytes <= 0) {
-    throw new Error('Invalid native hypersphere payload length');
+    throw new Error('Invalid native k3h4 payload length');
   }
   if (envelopeStatus === 'invalid-payload') {
-    throw new Error('Invalid native hypersphere payload');
+    throw new Error('Invalid native k3h4 payload');
   }
 
   const expectedCrc = envelopePayloadCrc32 >>> 0;
   const actualCrc =
       computeCrc32(outputBuffer.subarray(0, envelopePayloadBytes));
   if (actualCrc !== expectedCrc || envelopeStatus === 'crc-mismatch') {
-    throw new Error('Native hypersphere payload CRC mismatch');
+    throw new Error('Native k3h4 payload CRC mismatch');
   }
   if (envelopeStatus === 'nonfinite-value') {
-    throw new Error('Native hypersphere payload contains non-finite values');
+    throw new Error('Native k3h4 payload contains non-finite values');
   }
 
-  const nodes: NetcodeHypersphereNode[] = [];
+  const nodes: NetcodeK3h4Node[] = [];
   for (let node = 0; node < 4; node += 1) {
     const base = 4 + node * 24;
     nodes.push({
@@ -223,7 +218,7 @@ export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
   const clusterCount = Math.max(0, Math.min(4, outputBuffer.readInt32LE(108)));
   const vectorCount = Math.max(0, Math.min(4, outputBuffer.readInt32LE(112)));
 
-  const centers: NetcodeHypersphereKmeansCenter[] = [];
+  const centers: NetcodeK3h4Center[] = [];
   for (let cluster = 0; cluster < clusterCount; cluster += 1) {
     const base = 116 + cluster * 72;
     const centerQ16: number[] = [];
@@ -237,7 +232,7 @@ export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
     });
   }
 
-  const radii: NetcodeHypersphereKmeansRadius[] = [];
+  const radii: NetcodeK3h4Radius[] = [];
   for (let cluster = 0; cluster < clusterCount; cluster += 1) {
     const base = 404 + cluster * 16;
     radii.push({
@@ -248,7 +243,7 @@ export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
     });
   }
 
-  const weightedVoronoiScores: NetcodeHypersphereWeightedVoronoiScore[] = [];
+  const weightedVoronoiScores: NetcodeK3h4WeightedVoronoiScore[] = [];
   for (let index = 0; index < vectorCount * clusterCount; index += 1) {
     const base = 468 + index * 20;
     weightedVoronoiScores.push({
@@ -260,7 +255,7 @@ export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
     });
   }
 
-  const spectralProxy: NetcodeHypersphereSpectralProxy[] = [];
+  const spectralProxy: NetcodeK3h4SpectralProxy[] = [];
   for (let cluster = 0; cluster < clusterCount; cluster += 1) {
     const base = 788 + cluster * 16;
     spectralProxy.push({
@@ -271,7 +266,7 @@ export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
     });
   }
 
-  const observability: NetcodeHypersphereObservability = {
+  const observability: NetcodeK3h4Observability = {
     convergenceStatus: outputBuffer.readInt32LE(852),
     iterationCount: outputBuffer.readInt32LE(856),
     assignmentChangesLastIteration: outputBuffer.readInt32LE(860),
@@ -282,8 +277,8 @@ export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
   return {
     dimensions,
     nodes: nodes as
-               [NetcodeHypersphereNode, NetcodeHypersphereNode,
-                NetcodeHypersphereNode, NetcodeHypersphereNode],
+               [NetcodeK3h4Node, NetcodeK3h4Node, NetcodeK3h4Node,
+                NetcodeK3h4Node],
     alignment: outputBuffer.readInt32LE(100),
     radialStability: outputBuffer.readInt32LE(104),
     clusterCount,
@@ -314,8 +309,7 @@ export interface NativeNetcodeService {
       Promise<NetcodeRewardOutput>;
   buildLink(input: NetcodeLinkInput): Promise<NetcodeLinkOutput>;
   buildVector(input: NetcodeVectorInput): Promise<NetcodeVectorOutput>;
-  buildHypersphere(input: NetcodeVectorInput):
-      Promise<NetcodeHypersphereOutput>;
+  buildK3h4(input: NetcodeVectorInput): Promise<NetcodeK3h4Output>;
 }
 
 type NativeNetcodeSymbols = {
@@ -332,7 +326,7 @@ type NativeNetcodeSymbols = {
       (signalInputPtr: Pointer, outOutputPtr: Pointer) => number;
   banana_native_v3_netcode_build_vector:
       (signalInputPtr: Pointer, outOutputPtr: Pointer) => number;
-  banana_native_v3_netcode_build_hypersphere:
+  banana_native_v3_netcode_build_k3h4:
       (signalInputPtr: Pointer, outOutputPtr: Pointer) => number;
 };
 
@@ -371,7 +365,7 @@ function createNativeBinding(): NativeNetcodeSymbols {
           args: [FFIType.ptr, FFIType.ptr],
           returns: FFIType.i32,
         },
-        banana_native_v3_netcode_build_hypersphere: {
+        banana_native_v3_netcode_build_k3h4: {
           args: [FFIType.ptr, FFIType.ptr],
           returns: FFIType.i32,
         },
@@ -558,8 +552,8 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
     };
   }
 
-  public async buildHypersphere(input: NetcodeVectorInput):
-      Promise<NetcodeHypersphereOutput> {
+  public async buildK3h4(input: NetcodeVectorInput):
+      Promise<NetcodeK3h4Output> {
     const signalBuffer = Buffer.alloc(44);
     signalBuffer.writeInt32LE(input.callDensity, 0);
     signalBuffer.writeInt32LE(input.questPercent, 4);
@@ -573,16 +567,15 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
     signalBuffer.writeInt32LE(input.modelConfidence, 36);
     signalBuffer.writeInt32LE(input.policyMomentum, 40);
 
-    const outputBuffer = Buffer.alloc(BANANA_NETCODE_HYPERSPHERE_BUFFER_BYTES);
-    const rc = this.symbols.banana_native_v3_netcode_build_hypersphere(
+    const outputBuffer = Buffer.alloc(BANANA_NETCODE_K3H4_BUFFER_BYTES);
+    const rc = this.symbols.banana_native_v3_netcode_build_k3h4(
         ptr(signalBuffer), ptr(outputBuffer));
     if (rc !== 0) {
       throw new Error(
-          `banana_native_v3_netcode_build_hypersphere failed with status ${
-              rc}`);
+          `banana_native_v3_netcode_build_k3h4 failed with status ${rc}`);
     }
 
-    return __decodeHypersphereBufferForTests(outputBuffer);
+    return __decodeK3h4BufferForTests(outputBuffer);
   }
 }
 

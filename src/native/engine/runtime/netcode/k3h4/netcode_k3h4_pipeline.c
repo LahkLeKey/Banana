@@ -9,7 +9,7 @@ int runtime_netcode_k3h4_pipeline_execute(
     const RuntimeNetcodeVectorOutput *input,
     RuntimeNetcodeK3h4Output *out_output)
 {
-    RuntimeNetcodeHyperspherePipelineContext context;
+    RuntimeNetcodeK3h4PipelineContext context;
 
     if (runtime_netcode_k3h4_initialize_pipeline_context(
             &context,

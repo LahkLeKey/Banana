@@ -1,4 +1,4 @@
-# Quickstart: Native Hypersphere K-Means Analytics
+# Quickstart: Native K3H4 Analytics
 
 ## 1) Prerequisites
 - Branch: `035-native-k3h4`
@@ -30,7 +30,7 @@ cmake --build out/v3-native
 
 ## 3) Run focused native tests
 ```bash
-ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure
+ctest -C Debug --test-dir out/v3-native -R "netcode|k3h4" --output-on-failure
 ```
 
 ## 4) Run API route/service contract tests
@@ -70,7 +70,7 @@ bun -e "import { registerNetcodeRoutes } from './src/typescript/api/src/routes/n
 1. Set `BANANA_NETCODE_K3H4_ENABLED=false`.
 2. Optionally set `BANANA_NETCODE_K3H4_COHORT=rollback` for evidence tagging.
 3. Re-run API contract test for `/api/netcode/analytics`.
-4. Verify legacy payload path is preserved and UI shows unavailable state for K-means panel.
+4. Verify non-K3H4 payload path is preserved and UI shows unavailable state for the analytics panel.
 
 ## 9) Evidence capture checklist
 
@@ -83,7 +83,7 @@ Recommended capture commands:
 
 ```bash
 cd /c/Github/Banana
-ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure | tee artifacts/native/k3h4/determinism/<timestamp>/ctest.log
+ctest -C Debug --test-dir out/v3-native -R "netcode|k3h4" --output-on-failure | tee artifacts/native/k3h4/determinism/<timestamp>/ctest.log
 
 cd src/typescript/api
 bun test src/routes/netcode.contract.test.ts src/routes/netcode.integration.test.ts src/services/nativeNetcode.fail-fast.test.ts | tee ../../../artifacts/api/035-native-k3h4/<timestamp>/api-contract.log

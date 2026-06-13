@@ -222,7 +222,7 @@ static unsigned int hash_append_u32(unsigned int hash, unsigned int value)
 }
 
 void runtime_netcode_k3h4_build_cluster_models(
-    RuntimeNetcodeHyperspherePipelineContext *context)
+    RuntimeNetcodeK3h4PipelineContext *context)
 {
     int i;
     int j;
@@ -246,7 +246,7 @@ void runtime_netcode_k3h4_build_cluster_models(
 }
 
 void runtime_netcode_k3h4_build_cluster_radii_and_spectral(
-    RuntimeNetcodeHyperspherePipelineContext *context)
+    RuntimeNetcodeK3h4PipelineContext *context)
 {
     int i;
 
@@ -308,7 +308,7 @@ void runtime_netcode_k3h4_build_cluster_radii_and_spectral(
 }
 
 void runtime_netcode_k3h4_build_weighted_voronoi_scores(
-    RuntimeNetcodeHyperspherePipelineContext *context)
+    RuntimeNetcodeK3h4PipelineContext *context)
 {
     int i;
 

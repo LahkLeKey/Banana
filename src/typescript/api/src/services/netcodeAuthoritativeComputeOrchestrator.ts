@@ -1,11 +1,10 @@
-import type {NativeNetcodeService, NetcodeHypersphereOutput, NetcodeLinkOutput, NetcodeRewardOutput, NetcodeVectorOutput,} from './nativeNetcode.ts';
+import type {NativeNetcodeService, NetcodeK3h4Output, NetcodeLinkOutput, NetcodeRewardOutput, NetcodeVectorOutput,} from './nativeNetcode.ts';
 
-export type NetcodeHypersphereRollout = {
+export type NetcodeK3h4Rollout = {
   enabled: boolean; cohort: string;
 };
 
-export type NetcodeAbiLayerName =
-    'learning'|'reward'|'link'|'vector'|'hypersphere';
+export type NetcodeAbiLayerName = 'learning'|'reward'|'link'|'vector'|'k3h4';
 
 export type NetcodeAbiLayerSnapshot = {
   layer: NetcodeAbiLayerName; contractVersion: 1;
@@ -17,7 +16,7 @@ export type NetcodeAbiLayerSnapshot = {
 };
 
 const NETCODE_ABI_LAYER_ORDER: NetcodeAbiLayerName[] =
-    ['learning', 'reward', 'link', 'vector', 'hypersphere'];
+    ['learning', 'reward', 'link', 'vector', 'k3h4'];
 
 export type NetcodeAbiLayerCoverage = {
   expectedLayers: readonly NetcodeAbiLayerName[];
@@ -49,12 +48,11 @@ export type NetcodeAnalyticsAuthoritativeRequest = {
   interactionSignal?: number;
 };
 
-export type NetcodeHypersphereKmeansProjection = {
-  centers: NetcodeHypersphereOutput['centers'];
-  radii: NetcodeHypersphereOutput['radii'];
-  weightedVoronoiScores: NetcodeHypersphereOutput['weightedVoronoiScores'];
-  spectralProxy: NetcodeHypersphereOutput['spectralProxy'];
-  observability: NetcodeHypersphereOutput['observability'];
+export type NetcodeK3h4Projection = {
+  centers: NetcodeK3h4Output['centers']; radii: NetcodeK3h4Output['radii'];
+  weightedVoronoiScores: NetcodeK3h4Output['weightedVoronoiScores'];
+  spectralProxy: NetcodeK3h4Output['spectralProxy'];
+  observability: NetcodeK3h4Output['observability'];
 };
 
 export type NetcodeLspRepresentation = {
@@ -63,14 +61,14 @@ export type NetcodeLspRepresentation = {
   authority: 'server-native';
   contractVersion: 1;
   deterministicHash: number;
-  rollout: NetcodeHypersphereRollout;
+  rollout: NetcodeK3h4Rollout;
 };
 
 export type NetcodeAnalyticsAuthoritativeResult = {
   contractVersion: 1; reward: NetcodeRewardOutput; link: NetcodeLinkOutput;
   vector: NetcodeVectorOutput;
-  hypersphere: NetcodeHypersphereOutput;
-  k3h4: NetcodeHypersphereKmeansProjection;
+  k3h4Projection: NetcodeK3h4Output;
+  k3h4: NetcodeK3h4Projection;
   abiLayers: readonly NetcodeAbiLayerSnapshot[];
   abiLayerCoverage: NetcodeAbiLayerCoverage;
   abiLayerLedger: NetcodeAbiLayerLedger;
@@ -98,16 +96,15 @@ export class NetcodeAnalyticsOrchestrationError extends Error {
 export interface NetcodeAnalyticsAuthoritativeComputeOrchestrator {
   compute(
       request: NetcodeAnalyticsAuthoritativeRequest,
-      rollout: NetcodeHypersphereRollout,
+      rollout: NetcodeK3h4Rollout,
       ): Promise<NetcodeAnalyticsAuthoritativeResult>;
 }
 
-function mapHypersphereBuildError(error: unknown):
-    NetcodeAnalyticsOrchestrationError|undefined {
-  const message =
-      error instanceof Error ? error.message : 'Unknown hypersphere error';
+function mapK3h4BuildError(error: unknown): NetcodeAnalyticsOrchestrationError|
+    undefined {
+  const message = error instanceof Error ? error.message : 'Unknown k3h4 error';
 
-  if (message.includes('Unsupported native hypersphere contract version')) {
+  if (message.includes('Unsupported native k3h4 contract version')) {
     return new NetcodeAnalyticsOrchestrationError(
         'ERR_UNSUPPORTED_VERSION', message, false);
   }
@@ -138,9 +135,9 @@ function buildAbiLayerCatalog(
     reward: NetcodeRewardOutput,
     link: NetcodeLinkOutput,
     vector: NetcodeVectorOutput,
-    hypersphere: NetcodeHypersphereOutput,
+    k3h4Projection: NetcodeK3h4Output,
     ): readonly NetcodeAbiLayerSnapshot[] {
-  const hypersphereEnvelope = hypersphere.envelope;
+  const k3h4Envelope = k3h4Projection.envelope;
   return [
     {
       layer: 'learning',
@@ -175,12 +172,12 @@ function buildAbiLayerCatalog(
       deterministicHash: vector.dimensions,
     },
     {
-      layer: 'hypersphere',
+      layer: 'k3h4',
       contractVersion: 1,
-      status: hypersphereEnvelope?.status ?? 'ok',
-      payloadBytes: hypersphereEnvelope?.payloadBytes ?? 0,
-      byteOrderTag: hypersphereEnvelope?.byteOrderTag ?? 0,
-      deterministicHash: hypersphere.observability.deterministicHash,
+      status: k3h4Envelope?.status ?? 'ok',
+      payloadBytes: k3h4Envelope?.payloadBytes ?? 0,
+      byteOrderTag: k3h4Envelope?.byteOrderTag ?? 0,
+      deterministicHash: k3h4Projection.observability.deterministicHash,
     },
   ];
 }
@@ -251,7 +248,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
 
   public async compute(
       request: NetcodeAnalyticsAuthoritativeRequest,
-      rollout: NetcodeHypersphereRollout,
+      rollout: NetcodeK3h4Rollout,
       ): Promise<NetcodeAnalyticsAuthoritativeResult> {
     const reward = await this.netcode.buildReward(
         {
@@ -290,11 +287,11 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
 
     const vector = await this.netcode.buildVector(vectorInput);
 
-    let hypersphere: NetcodeHypersphereOutput;
+    let k3h4Projection: NetcodeK3h4Output;
     try {
-      hypersphere = await this.netcode.buildHypersphere(vectorInput);
+      k3h4Projection = await this.netcode.buildK3h4(vectorInput);
     } catch (error) {
-      const mappedError = mapHypersphereBuildError(error);
+      const mappedError = mapK3h4BuildError(error);
       if (mappedError) {
         throw mappedError;
       }
@@ -302,13 +299,14 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
     }
 
     const k3h4 = {
-      centers: hypersphere.centers,
-      radii: hypersphere.radii,
-      weightedVoronoiScores: hypersphere.weightedVoronoiScores,
-      spectralProxy: hypersphere.spectralProxy,
-      observability: hypersphere.observability,
+      centers: k3h4Projection.centers,
+      radii: k3h4Projection.radii,
+      weightedVoronoiScores: k3h4Projection.weightedVoronoiScores,
+      spectralProxy: k3h4Projection.spectralProxy,
+      observability: k3h4Projection.observability,
     };
-    const abiLayers = buildAbiLayerCatalog(reward, link, vector, hypersphere);
+    const abiLayers =
+        buildAbiLayerCatalog(reward, link, vector, k3h4Projection);
     const abiLayerCoverage = summarizeAbiLayerCoverage(abiLayers);
     const abiLayerLedger = buildAbiLayerLedger(abiLayers);
 
@@ -317,7 +315,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       reward,
       link,
       vector,
-      hypersphere,
+      k3h4Projection,
       k3h4,
       abiLayers,
       abiLayerCoverage,
@@ -328,7 +326,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
         aggregate: 'k3h4',
         authority: 'server-native',
         contractVersion: 1,
-        deterministicHash: hypersphere.observability.deterministicHash,
+        deterministicHash: k3h4Projection.observability.deterministicHash,
         rollout,
       },
     };

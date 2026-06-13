@@ -1,4 +1,4 @@
-# Implementation Plan: Native Hypersphere K-Means Analytics
+# Implementation Plan: Native K3H4 Analytics
 
 **Branch**: `035-native-k3h4` | **Date**: 2026-06-13 | **Spec**: `.specify/specs/035-native-k3h4/spec.md`
 
@@ -6,7 +6,7 @@
 
 ## Summary
 
-Implement deterministic fixed-point K-means compute in Banana native netcode runtime, expose inscribed hypersphere radius, weighted Voronoi score, and spectral proxy outputs through an endianness-safe versioned ABI envelope, orchestrate production compute through API routes/services only, and keep React as a presentation-only consumer with deterministic rollout/testing gates.
+Implement deterministic fixed-point K-means compute in Banana native netcode runtime, expose inscribed radius, weighted Voronoi score, and spectral proxy outputs through an endianness-safe versioned ABI envelope, orchestrate production compute through API routes/services only, and keep React as a presentation-only consumer with deterministic rollout/testing gates.
 
 ## Technical Context
 
@@ -20,7 +20,7 @@ Implement deterministic fixed-point K-means compute in Banana native netcode run
 **Storage**: N/A for primary compute path (in-memory deterministic compute). Existing service persistence remains unchanged.
 
 **Testing**:
-- Native: CTest suites in `out/v3-native` with focused `netcode|hypersphere|k3h4` coverage additions
+- Native: CTest suites in `out/v3-native` with focused `netcode|k3h4` coverage additions
 - API: Bun route/service contract tests (e.g., `src/typescript/api/src/routes/netcode.contract.test.ts`)
 - React: Bun consumer tests in `src/typescript/react/src/domain/notebook`
 
@@ -42,7 +42,7 @@ Implement deterministic fixed-point K-means compute in Banana native netcode run
 - Failure states must be explicit and non-partial
 
 **Scale/Scope**:
-- Feature scope: netcode analytics route/service plus native netcode vector/hypersphere/ABI path
+- Feature scope: netcode analytics route/service plus native netcode vector/k3h4/ABI path
 - Expected cardinality: bounded vector dimensions (`<=16`) and deterministic cluster counts for runtime analytics requests
 - Touched domains: `src/native`, `src/typescript/api`, `src/typescript/react`
 
@@ -91,7 +91,7 @@ Implement deterministic fixed-point K-means compute in Banana native netcode run
 src/native/
 ├── include/banana_native_v3.h
 ├── engine/runtime/netcode/vector/
-├── engine/runtime/netcode/hypersphere/
+├── engine/runtime/netcode/k3h4/
 ├── engine/runtime/abi/netcode/
 └── scaffold/native_entry.c
 
@@ -120,7 +120,7 @@ tests/
 Output: `.specify/specs/035-native-k3h4/research.md`
 
 - Finalized fixed-point representation and deterministic tie-break/order policies.
-- Defined inscribed hypersphere radius guardrails for single-cluster and near-zero radius edge cases.
+- Defined inscribed radius guardrails for single-cluster and near-zero radius edge cases.
 - Chosen versioned little-endian ABI envelope strategy with explicit decode errors.
 - Confirmed API-only production compute and React presentation-only consumption policy.
 
@@ -142,7 +142,7 @@ Design outcomes:
 
 1. Native workstream
    - Add fixed-point K-means loop and deterministic assignment ordering in netcode runtime.
-   - Extend hypersphere module for inscribed radius, weighted Voronoi score, spectral proxy outputs.
+   - Extend K3H4 metric modules for inscribed radius, weighted Voronoi score, spectral proxy outputs.
    - Add ABI envelope encode/decode helpers with endianness/version/CRC validation.
 2. API workstream
    - Extend `nativeNetcode` service types and binary decode mapping for new envelope fields.

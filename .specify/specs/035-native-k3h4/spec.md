@@ -1,4 +1,4 @@
-# Feature Specification: Native Hypersphere K-Means Analytics
+# Feature Specification: Native K3H4 Analytics
 
 **Feature Branch**: `035-native-k3h4`
 
@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "Implement lambda-calculus-inspired fixed-point K-means iteration with inscribed hypersphere geometry, weighted Voronoi scoring, ABI-safe serialization, harmonic outputs, and rollout/testing across native compute, API orchestration, and React presentation-only consumers."
+**Input**: User description: "Implement lambda-calculus-inspired fixed-point K-means iteration with inscribed radius geometry, weighted Voronoi scoring, ABI-safe serialization, harmonic outputs, and rollout/testing across native compute, API orchestration, and React presentation-only consumers."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -43,11 +43,11 @@ As a platform integrator, I need ABI boundary payloads to remain endian-safe and
 
 ### User Story 3 - Presentation-Only Consumer Experience (Priority: P3)
 
-As a UI consumer, I need to display computed cluster and hypersphere outputs without re-running production math locally so views stay consistent with centrally orchestrated analytics.
+As a UI consumer, I need to display computed cluster and K3H4 outputs without re-running production math locally so views stay consistent with centrally orchestrated analytics.
 
 **Why this priority**: Keeps production behavior coherent across clients while allowing safe visualization and explanation features.
 
-**Independent Test**: Validate that consumer flows render server-provided metrics and do not require local hypersphere recomputation to produce production values.
+**Independent Test**: Validate that consumer flows render server-provided metrics and do not require local K3H4 recomputation to produce production values.
 
 **Acceptance Scenarios**:
 
@@ -68,10 +68,10 @@ As a UI consumer, I need to display computed cluster and hypersphere outputs wit
 
 - **FR-001**: System MUST compute cluster assignments using a fixed-point iteration process inspired by recursive fixed-point evaluation, with deterministic termination criteria.
 - **FR-002**: System MUST produce one center per resulting cluster and include the final cluster membership mapping for each input feature vector.
-- **FR-003**: System MUST compute each cluster inscribed hypersphere radius as half of the minimum distance from that center to any other center.
+- **FR-003**: System MUST compute each cluster inscribed radius as half of the minimum distance from that center to any other center.
 - **FR-004**: System MUST compute weighted Voronoi-style score values per cluster-input pair as distance-to-center divided by that cluster's radius.
 - **FR-005**: System MUST provide harmonic/spectral interpretation outputs for each cluster, including a deterministic frequency proxy proportional to inverse radius.
-- **FR-006**: System MUST execute production clustering and hypersphere math in the native compute and orchestration path, not in presentation clients.
+- **FR-006**: System MUST execute production clustering and K3H4 math in the native compute and orchestration path, not in presentation clients.
 - **FR-007**: System MUST expose complete clustering output through orchestrated compute APIs for consumer retrieval.
 - **FR-008**: System MUST enforce endianness-safe serialization and deserialization for all numeric and structural fields crossing ABI boundaries.
 - **FR-009**: System MUST version the clustering payload contract so backward and forward compatibility behavior is explicit.
@@ -85,7 +85,7 @@ As a UI consumer, I need to display computed cluster and hypersphere outputs wit
 
 - **Feature Vector Batch**: Input set of feature vectors and clustering parameters used for one compute invocation.
 - **Cluster Center**: Canonical center representation for each resulting cluster, including stable identity and coordinate vector.
-- **Inscribed Hypersphere Metric**: Per-cluster radius value derived from nearest neighboring center distance.
+- **Inscribed Radius Metric**: Per-cluster radius value derived from nearest neighboring center distance.
 - **Weighted Voronoi Score Set**: Per-input scoring structure containing normalized distance values by cluster radius.
 - **Spectral Proxy Metric**: Per-cluster harmonic interpretation value derived deterministically from inverse radius.
 - **Cluster Compute Contract Envelope**: Versioned payload containing outputs, convergence metadata, and validation status for cross-boundary transport.

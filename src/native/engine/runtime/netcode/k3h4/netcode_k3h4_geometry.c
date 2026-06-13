@@ -90,7 +90,7 @@ static void project_vector(const float *vector,
 }
 
 void runtime_netcode_k3h4_prepare_geometry(
-    RuntimeNetcodeHyperspherePipelineContext *context)
+    RuntimeNetcodeK3h4PipelineContext *context)
 {
     int i;
     int j;
@@ -114,7 +114,7 @@ void runtime_netcode_k3h4_prepare_geometry(
 }
 
 void runtime_netcode_k3h4_build_projection_nodes(
-    RuntimeNetcodeHyperspherePipelineContext *context)
+    RuntimeNetcodeK3h4PipelineContext *context)
 {
     int i;
 
@@ -161,7 +161,7 @@ void runtime_netcode_k3h4_build_projection_nodes(
 }
 
 void runtime_netcode_k3h4_finalize_geometry(
-    RuntimeNetcodeHyperspherePipelineContext *context)
+    RuntimeNetcodeK3h4PipelineContext *context)
 {
     float average_radius = context->total_radius / (float)RUNTIME_NETCODE_VECTOR_NODE_COUNT;
     int i;

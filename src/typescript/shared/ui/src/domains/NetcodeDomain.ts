@@ -1,7 +1,6 @@
 import type {InputAggregator} from './InputDomain';
 
-export type NetcodeAbiLayerKind =
-    'learning'|'reward'|'link'|'vector'|'hypersphere';
+export type NetcodeAbiLayerKind = 'learning'|'reward'|'link'|'vector'|'k3h4';
 
 export type NetcodeAbiLayerSnapshot = {
   readonly layer: NetcodeAbiLayerKind; readonly contractVersion: number; readonly status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch'; readonly payloadBytes: number; readonly byteOrderTag: number; readonly deterministicHash:
@@ -12,7 +11,7 @@ export type NetcodeAbiLayerSnapshot = {
 export type NetcodeAbiLayerCatalog = readonly NetcodeAbiLayerSnapshot[];
 
 const NETCODE_ABI_LAYER_ORDER: NetcodeAbiLayerKind[] =
-    ['learning', 'reward', 'link', 'vector', 'hypersphere'];
+    ['learning', 'reward', 'link', 'vector', 'k3h4'];
 
 export type NetcodeAbiLayerCoverage = {
   readonly expectedLayers: readonly NetcodeAbiLayerKind[]; readonly presentLayers: readonly NetcodeAbiLayerKind[]; readonly missingLayers: readonly NetcodeAbiLayerKind[]; readonly completeness: number; readonly complete:

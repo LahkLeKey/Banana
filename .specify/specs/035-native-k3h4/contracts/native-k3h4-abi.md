@@ -1,7 +1,7 @@
-# Contract: Native Hypersphere K-Means ABI Envelope
+# Contract: Native K3H4 ABI Envelope
 
 ## Scope
-Versioned binary envelope for hypersphere K-means outputs crossing native C runtime, TypeScript FFI service, and API orchestration.
+Versioned binary envelope for K3H4 outputs crossing native C runtime, TypeScript FFI service, and API orchestration.
 
 ## Canonical Encoding
 - Byte order: little-endian canonical on wire.

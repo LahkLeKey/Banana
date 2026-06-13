@@ -1,5 +1,5 @@
-#ifndef BANANA_ENGINE_RUNTIME_NETCODE_HYPERSPHERE_GEOMETRY_H
-#define BANANA_ENGINE_RUNTIME_NETCODE_HYPERSPHERE_GEOMETRY_H
+#ifndef BANANA_ENGINE_RUNTIME_NETCODE_K3H4_GEOMETRY_H
+#define BANANA_ENGINE_RUNTIME_NETCODE_K3H4_GEOMETRY_H
 
 #include "netcode_k3h4_pipeline_internal.h"
 
@@ -9,13 +9,13 @@ extern "C"
 #endif
 
     void runtime_netcode_k3h4_prepare_geometry(
-        RuntimeNetcodeHyperspherePipelineContext *context);
+        RuntimeNetcodeK3h4PipelineContext *context);
 
     void runtime_netcode_k3h4_build_projection_nodes(
-        RuntimeNetcodeHyperspherePipelineContext *context);
+        RuntimeNetcodeK3h4PipelineContext *context);
 
     void runtime_netcode_k3h4_finalize_geometry(
-        RuntimeNetcodeHyperspherePipelineContext *context);
+        RuntimeNetcodeK3h4PipelineContext *context);
 
 #ifdef __cplusplus
 }

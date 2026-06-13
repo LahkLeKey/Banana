@@ -3,7 +3,7 @@
 #include "netcode_k3h4_cluster_scoring.h"
 
 void runtime_netcode_k3h4_finalize_observability(
-    RuntimeNetcodeHyperspherePipelineContext *context)
+    RuntimeNetcodeK3h4PipelineContext *context)
 {
     context->output->observability.convergence_status = context->input->k3h4_convergence_status;
     context->output->observability.iteration_count = context->input->k3h4_iteration_count;
