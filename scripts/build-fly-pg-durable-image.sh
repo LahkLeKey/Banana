@@ -3,9 +3,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_NAME="${FLY_DB_APP_NAME:-banana-db}"
+APP_NAME="${FLY_DB_APP_NAME:-banana-db-v2}"
 PG_DURABLE_VERSION="${PG_DURABLE_VERSION:-0.2.2}"
-IMAGE_TAG="${FLY_DB_IMAGE_TAG:-pg17-durable-v${PG_DURABLE_VERSION}}"
+IMAGE_TAG="${FLY_DB_IMAGE_TAG:-pg18-durable-v${PG_DURABLE_VERSION}}"
 IMAGE_REF="registry.fly.io/${APP_NAME}:${IMAGE_TAG}"
 
 if ! command -v fly >/dev/null 2>&1; then
