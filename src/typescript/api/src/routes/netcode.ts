@@ -1,13 +1,12 @@
 import type {FastifyInstance} from 'fastify';
 
 import {getNativeNetcodeService, type NativeNetcodeService,} from '../services/nativeNetcode.ts';
+import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, type NetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError, type NetcodeHypersphereRollout,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
 
 type NetcodeRouteOptions = {
+  netcodeAuthoritativeComputeOrchestrator?:
+      NetcodeAnalyticsAuthoritativeComputeOrchestrator;
   netcodeService?: NativeNetcodeService;
-};
-
-type NetcodeHypersphereRollout = {
-  enabled: boolean; cohort: string;
 };
 
 function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
@@ -28,6 +27,9 @@ export async function registerNetcodeRoutes(
     options: NetcodeRouteOptions = {},
     ): Promise<void> {
   const netcode = options.netcodeService ?? getNativeNetcodeService();
+  const netcodeAuthoritativeComputeOrchestrator =
+      options.netcodeAuthoritativeComputeOrchestrator ??
+      createNetcodeAnalyticsAuthoritativeComputeOrchestrator(netcode);
 
   app.post<{
     Body: {
@@ -181,97 +183,24 @@ export async function registerNetcodeRoutes(
           {error: 'Invalid netcode analytics payload'});
     }
 
-    const reward = await netcode.buildReward(
-        {
-          callDensity: body.callDensity,
-          questPercent: body.questPercent,
-          comboStreak: body.comboStreak,
-          branchPressure: body.branchPressure,
-          workflowDepth: body.workflowDepth,
-        },
-        typeof body.interactionSignal === 'number' ? body.interactionSignal :
-                                                     body.modelConfidence,
-    );
-
-    const link = await netcode.buildLink({
-      callDensity: body.callDensity,
-      questPercent: body.questPercent,
-      playerLevel: body.playerLevel,
-      comboStreak: body.comboStreak,
-      branchPressure: body.branchPressure,
-      dependencyPulse: body.dependencyPulse,
-      interactionSignal: body.policyMomentum,
-    });
-
-    const vectorInput = {
-      callDensity: body.callDensity,
-      questPercent: body.questPercent,
-      playerLevel: body.playerLevel,
-      comboStreak: body.comboStreak,
-      branchPressure: body.branchPressure,
-      dependencyPulse: body.dependencyPulse,
-      workflowDepth: body.workflowDepth,
-      neuralRelevanceScore: reward.neuralRelevanceScore,
-      networkDimensions: body.networkDimensions,
-      modelConfidence: body.modelConfidence,
-      policyMomentum: body.policyMomentum,
-    };
-
-    const vector = await netcode.buildVector(vectorInput);
-
-    let hypersphere;
+    let orchestratedAnalytics;
     try {
-      hypersphere = await netcode.buildHypersphere(vectorInput);
+      orchestratedAnalytics =
+          await netcodeAuthoritativeComputeOrchestrator.compute(body, rollout);
     } catch (error) {
-      const message =
-          error instanceof Error ? error.message : 'Unknown hypersphere error';
-      if (message.includes('Unsupported native hypersphere contract version')) {
+      if (error instanceof NetcodeAnalyticsOrchestrationError) {
         return reply.status(502).send({
-          errorCode: 'ERR_UNSUPPORTED_VERSION',
-          message,
+          errorCode: error.errorCode,
+          message: error.message,
           contractVersion: 1,
-          retryable: false,
-          rollout,
-        });
-      }
-      if (message.includes('CRC mismatch')) {
-        return reply.status(502).send({
-          errorCode: 'ERR_BAD_CRC',
-          message,
-          contractVersion: 1,
-          retryable: true,
-          rollout,
-        });
-      }
-      if (message.includes('truncated payload')) {
-        return reply.status(502).send({
-          errorCode: 'ERR_PAYLOAD_TRUNCATED',
-          message,
-          contractVersion: 1,
-          retryable: true,
+          retryable: error.retryable,
           rollout,
         });
       }
       throw error;
     }
 
-    const hypersphereKmeans = {
-      centers: hypersphere.centers,
-      radii: hypersphere.radii,
-      weightedVoronoiScores: hypersphere.weightedVoronoiScores,
-      spectralProxy: hypersphere.spectralProxy,
-      observability: hypersphere.observability,
-    };
-
-    return {
-      contractVersion: 1,
-      reward,
-      link,
-      vector,
-      hypersphere,
-      hypersphereKmeans,
-      rollout,
-    };
+    return {...orchestratedAnalytics, rollout};
   });
 
   app.post<{

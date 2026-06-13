@@ -101,8 +101,18 @@ export type NetcodeAnalyticsRollout = {
   enabled: boolean; cohort: string;
 };
 
+export type NetcodeAnalyticsLspRepresentation = {
+  language: 'netcode.analytics.v1'; boundedContext: 'netcode';
+  aggregate: 'hypersphere-kmeans';
+  authority: 'server-native';
+  contractVersion: 1;
+  deterministicHash: number;
+  rollout: NetcodeAnalyticsRollout;
+};
+
 export type NetcodeAnalyticsResponse = {
-  contractVersion: number; reward: {
+  contractVersion: number;
+  lspRepresentation?: NetcodeAnalyticsLspRepresentation; reward: {
     neuralRelevanceScore: number; projectedRewardXp: number; rewardTier: number;
   };
   link: {intel: number; objectives: number; player: number; ops: number;};
