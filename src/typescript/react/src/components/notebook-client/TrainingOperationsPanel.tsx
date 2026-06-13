@@ -33,7 +33,10 @@ const buttonStyle: CSSProperties = {
     cursor: 'pointer',
 };
 
-function buildBulkQueueTemplate(selectedFile: string):
+function buildBulkQueueTemplate(
+    selectedFile: string,
+    indexedFileCount: number,
+    mode: 'operations' | 'controller'):
     Array<{ title: string; sector: string; rewardXp: number; }> {
     const normalized = selectedFile.replace(/\\/g, '/');
     const lane = normalized.split('/').filter(Boolean).pop() ?? selectedFile;
@@ -41,8 +44,36 @@ function buildBulkQueueTemplate(selectedFile: string):
         .replace(/\.[^.]+$/, '')
         .replace(/[_-]+/g, ' ')
         .replace(/\b\w/g, (match) => match.toUpperCase());
-    const sector = selectedFile.length > 0 ? selectedFile : 'default-sector';
     const targetLabel = sectorLabel.length > 0 ? sectorLabel : 'Frontier Sector';
+
+    if (mode === 'controller') {
+        const controllerSector = 'controller-training';
+        const controllerScale = Math.max(1, Math.min(4, Math.floor(indexedFileCount / 40) + 1));
+        return [
+            {
+                title: `Calibrate controller reward gradients in ${targetLabel}`,
+                sector: controllerSector,
+                rewardXp: 140 + controllerScale * 20,
+            },
+            {
+                title: 'Run imitation pass for AI controller tuning',
+                sector: controllerSector,
+                rewardXp: 190 + controllerScale * 20,
+            },
+            {
+                title: `Validate controller policies against ${indexedFileCount} indexed files`,
+                sector: controllerSector,
+                rewardXp: 260 + controllerScale * 30,
+            },
+            {
+                title: 'Archive controller training telemetry and issue stipend',
+                sector: controllerSector,
+                rewardXp: 160 + controllerScale * 15,
+            },
+        ];
+    }
+
+    const sector = selectedFile.length > 0 ? selectedFile : 'default-sector';
     return [
         {
             title: `Survey frontier output in ${targetLabel}`,
@@ -114,6 +145,7 @@ export function TrainingOperationsPanel(
         queue.reduce((sum, item) => sum + (item.status === 'completed' ? item.rewardXp : 0), 0);
     const completedCount = queue.filter((item) => item.status === 'completed').length;
     const pendingRewards = rewards.filter((reward) => reward.status === 'pending');
+    const controllerDrillCount = queue.filter((item) => item.sector === 'controller-training').length;
 
     useEffect(() => {
         if (!canUseApi) {
@@ -178,16 +210,18 @@ export function TrainingOperationsPanel(
         };
     }, [apiBaseUrl, canUseApi, token]);
 
-    const scaffoldBulkTodos = async () => {
+    const scaffoldWorkflow = async (mode: 'operations' | 'controller') => {
         if (!isApiMode) {
             setErrorMessage(SERVER_REQUIRED_MESSAGE);
             setStatusMessage(SERVER_REQUIRED_MESSAGE);
             return;
         }
 
-        const seeds = buildBulkQueueTemplate(selectedFile);
+        const seeds = buildBulkQueueTemplate(selectedFile, indexedFileCount, mode);
         setErrorMessage(null);
-        setStatusMessage('Drafting operations queue...');
+        setStatusMessage(
+            mode === 'controller' ? 'Drafting AI controller training queue...' : 'Drafting operations queue...',
+        );
 
         setIsBusy(true);
         try {
@@ -199,18 +233,23 @@ export function TrainingOperationsPanel(
                 details: {
                     jobCount: response.jobs.length,
                     selectedFile,
+                    workflowMode: mode,
                 },
             });
-            setStatusMessage(`Scaffolded ${response.jobs.length} jobs in persistent queue.`);
+            setStatusMessage(
+                mode === 'controller' ?
+                    `Scaffolded ${response.jobs.length} AI controller drills in persistent queue.` :
+                    `Scaffolded ${response.jobs.length} jobs in persistent queue.`,
+            );
         } catch (error: unknown) {
             setErrorMessage(error instanceof Error ? error.message : 'Unable to scaffold queue.');
-            setStatusMessage('Draft failed.');
+            setStatusMessage(mode === 'controller' ? 'Controller draft failed.' : 'Draft failed.');
         } finally {
             setIsBusy(false);
         }
     };
 
-    const executeBulkTodos = async () => {
+    const executeWorkflow = async (mode: 'operations' | 'controller') => {
         if (!isApiMode) {
             setErrorMessage(SERVER_REQUIRED_MESSAGE);
             setStatusMessage(SERVER_REQUIRED_MESSAGE);
@@ -218,13 +257,13 @@ export function TrainingOperationsPanel(
         }
 
         setErrorMessage(null);
-        setStatusMessage('Running operations cycle...');
+        setStatusMessage(mode === 'controller' ? 'Running AI controller training cycle...' : 'Running operations cycle...');
 
         const queueToRun =
-            queue.length > 0 ? queue : (await scaffoldTrainingJobs(apiBaseUrl, token, buildBulkQueueTemplate(selectedFile))).jobs;
+            queue.length > 0 ? queue : (await scaffoldTrainingJobs(apiBaseUrl, token, buildBulkQueueTemplate(selectedFile, indexedFileCount, mode))).jobs;
         setQueue(queueToRun);
         setIsBusy(true);
-        const correlationId = makeCorrelationId('queue-execute');
+        const correlationId = makeCorrelationId(mode === 'controller' ? 'controller-execute' : 'queue-execute');
 
         try {
             await recordTrainingTransitionEvent(apiBaseUrl, token, {
@@ -232,6 +271,7 @@ export function TrainingOperationsPanel(
                 correlationId,
                 details: {
                     requestedJobs: queueToRun.length,
+                    workflowMode: mode,
                 },
             });
 
@@ -277,15 +317,36 @@ export function TrainingOperationsPanel(
                 details: {
                     completedJobs: queueToRun.length,
                     selectedFile,
+                    workflowMode: mode,
                 },
             });
-            setStatusMessage(`Cycle complete: ${queueToRun.length} operations processed.`);
+            setStatusMessage(
+                mode === 'controller' ?
+                    `Controller cycle complete: ${queueToRun.length} drills processed.` :
+                    `Cycle complete: ${queueToRun.length} operations processed.`,
+            );
         } catch (error: unknown) {
             setErrorMessage(error instanceof Error ? error.message : 'Queue execution failed.');
-            setStatusMessage('Cycle failed.');
+            setStatusMessage(mode === 'controller' ? 'Controller cycle failed.' : 'Cycle failed.');
         } finally {
             setIsBusy(false);
         }
+    };
+
+    const scaffoldBulkTodos = async () => {
+        await scaffoldWorkflow('operations');
+    };
+
+    const executeBulkTodos = async () => {
+        await executeWorkflow('operations');
+    };
+
+    const scaffoldControllerDrills = async () => {
+        await scaffoldWorkflow('controller');
+    };
+
+    const executeControllerDrills = async () => {
+        await executeWorkflow('controller');
     };
 
     const claimAllRewards = async () => {
@@ -372,6 +433,25 @@ export function TrainingOperationsPanel(
                     <div style={{ fontSize: 12, color: '#fcd34d', textTransform: 'uppercase' }}>Pending Stipends</div>
                     <div style={{ fontWeight: 700, fontSize: 18, marginTop: 3 }}>{pendingRewards.length}</div>
                 </div>
+                <div style={{ border: '1px solid rgba(251, 191, 36, 0.25)', borderRadius: 10, padding: 10, background: 'rgba(120, 53, 15, 0.2)' }}>
+                    <div style={{ fontSize: 12, color: '#fcd34d', textTransform: 'uppercase' }}>Controller Drills</div>
+                    <div style={{ fontWeight: 700, fontSize: 18, marginTop: 3 }}>{controllerDrillCount}</div>
+                </div>
+            </div>
+
+            <h3 style={{ margin: '14px 0 6px', fontSize: 14, color: '#fef08a', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+                AI Controller Training
+            </h3>
+            <p style={{ margin: '0 0 8px', color: '#fde68a', fontSize: 13 }}>
+                Draft controller drills, run the training cycle, and grant XP through the existing persistent reward economy.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                <button type="button" style={buttonStyle} onClick={() => void scaffoldControllerDrills()} disabled={isBusy}>
+                    Draft Controller Drills
+                </button>
+                <button type="button" style={buttonStyle} onClick={() => void executeControllerDrills()} disabled={isBusy || (!isApiMode && queue.length === 0)}>
+                    Run Controller Training
+                </button>
             </div>
 
             <h3 style={{ margin: '14px 0 6px', fontSize: 14, color: '#fef08a', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
