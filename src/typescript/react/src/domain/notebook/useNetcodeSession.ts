@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-import {resolveApiBaseUrl} from '../../lib/api';
+import {fetchNetcodeAnalytics, resolveApiBaseUrl,} from '../../lib/api';
 
 import type {ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
@@ -120,36 +120,6 @@ type ApiLearningResponse = {
     recommendedNode: number;
     recommendedAction: number;
     xpByAction: readonly[number, number, number, number];
-  };
-};
-
-type ApiRewardResponse = {
-  reward: {
-    neuralRelevanceScore: number; projectedRewardXp: number; rewardTier: number;
-  };
-};
-
-type ApiLinkResponse = {
-  link: {intel: number; objectives: number; player: number; ops: number;};
-};
-
-type ApiVectorResponse = {
-  vector: {
-    dimensions: number; nodeVectors: readonly(readonly number[])[];
-    contractStrength: readonly[number, number, number, number];
-  };
-};
-
-type ApiHypersphereResponse = {
-  hypersphere: {
-    dimensions: number; nodes: readonly {
-      x: number;
-      y: number;
-      z: number;
-      coherence: number;
-    }[];
-    alignment: number;
-    radialStability: number;
   };
 };
 
@@ -280,65 +250,7 @@ export function useNetcodeSession({
 
         const run = async () => {
           try {
-            const rewardResponse =
-                await fetch(`${baseUrl}/api/netcode/reward`, {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({
-                    callDensity,
-                    questPercent,
-                    comboStreak,
-                    branchPressure,
-                    workflowDepth,
-                    interactionSignal: learningModel.modelConfidence,
-                  }),
-                });
-
-            if (!rewardResponse.ok ||
-                analyticsRequestRef.current !== requestId) {
-              return;
-            }
-            const rewardData = await rewardResponse.json() as ApiRewardResponse;
-            const rewardTier = rewardData.reward.rewardTier === 0 ?
-                'Elite Signal' :
-                rewardData.reward.rewardTier === 1 ? 'Relevant' :
-                                                     'Needs Labeling';
-            const rewardBand = rewardTier === 'Elite Signal' ? ELITE_BAND :
-                rewardTier === 'Relevant'                    ? RELEVANT_BAND :
-                                                               LABELING_BAND;
-            setRewardSignal({
-              neuralRelevanceScore: rewardData.reward.neuralRelevanceScore,
-              projectedRewardXp: rewardData.reward.projectedRewardXp,
-              rewardTier,
-              rewardBand,
-            });
-
-            const linkResponse = await fetch(`${baseUrl}/api/netcode/link`, {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                callDensity,
-                questPercent,
-                playerLevel,
-                comboStreak,
-                branchPressure,
-                dependencyPulse,
-                interactionSignal: learningModel.policyMomentum,
-              }),
-            });
-
-            if (!linkResponse.ok || analyticsRequestRef.current !== requestId) {
-              return;
-            }
-            const linkData = await linkResponse.json() as ApiLinkResponse;
-            setLinkConfidence({
-              intel: linkData.link.intel,
-              objectives: linkData.link.objectives,
-              player: linkData.link.player,
-              ops: linkData.link.ops,
-            });
-
-            const vectorBody = {
+            const analytics = await fetchNetcodeAnalytics(baseUrl, {
               callDensity,
               questPercent,
               playerLevel,
@@ -346,58 +258,60 @@ export function useNetcodeSession({
               branchPressure,
               dependencyPulse,
               workflowDepth,
-              neuralRelevanceScore: rewardData.reward.neuralRelevanceScore,
               networkDimensions,
               modelConfidence: learningModel.modelConfidence,
               policyMomentum: learningModel.policyMomentum,
-            };
+              interactionSignal: learningModel.modelConfidence,
+            });
 
-            const vectorResponse =
-                await fetch(`${baseUrl}/api/netcode/vector`, {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify(vectorBody),
-                });
-            if (!vectorResponse.ok ||
-                analyticsRequestRef.current !== requestId) {
+            if (analyticsRequestRef.current !== requestId) {
               return;
             }
-            const vectorData = await vectorResponse.json() as ApiVectorResponse;
+
+            const rewardTier = analytics.reward.rewardTier === 0 ?
+                'Elite Signal' :
+                analytics.reward.rewardTier === 1 ? 'Relevant' :
+                                                    'Needs Labeling';
+            const rewardBand = rewardTier === 'Elite Signal' ? ELITE_BAND :
+                rewardTier === 'Relevant'                    ? RELEVANT_BAND :
+                                                               LABELING_BAND;
+            setRewardSignal({
+              neuralRelevanceScore: analytics.reward.neuralRelevanceScore,
+              projectedRewardXp: analytics.reward.projectedRewardXp,
+              rewardTier,
+              rewardBand,
+            });
+
+            setLinkConfidence({
+              intel: analytics.link.intel,
+              objectives: analytics.link.objectives,
+              player: analytics.link.player,
+              ops: analytics.link.ops,
+            });
+
             const mappedVectors = NODE_ORDER.map(
                 (id, index) => ({
                   id,
-                  dimensions: [...(vectorData.vector.nodeVectors[index] ?? [])],
-                  contractStrength:
-                      vectorData.vector.contractStrength[index] ?? 0,
+                  dimensions: [...(analytics.vector.nodeVectors[index] ?? [])],
+                  contractStrength: analytics.vector.contractStrength[index] ??
+                      0,
                 }));
             setContractVectors(mappedVectors);
 
-            const hypersphereResponse =
-                await fetch(`${baseUrl}/api/netcode/hypersphere`, {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify(vectorBody),
-                });
-            if (!hypersphereResponse.ok ||
-                analyticsRequestRef.current !== requestId) {
-              return;
-            }
-            const hypersphereData =
-                await hypersphereResponse.json() as ApiHypersphereResponse;
             const mappedNodes = NODE_ORDER.map(
                 (id, index) => ({
                   id,
-                  x: hypersphereData.hypersphere.nodes[index]?.x ?? 0,
-                  y: hypersphereData.hypersphere.nodes[index]?.y ?? 0,
-                  z: hypersphereData.hypersphere.nodes[index]?.z ?? 0,
+                  x: analytics.hypersphere.nodes[index]?.x ?? 0,
+                  y: analytics.hypersphere.nodes[index]?.y ?? 0,
+                  z: analytics.hypersphere.nodes[index]?.z ?? 0,
                   coherence:
-                      hypersphereData.hypersphere.nodes[index]?.coherence ?? 0,
+                      analytics.hypersphere.nodes[index]?.coherence ?? 0,
                 }));
             setHypersphereProjection({
-              dimensions: hypersphereData.hypersphere.dimensions,
+              dimensions: analytics.hypersphere.dimensions,
               nodes: mappedNodes,
-              alignment: hypersphereData.hypersphere.alignment,
-              radialStability: hypersphereData.hypersphere.radialStability,
+              alignment: analytics.hypersphere.alignment,
+              radialStability: analytics.hypersphere.radialStability,
             });
           } catch {
             // Keep prior analytics values on transport failures.

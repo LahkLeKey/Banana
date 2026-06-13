@@ -24,6 +24,39 @@ export type ApiRootResponse = {
   endpoints?: {health?: string; swagger?: string};
 };
 
+export type NetcodeAnalyticsRequest = {
+  callDensity: number; questPercent: number; playerLevel: number;
+  comboStreak: number;
+  branchPressure: number;
+  dependencyPulse: number;
+  workflowDepth: 1 | 2 | 3;
+  networkDimensions: number;
+  modelConfidence: number;
+  policyMomentum: number;
+  interactionSignal?: number;
+};
+
+export type NetcodeAnalyticsResponse = {
+  reward: {
+    neuralRelevanceScore: number; projectedRewardXp: number; rewardTier: number;
+  };
+  link: {intel: number; objectives: number; player: number; ops: number;};
+  vector: {
+    dimensions: number; nodeVectors: readonly(readonly number[])[];
+    contractStrength: readonly[number, number, number, number];
+  };
+  hypersphere: {
+    dimensions: number; nodes: readonly {
+      x: number;
+      y: number;
+      z: number;
+      coherence: number;
+    }[];
+    alignment: number;
+    radialStability: number;
+  };
+};
+
 export type GuestAuthStartResponse = {
   token: string; guestId: string; displayName: string; expiresAt: string;
 };
@@ -368,6 +401,17 @@ export async function fetchApiHealth(baseUrl: string):
 
 export async function fetchApiRoot(baseUrl: string): Promise<ApiRootResponse> {
   return requestJson<ApiRootResponse>(baseUrl, '/');
+}
+
+export async function fetchNetcodeAnalytics(
+    baseUrl: string,
+    payload: NetcodeAnalyticsRequest,
+    ): Promise<NetcodeAnalyticsResponse> {
+  return requestJson<NetcodeAnalyticsResponse>(baseUrl, '/api/netcode/analytics', {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function startGuestAuthSession(
