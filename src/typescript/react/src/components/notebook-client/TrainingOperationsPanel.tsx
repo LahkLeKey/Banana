@@ -2,7 +2,7 @@ import { readStoredAuthSession, RouteSubActionBar } from '@banana/ui';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 
 import {
-    claimTrainingReward,
+    claimAllTrainingRewards,
     executeTrainingCycle,
     fetchApiHealth,
     fetchTrainingJobs,
@@ -247,35 +247,15 @@ export function TrainingOperationsPanel(
         setStatusMessage('Claiming rewards...');
 
         try {
-            for (const reward of pendingRewards) {
-                await recordTrainingTransitionEvent(apiBaseUrl, token, {
-                    eventType: 'reward.claim.attempted',
-                    correlationId: makeCorrelationId('reward-claim'),
-                    details: {
-                        rewardId: reward.rewardId,
-                        xp: reward.xp,
-                    },
-                });
-
-                await claimTrainingReward(apiBaseUrl, token, reward.rewardId);
-
-                await recordTrainingTransitionEvent(apiBaseUrl, token, {
-                    eventType: 'reward.claim.succeeded',
-                    correlationId: makeCorrelationId('reward-claim'),
-                    details: {
-                        rewardId: reward.rewardId,
-                        xp: reward.xp,
-                    },
-                });
+            const claimed = await claimAllTrainingRewards(apiBaseUrl, token);
+            setLeaderboard(claimed.leaderboard);
+            setRewards(claimed.rewards);
+            if (claimed.failedRewards.length > 0) {
+                setErrorMessage(`Some stipends failed policy checks (${claimed.failedRewards.length}).`);
+                setStatusMessage('Partial stipend collection completed.');
+            } else {
+                setStatusMessage('Stipends collected and standings refreshed.');
             }
-
-            const [leaderboardPayload, rewardsPayload] = await Promise.all([
-                fetchTrainingLeaderboard(apiBaseUrl, token, 12),
-                fetchTrainingRewards(apiBaseUrl, token),
-            ]);
-            setLeaderboard(leaderboardPayload.leaderboard);
-            setRewards(rewardsPayload.rewards);
-            setStatusMessage('Stipends collected and standings refreshed.');
         } catch (error: unknown) {
             await recordTrainingTransitionEvent(apiBaseUrl, token, {
                 eventType: 'reward.claim.failed',

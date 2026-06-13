@@ -399,6 +399,71 @@ export async function registerV1PlayerTrainingEconomyRoutes(
     }
   });
 
+  app.post('/rewards/claim-all', async (request, reply) => {
+    const actorId = request.requestContext.actorScope.actorId;
+    assertPlayerSelfScope(request, actorId);
+
+    const rewards = await store.listRewards(actorId);
+    const pendingRewards = rewards.filter((reward) => reward.status === 'pending');
+    const claimedRewards: typeof rewards = [];
+    const failedRewards: Array<{rewardId: string; error: string}> = [];
+
+    for (const reward of pendingRewards) {
+      const attemptedCorrelationId = buildTransitionCorrelationId(
+          request, 'reward-claim-attempted');
+      await store.storeTransitionEvent({
+        playerId: actorId,
+        eventType: 'reward.claim.attempted',
+        correlationId: attemptedCorrelationId,
+        details: {
+          rewardId: reward.rewardId,
+          xp: reward.xp,
+        },
+      });
+
+      try {
+        const claimedReward = await store.claimReward(actorId, reward.rewardId);
+        claimedRewards.push(claimedReward);
+        await store.storeTransitionEvent({
+          playerId: actorId,
+          eventType: 'reward.claim.succeeded',
+          correlationId: buildTransitionCorrelationId(
+              request, 'reward-claim-succeeded'),
+          details: {
+            rewardId: claimedReward.rewardId,
+            xp: claimedReward.xp,
+          },
+        });
+      } catch (error) {
+        const code =
+            error instanceof Error ? error.message : 'training_reward_claim_failed';
+        failedRewards.push({rewardId: reward.rewardId, error: code});
+        await store.storeTransitionEvent({
+          playerId: actorId,
+          eventType: 'reward.claim.failed',
+          correlationId: buildTransitionCorrelationId(
+              request, 'reward-claim-failed'),
+          details: {
+            rewardId: reward.rewardId,
+            error: code,
+          },
+        });
+      }
+    }
+
+    const refreshedRewards = await store.listRewards(actorId);
+    const leaderboard = await store.listLeaderboard(12);
+
+    reply.send({
+      playerId: actorId,
+      attemptedRewards: pendingRewards.length,
+      claimedRewards,
+      failedRewards,
+      rewards: refreshedRewards,
+      leaderboard,
+    });
+  });
+
   app.post('/telemetry/transitions', async (request, reply) => {
     const parseResult =
         transitionEventRequestSchema.safeParse(request.body ?? {});

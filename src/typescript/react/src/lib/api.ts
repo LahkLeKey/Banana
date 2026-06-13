@@ -503,9 +503,7 @@ export async function scaffoldTrainingJobs(
 }
 
 export async function scaffoldTrainingTemplateJobs(
-    baseUrl: string,
-    token: string,
-    payload: {
+    baseUrl: string, token: string, payload: {
       mode: TrainingWorkflowMode;
       selectedFile?: string;
       indexedFileCount?: number;
@@ -553,22 +551,17 @@ export async function executeTrainingJob(
 }
 
 export async function executeTrainingCycle(
-    baseUrl: string,
-    token: string,
-    payload: {
+    baseUrl: string, token: string, payload: {
       mode: TrainingWorkflowMode;
-      selectedFile?: string;
-      selectedLineCount: number;
+      selectedFile?: string; selectedLineCount: number;
       indexedFileCount?: number;
     }): Promise<{
-      playerId: string;
-      attemptedJobs: number;
-      completedJobs: number;
-      mode: TrainingWorkflowMode;
-      jobs: TrainingJob[];
-      leaderboard: TrainingLeaderboardEntry[];
-      rewards: TrainingReward[];
-    }> {
+  playerId: string; attemptedJobs: number; completedJobs: number;
+  mode: TrainingWorkflowMode;
+  jobs: TrainingJob[];
+  leaderboard: TrainingLeaderboardEntry[];
+  rewards: TrainingReward[];
+}> {
   return requestJson(
       baseUrl,
       '/v1/player/training/jobs/execute-cycle',
@@ -620,6 +613,25 @@ export async function claimTrainingReward(
         method: 'POST',
         headers: withBearerAuth(token),
       });
+}
+
+export async function claimAllTrainingRewards(baseUrl: string, token: string):
+    Promise<{
+      playerId: string;
+      attemptedRewards: number;
+      claimedRewards: TrainingReward[];
+      failedRewards: Array<{rewardId: string; error: string}>;
+      rewards: TrainingReward[];
+      leaderboard: TrainingLeaderboardEntry[];
+    }> {
+  return requestJson(
+      baseUrl,
+      '/v1/player/training/rewards/claim-all',
+      {
+        method: 'POST',
+        headers: withBearerAuth(token),
+      },
+  );
 }
 
 export async function recordTrainingTransitionEvent(
