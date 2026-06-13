@@ -26,7 +26,7 @@ cmake --build out/v3-native
 ### Optional high-performance backend knobs
 - `BANANA_NETCODE_ENABLE_BLAS=ON|OFF` (CMake option, default `ON`): enables CBLAS path when `cblas.h` and BLAS libs are available.
 - `BANANA_NETCODE_KMEANS_BACKEND=auto|blas|scalar` (runtime env): selects distance kernel backend. `auto` prefers BLAS when compiled in; otherwise deterministic scalar path.
-- CUDA/OpenCL/Eigen integration can be layered behind the same backend selector once toolchain/profile support is added for the target environment.
+- Production contract is CPU-only (scalar/BLAS). GPU backends are intentionally out of scope for this feature.
 
 ## 3) Run focused native tests
 ```bash
