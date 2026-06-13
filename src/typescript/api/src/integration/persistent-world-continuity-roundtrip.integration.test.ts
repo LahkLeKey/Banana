@@ -7,13 +7,14 @@ import {resetAreaStateVersionServiceForTests} from '../domains/persistent-world-
 import {createContinuityPayloadService} from '../domains/persistent-world-orchestration/services/continuityPayloadService.ts';
 import {registerFastifyErrorMapper} from '../lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from '../middleware/requestContext.ts';
+import {createWorldServiceForTests} from '../routes/world.test-service.ts';
 import {registerWorldRoutes} from '../routes/world.ts';
 
 async function createApp() {
   const app = Fastify({logger: false});
   await registerRequestContextMiddleware(app);
   registerFastifyErrorMapper(app);
-  await registerWorldRoutes(app);
+  await registerWorldRoutes(app, {worldService: createWorldServiceForTests()});
   await app.ready();
   return app;
 }

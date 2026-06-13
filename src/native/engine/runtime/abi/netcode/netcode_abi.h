@@ -12,6 +12,27 @@ extern "C"
 {
 #endif
 
+    #define RUNTIME_NETCODE_HYPERSPHERE_KMEANS_CONTRACT_VERSION 1
+    #define RUNTIME_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG 0x01020304
+    #define RUNTIME_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG_SWAPPED 0x04030201
+
+    typedef enum RuntimeNetcodeContractStatus
+    {
+        RUNTIME_NETCODE_CONTRACT_OK = 0,
+        RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION = -3001,
+        RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD = -3002,
+        RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE = -3003,
+        RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH = -3004
+    } RuntimeNetcodeContractStatus;
+
+    typedef struct RuntimeNetcodeContractEnvelopeHeader
+    {
+        int contract_version;
+        int byte_order_tag;
+        int payload_bytes;
+        int payload_crc32;
+    } RuntimeNetcodeContractEnvelopeHeader;
+
     typedef struct RuntimeNetcodeSignalInput
     {
         int call_density;
@@ -72,6 +93,23 @@ extern "C"
 
     int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal_input,
                                               RuntimeNetcodeHypersphereOutput *out_output);
+
+    int runtime_netcode_abi_hypersphere_payload_bytes(void);
+
+    int runtime_netcode_abi_encode_hypersphere_envelope(
+        const RuntimeNetcodeHypersphereOutput *payload,
+        RuntimeNetcodeContractEnvelopeHeader *out_header);
+
+    RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
+        const RuntimeNetcodeContractEnvelopeHeader *header,
+        const RuntimeNetcodeHypersphereOutput *payload,
+        int allow_byte_swapped_tag);
+
+    /*
+     * RuntimeNetcodeHypersphereOutput now carries deterministic K-means
+     * sections (centers/radii/scores/spectral/observability) through the ABI
+     * bridge. The bridge keeps these fields as plain data pass-through.
+     */
 
 #ifdef __cplusplus
 }

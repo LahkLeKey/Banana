@@ -14,6 +14,25 @@ static char s_pgbouncer_pool_mode[32] = "transaction";
 static int s_pgbouncer_default_pool_size = 20;
 static int s_world_initialized = 0;
 
+static int32_t map_runtime_contract_status(int status)
+{
+	switch (status)
+	{
+	case RUNTIME_NETCODE_CONTRACT_OK:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_OK;
+	case RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_UNSUPPORTED_VERSION;
+	case RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD;
+	case RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_NONFINITE_VALUE;
+	case RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_CRC_MISMATCH;
+	default:
+		return BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD;
+	}
+}
+
 static int ensure_world_initialized(void)
 {
 	if (s_world_initialized)
@@ -354,6 +373,9 @@ int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_ve
 	RuntimeNetcodeVectorSignalInput native_input;
 	RuntimeNetcodeHypersphereOutput native_output;
 	int index;
+	int cluster;
+	int dim;
+	int score;
 
 	if (!signal_input || !out_output)
 	{
@@ -380,12 +402,61 @@ int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_ve
 	out_output->dimensions = native_output.dimensions;
 	out_output->alignment = native_output.alignment;
 	out_output->radial_stability = native_output.radial_stability;
+	out_output->cluster_count = native_output.cluster_count;
+	out_output->vector_count = native_output.vector_count;
 	for (index = 0; index < 4; index++)
 	{
 		out_output->nodes[index].x = native_output.nodes[index].x;
 		out_output->nodes[index].y = native_output.nodes[index].y;
 		out_output->nodes[index].z = native_output.nodes[index].z;
 		out_output->nodes[index].coherence = native_output.nodes[index].coherence;
+		out_output->nodes[index].inradius = native_output.nodes[index].inradius;
+		out_output->nodes[index].nearest_neighbor_distance = native_output.nodes[index].nearest_neighbor_distance;
+	}
+
+	for (cluster = 0; cluster < 4; cluster++)
+	{
+		out_output->centers[cluster].cluster_id = native_output.centers[cluster].cluster_id;
+		out_output->centers[cluster].member_count = native_output.centers[cluster].member_count;
+		for (dim = 0; dim < 16; dim++)
+		{
+			out_output->centers[cluster].center_q16[dim] = native_output.centers[cluster].center_q16[dim];
+		}
+
+		out_output->radii[cluster].cluster_id = native_output.radii[cluster].cluster_id;
+		out_output->radii[cluster].nearest_neighbor_distance_q16 = native_output.radii[cluster].nearest_neighbor_distance_q16;
+		out_output->radii[cluster].inscribed_radius_q16 = native_output.radii[cluster].inscribed_radius_q16;
+		out_output->radii[cluster].radius_state = native_output.radii[cluster].radius_state;
+
+		out_output->spectral_proxy[cluster].cluster_id = native_output.spectral_proxy[cluster].cluster_id;
+		out_output->spectral_proxy[cluster].frequency_proxy_q16 = native_output.spectral_proxy[cluster].frequency_proxy_q16;
+		out_output->spectral_proxy[cluster].amplitude_proxy_q16 = native_output.spectral_proxy[cluster].amplitude_proxy_q16;
+		out_output->spectral_proxy[cluster].spectral_state = native_output.spectral_proxy[cluster].spectral_state;
+	}
+
+	for (score = 0; score < 16; score++)
+	{
+		out_output->weighted_voronoi_scores[score].vector_id = native_output.weighted_voronoi_scores[score].vector_id;
+		out_output->weighted_voronoi_scores[score].cluster_id = native_output.weighted_voronoi_scores[score].cluster_id;
+		out_output->weighted_voronoi_scores[score].distance_to_center_q16 = native_output.weighted_voronoi_scores[score].distance_to_center_q16;
+		out_output->weighted_voronoi_scores[score].weighted_score_q16 = native_output.weighted_voronoi_scores[score].weighted_score_q16;
+		out_output->weighted_voronoi_scores[score].score_validity = native_output.weighted_voronoi_scores[score].score_validity;
+	}
+
+	out_output->observability.convergence_status = native_output.observability.convergence_status;
+	out_output->observability.iteration_count = native_output.observability.iteration_count;
+	out_output->observability.assignment_changes_last_iteration = native_output.observability.assignment_changes_last_iteration;
+	out_output->observability.deterministic_hash = native_output.observability.deterministic_hash;
+	out_output->observability.endianness_decode_path = native_output.observability.endianness_decode_path;
+	out_output->envelope_contract_version = native_output.envelope.contract_version;
+	out_output->envelope_byte_order_tag = native_output.envelope.byte_order_tag;
+	out_output->envelope_payload_bytes = native_output.envelope.payload_bytes;
+	out_output->envelope_payload_crc32 = native_output.envelope.payload_crc32;
+	out_output->contract_status = map_runtime_contract_status(native_output.envelope.contract_status);
+
+	if (native_output.envelope.contract_status != RUNTIME_NETCODE_CONTRACT_OK)
+	{
+		return native_output.envelope.contract_status;
 	}
 
 	return 0;

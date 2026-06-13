@@ -37,7 +37,11 @@ bash scripts/build-fly-pg-durable-image.sh
 Image source and init artifacts:
 
 - `docker/postgres-pg-durable.Dockerfile`
-- `docker/pg-durable/initdb/010-create-extension.sh`
+
+Notes:
+
+- The image extends `flyio/postgres-flex:17.2` to preserve Fly Postgres runtime behavior.
+- `pg_durable` is installed in the image, then enabled with SQL on the running instance.
 
 ## Native-To-Neon Integration (Containerized)
 

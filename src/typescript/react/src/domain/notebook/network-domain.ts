@@ -22,13 +22,68 @@ export type ContractNodeVectorModel = {
 };
 
 export type ContractHypersphereProjectionNode = {
-  readonly id: ContractNodeId; readonly x: number; readonly y: number; readonly z: number; readonly coherence:
-                                                                                                        number;
+  readonly id: ContractNodeId; readonly x: number; readonly y: number; readonly z: number; readonly coherence: number; readonly inradius: number; readonly nearestNeighborDistance:
+                                                                                                                                                               number;
 };
 
 export type ContractHypersphereProjectionModel = {
   readonly dimensions: number; readonly nodes: readonly ContractHypersphereProjectionNode[]; readonly alignment: number; readonly radialStability:
                                                                                                                                       number;
+};
+
+export type ContractHypersphereKmeansCenterModel = {
+  readonly clusterId: number; readonly centerQ16: readonly number[]; readonly memberVectorIds: readonly number[]; readonly memberCount:
+                                                                                                                               number;
+};
+
+export type ContractHypersphereKmeansRadiusModel = {
+  readonly clusterId: number; readonly nearestNeighborDistanceQ16: number; readonly inscribedRadiusQ16: number; readonly radiusState:
+                                                                                                                             'ok' |
+      'degenerate' | 'invalid';
+};
+
+export type ContractHypersphereKmeansWeightedScoreModel = {
+  readonly vectorId: number; readonly clusterId: number; readonly distanceToCenterQ16: number; readonly weightedScoreQ16: number; readonly scoreValidity:
+                                                                                                                                               'valid' |
+      'clamped' | 'invalid';
+};
+
+export type ContractHypersphereKmeansSpectralProxyModel = {
+  readonly clusterId: number; readonly frequencyProxyQ16: number; readonly amplitudeProxyQ16: number; readonly spectralState:
+                                                                                                                   'ok' |
+      'low-signal' | 'invalid';
+};
+
+export type ContractHypersphereKmeansObservabilityModel = {
+  readonly convergenceStatus: 'converged'|'max-iterations'|'failed'; readonly iterationCount: number; readonly assignmentChangesLastIteration: number; readonly scoringValidity: 'valid' | 'degraded' | 'invalid'; readonly deterministicHash:
+                                                                                                                                                                                                                                string;
+};
+
+export type ContractHypersphereKmeansModel = {
+  readonly centers: readonly ContractHypersphereKmeansCenterModel[]; readonly radii: readonly ContractHypersphereKmeansRadiusModel[]; readonly weightedVoronoiScores: readonly ContractHypersphereKmeansWeightedScoreModel[]; readonly spectralProxy: readonly ContractHypersphereKmeansSpectralProxyModel[]; readonly observability:
+                                                                                                                                                                                                                                                                                                                           ContractHypersphereKmeansObservabilityModel;
+};
+
+export type ContractHypersphereKmeansContractStatus = 'ok'|
+    'unsupported-version'|'invalid-payload'|'nonfinite-value'|'crc-mismatch';
+
+export type ContractHypersphereKmeansEnvelope = {
+  readonly contractVersion: number; readonly byteOrderTag: number; readonly payloadBytes: number; readonly payloadCrc32: number; readonly status:
+                                                                                                                                              ContractHypersphereKmeansContractStatus;
+};
+
+export type ContractHypersphereKmeansRollout = {
+  readonly enabled: boolean; readonly cohort: string;
+};
+
+export type NetcodeAnalyticsAvailabilityModel = {
+  readonly available: boolean;
+  readonly reason:
+      'ok'|'rollout-disabled'|'transport-error'|'contract-error';
+  readonly errorCode?: string;
+  readonly retryable?: boolean;
+  readonly contractVersion?: number;
+  readonly rollout: ContractHypersphereKmeansRollout;
 };
 
 export type CFileContractNodeModel = {
@@ -94,6 +149,16 @@ function dot(a: readonly number[], b: readonly number[]): number {
     result += (a[index] ?? 0) * (b[index] ?? 0);
   }
   return result;
+}
+
+function euclideanDistance(a: readonly number[], b: readonly number[]): number {
+  const maxLength = Math.max(a.length, b.length);
+  let sum = 0;
+  for (let index = 0; index < maxLength; index += 1) {
+    const delta = (a[index] ?? 0) - (b[index] ?? 0);
+    sum += delta * delta;
+  }
+  return Math.sqrt(sum);
 }
 
 function projectNormalizedVector(normalizedVector: readonly number[]):
@@ -339,8 +404,33 @@ export function buildContractHypersphereProjectionModel(
       y: projection.y,
       z: projection.z,
       coherence,
+      inradius: 0,
+      nearestNeighborDistance: 0,
     };
   });
+
+  for (let index = 0; index < nodes.length; index += 1) {
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    for (let neighbor = 0; neighbor < normalizedNodes.length; neighbor += 1) {
+      if (neighbor === index) {
+        continue;
+      }
+      const candidate = euclideanDistance(
+          normalizedNodes[index]?.vector ?? [],
+          normalizedNodes[neighbor]?.vector ?? [],
+      );
+      if (candidate < nearestDistance) {
+        nearestDistance = candidate;
+      }
+    }
+
+    const safeDistance = Number.isFinite(nearestDistance) ? nearestDistance : 0;
+    nodes[index] = {
+      ...nodes[index],
+      nearestNeighborDistance: safeDistance,
+      inradius: safeDistance * 0.5,
+    };
+  }
 
   const averageRadius = totalRadius / nodes.length;
   const radiusVariance = nodes.reduce((sum, node) => {

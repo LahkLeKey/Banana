@@ -283,6 +283,8 @@ export function NotebookGameplaySurface({
         rewardSignal,
         linkConfidence,
         hypersphereProjection,
+        hypersphereKmeans,
+        analyticsAvailability,
     } = useNetcodeSession({
         callDensity,
         questPercent,
@@ -335,6 +337,11 @@ export function NotebookGameplaySurface({
         riskLabel,
     ]);
     const { neuralRelevanceScore, projectedRewardXp, rewardTier, rewardBand } = rewardSignal;
+    const kmeansClusterCount = hypersphereKmeans.centers.length;
+    const kmeansConvergence = hypersphereKmeans.observability.convergenceStatus;
+    const kmeansHashPreview = hypersphereKmeans.observability.deterministicHash.length > 0
+        ? hypersphereKmeans.observability.deterministicHash.slice(0, 8)
+        : 'n/a';
     const laneContractCoherence = useMemo(() => {
         const coherenceMap = new Map<ContractNodeId, number>();
         hypersphereProjection.nodes.forEach((node) => {
@@ -804,6 +811,27 @@ export function NotebookGameplaySurface({
                     </div>
                 ) : null}
 
+                {!analyticsAvailability.available ? (
+                    <div style={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        zIndex: 5,
+                        borderRadius: 12,
+                        border: '1px solid rgba(244, 63, 94, 0.55)',
+                        background: 'linear-gradient(140deg, rgba(76, 5, 25, 0.92), rgba(67, 20, 7, 0.85))',
+                        color: '#fecdd3',
+                        padding: '10px 12px',
+                        fontSize: 11,
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        fontWeight: 700,
+                        boxShadow: '0 12px 24px rgba(76, 5, 25, 0.35)',
+                    }}>
+                        Analytics unavailable · {analyticsAvailability.reason} · cohort {analyticsAvailability.rollout.cohort}
+                    </div>
+                ) : null}
+
                 <GameplayTopHud
                     selectedFile={selectedFile}
                     missionCode={missionSector.code}
@@ -952,6 +980,11 @@ export function NotebookGameplaySurface({
                             hypersphereAlignment={hypersphereProjection.alignment}
                             cFileCount={cFileCount}
                             modelConfidence={learningModel.modelConfidence}
+                            extraLines={[
+                                `KMeans: ${kmeansClusterCount} clusters`,
+                                `Convergence: ${kmeansConvergence}`,
+                                `Hash: ${kmeansHashPreview}`,
+                            ]}
                         />
                     ) : null}
 
@@ -973,6 +1006,7 @@ export function NotebookGameplaySurface({
                             rewardBand={rewardBand}
                             questListMaxHeight={expandedQuestRail ? '34dvh' : (hasOpenDock ? '18dvh' : '24dvh')}
                             projectedRewardXp={projectedRewardXp}
+                            statusLine={`KMeans ${kmeansClusterCount} · ${kmeansConvergence} · ${analyticsAvailability.rollout.cohort}`}
                             onMainAction={() => {
                                 setActiveWorkflowStep('commit');
                                 setWorkflowDepth(3);

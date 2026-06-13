@@ -29,6 +29,7 @@ type TelemetryRailProps = {
     readonly hypersphereAlignment: number;
     readonly cFileCount: number;
     readonly modelConfidence: number;
+    readonly extraLines?: readonly string[];
 };
 
 export function TelemetryRail(props: TelemetryRailProps) {
@@ -43,6 +44,7 @@ export function TelemetryRail(props: TelemetryRailProps) {
         hypersphereAlignment,
         cFileCount,
         modelConfidence,
+        extraLines = [],
     } = props;
 
     return (
@@ -83,6 +85,9 @@ export function TelemetryRail(props: TelemetryRailProps) {
                 <div style={{ fontSize: 10, color: '#e2e8f0' }}>Align {hypersphereAlignment}%</div>
                 <div style={{ fontSize: 10, color: '#7dd3fc' }}>C files {cFileCount}</div>
                 <div style={{ fontSize: 10, color: '#a7f3d0' }}>ML conf {modelConfidence}%</div>
+                {extraLines.map((line) => (
+                    <div key={line} style={{ fontSize: 10, color: '#cbd5e1' }}>{line}</div>
+                ))}
             </div>
         </div>
     );
@@ -101,6 +106,7 @@ type QuestLogRailProps = {
     readonly rewardBand: RewardBandContract;
     readonly questListMaxHeight: string;
     readonly projectedRewardXp: number;
+    readonly statusLine?: string;
     readonly onMainAction: () => void;
     readonly onClose?: () => void;
 };
@@ -119,6 +125,7 @@ export function QuestLogRail(props: QuestLogRailProps) {
         rewardBand,
         questListMaxHeight,
         projectedRewardXp,
+        statusLine,
         onMainAction,
         onClose,
     } = props;
@@ -189,6 +196,11 @@ export function QuestLogRail(props: QuestLogRailProps) {
                     <div style={{ fontSize: 8, color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                         {workflowStepLabel}
                     </div>
+                    {statusLine ? (
+                        <div style={{ fontSize: 9, color: '#cbd5e1', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                            {statusLine}
+                        </div>
+                    ) : null}
                 </div>
             </div>
 

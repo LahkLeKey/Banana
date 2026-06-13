@@ -38,10 +38,10 @@ export function useNotebookClient() {
                 notebookResult.value.payload :
                 null,
             manifestError: manifestResult.status === 'rejected' ?
-                'Notebook manifest not found yet. Run scaffold workflow.' :
+                'Notebook manifest is unavailable from API. Check API runtime and notebook endpoint.' :
                 null,
             notebookError: notebookResult.status === 'rejected' ?
-                'Notebook payload not available. Re-run scaffold workflow.' :
+                'Notebook payload is unavailable from API. Check API runtime and notebook endpoint.' :
                 null,
             manifestSource: manifestResult.status === 'fulfilled' ?
                 manifestResult.value.source :

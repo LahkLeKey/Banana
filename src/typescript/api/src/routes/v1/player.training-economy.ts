@@ -1,9 +1,11 @@
-import type {FastifyInstance} from 'fastify';
+import type {FastifyInstance, FastifyRequest} from 'fastify';
 import {z} from 'zod';
 
 import {validationError} from '../../lib/errors/domainErrors.ts';
 import {assertPlayerSelfScope} from '../../middleware/playerScopeAuthorization.ts';
 import {getTrainingEconomyStore} from '../../services/trainingEconomyStore.ts';
+
+type TrainingTemplateMode = 'operations'|'controller';
 
 const scaffoldJobsRequestSchema = z.object({
   jobs: z.array(z.object({
@@ -13,6 +15,19 @@ const scaffoldJobsRequestSchema = z.object({
          }))
             .min(1)
             .max(50),
+});
+
+const scaffoldTemplateRequestSchema = z.object({
+  mode: z.enum(['operations', 'controller']),
+  selectedFile: z.string().trim().max(260).optional(),
+  indexedFileCount: z.number().int().min(0).max(200000).optional(),
+});
+
+const executeCycleRequestSchema = z.object({
+  mode: z.enum(['operations', 'controller']),
+  selectedFile: z.string().trim().max(260).optional(),
+  selectedLineCount: z.number().int().min(1).max(200000),
+  indexedFileCount: z.number().int().min(0).max(200000).optional(),
 });
 
 const completeJobRequestSchema = z.object({
@@ -34,6 +49,98 @@ const transitionEventRequestSchema = z.object({
   details: z.record(z.string(), z.unknown()).optional(),
 });
 
+function buildBulkQueueTemplate(
+    selectedFile: string, indexedFileCount: number, mode: TrainingTemplateMode):
+    Array<{title: string; sector: string; rewardXp: number;}> {
+  const normalized = selectedFile.replace(/\\/g, '/');
+  const lane = normalized.split('/').filter(Boolean).pop() ?? selectedFile;
+  const sectorLabel = lane.replace(/\.[^.]+$/, '')
+                          .replace(/[_-]+/g, ' ')
+                          .replace(/\b\w/g, (match) => match.toUpperCase());
+  const targetLabel = sectorLabel.length > 0 ? sectorLabel : 'Frontier Sector';
+
+  if (mode === 'controller') {
+    const controllerSector = 'controller-training';
+    const controllerScale =
+        Math.max(1, Math.min(4, Math.floor(indexedFileCount / 40) + 1));
+    return [
+      {
+        title: `Calibrate controller reward gradients in ${targetLabel}`,
+        sector: controllerSector,
+        rewardXp: 140 + controllerScale * 20,
+      },
+      {
+        title: 'Run imitation pass for AI controller tuning',
+        sector: controllerSector,
+        rewardXp: 190 + controllerScale * 20,
+      },
+      {
+        title: `Validate controller policies against ${
+            indexedFileCount} indexed files`,
+        sector: controllerSector,
+        rewardXp: 260 + controllerScale * 30,
+      },
+      {
+        title: 'Archive controller training telemetry and issue stipend',
+        sector: controllerSector,
+        rewardXp: 160 + controllerScale * 15,
+      },
+    ];
+  }
+
+  const sector = selectedFile.length > 0 ? selectedFile : 'default-sector';
+  return [
+    {
+      title: `Survey frontier output in ${targetLabel}`,
+      sector,
+      rewardXp: 120,
+    },
+    {
+      title: 'Allocate worker crews and supplies',
+      sector,
+      rewardXp: 180,
+    },
+    {
+      title: 'Run production cycle for this province',
+      sector,
+      rewardXp: 260,
+    },
+    {
+      title: 'Audit yields and issue stipend payout',
+      sector,
+      rewardXp: 140,
+    },
+  ];
+}
+
+function buildExecutionInput(args: {
+  selectedFile: string; selectedLineCount: number; indexedFileCount: number;
+  index: number;
+  jobId: string;
+}): {score: number; durationMs: number; integrityProof: string} {
+  const durationMs = 5_000 + args.selectedLineCount * 25 + args.index * 300;
+  const scoreCap = Math.floor(durationMs / 5) + 4_500;
+  const score = Math.max(
+      600,
+      Math.min(
+          scoreCap,
+          args.selectedLineCount * 28 + args.indexedFileCount +
+              args.index * 120,
+          ),
+  );
+  const integritySector = args.selectedFile.trim().length > 0 ?
+      args.selectedFile.trim() :
+      'default';
+  const integrityProof =
+      `${integritySector}:${args.jobId}:${durationMs}:${score}`;
+  return {score, durationMs, integrityProof};
+}
+
+function buildTransitionCorrelationId(
+    request: FastifyRequest, eventType: string): string {
+  return `${request.requestContext.correlationId}-${eventType}-${Date.now()}`;
+}
+
 export async function registerV1PlayerTrainingEconomyRoutes(
     app: FastifyInstance): Promise<void> {
   const store = await getTrainingEconomyStore();
@@ -50,6 +157,44 @@ export async function registerV1PlayerTrainingEconomyRoutes(
     assertPlayerSelfScope(request, actorId);
 
     const jobs = await store.scaffoldJobs(actorId, parseResult.data.jobs);
+    reply.status(201).send({
+      playerId: actorId,
+      jobs,
+    });
+  });
+
+  app.post('/jobs/scaffold-template', async (request, reply) => {
+    const parseResult =
+        scaffoldTemplateRequestSchema.safeParse(request.body ?? {});
+    if (!parseResult.success) {
+      throw validationError('training_jobs_scaffold_template_invalid_payload', {
+        issues: parseResult.error.issues,
+      });
+    }
+
+    const actorId = request.requestContext.actorScope.actorId;
+    assertPlayerSelfScope(request, actorId);
+
+    const selectedFile = parseResult.data.selectedFile?.trim() ?? '';
+    const indexedFileCount = parseResult.data.indexedFileCount ?? 0;
+    const jobs = await store.scaffoldJobs(
+        actorId,
+        buildBulkQueueTemplate(
+            selectedFile, indexedFileCount, parseResult.data.mode),
+    );
+
+    await store.storeTransitionEvent({
+      playerId: actorId,
+      eventType: 'queue.scaffolded',
+      correlationId: buildTransitionCorrelationId(request, 'queue-scaffolded'),
+      details: {
+        jobCount: jobs.length,
+        selectedFile,
+        workflowMode: parseResult.data.mode,
+        indexedFileCount,
+      },
+    });
+
     reply.status(201).send({
       playerId: actorId,
       jobs,
@@ -109,6 +254,95 @@ export async function registerV1PlayerTrainingEconomyRoutes(
     }
   });
 
+  app.post('/jobs/execute-cycle', async (request, reply) => {
+    const parseResult = executeCycleRequestSchema.safeParse(request.body ?? {});
+    if (!parseResult.success) {
+      throw validationError('training_jobs_execute_cycle_invalid_payload', {
+        issues: parseResult.error.issues,
+      });
+    }
+
+    const actorId = request.requestContext.actorScope.actorId;
+    assertPlayerSelfScope(request, actorId);
+
+    const selectedFile = parseResult.data.selectedFile?.trim() ?? '';
+    const indexedFileCount = parseResult.data.indexedFileCount ?? 0;
+    const selectedLineCount = parseResult.data.selectedLineCount;
+
+    let queue = await store.listJobs(actorId);
+    let pending = queue.filter((job) => job.status !== 'completed');
+    if (pending.length === 0) {
+      pending = await store.scaffoldJobs(
+          actorId,
+          buildBulkQueueTemplate(
+              selectedFile, indexedFileCount, parseResult.data.mode),
+      );
+    }
+
+    await store.storeTransitionEvent({
+      playerId: actorId,
+      eventType: 'queue.execution.started',
+      correlationId:
+          buildTransitionCorrelationId(request, 'queue-execution-started'),
+      details: {
+        requestedJobs: pending.length,
+        workflowMode: parseResult.data.mode,
+      },
+    });
+
+    const completedJobIds: string[] = [];
+    for (let index = 0; index < pending.length; index += 1) {
+      const job = pending[index];
+      if (!job || job.status === 'completed') {
+        continue;
+      }
+
+      const execution = buildExecutionInput({
+        selectedFile,
+        selectedLineCount,
+        indexedFileCount,
+        index,
+        jobId: job.jobId,
+      });
+
+      await store.completeJob({
+        playerId: actorId,
+        jobId: job.jobId,
+        score: execution.score,
+        durationMs: execution.durationMs,
+        integrityProof: execution.integrityProof,
+      });
+      completedJobIds.push(job.jobId);
+    }
+
+    queue = await store.listJobs(actorId);
+    const leaderboard = await store.listLeaderboard(12);
+    const rewards = await store.listRewards(actorId);
+
+    await store.storeTransitionEvent({
+      playerId: actorId,
+      eventType: 'queue.execution.completed',
+      correlationId:
+          buildTransitionCorrelationId(request, 'queue-execution-completed'),
+      details: {
+        attemptedJobs: pending.length,
+        completedJobs: completedJobIds.length,
+        selectedFile,
+        workflowMode: parseResult.data.mode,
+      },
+    });
+
+    reply.send({
+      playerId: actorId,
+      attemptedJobs: pending.length,
+      completedJobs: completedJobIds.length,
+      mode: parseResult.data.mode,
+      jobs: queue,
+      leaderboard,
+      rewards,
+    });
+  });
+
   app.get('/leaderboard', async (request, reply) => {
     const actorId = request.requestContext.actorScope.actorId;
     assertPlayerSelfScope(request, actorId);
@@ -163,6 +397,72 @@ export async function registerV1PlayerTrainingEconomyRoutes(
                                                        400;
       reply.status(statusCode).send({error: code});
     }
+  });
+
+  app.post('/rewards/claim-all', async (request, reply) => {
+    const actorId = request.requestContext.actorScope.actorId;
+    assertPlayerSelfScope(request, actorId);
+
+    const rewards = await store.listRewards(actorId);
+    const pendingRewards =
+        rewards.filter((reward) => reward.status === 'pending');
+    const claimedRewards: typeof rewards = [];
+    const failedRewards: Array<{rewardId: string; error: string}> = [];
+
+    for (const reward of pendingRewards) {
+      const attemptedCorrelationId =
+          buildTransitionCorrelationId(request, 'reward-claim-attempted');
+      await store.storeTransitionEvent({
+        playerId: actorId,
+        eventType: 'reward.claim.attempted',
+        correlationId: attemptedCorrelationId,
+        details: {
+          rewardId: reward.rewardId,
+          xp: reward.xp,
+        },
+      });
+
+      try {
+        const claimedReward = await store.claimReward(actorId, reward.rewardId);
+        claimedRewards.push(claimedReward);
+        await store.storeTransitionEvent({
+          playerId: actorId,
+          eventType: 'reward.claim.succeeded',
+          correlationId:
+              buildTransitionCorrelationId(request, 'reward-claim-succeeded'),
+          details: {
+            rewardId: claimedReward.rewardId,
+            xp: claimedReward.xp,
+          },
+        });
+      } catch (error) {
+        const code = error instanceof Error ? error.message :
+                                              'training_reward_claim_failed';
+        failedRewards.push({rewardId: reward.rewardId, error: code});
+        await store.storeTransitionEvent({
+          playerId: actorId,
+          eventType: 'reward.claim.failed',
+          correlationId:
+              buildTransitionCorrelationId(request, 'reward-claim-failed'),
+          details: {
+            rewardId: reward.rewardId,
+            error: code,
+          },
+        });
+      }
+    }
+
+    const refreshedRewards = await store.listRewards(actorId);
+    const leaderboard = await store.listLeaderboard(12);
+
+    reply.send({
+      playerId: actorId,
+      attemptedRewards: pendingRewards.length,
+      claimedRewards,
+      failedRewards,
+      rewards: refreshedRewards,
+      leaderboard,
+    });
   });
 
   app.post('/telemetry/transitions', async (request, reply) => {

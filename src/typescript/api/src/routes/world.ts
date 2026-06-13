@@ -7,13 +7,13 @@
  * chunk
  */
 
-import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
+import {dlopen, FFIType, type Pointer, ptr} from 'bun:ffi';
 import type {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
-import path from 'node:path';
 
 import {bootstrapPersistentWorldOrchestrationDomain, type PersistentWorldOrchestrationDomain,} from '../domains/persistent-world-orchestration/index.ts';
 import type {ContinuityCheckpointCommitRequest, ContinuityPayload} from '../lib/contracts/v1/persistentWorld.ts';
 import {persistentWorldRevisitBaselineUnavailable,} from '../lib/errors/domainErrors.ts';
+import {loadBananaNativeSymbols,} from '../lib/native-interop-loader.ts';
 
 /**
  * ChunkStreamPacket binary format (from C):
@@ -43,51 +43,8 @@ type ContinuityCheckpointCommitBody = ContinuityCheckpointCommitRequest;
 
 type WorldRouteOptions = {
   persistentWorldOrchestrationDomain?: PersistentWorldOrchestrationDomain;
+  worldService?: WorldService;
 };
-
-class InMemoryWorldService implements WorldService {
-  public async getChunkBinary(chunkX: number, chunkZ: number): Promise<Buffer> {
-    const objectCount = 0;
-    const totalSize = 8222 + objectCount * 7;
-    const buffer = Buffer.alloc(totalSize);
-    const view =
-        new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-
-    let offset = 0;
-    view.setInt32(offset, chunkX, true);
-    offset += 4;
-    view.setInt32(offset, chunkZ, true);
-    offset += 4;
-    view.setUint32(offset, 1, true);
-    offset += 4;
-    view.setBigInt64(offset, 0n, true);
-    offset += 8;
-    view.setBigUint64(offset, 0n, true);
-    offset += 8;
-
-    for (let z = 0; z < 64; z++) {
-      for (let x = 0; x < 64; x++) {
-        const idx = z * 64 + x;
-        const h =
-            (Math.abs(chunkX * 17 + chunkZ * 31 + x * 7 + z * 13) % 120) + 40;
-        buffer[offset + idx] = h;
-      }
-    }
-    offset += 4096;
-
-    for (let z = 0; z < 64; z++) {
-      for (let x = 0; x < 64; x++) {
-        const idx = z * 64 + x;
-        const biome = Math.abs(chunkX + chunkZ + x + z) % 5;
-        buffer[offset + idx] = biome;
-      }
-    }
-    offset += 4096;
-
-    view.setUint16(offset, objectCount, true);
-    return buffer;
-  }
-}
 
 type WorldSymbols = {
   banana_native_v3_world_init: (seed: number, cache_size: number) => number;
@@ -97,49 +54,9 @@ type WorldSymbols = {
           number;
 };
 
-function resolveWorldLibraryCandidates(): string[] {
-  const ext = suffix;
-  const names = [`libbanana_native.${ext}`, `banana_native.${ext}`];
-  const envPath = process.env.BANANA_NATIVE_PATH;
-  const candidates: string[] = [];
-
-  if (envPath && envPath.trim().length > 0) {
-    const trimmed = envPath.trim();
-    if (trimmed.endsWith(`.${ext}`)) {
-      candidates.push(trimmed);
-    } else {
-      for (const name of names) {
-        candidates.push(path.join(trimmed, name));
-      }
-    }
-  }
-
-  const repoRoot = path.resolve(process.cwd(), '../../..');
-  const fallbackDirs = [
-    'out/native/bin',
-    'out/v3-native/Debug',
-    'out/v3-native/Release',
-    'out/v3-native-baseline/Debug',
-    'build/native/bin',
-    'build/native',
-  ];
-
-  for (const name of names) {
-    for (const dir of fallbackDirs) {
-      candidates.push(path.join(repoRoot, dir, name));
-    }
-  }
-
-  return Array.from(new Set(candidates));
-}
-
 function createWorldBinding(): WorldSymbols {
-  const candidates = resolveWorldLibraryCandidates();
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const library = dlopen(candidate, {
+  return loadBananaNativeSymbols<WorldSymbols>(
+      {
         banana_native_v3_world_init: {
           args: [FFIType.u32, FFIType.i32],
           returns: FFIType.i32,
@@ -152,17 +69,19 @@ function createWorldBinding(): WorldSymbols {
           args: [FFIType.i32, FFIType.i32, FFIType.ptr, FFIType.i32],
           returns: FFIType.i32,
         },
-      });
-
-      return library.symbols as unknown as WorldSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for world FFI. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`);
+      },
+      'world FFI',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'out/v3-native/Debug',
+          'out/v3-native/Release',
+          'out/v3-native-baseline/Debug',
+          'build/native/bin',
+          'build/native',
+        ],
+      },
+  );
 }
 
 export class NativeWorldService implements WorldService {
@@ -211,15 +130,7 @@ export async function registerWorldRoutes(
     app: FastifyInstance,
     options: WorldRouteOptions = {},
     ): Promise<void> {
-  let worldService: WorldService;
-  try {
-    worldService = new NativeWorldService();
-  } catch (error) {
-    app.log.warn(
-        {err: error},
-        'Native world FFI unavailable, falling back to in-memory world service');
-    worldService = new InMemoryWorldService();
-  }
+  const worldService = options.worldService ?? new NativeWorldService();
 
   const persistentWorldDomain = options.persistentWorldOrchestrationDomain ??
       bootstrapPersistentWorldOrchestrationDomain(app);

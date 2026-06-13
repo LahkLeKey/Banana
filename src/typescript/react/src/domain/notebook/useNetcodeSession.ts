@@ -1,8 +1,8 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-import {resolveApiBaseUrl} from '../../lib/api';
+import {fetchNetcodeAnalytics, fetchNetcodeLearning, NetcodeAnalyticsError, resolveApiBaseUrl,} from '../../lib/api';
 
-import type {ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
+import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
 type NetcodeSignals = {
   readonly callDensity: number; readonly questPercent: number; readonly comboStreak: number; readonly branchPressure: number; readonly workflowDepth: 1 | 2 | 3; readonly playerLevel: number; readonly dependencyPulse: number; readonly networkDimensions:
@@ -60,7 +60,15 @@ const DEFAULT_LINK_CONFIDENCE: NodeLinkConfidenceModel = {
 };
 
 function makeDefaultProjectionNode(id: ContractNodeId) {
-  return {id, x: 0, y: 0, z: 0, coherence: 0};
+  return {
+    id,
+    x: 0,
+    y: 0,
+    z: 0,
+    coherence: 0,
+    inradius: 0,
+    nearestNeighborDistance: 0,
+  };
 }
 
 const DEFAULT_HYPERSPHERE: ContractHypersphereProjectionModel = {
@@ -73,6 +81,29 @@ const DEFAULT_HYPERSPHERE: ContractHypersphereProjectionModel = {
   ],
   alignment: 0,
   radialStability: 0,
+};
+
+const DEFAULT_HYPERSPHERE_KMEANS: ContractHypersphereKmeansModel = {
+  centers: [],
+  radii: [],
+  weightedVoronoiScores: [],
+  spectralProxy: [],
+  observability: {
+    convergenceStatus: 'failed',
+    iterationCount: 0,
+    assignmentChangesLastIteration: 0,
+    scoringValidity: 'invalid',
+    deterministicHash: '',
+  },
+};
+
+const DEFAULT_ANALYTICS_AVAILABILITY: NetcodeAnalyticsAvailabilityModel = {
+  available: true,
+  reason: 'ok',
+  rollout: {
+    enabled: true,
+    cohort: 'default',
+  },
 };
 
 const NODE_ORDER: ContractNodeId[] = ['intel', 'objectives', 'player', 'ops'];
@@ -105,14 +136,6 @@ function actionToIndex(action: NodeInteractionAction): number {
   return 0;
 }
 
-type ApiLearningBody = {
-  callDensity: number; questPercent: number; comboStreak: number;
-  branchPressure: number;
-  workflowDepth: 1 | 2 | 3;
-  nodeTap?: number;
-  action?: number;
-};
-
 type ApiLearningResponse = {
   ledger: NodeInteractionLedger; learning: {
     modelConfidence: number; trainingAccuracy: number; policyMomentum: number;
@@ -123,39 +146,9 @@ type ApiLearningResponse = {
   };
 };
 
-type ApiRewardResponse = {
-  reward: {
-    neuralRelevanceScore: number; projectedRewardXp: number; rewardTier: number;
-  };
-};
-
-type ApiLinkResponse = {
-  link: {intel: number; objectives: number; player: number; ops: number;};
-};
-
-type ApiVectorResponse = {
-  vector: {
-    dimensions: number; nodeVectors: readonly(readonly number[])[];
-    contractStrength: readonly[number, number, number, number];
-  };
-};
-
-type ApiHypersphereResponse = {
-  hypersphere: {
-    dimensions: number; nodes: readonly {
-      x: number;
-      y: number;
-      z: number;
-      coherence: number;
-    }[];
-    alignment: number;
-    radialStability: number;
-  };
-};
-
 export type NetcodeSessionHook = {
-  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection:
-                                                                                                                                                                                                                                                                                                                                                                                               ContractHypersphereProjectionModel;
+  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly hypersphereKmeans: ContractHypersphereKmeansModel; readonly analyticsAvailability:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               NetcodeAnalyticsAvailabilityModel;
 };
 
 export function useNetcodeSession({
@@ -179,6 +172,11 @@ export function useNetcodeSession({
       useState<readonly ContractNodeVectorModel[]>([]);
   const [hypersphereProjection, setHypersphereProjection] =
       useState<ContractHypersphereProjectionModel>(DEFAULT_HYPERSPHERE);
+  const [hypersphereKmeans, setHypersphereKmeans] =
+      useState<ContractHypersphereKmeansModel>(DEFAULT_HYPERSPHERE_KMEANS);
+  const [analyticsAvailability, setAnalyticsAvailability] =
+      useState<NetcodeAnalyticsAvailabilityModel>(
+          DEFAULT_ANALYTICS_AVAILABILITY);
   const analyticsRequestRef = useRef(0);
 
   const signalsRef = useRef<NetcodeSignals>({
@@ -230,22 +228,14 @@ export function useNetcodeSession({
         const baseUrl = resolveApiBaseUrl();
         if (!baseUrl) return;
 
-        const body: ApiLearningBody = {
+        const body = {
           ...signalsRef.current,
           ...extra,
         };
 
         try {
-          const response = await fetch(`${baseUrl}/api/netcode/learning`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(body),
-          });
-
-          if (!response.ok) return;
-
-          const data = await response.json() as ApiLearningResponse;
-          applyResponse(data);
+          const data = await fetchNetcodeLearning(baseUrl, body);
+          applyResponse(data as ApiLearningResponse);
         } catch {
           // API unreachable — retain current model values
         }
@@ -280,65 +270,7 @@ export function useNetcodeSession({
 
         const run = async () => {
           try {
-            const rewardResponse =
-                await fetch(`${baseUrl}/api/netcode/reward`, {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({
-                    callDensity,
-                    questPercent,
-                    comboStreak,
-                    branchPressure,
-                    workflowDepth,
-                    interactionSignal: learningModel.modelConfidence,
-                  }),
-                });
-
-            if (!rewardResponse.ok ||
-                analyticsRequestRef.current !== requestId) {
-              return;
-            }
-            const rewardData = await rewardResponse.json() as ApiRewardResponse;
-            const rewardTier = rewardData.reward.rewardTier === 0 ?
-                'Elite Signal' :
-                rewardData.reward.rewardTier === 1 ? 'Relevant' :
-                                                     'Needs Labeling';
-            const rewardBand = rewardTier === 'Elite Signal' ? ELITE_BAND :
-                rewardTier === 'Relevant'                    ? RELEVANT_BAND :
-                                                               LABELING_BAND;
-            setRewardSignal({
-              neuralRelevanceScore: rewardData.reward.neuralRelevanceScore,
-              projectedRewardXp: rewardData.reward.projectedRewardXp,
-              rewardTier,
-              rewardBand,
-            });
-
-            const linkResponse = await fetch(`${baseUrl}/api/netcode/link`, {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                callDensity,
-                questPercent,
-                playerLevel,
-                comboStreak,
-                branchPressure,
-                dependencyPulse,
-                interactionSignal: learningModel.policyMomentum,
-              }),
-            });
-
-            if (!linkResponse.ok || analyticsRequestRef.current !== requestId) {
-              return;
-            }
-            const linkData = await linkResponse.json() as ApiLinkResponse;
-            setLinkConfidence({
-              intel: linkData.link.intel,
-              objectives: linkData.link.objectives,
-              player: linkData.link.player,
-              ops: linkData.link.ops,
-            });
-
-            const vectorBody = {
+            const analytics = await fetchNetcodeAnalytics(baseUrl, {
               callDensity,
               questPercent,
               playerLevel,
@@ -346,61 +278,158 @@ export function useNetcodeSession({
               branchPressure,
               dependencyPulse,
               workflowDepth,
-              neuralRelevanceScore: rewardData.reward.neuralRelevanceScore,
               networkDimensions,
               modelConfidence: learningModel.modelConfidence,
               policyMomentum: learningModel.policyMomentum,
-            };
+              interactionSignal: learningModel.modelConfidence,
+            });
 
-            const vectorResponse =
-                await fetch(`${baseUrl}/api/netcode/vector`, {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify(vectorBody),
-                });
-            if (!vectorResponse.ok ||
-                analyticsRequestRef.current !== requestId) {
+            if (analyticsRequestRef.current !== requestId) {
               return;
             }
-            const vectorData = await vectorResponse.json() as ApiVectorResponse;
+
+            const rewardTier = analytics.reward.rewardTier === 0 ?
+                'Elite Signal' :
+                analytics.reward.rewardTier === 1 ? 'Relevant' :
+                                                    'Needs Labeling';
+            const rewardBand = rewardTier === 'Elite Signal' ? ELITE_BAND :
+                rewardTier === 'Relevant'                    ? RELEVANT_BAND :
+                                                               LABELING_BAND;
+            setRewardSignal({
+              neuralRelevanceScore: analytics.reward.neuralRelevanceScore,
+              projectedRewardXp: analytics.reward.projectedRewardXp,
+              rewardTier,
+              rewardBand,
+            });
+
+            setLinkConfidence({
+              intel: analytics.link.intel,
+              objectives: analytics.link.objectives,
+              player: analytics.link.player,
+              ops: analytics.link.ops,
+            });
+
             const mappedVectors = NODE_ORDER.map(
                 (id, index) => ({
                   id,
-                  dimensions: [...(vectorData.vector.nodeVectors[index] ?? [])],
+                  dimensions: [...(analytics.vector.nodeVectors[index] ?? [])],
                   contractStrength:
-                      vectorData.vector.contractStrength[index] ?? 0,
+                      analytics.vector.contractStrength[index] ?? 0,
                 }));
             setContractVectors(mappedVectors);
 
-            const hypersphereResponse =
-                await fetch(`${baseUrl}/api/netcode/hypersphere`, {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify(vectorBody),
-                });
-            if (!hypersphereResponse.ok ||
-                analyticsRequestRef.current !== requestId) {
-              return;
-            }
-            const hypersphereData =
-                await hypersphereResponse.json() as ApiHypersphereResponse;
             const mappedNodes = NODE_ORDER.map(
                 (id, index) => ({
                   id,
-                  x: hypersphereData.hypersphere.nodes[index]?.x ?? 0,
-                  y: hypersphereData.hypersphere.nodes[index]?.y ?? 0,
-                  z: hypersphereData.hypersphere.nodes[index]?.z ?? 0,
-                  coherence:
-                      hypersphereData.hypersphere.nodes[index]?.coherence ?? 0,
+                  x: analytics.hypersphere.nodes[index]?.x ?? 0,
+                  y: analytics.hypersphere.nodes[index]?.y ?? 0,
+                  z: analytics.hypersphere.nodes[index]?.z ?? 0,
+                  coherence: analytics.hypersphere.nodes[index]?.coherence ?? 0,
+                  inradius: analytics.hypersphere.nodes[index]?.inradius ?? 0,
+                  nearestNeighborDistance: analytics.hypersphere.nodes[index]
+                                               ?.nearestNeighborDistance ??
+                      0,
                 }));
             setHypersphereProjection({
-              dimensions: hypersphereData.hypersphere.dimensions,
+              dimensions: analytics.hypersphere.dimensions,
               nodes: mappedNodes,
-              alignment: hypersphereData.hypersphere.alignment,
-              radialStability: hypersphereData.hypersphere.radialStability,
+              alignment: analytics.hypersphere.alignment,
+              radialStability: analytics.hypersphere.radialStability,
             });
-          } catch {
+
+            setHypersphereKmeans({
+              centers: analytics.hypersphereKmeans.centers.map(
+                  (center) => ({
+                    clusterId: center.clusterId,
+                    centerQ16: [...center.centerQ16],
+                    memberVectorIds: [...center.memberVectorIds],
+                    memberCount: center.memberCount,
+                  })),
+              radii: analytics.hypersphereKmeans.radii.map(
+                  (radius) => ({
+                    clusterId: radius.clusterId,
+                    nearestNeighborDistanceQ16:
+                        radius.nearestNeighborDistanceQ16,
+                    inscribedRadiusQ16: radius.inscribedRadiusQ16,
+                    radiusState: radius.radiusState,
+                  })),
+              weightedVoronoiScores:
+                  analytics.hypersphereKmeans.weightedVoronoiScores.map(
+                      (score) => ({
+                        vectorId: score.vectorId,
+                        clusterId: score.clusterId,
+                        distanceToCenterQ16: score.distanceToCenterQ16,
+                        weightedScoreQ16: score.weightedScoreQ16,
+                        scoreValidity: score.scoreValidity,
+                      })),
+              spectralProxy: analytics.hypersphereKmeans.spectralProxy.map(
+                  (entry) => ({
+                    clusterId: entry.clusterId,
+                    frequencyProxyQ16: entry.frequencyProxyQ16,
+                    amplitudeProxyQ16: entry.amplitudeProxyQ16,
+                    spectralState: entry.spectralState,
+                  })),
+              observability: {
+                convergenceStatus:
+                    analytics.hypersphereKmeans.observability.convergenceStatus,
+                iterationCount:
+                    analytics.hypersphereKmeans.observability.iterationCount,
+                assignmentChangesLastIteration:
+                    analytics.hypersphereKmeans.observability
+                        .assignmentChangesLastIteration,
+                scoringValidity:
+                    analytics.hypersphereKmeans.observability.scoringValidity,
+                deterministicHash:
+                    analytics.hypersphereKmeans.observability.deterministicHash,
+              },
+            });
+
+            const rollout = analytics.rollout;
+            setAnalyticsAvailability({
+              available: rollout.enabled,
+              reason: rollout.enabled ? 'ok' : 'rollout-disabled',
+              rollout: {
+                enabled: rollout.enabled,
+                cohort: rollout.cohort,
+              },
+              contractVersion: analytics.contractVersion,
+            });
+          } catch (error) {
+            if (analyticsRequestRef.current !== requestId) {
+              return;
+            }
+
             // Keep prior analytics values on transport failures.
+            if (error instanceof NetcodeAnalyticsError) {
+              const rollout = error.payload.rollout;
+              const isRolloutDisabled = rollout?.enabled === false ||
+                  (error.payload.error ?? error.message)
+                      .toLowerCase()
+                      .includes('rollout disabled');
+
+              setAnalyticsAvailability({
+                available: false,
+                reason: isRolloutDisabled ? 'rollout-disabled' :
+                                            'contract-error',
+                errorCode: error.payload.errorCode,
+                retryable: error.payload.retryable,
+                contractVersion: error.payload.contractVersion,
+                rollout: {
+                  enabled: rollout?.enabled ?? !isRolloutDisabled,
+                  cohort: rollout?.cohort ?? 'default',
+                },
+              });
+              return;
+            }
+
+            setAnalyticsAvailability({
+              available: false,
+              reason: 'transport-error',
+              rollout: {
+                enabled: true,
+                cohort: 'default',
+              },
+            });
           }
         };
 
@@ -428,5 +457,7 @@ export function useNetcodeSession({
     linkConfidence,
     contractVectors,
     hypersphereProjection,
+    hypersphereKmeans,
+    analyticsAvailability,
   };
 }

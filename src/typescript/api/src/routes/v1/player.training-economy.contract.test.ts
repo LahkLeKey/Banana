@@ -9,6 +9,7 @@ import {__resetTrainingEconomyStoreForTests} from '../../services/trainingEconom
 import {registerV1PlayerRoutes} from './player.ts';
 
 async function createApp() {
+  process.env.BANANA_TRAINING_STORE_MODE = 'inmemory';
   const app = Fastify({logger: false});
   await registerRequestContextMiddleware(app);
   registerFastifyErrorMapper(app);
@@ -174,4 +175,132 @@ describe('v1 player training economy contracts', () => {
 
     await app.close();
   });
+
+  test('scaffolds template jobs and executes cycle server-side', async () => {
+    const app = await createApp();
+
+    const scaffold = await app.inject({
+      method: 'POST',
+      url: '/v1/player/training/jobs/scaffold-template',
+      headers: {'x-actor-id': 'training-player-4'},
+      payload: {
+        mode: 'controller',
+        selectedFile: 'src/native/engine/runtime/controller/combat.c',
+        indexedFileCount: 144,
+      },
+    });
+
+    expect(scaffold.statusCode).toBe(201);
+    const scaffoldPayload = scaffold.json() as {jobs: Array<{jobId: string}>};
+    expect(scaffoldPayload.jobs.length).toBeGreaterThan(0);
+
+    const execute = await app.inject({
+      method: 'POST',
+      url: '/v1/player/training/jobs/execute-cycle',
+      headers: {'x-actor-id': 'training-player-4'},
+      payload: {
+        mode: 'controller',
+        selectedFile: 'src/native/engine/runtime/controller/combat.c',
+        selectedLineCount: 220,
+        indexedFileCount: 144,
+      },
+    });
+
+    expect(execute.statusCode).toBe(200);
+    const executePayload = execute.json() as {
+      attemptedJobs: number;
+      completedJobs: number;
+      jobs: Array<{status: string}>;
+      rewards: Array<{status: string}>;
+      leaderboard: Array<{playerId: string}>;
+    };
+    expect(executePayload.attemptedJobs).toBeGreaterThan(0);
+    expect(executePayload.completedJobs).toBe(executePayload.attemptedJobs);
+    expect(executePayload.jobs.some((job) => job.status === 'completed'))
+        .toBe(true);
+    expect(executePayload.rewards.length).toBeGreaterThan(0);
+    expect(executePayload.leaderboard.length).toBeGreaterThan(0);
+
+    const events = await app.inject({
+      method: 'GET',
+      url: '/v1/player/training/telemetry/transitions?limit=20',
+      headers: {'x-actor-id': 'training-player-4'},
+    });
+    expect(events.statusCode).toBe(200);
+    const eventPayload = events.json() as {
+      events: Array<{eventType: string}>;
+    };
+    const eventTypes = eventPayload.events.map((event) => event.eventType);
+    expect(eventTypes.includes('queue.scaffolded')).toBe(true);
+    expect(eventTypes.includes('queue.execution.started')).toBe(true);
+    expect(eventTypes.includes('queue.execution.completed')).toBe(true);
+
+    await app.close();
+  });
+
+  test(
+      'claims pending rewards via claim-all endpoint with telemetry',
+      async () => {
+        const app = await createApp();
+
+        const scaffold = await app.inject({
+          method: 'POST',
+          url: '/v1/player/training/jobs/scaffold-template',
+          headers: {'x-actor-id': 'training-player-5'},
+          payload: {
+            mode: 'operations',
+            selectedFile: 'src/native/engine/world/entity/controller.c',
+            indexedFileCount: 80,
+          },
+        });
+        expect(scaffold.statusCode).toBe(201);
+
+        const execute = await app.inject({
+          method: 'POST',
+          url: '/v1/player/training/jobs/execute-cycle',
+          headers: {'x-actor-id': 'training-player-5'},
+          payload: {
+            mode: 'operations',
+            selectedFile: 'src/native/engine/world/entity/controller.c',
+            selectedLineCount: 190,
+            indexedFileCount: 80,
+          },
+        });
+        expect(execute.statusCode).toBe(200);
+
+        const claimAll = await app.inject({
+          method: 'POST',
+          url: '/v1/player/training/rewards/claim-all',
+          headers: {'x-actor-id': 'training-player-5'},
+        });
+        expect(claimAll.statusCode).toBe(200);
+        const claimAllPayload = claimAll.json() as {
+          attemptedRewards: number;
+          claimedRewards: Array<{status: string}>;
+          failedRewards: Array<{error: string}>;
+          rewards: Array<{status: string}>;
+        };
+        expect(claimAllPayload.attemptedRewards).toBeGreaterThan(0);
+        expect(claimAllPayload.failedRewards).toHaveLength(0);
+        expect(claimAllPayload.claimedRewards.length)
+            .toBe(claimAllPayload.attemptedRewards);
+        expect(claimAllPayload.rewards.every(
+                   (reward) => reward.status === 'claimed'))
+            .toBe(true);
+
+        const events = await app.inject({
+          method: 'GET',
+          url: '/v1/player/training/telemetry/transitions?limit=50',
+          headers: {'x-actor-id': 'training-player-5'},
+        });
+        expect(events.statusCode).toBe(200);
+        const eventPayload = events.json() as {
+          events: Array<{eventType: string}>;
+        };
+        const eventTypes = eventPayload.events.map((event) => event.eventType);
+        expect(eventTypes.includes('reward.claim.attempted')).toBe(true);
+        expect(eventTypes.includes('reward.claim.succeeded')).toBe(true);
+
+        await app.close();
+      });
 });

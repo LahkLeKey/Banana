@@ -1,5 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
-import path from 'node:path';
+import {FFIType, type Pointer, ptr} from 'bun:ffi';
+
+import {loadBananaNativeSymbols,} from '../lib/native-interop-loader.ts';
 
 export type NetcodeSignalInput = {
   readonly callDensity: number; readonly questPercent: number; readonly comboStreak: number; readonly branchPressure: number; readonly workflowDepth:
@@ -43,9 +44,54 @@ export type NetcodeVectorOutput = {
                                                                                                  readonly[number, number, number, number];
 };
 
+export type NetcodeHypersphereKmeansContractStatus = 'ok'|'unsupported-version'|
+    'invalid-payload'|'nonfinite-value'|'crc-mismatch';
+
+export type NetcodeHypersphereKmeansEnvelope = {
+  readonly contractVersion: number; readonly byteOrderTag: number; readonly payloadBytes: number; readonly payloadCrc32: number; readonly status:
+                                                                                                                                              NetcodeHypersphereKmeansContractStatus;
+};
+
 export type NetcodeHypersphereNode = {
-  readonly x: number; readonly y: number; readonly z: number; readonly coherence:
-                                                                           number;
+  readonly x: number; readonly y: number; readonly z: number; readonly coherence: number; readonly inradius: number; readonly nearestNeighborDistance:
+                                                                                                                                  number;
+};
+
+export type NetcodeHypersphereRadiusState =
+    'ok'|'single-cluster'|'near-zero-clamped';
+
+export type NetcodeHypersphereScoreValidity = 'valid'|'invalid-radius';
+
+export type NetcodeHypersphereSpectralState = 'ok'|'radius-floor-applied';
+
+export type NetcodeHypersphereEndiannessDecodePath =
+    'little-endian'|'byte-swapped';
+
+type NetcodeQ16Vector = readonly number[];
+
+export type NetcodeHypersphereKmeansCenter = {
+  readonly clusterId: number; readonly memberCount: number; readonly centerQ16:
+                                                                         NetcodeQ16Vector;
+};
+
+export type NetcodeHypersphereKmeansRadius = {
+  readonly clusterId: number; readonly nearestNeighborDistanceQ16: number; readonly inscribedRadiusQ16: number; readonly radiusState:
+                                                                                                                             NetcodeHypersphereRadiusState;
+};
+
+export type NetcodeHypersphereWeightedVoronoiScore = {
+  readonly vectorId: number; readonly clusterId: number; readonly distanceToCenterQ16: number; readonly weightedScoreQ16: number; readonly scoreValidity:
+                                                                                                                                               NetcodeHypersphereScoreValidity;
+};
+
+export type NetcodeHypersphereSpectralProxy = {
+  readonly clusterId: number; readonly frequencyProxyQ16: number; readonly amplitudeProxyQ16: number; readonly spectralState:
+                                                                                                                   NetcodeHypersphereSpectralState;
+};
+
+export type NetcodeHypersphereObservability = {
+  readonly convergenceStatus: number; readonly iterationCount: number; readonly assignmentChangesLastIteration: number; readonly deterministicHash: number; readonly endiannessDecodePath:
+                                                                                                                                                                         NetcodeHypersphereEndiannessDecodePath;
 };
 
 export type NetcodeHypersphereOutput = {
@@ -58,7 +104,204 @@ export type NetcodeHypersphereOutput = {
   ];
   readonly alignment: number;
   readonly radialStability: number;
+  readonly clusterCount: number;
+  readonly vectorCount: number;
+  readonly centers: readonly NetcodeHypersphereKmeansCenter[];
+  readonly radii: readonly NetcodeHypersphereKmeansRadius[];
+  readonly weightedVoronoiScores: readonly NetcodeHypersphereWeightedVoronoiScore[];
+  readonly spectralProxy: readonly NetcodeHypersphereSpectralProxy[];
+  readonly observability: NetcodeHypersphereObservability;
+  readonly envelope?: NetcodeHypersphereKmeansEnvelope;
 };
+
+const BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES = 872;
+const BANANA_NETCODE_HYPERSPHERE_ENVELOPE_BYTES = 20;
+const BANANA_NETCODE_HYPERSPHERE_BUFFER_BYTES =
+    BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES +
+    BANANA_NETCODE_HYPERSPHERE_ENVELOPE_BYTES;
+
+function mapRadiusState(value: number): NetcodeHypersphereRadiusState {
+  if (value === 1) return 'single-cluster';
+  if (value === 2) return 'near-zero-clamped';
+  return 'ok';
+}
+
+function mapScoreValidity(value: number): NetcodeHypersphereScoreValidity {
+  if (value === 1) return 'invalid-radius';
+  return 'valid';
+}
+
+function mapSpectralState(value: number): NetcodeHypersphereSpectralState {
+  if (value === 1) return 'radius-floor-applied';
+  return 'ok';
+}
+
+function mapEndiannessPath(value: number):
+    NetcodeHypersphereEndiannessDecodePath {
+  if (value === 1) return 'byte-swapped';
+  return 'little-endian';
+}
+
+function mapContractStatus(value: number):
+    NetcodeHypersphereKmeansContractStatus {
+  if (value === -3001 || value === -2001) return 'unsupported-version';
+  if (value === -3002 || value === -2002) return 'invalid-payload';
+  if (value === -3003 || value === -2003) return 'nonfinite-value';
+  if (value === -3004 || value === -2004) return 'crc-mismatch';
+  return 'ok';
+}
+
+function computeCrc32(payload: Buffer): number {
+  let crc = 0xFFFFFFFF;
+  for (const byte of payload) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      const mask = -(crc & 1);
+      crc = (crc >>> 1) ^ (0xEDB88320 & mask);
+    }
+  }
+  return (~crc) >>> 0;
+}
+
+export function __decodeHypersphereBufferForTests(outputBuffer: Buffer):
+    NetcodeHypersphereOutput {
+  if (outputBuffer.length < BANANA_NETCODE_HYPERSPHERE_BUFFER_BYTES) {
+    throw new Error(
+        'banana_native_v3_netcode_build_hypersphere returned truncated payload');
+  }
+
+  const envelopeOffset = BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES;
+  const envelopeContractVersion = outputBuffer.readInt32LE(envelopeOffset + 0);
+  const envelopeByteOrderTag = outputBuffer.readInt32LE(envelopeOffset + 4);
+  const envelopePayloadBytes = outputBuffer.readInt32LE(envelopeOffset + 8);
+  const envelopePayloadCrc32 = outputBuffer.readInt32LE(envelopeOffset + 12);
+  const envelopeContractStatus = outputBuffer.readInt32LE(envelopeOffset + 16);
+  const envelopeStatus = mapContractStatus(envelopeContractStatus);
+
+  if (envelopeContractVersion !== 1 ||
+      envelopeStatus === 'unsupported-version') {
+    throw new Error('Unsupported native hypersphere contract version');
+  }
+  if (envelopeByteOrderTag !== 0x01020304) {
+    throw new Error('Invalid native hypersphere payload header');
+  }
+  if (envelopePayloadBytes > BANANA_NETCODE_HYPERSPHERE_PAYLOAD_BYTES) {
+    throw new Error(
+        'banana_native_v3_netcode_build_hypersphere returned truncated payload');
+  }
+  if (envelopePayloadBytes <= 0) {
+    throw new Error('Invalid native hypersphere payload length');
+  }
+  if (envelopeStatus === 'invalid-payload') {
+    throw new Error('Invalid native hypersphere payload');
+  }
+
+  const expectedCrc = envelopePayloadCrc32 >>> 0;
+  const actualCrc =
+      computeCrc32(outputBuffer.subarray(0, envelopePayloadBytes));
+  if (actualCrc !== expectedCrc || envelopeStatus === 'crc-mismatch') {
+    throw new Error('Native hypersphere payload CRC mismatch');
+  }
+  if (envelopeStatus === 'nonfinite-value') {
+    throw new Error('Native hypersphere payload contains non-finite values');
+  }
+
+  const nodes: NetcodeHypersphereNode[] = [];
+  for (let node = 0; node < 4; node += 1) {
+    const base = 4 + node * 24;
+    nodes.push({
+      x: outputBuffer.readFloatLE(base + 0),
+      y: outputBuffer.readFloatLE(base + 4),
+      z: outputBuffer.readFloatLE(base + 8),
+      coherence: outputBuffer.readInt32LE(base + 12),
+      inradius: outputBuffer.readFloatLE(base + 16),
+      nearestNeighborDistance: outputBuffer.readFloatLE(base + 20),
+    });
+  }
+
+  const dimensions = outputBuffer.readInt32LE(0);
+  const clusterCount = Math.max(0, Math.min(4, outputBuffer.readInt32LE(108)));
+  const vectorCount = Math.max(0, Math.min(4, outputBuffer.readInt32LE(112)));
+
+  const centers: NetcodeHypersphereKmeansCenter[] = [];
+  for (let cluster = 0; cluster < clusterCount; cluster += 1) {
+    const base = 116 + cluster * 72;
+    const centerQ16: number[] = [];
+    for (let dim = 0; dim < Math.max(0, Math.min(16, dimensions)); dim += 1) {
+      centerQ16.push(outputBuffer.readInt32LE(base + 8 + dim * 4));
+    }
+    centers.push({
+      clusterId: outputBuffer.readInt32LE(base + 0),
+      memberCount: outputBuffer.readInt32LE(base + 4),
+      centerQ16,
+    });
+  }
+
+  const radii: NetcodeHypersphereKmeansRadius[] = [];
+  for (let cluster = 0; cluster < clusterCount; cluster += 1) {
+    const base = 404 + cluster * 16;
+    radii.push({
+      clusterId: outputBuffer.readInt32LE(base + 0),
+      nearestNeighborDistanceQ16: outputBuffer.readInt32LE(base + 4),
+      inscribedRadiusQ16: outputBuffer.readInt32LE(base + 8),
+      radiusState: mapRadiusState(outputBuffer.readInt32LE(base + 12)),
+    });
+  }
+
+  const weightedVoronoiScores: NetcodeHypersphereWeightedVoronoiScore[] = [];
+  for (let index = 0; index < vectorCount * clusterCount; index += 1) {
+    const base = 468 + index * 20;
+    weightedVoronoiScores.push({
+      vectorId: outputBuffer.readInt32LE(base + 0),
+      clusterId: outputBuffer.readInt32LE(base + 4),
+      distanceToCenterQ16: outputBuffer.readInt32LE(base + 8),
+      weightedScoreQ16: outputBuffer.readInt32LE(base + 12),
+      scoreValidity: mapScoreValidity(outputBuffer.readInt32LE(base + 16)),
+    });
+  }
+
+  const spectralProxy: NetcodeHypersphereSpectralProxy[] = [];
+  for (let cluster = 0; cluster < clusterCount; cluster += 1) {
+    const base = 788 + cluster * 16;
+    spectralProxy.push({
+      clusterId: outputBuffer.readInt32LE(base + 0),
+      frequencyProxyQ16: outputBuffer.readInt32LE(base + 4),
+      amplitudeProxyQ16: outputBuffer.readInt32LE(base + 8),
+      spectralState: mapSpectralState(outputBuffer.readInt32LE(base + 12)),
+    });
+  }
+
+  const observability: NetcodeHypersphereObservability = {
+    convergenceStatus: outputBuffer.readInt32LE(852),
+    iterationCount: outputBuffer.readInt32LE(856),
+    assignmentChangesLastIteration: outputBuffer.readInt32LE(860),
+    deterministicHash: outputBuffer.readInt32LE(864),
+    endiannessDecodePath: mapEndiannessPath(outputBuffer.readInt32LE(868)),
+  };
+
+  return {
+    dimensions,
+    nodes: nodes as
+               [NetcodeHypersphereNode, NetcodeHypersphereNode,
+                NetcodeHypersphereNode, NetcodeHypersphereNode],
+    alignment: outputBuffer.readInt32LE(100),
+    radialStability: outputBuffer.readInt32LE(104),
+    clusterCount,
+    vectorCount,
+    centers,
+    radii,
+    weightedVoronoiScores,
+    spectralProxy,
+    observability,
+    envelope: {
+      contractVersion: envelopeContractVersion,
+      byteOrderTag: envelopeByteOrderTag,
+      payloadBytes: envelopePayloadBytes,
+      payloadCrc32: envelopePayloadCrc32,
+      status: envelopeStatus,
+    },
+  };
+}
 
 export interface NativeNetcodeService {
   reset(): Promise<void>;
@@ -93,54 +336,9 @@ type NativeNetcodeSymbols = {
       (signalInputPtr: Pointer, outOutputPtr: Pointer) => number;
 };
 
-function resolveNativeLibraryCandidates(): string[] {
-  const ext = suffix;
-  const names = [`libbanana_native.${ext}`, `banana_native.${ext}`];
-  const envPath = process.env.BANANA_NATIVE_PATH;
-  const candidates: string[] = [];
-
-  if (envPath && envPath.trim().length > 0) {
-    const trimmed = envPath.trim();
-    if (trimmed.endsWith(`.${ext}`)) {
-      candidates.push(trimmed);
-    } else {
-      for (const name of names) {
-        candidates.push(path.join(trimmed, name));
-      }
-    }
-  }
-
-  const rootCandidates = [
-    process.cwd(),
-    path.resolve(process.cwd(), '..'),
-    path.resolve(process.cwd(), '../../..'),
-  ];
-  const fallbackDirs = [
-    'out/native/bin',
-    'out/v3-native/Debug',
-    'out/v3-native/Release',
-    'build/native/bin',
-    'build/native',
-  ];
-
-  for (const root of rootCandidates) {
-    for (const name of names) {
-      for (const dir of fallbackDirs) {
-        candidates.push(path.join(root, dir, name));
-      }
-    }
-  }
-
-  return Array.from(new Set(candidates));
-}
-
 function createNativeBinding(): NativeNetcodeSymbols {
-  const candidates = resolveNativeLibraryCandidates();
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const library = dlopen(candidate, {
+  return loadBananaNativeSymbols<NativeNetcodeSymbols>(
+      {
         banana_native_v3_netcode_reset: {
           args: [],
           returns: FFIType.void,
@@ -177,17 +375,18 @@ function createNativeBinding(): NativeNetcodeSymbols {
           args: [FFIType.ptr, FFIType.ptr],
           returns: FFIType.i32,
         },
-      });
-
-      return library.symbols as unknown as NativeNetcodeSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for netcode FFI. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`);
+      },
+      'netcode FFI',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'out/v3-native/Debug',
+          'out/v3-native/Release',
+          'build/native/bin',
+          'build/native',
+        ],
+      },
+  );
 }
 
 export class NativeFFINetcodeService implements NativeNetcodeService {
@@ -374,7 +573,7 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
     signalBuffer.writeInt32LE(input.modelConfidence, 36);
     signalBuffer.writeInt32LE(input.policyMomentum, 40);
 
-    const outputBuffer = Buffer.alloc(76);
+    const outputBuffer = Buffer.alloc(BANANA_NETCODE_HYPERSPHERE_BUFFER_BYTES);
     const rc = this.symbols.banana_native_v3_netcode_build_hypersphere(
         ptr(signalBuffer), ptr(outputBuffer));
     if (rc !== 0) {
@@ -383,31 +582,30 @@ export class NativeFFINetcodeService implements NativeNetcodeService {
               rc}`);
     }
 
-    const nodes: NetcodeHypersphereNode[] = [];
-    for (let node = 0; node < 4; node += 1) {
-      const base = 4 + node * 16;
-      nodes.push({
-        x: outputBuffer.readFloatLE(base + 0),
-        y: outputBuffer.readFloatLE(base + 4),
-        z: outputBuffer.readFloatLE(base + 8),
-        coherence: outputBuffer.readInt32LE(base + 12),
-      });
-    }
-
-    return {
-      dimensions: outputBuffer.readInt32LE(0),
-      nodes: nodes as
-                 [NetcodeHypersphereNode, NetcodeHypersphereNode,
-                  NetcodeHypersphereNode, NetcodeHypersphereNode],
-      alignment: outputBuffer.readInt32LE(68),
-      radialStability: outputBuffer.readInt32LE(72),
-    };
+    return __decodeHypersphereBufferForTests(outputBuffer);
   }
 }
 
 let cachedService: NativeNetcodeService|null = null;
 
+function resolveNetcodeAdapterMode(): 'ffi' {
+  const adapterMode =
+      (process.env.BANANA_NETCODE_ADAPTER ?? 'ffi').toLowerCase();
+  if (adapterMode !== 'ffi' && adapterMode !== 'ffi-only') {
+    throw new Error(
+        `Unsupported BANANA_NETCODE_ADAPTER mode "${adapterMode}". ` +
+        'Use "ffi" to enforce native netcode bindings.');
+  }
+  return 'ffi';
+}
+
+export function __resetNativeNetcodeServiceForTests(): void {
+  cachedService = null;
+}
+
 export function getNativeNetcodeService(): NativeNetcodeService {
+  resolveNetcodeAdapterMode();
+
   if (!cachedService) {
     cachedService = new NativeFFINetcodeService();
   }

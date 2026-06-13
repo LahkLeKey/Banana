@@ -73,8 +73,21 @@ function resolveDatabaseUrl(): string {
   return resolveAuthoritativeDatabaseUrl(process.env).url;
 }
 
-function shouldUseStrictMode(): boolean {
-  return process.env.BANANA_TRAINING_STORE_STRICT === 'true';
+function resolveTrainingStoreMode(): 'postgres'|'inmemory' {
+  const mode = (process.env.BANANA_TRAINING_STORE_MODE ?? 'postgres')
+                   .trim()
+                   .toLowerCase();
+  if (mode === 'inmemory') {
+    return 'inmemory';
+  }
+
+  if (mode === 'postgres') {
+    return 'postgres';
+  }
+
+  throw new Error(
+      `Unsupported BANANA_TRAINING_STORE_MODE "${mode}". ` +
+      'Use "postgres" (default) or "inmemory".');
 }
 
 function shouldDisableSsl(databaseUrl: string): boolean {
@@ -699,22 +712,23 @@ export async function getTrainingEconomyStore(): Promise<TrainingEconomyStore> {
   }
 
   sharedStorePromise = (async () => {
-    const databaseUrl = resolveDatabaseUrl();
-    if (!databaseUrl) {
+    const mode = resolveTrainingStoreMode();
+    if (mode === 'inmemory') {
       return new MemoryTrainingEconomyStore();
     }
 
-    try {
-      const pool = await createPostgresPool(databaseUrl);
-      const store = new PostgresTrainingEconomyStore(pool);
-      await store.init();
-      return store;
-    } catch (error) {
-      if (shouldUseStrictMode()) {
-        throw error;
-      }
-      return new MemoryTrainingEconomyStore();
+    const databaseUrl = resolveDatabaseUrl();
+    if (!databaseUrl) {
+      throw new Error(
+          'No authoritative database URL configured for training store. ' +
+          'Set BANANA_PG_CONNECTION (or DATABASE_URL/NEON_DATABASE_URL alias) ' +
+          'or use BANANA_TRAINING_STORE_MODE=inmemory explicitly.');
     }
+
+    const pool = await createPostgresPool(databaseUrl);
+    const store = new PostgresTrainingEconomyStore(pool);
+    await store.init();
+    return store;
   })();
 
   return sharedStorePromise;

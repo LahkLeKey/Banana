@@ -1,5 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
-import path from 'node:path';
+import {FFIType, type Pointer, ptr} from 'bun:ffi';
+
+import {loadBananaNativeSymbols,} from './native-interop-loader.ts';
 
 export interface AntiCheatScoreResult {
   readonly score: number;
@@ -61,53 +62,9 @@ function boolToInt(value: boolean): number {
   return value ? 1 : 0;
 }
 
-function resolveNativeLibraryCandidates(): string[] {
-  const ext = suffix;
-  const names = [`libbanana_native.${ext}`, `banana_native.${ext}`];
-
-  const envPath = process.env.BANANA_NATIVE_PATH;
-  const candidates: string[] = [];
-
-  if (envPath && envPath.trim().length > 0) {
-    const trimmed = envPath.trim();
-    if (trimmed.endsWith(`.${ext}`)) {
-      candidates.push(trimmed);
-    } else {
-      for (const name of names) {
-        candidates.push(path.join(trimmed, name));
-      }
-    }
-  }
-
-  const repoRoot = path.resolve(process.cwd(), '../../..');
-  const fallbackDirs = [
-    'out/native/bin',
-    'build/native/bin',
-    'build/native',
-    'build/native/Debug',
-    'build/native/Release',
-    'build/cmake-tools',
-    'build/Release',
-    'build/sanitizers',
-    'build/native-static-analysis',
-    'out/native-anticheat-check/Release',
-  ];
-  for (const name of names) {
-    for (const dir of fallbackDirs) {
-      candidates.push(path.join(repoRoot, dir, name));
-    }
-  }
-
-  return Array.from(new Set(candidates));
-}
-
 function createNativeBinding(): NativeAntiCheatSymbols {
-  const candidates = resolveNativeLibraryCandidates();
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const symbols = dlopen(candidate, {
+  return loadBananaNativeSymbols<NativeAntiCheatSymbols>(
+      {
         banana_anticheat_reset_session: {
           args: [FFIType.ptr],
           returns: FFIType.i32,
@@ -142,16 +99,23 @@ function createNativeBinding(): NativeAntiCheatSymbols {
           args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr],
           returns: FFIType.i32,
         },
-      });
-      return symbols.symbols as unknown as NativeAntiCheatSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for anti-cheat FFI. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`);
+      },
+      'anti-cheat FFI',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'build/native/bin',
+          'build/native',
+          'build/native/Debug',
+          'build/native/Release',
+          'build/cmake-tools',
+          'build/Release',
+          'build/sanitizers',
+          'build/native-static-analysis',
+          'out/native-anticheat-check/Release',
+        ],
+      },
+  );
 }
 
 function assertStatus(operation: string, statusCode: number): void {
@@ -393,18 +357,10 @@ export function createDefaultAntiCheatInteropAdapter():
     AntiCheatInteropAdapter {
   const adapterMode =
       (process.env.BANANA_ANTICHEAT_ADAPTER ?? 'ffi').toLowerCase();
-  const requireNative = process.env.BANANA_ANTICHEAT_REQUIRE_NATIVE === 'true';
 
   if (adapterMode === 'inmemory') {
     return new InMemoryAntiCheatInteropAdapter();
   }
 
-  try {
-    return new NativeFFIAntiCheatInteropAdapter();
-  } catch (error) {
-    if (adapterMode === 'ffi-only' || requireNative) {
-      throw error;
-    }
-    return new InMemoryAntiCheatInteropAdapter();
-  }
+  return new NativeFFIAntiCheatInteropAdapter();
 }

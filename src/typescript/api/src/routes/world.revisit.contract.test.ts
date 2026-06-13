@@ -6,6 +6,7 @@ import {persistentWorldRevisitPathConflict, persistentWorldRevisitValidationErro
 import {registerFastifyErrorMapper} from '../lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from '../middleware/requestContext.ts';
 
+import {createWorldServiceForTests} from './world.test-service.ts';
 import {registerWorldRoutes} from './world.ts';
 
 function createMockDomainWithError(error: Error):
@@ -93,7 +94,10 @@ async function createApp(domain: PersistentWorldOrchestrationDomain) {
   const app = Fastify({logger: false});
   await registerRequestContextMiddleware(app);
   registerFastifyErrorMapper(app);
-  await registerWorldRoutes(app, {persistentWorldOrchestrationDomain: domain});
+  await registerWorldRoutes(app, {
+    persistentWorldOrchestrationDomain: domain,
+    worldService: createWorldServiceForTests(),
+  });
   await app.ready();
   return app;
 }

@@ -90,15 +90,22 @@ For tighter security later, move to private networking only and rotated credenti
 On first boot, ensure the database creates the extension:
 
 ```sql
+ALTER SYSTEM SET shared_preload_libraries = 'pg_durable';
+ALTER SYSTEM SET pg_durable.worker_role = 'postgres';
+SELECT pg_reload_conf();
+```
+
+Restart the Fly DB machine once after applying `ALTER SYSTEM`, then run:
+
+```sql
 CREATE EXTENSION IF NOT EXISTS pg_durable;
 ```
 
 If your app role needs durable workflow access, grant usage after bootstrap.
 
-The repo-owned image already runs with:
-
-- `shared_preload_libraries=pg_durable`
-- init script `docker/pg-durable/initdb/010-create-extension.sh`
+The repo-owned image preserves postgres-flex startup behavior and provides the
+`pg_durable` binaries so the SQL steps above can enable the extension safely on
+existing Fly volumes.
 
 ## 4) Set Banana API Fly secrets
 

@@ -1,10 +1,33 @@
 import type {FastifyInstance} from 'fastify';
 
-import {getNativeNetcodeService} from '../services/nativeNetcode.ts';
+import {getNativeNetcodeService, type NativeNetcodeService,} from '../services/nativeNetcode.ts';
 
-export async function registerNetcodeRoutes(app: FastifyInstance):
-    Promise<void> {
-  const netcode = getNativeNetcodeService();
+type NetcodeRouteOptions = {
+  netcodeService?: NativeNetcodeService;
+};
+
+type NetcodeHypersphereRollout = {
+  enabled: boolean; cohort: string;
+};
+
+function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
+  const enabledRaw =
+      (process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_ENABLED ?? 'true')
+          .trim()
+          .toLowerCase();
+  const enabled =
+      enabledRaw !== 'false' && enabledRaw !== '0' && enabledRaw !== 'off';
+  const cohort =
+      (process.env.BANANA_NETCODE_HYPERSPHERE_KMEANS_COHORT ?? 'all').trim() ||
+      'all';
+  return {enabled, cohort};
+}
+
+export async function registerNetcodeRoutes(
+    app: FastifyInstance,
+    options: NetcodeRouteOptions = {},
+    ): Promise<void> {
+  const netcode = options.netcodeService ?? getNativeNetcodeService();
 
   app.post<{
     Body: {
@@ -119,6 +142,136 @@ export async function registerNetcodeRoutes(app: FastifyInstance):
           0,
     });
     return {link};
+  });
+
+  app.post<{
+    Body: {
+      callDensity: number; questPercent: number; playerLevel: number;
+      comboStreak: number;
+      branchPressure: number;
+      dependencyPulse: number;
+      workflowDepth: 1 | 2 | 3;
+      networkDimensions: number;
+      modelConfidence: number;
+      policyMomentum: number;
+      interactionSignal?: number;
+    }
+  }>('/api/netcode/analytics', async (request, reply) => {
+    const rollout = resolveNetcodeHypersphereKmeansRollout();
+    if (!rollout.enabled) {
+      return reply.status(503).send({
+        error: 'Netcode hypersphere kmeans analytics rollout disabled',
+        rollout,
+      });
+    }
+
+    const body = request.body;
+    if (!body || typeof body.callDensity !== 'number' ||
+        typeof body.questPercent !== 'number' ||
+        typeof body.playerLevel !== 'number' ||
+        typeof body.comboStreak !== 'number' ||
+        typeof body.branchPressure !== 'number' ||
+        typeof body.dependencyPulse !== 'number' ||
+        (body.workflowDepth !== 1 && body.workflowDepth !== 2 &&
+         body.workflowDepth !== 3) ||
+        typeof body.networkDimensions !== 'number' ||
+        typeof body.modelConfidence !== 'number' ||
+        typeof body.policyMomentum !== 'number') {
+      return reply.status(400).send(
+          {error: 'Invalid netcode analytics payload'});
+    }
+
+    const reward = await netcode.buildReward(
+        {
+          callDensity: body.callDensity,
+          questPercent: body.questPercent,
+          comboStreak: body.comboStreak,
+          branchPressure: body.branchPressure,
+          workflowDepth: body.workflowDepth,
+        },
+        typeof body.interactionSignal === 'number' ? body.interactionSignal :
+                                                     body.modelConfidence,
+    );
+
+    const link = await netcode.buildLink({
+      callDensity: body.callDensity,
+      questPercent: body.questPercent,
+      playerLevel: body.playerLevel,
+      comboStreak: body.comboStreak,
+      branchPressure: body.branchPressure,
+      dependencyPulse: body.dependencyPulse,
+      interactionSignal: body.policyMomentum,
+    });
+
+    const vectorInput = {
+      callDensity: body.callDensity,
+      questPercent: body.questPercent,
+      playerLevel: body.playerLevel,
+      comboStreak: body.comboStreak,
+      branchPressure: body.branchPressure,
+      dependencyPulse: body.dependencyPulse,
+      workflowDepth: body.workflowDepth,
+      neuralRelevanceScore: reward.neuralRelevanceScore,
+      networkDimensions: body.networkDimensions,
+      modelConfidence: body.modelConfidence,
+      policyMomentum: body.policyMomentum,
+    };
+
+    const vector = await netcode.buildVector(vectorInput);
+
+    let hypersphere;
+    try {
+      hypersphere = await netcode.buildHypersphere(vectorInput);
+    } catch (error) {
+      const message =
+          error instanceof Error ? error.message : 'Unknown hypersphere error';
+      if (message.includes('Unsupported native hypersphere contract version')) {
+        return reply.status(502).send({
+          errorCode: 'ERR_UNSUPPORTED_VERSION',
+          message,
+          contractVersion: 1,
+          retryable: false,
+          rollout,
+        });
+      }
+      if (message.includes('CRC mismatch')) {
+        return reply.status(502).send({
+          errorCode: 'ERR_BAD_CRC',
+          message,
+          contractVersion: 1,
+          retryable: true,
+          rollout,
+        });
+      }
+      if (message.includes('truncated payload')) {
+        return reply.status(502).send({
+          errorCode: 'ERR_PAYLOAD_TRUNCATED',
+          message,
+          contractVersion: 1,
+          retryable: true,
+          rollout,
+        });
+      }
+      throw error;
+    }
+
+    const hypersphereKmeans = {
+      centers: hypersphere.centers,
+      radii: hypersphere.radii,
+      weightedVoronoiScores: hypersphere.weightedVoronoiScores,
+      spectralProxy: hypersphere.spectralProxy,
+      observability: hypersphere.observability,
+    };
+
+    return {
+      contractVersion: 1,
+      reward,
+      link,
+      vector,
+      hypersphere,
+      hypersphereKmeans,
+      rollout,
+    };
   });
 
   app.post<{

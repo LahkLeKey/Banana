@@ -24,6 +24,131 @@ export type ApiRootResponse = {
   endpoints?: {health?: string; swagger?: string};
 };
 
+export type NetcodeAnalyticsRequest = {
+  callDensity: number; questPercent: number; playerLevel: number;
+  comboStreak: number;
+  branchPressure: number;
+  dependencyPulse: number;
+  workflowDepth: 1 | 2 | 3;
+  networkDimensions: number;
+  modelConfidence: number;
+  policyMomentum: number;
+  interactionSignal?: number;
+};
+
+export type NetcodeLearningRequest = {
+  callDensity: number; questPercent: number; comboStreak: number;
+  branchPressure: number;
+  workflowDepth: 1 | 2 | 3;
+  nodeTap?: number;
+  action?: number;
+};
+
+export type NetcodeLearningResponse = {
+  ledger: {
+    snapshots: number; inspections: number; trainings: number; routes: number;
+    nodeTaps: number;
+  };
+  learning: {
+    modelConfidence: number; trainingAccuracy: number; policyMomentum: number;
+    nodeWeights: readonly[number, number, number, number];
+    recommendedNode: number;
+    recommendedAction: number;
+    xpByAction: readonly[number, number, number, number];
+  };
+};
+
+export type NetcodeHypersphereKmeansCenter = {
+  clusterId: number; centerQ16: readonly number[];
+  memberVectorIds: readonly number[];
+  memberCount: number;
+};
+
+export type NetcodeHypersphereKmeansRadius = {
+  clusterId: number; nearestNeighborDistanceQ16: number;
+  inscribedRadiusQ16: number;
+  radiusState: 'ok' | 'degenerate' | 'invalid';
+};
+
+export type NetcodeHypersphereKmeansWeightedScore = {
+  vectorId: number; clusterId: number; distanceToCenterQ16: number;
+  weightedScoreQ16: number;
+  scoreValidity: 'valid' | 'clamped' | 'invalid';
+};
+
+export type NetcodeHypersphereKmeansSpectralProxy = {
+  clusterId: number; frequencyProxyQ16: number; amplitudeProxyQ16: number;
+  spectralState: 'ok' | 'low-signal' | 'invalid';
+};
+
+export type NetcodeHypersphereKmeansObservability = {
+  convergenceStatus: 'converged'|'max-iterations'|'failed';
+  iterationCount: number;
+  assignmentChangesLastIteration: number;
+  scoringValidity: 'valid' | 'degraded' | 'invalid';
+  deterministicHash: string;
+};
+
+export type NetcodeHypersphereKmeansPayload = {
+  centers: readonly NetcodeHypersphereKmeansCenter[];
+  radii: readonly NetcodeHypersphereKmeansRadius[];
+  weightedVoronoiScores: readonly NetcodeHypersphereKmeansWeightedScore[];
+  spectralProxy: readonly NetcodeHypersphereKmeansSpectralProxy[];
+  observability: NetcodeHypersphereKmeansObservability;
+};
+
+export type NetcodeAnalyticsRollout = {
+  enabled: boolean; cohort: string;
+};
+
+export type NetcodeAnalyticsResponse = {
+  contractVersion: number; reward: {
+    neuralRelevanceScore: number; projectedRewardXp: number; rewardTier: number;
+  };
+  link: {intel: number; objectives: number; player: number; ops: number;};
+  vector: {
+    dimensions: number; nodeVectors: readonly(readonly number[])[];
+    contractStrength: readonly[number, number, number, number];
+  };
+  hypersphere: {
+    dimensions: number; nodes: readonly {
+      x: number;
+      y: number;
+      z: number;
+      coherence: number;
+      inradius: number;
+      nearestNeighborDistance: number;
+    }[];
+    alignment: number;
+    radialStability: number;
+  };
+  hypersphereKmeans: NetcodeHypersphereKmeansPayload;
+  rollout: NetcodeAnalyticsRollout;
+};
+
+export type NetcodeAnalyticsErrorResponse = {
+  error?: string;
+  errorCode?: string;
+  message?: string;
+  contractVersion?: number;
+  retryable?: boolean;
+  rollout?: NetcodeAnalyticsRollout;
+};
+
+export class NetcodeAnalyticsError extends Error {
+  readonly status: number;
+  readonly payload: NetcodeAnalyticsErrorResponse;
+
+  constructor(status: number, payload: NetcodeAnalyticsErrorResponse) {
+    super(
+        payload.message ?? payload.error ?? `request failed (${status})`,
+    );
+    this.name = 'NetcodeAnalyticsError';
+    this.status = status;
+    this.payload = payload;
+  }
+};
+
 export type GuestAuthStartResponse = {
   token: string; guestId: string; displayName: string; expiresAt: string;
 };
@@ -71,6 +196,8 @@ export type TrainingTransitionEvent = {
   details: Record<string, unknown>;
   createdAt: string;
 };
+
+export type TrainingWorkflowMode = 'operations'|'controller';
 
 export const GAME_SESSION_STORAGE_KEY = 'banana-game-session';
 export const GAME_PLAYER_GUID_STORAGE_KEY = 'banana-player-guid';
@@ -335,6 +462,14 @@ async function requestJson<T>(
   return (await response.json()) as T;
 }
 
+export async function fetchApiJson<T>(
+    baseUrl: string,
+    path: string,
+    init?: RequestInit,
+    ): Promise<T> {
+  return requestJson<T>(baseUrl, path, init);
+}
+
 function withBearerAuth(token: string): Record<string, string> {
   return {
     authorization: `Bearer ${token}`,
@@ -368,6 +503,41 @@ export async function fetchApiHealth(baseUrl: string):
 
 export async function fetchApiRoot(baseUrl: string): Promise<ApiRootResponse> {
   return requestJson<ApiRootResponse>(baseUrl, '/');
+}
+
+export async function fetchNetcodeAnalytics(
+    baseUrl: string,
+    payload: NetcodeAnalyticsRequest,
+    ): Promise<NetcodeAnalyticsResponse> {
+  const response = await fetch(`${baseUrl}/api/netcode/analytics`, {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let errorPayload: NetcodeAnalyticsErrorResponse = {};
+    try {
+      errorPayload = (await response.json()) as NetcodeAnalyticsErrorResponse;
+    } catch {
+      throw new NetcodeAnalyticsError(response.status, {});
+    }
+    throw new NetcodeAnalyticsError(response.status, errorPayload);
+  }
+
+  return (await response.json()) as NetcodeAnalyticsResponse;
+}
+
+export async function fetchNetcodeLearning(
+    baseUrl: string,
+    payload: NetcodeLearningRequest,
+    ): Promise<NetcodeLearningResponse> {
+  return requestJson<NetcodeLearningResponse>(
+      baseUrl, '/api/netcode/learning', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(payload),
+      });
 }
 
 export async function startGuestAuthSession(
@@ -413,6 +583,26 @@ export async function scaffoldTrainingJobs(
   );
 }
 
+export async function scaffoldTrainingTemplateJobs(
+    baseUrl: string, token: string, payload: {
+      mode: TrainingWorkflowMode;
+      selectedFile?: string;
+      indexedFileCount?: number;
+    }): Promise<{playerId: string; jobs: TrainingJob[]}> {
+  return requestJson<{playerId: string; jobs: TrainingJob[]}>(
+      baseUrl,
+      '/v1/player/training/jobs/scaffold-template',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...withBearerAuth(token),
+        },
+        body: JSON.stringify(payload),
+      },
+  );
+}
+
 export async function fetchTrainingJobs(baseUrl: string, token: string):
     Promise<{playerId: string; jobs: TrainingJob[]}> {
   return requestJson<{playerId: string; jobs: TrainingJob[]}>(
@@ -439,6 +629,32 @@ export async function executeTrainingJob(
         },
         body: JSON.stringify(payload),
       });
+}
+
+export async function executeTrainingCycle(
+    baseUrl: string, token: string, payload: {
+      mode: TrainingWorkflowMode;
+      selectedFile?: string; selectedLineCount: number;
+      indexedFileCount?: number;
+    }): Promise<{
+  playerId: string; attemptedJobs: number; completedJobs: number;
+  mode: TrainingWorkflowMode;
+  jobs: TrainingJob[];
+  leaderboard: TrainingLeaderboardEntry[];
+  rewards: TrainingReward[];
+}> {
+  return requestJson(
+      baseUrl,
+      '/v1/player/training/jobs/execute-cycle',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...withBearerAuth(token),
+        },
+        body: JSON.stringify(payload),
+      },
+  );
 }
 
 export async function fetchTrainingLeaderboard(
@@ -478,6 +694,23 @@ export async function claimTrainingReward(
         method: 'POST',
         headers: withBearerAuth(token),
       });
+}
+
+export async function claimAllTrainingRewards(
+    baseUrl: string, token: string): Promise<{
+  playerId: string; attemptedRewards: number; claimedRewards: TrainingReward[];
+  failedRewards: Array<{rewardId: string; error: string}>;
+  rewards: TrainingReward[];
+  leaderboard: TrainingLeaderboardEntry[];
+}> {
+  return requestJson(
+      baseUrl,
+      '/v1/player/training/rewards/claim-all',
+      {
+        method: 'POST',
+        headers: withBearerAuth(token),
+      },
+  );
 }
 
 export async function recordTrainingTransitionEvent(

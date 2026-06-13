@@ -1,5 +1,6 @@
-import {dlopen, FFIType, type Pointer, ptr, suffix} from 'bun:ffi';
-import path from 'node:path';
+import {FFIType, type Pointer, ptr} from 'bun:ffi';
+
+import {loadBananaNativeSymbols,} from '../lib/native-interop-loader.ts';
 
 export interface NativeEngineInput {
   readonly moveX: -1|0|1;
@@ -139,49 +140,9 @@ function normalizeCString(snapshot: string|{toString(): string}): string {
   return typeof snapshot === 'string' ? snapshot : snapshot.toString();
 }
 
-function resolveNativeLibraryCandidates(): string[] {
-  const ext = suffix;
-  const names = [`libbanana_native.${ext}`, `banana_native.${ext}`];
-  const envPath = process.env.BANANA_NATIVE_PATH;
-  const candidates: string[] = [];
-
-  if (envPath && envPath.trim().length > 0) {
-    const trimmed = envPath.trim();
-    if (trimmed.endsWith(`.${ext}`)) {
-      candidates.push(trimmed);
-    } else {
-      for (const name of names) {
-        candidates.push(path.join(trimmed, name));
-      }
-    }
-  }
-
-  const repoRoot = path.resolve(process.cwd(), '../../..');
-  const fallbackDirs = [
-    'out/native/bin',
-    'out/v3-native/Debug',
-    'out/v3-native/Release',
-    'out/v3-native-baseline/Debug',
-    'build/native/bin',
-    'build/native',
-  ];
-
-  for (const name of names) {
-    for (const dir of fallbackDirs) {
-      candidates.push(path.join(repoRoot, dir, name));
-    }
-  }
-
-  return Array.from(new Set(candidates));
-}
-
 function createNativeBinding(): NativeEngineSymbols {
-  const candidates = resolveNativeLibraryCandidates();
-  let lastError: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const library = dlopen(candidate, {
+  return loadBananaNativeSymbols<NativeEngineSymbols>(
+      {
         engine_init: {
           args: [FFIType.i32, FFIType.i32],
           returns: FFIType.i32,
@@ -259,17 +220,19 @@ function createNativeBinding(): NativeEngineSymbols {
           args: [],
           returns: FFIType.void,
         },
-      });
-
-      return library.symbols as unknown as NativeEngineSymbols;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-      `Unable to load Banana native library for engine FFI. Candidates: ${
-          candidates.join(', ')}. Last error: ${String(lastError)}`);
+      },
+      'engine FFI',
+      {
+        fallbackDirs: [
+          'out/native/bin',
+          'out/v3-native/Debug',
+          'out/v3-native/Release',
+          'out/v3-native-baseline/Debug',
+          'build/native/bin',
+          'build/native',
+        ],
+      },
+  );
 }
 
 export class NativeFFIEngineService implements NativeEngineService {
