@@ -2,7 +2,8 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 
 import {fetchNetcodeAnalytics, fetchNetcodeLearning, NetcodeAnalyticsError, resolveApiBaseUrl,} from '../../lib/api';
 
-import {mapK3h4AnalyticsToPresentationState,} from './k3h4AnalyticsOrchestrationLayer';
+import {createK3h4PresentationApplicationService,} from '../../application/notebook/k3h4/k3h4PresentationApplicationService';
+import {createK3h4PresentationMapperAdapter,} from '../../infrastructure/notebook/k3h4/k3h4PresentationMapperAdapter';
 import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
 type NetcodeSignals = {
@@ -94,6 +95,10 @@ const DEFAULT_ANALYTICS_AVAILABILITY: NetcodeAnalyticsAvailabilityModel = {
     cohort: 'default',
   },
 };
+
+const k3h4PresentationApplicationService =
+  createK3h4PresentationApplicationService(
+    createK3h4PresentationMapperAdapter());
 
 function mapNativeNodeId(value: number): ContractNodeId {
   if (value === 1) return 'objectives';
@@ -276,7 +281,7 @@ export function useNetcodeSession({
             }
 
             const presentationState =
-                mapK3h4AnalyticsToPresentationState(analytics);
+              k3h4PresentationApplicationService.map(analytics);
             setRewardSignal(presentationState.rewardSignal);
             setLinkConfidence(presentationState.linkConfidence);
             setContractVectors(presentationState.contractVectors);

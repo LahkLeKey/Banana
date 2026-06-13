@@ -383,6 +383,8 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/../scaffold/native_entry.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_native_orchestrator.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_hypersphere_orchestration_layer.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/application/k3h4_hypersphere_application_service.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/infrastructure/k3h4_hypersphere_infrastructure_adapter.c
   )
   target_link_libraries(banana_native_feedback_loop_factory PRIVATE banana_engine_core)
   target_include_directories(banana_native_feedback_loop_factory PRIVATE

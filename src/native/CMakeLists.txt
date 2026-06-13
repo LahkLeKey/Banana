@@ -14,6 +14,8 @@ add_library(banana_native SHARED
 	scaffold/native_entry.c
 	k3h4/k3h4_native_orchestrator.c
 	k3h4/k3h4_hypersphere_orchestration_layer.c
+	k3h4/application/k3h4_hypersphere_application_service.c
+	k3h4/infrastructure/k3h4_hypersphere_infrastructure_adapter.c
 )
 set_target_properties(banana_native PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
