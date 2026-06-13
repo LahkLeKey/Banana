@@ -67,10 +67,12 @@ export type NetcodeHypersphereSpectralState = 'ok'|'radius-floor-applied';
 export type NetcodeHypersphereEndiannessDecodePath =
     'little-endian'|'byte-swapped';
 
+type NetcodeQ16Vector = readonly number[];
+
 export type NetcodeHypersphereKmeansCenter = {
   readonly clusterId: number;
   readonly memberCount: number;
-  readonly centerQ16: readonly number[];
+  readonly centerQ16: NetcodeQ16Vector;
 };
 
 export type NetcodeHypersphereKmeansRadius = {
