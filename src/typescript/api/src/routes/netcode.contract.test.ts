@@ -262,6 +262,64 @@ describe('netcode analytics contract', () => {
     await app.close();
   });
 
+  test('rejects non-finite analytics payload values', async () => {
+    const app = await createApp(createFakeNetcode({}));
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/analytics',
+      payload: {
+        callDensity: Number.NaN,
+        questPercent: 20,
+        playerLevel: 30,
+        comboStreak: 40,
+        branchPressure: 50,
+        dependencyPulse: 60,
+        workflowDepth: 2,
+        networkDimensions: 6,
+        modelConfidence: 77,
+        policyMomentum: 66,
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: 'Invalid netcode analytics payload',
+    });
+
+    await app.close();
+  });
+
+  test(
+      'rejects analytics payloads with out-of-range k3h4 dimensions',
+      async () => {
+        const app = await createApp(createFakeNetcode({}));
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/netcode/analytics',
+          payload: {
+            callDensity: 10,
+            questPercent: 20,
+            playerLevel: 30,
+            comboStreak: 40,
+            branchPressure: 50,
+            dependencyPulse: 60,
+            workflowDepth: 2,
+            networkDimensions: 17,
+            modelConfidence: 77,
+            policyMomentum: 66,
+          },
+        });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toMatchObject({
+          error: 'Invalid netcode analytics payload',
+        });
+
+        await app.close();
+      });
+
   test('returns deterministic unsupported-version error payload', async () => {
     const captured: CapturedArgs = {};
     const failingService: NativeNetcodeService = {
