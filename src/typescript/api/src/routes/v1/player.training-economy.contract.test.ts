@@ -9,6 +9,7 @@ import {__resetTrainingEconomyStoreForTests} from '../../services/trainingEconom
 import {registerV1PlayerRoutes} from './player.ts';
 
 async function createApp() {
+  process.env.BANANA_TRAINING_STORE_MODE = 'inmemory';
   const app = Fastify({logger: false});
   await registerRequestContextMiddleware(app);
   registerFastifyErrorMapper(app);
@@ -171,6 +172,54 @@ describe('v1 player training economy contracts', () => {
     expect(eventsPayload.events[0]?.eventType)
         .toBe('queue.execution.completed');
     expect(eventsPayload.events[0]?.correlationId).toBe('queue-run-001');
+
+    await app.close();
+  });
+
+  test('scaffolds template jobs and executes cycle server-side', async () => {
+    const app = await createApp();
+
+    const scaffold = await app.inject({
+      method: 'POST',
+      url: '/v1/player/training/jobs/scaffold-template',
+      headers: {'x-actor-id': 'training-player-4'},
+      payload: {
+        mode: 'controller',
+        selectedFile: 'src/native/engine/runtime/controller/combat.c',
+        indexedFileCount: 144,
+      },
+    });
+
+    expect(scaffold.statusCode).toBe(201);
+    const scaffoldPayload = scaffold.json() as {jobs: Array<{jobId: string}>};
+    expect(scaffoldPayload.jobs.length).toBeGreaterThan(0);
+
+    const execute = await app.inject({
+      method: 'POST',
+      url: '/v1/player/training/jobs/execute-cycle',
+      headers: {'x-actor-id': 'training-player-4'},
+      payload: {
+        mode: 'controller',
+        selectedFile: 'src/native/engine/runtime/controller/combat.c',
+        selectedLineCount: 220,
+        indexedFileCount: 144,
+      },
+    });
+
+    expect(execute.statusCode).toBe(200);
+    const executePayload = execute.json() as {
+      attemptedJobs: number;
+      completedJobs: number;
+      jobs: Array<{status: string}>;
+      rewards: Array<{status: string}>;
+      leaderboard: Array<{playerId: string}>;
+    };
+    expect(executePayload.attemptedJobs).toBeGreaterThan(0);
+    expect(executePayload.completedJobs).toBe(executePayload.attemptedJobs);
+    expect(executePayload.jobs.some((job) => job.status === 'completed'))
+        .toBe(true);
+    expect(executePayload.rewards.length).toBeGreaterThan(0);
+    expect(executePayload.leaderboard.length).toBeGreaterThan(0);
 
     await app.close();
   });

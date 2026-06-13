@@ -3,17 +3,18 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 
 import {
     claimTrainingReward,
-    executeTrainingJob,
+    executeTrainingCycle,
     fetchApiHealth,
     fetchTrainingJobs,
     fetchTrainingLeaderboard,
     fetchTrainingRewards,
     recordTrainingTransitionEvent,
     resolveApiBaseUrl,
-    scaffoldTrainingJobs,
+    scaffoldTrainingTemplateJobs,
     type TrainingJob,
     type TrainingLeaderboardEntry,
     type TrainingReward,
+    type TrainingWorkflowMode,
 } from '../../lib/api';
 
 type TrainingOperationsPanelProps = {
@@ -32,71 +33,6 @@ const buttonStyle: CSSProperties = {
     padding: '8px 12px',
     cursor: 'pointer',
 };
-
-function buildBulkQueueTemplate(
-    selectedFile: string,
-    indexedFileCount: number,
-    mode: 'operations' | 'controller'):
-    Array<{ title: string; sector: string; rewardXp: number; }> {
-    const normalized = selectedFile.replace(/\\/g, '/');
-    const lane = normalized.split('/').filter(Boolean).pop() ?? selectedFile;
-    const sectorLabel = lane
-        .replace(/\.[^.]+$/, '')
-        .replace(/[_-]+/g, ' ')
-        .replace(/\b\w/g, (match) => match.toUpperCase());
-    const targetLabel = sectorLabel.length > 0 ? sectorLabel : 'Frontier Sector';
-
-    if (mode === 'controller') {
-        const controllerSector = 'controller-training';
-        const controllerScale = Math.max(1, Math.min(4, Math.floor(indexedFileCount / 40) + 1));
-        return [
-            {
-                title: `Calibrate controller reward gradients in ${targetLabel}`,
-                sector: controllerSector,
-                rewardXp: 140 + controllerScale * 20,
-            },
-            {
-                title: 'Run imitation pass for AI controller tuning',
-                sector: controllerSector,
-                rewardXp: 190 + controllerScale * 20,
-            },
-            {
-                title: `Validate controller policies against ${indexedFileCount} indexed files`,
-                sector: controllerSector,
-                rewardXp: 260 + controllerScale * 30,
-            },
-            {
-                title: 'Archive controller training telemetry and issue stipend',
-                sector: controllerSector,
-                rewardXp: 160 + controllerScale * 15,
-            },
-        ];
-    }
-
-    const sector = selectedFile.length > 0 ? selectedFile : 'default-sector';
-    return [
-        {
-            title: `Survey frontier output in ${targetLabel}`,
-            sector,
-            rewardXp: 120,
-        },
-        {
-            title: 'Allocate worker crews and supplies',
-            sector,
-            rewardXp: 180,
-        },
-        {
-            title: 'Run production cycle for this province',
-            sector,
-            rewardXp: 260,
-        },
-        {
-            title: 'Audit yields and issue stipend payout',
-            sector,
-            rewardXp: 140,
-        },
-    ];
-}
 
 function makeCorrelationId(prefix: string): string {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -210,14 +146,13 @@ export function TrainingOperationsPanel(
         };
     }, [apiBaseUrl, canUseApi, token]);
 
-    const scaffoldWorkflow = async (mode: 'operations' | 'controller') => {
+    const scaffoldWorkflow = async (mode: TrainingWorkflowMode) => {
         if (!isApiMode) {
             setErrorMessage(SERVER_REQUIRED_MESSAGE);
             setStatusMessage(SERVER_REQUIRED_MESSAGE);
             return;
         }
 
-        const seeds = buildBulkQueueTemplate(selectedFile, indexedFileCount, mode);
         setErrorMessage(null);
         setStatusMessage(
             mode === 'controller' ? 'Drafting AI controller training queue...' : 'Drafting operations queue...',
@@ -225,7 +160,11 @@ export function TrainingOperationsPanel(
 
         setIsBusy(true);
         try {
-            const response = await scaffoldTrainingJobs(apiBaseUrl, token, seeds);
+            const response = await scaffoldTrainingTemplateJobs(apiBaseUrl, token, {
+                mode,
+                selectedFile,
+                indexedFileCount,
+            });
             setQueue(response.jobs);
             await recordTrainingTransitionEvent(apiBaseUrl, token, {
                 eventType: 'queue.scaffolded',
@@ -249,7 +188,7 @@ export function TrainingOperationsPanel(
         }
     };
 
-    const executeWorkflow = async (mode: 'operations' | 'controller') => {
+    const executeWorkflow = async (mode: TrainingWorkflowMode) => {
         if (!isApiMode) {
             setErrorMessage(SERVER_REQUIRED_MESSAGE);
             setStatusMessage(SERVER_REQUIRED_MESSAGE);
@@ -259,9 +198,6 @@ export function TrainingOperationsPanel(
         setErrorMessage(null);
         setStatusMessage(mode === 'controller' ? 'Running AI controller training cycle...' : 'Running operations cycle...');
 
-        const queueToRun =
-            queue.length > 0 ? queue : (await scaffoldTrainingJobs(apiBaseUrl, token, buildBulkQueueTemplate(selectedFile, indexedFileCount, mode))).jobs;
-        setQueue(queueToRun);
         setIsBusy(true);
         const correlationId = makeCorrelationId(mode === 'controller' ? 'controller-execute' : 'queue-execute');
 
@@ -270,60 +206,36 @@ export function TrainingOperationsPanel(
                 eventType: 'queue.execution.started',
                 correlationId,
                 details: {
-                    requestedJobs: queueToRun.length,
+                    requestedJobs: queue.length,
                     workflowMode: mode,
                 },
             });
 
-            for (let index = 0; index < queueToRun.length; index += 1) {
-                const job = queueToRun[index];
-                if (!job || job.status === 'completed') {
-                    continue;
-                }
+            const execution = await executeTrainingCycle(apiBaseUrl, token, {
+                mode,
+                selectedFile,
+                selectedLineCount,
+                indexedFileCount,
+            });
 
-                setQueue((current) => current.map((item) =>
-                    item.jobId === job.jobId ? { ...item, status: 'running' } : item,
-                ));
-
-                const durationMs = 5_000 + selectedLineCount * 25 + index * 300;
-                const scoreCap = Math.floor(durationMs / 5) + 4_500;
-                const score = Math.max(
-                    600,
-                    Math.min(scoreCap, selectedLineCount * 28 + indexedFileCount + index * 120),
-                );
-
-                const completed = await executeTrainingJob(apiBaseUrl, token, job.jobId, {
-                    score,
-                    durationMs,
-                    integrityProof: `${selectedFile || 'default'}:${job.jobId}:${durationMs}:${score}`,
-                });
-
-                setQueue((current) => current.map((item) =>
-                    item.jobId === completed.job.jobId ? completed.job : item,
-                ));
-            }
-
-            const [leaderboardPayload, rewardsPayload] = await Promise.all([
-                fetchTrainingLeaderboard(apiBaseUrl, token, 12),
-                fetchTrainingRewards(apiBaseUrl, token),
-            ]);
-
-            setLeaderboard(leaderboardPayload.leaderboard);
-            setRewards(rewardsPayload.rewards);
+            setQueue(execution.jobs);
+            setLeaderboard(execution.leaderboard);
+            setRewards(execution.rewards);
 
             await recordTrainingTransitionEvent(apiBaseUrl, token, {
                 eventType: 'queue.execution.completed',
                 correlationId,
                 details: {
-                    completedJobs: queueToRun.length,
+                    completedJobs: execution.completedJobs,
+                    attemptedJobs: execution.attemptedJobs,
                     selectedFile,
                     workflowMode: mode,
                 },
             });
             setStatusMessage(
                 mode === 'controller' ?
-                    `Controller cycle complete: ${queueToRun.length} drills processed.` :
-                    `Cycle complete: ${queueToRun.length} operations processed.`,
+                    `Controller cycle complete: ${execution.completedJobs} drills processed.` :
+                    `Cycle complete: ${execution.completedJobs} operations processed.`,
             );
         } catch (error: unknown) {
             setErrorMessage(error instanceof Error ? error.message : 'Queue execution failed.');

@@ -127,6 +127,8 @@ export type TrainingTransitionEvent = {
   createdAt: string;
 };
 
+export type TrainingWorkflowMode = 'operations'|'controller';
+
 export const GAME_SESSION_STORAGE_KEY = 'banana-game-session';
 export const GAME_PLAYER_GUID_STORAGE_KEY = 'banana-player-guid';
 export const GAME_RUNTIME_PLAYER_GUID_STORAGE_KEY =
@@ -500,6 +502,28 @@ export async function scaffoldTrainingJobs(
   );
 }
 
+export async function scaffoldTrainingTemplateJobs(
+    baseUrl: string,
+    token: string,
+    payload: {
+      mode: TrainingWorkflowMode;
+      selectedFile?: string;
+      indexedFileCount?: number;
+    }): Promise<{playerId: string; jobs: TrainingJob[]}> {
+  return requestJson<{playerId: string; jobs: TrainingJob[]}>(
+      baseUrl,
+      '/v1/player/training/jobs/scaffold-template',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...withBearerAuth(token),
+        },
+        body: JSON.stringify(payload),
+      },
+  );
+}
+
 export async function fetchTrainingJobs(baseUrl: string, token: string):
     Promise<{playerId: string; jobs: TrainingJob[]}> {
   return requestJson<{playerId: string; jobs: TrainingJob[]}>(
@@ -526,6 +550,37 @@ export async function executeTrainingJob(
         },
         body: JSON.stringify(payload),
       });
+}
+
+export async function executeTrainingCycle(
+    baseUrl: string,
+    token: string,
+    payload: {
+      mode: TrainingWorkflowMode;
+      selectedFile?: string;
+      selectedLineCount: number;
+      indexedFileCount?: number;
+    }): Promise<{
+      playerId: string;
+      attemptedJobs: number;
+      completedJobs: number;
+      mode: TrainingWorkflowMode;
+      jobs: TrainingJob[];
+      leaderboard: TrainingLeaderboardEntry[];
+      rewards: TrainingReward[];
+    }> {
+  return requestJson(
+      baseUrl,
+      '/v1/player/training/jobs/execute-cycle',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...withBearerAuth(token),
+        },
+        body: JSON.stringify(payload),
+      },
+  );
 }
 
 export async function fetchTrainingLeaderboard(
