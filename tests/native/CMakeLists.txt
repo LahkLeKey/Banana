@@ -47,6 +47,21 @@ add_test(NAME banana_runtime_netcode_hypersphere_kmeans_edge_cases_test
 	COMMAND banana_runtime_netcode_hypersphere_kmeans_edge_cases_test
 )
 
+add_executable(banana_runtime_netcode_hypersphere_covariance_ellipsoid_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_hypersphere_covariance_ellipsoid_test.c
+)
+
+target_link_libraries(banana_runtime_netcode_hypersphere_covariance_ellipsoid_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_netcode_hypersphere_covariance_ellipsoid_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_netcode_hypersphere_covariance_ellipsoid_test
+	COMMAND banana_runtime_netcode_hypersphere_covariance_ellipsoid_test
+)
+
 add_executable(banana_runtime_netcode_abi_envelope_endianness_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_abi_envelope_endianness_test.c
 )

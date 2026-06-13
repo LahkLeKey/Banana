@@ -75,6 +75,199 @@ static int distance_q16_between_vectors(const int *lhs_q16, const int *rhs_q16, 
     return (int)runtime_netcode_q16_round_div((int64_t)sqrt(sum), 1);
 }
 
+static void set_identity_matrix(float matrix[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
+                                int dimensions,
+                                float diagonal_value)
+{
+    int row;
+    int column;
+    for (row = 0; row < dimensions; row++)
+    {
+        for (column = 0; column < dimensions; column++)
+        {
+            matrix[row][column] = row == column ? diagonal_value : 0.0f;
+        }
+    }
+}
+
+static int invert_matrix(const float input[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
+                         int dimensions,
+                         float output[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS])
+{
+    double augmented[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS * 2];
+    int row;
+    int column;
+
+    for (row = 0; row < dimensions; row++)
+    {
+        for (column = 0; column < dimensions; column++)
+        {
+            augmented[row][column] = (double)input[row][column];
+            augmented[row][column + dimensions] = row == column ? 1.0 : 0.0;
+        }
+    }
+
+    for (column = 0; column < dimensions; column++)
+    {
+        int pivot_row = column;
+        double pivot_abs = fabs(augmented[column][column]);
+
+        for (row = column + 1; row < dimensions; row++)
+        {
+            double candidate_abs = fabs(augmented[row][column]);
+            if (candidate_abs > pivot_abs)
+            {
+                pivot_abs = candidate_abs;
+                pivot_row = row;
+            }
+        }
+
+        if (pivot_abs <= 0.000000001)
+            return -1;
+
+        if (pivot_row != column)
+        {
+            for (int swap_column = 0; swap_column < dimensions * 2; swap_column++)
+            {
+                double temp = augmented[column][swap_column];
+                augmented[column][swap_column] = augmented[pivot_row][swap_column];
+                augmented[pivot_row][swap_column] = temp;
+            }
+        }
+
+        {
+            double pivot = augmented[column][column];
+            for (int normalize_column = 0; normalize_column < dimensions * 2; normalize_column++)
+                augmented[column][normalize_column] /= pivot;
+        }
+
+        for (row = 0; row < dimensions; row++)
+        {
+            int reduce_column;
+            double factor;
+            if (row == column) continue;
+
+            factor = augmented[row][column];
+            if (fabs(factor) <= 0.000000001) continue;
+
+            for (reduce_column = 0; reduce_column < dimensions * 2; reduce_column++)
+                augmented[row][reduce_column] -= factor * augmented[column][reduce_column];
+        }
+    }
+
+    for (row = 0; row < dimensions; row++)
+    {
+        for (column = 0; column < dimensions; column++)
+        {
+            output[row][column] = (float)augmented[row][column + dimensions];
+        }
+    }
+
+    return 0;
+}
+
+static void build_cluster_inverse_covariance(const RuntimeNetcodeVectorOutput *input,
+                                             const int normalized_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
+                                             const RuntimeNetcodeHypersphereOutput *output,
+                                             int cluster_id,
+                                             int dimensions,
+                                             float out_inverse_covariance[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS])
+{
+    float covariance[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
+    float center[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
+    float variance_sum = 0.0f;
+    int member_count = 0;
+    int node;
+    int row;
+    int column;
+    const float regularization = 0.001f;
+
+    set_identity_matrix(covariance, dimensions, 0.0f);
+
+    for (row = 0; row < dimensions; row++)
+        center[row] = runtime_netcode_q16_to_float(output->centers[cluster_id].center_q16[row]);
+
+    for (node = 0; node < output->vector_count; node++)
+    {
+        if (input->kmeans_assignments[node] != cluster_id)
+            continue;
+
+        member_count += 1;
+        for (row = 0; row < dimensions; row++)
+        {
+            float delta_row = runtime_netcode_q16_to_float(normalized_q16[node][row]) - center[row];
+            for (column = 0; column < dimensions; column++)
+            {
+                float delta_column = runtime_netcode_q16_to_float(normalized_q16[node][column]) - center[column];
+                covariance[row][column] += delta_row * delta_column;
+            }
+        }
+    }
+
+    if (member_count > 1)
+    {
+        float denominator = (float)(member_count - 1);
+        for (row = 0; row < dimensions; row++)
+        {
+            for (column = 0; column < dimensions; column++)
+                covariance[row][column] /= denominator;
+        }
+    }
+    else
+    {
+        set_identity_matrix(covariance, dimensions, 0.25f);
+    }
+
+    for (row = 0; row < dimensions; row++)
+        covariance[row][row] += regularization;
+
+    if (invert_matrix(covariance, dimensions, out_inverse_covariance) == 0)
+        return;
+
+    for (row = 0; row < dimensions; row++)
+        variance_sum += covariance[row][row];
+
+    {
+        float isotropic_variance = variance_sum / (float)dimensions;
+        if (isotropic_variance < regularization)
+            isotropic_variance = regularization;
+
+        set_identity_matrix(covariance, dimensions, isotropic_variance);
+        (void)invert_matrix(covariance, dimensions, out_inverse_covariance);
+    }
+}
+
+static float mahalanobis_squared_between_vectors(const int *lhs_q16,
+                                                 const int *rhs_q16,
+                                                 const float inverse_covariance[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
+                                                 int dimensions)
+{
+    float delta[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
+    float transformed[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
+    float result = 0.0f;
+    int row;
+    int column;
+
+    for (row = 0; row < dimensions; row++)
+        delta[row] = runtime_netcode_q16_to_float(lhs_q16[row] - rhs_q16[row]);
+
+    for (row = 0; row < dimensions; row++)
+    {
+        float sum = 0.0f;
+        for (column = 0; column < dimensions; column++)
+            sum += inverse_covariance[row][column] * delta[column];
+        transformed[row] = sum;
+    }
+
+    for (row = 0; row < dimensions; row++)
+        result += delta[row] * transformed[row];
+
+    if (result < 0.0f)
+        return 0.0f;
+
+    return result;
+}
+
 static unsigned int hash_append_u32(unsigned int hash, unsigned int value)
 {
     int byte_index;
@@ -169,6 +362,7 @@ int runtime_netcode_hypersphere_build(const RuntimeNetcodeVectorOutput *input,
     float total_coherence = 0.0f;
     float total_radius = 0.0f;
     float radius_variance = 0.0f;
+    float cluster_inverse_covariance[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
     const int radius_floor_q16 = 64;
     float average_radius;
     int cluster_count;
@@ -214,6 +408,13 @@ int runtime_netcode_hypersphere_build(const RuntimeNetcodeVectorOutput *input,
         {
             out_output->centers[i].center_q16[j] = input->kmeans_centers_q16[i][j];
         }
+
+        build_cluster_inverse_covariance(input,
+                                         normalized_q16,
+                                         out_output,
+                                         i,
+                                         dimensions,
+                                         cluster_inverse_covariance[i]);
     }
 
     for (i = 0; i < RUNTIME_NETCODE_VECTOR_NODE_COUNT; i++)
@@ -314,15 +515,19 @@ int runtime_netcode_hypersphere_build(const RuntimeNetcodeVectorOutput *input,
         for (j = 0; j < cluster_count; j++)
         {
             int score_index = i * cluster_count + j;
-            int distance_q16 = distance_q16_between_vectors(
+            int mahalanobis_q16;
+            float mahalanobis_squared;
+
+            mahalanobis_squared = mahalanobis_squared_between_vectors(
                 normalized_q16[i],
                 out_output->centers[j].center_q16,
+                cluster_inverse_covariance[j],
                 dimensions);
-            int radius_q16 = out_output->radii[j].inscribed_radius_q16;
+            mahalanobis_q16 = runtime_netcode_q16_from_float(sqrtf(mahalanobis_squared));
 
             out_output->weighted_voronoi_scores[score_index].vector_id = i;
             out_output->weighted_voronoi_scores[score_index].cluster_id = j;
-            out_output->weighted_voronoi_scores[score_index].distance_to_center_q16 = distance_q16;
+            out_output->weighted_voronoi_scores[score_index].distance_to_center_q16 = mahalanobis_q16;
 
             if (out_output->radii[j].radius_state == RUNTIME_NETCODE_RADIUS_SINGLE_CLUSTER)
             {
@@ -333,7 +538,7 @@ int runtime_netcode_hypersphere_build(const RuntimeNetcodeVectorOutput *input,
             else
             {
                 out_output->weighted_voronoi_scores[score_index].weighted_score_q16 =
-                    runtime_netcode_q16_div(distance_q16, radius_q16);
+                    runtime_netcode_q16_from_float(mahalanobis_squared);
                 out_output->weighted_voronoi_scores[score_index].score_validity =
                     RUNTIME_NETCODE_SCORE_VALID;
             }
