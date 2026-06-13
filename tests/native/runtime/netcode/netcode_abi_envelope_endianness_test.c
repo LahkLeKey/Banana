@@ -10,7 +10,7 @@ static int fail(const char *message)
 
 int main(void)
 {
-    RuntimeNetcodeVectorSignalInput input = {
+    RuntimeK3h4VectorSignalInput input = {
         .call_density = 42,
         .quest_percent = 58,
         .player_level = 7,
@@ -23,27 +23,27 @@ int main(void)
         .model_confidence = 71,
         .policy_momentum = 65,
     };
-    RuntimeNetcodeHypersphereOutput output;
-    RuntimeNetcodeContractEnvelopeHeader swapped_header;
-    RuntimeNetcodeContractStatus status;
+    RuntimeNetcodeK3h4Output output;
+    RuntimeK3h4ContractEnvelopeHeader swapped_header;
+    RuntimeK3h4ContractStatus status;
 
-    if (runtime_netcode_abi_build_hypersphere(input, &output) != RUNTIME_NETCODE_CONTRACT_OK)
-        return fail("failed to build baseline hypersphere output");
+    if (runtime_k3h4_abi_build_k3h4(input, &output) != RUNTIME_K3H4_CONTRACT_OK)
+        return fail("failed to build baseline k3h4 output");
 
-    if (output.envelope.contract_status != RUNTIME_NETCODE_CONTRACT_OK)
+    if (output.envelope.contract_status != RUNTIME_K3H4_CONTRACT_OK)
         return fail("expected runtime envelope status to be OK");
 
     swapped_header.contract_version = output.envelope.contract_version;
-    swapped_header.byte_order_tag = RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG_SWAPPED;
+    swapped_header.byte_order_tag = RUNTIME_K3H4_BYTE_ORDER_TAG_SWAPPED;
     swapped_header.payload_bytes = output.envelope.payload_bytes;
     swapped_header.payload_crc32 = output.envelope.payload_crc32;
 
-    status = runtime_netcode_abi_validate_hypersphere_envelope(&swapped_header, &output, 1);
-    if (status != RUNTIME_NETCODE_CONTRACT_OK)
+    status = runtime_k3h4_abi_validate_k3h4_envelope(&swapped_header, &output, 1);
+    if (status != RUNTIME_K3H4_CONTRACT_OK)
         return fail("expected byte-swapped tag to validate when allowed");
 
-    status = runtime_netcode_abi_validate_hypersphere_envelope(&swapped_header, &output, 0);
-    if (status != RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD)
+    status = runtime_k3h4_abi_validate_k3h4_envelope(&swapped_header, &output, 0);
+    if (status != RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD)
         return fail("expected byte-swapped tag to fail when not allowed");
 
     return 0;

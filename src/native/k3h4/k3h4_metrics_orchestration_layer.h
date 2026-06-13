@@ -1,5 +1,5 @@
-#ifndef BANANA_NATIVE_K3H4_HYPERSPHERE_ORCHESTRATION_LAYER_H
-#define BANANA_NATIVE_K3H4_HYPERSPHERE_ORCHESTRATION_LAYER_H
+#ifndef BANANA_NATIVE_K3H4_METRICS_ORCHESTRATION_LAYER_H
+#define BANANA_NATIVE_K3H4_METRICS_ORCHESTRATION_LAYER_H
 
 #include "k3h4_native_orchestrator.h"
 
@@ -21,8 +21,8 @@ extern "C"
     int banana_native_k3h4_layer_build_vector(RuntimeK3h4VectorSignalInput signal_input,
                                               RuntimeNetcodeVectorOutput *out_output);
 
-    int banana_native_k3h4_layer_build_hypersphere(RuntimeK3h4VectorSignalInput signal_input,
-                                                   RuntimeNetcodeHypersphereOutput *out_output);
+    int banana_native_k3h4_layer_build_k3h4(RuntimeK3h4VectorSignalInput signal_input,
+                                                   RuntimeNetcodeK3h4Output *out_output);
 
 #ifdef __cplusplus
 }

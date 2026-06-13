@@ -1,5 +1,5 @@
-#include "runtime/netcode/hypersphere/netcode_hypersphere.h"
-#include "runtime/netcode/hypersphere/netcode_hypersphere_pipeline.h"
+#include "runtime/netcode/k3h4/netcode_k3h4_metrics.h"
+#include "runtime/netcode/k3h4/netcode_k3h4_pipeline.h"
 #include "runtime/netcode/vector/netcode_fixed_point.h"
 #include "runtime/netcode/vector/netcode_vector.h"
 
@@ -12,7 +12,7 @@ static int fail(const char *message)
     return 1;
 }
 
-static int assert_envelope_zero(const RuntimeNetcodeHypersphereOutput *output,
+static int assert_envelope_zero(const RuntimeNetcodeK3h4Output *output,
                                 const char *label)
 {
     if (output->envelope.contract_version != 0 ||
@@ -29,11 +29,11 @@ static int assert_envelope_zero(const RuntimeNetcodeHypersphereOutput *output,
     return 0;
 }
 
-static int assert_outputs_equal(const RuntimeNetcodeHypersphereOutput *lhs,
-                                const RuntimeNetcodeHypersphereOutput *rhs,
+static int assert_outputs_equal(const RuntimeNetcodeK3h4Output *lhs,
+                                const RuntimeNetcodeK3h4Output *rhs,
                                 const char *label)
 {
-    if (memcmp(lhs, rhs, sizeof(RuntimeNetcodeHypersphereOutput)) != 0)
+    if (memcmp(lhs, rhs, sizeof(RuntimeNetcodeK3h4Output)) != 0)
     {
         fprintf(stderr,
                 "[netcode-hypersphere-pipeline-equivalence] %s\n",
@@ -43,7 +43,7 @@ static int assert_outputs_equal(const RuntimeNetcodeHypersphereOutput *lhs,
     return 0;
 }
 
-static int assert_coherence_bounds(const RuntimeNetcodeHypersphereOutput *output,
+static int assert_coherence_bounds(const RuntimeNetcodeK3h4Output *output,
                                    const char *label)
 {
     int node;
@@ -61,11 +61,11 @@ static int assert_coherence_bounds(const RuntimeNetcodeHypersphereOutput *output
     return 0;
 }
 
-static int assert_output_unchanged(const RuntimeNetcodeHypersphereOutput *actual,
-                                   const RuntimeNetcodeHypersphereOutput *expected,
+static int assert_output_unchanged(const RuntimeNetcodeK3h4Output *actual,
+                                   const RuntimeNetcodeK3h4Output *expected,
                                    const char *label)
 {
-    if (memcmp(actual, expected, sizeof(RuntimeNetcodeHypersphereOutput)) != 0)
+    if (memcmp(actual, expected, sizeof(RuntimeNetcodeK3h4Output)) != 0)
     {
         fprintf(stderr,
                 "[netcode-hypersphere-pipeline-equivalence] %s\n",
@@ -77,13 +77,13 @@ static int assert_output_unchanged(const RuntimeNetcodeHypersphereOutput *actual
 
 typedef int (*RuntimeNetcodeHypersphereBuildFn)(
     const RuntimeNetcodeVectorOutput *input,
-    RuntimeNetcodeHypersphereOutput *out_output);
+    RuntimeNetcodeK3h4Output *out_output);
 
 static int assert_failure_output_unchanged(
     RuntimeNetcodeHypersphereBuildFn build_fn,
     const RuntimeNetcodeVectorOutput *input,
-    RuntimeNetcodeHypersphereOutput *output,
-    const RuntimeNetcodeHypersphereOutput *expected_output,
+    RuntimeNetcodeK3h4Output *output,
+    const RuntimeNetcodeK3h4Output *expected_output,
     const char *failure_label,
     const char *unchanged_label)
 {
@@ -98,7 +98,7 @@ static int assert_failure_output_unchanged(
     return assert_output_unchanged(output, expected_output, unchanged_label);
 }
 
-static int assert_node_geometry_sanity(const RuntimeNetcodeHypersphereOutput *output,
+static int assert_node_geometry_sanity(const RuntimeNetcodeK3h4Output *output,
                                        const char *label)
 {
     int node;
@@ -134,7 +134,7 @@ static int assert_node_geometry_sanity(const RuntimeNetcodeHypersphereOutput *ou
     return 0;
 }
 
-static int assert_summary_metric_bounds(const RuntimeNetcodeHypersphereOutput *output,
+static int assert_summary_metric_bounds(const RuntimeNetcodeK3h4Output *output,
                                         const char *label)
 {
     if (output->alignment < 0 || output->alignment > 100)
@@ -156,7 +156,7 @@ static int assert_summary_metric_bounds(const RuntimeNetcodeHypersphereOutput *o
     return 0;
 }
 
-static int assert_cluster_contract_sanity(const RuntimeNetcodeHypersphereOutput *output,
+static int assert_cluster_contract_sanity(const RuntimeNetcodeK3h4Output *output,
                                           const char *label)
 {
     int cluster;
@@ -389,7 +389,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeHypersphereOutput 
 }
 
 static int assert_observability_contract_sanity(
-    const RuntimeNetcodeHypersphereOutput *output,
+    const RuntimeNetcodeK3h4Output *output,
     const char *label)
 {
     if (output->observability.iteration_count < 0)
@@ -438,8 +438,8 @@ static int assert_observability_contract_sanity(
     return 0;
 }
 
-static int assert_success_contract_pair(const RuntimeNetcodeHypersphereOutput *facade_output,
-                                        const RuntimeNetcodeHypersphereOutput *pipeline_output,
+static int assert_success_contract_pair(const RuntimeNetcodeK3h4Output *facade_output,
+                                        const RuntimeNetcodeK3h4Output *pipeline_output,
                                         const char *parity_label,
                                         const char *facade_label,
                                         const char *pipeline_label)
@@ -491,15 +491,15 @@ int main(void)
         .policy_momentum = 62,
     };
     RuntimeNetcodeVectorOutput vector_output;
-    RuntimeNetcodeHypersphereOutput facade_output;
-    RuntimeNetcodeHypersphereOutput pipeline_output;
-    RuntimeNetcodeHypersphereOutput canonical_output;
-    RuntimeNetcodeHypersphereOutput expected_facade_output;
-    RuntimeNetcodeHypersphereOutput expected_pipeline_output;
+    RuntimeNetcodeK3h4Output facade_output;
+    RuntimeNetcodeK3h4Output pipeline_output;
+    RuntimeNetcodeK3h4Output canonical_output;
+    RuntimeNetcodeK3h4Output expected_facade_output;
+    RuntimeNetcodeK3h4Output expected_pipeline_output;
 
-    if (runtime_netcode_hypersphere_build(NULL, &facade_output) != -1)
+    if (runtime_netcode_k3h4_build(NULL, &facade_output) != -1)
         return fail("facade should reject NULL input with -1");
-    if (runtime_netcode_hypersphere_pipeline_execute(NULL, &pipeline_output) != -1)
+    if (runtime_netcode_k3h4_pipeline_execute(NULL, &pipeline_output) != -1)
         return fail("pipeline should reject NULL input with -1");
 
     memset(&facade_output, 0x5A, sizeof(facade_output));
@@ -508,7 +508,7 @@ int main(void)
     memcpy(&expected_pipeline_output, &pipeline_output, sizeof(expected_pipeline_output));
 
     if (assert_failure_output_unchanged(
-            runtime_netcode_hypersphere_build,
+            runtime_netcode_k3h4_build,
             NULL,
             &facade_output,
             &expected_facade_output,
@@ -516,7 +516,7 @@ int main(void)
             "facade should not mutate output on NULL-input failure"))
         return 1;
     if (assert_failure_output_unchanged(
-            runtime_netcode_hypersphere_pipeline_execute,
+            runtime_netcode_k3h4_pipeline_execute,
             NULL,
             &pipeline_output,
             &expected_pipeline_output,
@@ -524,9 +524,9 @@ int main(void)
             "pipeline should not mutate output on NULL-input failure"))
         return 1;
 
-    if (runtime_netcode_hypersphere_build(&vector_output, NULL) != -1)
+    if (runtime_netcode_k3h4_build(&vector_output, NULL) != -1)
         return fail("facade should reject NULL output with -1");
-    if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, NULL) != -1)
+    if (runtime_netcode_k3h4_pipeline_execute(&vector_output, NULL) != -1)
         return fail("pipeline should reject NULL output with -1");
 
     if (runtime_netcode_vector_build(&input, &vector_output) != 0)
@@ -534,10 +534,10 @@ int main(void)
 
     memset(&facade_output, 0xAA, sizeof(facade_output));
     memset(&pipeline_output, 0x55, sizeof(pipeline_output));
-    if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+    if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
         return fail("facade hypersphere build failed");
 
-    if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+    if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
         return fail("pipeline hypersphere execution failed");
 
     if (assert_success_contract_pair(&facade_output,
@@ -552,9 +552,9 @@ int main(void)
     vector_output.k3h4_cluster_count = 0;
     memset(&facade_output, 0xAA, sizeof(facade_output));
     memset(&pipeline_output, 0x55, sizeof(pipeline_output));
-    if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+    if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
         return fail("facade low-cluster clamp build failed");
-    if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+    if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
         return fail("pipeline low-cluster clamp build failed");
     if (assert_success_contract_pair(&facade_output,
                                      &pipeline_output,
@@ -568,9 +568,9 @@ int main(void)
     vector_output.k3h4_cluster_count = 99;
     memset(&facade_output, 0xAA, sizeof(facade_output));
     memset(&pipeline_output, 0x55, sizeof(pipeline_output));
-    if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+    if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
         return fail("facade high-cluster clamp build failed");
-    if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+    if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
         return fail("pipeline high-cluster clamp build failed");
     if (assert_success_contract_pair(&facade_output,
                                      &pipeline_output,
@@ -584,9 +584,9 @@ int main(void)
     vector_output.k3h4_cluster_count = 2;
     memset(&facade_output, 0xAB, sizeof(facade_output));
     memset(&pipeline_output, 0xBA, sizeof(pipeline_output));
-    if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+    if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
         return fail("facade in-range cluster-count build failed");
-    if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+    if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
         return fail("pipeline in-range cluster-count build failed");
     if (assert_success_contract_pair(&facade_output,
                                      &pipeline_output,
@@ -604,7 +604,7 @@ int main(void)
     memcpy(&expected_pipeline_output, &pipeline_output, sizeof(expected_pipeline_output));
 
     if (assert_failure_output_unchanged(
-            runtime_netcode_hypersphere_build,
+            runtime_netcode_k3h4_build,
             &vector_output,
             &facade_output,
             &expected_facade_output,
@@ -612,7 +612,7 @@ int main(void)
             "facade should not mutate output on zero-dimension failure"))
         return 1;
     if (assert_failure_output_unchanged(
-            runtime_netcode_hypersphere_pipeline_execute,
+            runtime_netcode_k3h4_pipeline_execute,
             &vector_output,
             &pipeline_output,
             &expected_pipeline_output,
@@ -627,7 +627,7 @@ int main(void)
     memcpy(&expected_pipeline_output, &pipeline_output, sizeof(expected_pipeline_output));
 
     if (assert_failure_output_unchanged(
-            runtime_netcode_hypersphere_build,
+            runtime_netcode_k3h4_build,
             &vector_output,
             &facade_output,
             &expected_facade_output,
@@ -635,7 +635,7 @@ int main(void)
             "facade should not mutate output on oversized-dimension failure"))
         return 1;
     if (assert_failure_output_unchanged(
-            runtime_netcode_hypersphere_pipeline_execute,
+            runtime_netcode_k3h4_pipeline_execute,
             &vector_output,
             &pipeline_output,
             &expected_pipeline_output,
@@ -649,9 +649,9 @@ int main(void)
     memset(&facade_output, 0x77, sizeof(facade_output));
     memset(&pipeline_output, 0x88, sizeof(pipeline_output));
 
-    if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+    if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
         return fail("facade recovery build failed");
-    if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+    if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
         return fail("pipeline recovery build failed");
 
     if (assert_success_contract_pair(&facade_output,
@@ -667,9 +667,9 @@ int main(void)
     memset(&facade_output, 0x91, sizeof(facade_output));
     memset(&pipeline_output, 0x19, sizeof(pipeline_output));
 
-    if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+    if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
         return fail("pipeline order-independence build failed");
-    if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+    if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
         return fail("facade order-independence build failed");
 
     if (assert_success_contract_pair(&facade_output,
@@ -689,16 +689,16 @@ int main(void)
 
         if ((iteration % 2) == 0)
         {
-            if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+            if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
                 return fail("alternating loop facade build failed");
-            if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+            if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
                 return fail("alternating loop pipeline execute failed");
         }
         else
         {
-            if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+            if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
                 return fail("alternating loop pipeline execute failed");
-            if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+            if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
                 return fail("alternating loop facade build failed");
         }
 
@@ -796,16 +796,16 @@ int main(void)
 
             if ((case_index % 2) == 0)
             {
-                if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+                if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
                     return fail("facade build failed for parity scenario");
-                if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+                if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
                     return fail("pipeline execute failed for parity scenario");
             }
             else
             {
-                if (runtime_netcode_hypersphere_pipeline_execute(&vector_output, &pipeline_output) != 0)
+                if (runtime_netcode_k3h4_pipeline_execute(&vector_output, &pipeline_output) != 0)
                     return fail("pipeline execute failed for parity scenario");
-                if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
+                if (runtime_netcode_k3h4_build(&vector_output, &facade_output) != 0)
                     return fail("facade build failed for parity scenario");
             }
 

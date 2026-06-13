@@ -1,6 +1,6 @@
 #include "netcode_k3h4_orchestrator.h"
 
-#include "netcode_k3h4_hypersphere.h"
+#include "netcode_k3h4_metrics.h"
 
 #include <string.h>
 
@@ -54,7 +54,7 @@ int runtime_netcode_k3h4_orchestrate_full(const RuntimeNetcodeK3h4Request *reque
     if (runtime_netcode_k3h4_build_vector(&vector_input, &out_output->vector) != 0)
         return -1;
 
-    if (runtime_netcode_k3h4_hypersphere_build(&out_output->vector, &out_output->hypersphere) != 0)
+    if (runtime_netcode_k3h4_build(&out_output->vector, &out_output->k3h4) != 0)
         return -1;
 
     return 0;
@@ -155,14 +155,14 @@ int runtime_netcode_k3h4_orchestrate(const RuntimeNetcodeVectorInput *input,
     if (runtime_netcode_vector_build(input, &out_output->vector) != 0)
         return -1;
 
-    if (runtime_netcode_k3h4_hypersphere_build(&out_output->vector, &out_output->hypersphere) != 0)
+    if (runtime_netcode_k3h4_build(&out_output->vector, &out_output->k3h4) != 0)
         return -1;
 
     return 0;
 }
 
-int runtime_netcode_k3h4_build_hypersphere(const RuntimeNetcodeK3h4VectorSignalInput *input,
-                                           RuntimeNetcodeHypersphereOutput *out_output)
+int runtime_netcode_k3h4_build_k3h4(const RuntimeNetcodeK3h4VectorSignalInput *input,
+                                           RuntimeNetcodeK3h4Output *out_output)
 {
     RuntimeNetcodeVectorInput vector_input;
     RuntimeNetcodeK3h4OrchestrationOutput orchestration_output;
@@ -186,6 +186,6 @@ int runtime_netcode_k3h4_build_hypersphere(const RuntimeNetcodeK3h4VectorSignalI
     if (runtime_netcode_k3h4_orchestrate(&vector_input, &orchestration_output) != 0)
         return -1;
 
-    *out_output = orchestration_output.hypersphere;
+    *out_output = orchestration_output.k3h4;
     return 0;
 }

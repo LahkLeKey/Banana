@@ -1,7 +1,7 @@
 #ifndef BANANA_NATIVE_K3H4_APPLICATION_SERVICE_H
 #define BANANA_NATIVE_K3H4_APPLICATION_SERVICE_H
 
-#include "../domain/k3h4_hypersphere_domain_port.h"
+#include "../domain/k3h4_metrics_domain_port.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -10,29 +10,29 @@ extern "C"
 
     int banana_native_k3h4_application_build_learning(
         const BananaNativeK3h4DomainPort *domain_port,
-        RuntimeNetcodeSignalInput signal_input,
+        RuntimeK3h4SignalInput signal_input,
         RuntimeNetcodeLearningOutput *out_output);
 
     int banana_native_k3h4_application_build_reward(
         const BananaNativeK3h4DomainPort *domain_port,
-        RuntimeNetcodeSignalInput signal_input,
+        RuntimeK3h4SignalInput signal_input,
         int interaction_signal,
         RuntimeNetcodeRewardOutput *out_output);
 
     int banana_native_k3h4_application_build_link(
         const BananaNativeK3h4DomainPort *domain_port,
-        RuntimeNetcodeLinkSignalInput signal_input,
+        RuntimeK3h4LinkSignalInput signal_input,
         RuntimeNetcodeLinkOutput *out_output);
 
     int banana_native_k3h4_application_build_vector(
         const BananaNativeK3h4DomainPort *domain_port,
-        RuntimeNetcodeVectorSignalInput signal_input,
+        RuntimeK3h4VectorSignalInput signal_input,
         RuntimeNetcodeVectorOutput *out_output);
 
-    int banana_native_k3h4_application_build_hypersphere(
+    int banana_native_k3h4_application_build_k3h4(
         const BananaNativeK3h4DomainPort *domain_port,
-        RuntimeNetcodeVectorSignalInput signal_input,
-        RuntimeNetcodeHypersphereOutput *out_output);
+        RuntimeK3h4VectorSignalInput signal_input,
+        RuntimeNetcodeK3h4Output *out_output);
 
 #ifdef __cplusplus
 }

@@ -1,12 +1,12 @@
 #ifndef BANANA_ENGINE_RUNTIME_NETCODE_HYPERSPHERE_PIPELINE_INTERNAL_H
 #define BANANA_ENGINE_RUNTIME_NETCODE_HYPERSPHERE_PIPELINE_INTERNAL_H
 
-#include "netcode_hypersphere_pipeline.h"
+#include "netcode_k3h4_pipeline.h"
 
 typedef struct RuntimeNetcodeHyperspherePipelineContext
 {
     const RuntimeNetcodeVectorOutput *input;
-    RuntimeNetcodeHypersphereOutput *output;
+    RuntimeNetcodeK3h4Output *output;
     float normalized[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
     int normalized_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
     float centroid[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
@@ -18,6 +18,7 @@ typedef struct RuntimeNetcodeHyperspherePipelineContext
     int cluster_count;
     int dimensions;
     int radius_floor_q16;
+    int assignment_family;
 } RuntimeNetcodeHyperspherePipelineContext;
 
 #endif

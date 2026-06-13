@@ -1,5 +1,5 @@
-#ifndef BANANA_ENGINE_RUNTIME_NETCODE_HYPERSPHERE_H
-#define BANANA_ENGINE_RUNTIME_NETCODE_HYPERSPHERE_H
+#ifndef BANANA_ENGINE_RUNTIME_NETCODE_K3H4_METRICS_H
+#define BANANA_ENGINE_RUNTIME_NETCODE_K3H4_METRICS_H
 
 #include "../vector/netcode_vector.h"
 
@@ -42,6 +42,12 @@ extern "C"
         RUNTIME_NETCODE_ENDIANNESS_LITTLE_ENDIAN = 0,
         RUNTIME_NETCODE_ENDIANNESS_BYTE_SWAPPED = 1
     } RuntimeNetcodeEndiannessDecodePath;
+
+    typedef enum RuntimeNetcodeK3h4AssignmentFamily
+    {
+        RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE = 0,
+        RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER = 1
+    } RuntimeNetcodeK3h4AssignmentFamily;
 
     typedef struct RuntimeNetcodeK3h4Center
     {
@@ -93,7 +99,7 @@ extern "C"
         int contract_status;
     } RuntimeNetcodeEnvelopeMetadata;
 
-    typedef struct RuntimeNetcodeHypersphereOutput
+    typedef struct RuntimeNetcodeK3h4Output
     {
         int dimensions;
         RuntimeNetcodeProjectionNode nodes[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
@@ -108,10 +114,10 @@ extern "C"
         RuntimeNetcodeSpectralProxy spectral_proxy[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
         RuntimeNetcodeK3h4Observability observability;
         RuntimeNetcodeEnvelopeMetadata envelope;
-    } RuntimeNetcodeHypersphereOutput;
+    } RuntimeNetcodeK3h4Output;
 
-    int runtime_netcode_hypersphere_build(const RuntimeNetcodeVectorOutput *input,
-                                          RuntimeNetcodeHypersphereOutput *out_output);
+    int runtime_netcode_k3h4_build(const RuntimeNetcodeVectorOutput *input,
+                                          RuntimeNetcodeK3h4Output *out_output);
 
 #ifdef __cplusplus
 }

@@ -33,13 +33,13 @@ static uint32_t crc32_compute(const uint8_t *bytes, size_t length)
     return ~crc;
 }
 
-int runtime_netcode_abi_hypersphere_payload_bytes(void)
+int runtime_netcode_abi_k3h4_payload_bytes(void)
 {
-    return (int)offsetof(RuntimeNetcodeHypersphereOutput, envelope);
+    return (int)offsetof(RuntimeNetcodeK3h4Output, envelope);
 }
 
-int runtime_netcode_abi_encode_hypersphere_envelope(
-    const RuntimeNetcodeHypersphereOutput *payload,
+int runtime_netcode_abi_encode_k3h4_envelope(
+    const RuntimeNetcodeK3h4Output *payload,
     RuntimeNetcodeContractEnvelopeHeader *out_header)
 {
     int payload_bytes;
@@ -47,7 +47,7 @@ int runtime_netcode_abi_encode_hypersphere_envelope(
     if (!payload || !out_header)
         return -1;
 
-    payload_bytes = runtime_netcode_abi_hypersphere_payload_bytes();
+    payload_bytes = runtime_netcode_abi_k3h4_payload_bytes();
 
     out_header->contract_version = RUNTIME_NETCODE_K3H4_CONTRACT_VERSION;
     out_header->byte_order_tag = RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG;
@@ -56,7 +56,7 @@ int runtime_netcode_abi_encode_hypersphere_envelope(
     return 0;
 }
 
-static int hypersphere_has_nonfinite(const RuntimeNetcodeHypersphereOutput *payload)
+static int k3h4_has_nonfinite(const RuntimeNetcodeK3h4Output *payload)
 {
     int i;
 
@@ -73,9 +73,9 @@ static int hypersphere_has_nonfinite(const RuntimeNetcodeHypersphereOutput *payl
     return 0;
 }
 
-RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
+RuntimeNetcodeContractStatus runtime_netcode_abi_validate_k3h4_envelope(
     const RuntimeNetcodeContractEnvelopeHeader *header,
-    const RuntimeNetcodeHypersphereOutput *payload,
+    const RuntimeNetcodeK3h4Output *payload,
     int allow_byte_swapped_tag)
 {
     int expected_payload_bytes;
@@ -96,7 +96,7 @@ RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
         }
     }
 
-    expected_payload_bytes = runtime_netcode_abi_hypersphere_payload_bytes();
+    expected_payload_bytes = runtime_netcode_abi_k3h4_payload_bytes();
     if (header->payload_bytes != expected_payload_bytes)
         return RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD;
 
@@ -104,7 +104,7 @@ RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
     if ((int)expected_crc != header->payload_crc32)
         return RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH;
 
-    if (hypersphere_has_nonfinite(payload))
+    if (k3h4_has_nonfinite(payload))
         return RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE;
 
     return RUNTIME_NETCODE_CONTRACT_OK;
@@ -249,8 +249,8 @@ int runtime_netcode_abi_build_vector(RuntimeNetcodeVectorSignalInput signal_inpu
     return 0;
 }
 
-int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal_input,
-                                          RuntimeNetcodeHypersphereOutput *out_output)
+int runtime_netcode_abi_build_k3h4(RuntimeNetcodeVectorSignalInput signal_input,
+                                   RuntimeNetcodeK3h4Output *out_output)
 {
     RuntimeNetcodeK3h4Request request;
     RuntimeNetcodeK3h4FullOutput full_output;
@@ -279,15 +279,41 @@ int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal
     if (runtime_netcode_k3h4_orchestrate_full(&request, &full_output) != 0)
         return -1;
 
-    *out_output = full_output.hypersphere;
+    *out_output = full_output.k3h4;
 
-    if (runtime_netcode_abi_encode_hypersphere_envelope(out_output, (RuntimeNetcodeContractEnvelopeHeader *)&out_output->envelope) != 0)
+    if (runtime_netcode_abi_encode_k3h4_envelope(out_output, (RuntimeNetcodeContractEnvelopeHeader *)&out_output->envelope) != 0)
         return -1;
 
-    out_output->envelope.contract_status = runtime_netcode_abi_validate_hypersphere_envelope(
+    out_output->envelope.contract_status = runtime_netcode_abi_validate_k3h4_envelope(
         (const RuntimeNetcodeContractEnvelopeHeader *)&out_output->envelope,
         out_output,
         1);
 
     return out_output->envelope.contract_status;
+}
+
+int runtime_netcode_abi_hypersphere_payload_bytes(void)
+{
+    return runtime_netcode_abi_k3h4_payload_bytes();
+}
+
+int runtime_netcode_abi_encode_hypersphere_envelope(
+    const RuntimeNetcodeK3h4Output *payload,
+    RuntimeNetcodeContractEnvelopeHeader *out_header)
+{
+    return runtime_netcode_abi_encode_k3h4_envelope(payload, out_header);
+}
+
+RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
+    const RuntimeNetcodeContractEnvelopeHeader *header,
+    const RuntimeNetcodeK3h4Output *payload,
+    int allow_byte_swapped_tag)
+{
+    return runtime_netcode_abi_validate_k3h4_envelope(header, payload, allow_byte_swapped_tag);
+}
+
+int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal_input,
+                                          RuntimeNetcodeK3h4Output *out_output)
+{
+    return runtime_netcode_abi_build_k3h4(signal_input, out_output);
 }

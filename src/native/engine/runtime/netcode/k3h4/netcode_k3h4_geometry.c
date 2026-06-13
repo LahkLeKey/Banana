@@ -1,4 +1,4 @@
-#include "netcode_hypersphere_geometry.h"
+#include "netcode_k3h4_geometry.h"
 
 #include "../vector/netcode_fixed_point.h"
 
@@ -89,7 +89,7 @@ static void project_vector(const float *vector,
     *out_z = sqrtf(fmaxf(0.0f, 1.0f - planar_energy * planar_energy));
 }
 
-void runtime_netcode_hypersphere_prepare_geometry(
+void runtime_netcode_k3h4_prepare_geometry(
     RuntimeNetcodeHyperspherePipelineContext *context)
 {
     int i;
@@ -113,7 +113,7 @@ void runtime_netcode_hypersphere_prepare_geometry(
     normalize_vector(context->centroid, context->dimensions, context->centroid_normalized);
 }
 
-void runtime_netcode_hypersphere_build_projection_nodes(
+void runtime_netcode_k3h4_build_projection_nodes(
     RuntimeNetcodeHyperspherePipelineContext *context)
 {
     int i;
@@ -160,7 +160,7 @@ void runtime_netcode_hypersphere_build_projection_nodes(
     }
 }
 
-void runtime_netcode_hypersphere_finalize_geometry(
+void runtime_netcode_k3h4_finalize_geometry(
     RuntimeNetcodeHyperspherePipelineContext *context)
 {
     float average_radius = context->total_radius / (float)RUNTIME_NETCODE_VECTOR_NODE_COUNT;

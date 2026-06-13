@@ -5,44 +5,44 @@
 #include "../../netcode/reward/netcode_reward.h"
 #include "../../netcode/link/netcode_link.h"
 #include "../../netcode/vector/netcode_vector.h"
-#include "../../netcode/hypersphere/netcode_hypersphere.h"
+#include "../../netcode/k3h4/netcode_k3h4_metrics.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    #define RUNTIME_NETCODE_K3H4_CONTRACT_VERSION 1
-    #define RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG 0x01020304
-    #define RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG_SWAPPED 0x04030201
+    #define RUNTIME_K3H4_CONTRACT_VERSION 1
+    #define RUNTIME_K3H4_BYTE_ORDER_TAG 0x01020304
+    #define RUNTIME_K3H4_BYTE_ORDER_TAG_SWAPPED 0x04030201
 
-    typedef enum RuntimeNetcodeContractStatus
+    typedef enum RuntimeK3h4ContractStatus
     {
-        RUNTIME_NETCODE_CONTRACT_OK = 0,
-        RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION = -3001,
-        RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD = -3002,
-        RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE = -3003,
-        RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH = -3004
-    } RuntimeNetcodeContractStatus;
+        RUNTIME_K3H4_CONTRACT_OK = 0,
+        RUNTIME_K3H4_CONTRACT_UNSUPPORTED_VERSION = -3001,
+        RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD = -3002,
+        RUNTIME_K3H4_CONTRACT_NONFINITE_VALUE = -3003,
+        RUNTIME_K3H4_CONTRACT_CRC_MISMATCH = -3004
+    } RuntimeK3h4ContractStatus;
 
-    typedef struct RuntimeNetcodeContractEnvelopeHeader
+    typedef struct RuntimeK3h4ContractEnvelopeHeader
     {
         int contract_version;
         int byte_order_tag;
         int payload_bytes;
         int payload_crc32;
-    } RuntimeNetcodeContractEnvelopeHeader;
+    } RuntimeK3h4ContractEnvelopeHeader;
 
-    typedef struct RuntimeNetcodeSignalInput
+    typedef struct RuntimeK3h4SignalInput
     {
         int call_density;
         int quest_percent;
         int combo_streak;
         int branch_pressure;
         int workflow_depth;
-    } RuntimeNetcodeSignalInput;
+    } RuntimeK3h4SignalInput;
 
-    typedef struct RuntimeNetcodeLinkSignalInput
+    typedef struct RuntimeK3h4LinkSignalInput
     {
         int call_density;
         int quest_percent;
@@ -51,9 +51,9 @@ extern "C"
         int branch_pressure;
         int dependency_pulse;
         int interaction_signal;
-    } RuntimeNetcodeLinkSignalInput;
+    } RuntimeK3h4LinkSignalInput;
 
-    typedef struct RuntimeNetcodeVectorSignalInput
+    typedef struct RuntimeK3h4VectorSignalInput
     {
         int call_density;
         int quest_percent;
@@ -66,7 +66,24 @@ extern "C"
         int network_dimensions;
         int model_confidence;
         int policy_momentum;
-    } RuntimeNetcodeVectorSignalInput;
+    } RuntimeK3h4VectorSignalInput;
+
+    /* Compatibility aliases for existing netcode-prefixed declarations. */
+    #define RUNTIME_NETCODE_K3H4_CONTRACT_VERSION RUNTIME_K3H4_CONTRACT_VERSION
+    #define RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG RUNTIME_K3H4_BYTE_ORDER_TAG
+    #define RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG_SWAPPED RUNTIME_K3H4_BYTE_ORDER_TAG_SWAPPED
+
+    typedef RuntimeK3h4ContractStatus RuntimeNetcodeContractStatus;
+    typedef RuntimeK3h4ContractEnvelopeHeader RuntimeNetcodeContractEnvelopeHeader;
+    typedef RuntimeK3h4SignalInput RuntimeNetcodeSignalInput;
+    typedef RuntimeK3h4LinkSignalInput RuntimeNetcodeLinkSignalInput;
+    typedef RuntimeK3h4VectorSignalInput RuntimeNetcodeVectorSignalInput;
+
+    #define RUNTIME_NETCODE_CONTRACT_OK RUNTIME_K3H4_CONTRACT_OK
+    #define RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION RUNTIME_K3H4_CONTRACT_UNSUPPORTED_VERSION
+    #define RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD
+    #define RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE RUNTIME_K3H4_CONTRACT_NONFINITE_VALUE
+    #define RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH RUNTIME_K3H4_CONTRACT_CRC_MISMATCH
 
     void runtime_netcode_abi_reset(void);
 
@@ -91,39 +108,39 @@ extern "C"
     int runtime_netcode_abi_build_vector(RuntimeNetcodeVectorSignalInput signal_input,
                                          RuntimeNetcodeVectorOutput *out_output);
 
+    int runtime_netcode_abi_build_k3h4(RuntimeNetcodeVectorSignalInput signal_input,
+                                       RuntimeNetcodeK3h4Output *out_output);
+
+    int runtime_netcode_abi_k3h4_payload_bytes(void);
+
+    int runtime_netcode_abi_encode_k3h4_envelope(
+        const RuntimeNetcodeK3h4Output *payload,
+        RuntimeNetcodeContractEnvelopeHeader *out_header);
+
+    RuntimeNetcodeContractStatus runtime_netcode_abi_validate_k3h4_envelope(
+        const RuntimeNetcodeContractEnvelopeHeader *header,
+        const RuntimeNetcodeK3h4Output *payload,
+        int allow_byte_swapped_tag);
+
+    /* Compatibility surface retained while callers migrate to k3h4 naming. */
     int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal_input,
-                                              RuntimeNetcodeHypersphereOutput *out_output);
+                                              RuntimeNetcodeK3h4Output *out_output);
 
     int runtime_netcode_abi_hypersphere_payload_bytes(void);
 
     int runtime_netcode_abi_encode_hypersphere_envelope(
-        const RuntimeNetcodeHypersphereOutput *payload,
+        const RuntimeNetcodeK3h4Output *payload,
         RuntimeNetcodeContractEnvelopeHeader *out_header);
 
     RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
         const RuntimeNetcodeContractEnvelopeHeader *header,
-        const RuntimeNetcodeHypersphereOutput *payload,
+        const RuntimeNetcodeK3h4Output *payload,
         int allow_byte_swapped_tag);
 
     /*
-     * K3H4 ABI aliases keep the public ABI language aligned to the
-     * hypersphere contract while preserving existing netcode symbols.
+     * K3H4 wrapper helpers are preferred call sites.
+     * Netcode-prefixed function symbols remain the ABI implementation.
      */
-    #define RUNTIME_K3H4_CONTRACT_VERSION RUNTIME_NETCODE_K3H4_CONTRACT_VERSION
-    #define RUNTIME_K3H4_BYTE_ORDER_TAG RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG
-    #define RUNTIME_K3H4_BYTE_ORDER_TAG_SWAPPED RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG_SWAPPED
-
-    typedef RuntimeNetcodeContractStatus RuntimeK3h4ContractStatus;
-    typedef RuntimeNetcodeContractEnvelopeHeader RuntimeK3h4ContractEnvelopeHeader;
-    typedef RuntimeNetcodeSignalInput RuntimeK3h4SignalInput;
-    typedef RuntimeNetcodeLinkSignalInput RuntimeK3h4LinkSignalInput;
-    typedef RuntimeNetcodeVectorSignalInput RuntimeK3h4VectorSignalInput;
-
-    #define RUNTIME_K3H4_CONTRACT_OK RUNTIME_NETCODE_CONTRACT_OK
-    #define RUNTIME_K3H4_CONTRACT_UNSUPPORTED_VERSION RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION
-    #define RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD
-    #define RUNTIME_K3H4_CONTRACT_NONFINITE_VALUE RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE
-    #define RUNTIME_K3H4_CONTRACT_CRC_MISMATCH RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH
 
     static inline void runtime_k3h4_abi_reset(void)
     {
@@ -175,34 +192,60 @@ extern "C"
         return runtime_netcode_abi_build_vector(signal_input, out_output);
     }
 
-    static inline int runtime_k3h4_abi_build_hypersphere(RuntimeK3h4VectorSignalInput signal_input,
-                                                         RuntimeNetcodeHypersphereOutput *out_output)
+    static inline int runtime_k3h4_abi_build_k3h4(RuntimeK3h4VectorSignalInput signal_input,
+                                                  RuntimeNetcodeK3h4Output *out_output)
     {
-        return runtime_netcode_abi_build_hypersphere(signal_input, out_output);
+        return runtime_netcode_abi_build_k3h4(signal_input, out_output);
+    }
+
+    static inline int runtime_k3h4_abi_k3h4_payload_bytes(void)
+    {
+        return runtime_netcode_abi_k3h4_payload_bytes();
+    }
+
+    static inline int runtime_k3h4_abi_encode_k3h4_envelope(
+        const RuntimeNetcodeK3h4Output *payload,
+        RuntimeK3h4ContractEnvelopeHeader *out_header)
+    {
+        return runtime_netcode_abi_encode_k3h4_envelope(payload, out_header);
+    }
+
+    static inline RuntimeK3h4ContractStatus runtime_k3h4_abi_validate_k3h4_envelope(
+        const RuntimeK3h4ContractEnvelopeHeader *header,
+        const RuntimeNetcodeK3h4Output *payload,
+        int allow_byte_swapped_tag)
+    {
+        return runtime_netcode_abi_validate_k3h4_envelope(header, payload, allow_byte_swapped_tag);
+    }
+
+    static inline int runtime_k3h4_abi_build_hypersphere(RuntimeK3h4VectorSignalInput signal_input,
+                                                         RuntimeNetcodeK3h4Output *out_output)
+    {
+        return runtime_k3h4_abi_build_k3h4(signal_input, out_output);
     }
 
     static inline int runtime_k3h4_abi_hypersphere_payload_bytes(void)
     {
-        return runtime_netcode_abi_hypersphere_payload_bytes();
+        return runtime_k3h4_abi_k3h4_payload_bytes();
     }
 
     static inline int runtime_k3h4_abi_encode_hypersphere_envelope(
-        const RuntimeNetcodeHypersphereOutput *payload,
+        const RuntimeNetcodeK3h4Output *payload,
         RuntimeK3h4ContractEnvelopeHeader *out_header)
     {
-        return runtime_netcode_abi_encode_hypersphere_envelope(payload, out_header);
+        return runtime_k3h4_abi_encode_k3h4_envelope(payload, out_header);
     }
 
     static inline RuntimeK3h4ContractStatus runtime_k3h4_abi_validate_hypersphere_envelope(
         const RuntimeK3h4ContractEnvelopeHeader *header,
-        const RuntimeNetcodeHypersphereOutput *payload,
+        const RuntimeNetcodeK3h4Output *payload,
         int allow_byte_swapped_tag)
     {
-        return runtime_netcode_abi_validate_hypersphere_envelope(header, payload, allow_byte_swapped_tag);
+        return runtime_k3h4_abi_validate_k3h4_envelope(header, payload, allow_byte_swapped_tag);
     }
 
     /*
-     * RuntimeNetcodeHypersphereOutput now carries deterministic K-means
+     * RuntimeNetcodeK3h4Output now carries deterministic K-means
      * sections (centers/radii/scores/spectral/observability) through the ABI
      * bridge. The bridge keeps these fields as plain data pass-through.
      */

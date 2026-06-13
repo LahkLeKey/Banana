@@ -21,8 +21,8 @@ extern "C"
     int banana_native_k3h4_build_vector(RuntimeK3h4VectorSignalInput signal_input,
                                         RuntimeNetcodeVectorOutput *out_output);
 
-    int banana_native_k3h4_build_hypersphere(RuntimeK3h4VectorSignalInput signal_input,
-                                             RuntimeNetcodeHypersphereOutput *out_output);
+    int banana_native_k3h4_build_k3h4(RuntimeK3h4VectorSignalInput signal_input,
+                                             RuntimeNetcodeK3h4Output *out_output);
 
 #ifdef __cplusplus
 }

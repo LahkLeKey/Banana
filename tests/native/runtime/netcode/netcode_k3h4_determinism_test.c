@@ -11,7 +11,7 @@ static int fail(const char *message)
 
 int main(void)
 {
-    RuntimeNetcodeVectorSignalInput input = {
+    RuntimeK3h4VectorSignalInput input = {
         .call_density = 48,
         .quest_percent = 55,
         .player_level = 6,
@@ -24,15 +24,15 @@ int main(void)
         .model_confidence = 72,
         .policy_momentum = 64,
     };
-    RuntimeNetcodeHypersphereOutput first_output;
-    RuntimeNetcodeHypersphereOutput second_output;
+    RuntimeNetcodeK3h4Output first_output;
+    RuntimeNetcodeK3h4Output second_output;
 
-    if (runtime_netcode_abi_build_hypersphere(input, &first_output) != 0)
-        return fail("failed to build first hypersphere output");
-    if (runtime_netcode_abi_build_hypersphere(input, &second_output) != 0)
-        return fail("failed to build second hypersphere output");
+    if (runtime_k3h4_abi_build_k3h4(input, &first_output) != 0)
+        return fail("failed to build first k3h4 output");
+    if (runtime_k3h4_abi_build_k3h4(input, &second_output) != 0)
+        return fail("failed to build second k3h4 output");
 
-    if (memcmp(&first_output, &second_output, sizeof(RuntimeNetcodeHypersphereOutput)) != 0)
+    if (memcmp(&first_output, &second_output, sizeof(RuntimeNetcodeK3h4Output)) != 0)
         return fail("repeated deterministic output mismatch");
 
     if (first_output.cluster_count < 1 || first_output.cluster_count > 4)

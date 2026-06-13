@@ -1,5 +1,6 @@
-#include "netcode_hypersphere_pipeline_setup.h"
+#include "netcode_k3h4_pipeline_setup.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static int clamp_cluster_count(int value)
@@ -9,10 +10,22 @@ static int clamp_cluster_count(int value)
     return value;
 }
 
-int runtime_netcode_hypersphere_initialize_pipeline_context(
+static int resolve_assignment_family(void)
+{
+    const char *assignment_family = getenv("BANANA_K3H4_ASSIGNMENT_FAMILY");
+    if (!assignment_family)
+        return RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE;
+
+    if (strcmp(assignment_family, "power") == 0 || strcmp(assignment_family, "POWER") == 0)
+        return RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER;
+
+    return RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE;
+}
+
+int runtime_netcode_k3h4_initialize_pipeline_context(
     RuntimeNetcodeHyperspherePipelineContext *context,
     const RuntimeNetcodeVectorOutput *input,
-    RuntimeNetcodeHypersphereOutput *out_output)
+    RuntimeNetcodeK3h4Output *out_output)
 {
     if (!context || !input || !out_output)
         return -1;
@@ -28,6 +41,7 @@ int runtime_netcode_hypersphere_initialize_pipeline_context(
     context->dimensions = input->dimensions;
     context->cluster_count = clamp_cluster_count(input->k3h4_cluster_count);
     context->radius_floor_q16 = 64;
+    context->assignment_family = resolve_assignment_family();
 
     context->output->dimensions = context->dimensions;
     context->output->cluster_count = context->cluster_count;

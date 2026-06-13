@@ -4,7 +4,7 @@
 #include "../link/netcode_link.h"
 #include "../model/netcode_model.h"
 #include "../reward/netcode_reward.h"
-#include "../hypersphere/netcode_hypersphere.h"
+#include "netcode_k3h4_metrics.h"
 #include "../vector/netcode_vector.h"
 
 #ifdef __cplusplus
@@ -50,7 +50,7 @@ extern "C"
     typedef struct RuntimeNetcodeK3h4OrchestrationOutput
     {
         RuntimeNetcodeVectorOutput vector;
-        RuntimeNetcodeHypersphereOutput hypersphere;
+        RuntimeNetcodeK3h4Output k3h4;
     } RuntimeNetcodeK3h4OrchestrationOutput;
 
     typedef struct RuntimeNetcodeK3h4Request
@@ -76,7 +76,7 @@ extern "C"
         RuntimeNetcodeRewardOutput reward;
         RuntimeNetcodeLinkOutput link;
         RuntimeNetcodeVectorOutput vector;
-        RuntimeNetcodeHypersphereOutput hypersphere;
+        RuntimeNetcodeK3h4Output k3h4;
     } RuntimeNetcodeK3h4FullOutput;
 
     int runtime_netcode_k3h4_orchestrate_full(const RuntimeNetcodeK3h4Request *request,
@@ -99,8 +99,8 @@ extern "C"
     int runtime_netcode_k3h4_orchestrate(const RuntimeNetcodeVectorInput *input,
                                          RuntimeNetcodeK3h4OrchestrationOutput *out_output);
 
-    int runtime_netcode_k3h4_build_hypersphere(const RuntimeNetcodeK3h4VectorSignalInput *input,
-                                               RuntimeNetcodeHypersphereOutput *out_output);
+    int runtime_netcode_k3h4_build_k3h4(const RuntimeNetcodeK3h4VectorSignalInput *input,
+                                               RuntimeNetcodeK3h4Output *out_output);
 
 #ifdef __cplusplus
 }

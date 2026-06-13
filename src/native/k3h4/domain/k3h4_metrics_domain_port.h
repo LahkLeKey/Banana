@@ -10,17 +10,17 @@ extern "C"
 
     typedef struct BananaNativeK3h4DomainPort
     {
-        int (*build_learning)(RuntimeNetcodeSignalInput signal_input,
+        int (*build_learning)(RuntimeK3h4SignalInput signal_input,
                               RuntimeNetcodeLearningOutput *out_output);
-        int (*build_reward)(RuntimeNetcodeSignalInput signal_input,
+        int (*build_reward)(RuntimeK3h4SignalInput signal_input,
                             int interaction_signal,
                             RuntimeNetcodeRewardOutput *out_output);
-        int (*build_link)(RuntimeNetcodeLinkSignalInput signal_input,
+        int (*build_link)(RuntimeK3h4LinkSignalInput signal_input,
                           RuntimeNetcodeLinkOutput *out_output);
-        int (*build_vector)(RuntimeNetcodeVectorSignalInput signal_input,
+        int (*build_vector)(RuntimeK3h4VectorSignalInput signal_input,
                             RuntimeNetcodeVectorOutput *out_output);
-        int (*build_hypersphere)(RuntimeNetcodeVectorSignalInput signal_input,
-                                 RuntimeNetcodeHypersphereOutput *out_output);
+        int (*build_k3h4)(RuntimeK3h4VectorSignalInput signal_input,
+                                 RuntimeNetcodeK3h4Output *out_output);
     } BananaNativeK3h4DomainPort;
 
 #ifdef __cplusplus

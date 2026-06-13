@@ -1,4 +1,4 @@
-#include "netcode_hypersphere_cluster_scoring.h"
+#include "netcode_k3h4_cluster_scoring.h"
 
 #include "../vector/netcode_fixed_point.h"
 
@@ -108,7 +108,7 @@ static int invert_matrix(const float input[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS
 static void build_cluster_inverse_covariance(
     const RuntimeNetcodeVectorOutput *input,
     const int normalized_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
-    const RuntimeNetcodeHypersphereOutput *output,
+    const RuntimeNetcodeK3h4Output *output,
     int cluster_id,
     int dimensions,
     float out_inverse_covariance[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS])
@@ -221,7 +221,7 @@ static unsigned int hash_append_u32(unsigned int hash, unsigned int value)
     return hash;
 }
 
-void runtime_netcode_hypersphere_build_cluster_models(
+void runtime_netcode_k3h4_build_cluster_models(
     RuntimeNetcodeHyperspherePipelineContext *context)
 {
     int i;
@@ -245,7 +245,7 @@ void runtime_netcode_hypersphere_build_cluster_models(
     }
 }
 
-void runtime_netcode_hypersphere_build_cluster_radii_and_spectral(
+void runtime_netcode_k3h4_build_cluster_radii_and_spectral(
     RuntimeNetcodeHyperspherePipelineContext *context)
 {
     int i;
@@ -307,7 +307,7 @@ void runtime_netcode_hypersphere_build_cluster_radii_and_spectral(
     }
 }
 
-void runtime_netcode_hypersphere_build_weighted_voronoi_scores(
+void runtime_netcode_k3h4_build_weighted_voronoi_scores(
     RuntimeNetcodeHyperspherePipelineContext *context)
 {
     int i;
@@ -319,6 +319,7 @@ void runtime_netcode_hypersphere_build_weighted_voronoi_scores(
         {
             int score_index = i * context->cluster_count + j;
             int mahalanobis_q16;
+            int radius_q16;
             float mahalanobis_squared;
 
             mahalanobis_squared = mahalanobis_squared_between_vectors(
@@ -332,6 +333,8 @@ void runtime_netcode_hypersphere_build_weighted_voronoi_scores(
             context->output->weighted_voronoi_scores[score_index].cluster_id = j;
             context->output->weighted_voronoi_scores[score_index].distance_to_center_q16 = mahalanobis_q16;
 
+            radius_q16 = context->output->radii[j].inscribed_radius_q16;
+
             if (context->output->radii[j].radius_state == RUNTIME_NETCODE_RADIUS_SINGLE_CLUSTER)
             {
                 context->output->weighted_voronoi_scores[score_index].weighted_score_q16 = 0;
@@ -340,8 +343,18 @@ void runtime_netcode_hypersphere_build_weighted_voronoi_scores(
             }
             else
             {
-                context->output->weighted_voronoi_scores[score_index].weighted_score_q16 =
-                    runtime_netcode_q16_from_float(mahalanobis_squared);
+                if (context->assignment_family == RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER)
+                {
+                    int distance_sq_q16 = runtime_netcode_q16_mul(mahalanobis_q16, mahalanobis_q16);
+                    int radius_sq_q16 = runtime_netcode_q16_mul(radius_q16, radius_q16);
+                    context->output->weighted_voronoi_scores[score_index].weighted_score_q16 =
+                        distance_sq_q16 - radius_sq_q16;
+                }
+                else
+                {
+                    context->output->weighted_voronoi_scores[score_index].weighted_score_q16 =
+                        runtime_netcode_q16_div(mahalanobis_q16, radius_q16);
+                }
                 context->output->weighted_voronoi_scores[score_index].score_validity =
                     RUNTIME_NETCODE_SCORE_VALID;
             }
@@ -349,8 +362,8 @@ void runtime_netcode_hypersphere_build_weighted_voronoi_scores(
     }
 }
 
-int runtime_netcode_hypersphere_build_deterministic_hash(
-    const RuntimeNetcodeHypersphereOutput *output)
+int runtime_netcode_k3h4_build_deterministic_hash(
+    const RuntimeNetcodeK3h4Output *output)
 {
     unsigned int hash = 2166136261u;
     int i;

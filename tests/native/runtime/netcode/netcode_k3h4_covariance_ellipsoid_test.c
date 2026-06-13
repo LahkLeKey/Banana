@@ -1,8 +1,22 @@
-#include "runtime/netcode/hypersphere/netcode_hypersphere.h"
+#include "runtime/netcode/k3h4/netcode_k3h4_metrics.h"
 #include "runtime/netcode/vector/netcode_fixed_point.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+#if defined(_WIN32)
+static int set_assignment_family(const char *value)
+{
+    return _putenv_s("BANANA_K3H4_ASSIGNMENT_FAMILY", value ? value : "");
+}
+#else
+static int set_assignment_family(const char *value)
+{
+    if (!value) return unsetenv("BANANA_K3H4_ASSIGNMENT_FAMILY");
+    return setenv("BANANA_K3H4_ASSIGNMENT_FAMILY", value, 1);
+}
+#endif
 
 static int fail(const char *message)
 {
@@ -13,7 +27,7 @@ static int fail(const char *message)
 int main(void)
 {
     RuntimeNetcodeVectorOutput vector_output;
-    RuntimeNetcodeHypersphereOutput hypersphere_output;
+    RuntimeNetcodeK3h4Output metrics_output;
     int dimensions = 2;
     int score_own;
     int score_cross;
@@ -45,23 +59,28 @@ int main(void)
     vector_output.k3h4_centers_q16[1][0] = runtime_netcode_q16_from_float(0.15f);
     vector_output.k3h4_centers_q16[1][1] = runtime_netcode_q16_from_float(0.99f);
 
-    if (runtime_netcode_hypersphere_build(&vector_output, &hypersphere_output) != 0)
+    if (set_assignment_family("power") != 0)
+        return fail("failed to set power assignment family");
+
+    if (runtime_netcode_k3h4_build(&vector_output, &metrics_output) != 0)
         return fail("failed to build covariance ellipsoid output");
 
-    score_own = hypersphere_output.weighted_voronoi_scores[0].weighted_score_q16;
-    score_cross = hypersphere_output.weighted_voronoi_scores[1].weighted_score_q16;
+    score_own = metrics_output.weighted_voronoi_scores[0].weighted_score_q16;
+    score_cross = metrics_output.weighted_voronoi_scores[1].weighted_score_q16;
     if (score_own >= score_cross)
         return fail("expected own-cluster Mahalanobis score to be lower than cross-cluster score");
 
     legacy_score = runtime_netcode_q16_div(
-        hypersphere_output.weighted_voronoi_scores[0].distance_to_center_q16,
-        hypersphere_output.radii[0].inscribed_radius_q16);
+        metrics_output.weighted_voronoi_scores[0].distance_to_center_q16,
+        metrics_output.radii[0].inscribed_radius_q16);
 
     if (legacy_score == score_own)
-        return fail("expected covariance ellipsoid score path to differ from hypersphere legacy score path");
+        return fail("expected covariance ellipsoid score path to differ from multiplicative legacy score path");
 
-    if (hypersphere_output.weighted_voronoi_scores[0].score_validity != RUNTIME_NETCODE_SCORE_VALID)
+    if (metrics_output.weighted_voronoi_scores[0].score_validity != RUNTIME_NETCODE_SCORE_VALID)
         return fail("expected own-cluster score to be valid");
+
+    (void)set_assignment_family(NULL);
 
     return 0;
 }

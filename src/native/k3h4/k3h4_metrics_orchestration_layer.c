@@ -1,7 +1,7 @@
-#include "k3h4_hypersphere_orchestration_layer.h"
+#include "k3h4_metrics_orchestration_layer.h"
 
-#include "application/k3h4_hypersphere_application_service.h"
-#include "infrastructure/k3h4_hypersphere_infrastructure_adapter.h"
+#include "application/k3h4_metrics_application_service.h"
+#include "infrastructure/k3h4_metrics_infrastructure_adapter.h"
 
 static BananaNativeK3h4DomainPort resolve_domain_port(void)
 {
@@ -50,11 +50,11 @@ int banana_native_k3h4_layer_build_vector(RuntimeK3h4VectorSignalInput signal_in
         out_output);
 }
 
-int banana_native_k3h4_layer_build_hypersphere(RuntimeK3h4VectorSignalInput signal_input,
-                                               RuntimeNetcodeHypersphereOutput *out_output)
+int banana_native_k3h4_layer_build_k3h4(RuntimeK3h4VectorSignalInput signal_input,
+                                               RuntimeNetcodeK3h4Output *out_output)
 {
     BananaNativeK3h4DomainPort domain_port = resolve_domain_port();
-    return banana_native_k3h4_application_build_hypersphere(
+    return banana_native_k3h4_application_build_k3h4(
         &domain_port,
         signal_input,
         out_output);

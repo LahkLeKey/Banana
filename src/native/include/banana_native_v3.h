@@ -156,7 +156,7 @@ typedef struct banana_native_v3_netcode_k3h4_observability {
 	int32_t endianness_decode_path;
 } banana_native_v3_netcode_k3h4_observability;
 
-typedef struct banana_native_v3_netcode_hypersphere_output {
+typedef struct banana_native_v3_netcode_k3h4_output {
 	int32_t dimensions;
 	banana_native_v3_netcode_projection_node nodes[4];
 	int32_t alignment;
@@ -173,7 +173,9 @@ typedef struct banana_native_v3_netcode_hypersphere_output {
 	int32_t envelope_payload_bytes;
 	int32_t envelope_payload_crc32;
 	int32_t contract_status;
-} banana_native_v3_netcode_hypersphere_output;
+} banana_native_v3_netcode_k3h4_output;
+
+typedef banana_native_v3_netcode_k3h4_output banana_native_v3_netcode_hypersphere_output;
 
 #define BANANA_NATIVE_V3_NETCODE_K3H4_CONTRACT_VERSION 1
 #define BANANA_NATIVE_V3_NETCODE_K3H4_BYTE_ORDER_TAG 0x01020304
@@ -229,6 +231,8 @@ BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_link(const banana_nat
 						 banana_native_v3_netcode_link_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_vector(const banana_native_v3_netcode_vector_input *signal_input,
 						   banana_native_v3_netcode_vector_output *out_output);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_k3h4(const banana_native_v3_netcode_vector_input *signal_input,
+							banana_native_v3_netcode_k3h4_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_vector_input *signal_input,
 							banana_native_v3_netcode_hypersphere_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,

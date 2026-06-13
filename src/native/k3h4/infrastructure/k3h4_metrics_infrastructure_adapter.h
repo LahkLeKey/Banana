@@ -1,7 +1,7 @@
 #ifndef BANANA_NATIVE_K3H4_INFRA_ADAPTER_H
 #define BANANA_NATIVE_K3H4_INFRA_ADAPTER_H
 
-#include "../domain/k3h4_hypersphere_domain_port.h"
+#include "../domain/k3h4_metrics_domain_port.h"
 
 #ifdef __cplusplus
 extern "C"
