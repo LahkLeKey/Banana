@@ -11,6 +11,19 @@ type NetcodeRouteOptions = {
   netcodeService?: NativeNetcodeService;
 };
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isValidWorkflowDepth(value: unknown): value is 1|2|3 {
+  return isFiniteNumber(value) && (value === 1 || value === 2 || value === 3);
+}
+
+function isValidNetworkDimensions(value: unknown): boolean {
+  return isFiniteNumber(value) && Number.isInteger(value) && value >= 1 &&
+      value <= 16;
+}
+
 function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
   const enabledRaw =
       (process.env.BANANA_NETCODE_K3H4_ENABLED ?? 'true').trim().toLowerCase();
@@ -51,12 +64,11 @@ export async function registerNetcodeRoutes(
       '/api/netcode/learning',
       async (request, reply) => {
         const body = request.body;
-        if (!body || typeof body.callDensity !== 'number' ||
-            typeof body.questPercent !== 'number' ||
-            typeof body.comboStreak !== 'number' ||
-            typeof body.branchPressure !== 'number' ||
-            (body.workflowDepth !== 1 && body.workflowDepth !== 2 &&
-             body.workflowDepth !== 3)) {
+        if (!body || !isFiniteNumber(body.callDensity) ||
+            !isFiniteNumber(body.questPercent) ||
+            !isFiniteNumber(body.comboStreak) ||
+            !isFiniteNumber(body.branchPressure) ||
+            !isValidWorkflowDepth(body.workflowDepth)) {
           return reply.status(400).send({
             error: 'Invalid netcode learning payload',
           });
@@ -99,12 +111,11 @@ export async function registerNetcodeRoutes(
     }
   }>('/api/netcode/reward', async (request, reply) => {
     const body = request.body;
-    if (!body || typeof body.callDensity !== 'number' ||
-        typeof body.questPercent !== 'number' ||
-        typeof body.comboStreak !== 'number' ||
-        typeof body.branchPressure !== 'number' ||
-        (body.workflowDepth !== 1 && body.workflowDepth !== 2 &&
-         body.workflowDepth !== 3)) {
+    if (!body || !isFiniteNumber(body.callDensity) ||
+        !isFiniteNumber(body.questPercent) ||
+        !isFiniteNumber(body.comboStreak) ||
+        !isFiniteNumber(body.branchPressure) ||
+        !isValidWorkflowDepth(body.workflowDepth)) {
       return reply.status(400).send({error: 'Invalid netcode reward payload'});
     }
 
@@ -131,12 +142,12 @@ export async function registerNetcodeRoutes(
     }
   }>('/api/netcode/link', async (request, reply) => {
     const body = request.body;
-    if (!body || typeof body.callDensity !== 'number' ||
-        typeof body.questPercent !== 'number' ||
-        typeof body.playerLevel !== 'number' ||
-        typeof body.comboStreak !== 'number' ||
-        typeof body.branchPressure !== 'number' ||
-        typeof body.dependencyPulse !== 'number') {
+    if (!body || !isFiniteNumber(body.callDensity) ||
+        !isFiniteNumber(body.questPercent) ||
+        !isFiniteNumber(body.playerLevel) ||
+        !isFiniteNumber(body.comboStreak) ||
+        !isFiniteNumber(body.branchPressure) ||
+        !isFiniteNumber(body.dependencyPulse)) {
       return reply.status(400).send({error: 'Invalid netcode link payload'});
     }
 
@@ -176,17 +187,16 @@ export async function registerNetcodeRoutes(
     }
 
     const body = request.body;
-    if (!body || typeof body.callDensity !== 'number' ||
-        typeof body.questPercent !== 'number' ||
-        typeof body.playerLevel !== 'number' ||
-        typeof body.comboStreak !== 'number' ||
-        typeof body.branchPressure !== 'number' ||
-        typeof body.dependencyPulse !== 'number' ||
-        (body.workflowDepth !== 1 && body.workflowDepth !== 2 &&
-         body.workflowDepth !== 3) ||
-        typeof body.networkDimensions !== 'number' ||
-        typeof body.modelConfidence !== 'number' ||
-        typeof body.policyMomentum !== 'number') {
+    if (!body || !isFiniteNumber(body.callDensity) ||
+        !isFiniteNumber(body.questPercent) ||
+        !isFiniteNumber(body.playerLevel) ||
+        !isFiniteNumber(body.comboStreak) ||
+        !isFiniteNumber(body.branchPressure) ||
+        !isFiniteNumber(body.dependencyPulse) ||
+        !isValidWorkflowDepth(body.workflowDepth) ||
+        !isValidNetworkDimensions(body.networkDimensions) ||
+        !isFiniteNumber(body.modelConfidence) ||
+        !isFiniteNumber(body.policyMomentum)) {
       return reply.status(400).send(
           {error: 'Invalid netcode analytics payload'});
     }
@@ -225,18 +235,17 @@ export async function registerNetcodeRoutes(
     }
   }>('/api/netcode/vector', async (request, reply) => {
     const body = request.body;
-    if (!body || typeof body.callDensity !== 'number' ||
-        typeof body.questPercent !== 'number' ||
-        typeof body.playerLevel !== 'number' ||
-        typeof body.comboStreak !== 'number' ||
-        typeof body.branchPressure !== 'number' ||
-        typeof body.dependencyPulse !== 'number' ||
-        (body.workflowDepth !== 1 && body.workflowDepth !== 2 &&
-         body.workflowDepth !== 3) ||
-        typeof body.neuralRelevanceScore !== 'number' ||
-        typeof body.networkDimensions !== 'number' ||
-        typeof body.modelConfidence !== 'number' ||
-        typeof body.policyMomentum !== 'number') {
+    if (!body || !isFiniteNumber(body.callDensity) ||
+        !isFiniteNumber(body.questPercent) ||
+        !isFiniteNumber(body.playerLevel) ||
+        !isFiniteNumber(body.comboStreak) ||
+        !isFiniteNumber(body.branchPressure) ||
+        !isFiniteNumber(body.dependencyPulse) ||
+        !isValidWorkflowDepth(body.workflowDepth) ||
+        !isFiniteNumber(body.neuralRelevanceScore) ||
+        !isValidNetworkDimensions(body.networkDimensions) ||
+        !isFiniteNumber(body.modelConfidence) ||
+        !isFiniteNumber(body.policyMomentum)) {
       return reply.status(400).send({error: 'Invalid netcode vector payload'});
     }
 
@@ -270,18 +279,17 @@ export async function registerNetcodeRoutes(
     }
   }>('/api/netcode/hypersphere', async (request, reply) => {
     const body = request.body;
-    if (!body || typeof body.callDensity !== 'number' ||
-        typeof body.questPercent !== 'number' ||
-        typeof body.playerLevel !== 'number' ||
-        typeof body.comboStreak !== 'number' ||
-        typeof body.branchPressure !== 'number' ||
-        typeof body.dependencyPulse !== 'number' ||
-        (body.workflowDepth !== 1 && body.workflowDepth !== 2 &&
-         body.workflowDepth !== 3) ||
-        typeof body.neuralRelevanceScore !== 'number' ||
-        typeof body.networkDimensions !== 'number' ||
-        typeof body.modelConfidence !== 'number' ||
-        typeof body.policyMomentum !== 'number') {
+    if (!body || !isFiniteNumber(body.callDensity) ||
+        !isFiniteNumber(body.questPercent) ||
+        !isFiniteNumber(body.playerLevel) ||
+        !isFiniteNumber(body.comboStreak) ||
+        !isFiniteNumber(body.branchPressure) ||
+        !isFiniteNumber(body.dependencyPulse) ||
+        !isValidWorkflowDepth(body.workflowDepth) ||
+        !isFiniteNumber(body.neuralRelevanceScore) ||
+        !isValidNetworkDimensions(body.networkDimensions) ||
+        !isFiniteNumber(body.modelConfidence) ||
+        !isFiniteNumber(body.policyMomentum)) {
       return reply.status(400).send(
           {error: 'Invalid netcode hypersphere payload'});
     }
