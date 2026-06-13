@@ -27,6 +27,16 @@ export type NetcodeAbiLayerCoverage = {
   complete: boolean;
 };
 
+export type NetcodeAbiLayerDatum = {
+  layer: NetcodeAbiLayerName; present: boolean; contractVersion: number;
+  status: NetcodeAbiLayerSnapshot['status'] | 'missing';
+  payloadBytes: number;
+  byteOrderTag: number;
+  deterministicHash: number | null;
+};
+
+export type NetcodeAbiLayerLedger = readonly NetcodeAbiLayerDatum[];
+
 export type NetcodeAnalyticsAuthoritativeRequest = {
   callDensity: number; questPercent: number; playerLevel: number;
   comboStreak: number;
@@ -63,6 +73,7 @@ export type NetcodeAnalyticsAuthoritativeResult = {
   k3h4: NetcodeHypersphereKmeansProjection;
   abiLayers: readonly NetcodeAbiLayerSnapshot[];
   abiLayerCoverage: NetcodeAbiLayerCoverage;
+  abiLayerLedger: NetcodeAbiLayerLedger;
   lspRepresentation: NetcodeLspRepresentation;
 };
 
@@ -198,6 +209,42 @@ function summarizeAbiLayerCoverage(
   };
 }
 
+function buildAbiLayerLedger(
+    abiLayers: readonly NetcodeAbiLayerSnapshot[],
+    ): NetcodeAbiLayerLedger {
+  const layerMap = new Map<NetcodeAbiLayerName, NetcodeAbiLayerSnapshot>();
+  for (const layer of abiLayers) {
+    if (!layerMap.has(layer.layer)) {
+      layerMap.set(layer.layer, layer);
+    }
+  }
+
+  return NETCODE_ABI_LAYER_ORDER.map((layer) => {
+    const snapshot = layerMap.get(layer);
+    if (!snapshot) {
+      return {
+        layer,
+        present: false,
+        contractVersion: 1,
+        status: 'missing',
+        payloadBytes: 0,
+        byteOrderTag: 0,
+        deterministicHash: null,
+      };
+    }
+
+    return {
+      layer,
+      present: true,
+      contractVersion: snapshot.contractVersion,
+      status: snapshot.status,
+      payloadBytes: snapshot.payloadBytes,
+      byteOrderTag: snapshot.byteOrderTag,
+      deterministicHash: snapshot.deterministicHash,
+    };
+  });
+}
+
 class NativeNetcodeAuthoritativeComputeOrchestrator implements
     NetcodeAnalyticsAuthoritativeComputeOrchestrator {
   constructor(private readonly netcode: NativeNetcodeService) {}
@@ -263,6 +310,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
     };
     const abiLayers = buildAbiLayerCatalog(reward, link, vector, hypersphere);
     const abiLayerCoverage = summarizeAbiLayerCoverage(abiLayers);
+    const abiLayerLedger = buildAbiLayerLedger(abiLayers);
 
     return {
       contractVersion: 1,
@@ -273,6 +321,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       k3h4,
       abiLayers,
       abiLayerCoverage,
+      abiLayerLedger,
       lspRepresentation: {
         language: 'netcode.analytics.v1',
         boundedContext: 'netcode',

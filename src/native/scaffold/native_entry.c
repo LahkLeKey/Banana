@@ -20,15 +20,15 @@ static int32_t map_runtime_contract_status(int status)
 {
 	switch (status)
 	{
-	case RUNTIME_NETCODE_CONTRACT_OK:
+	case RUNTIME_K3H4_CONTRACT_OK:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_OK;
-	case RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION:
+	case RUNTIME_K3H4_CONTRACT_UNSUPPORTED_VERSION:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_UNSUPPORTED_VERSION;
-	case RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD:
+	case RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD;
-	case RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE:
+	case RUNTIME_K3H4_CONTRACT_NONFINITE_VALUE:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_NONFINITE_VALUE;
-	case RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH:
+	case RUNTIME_K3H4_CONTRACT_CRC_MISMATCH:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_CRC_MISMATCH;
 	default:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD;
@@ -190,17 +190,17 @@ void banana_native_v3_world_cleanup(void)
 
 void banana_native_v3_netcode_reset(void)
 {
-	runtime_netcode_abi_reset();
+	runtime_k3h4_abi_reset();
 }
 
 void banana_native_v3_netcode_record_node_tap(int32_t node)
 {
-	runtime_netcode_abi_record_node_tap((RuntimeNetcodeNode)node);
+	runtime_k3h4_abi_record_node_tap((RuntimeNetcodeNode)node);
 }
 
 void banana_native_v3_netcode_record_action(int32_t action)
 {
-	runtime_netcode_abi_record_action((RuntimeNetcodeAction)action);
+	runtime_k3h4_abi_record_action((RuntimeNetcodeAction)action);
 }
 
 int banana_native_v3_netcode_get_ledger(banana_native_v3_netcode_ledger *out_ledger)
@@ -212,7 +212,7 @@ int banana_native_v3_netcode_get_ledger(banana_native_v3_netcode_ledger *out_led
 		return -1;
 	}
 
-	if (runtime_netcode_abi_get_ledger(&ledger) != 0)
+	if (runtime_k3h4_abi_get_ledger(&ledger) != 0)
 	{
 		return -1;
 	}
@@ -456,7 +456,7 @@ int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_ve
 	out_output->envelope_payload_crc32 = native_output.envelope.payload_crc32;
 	out_output->contract_status = map_runtime_contract_status(native_output.envelope.contract_status);
 
-	if (native_output.envelope.contract_status != RUNTIME_NETCODE_CONTRACT_OK)
+	if (native_output.envelope.contract_status != RUNTIME_K3H4_CONTRACT_OK)
 	{
 		return native_output.envelope.contract_status;
 	}

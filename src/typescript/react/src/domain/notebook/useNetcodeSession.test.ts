@@ -215,6 +215,53 @@ describe('useNetcodeSession contract consumer', () => {
            completeness: 1,
            complete: true,
          },
+         abiLayerLedger: [
+           {
+             layer: 'learning',
+             present: true,
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 91,
+           },
+           {
+             layer: 'reward',
+             present: true,
+             contractVersion: 1,
+             status: 'crc-mismatch',
+             payloadBytes: 128,
+             byteOrderTag: 0,
+             deterministicHash: 4242,
+           },
+           {
+             layer: 'link',
+             present: true,
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 30,
+           },
+           {
+             layer: 'vector',
+             present: true,
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 3,
+           },
+           {
+             layer: 'hypersphere',
+             present: true,
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 892,
+             byteOrderTag: 0x01020304,
+             deterministicHash: 'a1b2c3d4e5',
+           },
+         ],
          rollout: {enabled: true, cohort: 'canary'},
        };
 
@@ -272,10 +319,10 @@ describe('useNetcodeSession contract consumer', () => {
            layer: 'reward',
            present: true,
            contractVersion: 1,
-           status: 'ok',
-           payloadBytes: 0,
+           status: 'crc-mismatch',
+           payloadBytes: 128,
            byteOrderTag: 0,
-           deterministicHash: 42,
+           deterministicHash: 4242,
          },
          {
            layer: 'link',
@@ -313,192 +360,145 @@ describe('useNetcodeSession contract consumer', () => {
        });
      });
 
-  it('derives ABI coverage when API omits abiLayerCoverage', async () => {
-    analyticsError = null;
-    analyticsResponse = {
-      contractVersion: 1,
-      reward: {
-        neuralRelevanceScore: 72,
-        projectedRewardXp: 21,
-        rewardTier: 1,
-      },
-      link: {intel: 4, objectives: 5, player: 6, ops: 7},
-      vector: {
-        dimensions: 2,
-        nodeVectors: [[1, 2], [2, 3], [3, 4], [4, 5]],
-        contractStrength: [10, 20, 30, 40] as const,
-      },
-      hypersphere: {
-        dimensions: 2,
-        nodes: [
-          {
-            x: 1,
-            y: 0,
-            z: 0,
-            coherence: 80,
-            inradius: 0.3,
-            nearestNeighborDistance: 0.6,
-          },
-          {
-            x: 0,
-            y: 1,
-            z: 0,
-            coherence: 70,
-            inradius: 0.2,
-            nearestNeighborDistance: 0.5,
-          },
-          {
-            x: 0,
-            y: 0,
-            z: 1,
-            coherence: 60,
-            inradius: 0.1,
-            nearestNeighborDistance: 0.4,
-          },
-          {
-            x: -1,
-            y: 0,
-            z: 0,
-            coherence: 50,
-            inradius: 0.1,
-            nearestNeighborDistance: 0.3,
-          },
-        ],
-        alignment: 66,
-        radialStability: 55,
-      },
-      k3h4: {
-        centers: [
-          {
-            clusterId: 0,
-            centerQ16: [32768, 16384],
-            memberVectorIds: [1],
-            memberCount: 1,
-          },
-        ],
-        radii: [
-          {
-            clusterId: 0,
-            nearestNeighborDistanceQ16: 32768,
-            inscribedRadiusQ16: 16384,
-            radiusState: 'ok',
-          },
-        ],
-        weightedVoronoiScores: [
-          {
-            vectorId: 1,
-            clusterId: 0,
-            distanceToCenterQ16: 8192,
-            weightedScoreQ16: 16384,
-            scoreValidity: 'valid',
-          },
-        ],
-        spectralProxy: [
-          {
-            clusterId: 0,
-            frequencyProxyQ16: 65536,
-            amplitudeProxyQ16: 32768,
-            spectralState: 'ok',
-          },
-        ],
-        observability: {
-          convergenceStatus: 'converged',
-          iterationCount: 2,
-          assignmentChangesLastIteration: 0,
-          scoringValidity: 'valid',
-          deterministicHash: 'f00baa55',
-        },
-      },
-      abiLayers: [
-        {
-          layer: 'learning',
-          contractVersion: 1,
-          status: 'ok',
-          payloadBytes: 0,
-          byteOrderTag: 0,
-          deterministicHash: 72,
-        },
-        {
-          layer: 'reward',
-          contractVersion: 1,
-          status: 'ok',
-          payloadBytes: 0,
-          byteOrderTag: 0,
-          deterministicHash: 21,
-        },
-      ],
-      rollout: {enabled: true, cohort: 'legacy'},
-    };
+  it('rejects analytics payloads that omit authoritative ABI metadata',
+     async () => {
+       analyticsError = null;
+       analyticsResponse = {
+         contractVersion: 1,
+         reward: {
+           neuralRelevanceScore: 72,
+           projectedRewardXp: 21,
+           rewardTier: 1,
+         },
+         link: {intel: 4, objectives: 5, player: 6, ops: 7},
+         vector: {
+           dimensions: 2,
+           nodeVectors: [[1, 2], [2, 3], [3, 4], [4, 5]],
+           contractStrength: [10, 20, 30, 40] as const,
+         },
+         hypersphere: {
+           dimensions: 2,
+           nodes: [
+             {
+               x: 1,
+               y: 0,
+               z: 0,
+               coherence: 80,
+               inradius: 0.3,
+               nearestNeighborDistance: 0.6,
+             },
+             {
+               x: 0,
+               y: 1,
+               z: 0,
+               coherence: 70,
+               inradius: 0.2,
+               nearestNeighborDistance: 0.5,
+             },
+             {
+               x: 0,
+               y: 0,
+               z: 1,
+               coherence: 60,
+               inradius: 0.1,
+               nearestNeighborDistance: 0.4,
+             },
+             {
+               x: -1,
+               y: 0,
+               z: 0,
+               coherence: 50,
+               inradius: 0.1,
+               nearestNeighborDistance: 0.3,
+             },
+           ],
+           alignment: 66,
+           radialStability: 55,
+         },
+         k3h4: {
+           centers: [
+             {
+               clusterId: 0,
+               centerQ16: [32768, 16384],
+               memberVectorIds: [1],
+               memberCount: 1,
+             },
+           ],
+           radii: [
+             {
+               clusterId: 0,
+               nearestNeighborDistanceQ16: 32768,
+               inscribedRadiusQ16: 16384,
+               radiusState: 'ok',
+             },
+           ],
+           weightedVoronoiScores: [
+             {
+               vectorId: 1,
+               clusterId: 0,
+               distanceToCenterQ16: 8192,
+               weightedScoreQ16: 16384,
+               scoreValidity: 'valid',
+             },
+           ],
+           spectralProxy: [
+             {
+               clusterId: 0,
+               frequencyProxyQ16: 65536,
+               amplitudeProxyQ16: 32768,
+               spectralState: 'ok',
+             },
+           ],
+           observability: {
+             convergenceStatus: 'converged',
+             iterationCount: 2,
+             assignmentChangesLastIteration: 0,
+             scoringValidity: 'valid',
+             deterministicHash: 'f00baa55',
+           },
+         },
+         abiLayers: [
+           {
+             layer: 'learning',
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 72,
+           },
+           {
+             layer: 'reward',
+             contractVersion: 1,
+             status: 'ok',
+             payloadBytes: 0,
+             byteOrderTag: 0,
+             deterministicHash: 21,
+           },
+         ],
+         rollout: {enabled: true, cohort: 'legacy'},
+       };
 
-    const {result} = renderHook(() => useNetcodeSession({
-                                  callDensity: 30,
-                                  questPercent: 40,
-                                  comboStreak: 2,
-                                  branchPressure: 20,
-                                  workflowDepth: 2,
-                                  playerLevel: 5,
-                                  dependencyPulse: 15,
-                                  networkDimensions: 8,
-                                }));
+       const {result} = renderHook(() => useNetcodeSession({
+                                     callDensity: 30,
+                                     questPercent: 40,
+                                     comboStreak: 2,
+                                     branchPressure: 20,
+                                     workflowDepth: 2,
+                                     playerLevel: 5,
+                                     dependencyPulse: 15,
+                                     networkDimensions: 8,
+                                   }));
 
-    await waitFor(() => {
-      expect(result.current.k3h4.centers.length).toBe(1);
-    });
+       await waitFor(() => {
+         expect(result.current.analyticsAvailability.available).toBe(false);
+       });
 
-    expect(result.current.abiLayerCoverage).toMatchObject({
-      complete: false,
-      completeness: 2 / 5,
-      presentLayers: ['learning', 'reward'],
-      missingLayers: ['link', 'vector', 'hypersphere'],
-    });
-    expect(result.current.abiLayerLedger).toEqual([
-      {
-        layer: 'learning',
-        present: true,
-        contractVersion: 1,
-        status: 'ok',
-        payloadBytes: 0,
-        byteOrderTag: 0,
-        deterministicHash: 72,
-      },
-      {
-        layer: 'reward',
-        present: true,
-        contractVersion: 1,
-        status: 'ok',
-        payloadBytes: 0,
-        byteOrderTag: 0,
-        deterministicHash: 21,
-      },
-      {
-        layer: 'link',
-        present: false,
-        contractVersion: 1,
-        status: 'missing',
-        payloadBytes: 0,
-        byteOrderTag: 0,
-        deterministicHash: null,
-      },
-      {
-        layer: 'vector',
-        present: false,
-        contractVersion: 1,
-        status: 'missing',
-        payloadBytes: 0,
-        byteOrderTag: 0,
-        deterministicHash: null,
-      },
-      {
-        layer: 'hypersphere',
-        present: false,
-        contractVersion: 1,
-        status: 'missing',
-        payloadBytes: 0,
-        byteOrderTag: 0,
-        deterministicHash: null,
-      },
-    ]);
-  });
+       expect(result.current.analyticsAvailability).toMatchObject({
+         available: false,
+         reason: 'contract-error',
+         rollout: {enabled: true, cohort: 'default'},
+       });
+     });
 
   it('surfaces rollout-disabled analytics as unavailable state', async () => {
     analyticsResponse = null;

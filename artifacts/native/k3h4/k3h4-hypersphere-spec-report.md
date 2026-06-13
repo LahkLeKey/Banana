@@ -1,114 +1,146 @@
-# K3H4 Endianness, Geometry, and Harmonic Recap Report
+# K3H4 Refactoring Report
 
-## Purpose
-This report summarizes how the full discussion ties together mathematically and architecturally, and how that maps to the Banana k3h4 implementation from native to API to frontend.
+## Executive Summary
+The discussion is most coherent when modeled as one pipeline instead of disconnected metaphors.
+The pipeline starts with centroidal partitioning (K-means), obtains its geometric interpretation through Voronoi cells, attaches local scale through per-cluster inscribed hypersphere radii, expresses iteration as a fixed-point transform, and enforces correctness through explicit binary contracts (byte order and payload semantics).
 
-## Core Conclusion
-At the mathematical layer, endianness does not change k-means, Voronoi partitions, hyperspheres, or fixed-point convergence.
-At the representation layer, endianness is critical because bytes must be interpreted correctly before geometry exists.
+K3H4 is used as a compact label for this model:
+- K3: three geometric state variables per cluster (center, cell, radius).
+- H4: four model blocks (K-means partitioning, hypersphere geometry, harmonic or spectral analysis, hardware or endianness contract).
 
-Short form:
-- Geometry is invariant under correct decode.
-- Geometry collapses under incorrect decode.
-- Therefore endianness belongs to transport and contract integrity, not clustering semantics.
+The critical technical distinction is assignment geometry:
+- Multiplicative score s_i(x) = ||x - c_i|| / r_i induces multiplicatively weighted Voronoi behavior.
+- Power score p_i(x) = ||x - c_i||^2 - r_i^2 induces a power diagram.
 
-## Conversation Thread, Unified
+These are related but not equivalent. Multiplicative weighting can produce non-convex or disconnected regions; power cells are polyhedral with hyperplane boundaries.
 
-### 1) Geometry and k3h4
-The geometric objects are defined on numeric vectors and distances:
-- coordinates
-- centroids
-- Voronoi cells
-- inscribed hypersphere radii
+## Conversation Recap as a Unified Map
 
-Whether `1.0` is encoded as little-endian or big-endian bytes does not matter once it is decoded into the same numeric value.
+| Conversation concept | Role in K3H4 |
+| --- | --- |
+| Lambda calculus | Fixed-point view of iterative clustering |
+| K-means | Baseline assignment and center update engine |
+| Voronoi cells | Geometry of nearest-center assignment |
+| Inscribed hyperspheres | Cluster-local scale via radius r_i |
+| Endianness | Representation contract before geometry exists |
+| Harmonic or spectral view | Graph-eigenmode layer for non-Euclidean structure |
 
-### 2) Where Endianness Actually Enters
-Endianness appears when moving between:
-- memory bytes
-- wire payload bytes
-- interpreted numeric types
+This map is operational, not mnemonic. In standard Lloyd-style K-means, nearest-center assignment is exactly an ordinary Voronoi partition. Once radius enters assignment, the geometry changes and must be specified explicitly.
 
-Conceptually:
-- `ByteString -> interpreted numbers -> vector space -> geometry`
+## Mathematical Core
 
-If byte order is misinterpreted, decoded numbers are wrong and all downstream geometry (distance, assignment, radius, score) becomes invalid.
+### 1) Baseline K-means and Voronoi Partition
+Given centers c_1,...,c_k in R^d, assignment is
 
-### 3) Lambda Calculus and Stack Positioning
-Pure lambda calculus has no native byte-order concern.
-Endianness appears only after compilation/runtime lowers values into machine words and byte sequences.
+A(x) = argmin_i ||x - c_i||.
 
-Stack view:
-- lambda/fixed-point semantics
-- typed numeric values
-- machine representation
-- bytes in memory/transport
+This defines ordinary Voronoi cells V_i. If each cell uses a centered insphere radius, the maximal centered radius is
 
-So endianness is a lower-layer implementation contract, not a higher-layer mathematical law.
+r_i = 0.5 * min_{j != i} ||c_i - c_j||
 
-### 4) Harmonic Analogy
-Big-endian vs little-endian are not harmonics by themselves.
-But if a byte sequence is treated as a sampled signal, reversing bit order resembles time reversal:
-- magnitude spectrum can remain similar
-- phase relationships change
+for the unweighted Voronoi configuration.
 
-This gives a useful analogy:
-- byte-order convention affects representation phase
-- cluster/hypersphere structure reflects geometric invariants after correct interpretation
+### 2) Radius-Aware Assignment Variants
+Two common radius-aware scores are:
 
-### 5) Hypersphere and Spectral Interpretation
-The discussion linked hypersphere radius to a resonance-style interpretation:
-- larger radius -> lower characteristic frequency proxy
-- smaller radius -> higher characteristic frequency proxy
+s_i(x) = ||x - c_i|| / r_i
 
-In k3h4, this maps to deterministic spectral proxy outputs derived from hypersphere metrics.
+p_i(x) = ||x - c_i||^2 - r_i^2
 
-## How This Maps to Banana Implementation
+Interpretation:
+- Minimizing s_i corresponds to multiplicative weighting.
+- Minimizing p_i corresponds to additive power distance.
 
-### Native Layering
-Native is now explicit about top-level model orchestration:
-- `src/native/k3h4` is the API-facing native orchestration layer.
-- Scaffold exports route through k3h4 bridge functions.
-- Runtime netcode orchestration computes deterministic k3h4 outputs and envelope metadata.
+Practical consequence:
+- Use multiplicative weighting when strict scale normalization is desired and non-convex geometry is acceptable.
+- Use power diagrams when convex polyhedral cells and stable point-location behavior are preferred.
 
-### Contract Integrity
-Endianness and payload correctness are enforced by the ABI envelope path:
-- contract version checks
-- payload length checks
-- CRC checks
-- deterministic error status mapping
+### 3) Fixed-Point Form
+Let F map (C, R, A) to updated (C', R', A') by:
+1. Assignment using selected score family.
+2. Center update by cluster mean.
+3. Radius closure from updated centers.
 
-This enforces the exact boundary where representation correctness must be guaranteed before geometry is trusted.
+The loop seeks a fixed point:
 
-### API and Frontend Role
-- API remains orchestration/transport boundary for contract-safe outputs.
-- Frontend remains presentation-only for authoritative k3h4 values.
+(C, R, A) = F(C, R, A).
 
-This preserves the intended ownership chain:
-- native compute authority
-- API contract authority
-- frontend render authority
+This is the lambda-calculus style reading of an iterative K-means pipeline: a recursive operator converging to a stable state under deterministic tie-break and stopping rules.
 
-## DDD / SOLID Recap
+## K3H4 State Model
 
-### Domain Breakdown
-- Native domain: compute, determinism, envelope integrity.
-- API application domain: request orchestration and response shaping.
-- Frontend presentation domain: rendering and UX state only.
+Per-cluster geometric state:
 
-### SOLID Interpretation
-- SRP: k3h4 bridge isolates model orchestration responsibilities.
-- OCP: runtime internals can evolve while preserving bridge/ABI contracts.
-- LSP: callers see stable behavior for supported contract versions.
-- ISP: consumers call focused build endpoints.
-- DIP: upper layers depend on stable k3h4 abstractions, not low-level internals.
+(c_i, V_i, r_i), i = 1,...,k.
 
-## Operational Rules Going Forward
-- Treat endianness as a contract-gate concern, never a geometry concern.
-- Keep k3h4 model integration entering through `src/native/k3h4` for API-facing paths.
-- Keep ABI validation and mixed-endian tests as mandatory for release safety.
-- Keep frontend free of production recompute and tied to authoritative payloads.
+System-level state can be summarized as:
 
-## Final Recap Statement
-The entire conversation converges on one system principle:
-math and geometry define what should happen, while endianness and ABI contracts ensure every machine agrees on the same numbers so that geometry can exist reliably in production.
+Sigma = (B, H, X, W, Z, C, R, A)
+
+where:
+- B is raw bytes.
+- H is decode and hardware contract (dtype, byte order, alignment, device).
+- X is decoded feature matrix.
+- W is optional affinity graph.
+- Z is embedding (Z = X when spectral layer is bypassed).
+- C are centers, R are radii, A is assignment map.
+
+Decode precedence is strict:
+
+X = Decode_H(B).
+
+If decode is wrong, geometry is undefined regardless of clustering algorithm quality.
+
+## Harmonic Layer: Rigorous Use
+The term harmonic is made precise through spectral clustering.
+When data are graph-like, manifold-shaped, or non-convex in ambient space, construct a graph Laplacian and embed first:
+
+L = D - W, or L_sym = I - D^(-1/2) W D^(-1/2).
+
+Then run the K3H4 clustering stage in the eigenvector embedding Z. This replaces informal harmonic analogy with a mathematically controlled upstream transformation.
+
+## Endianness and Interchange Contract
+Endianness is not a geometric parameter; it is a representation parameter.
+It must be explicit in all binary interchange and ABI boundaries.
+
+Operational rule:
+- Byte-to-number decoding is part of model validity, not an implementation afterthought.
+
+Implementation-aligned safeguards:
+- Versioned envelope.
+- Canonical byte order declaration.
+- Payload length validation.
+- Deterministic error states for malformed, truncated, or unsupported payloads.
+- Optional CRC or equivalent integrity check.
+
+## Banana Mapping
+
+### Native
+- Native orchestration entry remains under src/native/k3h4.
+- Runtime emits deterministic K3H4 outputs and envelope metadata.
+
+### API
+- API remains the orchestration and contract boundary.
+- FFI decode maps envelope fields to stable response contracts.
+
+### Frontend
+- Frontend remains presentation-only for production metrics.
+- No production local recomputation fallback.
+
+This preserves compute authority in native, contract authority in API, and render authority in frontend.
+
+## Recommended Refactoring Path
+1. Choose assignment family explicitly (multiplicative vs power) and document rationale.
+2. Define deterministic tie-break rules and convergence criteria.
+3. Close radii after center updates each iteration.
+4. Keep spectral embedding optional but first-class for non-Euclidean regimes.
+5. Treat binary decode policy as a first-class part of correctness proofs and tests.
+
+## Final Statement
+K3H4 is most useful as a layered contract between geometry and systems:
+- Geometry defines the intended partition and scale behavior.
+- Fixed-point iteration defines the update logic.
+- Spectral preprocessing extends applicability when Euclidean partitions are insufficient.
+- Endianness and ABI contracts ensure all participants compute on the same numbers.
+
+Without the last layer, the first three are mathematically correct but operationally fragile.

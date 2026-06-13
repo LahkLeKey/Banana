@@ -1,4 +1,4 @@
-import {buildNetcodeAbiLayerLedger, type NetcodeAbiLayerCoverage, type NetcodeAbiLayerLedger, summarizeNetcodeAbiLayers} from '@banana/ui';
+import {type NetcodeAbiLayerCoverage, type NetcodeAbiLayerLedger} from '@banana/ui';
 
 import type {NetcodeAnalyticsAbiLayerSnapshot, NetcodeAnalyticsResponse,} from '../../lib/api';
 
@@ -37,6 +37,11 @@ export type K3h4AnalyticsPresentationState = {
 export function mapK3h4AnalyticsToPresentationState(
     analytics: NetcodeAnalyticsResponse,
     ): K3h4AnalyticsPresentationState {
+  if (!analytics.abiLayerCoverage || !analytics.abiLayerLedger) {
+    throw new Error(
+        'Invalid analytics contract: missing authoritative ABI metadata');
+  }
+
   const rewardTier = analytics.reward.rewardTier === 0 ? 'Elite Signal' :
       analytics.reward.rewardTier === 1                ? 'Relevant' :
                                                          'Needs Labeling';
@@ -109,16 +114,14 @@ export function mapK3h4AnalyticsToPresentationState(
   };
 
   const abiLayers = analytics.abiLayers.map((layer) => ({...layer}));
-  const abiLayerCoverage = analytics.abiLayerCoverage ?
-      {
-        expectedLayers: [...analytics.abiLayerCoverage.expectedLayers],
-        presentLayers: [...analytics.abiLayerCoverage.presentLayers],
-        missingLayers: [...analytics.abiLayerCoverage.missingLayers],
-        completeness: analytics.abiLayerCoverage.completeness,
-        complete: analytics.abiLayerCoverage.complete,
-      } :
-      summarizeNetcodeAbiLayers(abiLayers);
-  const abiLayerLedger = buildNetcodeAbiLayerLedger(abiLayers);
+  const abiLayerCoverage = {
+    expectedLayers: [...analytics.abiLayerCoverage.expectedLayers],
+    presentLayers: [...analytics.abiLayerCoverage.presentLayers],
+    missingLayers: [...analytics.abiLayerCoverage.missingLayers],
+    completeness: analytics.abiLayerCoverage.completeness,
+    complete: analytics.abiLayerCoverage.complete,
+  };
+  const abiLayerLedger = analytics.abiLayerLedger.map((layer) => ({...layer}));
 
   return {
     rewardSignal: {

@@ -253,6 +253,53 @@ describe('netcode analytics contract', () => {
           ],
           missingLayers: [],
         });
+        expect(json.abiLayerLedger).toEqual([
+          {
+            layer: 'learning',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 0,
+            byteOrderTag: 0,
+            deterministicHash: 88,
+          },
+          {
+            layer: 'reward',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 0,
+            byteOrderTag: 0,
+            deterministicHash: 144,
+          },
+          {
+            layer: 'link',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 0,
+            byteOrderTag: 0,
+            deterministicHash: 30,
+          },
+          {
+            layer: 'vector',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 0,
+            byteOrderTag: 0,
+            deterministicHash: 3,
+          },
+          {
+            layer: 'hypersphere',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 892,
+            byteOrderTag: 0x01020304,
+            deterministicHash: 123456,
+          },
+        ]);
         const payload = response.json() as {
           hypersphere: {
             nodes: Array<{inradius: number; nearestNeighborDistance: number;}>;

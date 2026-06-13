@@ -106,6 +106,102 @@ extern "C"
         int allow_byte_swapped_tag);
 
     /*
+     * K3H4 ABI aliases keep the public ABI language aligned to the
+     * hypersphere contract while preserving existing netcode symbols.
+     */
+    #define RUNTIME_K3H4_CONTRACT_VERSION RUNTIME_NETCODE_K3H4_CONTRACT_VERSION
+    #define RUNTIME_K3H4_BYTE_ORDER_TAG RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG
+    #define RUNTIME_K3H4_BYTE_ORDER_TAG_SWAPPED RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG_SWAPPED
+
+    typedef RuntimeNetcodeContractStatus RuntimeK3h4ContractStatus;
+    typedef RuntimeNetcodeContractEnvelopeHeader RuntimeK3h4ContractEnvelopeHeader;
+    typedef RuntimeNetcodeSignalInput RuntimeK3h4SignalInput;
+    typedef RuntimeNetcodeLinkSignalInput RuntimeK3h4LinkSignalInput;
+    typedef RuntimeNetcodeVectorSignalInput RuntimeK3h4VectorSignalInput;
+
+    #define RUNTIME_K3H4_CONTRACT_OK RUNTIME_NETCODE_CONTRACT_OK
+    #define RUNTIME_K3H4_CONTRACT_UNSUPPORTED_VERSION RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION
+    #define RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD
+    #define RUNTIME_K3H4_CONTRACT_NONFINITE_VALUE RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE
+    #define RUNTIME_K3H4_CONTRACT_CRC_MISMATCH RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH
+
+    static inline void runtime_k3h4_abi_reset(void)
+    {
+        runtime_netcode_abi_reset();
+    }
+
+    static inline void runtime_k3h4_abi_record_node_tap(RuntimeNetcodeNode node)
+    {
+        runtime_netcode_abi_record_node_tap(node);
+    }
+
+    static inline void runtime_k3h4_abi_record_action(RuntimeNetcodeAction action)
+    {
+        runtime_netcode_abi_record_action(action);
+    }
+
+    static inline RuntimeNetcodeNode runtime_k3h4_abi_get_focus_node(void)
+    {
+        return runtime_netcode_abi_get_focus_node();
+    }
+
+    static inline int runtime_k3h4_abi_get_ledger(RuntimeNetcodeInteractionLedger *out_ledger)
+    {
+        return runtime_netcode_abi_get_ledger(out_ledger);
+    }
+
+    static inline int runtime_k3h4_abi_build_learning(RuntimeK3h4SignalInput signal_input,
+                                                      RuntimeNetcodeLearningOutput *out_output)
+    {
+        return runtime_netcode_abi_build_learning(signal_input, out_output);
+    }
+
+    static inline int runtime_k3h4_abi_build_reward(RuntimeK3h4SignalInput signal_input,
+                                                    int interaction_signal,
+                                                    RuntimeNetcodeRewardOutput *out_output)
+    {
+        return runtime_netcode_abi_build_reward(signal_input, interaction_signal, out_output);
+    }
+
+    static inline int runtime_k3h4_abi_build_link(RuntimeK3h4LinkSignalInput signal_input,
+                                                  RuntimeNetcodeLinkOutput *out_output)
+    {
+        return runtime_netcode_abi_build_link(signal_input, out_output);
+    }
+
+    static inline int runtime_k3h4_abi_build_vector(RuntimeK3h4VectorSignalInput signal_input,
+                                                    RuntimeNetcodeVectorOutput *out_output)
+    {
+        return runtime_netcode_abi_build_vector(signal_input, out_output);
+    }
+
+    static inline int runtime_k3h4_abi_build_hypersphere(RuntimeK3h4VectorSignalInput signal_input,
+                                                         RuntimeNetcodeHypersphereOutput *out_output)
+    {
+        return runtime_netcode_abi_build_hypersphere(signal_input, out_output);
+    }
+
+    static inline int runtime_k3h4_abi_hypersphere_payload_bytes(void)
+    {
+        return runtime_netcode_abi_hypersphere_payload_bytes();
+    }
+
+    static inline int runtime_k3h4_abi_encode_hypersphere_envelope(
+        const RuntimeNetcodeHypersphereOutput *payload,
+        RuntimeK3h4ContractEnvelopeHeader *out_header)
+    {
+        return runtime_netcode_abi_encode_hypersphere_envelope(payload, out_header);
+    }
+
+    static inline RuntimeK3h4ContractStatus runtime_k3h4_abi_validate_hypersphere_envelope(
+        const RuntimeK3h4ContractEnvelopeHeader *header,
+        const RuntimeNetcodeHypersphereOutput *payload,
+        int allow_byte_swapped_tag)
+    {
+        return runtime_netcode_abi_validate_hypersphere_envelope(header, payload, allow_byte_swapped_tag);
+    }
+
+    /*
      * RuntimeNetcodeHypersphereOutput now carries deterministic K-means
      * sections (centers/radii/scores/spectral/observability) through the ABI
      * bridge. The bridge keeps these fields as plain data pass-through.

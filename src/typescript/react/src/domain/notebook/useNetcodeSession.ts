@@ -334,6 +334,20 @@ export function useNetcodeSession({
               return;
             }
 
+            if (error instanceof Error &&
+                error.message.toLowerCase().includes(
+                    'invalid analytics contract')) {
+              setAnalyticsAvailability({
+                available: false,
+                reason: 'contract-error',
+                rollout: {
+                  enabled: true,
+                  cohort: 'default',
+                },
+              });
+              return;
+            }
+
             setAnalyticsAvailability({
               available: false,
               reason: 'transport-error',

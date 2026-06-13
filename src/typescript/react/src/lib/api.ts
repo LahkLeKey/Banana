@@ -3,7 +3,7 @@ type ErrorPayload = {
 };
 
 import type {LaunchGateReasonCode, LaunchGateStatusResponse, LaunchGateVerifyResponse} from './launchGateTypes';
-import type {NetcodeAbiLayerCoverage, NetcodeAbiLayerKind, NetcodeAbiLayerSnapshot} from '@banana/ui';
+import type {NetcodeAbiLayerCoverage, NetcodeAbiLayerKind, NetcodeAbiLayerLedger, NetcodeAbiLayerSnapshot} from '@banana/ui';
 
 type BananaSummaryResponse = {
   banana: number;
@@ -108,6 +108,8 @@ export type NetcodeAnalyticsAbiLayerSnapshot = NetcodeAbiLayerSnapshot;
 
 export type NetcodeAnalyticsAbiLayerCoverage = NetcodeAbiLayerCoverage;
 
+export type NetcodeAnalyticsAbiLayerLedger = NetcodeAbiLayerLedger;
+
 export type NetcodeAnalyticsLspRepresentation = {
   language: 'netcode.analytics.v1'; boundedContext: 'netcode';
   aggregate: 'k3h4';
@@ -141,8 +143,8 @@ export type NetcodeAnalyticsResponse = {
   };
   k3h4: NetcodeHypersphereKmeansPayload;
   abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
-  // Optional for compatibility with older API payloads.
-  abiLayerCoverage?: NetcodeAnalyticsAbiLayerCoverage;
+  abiLayerCoverage: NetcodeAnalyticsAbiLayerCoverage;
+  abiLayerLedger: NetcodeAnalyticsAbiLayerLedger;
   rollout: NetcodeAnalyticsRollout;
 };
 
