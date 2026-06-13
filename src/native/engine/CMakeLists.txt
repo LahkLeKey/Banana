@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+include(CheckIncludeFile)
+
 if(NOT MSVC)
   # GNU/Clang builds are stricter about NULL visibility; force-include stddef
   # across C translation units to keep cross-platform builds consistent.
@@ -205,6 +207,8 @@ set(BANANA_RENDER_BACKEND "${BANANA_RENDER_BACKEND_DEFAULT}" CACHE STRING
   "Native renderer backend: glfw or dx12")
 set_property(CACHE BANANA_RENDER_BACKEND PROPERTY STRINGS glfw dx12)
 
+option(BANANA_NETCODE_ENABLE_BLAS "Enable optional BLAS acceleration for netcode kmeans distance kernels" ON)
+
 target_include_directories(banana_engine_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/render
@@ -333,6 +337,27 @@ if(TRUE)
     message(STATUS "[engine] Parallel controller sync: OpenMP enabled")
   else()
     message(FATAL_ERROR "[engine] OpenMP is required: strict parallel runtime has no serial fallback")
+  endif()
+
+  if(BANANA_NETCODE_ENABLE_BLAS)
+    find_package(BLAS QUIET)
+    if(BLAS_FOUND)
+      set(CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES})
+      check_include_file(cblas.h BANANA_HAS_CBLAS_HEADER)
+      unset(CMAKE_REQUIRED_LIBRARIES)
+
+      if(BANANA_HAS_CBLAS_HEADER)
+        target_link_libraries(banana_engine_core PUBLIC BLAS::BLAS)
+        target_compile_definitions(banana_engine_core PUBLIC BANANA_ENGINE_HAS_CBLAS=1)
+        message(STATUS "[engine] Netcode kmeans acceleration: CBLAS enabled")
+      else()
+        message(STATUS "[engine] BLAS found without cblas.h; using deterministic scalar kmeans backend")
+      endif()
+    else()
+      message(STATUS "[engine] BLAS not found; using deterministic scalar kmeans backend")
+    endif()
+  else()
+    message(STATUS "[engine] Netcode kmeans BLAS acceleration disabled by BANANA_NETCODE_ENABLE_BLAS=OFF")
   endif()
 endif()
 

@@ -3,7 +3,18 @@
 #include "netcode_fixed_point.h"
 
 #include <limits.h>
+#include <stdlib.h>
 #include <string.h>
+
+#if defined(BANANA_ENGINE_HAS_CBLAS)
+#include <cblas.h>
+#endif
+
+typedef enum RuntimeNetcodeKmeansBackend
+{
+    RUNTIME_NETCODE_KMEANS_BACKEND_SCALAR = 0,
+    RUNTIME_NETCODE_KMEANS_BACKEND_BLAS = 1
+} RuntimeNetcodeKmeansBackend;
 
 static int clamp(int value, int min_value, int max_value)
 {
@@ -47,8 +58,71 @@ static int64_t squared_distance_q16(
     return sum;
 }
 
+#if defined(BANANA_ENGINE_HAS_CBLAS)
+static int64_t squared_distance_q16_blas(
+    const int *lhs_q16,
+    const int *rhs_q16,
+    int dimensions)
+{
+    float delta[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
+    int dim;
+    float distance;
+
+    for (dim = 0; dim < dimensions; dim++)
+    {
+        delta[dim] = ((float)lhs_q16[dim] - (float)rhs_q16[dim]) / (float)NETCODE_Q16_ONE;
+    }
+
+    distance = cblas_sdot(dimensions, delta, 1, delta, 1);
+    return (int64_t)(distance * (float)NETCODE_Q16_ONE * (float)NETCODE_Q16_ONE + 0.5f);
+}
+#endif
+
+static RuntimeNetcodeKmeansBackend resolve_backend(void)
+{
+    const char *backend_env = getenv("BANANA_NETCODE_KMEANS_BACKEND");
+    if (!backend_env || backend_env[0] == '\0' || strcmp(backend_env, "auto") == 0)
+    {
+#if defined(BANANA_ENGINE_HAS_CBLAS)
+        return RUNTIME_NETCODE_KMEANS_BACKEND_BLAS;
+#else
+        return RUNTIME_NETCODE_KMEANS_BACKEND_SCALAR;
+#endif
+    }
+
+    if (strcmp(backend_env, "blas") == 0)
+    {
+#if defined(BANANA_ENGINE_HAS_CBLAS)
+        return RUNTIME_NETCODE_KMEANS_BACKEND_BLAS;
+#else
+        return RUNTIME_NETCODE_KMEANS_BACKEND_SCALAR;
+#endif
+    }
+
+    return RUNTIME_NETCODE_KMEANS_BACKEND_SCALAR;
+}
+
+static int64_t distance_for_backend(
+    RuntimeNetcodeKmeansBackend backend,
+    const int *lhs_q16,
+    const int *rhs_q16,
+    int dimensions)
+{
+#if defined(BANANA_ENGINE_HAS_CBLAS)
+    if (backend == RUNTIME_NETCODE_KMEANS_BACKEND_BLAS)
+    {
+        return squared_distance_q16_blas(lhs_q16, rhs_q16, dimensions);
+    }
+#else
+    (void)backend;
+#endif
+
+    return squared_distance_q16(lhs_q16, rhs_q16, dimensions);
+}
+
 static int choose_cluster(
     const int vector_q16[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
+    RuntimeNetcodeKmeansBackend backend,
     int cluster_count,
     int dimensions,
     const int centers_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS])
@@ -59,7 +133,7 @@ static int choose_cluster(
 
     for (cluster_index = 0; cluster_index < cluster_count; cluster_index++)
     {
-        int64_t distance = squared_distance_q16(vector_q16, centers_q16[cluster_index], dimensions);
+        int64_t distance = distance_for_backend(backend, vector_q16, centers_q16[cluster_index], dimensions);
         if (distance < selected_distance)
         {
             selected_distance = distance;
@@ -84,6 +158,7 @@ int runtime_netcode_kmeans_compute(
     int updated_centers_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS] = {{0}};
     int assignments[RUNTIME_NETCODE_VECTOR_NODE_COUNT] = {0};
     int member_counts[RUNTIME_NETCODE_VECTOR_NODE_COUNT] = {0};
+    RuntimeNetcodeKmeansBackend backend;
     int iteration;
     int vector_index;
     int cluster_index;
@@ -103,6 +178,7 @@ int runtime_netcode_kmeans_compute(
     cluster_count = clamp(cluster_count, 1, vector_count);
     max_iterations = max_iterations <= 0 ? 32 : max_iterations;
     convergence_threshold_q16 = convergence_threshold_q16 <= 0 ? 8 : convergence_threshold_q16;
+    backend = resolve_backend();
 
     float_vectors_to_q16(vectors, vector_count, dimensions, vectors_q16);
 
@@ -129,7 +205,7 @@ int runtime_netcode_kmeans_compute(
 
         for (vector_index = 0; vector_index < vector_count; vector_index++)
         {
-            int chosen_cluster = choose_cluster(vectors_q16[vector_index], cluster_count, dimensions, centers_q16);
+            int chosen_cluster = choose_cluster(vectors_q16[vector_index], backend, cluster_count, dimensions, centers_q16);
             if (iteration == 0 || assignments[vector_index] != chosen_cluster)
             {
                 assignment_changes += 1;

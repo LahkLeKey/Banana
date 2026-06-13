@@ -23,6 +23,11 @@ cmake -S src/native -B out/v3-native
 cmake --build out/v3-native
 ```
 
+### Optional high-performance backend knobs
+- `BANANA_NETCODE_ENABLE_BLAS=ON|OFF` (CMake option, default `ON`): enables CBLAS path when `cblas.h` and BLAS libs are available.
+- `BANANA_NETCODE_KMEANS_BACKEND=auto|blas|scalar` (runtime env): selects distance kernel backend. `auto` prefers BLAS when compiled in; otherwise deterministic scalar path.
+- CUDA/OpenCL/Eigen integration can be layered behind the same backend selector once toolchain/profile support is added for the target environment.
+
 ## 3) Run focused native tests
 ```bash
 ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|kmeans" --output-on-failure
