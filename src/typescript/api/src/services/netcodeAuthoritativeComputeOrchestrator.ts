@@ -88,6 +88,16 @@ function mapHypersphereBuildError(error: unknown):
   return undefined;
 }
 
+function resolveRewardInteractionSignal(
+    request: NetcodeAnalyticsAuthoritativeRequest,
+    ): number {
+  if (typeof request.interactionSignal === 'number') {
+    return request.interactionSignal;
+  }
+
+  return Math.round((request.modelConfidence * 2 + request.policyMomentum) / 3);
+}
+
 class NativeNetcodeAuthoritativeComputeOrchestrator implements
     NetcodeAnalyticsAuthoritativeComputeOrchestrator {
   constructor(private readonly netcode: NativeNetcodeService) {}
@@ -104,9 +114,7 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
           branchPressure: request.branchPressure,
           workflowDepth: request.workflowDepth,
         },
-        typeof request.interactionSignal === 'number' ?
-            request.interactionSignal :
-            request.modelConfidence,
+        resolveRewardInteractionSignal(request),
     );
 
     const link = await this.netcode.buildLink({

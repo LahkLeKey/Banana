@@ -200,7 +200,7 @@ describe('netcode analytics contract', () => {
         });
 
         expect(response.statusCode).toBe(200);
-        expect(captured.rewardSignal).toBe(77);
+  expect(captured.rewardSignal).toBe(73);
         expect(captured.linkSignal).toBe(66);
         const json = response.json();
         expect(json).toMatchObject({
@@ -234,6 +234,35 @@ describe('netcode analytics contract', () => {
 
         await app.close();
       });
+
+  test('prefers explicit interactionSignal over blended fallback', async () => {
+    const captured: CapturedArgs = {};
+    const app = await createApp(createFakeNetcode(captured));
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/analytics',
+      payload: {
+        callDensity: 10,
+        questPercent: 20,
+        playerLevel: 30,
+        comboStreak: 40,
+        branchPressure: 50,
+        dependencyPulse: 60,
+        workflowDepth: 2,
+        networkDimensions: 6,
+        modelConfidence: 77,
+        policyMomentum: 66,
+        interactionSignal: 91,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(captured.rewardSignal).toBe(91);
+    expect(captured.linkSignal).toBe(66);
+
+    await app.close();
+  });
 
   test('rejects invalid analytics payloads', async () => {
     const app = await createApp(createFakeNetcode({}));
