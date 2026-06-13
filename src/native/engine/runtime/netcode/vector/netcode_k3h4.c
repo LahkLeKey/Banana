@@ -1,4 +1,4 @@
-#include "netcode_kmeans.h"
+#include "netcode_k3h4.h"
 
 #include "netcode_fixed_point.h"
 
@@ -10,11 +10,11 @@
 #include <cblas.h>
 #endif
 
-typedef enum RuntimeNetcodeKmeansBackend
+typedef enum RuntimeNetcodeK3h4Backend
 {
-    RUNTIME_NETCODE_KMEANS_BACKEND_SCALAR = 0,
-    RUNTIME_NETCODE_KMEANS_BACKEND_BLAS = 1
-} RuntimeNetcodeKmeansBackend;
+    RUNTIME_NETCODE_K3H4_BACKEND_SCALAR = 0,
+    RUNTIME_NETCODE_K3H4_BACKEND_BLAS = 1
+} RuntimeNetcodeK3h4Backend;
 
 static int clamp(int value, int min_value, int max_value)
 {
@@ -78,38 +78,38 @@ static int64_t squared_distance_q16_blas(
 }
 #endif
 
-static RuntimeNetcodeKmeansBackend resolve_backend(void)
+static RuntimeNetcodeK3h4Backend resolve_backend(void)
 {
-    const char *backend_env = getenv("BANANA_NETCODE_KMEANS_BACKEND");
+    const char *backend_env = getenv("BANANA_NETCODE_K3H4_BACKEND");
     if (!backend_env || backend_env[0] == '\0' || strcmp(backend_env, "auto") == 0)
     {
 #if defined(BANANA_ENGINE_HAS_CBLAS)
-        return RUNTIME_NETCODE_KMEANS_BACKEND_BLAS;
+        return RUNTIME_NETCODE_K3H4_BACKEND_BLAS;
 #else
-        return RUNTIME_NETCODE_KMEANS_BACKEND_SCALAR;
+        return RUNTIME_NETCODE_K3H4_BACKEND_SCALAR;
 #endif
     }
 
     if (strcmp(backend_env, "blas") == 0)
     {
 #if defined(BANANA_ENGINE_HAS_CBLAS)
-        return RUNTIME_NETCODE_KMEANS_BACKEND_BLAS;
+        return RUNTIME_NETCODE_K3H4_BACKEND_BLAS;
 #else
-        return RUNTIME_NETCODE_KMEANS_BACKEND_SCALAR;
+        return RUNTIME_NETCODE_K3H4_BACKEND_SCALAR;
 #endif
     }
 
-    return RUNTIME_NETCODE_KMEANS_BACKEND_SCALAR;
+    return RUNTIME_NETCODE_K3H4_BACKEND_SCALAR;
 }
 
 static int64_t distance_for_backend(
-    RuntimeNetcodeKmeansBackend backend,
+    RuntimeNetcodeK3h4Backend backend,
     const int *lhs_q16,
     const int *rhs_q16,
     int dimensions)
 {
 #if defined(BANANA_ENGINE_HAS_CBLAS)
-    if (backend == RUNTIME_NETCODE_KMEANS_BACKEND_BLAS)
+    if (backend == RUNTIME_NETCODE_K3H4_BACKEND_BLAS)
     {
         return squared_distance_q16_blas(lhs_q16, rhs_q16, dimensions);
     }
@@ -122,7 +122,7 @@ static int64_t distance_for_backend(
 
 static int choose_cluster(
     const int vector_q16[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
-    RuntimeNetcodeKmeansBackend backend,
+    RuntimeNetcodeK3h4Backend backend,
     int cluster_count,
     int dimensions,
     const int centers_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS])
@@ -144,21 +144,21 @@ static int choose_cluster(
     return selected_cluster;
 }
 
-int runtime_netcode_kmeans_compute(
+int runtime_netcode_k3h4_compute(
     const float vectors[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
     int vector_count,
     int dimensions,
     int cluster_count,
     int max_iterations,
     int convergence_threshold_q16,
-    RuntimeNetcodeKmeansResult *out_result)
+    RuntimeNetcodeK3h4Result *out_result)
 {
     int vectors_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS] = {{0}};
     int centers_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS] = {{0}};
     int updated_centers_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS] = {{0}};
     int assignments[RUNTIME_NETCODE_VECTOR_NODE_COUNT] = {0};
     int member_counts[RUNTIME_NETCODE_VECTOR_NODE_COUNT] = {0};
-    RuntimeNetcodeKmeansBackend backend;
+    RuntimeNetcodeK3h4Backend backend;
     int iteration;
     int vector_index;
     int cluster_index;
@@ -170,7 +170,7 @@ int runtime_netcode_kmeans_compute(
         if (out_result)
         {
             memset(out_result, 0, sizeof(*out_result));
-            out_result->convergence_status = RUNTIME_NETCODE_KMEANS_INVALID_INPUT;
+            out_result->convergence_status = RUNTIME_NETCODE_K3H4_INVALID_INPUT;
         }
         return -1;
     }
@@ -193,7 +193,7 @@ int runtime_netcode_kmeans_compute(
     memset(out_result, 0, sizeof(*out_result));
     out_result->cluster_count = cluster_count;
     out_result->vector_count = vector_count;
-    out_result->convergence_status = RUNTIME_NETCODE_KMEANS_MAX_ITERATIONS_EXCEEDED;
+    out_result->convergence_status = RUNTIME_NETCODE_K3H4_MAX_ITERATIONS_EXCEEDED;
 
     for (iteration = 0; iteration < max_iterations; iteration++)
     {
@@ -253,7 +253,7 @@ int runtime_netcode_kmeans_compute(
 
         if (assignment_changes == 0 || max_center_shift <= convergence_threshold_q16)
         {
-            out_result->convergence_status = RUNTIME_NETCODE_KMEANS_CONVERGED;
+            out_result->convergence_status = RUNTIME_NETCODE_K3H4_CONVERGED;
             break;
         }
     }

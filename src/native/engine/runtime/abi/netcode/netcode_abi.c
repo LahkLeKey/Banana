@@ -1,6 +1,7 @@
 #include "netcode_abi.h"
 
 #include "../../netcode/contract/netcode_contract.h"
+#include "../../netcode/k3h4/netcode_k3h4_orchestrator.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -48,8 +49,8 @@ int runtime_netcode_abi_encode_hypersphere_envelope(
 
     payload_bytes = runtime_netcode_abi_hypersphere_payload_bytes();
 
-    out_header->contract_version = RUNTIME_NETCODE_HYPERSPHERE_KMEANS_CONTRACT_VERSION;
-    out_header->byte_order_tag = RUNTIME_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG;
+    out_header->contract_version = RUNTIME_NETCODE_K3H4_CONTRACT_VERSION;
+    out_header->byte_order_tag = RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG;
     out_header->payload_bytes = payload_bytes;
     out_header->payload_crc32 = (int)crc32_compute((const uint8_t *)payload, (size_t)payload_bytes);
     return 0;
@@ -83,13 +84,13 @@ RuntimeNetcodeContractStatus runtime_netcode_abi_validate_hypersphere_envelope(
     if (!header || !payload)
         return RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD;
 
-    if (header->contract_version != RUNTIME_NETCODE_HYPERSPHERE_KMEANS_CONTRACT_VERSION)
+    if (header->contract_version != RUNTIME_NETCODE_K3H4_CONTRACT_VERSION)
         return RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION;
 
-    if (header->byte_order_tag != RUNTIME_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG)
+    if (header->byte_order_tag != RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG)
     {
         if (!(allow_byte_swapped_tag &&
-              header->byte_order_tag == RUNTIME_NETCODE_HYPERSPHERE_KMEANS_BYTE_ORDER_TAG_SWAPPED))
+              header->byte_order_tag == RUNTIME_NETCODE_K3H4_BYTE_ORDER_TAG_SWAPPED))
         {
             return RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD;
         }
@@ -137,100 +138,148 @@ int runtime_netcode_abi_get_ledger(RuntimeNetcodeInteractionLedger *out_ledger)
 int runtime_netcode_abi_build_learning(RuntimeNetcodeSignalInput signal_input,
                                        RuntimeNetcodeLearningOutput *out_output)
 {
-    RuntimeNetcodeLearningInput input;
+    RuntimeNetcodeK3h4Request request;
+    RuntimeNetcodeK3h4FullOutput full_output;
 
     if (!out_output)
         return -1;
 
-    if (runtime_netcode_contract_get_ledger(&input.ledger) != 0)
+    memset(&request, 0, sizeof(request));
+    if (runtime_netcode_contract_get_ledger(&request.ledger) != 0)
         return -1;
 
-    input.call_density = signal_input.call_density;
-    input.quest_percent = signal_input.quest_percent;
-    input.combo_streak = signal_input.combo_streak;
-    input.branch_pressure = signal_input.branch_pressure;
-    input.workflow_depth = signal_input.workflow_depth;
+    request.call_density = signal_input.call_density;
+    request.quest_percent = signal_input.quest_percent;
+    request.combo_streak = signal_input.combo_streak;
+    request.branch_pressure = signal_input.branch_pressure;
+    request.workflow_depth = signal_input.workflow_depth;
 
-    return runtime_netcode_model_build(&input, out_output);
+    if (runtime_netcode_k3h4_orchestrate_full(&request, &full_output) != 0)
+        return -1;
+
+    *out_output = full_output.learning;
+    return 0;
 }
 
 int runtime_netcode_abi_build_reward(RuntimeNetcodeSignalInput signal_input,
                                      int interaction_signal,
                                      RuntimeNetcodeRewardOutput *out_output)
 {
-    RuntimeNetcodeRewardInput input;
+    RuntimeNetcodeK3h4Request request;
+    RuntimeNetcodeK3h4FullOutput full_output;
 
     if (!out_output)
         return -1;
 
-    input.call_density = signal_input.call_density;
-    input.quest_percent = signal_input.quest_percent;
-    input.combo_streak = signal_input.combo_streak;
-    input.branch_pressure = signal_input.branch_pressure;
-    input.workflow_depth = signal_input.workflow_depth;
-    input.interaction_signal = interaction_signal;
+    memset(&request, 0, sizeof(request));
+    if (runtime_netcode_contract_get_ledger(&request.ledger) != 0)
+        return -1;
 
-    return runtime_netcode_reward_build(&input, out_output);
+    request.call_density = signal_input.call_density;
+    request.quest_percent = signal_input.quest_percent;
+    request.combo_streak = signal_input.combo_streak;
+    request.branch_pressure = signal_input.branch_pressure;
+    request.workflow_depth = signal_input.workflow_depth;
+    request.interaction_signal = interaction_signal;
+
+    if (runtime_netcode_k3h4_orchestrate_full(&request, &full_output) != 0)
+        return -1;
+
+    *out_output = full_output.reward;
+    return 0;
 }
 
 int runtime_netcode_abi_build_link(RuntimeNetcodeLinkSignalInput signal_input,
                                    RuntimeNetcodeLinkOutput *out_output)
 {
-    RuntimeNetcodeLinkInput input;
+    RuntimeNetcodeK3h4Request request;
+    RuntimeNetcodeK3h4FullOutput full_output;
 
     if (!out_output)
         return -1;
 
-    input.call_density = signal_input.call_density;
-    input.quest_percent = signal_input.quest_percent;
-    input.player_level = signal_input.player_level;
-    input.combo_streak = signal_input.combo_streak;
-    input.branch_pressure = signal_input.branch_pressure;
-    input.dependency_pulse = signal_input.dependency_pulse;
-    input.interaction_signal = signal_input.interaction_signal;
+    memset(&request, 0, sizeof(request));
+    if (runtime_netcode_contract_get_ledger(&request.ledger) != 0)
+        return -1;
 
-    return runtime_netcode_link_build(&input, out_output);
+    request.call_density = signal_input.call_density;
+    request.quest_percent = signal_input.quest_percent;
+    request.player_level = signal_input.player_level;
+    request.combo_streak = signal_input.combo_streak;
+    request.branch_pressure = signal_input.branch_pressure;
+    request.dependency_pulse = signal_input.dependency_pulse;
+    request.interaction_signal = signal_input.interaction_signal;
+
+    if (runtime_netcode_k3h4_orchestrate_full(&request, &full_output) != 0)
+        return -1;
+
+    *out_output = full_output.link;
+    return 0;
 }
 
 int runtime_netcode_abi_build_vector(RuntimeNetcodeVectorSignalInput signal_input,
                                      RuntimeNetcodeVectorOutput *out_output)
 {
-    RuntimeNetcodeVectorInput input;
+    RuntimeNetcodeK3h4Request request;
+    RuntimeNetcodeK3h4FullOutput full_output;
 
     if (!out_output)
         return -1;
 
-    input.call_density = signal_input.call_density;
-    input.quest_percent = signal_input.quest_percent;
-    input.player_level = signal_input.player_level;
-    input.combo_streak = signal_input.combo_streak;
-    input.branch_pressure = signal_input.branch_pressure;
-    input.dependency_pulse = signal_input.dependency_pulse;
-    input.workflow_depth = signal_input.workflow_depth;
-    input.neural_relevance_score = signal_input.neural_relevance_score;
-    input.network_dimensions = signal_input.network_dimensions;
-    input.model_confidence = signal_input.model_confidence;
-    input.policy_momentum = signal_input.policy_momentum;
+    memset(&request, 0, sizeof(request));
+    if (runtime_netcode_contract_get_ledger(&request.ledger) != 0)
+        return -1;
 
-    return runtime_netcode_vector_build(&input, out_output);
+    request.call_density = signal_input.call_density;
+    request.quest_percent = signal_input.quest_percent;
+    request.player_level = signal_input.player_level;
+    request.combo_streak = signal_input.combo_streak;
+    request.branch_pressure = signal_input.branch_pressure;
+    request.dependency_pulse = signal_input.dependency_pulse;
+    request.workflow_depth = signal_input.workflow_depth;
+    request.neural_relevance_score = signal_input.neural_relevance_score;
+    request.network_dimensions = signal_input.network_dimensions;
+    request.model_confidence = signal_input.model_confidence;
+    request.policy_momentum = signal_input.policy_momentum;
+
+    if (runtime_netcode_k3h4_orchestrate_full(&request, &full_output) != 0)
+        return -1;
+
+    *out_output = full_output.vector;
+    return 0;
 }
 
 int runtime_netcode_abi_build_hypersphere(RuntimeNetcodeVectorSignalInput signal_input,
                                           RuntimeNetcodeHypersphereOutput *out_output)
 {
-    RuntimeNetcodeVectorOutput vector_output;
+    RuntimeNetcodeK3h4Request request;
+    RuntimeNetcodeK3h4FullOutput full_output;
 
     if (!out_output)
         return -1;
 
-    memset(&vector_output, 0, sizeof(vector_output));
+    memset(&request, 0, sizeof(request));
+    if (runtime_netcode_contract_get_ledger(&request.ledger) != 0)
+        return -1;
+
     memset(out_output, 0, sizeof(*out_output));
 
-    if (runtime_netcode_abi_build_vector(signal_input, &vector_output) != 0)
+    request.call_density = signal_input.call_density;
+    request.quest_percent = signal_input.quest_percent;
+    request.player_level = signal_input.player_level;
+    request.combo_streak = signal_input.combo_streak;
+    request.branch_pressure = signal_input.branch_pressure;
+    request.dependency_pulse = signal_input.dependency_pulse;
+    request.workflow_depth = signal_input.workflow_depth;
+    request.neural_relevance_score = signal_input.neural_relevance_score;
+    request.network_dimensions = signal_input.network_dimensions;
+    request.model_confidence = signal_input.model_confidence;
+    request.policy_momentum = signal_input.policy_momentum;
+
+    if (runtime_netcode_k3h4_orchestrate_full(&request, &full_output) != 0)
         return -1;
 
-    if (runtime_netcode_hypersphere_build(&vector_output, out_output) != 0)
-        return -1;
+    *out_output = full_output.hypersphere;
 
     if (runtime_netcode_abi_encode_hypersphere_envelope(out_output, (RuntimeNetcodeContractEnvelopeHeader *)&out_output->envelope) != 0)
         return -1;

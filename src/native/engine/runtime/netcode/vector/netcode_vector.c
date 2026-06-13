@@ -1,5 +1,5 @@
 #include "netcode_vector.h"
-#include "netcode_kmeans.h"
+#include "netcode_k3h4.h"
 
 #include <math.h>
 
@@ -59,7 +59,7 @@ static int strength_from_vector(const float *vector, int dimensions)
 int runtime_netcode_vector_build(const RuntimeNetcodeVectorInput *input,
                                  RuntimeNetcodeVectorOutput *out_output)
 {
-    RuntimeNetcodeKmeansResult kmeans_result;
+    RuntimeNetcodeK3h4Result k3h4_result;
     float density;
     float quest;
     float player;
@@ -155,30 +155,30 @@ int runtime_netcode_vector_build(const RuntimeNetcodeVectorInput *input,
     out_output->contract_strength[3] =
         strength_from_vector(out_output->node_vectors[3], dimensions);
 
-    if (runtime_netcode_kmeans_compute(out_output->node_vectors,
+    if (runtime_netcode_k3h4_compute(out_output->node_vectors,
                                        RUNTIME_NETCODE_VECTOR_NODE_COUNT,
                                        dimensions,
                                        RUNTIME_NETCODE_VECTOR_NODE_COUNT,
                                        32,
                                        8,
-                                       &kmeans_result) != 0)
+                                       &k3h4_result) != 0)
     {
         return -1;
     }
 
-    out_output->kmeans_cluster_count = kmeans_result.cluster_count;
-    out_output->kmeans_iteration_count = kmeans_result.iteration_count;
-    out_output->kmeans_convergence_status = kmeans_result.convergence_status;
-    out_output->kmeans_assignment_changes_last_iteration =
-        kmeans_result.assignment_changes_last_iteration;
+    out_output->k3h4_cluster_count = k3h4_result.cluster_count;
+    out_output->k3h4_iteration_count = k3h4_result.iteration_count;
+    out_output->k3h4_convergence_status = k3h4_result.convergence_status;
+    out_output->k3h4_assignment_changes_last_iteration =
+        k3h4_result.assignment_changes_last_iteration;
 
     for (int i = 0; i < RUNTIME_NETCODE_VECTOR_NODE_COUNT; i++)
     {
-        out_output->kmeans_assignments[i] = kmeans_result.assignments[i];
-        out_output->kmeans_member_counts[i] = kmeans_result.member_counts[i];
+        out_output->k3h4_assignments[i] = k3h4_result.assignments[i];
+        out_output->k3h4_member_counts[i] = k3h4_result.member_counts[i];
         for (int d = 0; d < dimensions; d++)
         {
-            out_output->kmeans_centers_q16[i][d] = kmeans_result.centers_q16[i][d];
+            out_output->k3h4_centers_q16[i][d] = k3h4_result.centers_q16[i][d];
         }
     }
 

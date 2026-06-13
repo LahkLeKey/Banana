@@ -14,14 +14,14 @@ static void seed_valid_vector_output(RuntimeNetcodeVectorOutput *output)
 {
     memset(output, 0, sizeof(*output));
     output->dimensions = 6;
-    output->kmeans_cluster_count = 99;
+    output->k3h4_cluster_count = 99;
 }
 
 static void seed_low_cluster_vector_output(RuntimeNetcodeVectorOutput *output)
 {
     memset(output, 0, sizeof(*output));
     output->dimensions = 6;
-    output->kmeans_cluster_count = -5;
+    output->k3h4_cluster_count = -5;
 }
 
 int main(void)

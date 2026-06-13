@@ -43,20 +43,20 @@ extern "C"
         RUNTIME_NETCODE_ENDIANNESS_BYTE_SWAPPED = 1
     } RuntimeNetcodeEndiannessDecodePath;
 
-    typedef struct RuntimeNetcodeKmeansCenter
+    typedef struct RuntimeNetcodeK3h4Center
     {
         int cluster_id;
         int member_count;
         int center_q16[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
-    } RuntimeNetcodeKmeansCenter;
+    } RuntimeNetcodeK3h4Center;
 
-    typedef struct RuntimeNetcodeKmeansRadius
+    typedef struct RuntimeNetcodeK3h4Radius
     {
         int cluster_id;
         int nearest_neighbor_distance_q16;
         int inscribed_radius_q16;
         int radius_state;
-    } RuntimeNetcodeKmeansRadius;
+    } RuntimeNetcodeK3h4Radius;
 
     typedef struct RuntimeNetcodeWeightedVoronoiScore
     {
@@ -75,14 +75,14 @@ extern "C"
         int spectral_state;
     } RuntimeNetcodeSpectralProxy;
 
-    typedef struct RuntimeNetcodeKmeansObservability
+    typedef struct RuntimeNetcodeK3h4Observability
     {
         int convergence_status;
         int iteration_count;
         int assignment_changes_last_iteration;
         int deterministic_hash;
         int endianness_decode_path;
-    } RuntimeNetcodeKmeansObservability;
+    } RuntimeNetcodeK3h4Observability;
 
     typedef struct RuntimeNetcodeEnvelopeMetadata
     {
@@ -101,12 +101,12 @@ extern "C"
         int radial_stability;
         int cluster_count;
         int vector_count;
-        RuntimeNetcodeKmeansCenter centers[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
-        RuntimeNetcodeKmeansRadius radii[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
+        RuntimeNetcodeK3h4Center centers[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
+        RuntimeNetcodeK3h4Radius radii[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
         RuntimeNetcodeWeightedVoronoiScore weighted_voronoi_scores[
             RUNTIME_NETCODE_VECTOR_NODE_COUNT * RUNTIME_NETCODE_VECTOR_NODE_COUNT];
         RuntimeNetcodeSpectralProxy spectral_proxy[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
-        RuntimeNetcodeKmeansObservability observability;
+        RuntimeNetcodeK3h4Observability observability;
         RuntimeNetcodeEnvelopeMetadata envelope;
     } RuntimeNetcodeHypersphereOutput;
 

@@ -173,8 +173,8 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeHypersphereOutput 
 
     for (cluster = 0; cluster < output->cluster_count; cluster++)
     {
-        const RuntimeNetcodeKmeansCenter *center = &output->centers[cluster];
-        const RuntimeNetcodeKmeansRadius *radius = &output->radii[cluster];
+        const RuntimeNetcodeK3h4Center *center = &output->centers[cluster];
+        const RuntimeNetcodeK3h4Radius *radius = &output->radii[cluster];
         const RuntimeNetcodeSpectralProxy *spectral = &output->spectral_proxy[cluster];
 
         if (center->cluster_id != cluster)
@@ -305,7 +305,7 @@ static int assert_cluster_contract_sanity(const RuntimeNetcodeHypersphereOutput 
          score_index++)
     {
         const RuntimeNetcodeWeightedVoronoiScore *score = &output->weighted_voronoi_scores[score_index];
-        const RuntimeNetcodeKmeansRadius *radius;
+        const RuntimeNetcodeK3h4Radius *radius;
 
         if (score->vector_id < 0 || score->vector_id >= output->vector_count)
         {
@@ -549,7 +549,7 @@ int main(void)
 
     memcpy(&canonical_output, &facade_output, sizeof(canonical_output));
 
-    vector_output.kmeans_cluster_count = 0;
+    vector_output.k3h4_cluster_count = 0;
     memset(&facade_output, 0xAA, sizeof(facade_output));
     memset(&pipeline_output, 0x55, sizeof(pipeline_output));
     if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
@@ -565,7 +565,7 @@ int main(void)
     if (facade_output.cluster_count != 1)
         return fail("expected low cluster-count clamp to 1");
 
-    vector_output.kmeans_cluster_count = 99;
+    vector_output.k3h4_cluster_count = 99;
     memset(&facade_output, 0xAA, sizeof(facade_output));
     memset(&pipeline_output, 0x55, sizeof(pipeline_output));
     if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
@@ -581,7 +581,7 @@ int main(void)
     if (facade_output.cluster_count != RUNTIME_NETCODE_VECTOR_NODE_COUNT)
         return fail("expected high cluster-count clamp to vector node count");
 
-    vector_output.kmeans_cluster_count = 2;
+    vector_output.k3h4_cluster_count = 2;
     memset(&facade_output, 0xAB, sizeof(facade_output));
     memset(&pipeline_output, 0xBA, sizeof(pipeline_output));
     if (runtime_netcode_hypersphere_build(&vector_output, &facade_output) != 0)
@@ -826,8 +826,8 @@ int main(void)
             if (facade_output.cluster_count < 1 ||
                 facade_output.cluster_count > RUNTIME_NETCODE_VECTOR_NODE_COUNT)
                 return fail("multi-input parity scenario cluster_count out of bounds");
-            if (facade_output.cluster_count != vector_output.kmeans_cluster_count)
-                return fail("multi-input parity scenario cluster_count drifted from vector kmeans result");
+            if (facade_output.cluster_count != vector_output.k3h4_cluster_count)
+                return fail("multi-input parity scenario cluster_count drifted from vector k3h4 result");
             if (facade_output.observability.deterministic_hash == 0)
                 return fail("multi-input parity scenario deterministic hash should be non-zero");
 
