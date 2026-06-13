@@ -1,6 +1,6 @@
 import {dlopen} from 'bun:ffi';
 
-import {resolveBananaNativeLibraryCandidates, type NativeLibraryCandidateOptions,} from './native-library-candidates';
+import {type NativeLibraryCandidateOptions, resolveBananaNativeLibraryCandidates,} from './native-library-candidates';
 
 type DlopenSymbolDefinition = Parameters<typeof dlopen>[1];
 
@@ -10,7 +10,7 @@ export function loadBananaNativeSymbols<T>(
     symbolDefinitions: DlopenSymbolDefinition,
     featureLabel: string,
     options: LoadNativeSymbolsOptions = {},
-): T {
+    ): T {
   const candidates = resolveBananaNativeLibraryCandidates(options);
   let lastError: unknown = null;
 

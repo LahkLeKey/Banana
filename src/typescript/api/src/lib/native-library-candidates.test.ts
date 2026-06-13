@@ -5,7 +5,7 @@ import path from 'node:path';
 
 import {resolveBananaNativeLibraryCandidates,} from './native-library-candidates';
 
-type EnvState = Record<string, string | undefined>;
+type EnvState = Record<string, string|undefined>;
 
 const createdDirs: string[] = [];
 
@@ -28,16 +28,19 @@ function restoreEnv(state: EnvState): void {
 }
 
 function createTempDir(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'banana-native-candidates-'));
+  const dir =
+      fs.mkdtempSync(path.join(os.tmpdir(), 'banana-native-candidates-'));
   createdDirs.push(dir);
   return dir;
 }
 
 function resolveLibraryBasenames(): {libName: string; plainName: string} {
-  const sample = resolveBananaNativeLibraryCandidates({fallbackDirs: []})
-                     .map((candidate) => path.basename(candidate))
-                     .find((basename) => basename.startsWith('libbanana_native.') ||
-                         basename.startsWith('banana_native.'));
+  const sample =
+      resolveBananaNativeLibraryCandidates({fallbackDirs: []})
+          .map((candidate) => path.basename(candidate))
+          .find(
+              (basename) => basename.startsWith('libbanana_native.') ||
+                  basename.startsWith('banana_native.'));
 
   if (!sample || sample.lastIndexOf('.') < 0) {
     throw new Error('Unable to determine native library extension for tests');
@@ -61,7 +64,8 @@ afterEach(() => {
 
 describe('native library candidates', () => {
   test('accepts BANANA_NATIVE_PATH as a direct file path', () => {
-    const envState = snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+    const envState =
+        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
     try {
       const tmpDir = createTempDir();
       const {libName} = resolveLibraryBasenames();
@@ -71,7 +75,8 @@ describe('native library candidates', () => {
       process.env.BANANA_NATIVE_PATH = directLibraryPath;
       delete process.env.BANANA_NATIVE_SEARCH_ROOTS;
 
-      const candidates = resolveBananaNativeLibraryCandidates({fallbackDirs: []});
+      const candidates =
+          resolveBananaNativeLibraryCandidates({fallbackDirs: []});
       expect(candidates[0]).toBe(directLibraryPath);
     } finally {
       restoreEnv(envState);
@@ -79,14 +84,16 @@ describe('native library candidates', () => {
   });
 
   test('accepts BANANA_NATIVE_PATH as a directory', () => {
-    const envState = snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+    const envState =
+        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
     try {
       const tmpDir = createTempDir();
       const {libName, plainName} = resolveLibraryBasenames();
       process.env.BANANA_NATIVE_PATH = tmpDir;
       delete process.env.BANANA_NATIVE_SEARCH_ROOTS;
 
-      const candidates = resolveBananaNativeLibraryCandidates({fallbackDirs: []});
+      const candidates =
+          resolveBananaNativeLibraryCandidates({fallbackDirs: []});
       expect(candidates).toContain(path.join(tmpDir, libName));
       expect(candidates).toContain(path.join(tmpDir, plainName));
     } finally {
@@ -95,7 +102,8 @@ describe('native library candidates', () => {
   });
 
   test('prioritizes existing paths before missing paths', () => {
-    const envState = snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+    const envState =
+        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
     try {
       const tmpDir = createTempDir();
       const {libName, plainName} = resolveLibraryBasenames();
@@ -106,23 +114,26 @@ describe('native library candidates', () => {
       process.env.BANANA_NATIVE_PATH = tmpDir;
       delete process.env.BANANA_NATIVE_SEARCH_ROOTS;
 
-      const candidates = resolveBananaNativeLibraryCandidates({fallbackDirs: []});
-      expect(candidates.indexOf(existingCandidate)).toBeLessThan(
-          candidates.indexOf(missingCandidate));
+      const candidates =
+          resolveBananaNativeLibraryCandidates({fallbackDirs: []});
+      expect(candidates.indexOf(existingCandidate))
+          .toBeLessThan(candidates.indexOf(missingCandidate));
     } finally {
       restoreEnv(envState);
     }
   });
 
   test('includes BANANA_NATIVE_SEARCH_ROOTS entries', () => {
-    const envState = snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+    const envState =
+        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
     try {
       const tmpDir = createTempDir();
       const {libName, plainName} = resolveLibraryBasenames();
       process.env.BANANA_NATIVE_SEARCH_ROOTS = tmpDir;
       delete process.env.BANANA_NATIVE_PATH;
 
-      const candidates = resolveBananaNativeLibraryCandidates({fallbackDirs: []});
+      const candidates =
+          resolveBananaNativeLibraryCandidates({fallbackDirs: []});
       expect(candidates).toContain(path.join(tmpDir, libName));
       expect(candidates).toContain(path.join(tmpDir, plainName));
     } finally {
@@ -131,12 +142,14 @@ describe('native library candidates', () => {
   });
 
   test('deduplicates repeated candidate roots', () => {
-    const envState = snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
+    const envState =
+        snapshotEnv(['BANANA_NATIVE_PATH', 'BANANA_NATIVE_SEARCH_ROOTS']);
     try {
       process.env.BANANA_NATIVE_SEARCH_ROOTS = process.cwd();
       delete process.env.BANANA_NATIVE_PATH;
 
-      const candidates = resolveBananaNativeLibraryCandidates({fallbackDirs: []});
+      const candidates =
+          resolveBananaNativeLibraryCandidates({fallbackDirs: []});
       expect(new Set(candidates).size).toBe(candidates.length);
     } finally {
       restoreEnv(envState);
