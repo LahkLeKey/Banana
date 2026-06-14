@@ -6,6 +6,7 @@ COPY src/typescript/api/package.json src/typescript/api/bun.lock ./
 RUN bun install
 
 COPY src/typescript/api/src ./src
+COPY notebooks /app/notebooks
 
 ENV HOST=0.0.0.0
 ENV PORT=8081
