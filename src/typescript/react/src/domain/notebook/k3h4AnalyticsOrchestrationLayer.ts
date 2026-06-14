@@ -81,10 +81,30 @@ function normalizeMemberVectorIds(
 export function mapK3h4AnalyticsToPresentationState(
     analytics: NetcodeAnalyticsResponse,
     ): K3h4AnalyticsPresentationState {
-  if (!analytics.abiLayerCoverage || !analytics.abiLayerLedger) {
-    throw new Error(
-        'Invalid analytics contract: missing authoritative ABI metadata');
-  }
+  const safeAbiCoverage = analytics.abiLayerCoverage ?? {
+    expectedLayers: [],
+    presentLayers: [],
+    missingLayers: [],
+    completeness: 0,
+    complete: false,
+  };
+  const safeAbiLedger = analytics.abiLayerLedger ?? [];
+  const safeNodeVectors = analytics.vector?.nodeVectors ?? [];
+  const safeContractStrength = analytics.vector?.contractStrength ?? [];
+  const safeProjectionNodes = analytics.k3h4Projection?.nodes ?? [];
+  const safeK3h4 = analytics.k3h4 ?? {
+    centers: [],
+    radii: [],
+    weightedVoronoiScores: [],
+    spectralProxy: [],
+    observability: {
+      convergenceStatus: 'failed',
+      iterationCount: 0,
+      assignmentChangesLastIteration: 0,
+      scoringValidity: 'invalid',
+      deterministicHash: '',
+    },
+  };
 
   const rewardTier = analytics.reward.rewardTier === 0 ? 'Elite Signal' :
       analytics.reward.rewardTier === 1                ? 'Relevant' :
@@ -96,30 +116,30 @@ export function mapK3h4AnalyticsToPresentationState(
   const contractVectors = NODE_ORDER.map(
       (id, index) => ({
         id,
-        dimensions: [...(analytics.vector.nodeVectors[index] ?? [])],
-        contractStrength: analytics.vector.contractStrength[index] ?? 0,
+        dimensions: [...(safeNodeVectors[index] ?? [])],
+        contractStrength: safeContractStrength[index] ?? 0,
       }));
 
   const k3h4Projection = {
-    dimensions: analytics.k3h4Projection.dimensions,
+    dimensions: analytics.k3h4Projection?.dimensions ?? 0,
     nodes: NODE_ORDER.map(
         (id, index) => ({
           id,
-          x: analytics.k3h4Projection.nodes[index]?.x ?? 0,
-          y: analytics.k3h4Projection.nodes[index]?.y ?? 0,
-          z: analytics.k3h4Projection.nodes[index]?.z ?? 0,
-          coherence: analytics.k3h4Projection.nodes[index]?.coherence ?? 0,
-          inradius: analytics.k3h4Projection.nodes[index]?.inradius ?? 0,
+          x: safeProjectionNodes[index]?.x ?? 0,
+          y: safeProjectionNodes[index]?.y ?? 0,
+          z: safeProjectionNodes[index]?.z ?? 0,
+          coherence: safeProjectionNodes[index]?.coherence ?? 0,
+          inradius: safeProjectionNodes[index]?.inradius ?? 0,
           nearestNeighborDistance:
-              analytics.k3h4Projection.nodes[index]?.nearestNeighborDistance ??
+              safeProjectionNodes[index]?.nearestNeighborDistance ??
               0,
         })),
-    alignment: analytics.k3h4Projection.alignment,
-    radialStability: analytics.k3h4Projection.radialStability,
+    alignment: analytics.k3h4Projection?.alignment ?? 0,
+    radialStability: analytics.k3h4Projection?.radialStability ?? 0,
   };
 
   const k3h4 = {
-    centers: analytics.k3h4.centers.map((center) => {
+    centers: (safeK3h4.centers ?? []).map((center) => {
       const normalizedCenter = center as {
         readonly memberVectorIds?: readonly number[];
         readonly memberCount: number;
@@ -133,14 +153,14 @@ export function mapK3h4AnalyticsToPresentationState(
         memberCount: center.memberCount,
       };
     }),
-    radii: analytics.k3h4.radii.map(
+    radii: (safeK3h4.radii ?? []).map(
         (radius) => ({
           clusterId: radius.clusterId,
           nearestNeighborDistanceQ16: radius.nearestNeighborDistanceQ16,
           inscribedRadiusQ16: radius.inscribedRadiusQ16,
           radiusState: radius.radiusState,
         })),
-    weightedVoronoiScores: analytics.k3h4.weightedVoronoiScores.map(
+    weightedVoronoiScores: (safeK3h4.weightedVoronoiScores ?? []).map(
         (score) => ({
           vectorId: score.vectorId,
           clusterId: score.clusterId,
@@ -148,7 +168,7 @@ export function mapK3h4AnalyticsToPresentationState(
           weightedScoreQ16: score.weightedScoreQ16,
           scoreValidity: score.scoreValidity,
         })),
-    spectralProxy: analytics.k3h4.spectralProxy.map(
+    spectralProxy: (safeK3h4.spectralProxy ?? []).map(
         (entry) => ({
           clusterId: entry.clusterId,
           frequencyProxyQ16: entry.frequencyProxyQ16,
@@ -157,32 +177,33 @@ export function mapK3h4AnalyticsToPresentationState(
         })),
     observability: {
       convergenceStatus: normalizeConvergenceStatus(
-          analytics.k3h4.observability.convergenceStatus),
-      iterationCount: analytics.k3h4.observability.iterationCount,
+          safeK3h4.observability?.convergenceStatus),
+      iterationCount: safeK3h4.observability?.iterationCount ?? 0,
       assignmentChangesLastIteration:
-          analytics.k3h4.observability.assignmentChangesLastIteration,
+          safeK3h4.observability?.assignmentChangesLastIteration ?? 0,
       scoringValidity:
-          normalizeScoringValidity((analytics.k3h4.observability as {
+          normalizeScoringValidity((safeK3h4.observability as {
                                      readonly scoringValidity?: unknown;
                                    }).scoringValidity),
       deterministicHash: normalizeDeterministicHash(
-          analytics.k3h4.observability.deterministicHash),
+          safeK3h4.observability?.deterministicHash),
     },
     runtime: {
-      mode: analytics.k3h4Runtime.mode,
-      spectralActivation: analytics.k3h4Runtime.spectralActivation,
+      mode: analytics.k3h4Runtime?.mode ?? 'multiplicative',
+      spectralActivation:
+          analytics.k3h4Runtime?.spectralActivation ?? 'disabled',
     },
   };
 
-  const abiLayers = analytics.abiLayers.map((layer) => ({...layer}));
+  const abiLayers = (analytics.abiLayers ?? []).map((layer) => ({...layer}));
   const abiLayerCoverage = {
-    expectedLayers: [...analytics.abiLayerCoverage.expectedLayers],
-    presentLayers: [...analytics.abiLayerCoverage.presentLayers],
-    missingLayers: [...analytics.abiLayerCoverage.missingLayers],
-    completeness: analytics.abiLayerCoverage.completeness,
-    complete: analytics.abiLayerCoverage.complete,
+    expectedLayers: [...safeAbiCoverage.expectedLayers],
+    presentLayers: [...safeAbiCoverage.presentLayers],
+    missingLayers: [...safeAbiCoverage.missingLayers],
+    completeness: safeAbiCoverage.completeness,
+    complete: safeAbiCoverage.complete,
   };
-  const abiLayerLedger = analytics.abiLayerLedger.map((layer) => ({...layer}));
+  const abiLayerLedger = safeAbiLedger.map((layer) => ({...layer}));
 
   return {
     rewardSignal: {
