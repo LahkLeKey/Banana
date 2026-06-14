@@ -16,6 +16,7 @@ RUN bun install
 COPY src/typescript/api/src ./src
 COPY notebooks /app/notebooks
 COPY src/native /app/src/native
+COPY tests/native /app/tests/native
 
 RUN cmake -S /app/src/native -B /app/out/native -G Ninja -DCMAKE_BUILD_TYPE=Release \
 	&& cmake --build /app/out/native --target banana_native --parallel \
