@@ -3,6 +3,7 @@
 - `validate-api-parity-governance.sh`: validates API route ownership and parity inventory.
 - `validate-steam-launch-gating.sh`: validates spec 008 setup artifacts and reports completed/remaining task counts.
 - `validate-coherent-world-unified-slice.sh`: CI guard that blocks superseded/new coherent-lane spec drift outside 031.
+- `build-k3h4-standalone-release.sh`: packages a standalone K3H4 model release bundle (native library, ABI header, contracts, metadata, checksum) under `artifacts/native/k3h4/releases/<version>/`.
 - `run-native-feedback-loop.sh`: runs the native human-feedback loop factory in scenario mode or DX12 playloop script mode (`--script`), emitting operator-readable telemetry snapshots.
 - `run-war-test-suites.sh`: scenario-suite orchestrator for the feedback loop factory (`focused`, `evidence`, `soak`, `gameplay`, `legacy`, `mmo-only`) with optional scenario overrides (`warfront`, `negotiate`, `comeback`, `flank`, `pressure`, `truce`, `rally`) and optional `--script-dir` (`<scenario>.dx12play`) execution.
 - `run-dx12-playtest-suites.sh`: launches the DX12 POC with polished demo-scene assets for interactive playtests or autotest sweeps (`playtest`, `showcase`, `metro`, `corridor`, `continent`, `all`, `features`) with optional `--feature <name>` overrides.
@@ -16,3 +17,4 @@ Playtest examples:
 
 Notes:
 - Autotest runs with auto-target enabled inject a move target automatically by setting `BANANA_DX12_POC_AUTOTEST_ALLOW_TARGET=1`.
+- Standalone K3H4 bundle example: `bash scripts/build-k3h4-standalone-release.sh --version 2026.06.14`.
