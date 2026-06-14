@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 
 import {registerFastifyErrorMapper} from '../lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from '../middleware/requestContext.ts';
+import type {K3h4ScalingBenchmarkStatus} from '../services/k3h4ScalingBenchmark.ts';
 import type {K3h4ApplicationOrchestrationLayer} from '../services/k3h4ApplicationOrchestrationLayer.ts';
 import type {NativeNetcodeService} from '../services/nativeNetcode.ts';
 import {type NetcodeAnalyticsAuthoritativeResult, NetcodeAnalyticsOrchestrationError,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
@@ -956,3 +957,121 @@ describe('netcode analytics contract', () => {
         await app.close();
       });
 });
+
+/* --------------------------------------------------------------------------
+ * GET /api/netcode/k3h4/scaling-benchmark contract tests (036)
+ * -------------------------------------------------------------------------- */
+
+async function buildScalingBenchmarkApp(
+    benchmarkStatus: K3h4ScalingBenchmarkStatus,
+        ) {
+          const app = Fastify();
+          registerFastifyErrorMapper(app);
+          await registerRequestContextMiddleware(app);
+          await registerNetcodeRoutes(app, {
+            netcodeAuthoritativeComputeOrchestrator: undefined,
+            k3h4ApplicationOrchestrationLayer: undefined,
+            netcodeService: undefined,
+            scalingBenchmarkLoader: () => benchmarkStatus,
+          });
+          return app;
+        }
+
+        const CANONICAL_BENCHMARK_RESULT = {
+          contractVersion: 1 as const,
+          schemaVersion: 1,
+          series: [
+            {n: 64, k3h4Ns: 1000, attentionNs: 4000},
+            {n: 256, k3h4Ns: 4000, attentionNs: 65000},
+            {n: 1024, k3h4Ns: 16000, attentionNs: 1048000},
+            {n: 4096, k3h4Ns: 64000, attentionNs: 16777000},
+            {n: 16384, k3h4Ns: 256000, attentionNs: 268435000},
+          ],
+          metadata: {
+            calibratedSizes: [64, 256, 1024, 4096, 16384],
+            extrapolatedAbove: null,
+          },
+        } as const;
+
+describe('GET /api/netcode/k3h4/scaling-benchmark', () => {
+  test('returns 200 with scaling series when artifact is available', async () => {
+    const app = await buildScalingBenchmarkApp({
+      kind: 'ok',
+      result: CANONICAL_BENCHMARK_RESULT,
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/scaling-benchmark',
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.contractVersion).toBe(1);
+    expect(Array.isArray(body.series)).toBe(true);
+    expect(body.series).toHaveLength(5);
+    expect(body.series[0]).toMatchObject({n: 64});
+    expect(body.series[4]).toMatchObject({n: 16384});
+    expect(body.metadata.calibratedSizes).toHaveLength(5);
+    expect(body.metadata.extrapolatedAbove).toBeNull();
+
+    await app.close();
+  });
+
+  test('returns 404 with benchmark_not_found when artifact is missing', async () => {
+    const app = await buildScalingBenchmarkApp({kind: 'not_found'});
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/scaling-benchmark',
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({error: 'benchmark_not_found'});
+
+    await app.close();
+  });
+
+  test('returns 503 with benchmark_unavailable when I/O fails', async () => {
+    const app = await buildScalingBenchmarkApp({
+      kind: 'unavailable',
+      reason: 'EACCES: permission denied',
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/scaling-benchmark',
+    });
+
+    expect(response.statusCode).toBe(503);
+    const body = response.json();
+    expect(body.error).toBe('benchmark_unavailable');
+    expect(typeof body.message).toBe('string');
+
+    await app.close();
+  });
+
+  test('series entries include n, k3h4Ns, and attentionNs', async () => {
+    const app = await buildScalingBenchmarkApp({
+      kind: 'ok',
+      result: CANONICAL_BENCHMARK_RESULT,
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/scaling-benchmark',
+    });
+
+    const {series} = response.json() as {series: unknown[]};
+    for (const entry of series) {
+      expect(entry).toMatchObject({
+        n: expect.any(Number),
+        k3h4Ns: expect.any(Number),
+        attentionNs: expect.any(Number),
+      });
+    }
+
+    await app.close();
+  });
+});
+
