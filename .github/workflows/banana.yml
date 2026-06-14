@@ -101,8 +101,8 @@ jobs:
 
       - name: Run Gitleaks secret scan
         uses: gitleaks/gitleaks-action@v2
-        with:
-          args: detect --source . --config .gitleaks.toml --no-banner --redact
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
   typescript-smoke:
     name: Build / TypeScript smoke
@@ -138,7 +138,7 @@ jobs:
         working-directory: src/typescript/shared/ui
 
       - name: UI smoke import
-        run: bun -e 'import "./src/typescript/shared/ui/src/types.ts"; console.log("ui-types-ok");'
+        run: bun -e 'import "./src/typescript/shared/ui/src/index.ts"; console.log("ui-types-ok");'
 
       - name: Install API dependencies
         run: bun install --frozen-lockfile
