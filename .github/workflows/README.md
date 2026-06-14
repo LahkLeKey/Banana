@@ -7,6 +7,12 @@ This repository uses a single workflow harness:
 All managed CI/CD lanes must be orchestrated inside this harness so operators can
 triage one unified graph and one pass/fail summary.
 
+On-demand publishing workflows may exist for operational release packaging where
+no merge-gate signal is required:
+
+- `.github/workflows/steam-publish.yml`
+- `.github/workflows/k3h4-model-release.yml`
+
 ## Scaffolding Rules (DDD + SOLID)
 
 - Domain first: model each lane as a bounded context (lint, native, runtime, deploy checks).

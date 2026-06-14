@@ -1,0 +1,87 @@
+name: K3H4 Model Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Standalone K3H4 bundle version (example: 2026.06.14)"
+        required: true
+        type: string
+      tag:
+        description: "Optional release tag override (default: k3h4-model-v<version>)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: k3h4-model-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish-k3h4-model:
+    name: Build and publish standalone K3H4 model
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake ninja-build gcc g++
+
+      - name: Configure native build
+        run: cmake -S src/native -B out/v3-native -G Ninja
+
+      - name: Build native library
+        run: cmake --build out/v3-native --target banana_native --parallel
+
+      - name: Build standalone k3h4 bundle
+        id: bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/build-k3h4-standalone-release.sh --version "${{ inputs.version }}"
+
+      - name: Resolve release tag
+        id: release_tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${{ inputs.tag }}" ]]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="k3h4-model-v${{ inputs.version }}"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Upload CI artifact copy
+        uses: actions/upload-artifact@v4
+        with:
+          name: k3h4-model-${{ inputs.version }}
+          path: |
+            ${{ steps.bundle.outputs.archive_path }}
+            ${{ steps.bundle.outputs.checksum_path }}
+            ${{ steps.bundle.outputs.notes_path }}
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release_tag.outputs.tag }}
+          ARCHIVE_PATH: ${{ steps.bundle.outputs.archive_path }}
+          CHECKSUM_PATH: ${{ steps.bundle.outputs.checksum_path }}
+          NOTES_PATH: ${{ steps.bundle.outputs.notes_path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$ARCHIVE_PATH" "$CHECKSUM_PATH" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$ARCHIVE_PATH" "$CHECKSUM_PATH" \
+              --title "K3H4 Standalone Model ${{ inputs.version }}" \
+              --notes-file "$NOTES_PATH" \
+              --target "${GITHUB_SHA}"
+          fi
