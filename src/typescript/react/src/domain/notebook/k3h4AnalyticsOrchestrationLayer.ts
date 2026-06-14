@@ -113,12 +113,12 @@ export function mapK3h4AnalyticsToPresentationState(
       rewardTier === 'Relevant'                    ? RELEVANT_BAND :
                                                      LABELING_BAND;
 
-  const contractVectors = NODE_ORDER.map(
-      (id, index) => ({
-        id,
-        dimensions: [...(safeNodeVectors[index] ?? [])],
-        contractStrength: safeContractStrength[index] ?? 0,
-      }));
+  const contractVectors =
+      NODE_ORDER.map((id, index) => ({
+                       id,
+                       dimensions: [...(safeNodeVectors[index] ?? [])],
+                       contractStrength: safeContractStrength[index] ?? 0,
+                     }));
 
   const k3h4Projection = {
     dimensions: analytics.k3h4Projection?.dimensions ?? 0,
@@ -131,8 +131,7 @@ export function mapK3h4AnalyticsToPresentationState(
           coherence: safeProjectionNodes[index]?.coherence ?? 0,
           inradius: safeProjectionNodes[index]?.inradius ?? 0,
           nearestNeighborDistance:
-              safeProjectionNodes[index]?.nearestNeighborDistance ??
-              0,
+              safeProjectionNodes[index]?.nearestNeighborDistance ?? 0,
         })),
     alignment: analytics.k3h4Projection?.alignment ?? 0,
     radialStability: analytics.k3h4Projection?.radialStability ?? 0,
@@ -153,40 +152,42 @@ export function mapK3h4AnalyticsToPresentationState(
         memberCount: center.memberCount,
       };
     }),
-    radii: (safeK3h4.radii ?? []).map(
-        (radius) => ({
-          clusterId: radius.clusterId,
-          nearestNeighborDistanceQ16: radius.nearestNeighborDistanceQ16,
-          inscribedRadiusQ16: radius.inscribedRadiusQ16,
-          radiusState: radius.radiusState,
-        })),
-    weightedVoronoiScores: (safeK3h4.weightedVoronoiScores ?? []).map(
-        (score) => ({
-          vectorId: score.vectorId,
-          clusterId: score.clusterId,
-          distanceToCenterQ16: score.distanceToCenterQ16,
-          weightedScoreQ16: score.weightedScoreQ16,
-          scoreValidity: score.scoreValidity,
-        })),
-    spectralProxy: (safeK3h4.spectralProxy ?? []).map(
-        (entry) => ({
-          clusterId: entry.clusterId,
-          frequencyProxyQ16: entry.frequencyProxyQ16,
-          amplitudeProxyQ16: entry.amplitudeProxyQ16,
-          spectralState: entry.spectralState,
-        })),
+    radii: (safeK3h4.radii ??
+            []).map((radius) => ({
+                      clusterId: radius.clusterId,
+                      nearestNeighborDistanceQ16:
+                          radius.nearestNeighborDistanceQ16,
+                      inscribedRadiusQ16: radius.inscribedRadiusQ16,
+                      radiusState: radius.radiusState,
+                    })),
+    weightedVoronoiScores:
+        (safeK3h4.weightedVoronoiScores ??
+         []).map((score) => ({
+                   vectorId: score.vectorId,
+                   clusterId: score.clusterId,
+                   distanceToCenterQ16: score.distanceToCenterQ16,
+                   weightedScoreQ16: score.weightedScoreQ16,
+                   scoreValidity: score.scoreValidity,
+                 })),
+    spectralProxy: (safeK3h4.spectralProxy ??
+                    []).map((entry) => ({
+                              clusterId: entry.clusterId,
+                              frequencyProxyQ16: entry.frequencyProxyQ16,
+                              amplitudeProxyQ16: entry.amplitudeProxyQ16,
+                              spectralState: entry.spectralState,
+                            })),
     observability: {
-      convergenceStatus: normalizeConvergenceStatus(
-          safeK3h4.observability?.convergenceStatus),
+      convergenceStatus:
+          normalizeConvergenceStatus(safeK3h4.observability?.convergenceStatus),
       iterationCount: safeK3h4.observability?.iterationCount ?? 0,
       assignmentChangesLastIteration:
           safeK3h4.observability?.assignmentChangesLastIteration ?? 0,
-      scoringValidity:
-          normalizeScoringValidity((safeK3h4.observability as {
-                                     readonly scoringValidity?: unknown;
-                                   }).scoringValidity),
-      deterministicHash: normalizeDeterministicHash(
-          safeK3h4.observability?.deterministicHash),
+      scoringValidity: normalizeScoringValidity((safeK3h4.observability as {
+                                                  readonly scoringValidity?:
+                                                      unknown;
+                                                }).scoringValidity),
+      deterministicHash:
+          normalizeDeterministicHash(safeK3h4.observability?.deterministicHash),
     },
     runtime: {
       mode: analytics.k3h4Runtime?.mode ?? 'multiplicative',

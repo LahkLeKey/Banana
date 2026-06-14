@@ -1,7 +1,7 @@
 // Notebooks route — serves a live-scanned catalog-index manifest of all
 // native C/H sources so the file explorer always reflects the current tree.
 import type {FastifyInstance} from 'fastify';
-import {readFileSync, readdirSync, statSync} from 'node:fs';
+import {readdirSync, readFileSync, statSync} from 'node:fs';
 import {join, relative} from 'node:path';
 
 function discoverNativeSources(sourceRoot: string): string[] {
@@ -35,9 +35,7 @@ function discoverNativeSources(sourceRoot: string): string[] {
 }
 
 type NotebookManifestPayload = {
-  generated_at_utc: string;
-  source_root: string;
-  notebook_path: string;
+  generated_at_utc: string; source_root: string; notebook_path: string;
   file_count: number;
   max_lines_per_file: number;
   files: string[];
@@ -55,9 +53,8 @@ function loadBundledNotebookManifest(workspaceRoot: string):
 
     return {
       generated_at_utc: new Date().toISOString(),
-      source_root: typeof parsed.source_root === 'string' ?
-          parsed.source_root :
-          'src/native',
+      source_root: typeof parsed.source_root === 'string' ? parsed.source_root :
+                                                            'src/native',
       notebook_path: typeof parsed.notebook_path === 'string' ?
           parsed.notebook_path :
           'notebooks/native-c-catalog.ipynb',
@@ -116,7 +113,8 @@ export async function registerNotebooksRoutes(app: FastifyInstance):
       return reply.send(payload);
     } catch {
       return reply.status(404).send({
-        message: 'Notebook payload is unavailable from API. Check API runtime and notebook endpoint.',
+        message:
+            'Notebook payload is unavailable from API. Check API runtime and notebook endpoint.',
       });
     }
   });
