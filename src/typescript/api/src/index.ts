@@ -91,7 +91,13 @@ try {
       {error},
       'netcode routes were skipped because native netcode interop failed during bootstrap');
 }
-await registerWorldRoutes(app, {persistentWorldOrchestrationDomain});
+try {
+  await registerWorldRoutes(app, {persistentWorldOrchestrationDomain});
+} catch (error) {
+  app.log.warn(
+      {error},
+      'world routes were skipped because native world interop failed during bootstrap');
+}
 await registerV1GameplayRoutes(app);
 await registerV1PlayerRoutes(app);
 
