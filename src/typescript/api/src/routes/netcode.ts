@@ -13,7 +13,7 @@ type NetcodeRouteOptions = {
   netcodeService?: NativeNetcodeService;
 };
 
-type NetcodeRouteOptionsExtended = NetcodeRouteOptions & {
+type NetcodeRouteOptionsExtended = NetcodeRouteOptions&{
   scalingBenchmarkLoader?: () => K3h4ScalingBenchmarkStatus;
 };
 
@@ -98,9 +98,9 @@ function isValidOrchestratedComputePayload(
 }
 
 export async function registerNetcodeRoutes(
-  app: FastifyInstance,
-  options: NetcodeRouteOptionsExtended = {},
-): Promise<void> {
+    app: FastifyInstance,
+    options: NetcodeRouteOptionsExtended = {},
+    ): Promise<void> {
   const netcode = options.netcodeService ?? getNativeNetcodeService();
   const netcodeAuthoritativeComputeOrchestrator =
       options.netcodeAuthoritativeComputeOrchestrator ??
@@ -115,10 +115,10 @@ export async function registerNetcodeRoutes(
            } :
            createK3h4ApplicationOrchestrationLayer(netcode));
 
-    const benchmarkLoader =
+  const benchmarkLoader =
       options.scalingBenchmarkLoader ?? loadK3h4ScalingBenchmark;
 
-    type OrchestratedNetcodeResult =
+  type OrchestratedNetcodeResult =
       Awaited<ReturnType<K3h4ApplicationOrchestrationLayer['compute']>>;
 
   async function computeOrSendOrchestrationError(

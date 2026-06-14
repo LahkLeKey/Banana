@@ -1066,24 +1066,19 @@ export async function completeAccountLinkRemediationTicket(
 }
 
 export type K3h4ScalingSeriesEntry = {
-  readonly n: number;
-  readonly k3h4Ns: number;
-  readonly attentionNs: number;
+  readonly n: number; readonly k3h4Ns: number; readonly attentionNs: number;
 };
 
 export type K3h4ScalingBenchmarkResponse = {
-  readonly contractVersion: number;
-  readonly schemaVersion: number;
-  readonly series: readonly K3h4ScalingSeriesEntry[];
-  readonly metadata: {
-    readonly calibratedSizes: readonly number[];
-    readonly extrapolatedAbove: number | null;
+  readonly contractVersion: number; readonly schemaVersion: number; readonly series: readonly K3h4ScalingSeriesEntry[]; readonly metadata: {
+    readonly calibratedSizes: readonly number[]; readonly extrapolatedAbove:
+                                                              number | null;
   };
 };
 
 export async function fetchK3h4ScalingBenchmark(
     baseUrl: string,
-): Promise<K3h4ScalingBenchmarkResponse> {
+    ): Promise<K3h4ScalingBenchmarkResponse> {
   return fetchApiJson<K3h4ScalingBenchmarkResponse>(
       baseUrl,
       '/api/netcode/k3h4/scaling-benchmark',

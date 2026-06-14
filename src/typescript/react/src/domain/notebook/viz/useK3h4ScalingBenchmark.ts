@@ -1,23 +1,20 @@
 import {useCallback, useEffect, useState} from 'react';
 
-import {
-  fetchK3h4ScalingBenchmark,
-  type K3h4ScalingBenchmarkResponse,
-  resolveApiBaseUrl,
-} from '../../../lib/api';
+import {fetchK3h4ScalingBenchmark, type K3h4ScalingBenchmarkResponse, resolveApiBaseUrl,} from '../../../lib/api';
 
-export type K3h4ScalingBenchmarkState =
-  | {status: 'idle'}
-  | {status: 'loading'}
-  | {status: 'ok'; data: K3h4ScalingBenchmarkResponse}
-  | {status: 'not_found'}
-  | {status: 'error'; message: string};
+export type K3h4ScalingBenchmarkState =|{status: 'idle'}|{status: 'loading'}|{
+  status: 'ok';
+  data: K3h4ScalingBenchmarkResponse
+}
+|{status: 'not_found'}|{
+  status: 'error';
+  message: string
+};
 
-export function useK3h4ScalingBenchmark(): {
-  state: K3h4ScalingBenchmarkState;
-  refresh: () => void;
-} {
-  const [state, setState] = useState<K3h4ScalingBenchmarkState>({status: 'idle'});
+export function useK3h4ScalingBenchmark():
+    {state: K3h4ScalingBenchmarkState; refresh: () => void;} {
+  const [state, setState] =
+      useState<K3h4ScalingBenchmarkState>({status: 'idle'});
 
   const load = useCallback(async () => {
     setState({status: 'loading'});

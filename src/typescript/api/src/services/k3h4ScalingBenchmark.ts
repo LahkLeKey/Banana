@@ -2,18 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export type K3h4ScalingBenchmarkEntry = {
-  readonly n: number;
-  readonly k3h4Ns: number;
-  readonly attentionNs: number;
+  readonly n: number; readonly k3h4Ns: number; readonly attentionNs: number;
 };
 
 export type K3h4ScalingBenchmarkResult = {
-  readonly contractVersion: 1;
-  readonly schemaVersion: number;
-  readonly series: readonly K3h4ScalingBenchmarkEntry[];
-  readonly metadata: {
-    readonly calibratedSizes: readonly number[];
-    readonly extrapolatedAbove: number | null;
+  readonly contractVersion: 1; readonly schemaVersion: number; readonly series: readonly K3h4ScalingBenchmarkEntry[]; readonly metadata: {
+    readonly calibratedSizes: readonly number[]; readonly extrapolatedAbove:
+                                                              number | null;
   };
 };
 
@@ -33,7 +28,7 @@ const SEARCH_ROOTS = [
   '/workspace',
 ];
 
-function resolveArtifactPath(): string | null {
+function resolveArtifactPath(): string|null {
   for (const root of SEARCH_ROOTS) {
     const candidate = path.join(root, ARTIFACT_RELATIVE_PATH);
     if (fs.existsSync(candidate)) {
@@ -43,10 +38,14 @@ function resolveArtifactPath(): string | null {
   return null;
 }
 
-export type K3h4ScalingBenchmarkStatus =
-    | {kind: 'ok'; result: K3h4ScalingBenchmarkResult}
-    | {kind: 'not_found'}
-    | {kind: 'unavailable'; reason: string};
+export type K3h4ScalingBenchmarkStatus =|{
+  kind: 'ok';
+  result: K3h4ScalingBenchmarkResult
+}
+|{kind: 'not_found'}|{
+  kind: 'unavailable';
+  reason: string
+};
 
 export function loadK3h4ScalingBenchmark(): K3h4ScalingBenchmarkStatus {
   const artifactPath = resolveArtifactPath();
@@ -69,11 +68,12 @@ export function loadK3h4ScalingBenchmark(): K3h4ScalingBenchmarkStatus {
     return {kind: 'unavailable', reason: 'benchmark artifact has empty series'};
   }
 
-  const series: K3h4ScalingBenchmarkEntry[] = raw.series.map((entry) => ({
-    n: entry.n,
-    k3h4Ns: entry.k3h4_ns,
-    attentionNs: entry.attention_ns,
-  }));
+  const series: K3h4ScalingBenchmarkEntry[] =
+      raw.series.map((entry) => ({
+                       n: entry.n,
+                       k3h4Ns: entry.k3h4_ns,
+                       attentionNs: entry.attention_ns,
+                     }));
 
   return {
     kind: 'ok',
