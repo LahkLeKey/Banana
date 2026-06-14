@@ -83,8 +83,14 @@ await registerHealthRoutes(app);
 await registerFrontendTelemetryRoutes(app);
 await registerAuthRoutes(app);
 await registerGameSessionRoutes(app);
-await registerNetcodeRoutes(app);
 await registerNotebooksRoutes(app);
+try {
+  await registerNetcodeRoutes(app);
+} catch (error) {
+  app.log.warn(
+      {error},
+      'netcode routes were skipped because native netcode interop failed during bootstrap');
+}
 await registerWorldRoutes(app, {persistentWorldOrchestrationDomain});
 await registerV1GameplayRoutes(app);
 await registerV1PlayerRoutes(app);
