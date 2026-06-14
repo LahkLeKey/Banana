@@ -20,6 +20,20 @@ type NotebookOperationsPanelProps = {
     analyticsCohort?: string;
     k3h4Clusters?: number;
     k3h4Convergence?: string;
+    abiCoveragePresent?: number;
+    abiCoverageExpected?: number;
+    abiCoveragePercent?: number;
+    abiCoverageComplete?: boolean;
+    abiCoverageMissing?: readonly string[];
+    abiLayerLedger?: readonly {
+        layer: 'learning' | 'reward' | 'link' | 'vector' | 'k3h4';
+        present: boolean;
+        contractVersion: number;
+        status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch' | 'missing';
+        payloadBytes: number;
+        byteOrderTag: number;
+        deterministicHash: number | string | null;
+    }[];
 };
 
 function deriveThreatIndex(selectedFile: string): string {
@@ -67,6 +81,12 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
         analyticsCohort = 'default',
         k3h4Clusters = 0,
         k3h4Convergence = 'unknown',
+        abiCoveragePresent = 0,
+        abiCoverageExpected = 5,
+        abiCoveragePercent = 0,
+        abiCoverageComplete = false,
+        abiCoverageMissing = [],
+        abiLayerLedger = [],
     } = props;
 
     const threatIndex = useMemo(() => deriveThreatIndex(selectedFile), [selectedFile]);
@@ -77,7 +97,50 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
     const overlayModeLabel = overlayMode === 'training' ? 'Logistics' : overlayMode === 'diagnostics' ? 'Diagnostics' : 'Split';
     const networkStatusLabel = loading ? 'SYNC' : 'LIVE';
     const analyticsStatusLabel = analyticsAvailable ? 'AVAILABLE' : 'UNAVAILABLE';
+    const abiCoverageSummary = `${abiCoveragePresent}/${abiCoverageExpected}`;
+    const abiCoverageLabel = `ABI ${abiCoverageSummary} · ${abiCoveragePercent}%`;
+    const abiCoverageStateLabel = abiCoverageComplete ? 'COMPLETE' : 'PARTIAL';
+    const abiCoverageMissingLabel = abiCoverageMissing.length > 0 ? abiCoverageMissing.join(', ') : 'none';
     const deckStatusLabel = drawerOpen ? 'OPEN' : 'PARKED';
+
+    const renderAbiLedger = () => (
+        <div style={{
+            marginTop: 8,
+            borderRadius: 10,
+            border: '1px solid rgba(148, 163, 184, 0.3)',
+            background: 'rgba(2, 10, 20, 0.45)',
+            padding: 8,
+            display: 'grid',
+            gap: 6,
+        }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#cbd5e1' }}>
+                ABI Layer Ledger
+            </div>
+            <div style={{ display: 'grid', gap: 4 }}>
+                {abiLayerLedger.map((layer) => (
+                    <div key={layer.layer} style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(76px, 92px) 1fr',
+                        gap: 8,
+                        alignItems: 'center',
+                        fontSize: 11,
+                        color: '#e2e8f0',
+                        borderRadius: 8,
+                        border: `1px solid ${layer.present ? 'rgba(34, 197, 94, 0.28)' : 'rgba(148, 163, 184, 0.24)'}`,
+                        background: layer.present ? 'rgba(20, 83, 45, 0.28)' : 'rgba(30, 41, 59, 0.35)',
+                        padding: '6px 8px',
+                    }}>
+                        <span style={{ textTransform: 'uppercase', letterSpacing: '0.04em', color: layer.present ? '#86efac' : '#94a3b8' }}>
+                            {layer.layer}
+                        </span>
+                        <span style={{ color: 'rgba(226, 232, 240, 0.9)' }}>
+                            {layer.status} · v{layer.contractVersion} · {layer.payloadBytes}b · hash {layer.deterministicHash ?? 'n/a'}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 
     const renderDrawerContent = () => {
         if (overlayMode === 'training') {
@@ -344,8 +407,33 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
                                 <HudStatusChip label="K3H4" value={`${k3h4Clusters} clusters`} color="#a7f3d0" borderColor="rgba(16, 185, 129, 0.28)" />
                                 <HudStatusChip label="Converge" value={k3h4Convergence} color="#bae6fd" borderColor="rgba(56, 189, 248, 0.3)" />
                                 <HudStatusChip label="Analytics" value={analyticsStatusLabel} color={analyticsAvailable ? '#86efac' : '#fda4af'} borderColor={analyticsAvailable ? 'rgba(34, 197, 94, 0.28)' : 'rgba(244, 63, 94, 0.3)'} />
+                                <HudStatusChip label="ABI" value={abiCoverageLabel} color={abiCoverageComplete ? '#86efac' : '#fcd34d'} borderColor={abiCoverageComplete ? 'rgba(34, 197, 94, 0.28)' : 'rgba(251, 191, 36, 0.3)'} />
+                                <span title="ABI legend: green = all expected layers present; amber = one or more layers missing." style={{ display: 'inline-flex' }}>
+                                    <HudStatusChip label="Legend" value="Green/Amber" color="#cbd5e1" borderColor="rgba(148, 163, 184, 0.28)" />
+                                </span>
                                 <HudStatusChip label="Deck" value={deckStatusLabel} color="#99f6e4" borderColor="rgba(45, 212, 191, 0.3)" />
                             </div>
+
+                            <div style={{
+                                display: 'grid',
+                                gap: 4,
+                                borderRadius: 10,
+                                border: `1px solid ${abiCoverageComplete ? 'rgba(34, 197, 94, 0.3)' : 'rgba(251, 191, 36, 0.35)'}`,
+                                background: abiCoverageComplete ? 'rgba(20, 83, 45, 0.32)' : 'rgba(120, 53, 15, 0.3)',
+                                padding: '8px 10px',
+                            }}>
+                                <div style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: abiCoverageComplete ? '#86efac' : '#fcd34d' }}>
+                                    ABI Coverage {abiCoverageStateLabel}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#e2e8f0' }}>
+                                    {abiCoverageLabel}
+                                </div>
+                                <div style={{ fontSize: 10, color: abiCoverageComplete ? 'rgba(187, 247, 208, 0.86)' : 'rgba(254, 240, 138, 0.88)' }}>
+                                    Missing: {abiCoverageMissingLabel}
+                                </div>
+                            </div>
+
+                            {renderAbiLedger()}
                         </div>
 
                         {renderDrawerContent()}
@@ -378,12 +466,17 @@ export function NotebookOperationsPanel(props: NotebookOperationsPanelProps) {
                 <Pill color={analyticsAvailable ? '#86efac' : '#fda4af'} borderColor={analyticsAvailable ? 'rgba(34, 197, 94, 0.28)' : 'rgba(244, 63, 94, 0.3)'}>{analyticsStatusLabel}</Pill>
                 <Pill color="#a7f3d0" borderColor="rgba(16, 185, 129, 0.28)">K3H4: {k3h4Clusters}</Pill>
                 <Pill color="#bae6fd" borderColor="rgba(56, 189, 248, 0.3)">Convergence: {k3h4Convergence}</Pill>
+                <Pill color={abiCoverageComplete ? '#86efac' : '#fcd34d'} borderColor={abiCoverageComplete ? 'rgba(34, 197, 94, 0.28)' : 'rgba(251, 191, 36, 0.3)'}>{abiCoverageLabel}</Pill>
+                <span title="ABI legend: green = all expected layers present; amber = one or more layers missing." style={{ display: 'inline-flex' }}>
+                    <Pill color="#cbd5e1" borderColor="rgba(148, 163, 184, 0.35)">ABI Legend</Pill>
+                </span>
                 <Pill color="#e9d5ff" borderColor="rgba(168, 85, 247, 0.26)">Cohort: {analyticsCohort}</Pill>
             </div>
 
             {/* Mode content — flat, no nested card */}
             <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 10 }}>
                 {renderDrawerContent()}
+                {renderAbiLedger()}
             </div>
         </div>
     );

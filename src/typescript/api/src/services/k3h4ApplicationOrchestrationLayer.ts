@@ -2,12 +2,12 @@ import type {K3h4ApplicationService} from '../application/k3h4/k3h4ApplicationSe
 import {composeK3h4ApplicationService,} from '../composition/k3h4/k3h4CompositionRoot.ts';
 
 import type {NativeNetcodeService} from './nativeNetcode.ts';
-import type {NetcodeAnalyticsAuthoritativeRequest, NetcodeAnalyticsAuthoritativeResult, NetcodeHypersphereRollout,} from './netcodeAuthoritativeComputeOrchestrator.ts';
+import type {NetcodeAnalyticsAuthoritativeRequest, NetcodeAnalyticsAuthoritativeResult, NetcodeK3h4Rollout,} from './netcodeAuthoritativeComputeOrchestrator.ts';
 
 export interface K3h4ApplicationOrchestrationLayer {
   compute(
       request: NetcodeAnalyticsAuthoritativeRequest,
-      rollout: NetcodeHypersphereRollout,
+      rollout: NetcodeK3h4Rollout,
       ): Promise<NetcodeAnalyticsAuthoritativeResult>;
 }
 
@@ -19,7 +19,7 @@ class DefaultK3h4ApplicationOrchestrationLayer implements
 
   public compute(
       request: NetcodeAnalyticsAuthoritativeRequest,
-      rollout: NetcodeHypersphereRollout,
+      rollout: NetcodeK3h4Rollout,
       ): Promise<NetcodeAnalyticsAuthoritativeResult> {
     return this.delegate.compute(request, rollout);
   }

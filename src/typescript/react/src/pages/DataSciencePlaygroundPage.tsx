@@ -86,6 +86,40 @@ const panelDefaultSizes: Record<NotebookHudPanelId, { width: number; height: num
     operations: { width: 360, height: 240 },
 };
 
+type NotebookAnalyticsTelemetry = {
+    analyticsAvailable: boolean;
+    analyticsCohort: string;
+    k3h4Clusters: number;
+    k3h4Convergence: string;
+    abiCoveragePresent: number;
+    abiCoverageExpected: number;
+    abiCoveragePercent: number;
+    abiCoverageComplete: boolean;
+    abiCoverageMissing: readonly string[];
+    abiLayerLedger: readonly {
+        layer: 'learning' | 'reward' | 'link' | 'vector' | 'k3h4';
+        present: boolean;
+        contractVersion: number;
+        status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch' | 'missing';
+        payloadBytes: number;
+        byteOrderTag: number;
+        deterministicHash: number | string | null;
+    }[];
+};
+
+const DEFAULT_NOTEBOOK_ANALYTICS_TELEMETRY: NotebookAnalyticsTelemetry = {
+    analyticsAvailable: true,
+    analyticsCohort: 'default',
+    k3h4Clusters: 0,
+    k3h4Convergence: 'unknown',
+    abiCoveragePresent: 0,
+    abiCoverageExpected: 5,
+    abiCoveragePercent: 0,
+    abiCoverageComplete: false,
+    abiCoverageMissing: [],
+    abiLayerLedger: [],
+};
+
 export function DataSciencePlaygroundPage() {
     const location = useLocation();
     const { loading, manifest, manifestError, manifestSource, notebookError, notebookSource, cellLookup, notebookCellCount } = useNotebookClient();
@@ -126,6 +160,9 @@ export function DataSciencePlaygroundPage() {
     const [questToast, setQuestToast] = useState('');
     const [announcedQuestIds, setAnnouncedQuestIds] = useState<string[]>([]);
     const [panelResetTokens, setPanelResetTokens] = useState<Record<NotebookHudPanelId, number>>(panelResetDefaults);
+    const [analyticsTelemetry, setAnalyticsTelemetry] = useState<NotebookAnalyticsTelemetry>(
+        DEFAULT_NOTEBOOK_ANALYTICS_TELEMETRY,
+    );
 
     const routeHudPreset = useMemo(() => resolveRouteHudPreset(location.pathname), [location.pathname]);
 
@@ -425,6 +462,16 @@ export function DataSciencePlaygroundPage() {
                     notebookError={notebookError}
                     manifestSource={manifestSource}
                     notebookSource={notebookSource}
+                    analyticsAvailable={analyticsTelemetry.analyticsAvailable}
+                    analyticsCohort={analyticsTelemetry.analyticsCohort}
+                    k3h4Clusters={analyticsTelemetry.k3h4Clusters}
+                    k3h4Convergence={analyticsTelemetry.k3h4Convergence}
+                    abiCoveragePresent={analyticsTelemetry.abiCoveragePresent}
+                    abiCoverageExpected={analyticsTelemetry.abiCoverageExpected}
+                    abiCoveragePercent={analyticsTelemetry.abiCoveragePercent}
+                    abiCoverageComplete={analyticsTelemetry.abiCoverageComplete}
+                    abiCoverageMissing={analyticsTelemetry.abiCoverageMissing}
+                    abiLayerLedger={analyticsTelemetry.abiLayerLedger}
                 />
             </RouteDeckTransition>
         ),
@@ -607,6 +654,7 @@ export function DataSciencePlaygroundPage() {
                     onToggleObjectiveNodeWindow={() => togglePanel('objectiveNode')}
                     onTogglePlayerNodeWindow={() => togglePanel('playerNode')}
                     onToggleNodeOpsWindow={() => togglePanel('nodeOps')}
+                    onAnalyticsTelemetryChange={setAnalyticsTelemetry}
                 />
 
                 <ResizableDockGrid

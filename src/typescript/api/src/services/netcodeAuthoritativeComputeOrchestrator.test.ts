@@ -3,7 +3,9 @@ import {describe, expect, test} from 'bun:test';
 import type {NativeNetcodeService} from './nativeNetcode.ts';
 import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError,} from './netcodeAuthoritativeComputeOrchestrator.ts';
 
-function createFakeNativeNetcodeService(): NativeNetcodeService {
+function createFakeNativeNetcodeService(
+    captured?: {buildVectorInput?: unknown; buildK3h4Input?: unknown;}):
+    NativeNetcodeService {
   return {
     async reset(): Promise<void> {
       return;
@@ -49,14 +51,20 @@ function createFakeNativeNetcodeService(): NativeNetcodeService {
         ops: 6,
       };
     },
-    async buildVector() {
+    async buildVector(input) {
+      if (captured) {
+        captured.buildVectorInput = input;
+      }
       return {
         dimensions: 3,
         nodeVectors: [[1, 2, 3], [4, 5, 6], [7, 8, 9], [2, 4, 6]],
         contractStrength: [11, 22, 33, 44] as const,
       };
     },
-    async buildHypersphere() {
+    async buildK3h4(input) {
+      if (captured) {
+        captured.buildK3h4Input = input;
+      }
       return {
         dimensions: 3,
         nodes: [
@@ -145,13 +153,13 @@ function createFakeNativeNetcodeService(): NativeNetcodeService {
           deterministicHash: 123456,
           endiannessDecodePath: 'little-endian' as const,
         },
-          envelope: {
-            contractVersion: 1,
-            byteOrderTag: 0x01020304,
-            payloadBytes: 892,
-            payloadCrc32: 987654321,
-            status: 'ok' as const,
-          },
+        envelope: {
+          contractVersion: 1,
+          byteOrderTag: 0x01020304,
+          payloadBytes: 892,
+          payloadCrc32: 987654321,
+          status: 'ok' as const,
+        },
       };
     },
   };
@@ -161,9 +169,10 @@ describe('netcode authoritative compute orchestrator', () => {
   test(
       'returns server-authoritative analytics with LSP representation',
       async () => {
+        const captured: {buildK3h4Input?: unknown;} = {};
         const orchestrator =
             createNetcodeAnalyticsAuthoritativeComputeOrchestrator(
-                createFakeNativeNetcodeService());
+                createFakeNativeNetcodeService(captured));
 
         const result = await orchestrator.compute(
             {
@@ -177,22 +186,82 @@ describe('netcode authoritative compute orchestrator', () => {
               networkDimensions: 6,
               modelConfidence: 77,
               policyMomentum: 66,
+              k3h4Mode: 'power',
+              spectralMode: 'affinity-graph',
             },
             {enabled: true, cohort: 'all'},
         );
 
         expect(result.contractVersion).toBe(1);
-        expect(result.k3h4.observability.deterministicHash)
-            .toBe(123456);
+        expect(result.k3h4.observability.deterministicHash).toBe(123456);
         expect(result.abiLayers).toHaveLength(5);
         expect(result.abiLayers[4]).toMatchObject({
-          layer: 'hypersphere',
+          layer: 'k3h4',
           contractVersion: 1,
           status: 'ok',
           payloadBytes: 892,
           byteOrderTag: 0x01020304,
           deterministicHash: 123456,
         });
+        expect(result.abiLayerCoverage).toMatchObject({
+          complete: true,
+          completeness: 1,
+          presentLayers: [
+            'learning',
+            'reward',
+            'link',
+            'vector',
+            'k3h4',
+          ],
+          missingLayers: [],
+        });
+        expect(result.abiLayerLedger).toEqual([
+          {
+            layer: 'learning',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 0,
+            byteOrderTag: 0,
+            deterministicHash: 88,
+          },
+          {
+            layer: 'reward',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 0,
+            byteOrderTag: 0,
+            deterministicHash: 144,
+          },
+          {
+            layer: 'link',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 0,
+            byteOrderTag: 0,
+            deterministicHash: 30,
+          },
+          {
+            layer: 'vector',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 0,
+            byteOrderTag: 0,
+            deterministicHash: 3,
+          },
+          {
+            layer: 'k3h4',
+            present: true,
+            contractVersion: 1,
+            status: 'ok',
+            payloadBytes: 892,
+            byteOrderTag: 0x01020304,
+            deterministicHash: 123456,
+          },
+        ]);
         expect(result.lspRepresentation).toMatchObject({
           language: 'netcode.analytics.v1',
           boundedContext: 'netcode',
@@ -202,6 +271,14 @@ describe('netcode authoritative compute orchestrator', () => {
           deterministicHash: 123456,
           rollout: {enabled: true, cohort: 'all'},
         });
+        expect(result.k3h4Runtime).toEqual({
+          mode: 'power',
+          spectralActivation: 'affinity-graph',
+        });
+        expect(captured.buildK3h4Input).toMatchObject({
+          k3h4Mode: 'power',
+          spectralMode: 'affinity-graph',
+        });
       });
 
   test(
@@ -209,8 +286,8 @@ describe('netcode authoritative compute orchestrator', () => {
       async () => {
         const failingNativeService: NativeNetcodeService = {
           ...createFakeNativeNetcodeService(),
-          async buildHypersphere() {
-            throw new Error('Native hypersphere payload CRC mismatch');
+          async buildK3h4() {
+            throw new Error('Native k3h4 payload CRC mismatch');
           },
         };
         const orchestrator =

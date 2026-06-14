@@ -54,6 +54,26 @@ type NotebookGameplaySurfaceProps = {
     readonly onToggleObjectiveNodeWindow?: () => void;
     readonly onTogglePlayerNodeWindow?: () => void;
     readonly onToggleNodeOpsWindow?: () => void;
+    readonly onAnalyticsTelemetryChange?: (telemetry: {
+        analyticsAvailable: boolean;
+        analyticsCohort: string;
+        k3h4Clusters: number;
+        k3h4Convergence: string;
+        abiCoveragePresent: number;
+        abiCoverageExpected: number;
+        abiCoveragePercent: number;
+        abiCoverageComplete: boolean;
+        abiCoverageMissing: readonly string[];
+        abiLayerLedger: readonly {
+            layer: 'learning' | 'reward' | 'link' | 'vector' | 'k3h4';
+            present: boolean;
+            contractVersion: number;
+            status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch' | 'missing';
+            payloadBytes: number;
+            byteOrderTag: number;
+            deterministicHash: number | string | null;
+        }[];
+    }) => void;
 };
 
 // Scanline overlay for the fullBleed stage
@@ -162,6 +182,7 @@ export function NotebookGameplaySurface({
     onToggleObjectiveNodeWindow,
     onTogglePlayerNodeWindow,
     onToggleNodeOpsWindow,
+    onAnalyticsTelemetryChange,
 }: NotebookGameplaySurfaceProps) {
     const [intelMode, setIntelMode] = useState<'summary' | 'raw'>('summary');
     const [developerIntelUnlocked, setDeveloperIntelUnlocked] = useState(false);
@@ -272,7 +293,7 @@ export function NotebookGameplaySurface({
             return 6;
         }
 
-        // Expand hypersphere dimensionality as C-file evidence increases.
+        // Expand K3H4 projection dimensionality as C-file evidence increases.
         return Math.min(16, Math.max(8, 6 + Math.floor(Math.log2(cFileCount + 1))));
     }, [cFileCount]);
     const {
@@ -282,8 +303,10 @@ export function NotebookGameplaySurface({
         recordAction,
         rewardSignal,
         linkConfidence,
-        hypersphereProjection,
+        k3h4Projection,
         k3h4,
+        abiLayerLedger,
+        abiLayerCoverage,
         analyticsAvailability,
     } = useNetcodeSession({
         callDensity,
@@ -342,9 +365,48 @@ export function NotebookGameplaySurface({
     const k3h4HashPreview = k3h4.observability.deterministicHash.length > 0
         ? k3h4.observability.deterministicHash.slice(0, 8)
         : 'n/a';
+    const abiCoveragePresent = abiLayerCoverage.presentLayers.length;
+    const abiCoverageExpected = abiLayerCoverage.expectedLayers.length;
+    const abiCoveragePercent = Math.round(abiLayerCoverage.completeness * 100);
+    const abiCoverageSummary = `${abiCoveragePresent}/${abiCoverageExpected}`;
+    const abiCoverageState = abiLayerCoverage.complete ? 'complete' : 'partial';
+    const abiCoverageMissing = abiLayerCoverage.missingLayers.length > 0
+        ? abiLayerCoverage.missingLayers.join(', ')
+        : 'none';
+
+    useEffect(() => {
+        if (!onAnalyticsTelemetryChange) {
+            return;
+        }
+
+        onAnalyticsTelemetryChange({
+            analyticsAvailable: analyticsAvailability.available,
+            analyticsCohort: analyticsAvailability.rollout.cohort,
+            k3h4Clusters: k3h4ClusterCount,
+            k3h4Convergence,
+            abiCoveragePresent,
+            abiCoverageExpected,
+            abiCoveragePercent,
+            abiCoverageComplete: abiLayerCoverage.complete,
+            abiCoverageMissing: [...abiLayerCoverage.missingLayers],
+            abiLayerLedger: abiLayerLedger.map((entry) => ({ ...entry })),
+        });
+    }, [
+        abiLayerLedger,
+        abiCoverageExpected,
+        abiCoveragePercent,
+        abiCoveragePresent,
+        analyticsAvailability.available,
+        analyticsAvailability.rollout.cohort,
+        k3h4ClusterCount,
+        k3h4Convergence,
+        onAnalyticsTelemetryChange,
+        abiLayerCoverage.complete,
+        abiLayerCoverage.missingLayers,
+    ]);
     const laneContractCoherence = useMemo(() => {
         const coherenceMap = new Map<ContractNodeId, number>();
-        hypersphereProjection.nodes.forEach((node) => {
+        k3h4Projection.nodes.forEach((node) => {
             coherenceMap.set(node.id, node.coherence);
         });
 
@@ -354,11 +416,11 @@ export function NotebookGameplaySurface({
             player: coherenceMap.get('player') ?? 50,
             ops: coherenceMap.get('ops') ?? 50,
         };
-    }, [hypersphereProjection.nodes]);
+    }, [k3h4Projection.nodes]);
     const hasOpenDock = activeDock !== null;
     const orbitLayerCount = useMemo(
-        () => Math.max(2, Math.ceil(hypersphereProjection.dimensions / 2)),
-        [hypersphereProjection.dimensions],
+        () => Math.max(2, Math.ceil(k3h4Projection.dimensions / 2)),
+        [k3h4Projection.dimensions],
     );
     const cFileContractNodes = useMemo(() => {
         if (!contentByFile || allIndexedFiles.length === 0) {
@@ -371,10 +433,10 @@ export function NotebookGameplaySurface({
             orbitLayerCount,
         });
     }, [allIndexedFiles, contentByFile, orbitLayerCount]);
-    const hypersphereOrbitLayers: OrbitLayerSpec[] = useMemo(() => {
+    const k3h4OrbitLayers: OrbitLayerSpec[] = useMemo(() => {
         const layerCount = orbitLayerCount;
-        const alignmentWeight = 0.5 + hypersphereProjection.alignment / 250;
-        const stabilityWeight = 0.5 + hypersphereProjection.radialStability / 250;
+        const alignmentWeight = 0.5 + k3h4Projection.alignment / 250;
+        const stabilityWeight = 0.5 + k3h4Projection.radialStability / 250;
         const orbitProfile = routeModeOrbitProfile[routeMode];
         const hudHorizontalLoad = isCompactViewport ? 0.08 : 0.36;
         const hudVerticalLoad = (hasOpenDock ? 0.18 : 0) + 0.14;
@@ -397,9 +459,9 @@ export function NotebookGameplaySurface({
         });
     }, [
         hasOpenDock,
-        hypersphereProjection.alignment,
-        hypersphereProjection.dimensions,
-        hypersphereProjection.radialStability,
+        k3h4Projection.alignment,
+        k3h4Projection.dimensions,
+        k3h4Projection.radialStability,
         isCompactViewport,
         routeMode,
         orbitLayerCount,
@@ -456,7 +518,7 @@ export function NotebookGameplaySurface({
         const rightBottomSpan = Math.max(8, bottomRightX - center.x);
 
         const projectionById = new Map<ContractNodeId, { x: number; y: number; z: number; }>();
-        hypersphereProjection.nodes.forEach((node) => {
+        k3h4Projection.nodes.forEach((node) => {
             projectionById.set(node.id, { x: node.x, y: node.y, z: node.z });
         });
 
@@ -488,9 +550,9 @@ export function NotebookGameplaySurface({
             player: projectAnchor('player', 'right', 'top'),
             ops: projectAnchor('ops', 'right', 'bottom'),
         };
-    }, [hasOpenDock, hypersphereProjection.nodes]);
+    }, [hasOpenDock, k3h4Projection.nodes]);
     const cFileVisualNodes = useMemo(() => {
-        if (cFileContractNodes.length === 0 || hypersphereOrbitLayers.length === 0) {
+        if (cFileContractNodes.length === 0 || k3h4OrbitLayers.length === 0) {
             return [] as Array<{
                 key: string;
                 x: number;
@@ -510,7 +572,7 @@ export function NotebookGameplaySurface({
         const spiralTightness = 0.78;
 
         return cFileContractNodes.map((node, index) => {
-            const layer = hypersphereOrbitLayers[node.layerHint % hypersphereOrbitLayers.length];
+            const layer = k3h4OrbitLayers[node.layerHint % k3h4OrbitLayers.length];
             const armIndex = index % armCount;
             const armAngle = (Math.PI * 2 * armIndex) / armCount;
             const radialRatio = (node.layerHint + 1) / Math.max(1, orbitLayerCount);
@@ -549,9 +611,9 @@ export function NotebookGameplaySurface({
                 depthBand,
             };
         });
-    }, [cFileContractNodes, hypersphereOrbitLayers, nodeAnchors.center.x, nodeAnchors.center.y, orbitLayerCount]);
+    }, [cFileContractNodes, k3h4OrbitLayers, nodeAnchors.center.x, nodeAnchors.center.y, orbitLayerCount]);
     const ambientGalaxyNodes = useMemo(() => {
-        if (hypersphereOrbitLayers.length === 0) {
+        if (k3h4OrbitLayers.length === 0) {
             return [] as Array<{
                 key: string;
                 x: number;
@@ -569,7 +631,7 @@ export function NotebookGameplaySurface({
 
         const count = 140;
         return Array.from({ length: count }, (_, index) => {
-            const layer = hypersphereOrbitLayers[index % hypersphereOrbitLayers.length];
+            const layer = k3h4OrbitLayers[index % k3h4OrbitLayers.length];
             const seed = Math.sin(index * 12.9898) * 43758.5453;
             const frac = seed - Math.floor(seed);
             const theta = frac * Math.PI * 2 + index * 0.17;
@@ -595,7 +657,7 @@ export function NotebookGameplaySurface({
                 depthBand,
             };
         });
-    }, [hypersphereOrbitLayers, nodeAnchors.center.x, nodeAnchors.center.y]);
+    }, [k3h4OrbitLayers, nodeAnchors.center.x, nodeAnchors.center.y]);
     const renderedGalaxyNodes = cFileVisualNodes.length > 0 ? cFileVisualNodes : ambientGalaxyNodes;
     const lanePulsePhase = useMemo(() => ({
         intel: { forward: 0, reverse: 0.66 },
@@ -832,13 +894,44 @@ export function NotebookGameplaySurface({
                     </div>
                 ) : null}
 
+                {analyticsAvailability.available ? (
+                    <div style={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        zIndex: 5,
+                        borderRadius: 12,
+                        border: `1px solid ${abiLayerCoverage.complete ? 'rgba(16, 185, 129, 0.52)' : 'rgba(251, 191, 36, 0.55)'}`,
+                        background: abiLayerCoverage.complete
+                            ? 'linear-gradient(140deg, rgba(6, 78, 59, 0.9), rgba(6, 95, 70, 0.82))'
+                            : 'linear-gradient(140deg, rgba(120, 53, 15, 0.9), rgba(146, 64, 14, 0.82))',
+                        color: abiLayerCoverage.complete ? '#d1fae5' : '#fef3c7',
+                        padding: '10px 12px',
+                        fontSize: 11,
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        fontWeight: 700,
+                        boxShadow: abiLayerCoverage.complete
+                            ? '0 12px 24px rgba(6, 78, 59, 0.35)'
+                            : '0 12px 24px rgba(120, 53, 15, 0.35)',
+                        display: 'grid',
+                        gap: 4,
+                        maxWidth: 340,
+                    }}>
+                        <span>ABI coverage {abiCoverageSummary} · {abiCoveragePercent}% · {abiCoverageState}</span>
+                        <span style={{ fontSize: 10, color: abiLayerCoverage.complete ? 'rgba(187, 247, 208, 0.92)' : 'rgba(254, 240, 138, 0.92)' }}>
+                            missing: {abiCoverageMissing}
+                        </span>
+                    </div>
+                ) : null}
+
                 <GameplayTopHud
                     selectedFile={selectedFile}
                     missionCode={missionSector.code}
                     missionTitle={missionSector.title}
                     routeMode={routeMode}
                     isCompactViewport={isCompactViewport}
-                    hypersphereDimensions={hypersphereProjection.dimensions}
+                    k3h4Dimensions={k3h4Projection.dimensions}
                 />
 
                 <div style={{
@@ -864,7 +957,7 @@ export function NotebookGameplaySurface({
 
                     <GameplayGalaxyField
                         nodeAnchors={nodeAnchors}
-                        hypersphereOrbitLayers={hypersphereOrbitLayers}
+                        k3h4OrbitLayers={k3h4OrbitLayers}
                         routeModeOrbitAccent={routeModeOrbitAccent[routeMode]}
                         renderedGalaxyNodes={renderedGalaxyNodes}
                         peripheralBranchMesh={peripheralBranchMesh}
@@ -976,13 +1069,14 @@ export function NotebookGameplaySurface({
                             includeCount={includeCount}
                             callDensity={callDensity}
                             riskLabel={riskLabel}
-                            hypersphereDimensions={hypersphereProjection.dimensions}
-                            hypersphereAlignment={hypersphereProjection.alignment}
+                            k3h4Dimensions={k3h4Projection.dimensions}
+                            k3h4Alignment={k3h4Projection.alignment}
                             cFileCount={cFileCount}
                             modelConfidence={learningModel.modelConfidence}
                             extraLines={[
                                 `K3H4: ${k3h4ClusterCount} clusters`,
                                 `Convergence: ${k3h4Convergence}`,
+                                `ABI: ${abiCoverageSummary} (${abiCoveragePercent}%)`,
                                 `Hash: ${k3h4HashPreview}`,
                             ]}
                         />
@@ -1006,7 +1100,7 @@ export function NotebookGameplaySurface({
                             rewardBand={rewardBand}
                             questListMaxHeight={expandedQuestRail ? '34dvh' : (hasOpenDock ? '18dvh' : '24dvh')}
                             projectedRewardXp={projectedRewardXp}
-                            statusLine={`K3H4 ${k3h4ClusterCount} · ${k3h4Convergence} · ${analyticsAvailability.rollout.cohort}`}
+                            statusLine={`K3H4 ${k3h4ClusterCount} · ${k3h4Convergence} · ABI ${abiCoverageSummary} · ${analyticsAvailability.rollout.cohort}`}
                             onMainAction={() => {
                                 setActiveWorkflowStep('commit');
                                 setWorkflowDepth(3);

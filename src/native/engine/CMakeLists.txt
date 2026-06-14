@@ -135,17 +135,16 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/netcode/model/netcode_model.c
   runtime/netcode/reward/netcode_reward.c
   runtime/netcode/link/netcode_link.c
-  runtime/netcode/k3h4/netcode_k3h4_hypersphere.c
+  runtime/netcode/k3h4/netcode_k3h4_metrics.c
   runtime/netcode/k3h4/netcode_k3h4_orchestrator.c
   runtime/netcode/vector/netcode_fixed_point.c
   runtime/netcode/vector/netcode_k3h4.c
   runtime/netcode/vector/netcode_vector.c
-  runtime/netcode/hypersphere/netcode_hypersphere.c
-  runtime/netcode/hypersphere/netcode_hypersphere_pipeline.c
-  runtime/netcode/hypersphere/netcode_hypersphere_pipeline_setup.c
-  runtime/netcode/hypersphere/netcode_hypersphere_geometry.c
-  runtime/netcode/hypersphere/netcode_hypersphere_cluster_scoring.c
-  runtime/netcode/hypersphere/netcode_hypersphere_observability.c
+  runtime/netcode/k3h4/netcode_k3h4_pipeline.c
+  runtime/netcode/k3h4/netcode_k3h4_pipeline_setup.c
+  runtime/netcode/k3h4/netcode_k3h4_geometry.c
+  runtime/netcode/k3h4/netcode_k3h4_cluster_scoring.c
+  runtime/netcode/k3h4/netcode_k3h4_observability.c
   runtime/netcode/contract/netcode_contract.c
   runtime/abi/netcode/netcode_abi.c
   runtime/abi/physics/physics_abi.c
@@ -382,9 +381,9 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/native_feedback_loop_factory.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../scaffold/native_entry.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_native_orchestrator.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_hypersphere_orchestration_layer.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/application/k3h4_hypersphere_application_service.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/infrastructure/k3h4_hypersphere_infrastructure_adapter.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_metrics_orchestration_layer.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/application/k3h4_metrics_application_service.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/infrastructure/k3h4_metrics_infrastructure_adapter.c
   )
   target_link_libraries(banana_native_feedback_loop_factory PRIVATE banana_engine_core)
   target_include_directories(banana_native_feedback_loop_factory PRIVATE

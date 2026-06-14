@@ -71,7 +71,7 @@ function createBaseService(): NativeNetcodeService {
         contractStrength: [11, 22, 33, 44] as const,
       };
     },
-    async buildHypersphere() {
+    async buildK3h4() {
       return {
         dimensions: 3,
         nodes: [
@@ -198,8 +198,8 @@ describe('netcode integration', () => {
       async () => {
         const service: NativeNetcodeService = {
           ...createBaseService(),
-          async buildHypersphere() {
-            throw new Error('Native hypersphere payload CRC mismatch');
+          async buildK3h4() {
+            throw new Error('Native k3h4 payload CRC mismatch');
           },
         };
         const app = await createApp(service);
@@ -240,7 +240,7 @@ describe('netcode integration', () => {
 
           expect(response.statusCode).toBe(503);
           expect(response.json()).toMatchObject({
-            error: 'Netcode hypersphere k3h4 analytics rollout disabled',
+            error: 'Netcode k3h4 analytics rollout disabled',
             rollout: {enabled: false, cohort: 'rollback'},
           });
         } finally {

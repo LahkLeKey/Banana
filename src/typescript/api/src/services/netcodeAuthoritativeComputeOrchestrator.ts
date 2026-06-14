@@ -1,21 +1,40 @@
-import type {NativeNetcodeService, NetcodeHypersphereOutput, NetcodeLinkOutput, NetcodeRewardOutput, NetcodeVectorOutput,} from './nativeNetcode.ts';
+import type {NativeNetcodeService, NetcodeK3h4Output, NetcodeLinkOutput, NetcodeRewardOutput, NetcodeVectorOutput,} from './nativeNetcode.ts';
 
-export type NetcodeHypersphereRollout = {
+export type NetcodeK3h4Rollout = {
   enabled: boolean; cohort: string;
 };
 
-export type NetcodeAbiLayerName =
-    'learning'|'reward'|'link'|'vector'|'hypersphere';
+export type NetcodeAbiLayerName = 'learning'|'reward'|'link'|'vector'|'k3h4';
 
 export type NetcodeAbiLayerSnapshot = {
-  layer: NetcodeAbiLayerName;
-  contractVersion: 1;
-  status: 'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
+  layer: NetcodeAbiLayerName; contractVersion: 1;
+  status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' |
       'crc-mismatch';
   payloadBytes: number;
   byteOrderTag: number;
   deterministicHash: number;
 };
+
+const NETCODE_ABI_LAYER_ORDER: NetcodeAbiLayerName[] =
+    ['learning', 'reward', 'link', 'vector', 'k3h4'];
+
+export type NetcodeAbiLayerCoverage = {
+  expectedLayers: readonly NetcodeAbiLayerName[];
+  presentLayers: readonly NetcodeAbiLayerName[];
+  missingLayers: readonly NetcodeAbiLayerName[];
+  completeness: number;
+  complete: boolean;
+};
+
+export type NetcodeAbiLayerDatum = {
+  layer: NetcodeAbiLayerName; present: boolean; contractVersion: number;
+  status: NetcodeAbiLayerSnapshot['status'] | 'missing';
+  payloadBytes: number;
+  byteOrderTag: number;
+  deterministicHash: number | null;
+};
+
+export type NetcodeAbiLayerLedger = readonly NetcodeAbiLayerDatum[];
 
 export type NetcodeAnalyticsAuthoritativeRequest = {
   callDensity: number; questPercent: number; playerLevel: number;
@@ -27,14 +46,20 @@ export type NetcodeAnalyticsAuthoritativeRequest = {
   modelConfidence: number;
   policyMomentum: number;
   interactionSignal?: number;
+  k3h4Mode?: 'multiplicative' | 'power';
+  spectralMode?: 'disabled' | 'affinity-graph';
 };
 
-export type NetcodeHypersphereKmeansProjection = {
-  centers: NetcodeHypersphereOutput['centers'];
-  radii: NetcodeHypersphereOutput['radii'];
-  weightedVoronoiScores: NetcodeHypersphereOutput['weightedVoronoiScores'];
-  spectralProxy: NetcodeHypersphereOutput['spectralProxy'];
-  observability: NetcodeHypersphereOutput['observability'];
+export type NetcodeK3h4RuntimeMetadata = {
+  mode: 'multiplicative'|'power';
+  spectralActivation: 'disabled' | 'affinity-graph';
+};
+
+export type NetcodeK3h4Projection = {
+  centers: NetcodeK3h4Output['centers']; radii: NetcodeK3h4Output['radii'];
+  weightedVoronoiScores: NetcodeK3h4Output['weightedVoronoiScores'];
+  spectralProxy: NetcodeK3h4Output['spectralProxy'];
+  observability: NetcodeK3h4Output['observability'];
 };
 
 export type NetcodeLspRepresentation = {
@@ -43,15 +68,18 @@ export type NetcodeLspRepresentation = {
   authority: 'server-native';
   contractVersion: 1;
   deterministicHash: number;
-  rollout: NetcodeHypersphereRollout;
+  rollout: NetcodeK3h4Rollout;
 };
 
 export type NetcodeAnalyticsAuthoritativeResult = {
   contractVersion: 1; reward: NetcodeRewardOutput; link: NetcodeLinkOutput;
   vector: NetcodeVectorOutput;
-  hypersphere: NetcodeHypersphereOutput;
-  k3h4: NetcodeHypersphereKmeansProjection;
+  k3h4Projection: NetcodeK3h4Output;
+  k3h4: NetcodeK3h4Projection;
+  k3h4Runtime: NetcodeK3h4RuntimeMetadata;
   abiLayers: readonly NetcodeAbiLayerSnapshot[];
+  abiLayerCoverage: NetcodeAbiLayerCoverage;
+  abiLayerLedger: NetcodeAbiLayerLedger;
   lspRepresentation: NetcodeLspRepresentation;
 };
 
@@ -76,16 +104,15 @@ export class NetcodeAnalyticsOrchestrationError extends Error {
 export interface NetcodeAnalyticsAuthoritativeComputeOrchestrator {
   compute(
       request: NetcodeAnalyticsAuthoritativeRequest,
-      rollout: NetcodeHypersphereRollout,
+      rollout: NetcodeK3h4Rollout,
       ): Promise<NetcodeAnalyticsAuthoritativeResult>;
 }
 
-function mapHypersphereBuildError(error: unknown):
-    NetcodeAnalyticsOrchestrationError|undefined {
-  const message =
-      error instanceof Error ? error.message : 'Unknown hypersphere error';
+function mapK3h4BuildError(error: unknown): NetcodeAnalyticsOrchestrationError|
+    undefined {
+  const message = error instanceof Error ? error.message : 'Unknown k3h4 error';
 
-  if (message.includes('Unsupported native hypersphere contract version')) {
+  if (message.includes('Unsupported native k3h4 contract version')) {
     return new NetcodeAnalyticsOrchestrationError(
         'ERR_UNSUPPORTED_VERSION', message, false);
   }
@@ -112,13 +139,124 @@ function resolveRewardInteractionSignal(
   return Math.round((request.modelConfidence * 2 + request.policyMomentum) / 3);
 }
 
+function buildAbiLayerCatalog(
+    reward: NetcodeRewardOutput,
+    link: NetcodeLinkOutput,
+    vector: NetcodeVectorOutput,
+    k3h4Projection: NetcodeK3h4Output,
+    ): readonly NetcodeAbiLayerSnapshot[] {
+  const k3h4Envelope = k3h4Projection.envelope;
+  return [
+    {
+      layer: 'learning',
+      contractVersion: 1,
+      status: 'ok',
+      payloadBytes: 0,
+      byteOrderTag: 0,
+      deterministicHash: reward.neuralRelevanceScore,
+    },
+    {
+      layer: 'reward',
+      contractVersion: 1,
+      status: 'ok',
+      payloadBytes: 0,
+      byteOrderTag: 0,
+      deterministicHash: reward.projectedRewardXp,
+    },
+    {
+      layer: 'link',
+      contractVersion: 1,
+      status: 'ok',
+      payloadBytes: 0,
+      byteOrderTag: 0,
+      deterministicHash: link.intel + link.objectives + link.player + link.ops,
+    },
+    {
+      layer: 'vector',
+      contractVersion: 1,
+      status: 'ok',
+      payloadBytes: 0,
+      byteOrderTag: 0,
+      deterministicHash: vector.dimensions,
+    },
+    {
+      layer: 'k3h4',
+      contractVersion: 1,
+      status: k3h4Envelope?.status ?? 'ok',
+      payloadBytes: k3h4Envelope?.payloadBytes ?? 0,
+      byteOrderTag: k3h4Envelope?.byteOrderTag ?? 0,
+      deterministicHash: k3h4Projection.observability.deterministicHash,
+    },
+  ];
+}
+
+function summarizeAbiLayerCoverage(
+    abiLayers: readonly NetcodeAbiLayerSnapshot[],
+    ): NetcodeAbiLayerCoverage {
+  const presentLayers = new Set<NetcodeAbiLayerName>();
+  for (const layer of abiLayers) {
+    presentLayers.add(layer.layer);
+  }
+
+  const presentLayerList =
+      NETCODE_ABI_LAYER_ORDER.filter((layer) => presentLayers.has(layer));
+  const missingLayers =
+      NETCODE_ABI_LAYER_ORDER.filter((layer) => !presentLayers.has(layer));
+
+  return {
+    expectedLayers: NETCODE_ABI_LAYER_ORDER,
+    presentLayers: presentLayerList,
+    missingLayers,
+    completeness: NETCODE_ABI_LAYER_ORDER.length === 0 ?
+        1 :
+        presentLayerList.length / NETCODE_ABI_LAYER_ORDER.length,
+    complete: missingLayers.length === 0,
+  };
+}
+
+function buildAbiLayerLedger(
+    abiLayers: readonly NetcodeAbiLayerSnapshot[],
+    ): NetcodeAbiLayerLedger {
+  const layerMap = new Map<NetcodeAbiLayerName, NetcodeAbiLayerSnapshot>();
+  for (const layer of abiLayers) {
+    if (!layerMap.has(layer.layer)) {
+      layerMap.set(layer.layer, layer);
+    }
+  }
+
+  return NETCODE_ABI_LAYER_ORDER.map((layer) => {
+    const snapshot = layerMap.get(layer);
+    if (!snapshot) {
+      return {
+        layer,
+        present: false,
+        contractVersion: 1,
+        status: 'missing',
+        payloadBytes: 0,
+        byteOrderTag: 0,
+        deterministicHash: null,
+      };
+    }
+
+    return {
+      layer,
+      present: true,
+      contractVersion: snapshot.contractVersion,
+      status: snapshot.status,
+      payloadBytes: snapshot.payloadBytes,
+      byteOrderTag: snapshot.byteOrderTag,
+      deterministicHash: snapshot.deterministicHash,
+    };
+  });
+}
+
 class NativeNetcodeAuthoritativeComputeOrchestrator implements
     NetcodeAnalyticsAuthoritativeComputeOrchestrator {
   constructor(private readonly netcode: NativeNetcodeService) {}
 
   public async compute(
       request: NetcodeAnalyticsAuthoritativeRequest,
-      rollout: NetcodeHypersphereRollout,
+      rollout: NetcodeK3h4Rollout,
       ): Promise<NetcodeAnalyticsAuthoritativeResult> {
     const reward = await this.netcode.buildReward(
         {
@@ -153,15 +291,17 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       networkDimensions: request.networkDimensions,
       modelConfidence: request.modelConfidence,
       policyMomentum: request.policyMomentum,
+      k3h4Mode: request.k3h4Mode ?? 'multiplicative',
+      spectralMode: request.spectralMode ?? 'disabled',
     };
 
     const vector = await this.netcode.buildVector(vectorInput);
 
-    let hypersphere: NetcodeHypersphereOutput;
+    let k3h4Projection: NetcodeK3h4Output;
     try {
-      hypersphere = await this.netcode.buildHypersphere(vectorInput);
+      k3h4Projection = await this.netcode.buildK3h4(vectorInput);
     } catch (error) {
-      const mappedError = mapHypersphereBuildError(error);
+      const mappedError = mapK3h4BuildError(error);
       if (mappedError) {
         throw mappedError;
       }
@@ -169,29 +309,39 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
     }
 
     const k3h4 = {
-      centers: hypersphere.centers,
-      radii: hypersphere.radii,
-      weightedVoronoiScores: hypersphere.weightedVoronoiScores,
-      spectralProxy: hypersphere.spectralProxy,
-      observability: hypersphere.observability,
+      centers: k3h4Projection.centers,
+      radii: k3h4Projection.radii,
+      weightedVoronoiScores: k3h4Projection.weightedVoronoiScores,
+      spectralProxy: k3h4Projection.spectralProxy,
+      observability: k3h4Projection.observability,
     };
-    const abiLayers = buildAbiLayerCatalog(reward, link, vector, hypersphere);
+    const k3h4Runtime: NetcodeK3h4RuntimeMetadata = {
+      mode: vectorInput.k3h4Mode,
+      spectralActivation: vectorInput.spectralMode,
+    };
+    const abiLayers =
+        buildAbiLayerCatalog(reward, link, vector, k3h4Projection);
+    const abiLayerCoverage = summarizeAbiLayerCoverage(abiLayers);
+    const abiLayerLedger = buildAbiLayerLedger(abiLayers);
 
     return {
       contractVersion: 1,
       reward,
       link,
       vector,
-      hypersphere,
+      k3h4Projection,
       k3h4,
+      k3h4Runtime,
       abiLayers,
+      abiLayerCoverage,
+      abiLayerLedger,
       lspRepresentation: {
         language: 'netcode.analytics.v1',
         boundedContext: 'netcode',
         aggregate: 'k3h4',
         authority: 'server-native',
         contractVersion: 1,
-        deterministicHash: hypersphere.observability.deterministicHash,
+        deterministicHash: k3h4Projection.observability.deterministicHash,
         rollout,
       },
     };

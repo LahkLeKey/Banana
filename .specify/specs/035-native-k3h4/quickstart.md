@@ -1,4 +1,4 @@
-# Quickstart: Native Hypersphere K-Means Analytics
+# Quickstart: Native K3H4 Analytics
 
 ## 1) Prerequisites
 - Branch: `035-native-k3h4`
@@ -7,6 +7,28 @@
   - `BANANA_NETCODE_ADAPTER=ffi`.
   - `BANANA_NETCODE_K3H4_ENABLED=true` for staged feature validation.
   - `BANANA_NETCODE_K3H4_COHORT=<cohort-name>` (for staged cohorts, default `all`).
+
+### Explicit Runtime Controls
+
+Request-level controls for `/api/netcode/analytics`, `/api/netcode/vector`, and `/api/netcode/k3h4`:
+
+- `k3h4Mode`: `multiplicative | power`
+- `spectralMode`: `disabled | affinity-graph`
+
+If omitted, defaults are:
+
+- `k3h4Mode=multiplicative`
+- `spectralMode=disabled`
+
+### Native Hardware Preflight Contract
+
+Before native K3H4 clustering executes, preflight declarations must match:
+
+- `hardwareByteOrderTag=0x01020304`
+- `hardwareDtypeTag=1` (`f32/q16 mixed`)
+- `hardwareAlignmentBytes=4`
+
+Mismatches fail fast with deterministic invalid-payload contract status.
 
 ### Rollout Matrix
 
@@ -30,7 +52,7 @@ cmake --build out/v3-native
 
 ## 3) Run focused native tests
 ```bash
-ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure
+ctest -C Debug --test-dir out/v3-native -R "netcode|k3h4" --output-on-failure
 ```
 
 ## 4) Run API route/service contract tests
@@ -65,12 +87,13 @@ bun -e "import { registerNetcodeRoutes } from './src/typescript/api/src/routes/n
 2. Collect response bodies.
 3. Assert byte-identical JSON after canonical key order normalization.
 4. Assert `observability.deterministicHash` is identical for all runs.
+5. Assert `k3h4Runtime.mode` and `k3h4Runtime.spectralActivation` remain unchanged across repeated runs.
 
 ## 8) Rollback drill
 1. Set `BANANA_NETCODE_K3H4_ENABLED=false`.
 2. Optionally set `BANANA_NETCODE_K3H4_COHORT=rollback` for evidence tagging.
 3. Re-run API contract test for `/api/netcode/analytics`.
-4. Verify legacy payload path is preserved and UI shows unavailable state for K-means panel.
+4. Verify non-K3H4 payload path is preserved and UI shows unavailable state for the analytics panel.
 
 ## 9) Evidence capture checklist
 
@@ -83,7 +106,7 @@ Recommended capture commands:
 
 ```bash
 cd /c/Github/Banana
-ctest -C Debug --test-dir out/v3-native -R "netcode|hypersphere|k3h4" --output-on-failure | tee artifacts/native/k3h4/determinism/<timestamp>/ctest.log
+ctest -C Debug --test-dir out/v3-native -R "netcode|k3h4" --output-on-failure | tee artifacts/native/k3h4/determinism/<timestamp>/ctest.log
 
 cd src/typescript/api
 bun test src/routes/netcode.contract.test.ts src/routes/netcode.integration.test.ts src/services/nativeNetcode.fail-fast.test.ts | tee ../../../artifacts/api/035-native-k3h4/<timestamp>/api-contract.log

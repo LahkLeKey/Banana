@@ -2,7 +2,7 @@
 
 This directory stores API validation evidence artifacts by feature.
 
-## Feature 035: Native Hypersphere K-Means
+## Feature 035: Native K3H4 Analytics
 
 Capture API and React presentation-consumer evidence under:
 
@@ -22,3 +22,10 @@ bun test src/domain/notebook/useNetcodeSession.test.ts src/domain/notebook/netwo
 ## Naming Guidance
 
 Use `YYYYMMDD-HHMMSS` timestamps and keep each run self-contained with command output.
+
+## Latest Run
+
+- Timestamp: `20260613-074821`
+- `035-native-k3h4/20260613-074821/api-netcode-tests.log`
+- `035-native-k3h4/20260613-074821/react-netcode-tests.log`
+- `035-native-k3h4/20260613-074821/run-meta.txt`

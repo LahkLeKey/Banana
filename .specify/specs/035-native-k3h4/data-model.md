@@ -1,4 +1,4 @@
-# Data Model: Native Hypersphere K-Means Analytics
+# Data Model: Native K3H4 Analytics
 
 ## Entity: FeatureVectorBatch
 - Description: One analytics compute request containing vectors and runtime parameters.
@@ -34,7 +34,7 @@
 - Validation rules:
   - `memberCount >= 0` and equals `memberVectorIds.length`.
 
-## Entity: InscribedHypersphereMetric
+## Entity: InscribedRadiusMetric
 - Description: Radius metadata derived from nearest-neighbor inter-center distance.
 - Fields:
   - `clusterId` (uint16)
@@ -91,7 +91,7 @@
 ## Relationships
 - `FeatureVectorBatch` 1..* `FeatureVector`
 - `FeatureVectorBatch` 1..* `ClusterCenter`
-- `ClusterCenter` 1..1 `InscribedHypersphereMetric`
+- `ClusterCenter` 1..1 `InscribedRadiusMetric`
 - `FeatureVector` *..* `ClusterCenter` via `WeightedVoronoiScore`
 - `ClusterCenter` 1..1 `SpectralProxyMetric`
 - `FeatureVectorBatch` 1..1 `ClusterComputeContractEnvelope`

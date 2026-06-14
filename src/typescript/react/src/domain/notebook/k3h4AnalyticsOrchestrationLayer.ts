@@ -1,9 +1,8 @@
-import type {
-  NetcodeAnalyticsAbiLayerSnapshot,
-  NetcodeAnalyticsResponse,
-} from '../../lib/api';
+import {type NetcodeAbiLayerCoverage, type NetcodeAbiLayerLedger} from '@banana/ui';
 
-import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
+import type {NetcodeAnalyticsAbiLayerSnapshot, NetcodeAnalyticsResponse,} from '../../lib/api';
+
+import type {ContractK3h4Model, ContractK3h4ProjectionModel, ContractNodeId, ContractNodeVectorModel, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
 const NODE_ORDER: ContractNodeId[] = ['intel', 'objectives', 'player', 'ops'];
 
@@ -28,14 +27,65 @@ const LABELING_BAND = {
 export type K3h4AnalyticsPresentationState = {
   rewardSignal: RewardSignalModel; linkConfidence: NodeLinkConfidenceModel;
   contractVectors: readonly ContractNodeVectorModel[];
-  hypersphereProjection: ContractHypersphereProjectionModel;
-  k3h4: ContractHypersphereKmeansModel;
+  k3h4Projection: ContractK3h4ProjectionModel;
+  k3h4: ContractK3h4Model;
   abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
+  abiLayerCoverage: NetcodeAbiLayerCoverage;
+  abiLayerLedger: NetcodeAbiLayerLedger;
 };
+
+function normalizeConvergenceStatus(value: unknown): 'converged'|
+    'max-iterations'|'failed' {
+  if (value === 'converged' || value === 'max-iterations' ||
+      value === 'failed') {
+    return value;
+  }
+
+  if (value === 0) return 'converged';
+  if (value === 1) return 'max-iterations';
+  return 'failed';
+}
+
+function normalizeScoringValidity(value: unknown): 'valid'|'degraded'|
+    'invalid' {
+  if (value === 'valid' || value === 'degraded' || value === 'invalid') {
+    return value;
+  }
+
+  if (value === 0) return 'valid';
+  if (value === 1) return 'degraded';
+  return 'invalid';
+}
+
+function normalizeDeterministicHash(value: unknown): string {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value.trim();
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return (value >>> 0).toString(16);
+  }
+
+  return '';
+}
+
+function normalizeMemberVectorIds(
+    memberVectorIds: unknown, memberCount: number): number[] {
+  if (Array.isArray(memberVectorIds) && memberVectorIds.length > 0) {
+    return memberVectorIds.filter((value) => Number.isFinite(value));
+  }
+
+  return Array.from({length: Math.max(0, memberCount)}, (_, index) => index);
+}
 
 export function mapK3h4AnalyticsToPresentationState(
     analytics: NetcodeAnalyticsResponse,
     ): K3h4AnalyticsPresentationState {
+  if (!analytics.abiLayerCoverage || !analytics.abiLayerLedger) {
+    throw new Error(
+        'Invalid analytics contract: missing authoritative ABI metadata');
+  }
+
   const rewardTier = analytics.reward.rewardTier === 0 ? 'Elite Signal' :
       analytics.reward.rewardTier === 1                ? 'Relevant' :
                                                          'Needs Labeling';
@@ -50,31 +100,39 @@ export function mapK3h4AnalyticsToPresentationState(
         contractStrength: analytics.vector.contractStrength[index] ?? 0,
       }));
 
-  const hypersphereProjection = {
-    dimensions: analytics.hypersphere.dimensions,
+  const k3h4Projection = {
+    dimensions: analytics.k3h4Projection.dimensions,
     nodes: NODE_ORDER.map(
         (id, index) => ({
           id,
-          x: analytics.hypersphere.nodes[index]?.x ?? 0,
-          y: analytics.hypersphere.nodes[index]?.y ?? 0,
-          z: analytics.hypersphere.nodes[index]?.z ?? 0,
-          coherence: analytics.hypersphere.nodes[index]?.coherence ?? 0,
-          inradius: analytics.hypersphere.nodes[index]?.inradius ?? 0,
+          x: analytics.k3h4Projection.nodes[index]?.x ?? 0,
+          y: analytics.k3h4Projection.nodes[index]?.y ?? 0,
+          z: analytics.k3h4Projection.nodes[index]?.z ?? 0,
+          coherence: analytics.k3h4Projection.nodes[index]?.coherence ?? 0,
+          inradius: analytics.k3h4Projection.nodes[index]?.inradius ?? 0,
           nearestNeighborDistance:
-              analytics.hypersphere.nodes[index]?.nearestNeighborDistance ?? 0,
+              analytics.k3h4Projection.nodes[index]?.nearestNeighborDistance ??
+              0,
         })),
-    alignment: analytics.hypersphere.alignment,
-    radialStability: analytics.hypersphere.radialStability,
+    alignment: analytics.k3h4Projection.alignment,
+    radialStability: analytics.k3h4Projection.radialStability,
   };
 
   const k3h4 = {
-    centers: analytics.k3h4.centers.map(
-        (center) => ({
-          clusterId: center.clusterId,
-          centerQ16: [...center.centerQ16],
-          memberVectorIds: [...center.memberVectorIds],
-          memberCount: center.memberCount,
-        })),
+    centers: analytics.k3h4.centers.map((center) => {
+      const normalizedCenter = center as {
+        readonly memberVectorIds?: readonly number[];
+        readonly memberCount: number;
+      };
+
+      return {
+        clusterId: center.clusterId,
+        centerQ16: [...center.centerQ16],
+        memberVectorIds: normalizeMemberVectorIds(
+            normalizedCenter.memberVectorIds, normalizedCenter.memberCount),
+        memberCount: center.memberCount,
+      };
+    }),
     radii: analytics.k3h4.radii.map(
         (radius) => ({
           clusterId: radius.clusterId,
@@ -98,14 +156,33 @@ export function mapK3h4AnalyticsToPresentationState(
           spectralState: entry.spectralState,
         })),
     observability: {
-      convergenceStatus: analytics.k3h4.observability.convergenceStatus,
+      convergenceStatus: normalizeConvergenceStatus(
+          analytics.k3h4.observability.convergenceStatus),
       iterationCount: analytics.k3h4.observability.iterationCount,
       assignmentChangesLastIteration:
           analytics.k3h4.observability.assignmentChangesLastIteration,
-      scoringValidity: analytics.k3h4.observability.scoringValidity,
-      deterministicHash: analytics.k3h4.observability.deterministicHash,
+      scoringValidity:
+          normalizeScoringValidity((analytics.k3h4.observability as {
+                                     readonly scoringValidity?: unknown;
+                                   }).scoringValidity),
+      deterministicHash: normalizeDeterministicHash(
+          analytics.k3h4.observability.deterministicHash),
+    },
+    runtime: {
+      mode: analytics.k3h4Runtime.mode,
+      spectralActivation: analytics.k3h4Runtime.spectralActivation,
     },
   };
+
+  const abiLayers = analytics.abiLayers.map((layer) => ({...layer}));
+  const abiLayerCoverage = {
+    expectedLayers: [...analytics.abiLayerCoverage.expectedLayers],
+    presentLayers: [...analytics.abiLayerCoverage.presentLayers],
+    missingLayers: [...analytics.abiLayerCoverage.missingLayers],
+    completeness: analytics.abiLayerCoverage.completeness,
+    complete: analytics.abiLayerCoverage.complete,
+  };
+  const abiLayerLedger = analytics.abiLayerLedger.map((layer) => ({...layer}));
 
   return {
     rewardSignal: {
@@ -121,8 +198,10 @@ export function mapK3h4AnalyticsToPresentationState(
       ops: analytics.link.ops,
     },
     contractVectors,
-    hypersphereProjection,
+    k3h4Projection,
     k3h4,
-    abiLayers: analytics.abiLayers.map((layer) => ({...layer})),
+    abiLayers,
+    abiLayerCoverage,
+    abiLayerLedger,
   };
 }

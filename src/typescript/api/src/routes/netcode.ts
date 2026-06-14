@@ -1,8 +1,8 @@
-import type {FastifyInstance} from 'fastify';
+import type {FastifyInstance, FastifyReply} from 'fastify';
 
 import {createK3h4ApplicationOrchestrationLayer, type K3h4ApplicationOrchestrationLayer,} from '../services/k3h4ApplicationOrchestrationLayer.ts';
 import {getNativeNetcodeService, type NativeNetcodeService,} from '../services/nativeNetcode.ts';
-import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, type NetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError, type NetcodeHypersphereRollout,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
+import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, type NetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError, type NetcodeK3h4Rollout,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
 
 type NetcodeRouteOptions = {
   netcodeAuthoritativeComputeOrchestrator?:
@@ -24,7 +24,16 @@ function isValidNetworkDimensions(value: unknown): boolean {
       value <= 16;
 }
 
-function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
+function isValidK3h4Mode(value: unknown): value is 'multiplicative'|'power' {
+  return value === 'multiplicative' || value === 'power';
+}
+
+function isValidSpectralMode(value: unknown): value is
+    'disabled'|'affinity-graph' {
+  return value === 'disabled' || value === 'affinity-graph';
+}
+
+function resolveNetcodeK3h4Rollout(): NetcodeK3h4Rollout {
   const enabledRaw =
       (process.env.BANANA_NETCODE_K3H4_ENABLED ?? 'true').trim().toLowerCase();
   const enabled =
@@ -32,6 +41,54 @@ function resolveNetcodeHypersphereKmeansRollout(): NetcodeHypersphereRollout {
   const cohort =
       (process.env.BANANA_NETCODE_K3H4_COHORT ?? 'all').trim() || 'all';
   return {enabled, cohort};
+}
+
+function createDirectRouteRollout(cohort: string): NetcodeK3h4Rollout {
+  return {
+    enabled: true,
+    cohort,
+  };
+}
+
+type NetcodeOrchestratedComputePayload = {
+  callDensity: number; questPercent: number; playerLevel: number;
+  comboStreak: number;
+  branchPressure: number;
+  dependencyPulse: number;
+  workflowDepth: 1 | 2 | 3;
+  networkDimensions: number;
+  modelConfidence: number;
+  policyMomentum: number;
+  k3h4Mode?: 'multiplicative' | 'power';
+  spectralMode?: 'disabled' | 'affinity-graph';
+  neuralRelevanceScore?: number;
+};
+
+function isValidOrchestratedComputePayload(
+    body: NetcodeOrchestratedComputePayload|undefined,
+    requireNeuralRelevanceScore: boolean,
+    ): boolean {
+  if (!body || !isFiniteNumber(body.callDensity) ||
+      !isFiniteNumber(body.questPercent) || !isFiniteNumber(body.playerLevel) ||
+      !isFiniteNumber(body.comboStreak) ||
+      !isFiniteNumber(body.branchPressure) ||
+      !isFiniteNumber(body.dependencyPulse) ||
+      !isValidWorkflowDepth(body.workflowDepth) ||
+      !isValidNetworkDimensions(body.networkDimensions) ||
+      !isFiniteNumber(body.modelConfidence) ||
+      !isFiniteNumber(body.policyMomentum) ||
+      (body.k3h4Mode !== undefined && !isValidK3h4Mode(body.k3h4Mode)) ||
+      (body.spectralMode !== undefined &&
+       !isValidSpectralMode(body.spectralMode))) {
+    return false;
+  }
+
+  if (requireNeuralRelevanceScore &&
+      !isFiniteNumber(body.neuralRelevanceScore)) {
+    return false;
+  }
+
+  return true;
 }
 
 export async function registerNetcodeRoutes(
@@ -51,6 +108,33 @@ export async function registerNetcodeRoutes(
                      request, rollout),
            } :
            createK3h4ApplicationOrchestrationLayer(netcode));
+
+  type OrchestratedNetcodeResult =
+      Awaited<ReturnType<K3h4ApplicationOrchestrationLayer['compute']>>;
+
+  async function computeOrSendOrchestrationError(
+      computeRequest:
+          Parameters<K3h4ApplicationOrchestrationLayer['compute']>[0],
+      rollout: NetcodeK3h4Rollout,
+      reply: FastifyReply,
+      ): Promise<OrchestratedNetcodeResult|null> {
+    try {
+      return await k3h4ApplicationOrchestrationLayer.compute(
+          computeRequest, rollout);
+    } catch (error) {
+      if (error instanceof NetcodeAnalyticsOrchestrationError) {
+        reply.status(502).send({
+          errorCode: error.errorCode,
+          message: error.message,
+          contractVersion: 1,
+          retryable: error.retryable,
+          rollout,
+        });
+        return null;
+      }
+      throw error;
+    }
+  }
 
   app.post<{
     Body: {
@@ -176,47 +260,27 @@ export async function registerNetcodeRoutes(
       modelConfidence: number;
       policyMomentum: number;
       interactionSignal?: number;
+      k3h4Mode?: 'multiplicative' | 'power';
+      spectralMode?: 'disabled' | 'affinity-graph';
     }
   }>('/api/netcode/analytics', async (request, reply) => {
-    const rollout = resolveNetcodeHypersphereKmeansRollout();
+    const rollout = resolveNetcodeK3h4Rollout();
     if (!rollout.enabled) {
       return reply.status(503).send({
-        error: 'Netcode hypersphere k3h4 analytics rollout disabled',
+        error: 'Netcode k3h4 analytics rollout disabled',
         rollout,
       });
     }
 
     const body = request.body;
-    if (!body || !isFiniteNumber(body.callDensity) ||
-        !isFiniteNumber(body.questPercent) ||
-        !isFiniteNumber(body.playerLevel) ||
-        !isFiniteNumber(body.comboStreak) ||
-        !isFiniteNumber(body.branchPressure) ||
-        !isFiniteNumber(body.dependencyPulse) ||
-        !isValidWorkflowDepth(body.workflowDepth) ||
-        !isValidNetworkDimensions(body.networkDimensions) ||
-        !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum)) {
+    if (!isValidOrchestratedComputePayload(body, false)) {
       return reply.status(400).send(
           {error: 'Invalid netcode analytics payload'});
     }
 
-    let orchestratedAnalytics;
-    try {
-      orchestratedAnalytics =
-          await k3h4ApplicationOrchestrationLayer.compute(body, rollout);
-    } catch (error) {
-      if (error instanceof NetcodeAnalyticsOrchestrationError) {
-        return reply.status(502).send({
-          errorCode: error.errorCode,
-          message: error.message,
-          contractVersion: 1,
-          retryable: error.retryable,
-          rollout,
-        });
-      }
-      throw error;
-    }
+    const orchestratedAnalytics =
+        await computeOrSendOrchestrationError(body, rollout, reply);
+    if (!orchestratedAnalytics) return;
 
     return {...orchestratedAnalytics, rollout};
   });
@@ -232,36 +296,22 @@ export async function registerNetcodeRoutes(
       networkDimensions: number;
       modelConfidence: number;
       policyMomentum: number;
+      k3h4Mode?: 'multiplicative' | 'power';
+      spectralMode?: 'disabled' | 'affinity-graph';
     }
   }>('/api/netcode/vector', async (request, reply) => {
     const body = request.body;
-    if (!body || !isFiniteNumber(body.callDensity) ||
-        !isFiniteNumber(body.questPercent) ||
-        !isFiniteNumber(body.playerLevel) ||
-        !isFiniteNumber(body.comboStreak) ||
-        !isFiniteNumber(body.branchPressure) ||
-        !isFiniteNumber(body.dependencyPulse) ||
-        !isValidWorkflowDepth(body.workflowDepth) ||
-        !isFiniteNumber(body.neuralRelevanceScore) ||
-        !isValidNetworkDimensions(body.networkDimensions) ||
-        !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum)) {
+    if (!isValidOrchestratedComputePayload(body, true)) {
       return reply.status(400).send({error: 'Invalid netcode vector payload'});
     }
 
-    const vector = await netcode.buildVector({
-      callDensity: body.callDensity,
-      questPercent: body.questPercent,
-      playerLevel: body.playerLevel,
-      comboStreak: body.comboStreak,
-      branchPressure: body.branchPressure,
-      dependencyPulse: body.dependencyPulse,
-      workflowDepth: body.workflowDepth,
-      neuralRelevanceScore: body.neuralRelevanceScore,
-      networkDimensions: body.networkDimensions,
-      modelConfidence: body.modelConfidence,
-      policyMomentum: body.policyMomentum,
-    });
+    const directVectorRollout = createDirectRouteRollout('vector-direct-route');
+
+    const orchestratedAnalytics =
+        await computeOrSendOrchestrationError(body, directVectorRollout, reply);
+    if (!orchestratedAnalytics) return;
+
+    const vector = orchestratedAnalytics.vector;
     return {vector};
   });
 
@@ -276,37 +326,21 @@ export async function registerNetcodeRoutes(
       networkDimensions: number;
       modelConfidence: number;
       policyMomentum: number;
+      k3h4Mode?: 'multiplicative' | 'power';
+      spectralMode?: 'disabled' | 'affinity-graph';
     }
-  }>('/api/netcode/hypersphere', async (request, reply) => {
+  }>('/api/netcode/k3h4', async (request, reply) => {
     const body = request.body;
-    if (!body || !isFiniteNumber(body.callDensity) ||
-        !isFiniteNumber(body.questPercent) ||
-        !isFiniteNumber(body.playerLevel) ||
-        !isFiniteNumber(body.comboStreak) ||
-        !isFiniteNumber(body.branchPressure) ||
-        !isFiniteNumber(body.dependencyPulse) ||
-        !isValidWorkflowDepth(body.workflowDepth) ||
-        !isFiniteNumber(body.neuralRelevanceScore) ||
-        !isValidNetworkDimensions(body.networkDimensions) ||
-        !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum)) {
-      return reply.status(400).send(
-          {error: 'Invalid netcode hypersphere payload'});
+    if (!isValidOrchestratedComputePayload(body, true)) {
+      return reply.status(400).send({error: 'Invalid netcode k3h4 payload'});
     }
 
-    const hypersphere = await netcode.buildHypersphere({
-      callDensity: body.callDensity,
-      questPercent: body.questPercent,
-      playerLevel: body.playerLevel,
-      comboStreak: body.comboStreak,
-      branchPressure: body.branchPressure,
-      dependencyPulse: body.dependencyPulse,
-      workflowDepth: body.workflowDepth,
-      neuralRelevanceScore: body.neuralRelevanceScore,
-      networkDimensions: body.networkDimensions,
-      modelConfidence: body.modelConfidence,
-      policyMomentum: body.policyMomentum,
-    });
-    return {hypersphere};
+    const directK3h4Rollout = createDirectRouteRollout('k3h4-direct-route');
+
+    const orchestratedAnalytics =
+        await computeOrSendOrchestrationError(body, directK3h4Rollout, reply);
+    if (!orchestratedAnalytics) return;
+
+    return {k3h4: orchestratedAnalytics.k3h4Projection};
   });
 }

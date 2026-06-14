@@ -11,7 +11,7 @@ static int fail(const char *message)
 
 int main(void)
 {
-    RuntimeNetcodeVectorSignalInput input = {
+    RuntimeK3h4VectorSignalInput input = {
         .call_density = 48,
         .quest_percent = 55,
         .player_level = 6,
@@ -23,16 +23,21 @@ int main(void)
         .network_dimensions = 10,
         .model_confidence = 72,
         .policy_momentum = 64,
+        .assignment_family = RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE,
+        .spectral_mode = RUNTIME_NETCODE_K3H4_SPECTRAL_DISABLED,
+        .hardware_byte_order_tag = RUNTIME_K3H4_BYTE_ORDER_TAG,
+        .hardware_dtype_tag = RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED,
+        .hardware_alignment_bytes = RUNTIME_K3H4_ALIGNMENT_BYTES_4,
     };
-    RuntimeNetcodeHypersphereOutput first_output;
-    RuntimeNetcodeHypersphereOutput second_output;
+    RuntimeNetcodeK3h4Output first_output;
+    RuntimeNetcodeK3h4Output second_output;
 
-    if (runtime_netcode_abi_build_hypersphere(input, &first_output) != 0)
-        return fail("failed to build first hypersphere output");
-    if (runtime_netcode_abi_build_hypersphere(input, &second_output) != 0)
-        return fail("failed to build second hypersphere output");
+    if (runtime_k3h4_abi_build_k3h4(input, &first_output) != 0)
+        return fail("failed to build first k3h4 output");
+    if (runtime_k3h4_abi_build_k3h4(input, &second_output) != 0)
+        return fail("failed to build second k3h4 output");
 
-    if (memcmp(&first_output, &second_output, sizeof(RuntimeNetcodeHypersphereOutput)) != 0)
+    if (memcmp(&first_output, &second_output, sizeof(RuntimeNetcodeK3h4Output)) != 0)
         return fail("repeated deterministic output mismatch");
 
     if (first_output.cluster_count < 1 || first_output.cluster_count > 4)

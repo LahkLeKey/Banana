@@ -3,6 +3,7 @@ type ErrorPayload = {
 };
 
 import type {LaunchGateReasonCode, LaunchGateStatusResponse, LaunchGateVerifyResponse} from './launchGateTypes';
+import type {NetcodeAbiLayerCoverage, NetcodeAbiLayerKind, NetcodeAbiLayerLedger, NetcodeAbiLayerSnapshot} from '@banana/ui';
 
 type BananaSummaryResponse = {
   banana: number;
@@ -34,6 +35,8 @@ export type NetcodeAnalyticsRequest = {
   modelConfidence: number;
   policyMomentum: number;
   interactionSignal?: number;
+  k3h4Mode?: 'multiplicative' | 'power';
+  spectralMode?: 'disabled' | 'affinity-graph';
 };
 
 export type NetcodeLearningRequest = {
@@ -58,30 +61,30 @@ export type NetcodeLearningResponse = {
   };
 };
 
-export type NetcodeHypersphereKmeansCenter = {
+export type NetcodeK3h4Center = {
   clusterId: number; centerQ16: readonly number[];
   memberVectorIds: readonly number[];
   memberCount: number;
 };
 
-export type NetcodeHypersphereKmeansRadius = {
+export type NetcodeK3h4Radius = {
   clusterId: number; nearestNeighborDistanceQ16: number;
   inscribedRadiusQ16: number;
   radiusState: 'ok' | 'degenerate' | 'invalid';
 };
 
-export type NetcodeHypersphereKmeansWeightedScore = {
+export type NetcodeK3h4WeightedScore = {
   vectorId: number; clusterId: number; distanceToCenterQ16: number;
   weightedScoreQ16: number;
   scoreValidity: 'valid' | 'clamped' | 'invalid';
 };
 
-export type NetcodeHypersphereKmeansSpectralProxy = {
+export type NetcodeK3h4SpectralProxy = {
   clusterId: number; frequencyProxyQ16: number; amplitudeProxyQ16: number;
   spectralState: 'ok' | 'low-signal' | 'invalid';
 };
 
-export type NetcodeHypersphereKmeansObservability = {
+export type NetcodeK3h4Observability = {
   convergenceStatus: 'converged'|'max-iterations'|'failed';
   iterationCount: number;
   assignmentChangesLastIteration: number;
@@ -89,31 +92,24 @@ export type NetcodeHypersphereKmeansObservability = {
   deterministicHash: string;
 };
 
-export type NetcodeHypersphereKmeansPayload = {
-  centers: readonly NetcodeHypersphereKmeansCenter[];
-  radii: readonly NetcodeHypersphereKmeansRadius[];
-  weightedVoronoiScores: readonly NetcodeHypersphereKmeansWeightedScore[];
-  spectralProxy: readonly NetcodeHypersphereKmeansSpectralProxy[];
-  observability: NetcodeHypersphereKmeansObservability;
+export type NetcodeK3h4Payload = {
+  centers: readonly NetcodeK3h4Center[]; radii: readonly NetcodeK3h4Radius[];
+  weightedVoronoiScores: readonly NetcodeK3h4WeightedScore[];
+  spectralProxy: readonly NetcodeK3h4SpectralProxy[];
+  observability: NetcodeK3h4Observability;
 };
 
 export type NetcodeAnalyticsRollout = {
   enabled: boolean; cohort: string;
 };
 
-export type NetcodeAnalyticsAbiLayerKind =
-    'learning'|'reward'|'link'|'vector'|'hypersphere';
+export type NetcodeAnalyticsAbiLayerKind = NetcodeAbiLayerKind;
 
-export type NetcodeAnalyticsAbiLayerSnapshot = {
-  readonly layer: NetcodeAnalyticsAbiLayerKind;
-  readonly contractVersion: number;
-  readonly status:
-      'ok'|'unsupported-version'|'invalid-payload'|'nonfinite-value'|
-      'crc-mismatch';
-  readonly payloadBytes: number;
-  readonly byteOrderTag: number;
-  readonly deterministicHash: number;
-};
+export type NetcodeAnalyticsAbiLayerSnapshot = NetcodeAbiLayerSnapshot;
+
+export type NetcodeAnalyticsAbiLayerCoverage = NetcodeAbiLayerCoverage;
+
+export type NetcodeAnalyticsAbiLayerLedger = NetcodeAbiLayerLedger;
 
 export type NetcodeAnalyticsLspRepresentation = {
   language: 'netcode.analytics.v1'; boundedContext: 'netcode';
@@ -134,7 +130,7 @@ export type NetcodeAnalyticsResponse = {
     dimensions: number; nodeVectors: readonly(readonly number[])[];
     contractStrength: readonly[number, number, number, number];
   };
-  hypersphere: {
+  k3h4Projection: {
     dimensions: number; nodes: readonly {
       x: number;
       y: number;
@@ -146,8 +142,14 @@ export type NetcodeAnalyticsResponse = {
     alignment: number;
     radialStability: number;
   };
-  k3h4: NetcodeHypersphereKmeansPayload;
+  k3h4: NetcodeK3h4Payload;
+  k3h4Runtime: {
+    mode: 'multiplicative' | 'power';
+    spectralActivation: 'disabled' | 'affinity-graph';
+  };
   abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
+  abiLayerCoverage: NetcodeAnalyticsAbiLayerCoverage;
+  abiLayerLedger: NetcodeAnalyticsAbiLayerLedger;
   rollout: NetcodeAnalyticsRollout;
 };
 

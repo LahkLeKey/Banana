@@ -1,10 +1,10 @@
+import {buildNetcodeAbiLayerLedger, type NetcodeAbiLayerCoverage, type NetcodeAbiLayerLedger, type NetcodeAbiLayerSnapshot, summarizeNetcodeAbiLayers,} from '@banana/ui';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 import {composeK3h4PresentationApplicationService,} from '../../application/notebook/k3h4/k3h4PresentationCompositionRoot';
-import type {NetcodeAnalyticsAbiLayerSnapshot,} from '../../lib/api';
 import {fetchNetcodeAnalytics, fetchNetcodeLearning, NetcodeAnalyticsError, resolveApiBaseUrl,} from '../../lib/api';
 
-import type {ContractHypersphereKmeansModel, ContractHypersphereProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
+import type {ContractK3h4Model, ContractK3h4ProjectionModel, ContractNodeId, ContractNodeVectorModel, NetcodeAnalyticsAvailabilityModel, NodeInteractionAction, NodeInteractionLearningModel, NodeInteractionLedger, NodeLinkConfidenceModel, RewardSignalModel,} from './network-domain';
 
 type NetcodeSignals = {
   readonly callDensity: number; readonly questPercent: number; readonly comboStreak: number; readonly branchPressure: number; readonly workflowDepth: 1 | 2 | 3; readonly playerLevel: number; readonly dependencyPulse: number; readonly networkDimensions:
@@ -61,7 +61,7 @@ function makeDefaultProjectionNode(id: ContractNodeId) {
   };
 }
 
-const DEFAULT_HYPERSPHERE: ContractHypersphereProjectionModel = {
+const DEFAULT_K3H4_PROJECTION: ContractK3h4ProjectionModel = {
   dimensions: 6,
   nodes: [
     makeDefaultProjectionNode('intel'),
@@ -73,7 +73,7 @@ const DEFAULT_HYPERSPHERE: ContractHypersphereProjectionModel = {
   radialStability: 0,
 };
 
-const DEFAULT_K3H4: ContractHypersphereKmeansModel = {
+const DEFAULT_K3H4: ContractK3h4Model = {
   centers: [],
   radii: [],
   weightedVoronoiScores: [],
@@ -84,6 +84,10 @@ const DEFAULT_K3H4: ContractHypersphereKmeansModel = {
     assignmentChangesLastIteration: 0,
     scoringValidity: 'invalid',
     deterministicHash: '',
+  },
+  runtime: {
+    mode: 'multiplicative',
+    spectralActivation: 'disabled',
   },
 };
 
@@ -138,9 +142,8 @@ type ApiLearningResponse = {
 };
 
 export type NetcodeSessionHook = {
-  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly hypersphereProjection: ContractHypersphereProjectionModel; readonly k3h4: ContractHypersphereKmeansModel; readonly analyticsAvailability:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  NetcodeAnalyticsAvailabilityModel;
-  readonly abiLayers: readonly NetcodeAnalyticsAbiLayerSnapshot[];
+  readonly learningModel: NodeInteractionLearningModel; readonly ledger: NodeInteractionLedger; readonly recordNodeTap: (node: ContractNodeId) => void; readonly recordAction: (action: NodeInteractionAction) => void; readonly rewardSignal: RewardSignalModel; readonly linkConfidence: NodeLinkConfidenceModel; readonly contractVectors: readonly ContractNodeVectorModel[]; readonly k3h4Projection: ContractK3h4ProjectionModel; readonly k3h4: ContractK3h4Model; readonly analyticsAvailability: NetcodeAnalyticsAvailabilityModel; readonly abiLayers: readonly NetcodeAbiLayerSnapshot[]; readonly abiLayerCoverage: NetcodeAbiLayerCoverage; readonly abiLayerLedger:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      NetcodeAbiLayerLedger;
 };
 
 export function useNetcodeSession({
@@ -162,12 +165,15 @@ export function useNetcodeSession({
       useState<NodeLinkConfidenceModel>(DEFAULT_LINK_CONFIDENCE);
   const [contractVectors, setContractVectors] =
       useState<readonly ContractNodeVectorModel[]>([]);
-  const [hypersphereProjection, setHypersphereProjection] =
-      useState<ContractHypersphereProjectionModel>(DEFAULT_HYPERSPHERE);
-  const [k3h4, setHypersphereKmeans] =
-      useState<ContractHypersphereKmeansModel>(DEFAULT_K3H4);
-    const [abiLayers, setAbiLayers] =
-      useState<readonly NetcodeAnalyticsAbiLayerSnapshot[]>([]);
+  const [k3h4Projection, setK3h4Projection] =
+      useState<ContractK3h4ProjectionModel>(DEFAULT_K3H4_PROJECTION);
+  const [k3h4, setK3h4Model] = useState<ContractK3h4Model>(DEFAULT_K3H4);
+  const [abiLayers, setAbiLayers] =
+      useState<readonly NetcodeAbiLayerSnapshot[]>([]);
+  const [abiLayerCoverage, setAbiLayerCoverage] =
+      useState<NetcodeAbiLayerCoverage>(() => summarizeNetcodeAbiLayers([]));
+  const [abiLayerLedger, setAbiLayerLedger] =
+      useState<NetcodeAbiLayerLedger>(() => buildNetcodeAbiLayerLedger([]));
   const [analyticsAvailability, setAnalyticsAvailability] =
       useState<NetcodeAnalyticsAvailabilityModel>(
           DEFAULT_ANALYTICS_AVAILABILITY);
@@ -287,9 +293,11 @@ export function useNetcodeSession({
             setRewardSignal(presentationState.rewardSignal);
             setLinkConfidence(presentationState.linkConfidence);
             setContractVectors(presentationState.contractVectors);
-            setHypersphereProjection(presentationState.hypersphereProjection);
-            setHypersphereKmeans(presentationState.k3h4);
+            setK3h4Projection(presentationState.k3h4Projection);
+            setK3h4Model(presentationState.k3h4);
             setAbiLayers(presentationState.abiLayers);
+            setAbiLayerCoverage(presentationState.abiLayerCoverage);
+            setAbiLayerLedger(presentationState.abiLayerLedger);
 
             const rollout = analytics.rollout;
             setAnalyticsAvailability({
@@ -329,6 +337,20 @@ export function useNetcodeSession({
               return;
             }
 
+            if (error instanceof Error &&
+                error.message.toLowerCase().includes(
+                    'invalid analytics contract')) {
+              setAnalyticsAvailability({
+                available: false,
+                reason: 'contract-error',
+                rollout: {
+                  enabled: true,
+                  cohort: 'default',
+                },
+              });
+              return;
+            }
+
             setAnalyticsAvailability({
               available: false,
               reason: 'transport-error',
@@ -363,9 +385,11 @@ export function useNetcodeSession({
     rewardSignal,
     linkConfidence,
     contractVectors,
-    hypersphereProjection,
+    k3h4Projection,
     k3h4,
     analyticsAvailability,
     abiLayers,
+    abiLayerCoverage,
+    abiLayerLedger,
   };
 }

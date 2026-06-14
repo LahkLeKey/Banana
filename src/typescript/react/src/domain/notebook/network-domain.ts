@@ -21,58 +21,64 @@ export type ContractNodeVectorModel = {
                                                                                     number;
 };
 
-export type ContractHypersphereProjectionNode = {
+export type ContractK3h4ProjectionNode = {
   readonly id: ContractNodeId; readonly x: number; readonly y: number; readonly z: number; readonly coherence: number; readonly inradius: number; readonly nearestNeighborDistance:
                                                                                                                                                                number;
 };
 
-export type ContractHypersphereProjectionModel = {
-  readonly dimensions: number; readonly nodes: readonly ContractHypersphereProjectionNode[]; readonly alignment: number; readonly radialStability:
-                                                                                                                                      number;
+export type ContractK3h4ProjectionModel = {
+  readonly dimensions: number; readonly nodes: readonly ContractK3h4ProjectionNode[]; readonly alignment: number; readonly radialStability:
+                                                                                                                               number;
 };
 
-export type ContractHypersphereKmeansCenterModel = {
+export type ContractK3h4CenterModel = {
   readonly clusterId: number; readonly centerQ16: readonly number[]; readonly memberVectorIds: readonly number[]; readonly memberCount:
                                                                                                                                number;
 };
 
-export type ContractHypersphereKmeansRadiusModel = {
+export type ContractK3h4RadiusModel = {
   readonly clusterId: number; readonly nearestNeighborDistanceQ16: number; readonly inscribedRadiusQ16: number; readonly radiusState:
                                                                                                                              'ok' |
       'degenerate' | 'invalid';
 };
 
-export type ContractHypersphereKmeansWeightedScoreModel = {
+export type ContractK3h4WeightedScoreModel = {
   readonly vectorId: number; readonly clusterId: number; readonly distanceToCenterQ16: number; readonly weightedScoreQ16: number; readonly scoreValidity:
                                                                                                                                                'valid' |
       'clamped' | 'invalid';
 };
 
-export type ContractHypersphereKmeansSpectralProxyModel = {
+export type ContractK3h4SpectralProxyModel = {
   readonly clusterId: number; readonly frequencyProxyQ16: number; readonly amplitudeProxyQ16: number; readonly spectralState:
                                                                                                                    'ok' |
       'low-signal' | 'invalid';
 };
 
-export type ContractHypersphereKmeansObservabilityModel = {
+export type ContractK3h4ObservabilityModel = {
   readonly convergenceStatus: 'converged'|'max-iterations'|'failed'; readonly iterationCount: number; readonly assignmentChangesLastIteration: number; readonly scoringValidity: 'valid' | 'degraded' | 'invalid'; readonly deterministicHash:
                                                                                                                                                                                                                                 string;
 };
 
-export type ContractHypersphereKmeansModel = {
-  readonly centers: readonly ContractHypersphereKmeansCenterModel[]; readonly radii: readonly ContractHypersphereKmeansRadiusModel[]; readonly weightedVoronoiScores: readonly ContractHypersphereKmeansWeightedScoreModel[]; readonly spectralProxy: readonly ContractHypersphereKmeansSpectralProxyModel[]; readonly observability:
-                                                                                                                                                                                                                                                                                                                           ContractHypersphereKmeansObservabilityModel;
+export type ContractK3h4RuntimeMetadataModel = {
+  readonly mode: 'multiplicative'|'power'; readonly spectralActivation:
+                                                        'disabled' |
+      'affinity-graph';
 };
 
-export type ContractHypersphereKmeansContractStatus = 'ok'|
-    'unsupported-version'|'invalid-payload'|'nonfinite-value'|'crc-mismatch';
+export type ContractK3h4Model =
+    {
+      readonly centers: readonly ContractK3h4CenterModel[]; readonly radii: readonly ContractK3h4RadiusModel[]; readonly weightedVoronoiScores: readonly ContractK3h4WeightedScoreModel[]; readonly spectralProxy: readonly ContractK3h4SpectralProxyModel[]; readonly observability: ContractK3h4ObservabilityModel; readonly runtime: ContractK3h4RuntimeMetadataModel;
+    };
 
-export type ContractHypersphereKmeansEnvelope = {
+export type ContractK3h4ContractStatus = 'ok'|'unsupported-version'|
+    'invalid-payload'|'nonfinite-value'|'crc-mismatch';
+
+export type ContractK3h4Envelope = {
   readonly contractVersion: number; readonly byteOrderTag: number; readonly payloadBytes: number; readonly payloadCrc32: number; readonly status:
-                                                                                                                                              ContractHypersphereKmeansContractStatus;
+                                                                                                                                              ContractK3h4ContractStatus;
 };
 
-export type ContractHypersphereKmeansRollout = {
+export type ContractK3h4Rollout = {
   readonly enabled: boolean; readonly cohort: string;
 };
 
@@ -83,7 +89,7 @@ export type NetcodeAnalyticsAvailabilityModel = {
   readonly errorCode?: string;
   readonly retryable?: boolean;
   readonly contractVersion?: number;
-  readonly rollout: ContractHypersphereKmeansRollout;
+  readonly rollout: ContractK3h4Rollout;
 };
 
 export type CFileContractNodeModel = {
@@ -360,9 +366,9 @@ export function buildContractNodeVectorModel(input: {
   ];
 }
 
-export function buildContractHypersphereProjectionModel(
+export function buildContractK3h4ProjectionModel(
     input: {readonly nodes: readonly ContractNodeVectorModel[];}):
-    ContractHypersphereProjectionModel {
+    ContractK3h4ProjectionModel {
   if (input.nodes.length === 0) {
     return {
       dimensions: 0,

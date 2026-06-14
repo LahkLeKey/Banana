@@ -1,5 +1,5 @@
 #include "banana_native_v3.h"
-#include "k3h4/k3h4_hypersphere_orchestration_layer.h"
+#include "k3h4/k3h4_metrics_orchestration_layer.h"
 #include "k3h4/k3h4_native_orchestrator.h"
 #include "runtime/engine/engine_aux_abi.h"
 #include "runtime/engine/engine_host.h"
@@ -20,15 +20,15 @@ static int32_t map_runtime_contract_status(int status)
 {
 	switch (status)
 	{
-	case RUNTIME_NETCODE_CONTRACT_OK:
+	case RUNTIME_K3H4_CONTRACT_OK:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_OK;
-	case RUNTIME_NETCODE_CONTRACT_UNSUPPORTED_VERSION:
+	case RUNTIME_K3H4_CONTRACT_UNSUPPORTED_VERSION:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_UNSUPPORTED_VERSION;
-	case RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD:
+	case RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD;
-	case RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE:
+	case RUNTIME_K3H4_CONTRACT_NONFINITE_VALUE:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_NONFINITE_VALUE;
-	case RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH:
+	case RUNTIME_K3H4_CONTRACT_CRC_MISMATCH:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_CRC_MISMATCH;
 	default:
 		return BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD;
@@ -190,17 +190,17 @@ void banana_native_v3_world_cleanup(void)
 
 void banana_native_v3_netcode_reset(void)
 {
-	runtime_netcode_abi_reset();
+	runtime_k3h4_abi_reset();
 }
 
 void banana_native_v3_netcode_record_node_tap(int32_t node)
 {
-	runtime_netcode_abi_record_node_tap((RuntimeNetcodeNode)node);
+	runtime_k3h4_abi_record_node_tap((RuntimeNetcodeNode)node);
 }
 
 void banana_native_v3_netcode_record_action(int32_t action)
 {
-	runtime_netcode_abi_record_action((RuntimeNetcodeAction)action);
+	runtime_k3h4_abi_record_action((RuntimeNetcodeAction)action);
 }
 
 int banana_native_v3_netcode_get_ledger(banana_native_v3_netcode_ledger *out_ledger)
@@ -212,7 +212,7 @@ int banana_native_v3_netcode_get_ledger(banana_native_v3_netcode_ledger *out_led
 		return -1;
 	}
 
-	if (runtime_netcode_abi_get_ledger(&ledger) != 0)
+	if (runtime_k3h4_abi_get_ledger(&ledger) != 0)
 	{
 		return -1;
 	}
@@ -228,7 +228,7 @@ int banana_native_v3_netcode_get_ledger(banana_native_v3_netcode_ledger *out_led
 int banana_native_v3_netcode_build_learning(const banana_native_v3_netcode_signal_input *signal_input,
 									banana_native_v3_netcode_learning_output *out_output)
 {
-	RuntimeNetcodeSignalInput native_input;
+	RuntimeK3h4SignalInput native_input;
 	RuntimeNetcodeLearningOutput native_output;
 
 	if (!signal_input || !out_output)
@@ -268,7 +268,7 @@ int banana_native_v3_netcode_build_reward(const banana_native_v3_netcode_signal_
 								 int32_t interaction_signal,
 								 banana_native_v3_netcode_reward_output *out_output)
 {
-	RuntimeNetcodeSignalInput native_input;
+	RuntimeK3h4SignalInput native_input;
 	RuntimeNetcodeRewardOutput native_output;
 
 	if (!signal_input || !out_output)
@@ -297,7 +297,7 @@ int banana_native_v3_netcode_build_reward(const banana_native_v3_netcode_signal_
 int banana_native_v3_netcode_build_link(const banana_native_v3_netcode_link_input *signal_input,
 							   banana_native_v3_netcode_link_output *out_output)
 {
-	RuntimeNetcodeLinkSignalInput native_input;
+	RuntimeK3h4LinkSignalInput native_input;
 	RuntimeNetcodeLinkOutput native_output;
 
 	if (!signal_input || !out_output)
@@ -329,7 +329,7 @@ int banana_native_v3_netcode_build_link(const banana_native_v3_netcode_link_inpu
 int banana_native_v3_netcode_build_vector(const banana_native_v3_netcode_vector_input *signal_input,
 								 banana_native_v3_netcode_vector_output *out_output)
 {
-	RuntimeNetcodeVectorSignalInput native_input;
+	RuntimeK3h4VectorSignalInput native_input;
 	RuntimeNetcodeVectorOutput native_output;
 	int row;
 	int col;
@@ -350,6 +350,11 @@ int banana_native_v3_netcode_build_vector(const banana_native_v3_netcode_vector_
 	native_input.network_dimensions = signal_input->network_dimensions;
 	native_input.model_confidence = signal_input->model_confidence;
 	native_input.policy_momentum = signal_input->policy_momentum;
+	native_input.assignment_family = signal_input->assignment_family;
+	native_input.spectral_mode = signal_input->spectral_mode;
+	native_input.hardware_byte_order_tag = signal_input->hardware_byte_order_tag;
+	native_input.hardware_dtype_tag = signal_input->hardware_dtype_tag;
+	native_input.hardware_alignment_bytes = signal_input->hardware_alignment_bytes;
 
 	if (banana_native_k3h4_layer_build_vector(native_input, &native_output) != 0)
 	{
@@ -369,11 +374,11 @@ int banana_native_v3_netcode_build_vector(const banana_native_v3_netcode_vector_
 	return 0;
 }
 
-int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_vector_input *signal_input,
-								   banana_native_v3_netcode_hypersphere_output *out_output)
+int banana_native_v3_netcode_build_k3h4(const banana_native_v3_netcode_vector_input *signal_input,
+								   banana_native_v3_netcode_k3h4_output *out_output)
 {
-	RuntimeNetcodeVectorSignalInput native_input;
-	RuntimeNetcodeHypersphereOutput native_output;
+	RuntimeK3h4VectorSignalInput native_input;
+	RuntimeNetcodeK3h4Output native_output;
 	int index;
 	int cluster;
 	int dim;
@@ -395,8 +400,13 @@ int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_ve
 	native_input.network_dimensions = signal_input->network_dimensions;
 	native_input.model_confidence = signal_input->model_confidence;
 	native_input.policy_momentum = signal_input->policy_momentum;
+	native_input.assignment_family = signal_input->assignment_family;
+	native_input.spectral_mode = signal_input->spectral_mode;
+	native_input.hardware_byte_order_tag = signal_input->hardware_byte_order_tag;
+	native_input.hardware_dtype_tag = signal_input->hardware_dtype_tag;
+	native_input.hardware_alignment_bytes = signal_input->hardware_alignment_bytes;
 
-	if (banana_native_k3h4_layer_build_hypersphere(native_input, &native_output) != 0)
+	if (banana_native_k3h4_layer_build_k3h4(native_input, &native_output) != 0)
 	{
 		return -1;
 	}
@@ -456,7 +466,7 @@ int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_ve
 	out_output->envelope_payload_crc32 = native_output.envelope.payload_crc32;
 	out_output->contract_status = map_runtime_contract_status(native_output.envelope.contract_status);
 
-	if (native_output.envelope.contract_status != RUNTIME_NETCODE_CONTRACT_OK)
+	if (native_output.envelope.contract_status != RUNTIME_K3H4_CONTRACT_OK)
 	{
 		return native_output.envelope.contract_status;
 	}

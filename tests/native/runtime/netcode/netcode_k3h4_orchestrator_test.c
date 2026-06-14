@@ -18,14 +18,14 @@ static int floats_equal(float lhs, float rhs)
 
 int main(void)
 {
-    RuntimeNetcodeSignalInput signal_input;
-    RuntimeNetcodeLinkSignalInput link_input;
-    RuntimeNetcodeVectorSignalInput vector_input;
+    RuntimeK3h4SignalInput signal_input;
+    RuntimeK3h4LinkSignalInput link_input;
+    RuntimeK3h4VectorSignalInput vector_input;
     RuntimeNetcodeLearningOutput abi_learning;
     RuntimeNetcodeRewardOutput abi_reward;
     RuntimeNetcodeLinkOutput abi_link;
     RuntimeNetcodeVectorOutput abi_vector;
-    RuntimeNetcodeHypersphereOutput abi_hypersphere;
+    RuntimeNetcodeK3h4Output abi_k3h4;
     RuntimeNetcodeInteractionLedger ledger;
     RuntimeNetcodeK3h4Request request;
     RuntimeNetcodeK3h4FullOutput orchestrated;
@@ -34,11 +34,11 @@ int main(void)
     int cluster;
     int score;
 
-    runtime_netcode_abi_reset();
-    runtime_netcode_abi_record_node_tap(RUNTIME_NETCODE_NODE_INTEL);
-    runtime_netcode_abi_record_node_tap(RUNTIME_NETCODE_NODE_PLAYER);
-    runtime_netcode_abi_record_action(RUNTIME_NETCODE_ACTION_ROUTE);
-    runtime_netcode_abi_record_action(RUNTIME_NETCODE_ACTION_TRAIN);
+    runtime_k3h4_abi_reset();
+    runtime_k3h4_abi_record_node_tap(RUNTIME_NETCODE_NODE_INTEL);
+    runtime_k3h4_abi_record_node_tap(RUNTIME_NETCODE_NODE_PLAYER);
+    runtime_k3h4_abi_record_action(RUNTIME_NETCODE_ACTION_ROUTE);
+    runtime_k3h4_abi_record_action(RUNTIME_NETCODE_ACTION_TRAIN);
 
     memset(&signal_input, 0, sizeof(signal_input));
     signal_input.call_density = 44;
@@ -68,20 +68,25 @@ int main(void)
     vector_input.network_dimensions = 10;
     vector_input.model_confidence = 76;
     vector_input.policy_momentum = 63;
+    vector_input.assignment_family = RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER;
+    vector_input.spectral_mode = RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH;
+    vector_input.hardware_byte_order_tag = RUNTIME_K3H4_BYTE_ORDER_TAG;
+    vector_input.hardware_dtype_tag = RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED;
+    vector_input.hardware_alignment_bytes = RUNTIME_K3H4_ALIGNMENT_BYTES_4;
 
-    if (runtime_netcode_abi_build_learning(signal_input, &abi_learning) != 0)
-        return fail("runtime_netcode_abi_build_learning failed");
-    if (runtime_netcode_abi_build_reward(signal_input, link_input.interaction_signal, &abi_reward) != 0)
-        return fail("runtime_netcode_abi_build_reward failed");
-    if (runtime_netcode_abi_build_link(link_input, &abi_link) != 0)
-        return fail("runtime_netcode_abi_build_link failed");
-    if (runtime_netcode_abi_build_vector(vector_input, &abi_vector) != 0)
-        return fail("runtime_netcode_abi_build_vector failed");
-    if (runtime_netcode_abi_build_hypersphere(vector_input, &abi_hypersphere) != 0)
-        return fail("runtime_netcode_abi_build_hypersphere failed");
+    if (runtime_k3h4_abi_build_learning(signal_input, &abi_learning) != 0)
+        return fail("runtime_k3h4_abi_build_learning failed");
+    if (runtime_k3h4_abi_build_reward(signal_input, link_input.interaction_signal, &abi_reward) != 0)
+        return fail("runtime_k3h4_abi_build_reward failed");
+    if (runtime_k3h4_abi_build_link(link_input, &abi_link) != 0)
+        return fail("runtime_k3h4_abi_build_link failed");
+    if (runtime_k3h4_abi_build_vector(vector_input, &abi_vector) != 0)
+        return fail("runtime_k3h4_abi_build_vector failed");
+    if (runtime_k3h4_abi_build_k3h4(vector_input, &abi_k3h4) != 0)
+        return fail("runtime_k3h4_abi_build_k3h4 failed");
 
-    if (runtime_netcode_abi_get_ledger(&ledger) != 0)
-        return fail("runtime_netcode_abi_get_ledger failed");
+    if (runtime_k3h4_abi_get_ledger(&ledger) != 0)
+        return fail("runtime_k3h4_abi_get_ledger failed");
 
     memset(&request, 0, sizeof(request));
     request.ledger = ledger;
@@ -97,6 +102,11 @@ int main(void)
     request.network_dimensions = vector_input.network_dimensions;
     request.model_confidence = vector_input.model_confidence;
     request.policy_momentum = vector_input.policy_momentum;
+    request.assignment_family = vector_input.assignment_family;
+    request.spectral_mode = vector_input.spectral_mode;
+    request.hardware_byte_order_tag = vector_input.hardware_byte_order_tag;
+    request.hardware_dtype_tag = vector_input.hardware_dtype_tag;
+    request.hardware_alignment_bytes = vector_input.hardware_alignment_bytes;
 
     if (runtime_netcode_k3h4_orchestrate_full(&request, &orchestrated) != 0)
         return fail("runtime_netcode_k3h4_orchestrate_full failed");
@@ -163,81 +173,81 @@ int main(void)
         }
     }
 
-    if (abi_hypersphere.dimensions != orchestrated.hypersphere.dimensions ||
-        abi_hypersphere.alignment != orchestrated.hypersphere.alignment ||
-        abi_hypersphere.radial_stability != orchestrated.hypersphere.radial_stability ||
-        abi_hypersphere.cluster_count != orchestrated.hypersphere.cluster_count ||
-        abi_hypersphere.vector_count != orchestrated.hypersphere.vector_count)
+    if (abi_k3h4.dimensions != orchestrated.k3h4.dimensions ||
+        abi_k3h4.alignment != orchestrated.k3h4.alignment ||
+        abi_k3h4.radial_stability != orchestrated.k3h4.radial_stability ||
+        abi_k3h4.cluster_count != orchestrated.k3h4.cluster_count ||
+        abi_k3h4.vector_count != orchestrated.k3h4.vector_count)
     {
-        return fail("hypersphere metadata mismatch against orchestrator");
+        return fail("k3h4 metadata mismatch against orchestrator");
     }
 
     for (node = 0; node < RUNTIME_NETCODE_VECTOR_NODE_COUNT; node++)
     {
-        if (!floats_equal(abi_hypersphere.nodes[node].x, orchestrated.hypersphere.nodes[node].x) ||
-            !floats_equal(abi_hypersphere.nodes[node].y, orchestrated.hypersphere.nodes[node].y) ||
-            !floats_equal(abi_hypersphere.nodes[node].z, orchestrated.hypersphere.nodes[node].z) ||
-            abi_hypersphere.nodes[node].coherence != orchestrated.hypersphere.nodes[node].coherence ||
-            !floats_equal(abi_hypersphere.nodes[node].inradius, orchestrated.hypersphere.nodes[node].inradius) ||
-            !floats_equal(abi_hypersphere.nodes[node].nearest_neighbor_distance,
-                          orchestrated.hypersphere.nodes[node].nearest_neighbor_distance))
+        if (!floats_equal(abi_k3h4.nodes[node].x, orchestrated.k3h4.nodes[node].x) ||
+            !floats_equal(abi_k3h4.nodes[node].y, orchestrated.k3h4.nodes[node].y) ||
+            !floats_equal(abi_k3h4.nodes[node].z, orchestrated.k3h4.nodes[node].z) ||
+            abi_k3h4.nodes[node].coherence != orchestrated.k3h4.nodes[node].coherence ||
+            !floats_equal(abi_k3h4.nodes[node].inradius, orchestrated.k3h4.nodes[node].inradius) ||
+            !floats_equal(abi_k3h4.nodes[node].nearest_neighbor_distance,
+                          orchestrated.k3h4.nodes[node].nearest_neighbor_distance))
         {
-            return fail("hypersphere node mismatch");
+            return fail("k3h4 node mismatch");
         }
     }
 
-    for (cluster = 0; cluster < abi_hypersphere.cluster_count; cluster++)
+    for (cluster = 0; cluster < abi_k3h4.cluster_count; cluster++)
     {
-        if (abi_hypersphere.centers[cluster].cluster_id != orchestrated.hypersphere.centers[cluster].cluster_id ||
-            abi_hypersphere.centers[cluster].member_count != orchestrated.hypersphere.centers[cluster].member_count ||
-            abi_hypersphere.radii[cluster].cluster_id != orchestrated.hypersphere.radii[cluster].cluster_id ||
-            abi_hypersphere.radii[cluster].nearest_neighbor_distance_q16 != orchestrated.hypersphere.radii[cluster].nearest_neighbor_distance_q16 ||
-            abi_hypersphere.radii[cluster].inscribed_radius_q16 != orchestrated.hypersphere.radii[cluster].inscribed_radius_q16 ||
-            abi_hypersphere.radii[cluster].radius_state != orchestrated.hypersphere.radii[cluster].radius_state ||
-            abi_hypersphere.spectral_proxy[cluster].cluster_id != orchestrated.hypersphere.spectral_proxy[cluster].cluster_id ||
-            abi_hypersphere.spectral_proxy[cluster].frequency_proxy_q16 != orchestrated.hypersphere.spectral_proxy[cluster].frequency_proxy_q16 ||
-            abi_hypersphere.spectral_proxy[cluster].amplitude_proxy_q16 != orchestrated.hypersphere.spectral_proxy[cluster].amplitude_proxy_q16 ||
-            abi_hypersphere.spectral_proxy[cluster].spectral_state != orchestrated.hypersphere.spectral_proxy[cluster].spectral_state)
+        if (abi_k3h4.centers[cluster].cluster_id != orchestrated.k3h4.centers[cluster].cluster_id ||
+            abi_k3h4.centers[cluster].member_count != orchestrated.k3h4.centers[cluster].member_count ||
+            abi_k3h4.radii[cluster].cluster_id != orchestrated.k3h4.radii[cluster].cluster_id ||
+            abi_k3h4.radii[cluster].nearest_neighbor_distance_q16 != orchestrated.k3h4.radii[cluster].nearest_neighbor_distance_q16 ||
+            abi_k3h4.radii[cluster].inscribed_radius_q16 != orchestrated.k3h4.radii[cluster].inscribed_radius_q16 ||
+            abi_k3h4.radii[cluster].radius_state != orchestrated.k3h4.radii[cluster].radius_state ||
+            abi_k3h4.spectral_proxy[cluster].cluster_id != orchestrated.k3h4.spectral_proxy[cluster].cluster_id ||
+            abi_k3h4.spectral_proxy[cluster].frequency_proxy_q16 != orchestrated.k3h4.spectral_proxy[cluster].frequency_proxy_q16 ||
+            abi_k3h4.spectral_proxy[cluster].amplitude_proxy_q16 != orchestrated.k3h4.spectral_proxy[cluster].amplitude_proxy_q16 ||
+            abi_k3h4.spectral_proxy[cluster].spectral_state != orchestrated.k3h4.spectral_proxy[cluster].spectral_state)
         {
-            return fail("hypersphere cluster metrics mismatch");
+            return fail("k3h4 cluster metrics mismatch");
         }
 
-        for (dim = 0; dim < abi_hypersphere.dimensions; dim++)
+        for (dim = 0; dim < abi_k3h4.dimensions; dim++)
         {
-            if (abi_hypersphere.centers[cluster].center_q16[dim] !=
-                orchestrated.hypersphere.centers[cluster].center_q16[dim])
+            if (abi_k3h4.centers[cluster].center_q16[dim] !=
+                orchestrated.k3h4.centers[cluster].center_q16[dim])
             {
-                return fail("hypersphere center_q16 mismatch");
+                return fail("k3h4 center_q16 mismatch");
             }
         }
     }
 
-    for (score = 0; score < abi_hypersphere.vector_count * abi_hypersphere.cluster_count; score++)
+    for (score = 0; score < abi_k3h4.vector_count * abi_k3h4.cluster_count; score++)
     {
-        if (abi_hypersphere.weighted_voronoi_scores[score].vector_id !=
-                orchestrated.hypersphere.weighted_voronoi_scores[score].vector_id ||
-            abi_hypersphere.weighted_voronoi_scores[score].cluster_id !=
-                orchestrated.hypersphere.weighted_voronoi_scores[score].cluster_id ||
-            abi_hypersphere.weighted_voronoi_scores[score].distance_to_center_q16 !=
-                orchestrated.hypersphere.weighted_voronoi_scores[score].distance_to_center_q16 ||
-            abi_hypersphere.weighted_voronoi_scores[score].weighted_score_q16 !=
-                orchestrated.hypersphere.weighted_voronoi_scores[score].weighted_score_q16 ||
-            abi_hypersphere.weighted_voronoi_scores[score].score_validity !=
-                orchestrated.hypersphere.weighted_voronoi_scores[score].score_validity)
+        if (abi_k3h4.weighted_voronoi_scores[score].vector_id !=
+                orchestrated.k3h4.weighted_voronoi_scores[score].vector_id ||
+            abi_k3h4.weighted_voronoi_scores[score].cluster_id !=
+                orchestrated.k3h4.weighted_voronoi_scores[score].cluster_id ||
+            abi_k3h4.weighted_voronoi_scores[score].distance_to_center_q16 !=
+                orchestrated.k3h4.weighted_voronoi_scores[score].distance_to_center_q16 ||
+            abi_k3h4.weighted_voronoi_scores[score].weighted_score_q16 !=
+                orchestrated.k3h4.weighted_voronoi_scores[score].weighted_score_q16 ||
+            abi_k3h4.weighted_voronoi_scores[score].score_validity !=
+                orchestrated.k3h4.weighted_voronoi_scores[score].score_validity)
         {
-            return fail("hypersphere weighted_voronoi_scores mismatch");
+            return fail("k3h4 weighted_voronoi_scores mismatch");
         }
     }
 
-    if (abi_hypersphere.observability.convergence_status != orchestrated.hypersphere.observability.convergence_status ||
-        abi_hypersphere.observability.iteration_count != orchestrated.hypersphere.observability.iteration_count ||
-        abi_hypersphere.observability.assignment_changes_last_iteration !=
-            orchestrated.hypersphere.observability.assignment_changes_last_iteration ||
-        abi_hypersphere.observability.deterministic_hash != orchestrated.hypersphere.observability.deterministic_hash ||
-        abi_hypersphere.observability.endianness_decode_path !=
-            orchestrated.hypersphere.observability.endianness_decode_path)
+    if (abi_k3h4.observability.convergence_status != orchestrated.k3h4.observability.convergence_status ||
+        abi_k3h4.observability.iteration_count != orchestrated.k3h4.observability.iteration_count ||
+        abi_k3h4.observability.assignment_changes_last_iteration !=
+            orchestrated.k3h4.observability.assignment_changes_last_iteration ||
+        abi_k3h4.observability.deterministic_hash != orchestrated.k3h4.observability.deterministic_hash ||
+        abi_k3h4.observability.endianness_decode_path !=
+            orchestrated.k3h4.observability.endianness_decode_path)
     {
-        return fail("hypersphere observability mismatch");
+        return fail("k3h4 observability mismatch");
     }
 
     return 0;

@@ -1,4 +1,4 @@
-# Research: Native Hypersphere K-Means Analytics
+# Research: Native K3H4 Analytics
 
 ## Decision 1: Deterministic fixed-point K-means core in native runtime
 - Decision: Implement K-means compute in C using fixed-point arithmetic (`Q16.16`) for centers, distances, and convergence checks.
@@ -10,7 +10,7 @@
 - Rationale: Reproducible output requires deterministic ordering beyond mathematical equivalence.
 - Alternatives considered: Hash-map or insertion-order accumulation (rejected because order can differ by run/allocator behavior).
 
-## Decision 3: Inscribed hypersphere radius derivation with guardrails
+## Decision 3: Inscribed radius derivation with guardrails
 - Decision: Radius per cluster is `0.5 * min(distance(center_i, center_j))` with explicit sentinel behavior for single-cluster output and minimum-radius clamp for near-duplicate centers.
 - Rationale: Satisfies FR-003 while preventing divide-by-zero in weighted scoring.
 - Alternatives considered: Global average radius (rejected, violates requirement); epsilon added only at score stage (rejected, hides invalid radius state).

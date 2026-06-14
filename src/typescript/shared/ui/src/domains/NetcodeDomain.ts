@@ -1,5 +1,91 @@
 import type {InputAggregator} from './InputDomain';
 
+export type NetcodeAbiLayerKind = 'learning'|'reward'|'link'|'vector'|'k3h4';
+
+export type NetcodeAbiLayerSnapshot = {
+  readonly layer: NetcodeAbiLayerKind; readonly contractVersion: number; readonly status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' | 'crc-mismatch'; readonly payloadBytes: number; readonly byteOrderTag: number; readonly deterministicHash:
+                                                                                                                                                                                                                                                            number |
+      string;
+};
+
+export type NetcodeAbiLayerCatalog = readonly NetcodeAbiLayerSnapshot[];
+
+const NETCODE_ABI_LAYER_ORDER: NetcodeAbiLayerKind[] =
+    ['learning', 'reward', 'link', 'vector', 'k3h4'];
+
+export type NetcodeAbiLayerCoverage = {
+  readonly expectedLayers: readonly NetcodeAbiLayerKind[]; readonly presentLayers: readonly NetcodeAbiLayerKind[]; readonly missingLayers: readonly NetcodeAbiLayerKind[]; readonly completeness: number; readonly complete:
+                                                                                                                                                                                                                       boolean;
+};
+
+export type NetcodeAbiLayerDatum = {
+  readonly layer: NetcodeAbiLayerKind; readonly present: boolean; readonly contractVersion: number; readonly status: NetcodeAbiLayerSnapshot['status'] | 'missing'; readonly payloadBytes: number; readonly byteOrderTag: number; readonly deterministicHash:
+                                                                                                                                                                                                                                               number |
+      string | null;
+};
+
+export type NetcodeAbiLayerLedger = readonly NetcodeAbiLayerDatum[];
+
+export function buildNetcodeAbiLayerLedger(
+    layers: NetcodeAbiLayerCatalog,
+    ): NetcodeAbiLayerLedger {
+  const layerMap = new Map<NetcodeAbiLayerKind, NetcodeAbiLayerSnapshot>();
+  for (const layer of layers) {
+    if (!layerMap.has(layer.layer)) {
+      layerMap.set(layer.layer, layer);
+    }
+  }
+
+  return NETCODE_ABI_LAYER_ORDER.map((layer) => {
+    const snapshot = layerMap.get(layer);
+    if (!snapshot) {
+      return {
+        layer,
+        present: false,
+        contractVersion: 1,
+        status: 'missing',
+        payloadBytes: 0,
+        byteOrderTag: 0,
+        deterministicHash: null,
+      };
+    }
+
+    return {
+      layer,
+      present: true,
+      contractVersion: snapshot.contractVersion,
+      status: snapshot.status,
+      payloadBytes: snapshot.payloadBytes,
+      byteOrderTag: snapshot.byteOrderTag,
+      deterministicHash: snapshot.deterministicHash,
+    };
+  });
+}
+
+export function summarizeNetcodeAbiLayers(
+    layers: NetcodeAbiLayerCatalog,
+    ): NetcodeAbiLayerCoverage {
+  const presentLayers = new Set<NetcodeAbiLayerKind>();
+  for (const layer of layers) {
+    presentLayers.add(layer.layer);
+  }
+
+  const missingLayers =
+      NETCODE_ABI_LAYER_ORDER.filter((layer) => !presentLayers.has(layer));
+  const presentLayerList =
+      NETCODE_ABI_LAYER_ORDER.filter((layer) => presentLayers.has(layer));
+
+  return {
+    expectedLayers: NETCODE_ABI_LAYER_ORDER,
+    presentLayers: presentLayerList,
+    missingLayers,
+    completeness: NETCODE_ABI_LAYER_ORDER.length === 0 ?
+        1 :
+        presentLayerList.length / NETCODE_ABI_LAYER_ORDER.length,
+    complete: missingLayers.length === 0,
+  };
+}
+
 export type AntiCheatViolationReason =|'sequence_regression'|'sequence_gap'|
     'tick_ahead'|'tick_behind'|'clock_skew'|'invalid_axis';
 

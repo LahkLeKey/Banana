@@ -82,7 +82,25 @@ typedef struct banana_native_v3_netcode_vector_input {
 	int32_t network_dimensions;
 	int32_t model_confidence;
 	int32_t policy_momentum;
+	int32_t assignment_family;
+	int32_t spectral_mode;
+	int32_t hardware_byte_order_tag;
+	int32_t hardware_dtype_tag;
+	int32_t hardware_alignment_bytes;
 } banana_native_v3_netcode_vector_input;
+
+typedef enum banana_native_v3_netcode_k3h4_assignment_family {
+	BANANA_NATIVE_V3_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE = 0,
+	BANANA_NATIVE_V3_NETCODE_K3H4_ASSIGNMENT_POWER = 1,
+} banana_native_v3_netcode_k3h4_assignment_family;
+
+typedef enum banana_native_v3_netcode_k3h4_spectral_mode {
+	BANANA_NATIVE_V3_NETCODE_K3H4_SPECTRAL_DISABLED = 0,
+	BANANA_NATIVE_V3_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH = 1,
+} banana_native_v3_netcode_k3h4_spectral_mode;
+
+#define BANANA_NATIVE_V3_NETCODE_K3H4_DTYPE_TAG_F32_Q16_MIXED 1
+#define BANANA_NATIVE_V3_NETCODE_K3H4_ALIGNMENT_BYTES_4 4
 
 typedef struct banana_native_v3_netcode_vector_output {
 	int32_t dimensions;
@@ -113,6 +131,7 @@ typedef enum banana_native_v3_netcode_score_validity {
 typedef enum banana_native_v3_netcode_spectral_state {
 	BANANA_NATIVE_V3_NETCODE_SPECTRAL_OK = 0,
 	BANANA_NATIVE_V3_NETCODE_SPECTRAL_RADIUS_FLOOR_APPLIED = 1,
+	BANANA_NATIVE_V3_NETCODE_SPECTRAL_DISABLED = 2,
 } banana_native_v3_netcode_spectral_state;
 
 typedef enum banana_native_v3_netcode_endianness_decode_path {
@@ -156,7 +175,7 @@ typedef struct banana_native_v3_netcode_k3h4_observability {
 	int32_t endianness_decode_path;
 } banana_native_v3_netcode_k3h4_observability;
 
-typedef struct banana_native_v3_netcode_hypersphere_output {
+typedef struct banana_native_v3_netcode_k3h4_output {
 	int32_t dimensions;
 	banana_native_v3_netcode_projection_node nodes[4];
 	int32_t alignment;
@@ -173,10 +192,13 @@ typedef struct banana_native_v3_netcode_hypersphere_output {
 	int32_t envelope_payload_bytes;
 	int32_t envelope_payload_crc32;
 	int32_t contract_status;
-} banana_native_v3_netcode_hypersphere_output;
+} banana_native_v3_netcode_k3h4_output;
 
 #define BANANA_NATIVE_V3_NETCODE_K3H4_CONTRACT_VERSION 1
 #define BANANA_NATIVE_V3_NETCODE_K3H4_BYTE_ORDER_TAG 0x01020304
+
+#define BANANA_NATIVE_V3_K3H4_CONTRACT_VERSION BANANA_NATIVE_V3_NETCODE_K3H4_CONTRACT_VERSION
+#define BANANA_NATIVE_V3_K3H4_BYTE_ORDER_TAG BANANA_NATIVE_V3_NETCODE_K3H4_BYTE_ORDER_TAG
 
 typedef enum banana_native_v3_netcode_contract_status {
 	BANANA_NATIVE_V3_NETCODE_CONTRACT_OK = 0,
@@ -185,6 +207,12 @@ typedef enum banana_native_v3_netcode_contract_status {
 	BANANA_NATIVE_V3_NETCODE_CONTRACT_NONFINITE_VALUE = -2003,
 	BANANA_NATIVE_V3_NETCODE_CONTRACT_CRC_MISMATCH = -2004
 } banana_native_v3_netcode_contract_status;
+
+#define BANANA_NATIVE_V3_K3H4_CONTRACT_OK BANANA_NATIVE_V3_NETCODE_CONTRACT_OK
+#define BANANA_NATIVE_V3_K3H4_CONTRACT_UNSUPPORTED_VERSION BANANA_NATIVE_V3_NETCODE_CONTRACT_UNSUPPORTED_VERSION
+#define BANANA_NATIVE_V3_K3H4_CONTRACT_INVALID_PAYLOAD BANANA_NATIVE_V3_NETCODE_CONTRACT_INVALID_PAYLOAD
+#define BANANA_NATIVE_V3_K3H4_CONTRACT_NONFINITE_VALUE BANANA_NATIVE_V3_NETCODE_CONTRACT_NONFINITE_VALUE
+#define BANANA_NATIVE_V3_K3H4_CONTRACT_CRC_MISMATCH BANANA_NATIVE_V3_NETCODE_CONTRACT_CRC_MISMATCH
 
 typedef struct banana_native_v3_netcode_contract_envelope_header {
 	int32_t contract_version;
@@ -220,8 +248,8 @@ BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_link(const banana_nat
 						 banana_native_v3_netcode_link_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_vector(const banana_native_v3_netcode_vector_input *signal_input,
 						   banana_native_v3_netcode_vector_output *out_output);
-BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_hypersphere(const banana_native_v3_netcode_vector_input *signal_input,
-							banana_native_v3_netcode_hypersphere_output *out_output);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_k3h4(const banana_native_v3_netcode_vector_input *signal_input,
+							banana_native_v3_netcode_k3h4_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
 												 banana_launch_gate_policy *out_policy);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_decide(const char *mode_label,

@@ -1,55 +1,60 @@
-# Contract: Native Hypersphere K-Means ABI Envelope
+# Contract: Native K3H4 ABI Envelope
 
 ## Scope
-Versioned binary envelope for hypersphere K-means outputs crossing native C runtime, TypeScript FFI service, and API orchestration.
+Versioned K3H4 payload and envelope crossing native C runtime, TypeScript FFI service, and API orchestration.
 
 ## Canonical Encoding
-- Byte order: little-endian canonical on wire.
-- Decoder behavior:
-  - If host is little-endian, decode directly.
-  - If host is big-endian fixture, byte-swap numeric primitives before semantic validation.
+- Byte order: little-endian canonical.
 - Numeric encoding:
-  - Fixed-point metrics use signed `Q16.16` stored as int32.
-  - Counts/ids use unsigned integer widths shown below.
+   - Fixed-point metrics use signed `Q16.16` as `int32`.
+   - Counts/ids and scalar metadata are `int32`.
+- Envelope transport fields are stored in the trailing envelope section of `RuntimeNetcodeK3h4Output`.
 
-## Envelope Layout
-1. `magic` (`uint32`) fixed value `0x4B4D4842` (`BHMK`).
-2. `version` (`uint16`) initial value `1`.
-3. `flags` (`uint16`) bitmask (`bit0: radius_clamp_applied`, `bit1: score_invalid_present`).
-4. `payloadLength` (`uint32`) bytes after header.
-5. `payloadCrc32` (`uint32`) CRC over payload bytes.
-6. `payload` (variable) structured sections below.
+## Hardware Preflight (Required)
+Before any K3H4 clustering entrypoint executes, caller must provide declarations in `RuntimeK3h4VectorSignalInput`:
+- `hardware_byte_order_tag == RUNTIME_K3H4_BYTE_ORDER_TAG (0x01020304)`
+- `hardware_dtype_tag == RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED (1)`
+- `hardware_alignment_bytes == RUNTIME_K3H4_ALIGNMENT_BYTES_4 (4)`
 
-## Payload Sections
-1. `meta`
-   - `clusterCount` (`uint16`)
-   - `vectorCount` (`uint32`)
-   - `dimensionCount` (`uint16`)
-   - `iterationCount` (`uint16`)
-   - `convergenceStatus` (`uint8` enum)
-2. `centers`
-   - repeated `clusterCount` entries
-   - each entry: `clusterId` (`uint16`), `memberCount` (`uint32`), `centerQ16[dimensionCount]` (`int32[]`)
-3. `radii`
-   - repeated `clusterCount` entries
-   - each entry: `clusterId` (`uint16`), `nearestNeighborDistanceQ16` (`int32`), `inscribedRadiusQ16` (`int32`), `radiusState` (`uint8` enum)
-4. `scores`
-   - repeated `vectorCount * clusterCount` entries
-   - each entry: `vectorId` (`uint32`), `clusterId` (`uint16`), `distanceToCenterQ16` (`int32`), `weightedScoreQ16` (`int32`), `scoreValidity` (`uint8` enum)
-5. `spectral`
-   - repeated `clusterCount` entries
-   - each entry: `clusterId` (`uint16`), `frequencyProxyQ16` (`int32`), `amplitudeProxyQ16` (`int32`), `spectralState` (`uint8` enum)
+If any preflight declaration mismatches, build returns deterministic contract status:
+- `RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD`
+
+## Explicit Runtime Controls
+`RuntimeK3h4VectorSignalInput` includes explicit controls:
+- `assignment_family`:
+   - `RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE`
+   - `RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER`
+- `spectral_mode`:
+   - `RUNTIME_NETCODE_K3H4_SPECTRAL_DISABLED`
+   - `RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH`
+
+These are propagated into pipeline execution through config-aware K3H4 build APIs.
+
+## Envelope Fields
+Envelope metadata written to `RuntimeNetcodeK3h4Output.envelope`:
+1. `contract_version`
+2. `byte_order_tag`
+3. `payload_bytes`
+4. `payload_crc32`
+5. `contract_status`
+
+Validation path:
+- `runtime_netcode_abi_encode_k3h4_envelope`
+- `runtime_netcode_abi_validate_k3h4_envelope`
 
 ## Error Contract
-- `ERR_UNSUPPORTED_VERSION`: version unknown, do not publish partial payload.
-- `ERR_BAD_MAGIC`: envelope header mismatch.
-- `ERR_BAD_CRC`: checksum mismatch.
-- `ERR_PAYLOAD_TRUNCATED`: payload length underflow.
-- `ERR_NON_FINITE_VALUE`: decoded value invalid for semantic domain.
-- `ERR_CONVERGENCE_FAILURE`: max iterations exceeded; payload may include metadata only with no promotable metrics.
+- `RUNTIME_K3H4_CONTRACT_OK`
+- `RUNTIME_K3H4_CONTRACT_UNSUPPORTED_VERSION`
+- `RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD`
+- `RUNTIME_K3H4_CONTRACT_NONFINITE_VALUE`
+- `RUNTIME_K3H4_CONTRACT_CRC_MISMATCH`
 
 ## Determinism Rules
-- Cluster and metric arrays are sorted by deterministic `clusterId`.
-- Score rows are sorted by `vectorId` then `clusterId`.
-- Tie breaks in assignment select lowest `clusterId`.
-- All fixed-point divisions use deterministic rounding mode (half-away-from-zero).
+- Assignment family behavior is deterministic within a selected mode.
+- Mode-specific score paths are explicit:
+   - Multiplicative score path
+   - Power score path
+- Spectral output is gated:
+   - Spectral disabled mode emits spectral-disabled state.
+   - Affinity-graph mode emits active spectral states.
+- Deterministic hash is built from output fields including mode-governed score/spectral sections.
