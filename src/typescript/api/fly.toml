@@ -9,6 +9,7 @@ kill_timeout = "5s"
 [env]
   HOST = "0.0.0.0"
   PORT = "8081"
+  BANANA_NATIVE_PATH = "/app/src/typescript/api/libbanana_native.so"
   BANANA_ENGINE_ADAPTER = "inmemory"
   BANANA_ANTICHEAT_ADAPTER = "inmemory"
   BANANA_CORS_ORIGINS = "https://banana.engineer,http://localhost:5173,http://127.0.0.1:5173"
