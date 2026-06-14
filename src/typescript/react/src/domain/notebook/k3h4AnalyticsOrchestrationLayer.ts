@@ -34,6 +34,50 @@ export type K3h4AnalyticsPresentationState = {
   abiLayerLedger: NetcodeAbiLayerLedger;
 };
 
+function normalizeConvergenceStatus(value: unknown): 'converged'|
+    'max-iterations'|'failed' {
+  if (value === 'converged' || value === 'max-iterations' ||
+      value === 'failed') {
+    return value;
+  }
+
+  if (value === 0) return 'converged';
+  if (value === 1) return 'max-iterations';
+  return 'failed';
+}
+
+function normalizeScoringValidity(value: unknown): 'valid'|'degraded'|
+    'invalid' {
+  if (value === 'valid' || value === 'degraded' || value === 'invalid') {
+    return value;
+  }
+
+  if (value === 0) return 'valid';
+  if (value === 1) return 'degraded';
+  return 'invalid';
+}
+
+function normalizeDeterministicHash(value: unknown): string {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value.trim();
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return (value >>> 0).toString(16);
+  }
+
+  return '';
+}
+
+function normalizeMemberVectorIds(
+    memberVectorIds: unknown, memberCount: number): number[] {
+  if (Array.isArray(memberVectorIds) && memberVectorIds.length > 0) {
+    return memberVectorIds.filter((value) => Number.isFinite(value));
+  }
+
+  return Array.from({length: Math.max(0, memberCount)}, (_, index) => index);
+}
+
 export function mapK3h4AnalyticsToPresentationState(
     analytics: NetcodeAnalyticsResponse,
     ): K3h4AnalyticsPresentationState {
@@ -75,13 +119,20 @@ export function mapK3h4AnalyticsToPresentationState(
   };
 
   const k3h4 = {
-    centers: analytics.k3h4.centers.map(
-        (center) => ({
-          clusterId: center.clusterId,
-          centerQ16: [...center.centerQ16],
-          memberVectorIds: [...center.memberVectorIds],
-          memberCount: center.memberCount,
-        })),
+    centers: analytics.k3h4.centers.map((center) => {
+      const normalizedCenter = center as {
+        readonly memberVectorIds?: readonly number[];
+        readonly memberCount: number;
+      };
+
+      return {
+        clusterId: center.clusterId,
+        centerQ16: [...center.centerQ16],
+        memberVectorIds: normalizeMemberVectorIds(
+            normalizedCenter.memberVectorIds, normalizedCenter.memberCount),
+        memberCount: center.memberCount,
+      };
+    }),
     radii: analytics.k3h4.radii.map(
         (radius) => ({
           clusterId: radius.clusterId,
@@ -105,12 +156,17 @@ export function mapK3h4AnalyticsToPresentationState(
           spectralState: entry.spectralState,
         })),
     observability: {
-      convergenceStatus: analytics.k3h4.observability.convergenceStatus,
+      convergenceStatus: normalizeConvergenceStatus(
+          analytics.k3h4.observability.convergenceStatus),
       iterationCount: analytics.k3h4.observability.iterationCount,
       assignmentChangesLastIteration:
           analytics.k3h4.observability.assignmentChangesLastIteration,
-      scoringValidity: analytics.k3h4.observability.scoringValidity,
-      deterministicHash: analytics.k3h4.observability.deterministicHash,
+      scoringValidity:
+          normalizeScoringValidity((analytics.k3h4.observability as {
+                                     readonly scoringValidity?: unknown;
+                                   }).scoringValidity),
+      deterministicHash: normalizeDeterministicHash(
+          analytics.k3h4.observability.deterministicHash),
     },
     runtime: {
       mode: analytics.k3h4Runtime.mode,

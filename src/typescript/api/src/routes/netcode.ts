@@ -1,4 +1,4 @@
-import type {FastifyInstance} from 'fastify';
+import type {FastifyInstance, FastifyReply} from 'fastify';
 
 import {createK3h4ApplicationOrchestrationLayer, type K3h4ApplicationOrchestrationLayer,} from '../services/k3h4ApplicationOrchestrationLayer.ts';
 import {getNativeNetcodeService, type NativeNetcodeService,} from '../services/nativeNetcode.ts';
@@ -43,6 +43,54 @@ function resolveNetcodeK3h4Rollout(): NetcodeK3h4Rollout {
   return {enabled, cohort};
 }
 
+function createDirectRouteRollout(cohort: string): NetcodeK3h4Rollout {
+  return {
+    enabled: true,
+    cohort,
+  };
+}
+
+type NetcodeOrchestratedComputePayload = {
+  callDensity: number; questPercent: number; playerLevel: number;
+  comboStreak: number;
+  branchPressure: number;
+  dependencyPulse: number;
+  workflowDepth: 1 | 2 | 3;
+  networkDimensions: number;
+  modelConfidence: number;
+  policyMomentum: number;
+  k3h4Mode?: 'multiplicative' | 'power';
+  spectralMode?: 'disabled' | 'affinity-graph';
+  neuralRelevanceScore?: number;
+};
+
+function isValidOrchestratedComputePayload(
+    body: NetcodeOrchestratedComputePayload|undefined,
+    requireNeuralRelevanceScore: boolean,
+    ): boolean {
+  if (!body || !isFiniteNumber(body.callDensity) ||
+      !isFiniteNumber(body.questPercent) || !isFiniteNumber(body.playerLevel) ||
+      !isFiniteNumber(body.comboStreak) ||
+      !isFiniteNumber(body.branchPressure) ||
+      !isFiniteNumber(body.dependencyPulse) ||
+      !isValidWorkflowDepth(body.workflowDepth) ||
+      !isValidNetworkDimensions(body.networkDimensions) ||
+      !isFiniteNumber(body.modelConfidence) ||
+      !isFiniteNumber(body.policyMomentum) ||
+      (body.k3h4Mode !== undefined && !isValidK3h4Mode(body.k3h4Mode)) ||
+      (body.spectralMode !== undefined &&
+       !isValidSpectralMode(body.spectralMode))) {
+    return false;
+  }
+
+  if (requireNeuralRelevanceScore &&
+      !isFiniteNumber(body.neuralRelevanceScore)) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function registerNetcodeRoutes(
     app: FastifyInstance,
     options: NetcodeRouteOptions = {},
@@ -60,6 +108,33 @@ export async function registerNetcodeRoutes(
                      request, rollout),
            } :
            createK3h4ApplicationOrchestrationLayer(netcode));
+
+  type OrchestratedNetcodeResult =
+      Awaited<ReturnType<K3h4ApplicationOrchestrationLayer['compute']>>;
+
+  async function computeOrSendOrchestrationError(
+      computeRequest:
+          Parameters<K3h4ApplicationOrchestrationLayer['compute']>[0],
+      rollout: NetcodeK3h4Rollout,
+      reply: FastifyReply,
+      ): Promise<OrchestratedNetcodeResult|null> {
+    try {
+      return await k3h4ApplicationOrchestrationLayer.compute(
+          computeRequest, rollout);
+    } catch (error) {
+      if (error instanceof NetcodeAnalyticsOrchestrationError) {
+        reply.status(502).send({
+          errorCode: error.errorCode,
+          message: error.message,
+          contractVersion: 1,
+          retryable: error.retryable,
+          rollout,
+        });
+        return null;
+      }
+      throw error;
+    }
+  }
 
   app.post<{
     Body: {
@@ -198,39 +273,14 @@ export async function registerNetcodeRoutes(
     }
 
     const body = request.body;
-    if (!body || !isFiniteNumber(body.callDensity) ||
-        !isFiniteNumber(body.questPercent) ||
-        !isFiniteNumber(body.playerLevel) ||
-        !isFiniteNumber(body.comboStreak) ||
-        !isFiniteNumber(body.branchPressure) ||
-        !isFiniteNumber(body.dependencyPulse) ||
-        !isValidWorkflowDepth(body.workflowDepth) ||
-        !isValidNetworkDimensions(body.networkDimensions) ||
-        !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum) ||
-        (body.k3h4Mode !== undefined && !isValidK3h4Mode(body.k3h4Mode)) ||
-        (body.spectralMode !== undefined &&
-         !isValidSpectralMode(body.spectralMode))) {
+    if (!isValidOrchestratedComputePayload(body, false)) {
       return reply.status(400).send(
           {error: 'Invalid netcode analytics payload'});
     }
 
-    let orchestratedAnalytics;
-    try {
-      orchestratedAnalytics =
-          await k3h4ApplicationOrchestrationLayer.compute(body, rollout);
-    } catch (error) {
-      if (error instanceof NetcodeAnalyticsOrchestrationError) {
-        return reply.status(502).send({
-          errorCode: error.errorCode,
-          message: error.message,
-          contractVersion: 1,
-          retryable: error.retryable,
-          rollout,
-        });
-      }
-      throw error;
-    }
+    const orchestratedAnalytics =
+        await computeOrSendOrchestrationError(body, rollout, reply);
+    if (!orchestratedAnalytics) return;
 
     return {...orchestratedAnalytics, rollout};
   });
@@ -251,38 +301,17 @@ export async function registerNetcodeRoutes(
     }
   }>('/api/netcode/vector', async (request, reply) => {
     const body = request.body;
-    if (!body || !isFiniteNumber(body.callDensity) ||
-        !isFiniteNumber(body.questPercent) ||
-        !isFiniteNumber(body.playerLevel) ||
-        !isFiniteNumber(body.comboStreak) ||
-        !isFiniteNumber(body.branchPressure) ||
-        !isFiniteNumber(body.dependencyPulse) ||
-        !isValidWorkflowDepth(body.workflowDepth) ||
-        !isFiniteNumber(body.neuralRelevanceScore) ||
-        !isValidNetworkDimensions(body.networkDimensions) ||
-        !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum) ||
-        (body.k3h4Mode !== undefined && !isValidK3h4Mode(body.k3h4Mode)) ||
-        (body.spectralMode !== undefined &&
-         !isValidSpectralMode(body.spectralMode))) {
+    if (!isValidOrchestratedComputePayload(body, true)) {
       return reply.status(400).send({error: 'Invalid netcode vector payload'});
     }
 
-    const vector = await netcode.buildVector({
-      callDensity: body.callDensity,
-      questPercent: body.questPercent,
-      playerLevel: body.playerLevel,
-      comboStreak: body.comboStreak,
-      branchPressure: body.branchPressure,
-      dependencyPulse: body.dependencyPulse,
-      workflowDepth: body.workflowDepth,
-      neuralRelevanceScore: body.neuralRelevanceScore,
-      networkDimensions: body.networkDimensions,
-      modelConfidence: body.modelConfidence,
-      policyMomentum: body.policyMomentum,
-      k3h4Mode: body.k3h4Mode,
-      spectralMode: body.spectralMode,
-    });
+    const directVectorRollout = createDirectRouteRollout('vector-direct-route');
+
+    const orchestratedAnalytics =
+        await computeOrSendOrchestrationError(body, directVectorRollout, reply);
+    if (!orchestratedAnalytics) return;
+
+    const vector = orchestratedAnalytics.vector;
     return {vector};
   });
 
@@ -302,38 +331,16 @@ export async function registerNetcodeRoutes(
     }
   }>('/api/netcode/k3h4', async (request, reply) => {
     const body = request.body;
-    if (!body || !isFiniteNumber(body.callDensity) ||
-        !isFiniteNumber(body.questPercent) ||
-        !isFiniteNumber(body.playerLevel) ||
-        !isFiniteNumber(body.comboStreak) ||
-        !isFiniteNumber(body.branchPressure) ||
-        !isFiniteNumber(body.dependencyPulse) ||
-        !isValidWorkflowDepth(body.workflowDepth) ||
-        !isFiniteNumber(body.neuralRelevanceScore) ||
-        !isValidNetworkDimensions(body.networkDimensions) ||
-        !isFiniteNumber(body.modelConfidence) ||
-        !isFiniteNumber(body.policyMomentum) ||
-        (body.k3h4Mode !== undefined && !isValidK3h4Mode(body.k3h4Mode)) ||
-        (body.spectralMode !== undefined &&
-         !isValidSpectralMode(body.spectralMode))) {
+    if (!isValidOrchestratedComputePayload(body, true)) {
       return reply.status(400).send({error: 'Invalid netcode k3h4 payload'});
     }
 
-    const k3h4 = await netcode.buildK3h4({
-      callDensity: body.callDensity,
-      questPercent: body.questPercent,
-      playerLevel: body.playerLevel,
-      comboStreak: body.comboStreak,
-      branchPressure: body.branchPressure,
-      dependencyPulse: body.dependencyPulse,
-      workflowDepth: body.workflowDepth,
-      neuralRelevanceScore: body.neuralRelevanceScore,
-      networkDimensions: body.networkDimensions,
-      modelConfidence: body.modelConfidence,
-      policyMomentum: body.policyMomentum,
-      k3h4Mode: body.k3h4Mode,
-      spectralMode: body.spectralMode,
-    });
-    return {k3h4};
+    const directK3h4Rollout = createDirectRouteRollout('k3h4-direct-route');
+
+    const orchestratedAnalytics =
+        await computeOrSendOrchestrationError(body, directK3h4Rollout, reply);
+    if (!orchestratedAnalytics) return;
+
+    return {k3h4: orchestratedAnalytics.k3h4Projection};
   });
 }
