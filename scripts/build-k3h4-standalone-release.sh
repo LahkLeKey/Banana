@@ -47,9 +47,16 @@ if [[ -z "$VERSION" ]]; then
   exit 1
 fi
 
+if [[ ! "$VERSION" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ || "$VERSION" == *".."* ]]; then
+  echo "[k3h4-release] --version must be a simple version string (letters/digits/._-) and must not contain '..' or '/': $VERSION" >&2
+  exit 1
+fi
+
 if [[ -z "$NATIVE_LIB" ]]; then
   CANDIDATES=(
+    "$ROOT_DIR/out/v3-native/libbanana_native.so"
     "$ROOT_DIR/out/v3-native/bin/libbanana_native.so"
+    "$ROOT_DIR/out/native/libbanana_native.so"
     "$ROOT_DIR/out/native/bin/libbanana_native.so"
   )
 
@@ -61,7 +68,7 @@ if [[ -z "$NATIVE_LIB" ]]; then
   done
 
   if [[ -z "$NATIVE_LIB" ]]; then
-    discovered="$(find "$ROOT_DIR/out" -type f -name libbanana_native.so | head -n 1 || true)"
+    discovered="$(find "$ROOT_DIR/out/v3-native" "$ROOT_DIR/out/native" "$ROOT_DIR/out" -type f -name libbanana_native.so 2>/dev/null | head -n 1 || true)"
     if [[ -n "$discovered" ]]; then
       NATIVE_LIB="$discovered"
     fi

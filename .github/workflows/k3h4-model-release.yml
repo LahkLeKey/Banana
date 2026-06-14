@@ -33,10 +33,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends cmake ninja-build gcc g++
 
       - name: Configure native build
-        run: cmake -S src/native -B out/v3-native -G Ninja
+        run: cmake -S src/native -B out/v3-native -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build native library
         run: cmake --build out/v3-native --target banana_native --parallel
+
+      - name: Run native tests
+        run: ctest --test-dir out/v3-native --output-on-failure
 
       - name: Build standalone k3h4 bundle
         id: bundle
@@ -79,6 +82,9 @@ jobs:
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "$ARCHIVE_PATH" "$CHECKSUM_PATH" --clobber
+            gh release edit "$RELEASE_TAG" \
+              --title "K3H4 Standalone Model ${{ inputs.version }}" \
+              --notes-file "$NOTES_PATH"
           else
             gh release create "$RELEASE_TAG" "$ARCHIVE_PATH" "$CHECKSUM_PATH" \
               --title "K3H4 Standalone Model ${{ inputs.version }}" \
