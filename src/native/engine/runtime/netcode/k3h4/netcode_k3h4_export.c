@@ -43,6 +43,7 @@ static uint32_t k3h4_export_crc32_update(uint32_t crc, uint8_t byte)
 
 static uint32_t k3h4_export_crc32(const uint8_t *buf, size_t len)
 {
+    /* CRC covers the serialized payload bytes exactly as written to disk. */
     uint32_t crc = 0xFFFFFFFFu;
     size_t i;
     for (i = 0; i < len; i++)
@@ -101,6 +102,9 @@ static int ensure_dir(const char *path)
 
 static int ensure_dir_tree(char *path)
 {
+    /* Create each prefix in-place so nested session directories materialize
+     * without requiring the caller to pre-create intermediate folders.
+     */
     char *sep = path;
     while ((sep = strchr(sep + 1, '/')) != NULL)
     {
@@ -228,18 +232,23 @@ BananaK3h4ExportStatus banana_k3h4_export_training_artifact(
         int spectral_q16             = 0;
         int vec;
 
-        /* center[d] as float32 (convert from Q16.16) */
+        /* center[d] is persisted as float32 even though the runtime contract is
+         * Q16-based; the artifact preserves the decoded real-space coordinates.
+         */
         for (dim = 0; dim < dimension; dim++)
         {
             float cv = (float)c->center_q16[dim] / 65536.0f;
             pos = write_le_f32(buf, pos, cv);
         }
 
-        /* inscribed radius as float32 */
+        /* Radius is likewise emitted in decoded real-space units. */
         radius_f32 = (float)r->inscribed_radius_q16 / 65536.0f;
         pos = write_le_f32(buf, pos, radius_f32);
 
-        /* collect scores for this cluster (first matching vector) */
+        /* The artifact stores representative cluster scores from the Q16 score
+         * table; callers that need the full score lattice should read the full
+         * RuntimeNetcodeK3h4Output instead of this summarized bundle.
+         */
         for (vec = 0; vec < state->vector_count; vec++)
         {
             const RuntimeNetcodeWeightedVoronoiScore *s =

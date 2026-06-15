@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* The pipeline always keeps cluster_count in [1, node_count]. */
 static int clamp_cluster_count(int value)
 {
     if (value < 1) return 1;
@@ -12,6 +13,9 @@ static int clamp_cluster_count(int value)
 
 static int resolve_assignment_family(void)
 {
+    /* Environment resolution is an operational override only; the scoring math
+     * still remains either distance/radius or distance^2 - radius^2.
+     */
     const char *assignment_family = getenv("BANANA_K3H4_ASSIGNMENT_FAMILY");
     if (!assignment_family)
         return RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE;
@@ -31,6 +35,7 @@ static int normalize_assignment_family(int assignment_family)
 
 static int resolve_spectral_mode(void)
 {
+    /* Affinity-graph is the current operational default when no override exists. */
     const char *spectral_mode = getenv("BANANA_K3H4_SPECTRAL_MODE");
     if (!spectral_mode)
         return RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH;
@@ -71,6 +76,9 @@ int runtime_netcode_k3h4_initialize_pipeline_context_with_config(
     context->output = out_output;
     context->dimensions = input->dimensions;
     context->cluster_count = clamp_cluster_count(input->k3h4_cluster_count);
+    /* 64 / 65536 ~= 9.77e-4 keeps radii from collapsing to numerically tiny
+     * values when clusters become nearly coincident.
+     */
     context->radius_floor_q16 = 64;
     context->assignment_family = normalize_assignment_family(assignment_family);
     context->spectral_enabled =

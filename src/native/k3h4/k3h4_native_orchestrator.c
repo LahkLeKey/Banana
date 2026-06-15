@@ -1,5 +1,12 @@
 #include "k3h4_native_orchestrator.h"
 
+/*
+ * This file is intentionally thin: it keeps the public native k3h4 facade in
+ * one place while delegating the actual computation to the runtime ABI layer.
+ * That separation lets higher layers depend on stable symbols without caring
+ * whether the underlying implementation comes from direct runtime code or a
+ * later adapter stack.
+ */
 int banana_native_k3h4_build_learning(RuntimeK3h4SignalInput signal_input,
                                       RuntimeNetcodeLearningOutput *out_output)
 {

@@ -1,5 +1,10 @@
 #include "k3h4_metrics_application_service.h"
 
+/*
+ * The application service is a guard layer: it rejects missing bindings and
+ * otherwise forwards stage requests unchanged. This keeps orchestration code
+ * free of null-check boilerplate while preserving a testable indirection point.
+ */
 int banana_native_k3h4_application_build_learning(
     const BananaNativeK3h4DomainPort *domain_port,
     RuntimeK3h4SignalInput signal_input,
