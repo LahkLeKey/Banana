@@ -6,6 +6,12 @@ export type NetcodeK3h4Rollout = {
 
 export type NetcodeAbiLayerName = 'learning'|'reward'|'link'|'vector'|'k3h4';
 
+/**
+ * Snapshot of one native ABI layer as surfaced to API consumers.
+ *
+ * The first four layers are logical checkpoints in the authoritative compute
+ * pipeline; the k3h4 layer additionally carries native envelope metadata.
+ */
 export type NetcodeAbiLayerSnapshot = {
   layer: NetcodeAbiLayerName; contractVersion: 1;
   status: 'ok' | 'unsupported-version' | 'invalid-payload' | 'nonfinite-value' |
@@ -55,6 +61,10 @@ export type NetcodeK3h4RuntimeMetadata = {
   spectralActivation: 'disabled' | 'affinity-graph';
 };
 
+/**
+ * API-facing subset of the native k3h4 payload that callers need for runtime
+ * inspection and UI projection without repeating the full response shape.
+ */
 export type NetcodeK3h4Projection = {
   centers: NetcodeK3h4Output['centers']; radii: NetcodeK3h4Output['radii'];
   weightedVoronoiScores: NetcodeK3h4Output['weightedVoronoiScores'];
@@ -102,6 +112,10 @@ export class NetcodeAnalyticsOrchestrationError extends Error {
 }
 
 export interface NetcodeAnalyticsAuthoritativeComputeOrchestrator {
+  /**
+   * Runs the reward -> link -> vector -> k3h4 pipeline against the native
+   * service and returns projection data plus ABI observability metadata.
+   */
   compute(
       request: NetcodeAnalyticsAuthoritativeRequest,
       rollout: NetcodeK3h4Rollout,
@@ -258,6 +272,9 @@ class NativeNetcodeAuthoritativeComputeOrchestrator implements
       request: NetcodeAnalyticsAuthoritativeRequest,
       rollout: NetcodeK3h4Rollout,
       ): Promise<NetcodeAnalyticsAuthoritativeResult> {
+    // Keep the API pipeline order aligned with the native authoritative path so
+    // ABI layer coverage and deterministic hashes stay comparable across
+    // layers.
     const reward = await this.netcode.buildReward(
         {
           callDensity: request.callDensity,

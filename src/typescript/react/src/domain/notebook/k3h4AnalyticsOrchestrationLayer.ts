@@ -24,6 +24,11 @@ const LABELING_BAND = {
   glow: 'rgba(249, 115, 22, 0.36)',
 } as const;
 
+/**
+ * Frontend-ready view model for the authoritative k3h4 analytics response.
+ * This keeps the notebook UI insulated from sparse API payloads and mixed
+ * scalar encodings that come back from native observability fields.
+ */
 export type K3h4AnalyticsPresentationState = {
   rewardSignal: RewardSignalModel; linkConfidence: NodeLinkConfidenceModel;
   contractVectors: readonly ContractNodeVectorModel[];
@@ -78,6 +83,11 @@ function normalizeMemberVectorIds(
   return Array.from({length: Math.max(0, memberCount)}, (_, index) => index);
 }
 
+/**
+ * Normalizes the API/native response into stable frontend presentation data.
+ * Missing slices are backfilled with safe defaults so notebook widgets can
+ * render partial rollouts and contract diagnostics without branching on nulls.
+ */
 export function mapK3h4AnalyticsToPresentationState(
     analytics: NetcodeAnalyticsResponse,
     ): K3h4AnalyticsPresentationState {

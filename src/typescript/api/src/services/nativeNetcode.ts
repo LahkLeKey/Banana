@@ -37,6 +37,11 @@ export type NetcodeK3h4Mode = 'multiplicative'|'power';
 
 export type NetcodeK3h4SpectralMode = 'disabled'|'affinity-graph';
 
+/**
+ * Input contract shared by the vector builder and the full k3h4 projection
+ * builder. Optional hardware tags are carried through so the native layer can
+ * validate envelope compatibility for callers that persist payloads.
+ */
 export type NetcodeVectorInput =
     {
       readonly callDensity: number; readonly questPercent: number; readonly playerLevel: number; readonly comboStreak: number; readonly branchPressure: number; readonly dependencyPulse: number; readonly workflowDepth: 1 | 2 | 3; readonly neuralRelevanceScore: number; readonly networkDimensions: number; readonly modelConfidence: number; readonly policyMomentum:
@@ -180,6 +185,14 @@ function computeCrc32(payload: Buffer): number {
   return (~crc) >>> 0;
 }
 
+/**
+ * Decodes the fixed-width native k3h4 payload into a typed API object.
+ *
+ * The native contract appends a 20-byte envelope after the payload body. This
+ * decoder validates the envelope first so the API fails early on version,
+ * payload length, CRC, or non-finite value mismatches before exposing partial
+ * projection data to higher layers.
+ */
 export function __decodeK3h4BufferForTests(outputBuffer: Buffer):
     NetcodeK3h4Output {
   if (outputBuffer.length < BANANA_NETCODE_K3H4_BUFFER_BYTES) {
