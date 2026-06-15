@@ -63,7 +63,12 @@ extern "C"
         RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH = 1
     } RuntimeNetcodeK3h4SpectralMode;
 
-    /* Fixed-point cluster center exported through the ABI payload. */
+    /*
+     * Fixed-point cluster center exported through the ABI payload.
+     *
+     * Each component uses Q16 encoding:
+     *   center_real[dim] = center_q16[dim] / 65536.0
+     */
     typedef struct RuntimeNetcodeK3h4Center
     {
         int cluster_id;
@@ -71,7 +76,14 @@ extern "C"
         int center_q16[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
     } RuntimeNetcodeK3h4Center;
 
-    /* Inradius and nearest-neighbor distance summary for one cluster. */
+    /*
+     * Inradius and nearest-neighbor distance summary for one cluster.
+     *
+     * nearest_neighbor_distance_q16 is the closest center-to-center distance.
+     * inscribed_radius_q16 is computed as:
+     *   r_q16 = round(nearest_neighbor_distance_q16 / 2)
+     * then clamped to a floor when the geometry would collapse.
+     */
     typedef struct RuntimeNetcodeK3h4Radius
     {
         int cluster_id;
@@ -80,7 +92,18 @@ extern "C"
         int radius_state;
     } RuntimeNetcodeK3h4Radius;
 
-    /* Distance-weighted token-to-cluster score emitted for notebook comparisons. */
+    /*
+     * Distance-weighted token-to-cluster score emitted for notebook comparisons.
+     *
+     * distance_to_center_q16 stores the Mahalanobis distance in Q16 form.
+     * weighted_score_q16 then depends on the selected assignment family:
+     *
+     *   multiplicative mode: score = distance_q16 / radius_q16
+     *   power mode:          score = distance_q16^2 - radius_q16^2
+     *
+     * Smaller multiplicative scores are better; more negative power scores are
+     * more interior to the cluster boundary.
+     */
     typedef struct RuntimeNetcodeWeightedVoronoiScore
     {
         int vector_id;
@@ -90,7 +113,14 @@ extern "C"
         int score_validity;
     } RuntimeNetcodeWeightedVoronoiScore;
 
-    /* Compact spectral proxy summary per cluster. */
+    /*
+     * Compact spectral proxy summary per cluster.
+     *
+     * When spectral mode is enabled:
+     *   frequency_proxy_q16 ~= 1 / radius_q16
+     *   amplitude_proxy_q16 = member_count / vector_count
+     * both encoded back into Q16 for deterministic transport.
+     */
     typedef struct RuntimeNetcodeSpectralProxy
     {
         int cluster_id;
@@ -99,7 +129,11 @@ extern "C"
         int spectral_state;
     } RuntimeNetcodeSpectralProxy;
 
-    /* Observability fields used to explain clustering stability and decoding. */
+    /*
+     * Observability fields used to explain clustering stability and decoding.
+     * deterministic_hash is built from the exported Q16 centers, radii,
+     * spectral values, and weighted scores so equal payloads hash identically.
+     */
     typedef struct RuntimeNetcodeK3h4Observability
     {
         int convergence_status;
@@ -119,7 +153,13 @@ extern "C"
         int contract_status;
     } RuntimeNetcodeEnvelopeMetadata;
 
-    /* Full k3h4 payload that crosses the native ABI boundary. */
+    /*
+     * Full k3h4 payload that crosses the native ABI boundary.
+     *
+     * Float fields are reserved for presentation-friendly geometry, while the
+     * quantitative clustering contract rides mostly in Q16 fields so the API
+     * and frontend can reconstruct the same ordering and thresholds exactly.
+     */
     typedef struct RuntimeNetcodeK3h4Output
     {
         int dimensions;

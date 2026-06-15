@@ -79,23 +79,50 @@ export type NetcodeK3h4SpectralState = 'ok'|'radius-floor-applied'|'disabled';
 
 export type NetcodeK3h4EndiannessDecodePath = 'little-endian'|'byte-swapped';
 
+/**
+ * Q16 fixed-point vector.
+ *
+ * Decode each component with:
+ *   real = q16 / 65536
+ *
+ * The native layer uses Q16 here so cluster centers and derived scores survive
+ * ABI transport and hashing without float-rounding drift.
+ */
 type NetcodeQ16Vector = readonly number[];
 
+/** Native cluster center with each coordinate stored in Q16. */
 export type NetcodeK3h4Center = {
   readonly clusterId: number; readonly memberCount: number; readonly centerQ16:
                                                                          NetcodeQ16Vector;
 };
 
+/**
+ * Radius summary in Q16 units.
+ * nearestNeighborDistanceQ16 is the closest center-to-center distance and
+ * inscribedRadiusQ16 is approximately half of that distance after floor clamps.
+ */
 export type NetcodeK3h4Radius = {
   readonly clusterId: number; readonly nearestNeighborDistanceQ16: number; readonly inscribedRadiusQ16: number; readonly radiusState:
                                                                                                                              NetcodeK3h4RadiusState;
 };
 
+/**
+ * Per-vector score against one cluster.
+ *
+ * distanceToCenterQ16 is the Mahalanobis distance in Q16 form. The native
+ * builder then computes weightedScoreQ16 as either distance/radius
+ * (multiplicative mode) or distance^2 - radius^2 (power mode).
+ */
 export type NetcodeK3h4WeightedVoronoiScore = {
   readonly vectorId: number; readonly clusterId: number; readonly distanceToCenterQ16: number; readonly weightedScoreQ16: number; readonly scoreValidity:
                                                                                                                                                NetcodeK3h4ScoreValidity;
 };
 
+/**
+ * Spectral proxy emitted from the cluster radius model.
+ * frequencyProxyQ16 approximates 1/radius and amplitudeProxyQ16 approximates
+ * memberCount/vectorCount, both encoded in Q16.
+ */
 export type NetcodeK3h4SpectralProxy = {
   readonly clusterId: number; readonly frequencyProxyQ16: number; readonly amplitudeProxyQ16: number; readonly spectralState:
                                                                                                                    NetcodeK3h4SpectralState;
