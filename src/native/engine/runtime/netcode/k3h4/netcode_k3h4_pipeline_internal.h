@@ -3,6 +3,17 @@
 
 #include "netcode_k3h4_pipeline.h"
 
+/*
+ * Scratch context shared across the k3h4 pipeline stages.
+ *
+ * The pipeline keeps both real-valued normalized vectors and their Q16 copies:
+ * - normalized      drives display geometry and covariance estimation
+ * - normalized_q16  preserves deterministic center/radius/score calculations
+ *
+ * cluster_inverse_covariance[i] stores Sigma_i^{-1} for Mahalanobis scoring.
+ * radius_floor_q16, assignment_family, and spectral_enabled capture the active
+ * runtime configuration chosen by setup.
+ */
 typedef struct RuntimeNetcodeK3h4PipelineContext
 {
     const RuntimeNetcodeVectorOutput *input;
