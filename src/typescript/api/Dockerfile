@@ -15,6 +15,7 @@ RUN bun install
 
 COPY src/typescript/api/src ./src
 COPY notebooks /app/notebooks
+COPY artifacts/native /app/artifacts/native
 COPY src/native /app/src/native
 COPY tests/native /app/tests/native
 
