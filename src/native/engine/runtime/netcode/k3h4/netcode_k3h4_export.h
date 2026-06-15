@@ -22,6 +22,7 @@ extern "C"
      * Export status codes
      * ----------------------------------------------------------------------- */
 
+    /* Result of serializing a completed k3h4 pipeline output to disk. */
     typedef enum
     {
         BANANA_K3H4_EXPORT_OK                  = 0,

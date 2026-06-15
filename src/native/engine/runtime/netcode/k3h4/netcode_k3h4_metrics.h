@@ -27,12 +27,14 @@ extern "C"
         RUNTIME_NETCODE_RADIUS_NEAR_ZERO_CLAMPED = 2
     } RuntimeNetcodeRadiusState;
 
+    /* Indicates whether a weighted Voronoi score is safe to present as-is. */
     typedef enum RuntimeNetcodeScoreValidity
     {
         RUNTIME_NETCODE_SCORE_VALID = 0,
         RUNTIME_NETCODE_SCORE_INVALID_RADIUS = 1
     } RuntimeNetcodeScoreValidity;
 
+    /* Describes whether spectral proxy data is measured or degraded/disabled. */
     typedef enum RuntimeNetcodeSpectralState
     {
         RUNTIME_NETCODE_SPECTRAL_OK = 0,
@@ -40,24 +42,28 @@ extern "C"
         RUNTIME_NETCODE_SPECTRAL_DISABLED = 2
     } RuntimeNetcodeSpectralState;
 
+    /* Records whether the payload was read directly or through byte swapping. */
     typedef enum RuntimeNetcodeEndiannessDecodePath
     {
         RUNTIME_NETCODE_ENDIANNESS_LITTLE_ENDIAN = 0,
         RUNTIME_NETCODE_ENDIANNESS_BYTE_SWAPPED = 1
     } RuntimeNetcodeEndiannessDecodePath;
 
+    /* Assignment family toggles the cluster-membership scoring strategy. */
     typedef enum RuntimeNetcodeK3h4AssignmentFamily
     {
         RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE = 0,
         RUNTIME_NETCODE_K3H4_ASSIGNMENT_POWER = 1
     } RuntimeNetcodeK3h4AssignmentFamily;
 
+    /* Spectral mode enables or suppresses affinity-graph proxy generation. */
     typedef enum RuntimeNetcodeK3h4SpectralMode
     {
         RUNTIME_NETCODE_K3H4_SPECTRAL_DISABLED = 0,
         RUNTIME_NETCODE_K3H4_SPECTRAL_AFFINITY_GRAPH = 1
     } RuntimeNetcodeK3h4SpectralMode;
 
+    /* Fixed-point cluster center exported through the ABI payload. */
     typedef struct RuntimeNetcodeK3h4Center
     {
         int cluster_id;
@@ -65,6 +71,7 @@ extern "C"
         int center_q16[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
     } RuntimeNetcodeK3h4Center;
 
+    /* Inradius and nearest-neighbor distance summary for one cluster. */
     typedef struct RuntimeNetcodeK3h4Radius
     {
         int cluster_id;
@@ -73,6 +80,7 @@ extern "C"
         int radius_state;
     } RuntimeNetcodeK3h4Radius;
 
+    /* Distance-weighted token-to-cluster score emitted for notebook comparisons. */
     typedef struct RuntimeNetcodeWeightedVoronoiScore
     {
         int vector_id;
@@ -82,6 +90,7 @@ extern "C"
         int score_validity;
     } RuntimeNetcodeWeightedVoronoiScore;
 
+    /* Compact spectral proxy summary per cluster. */
     typedef struct RuntimeNetcodeSpectralProxy
     {
         int cluster_id;
@@ -90,6 +99,7 @@ extern "C"
         int spectral_state;
     } RuntimeNetcodeSpectralProxy;
 
+    /* Observability fields used to explain clustering stability and decoding. */
     typedef struct RuntimeNetcodeK3h4Observability
     {
         int convergence_status;
@@ -99,6 +109,7 @@ extern "C"
         int endianness_decode_path;
     } RuntimeNetcodeK3h4Observability;
 
+    /* Envelope metadata appended after the payload body for validation. */
     typedef struct RuntimeNetcodeEnvelopeMetadata
     {
         int contract_version;
