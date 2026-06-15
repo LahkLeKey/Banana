@@ -30,7 +30,8 @@ const SEARCH_ROOTS = [
   '/workspace',
 ];
 
-/* Searches a few common workspace roots because the API can run from nested packages. */
+/* Searches a few common workspace roots because the API can run from nested
+ * packages. */
 function resolveArtifactPath(): string|null {
   for (const root of SEARCH_ROOTS) {
     const candidate = path.join(root, ARTIFACT_RELATIVE_PATH);
