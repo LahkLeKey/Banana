@@ -39,8 +39,18 @@ extern "C"
      * training artifact file and writes it atomically to:
      *   <out_dir>/k3h4-training/<session_id>/epoch-<epoch_index>.bin
      *
+     * The exported record preserves the Q16-valued mathematical contract from
+     * RuntimeNetcodeK3h4Output. In particular:
+     *   center_q16           = round(center_real * 2^16)
+     *   radius_q16           = round(radius_real * 2^16)
+     *   weighted_score_q16   = round(score_real  * 2^16)   when ratio-based
+     *
+     * For power mode the score field instead stores the signed quantity
+     * distance_q16^2 - radius_q16^2, which is intentionally not normalized
+     * back to unit scale before serialization.
+     *
      * Hardware preflight (byte-order tag, dtype tag, alignment) is validated
-     * before any I/O is attempted.  On failure no file is created.
+     * before any I/O is attempted. On failure no file is created.
      *
      * Parameters:
      *   session_id  – null-terminated, max BANANA_K3H4_SESSION_ID_MAX_LEN chars.

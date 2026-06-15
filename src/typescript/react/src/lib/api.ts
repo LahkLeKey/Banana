@@ -68,18 +68,35 @@ export type NetcodeK3h4Center = {
   memberCount: number;
 };
 
+/**
+ * Radius fields are transported in Q16 fixed-point units.
+ * Decode with real = q16 / 65536.
+ * inscribedRadiusQ16 is approximately half the nearest center-to-center
+ * distance, after the native radius floor is applied.
+ */
 export type NetcodeK3h4Radius = {
   clusterId: number; nearestNeighborDistanceQ16: number;
   inscribedRadiusQ16: number;
   radiusState: 'ok' | 'degenerate' | 'invalid';
 };
 
+/**
+ * Per-vector score against one cluster.
+ * distanceToCenterQ16 is a Mahalanobis distance in Q16 form.
+ * weightedScoreQ16 is either distance/radius or distance^2 - radius^2,
+ * depending on the native assignment family that produced the payload.
+ */
 export type NetcodeK3h4WeightedScore = {
   vectorId: number; clusterId: number; distanceToCenterQ16: number;
   weightedScoreQ16: number;
   scoreValidity: 'valid' | 'clamped' | 'invalid';
 };
 
+/**
+ * Spectral proxy terms in Q16.
+ * frequencyProxyQ16 approximates 1/radius and amplitudeProxyQ16 approximates
+ * memberCount/vectorCount.
+ */
 export type NetcodeK3h4SpectralProxy = {
   clusterId: number; frequencyProxyQ16: number; amplitudeProxyQ16: number;
   spectralState: 'ok' | 'low-signal' | 'invalid';

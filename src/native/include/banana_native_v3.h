@@ -90,7 +90,9 @@ typedef struct banana_native_v3_netcode_vector_input {
 } banana_native_v3_netcode_vector_input;
 
 typedef enum banana_native_v3_netcode_k3h4_assignment_family {
+	/* score = distance_q16 / radius_q16 */
 	BANANA_NATIVE_V3_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE = 0,
+	/* score = distance_q16^2 - radius_q16^2 */
 	BANANA_NATIVE_V3_NETCODE_K3H4_ASSIGNMENT_POWER = 1,
 } banana_native_v3_netcode_k3h4_assignment_family;
 
@@ -102,6 +104,11 @@ typedef enum banana_native_v3_netcode_k3h4_spectral_mode {
 #define BANANA_NATIVE_V3_NETCODE_K3H4_DTYPE_TAG_F32_Q16_MIXED 1
 #define BANANA_NATIVE_V3_NETCODE_K3H4_ALIGNMENT_BYTES_4 4
 
+/*
+ * Public vector contract used to seed the k3h4 pipeline.
+ * node_vectors remain float, while later k3h4 payload sections switch to Q16
+ * fixed-point for deterministic transport and hashing.
+ */
 typedef struct banana_native_v3_netcode_vector_output {
 	int32_t dimensions;
 	float node_vectors[4][16];
@@ -139,12 +146,23 @@ typedef enum banana_native_v3_netcode_endianness_decode_path {
 	BANANA_NATIVE_V3_NETCODE_ENDIANNESS_BYTE_SWAPPED = 1,
 } banana_native_v3_netcode_endianness_decode_path;
 
+/*
+ * Center coordinates in signed Q16.
+ * Decode with:
+ *   center_real = center_q16 / 65536.0
+ */
 typedef struct banana_native_v3_netcode_k3h4_center {
 	int32_t cluster_id;
 	int32_t member_count;
 	int32_t center_q16[16];
 } banana_native_v3_netcode_k3h4_center;
 
+/*
+ * Radius contract in Q16.
+ * nearest_neighbor_distance_q16 is the closest center-to-center distance.
+ * inscribed_radius_q16 is approximately half that distance, with a floor clamp
+ * applied when the geometry would collapse.
+ */
 typedef struct banana_native_v3_netcode_k3h4_radius {
 	int32_t cluster_id;
 	int32_t nearest_neighbor_distance_q16;
@@ -152,6 +170,11 @@ typedef struct banana_native_v3_netcode_k3h4_radius {
 	int32_t radius_state;
 } banana_native_v3_netcode_k3h4_radius;
 
+/*
+ * Per-vector score against one cluster.
+ * distance_to_center_q16 stores the Mahalanobis distance in Q16.
+ * weighted_score_q16 is derived from the selected assignment family.
+ */
 typedef struct banana_native_v3_netcode_weighted_voronoi_score {
 	int32_t vector_id;
 	int32_t cluster_id;
@@ -160,6 +183,11 @@ typedef struct banana_native_v3_netcode_weighted_voronoi_score {
 	int32_t score_validity;
 } banana_native_v3_netcode_weighted_voronoi_score;
 
+/*
+ * Spectral proxy in Q16.
+ * frequency_proxy_q16 approximates 1/radius and amplitude_proxy_q16
+ * approximates member_count/vector_count.
+ */
 typedef struct banana_native_v3_netcode_spectral_proxy {
 	int32_t cluster_id;
 	int32_t frequency_proxy_q16;
@@ -167,6 +195,10 @@ typedef struct banana_native_v3_netcode_spectral_proxy {
 	int32_t spectral_state;
 } banana_native_v3_netcode_spectral_proxy;
 
+/*
+ * Convergence and reproducibility metadata for the exported payload.
+ * deterministic_hash is computed from the Q16-bearing sections of the output.
+ */
 typedef struct banana_native_v3_netcode_k3h4_observability {
 	int32_t convergence_status;
 	int32_t iteration_count;
@@ -175,6 +207,12 @@ typedef struct banana_native_v3_netcode_k3h4_observability {
 	int32_t endianness_decode_path;
 } banana_native_v3_netcode_k3h4_observability;
 
+/*
+ * Full exported k3h4 payload.
+ * Float fields carry display-friendly geometry; the mathematical clustering
+ * contract is primarily represented in the Q16 center/radius/score/proxy
+ * fields plus the envelope metadata appended at the tail.
+ */
 typedef struct banana_native_v3_netcode_k3h4_output {
 	int32_t dimensions;
 	banana_native_v3_netcode_projection_node nodes[4];

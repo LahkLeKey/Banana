@@ -36,18 +36,25 @@ export type ContractK3h4CenterModel = {
                                                                                                                                number;
 };
 
+/** Q16 radius contract from native. Decode with real = q16 / 65536. */
 export type ContractK3h4RadiusModel = {
   readonly clusterId: number; readonly nearestNeighborDistanceQ16: number; readonly inscribedRadiusQ16: number; readonly radiusState:
                                                                                                                              'ok' |
       'degenerate' | 'invalid';
 };
 
+/**
+ * Q16 score against one cluster.
+ * The native layer computes either distance/radius or distance^2 - radius^2,
+ * depending on the active assignment family.
+ */
 export type ContractK3h4WeightedScoreModel = {
   readonly vectorId: number; readonly clusterId: number; readonly distanceToCenterQ16: number; readonly weightedScoreQ16: number; readonly scoreValidity:
                                                                                                                                                'valid' |
       'clamped' | 'invalid';
 };
 
+/** Q16 spectral proxy terms derived from the cluster radii model. */
 export type ContractK3h4SpectralProxyModel = {
   readonly clusterId: number; readonly frequencyProxyQ16: number; readonly amplitudeProxyQ16: number; readonly spectralState:
                                                                                                                    'ok' |
