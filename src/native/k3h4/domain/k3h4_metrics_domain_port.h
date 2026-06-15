@@ -8,6 +8,12 @@ extern "C"
 {
 #endif
 
+    /*
+     * Domain port for the native k3h4 metrics application layer.
+     *
+     * The port carries one function pointer per build stage so the application
+     * layer can stay decoupled from the concrete facade or ABI implementation.
+     */
     typedef struct BananaNativeK3h4DomainPort
     {
         int (*build_learning)(RuntimeK3h4SignalInput signal_input,
