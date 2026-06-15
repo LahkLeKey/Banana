@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 
+/** Score emitted for one token under one k3h4 assignment mode. */
 export type TokenScore = {
     readonly tokenId: string;
     readonly clusterId: number;
     readonly score: number;
 };
 
+/** Props for the cross-mode notebook comparison panel. */
 export type ModeDifferentiationViewProps = {
     readonly multiplicativeScores: readonly TokenScore[];
     readonly powerScores: readonly TokenScore[];
@@ -20,6 +22,7 @@ type TokenScorePair = {
     readonly divergent: boolean;
 };
 
+/* Aligns tokens across the two modes and flags cluster-assignment divergence. */
 function buildTokenPairs(
     multiplicativeScores: readonly TokenScore[],
     powerScores: readonly TokenScore[],
@@ -62,6 +65,10 @@ function tokenKey(mode: 'multiplicative' | 'power', tokenId: string): string {
     return `${mode}:${tokenId}`;
 }
 
+/**
+ * Renders side-by-side token score distributions for multiplicative and power
+ * mode so notebook users can spot divergence or degeneracy in one glance.
+ */
 export function ModeDifferentiationView({
     multiplicativeScores,
     powerScores,

@@ -8,6 +8,7 @@ extern "C"
 {
 #endif
 
+    /* Creates the concrete domain port backed by the direct native k3h4 facade. */
     BananaNativeK3h4DomainPort banana_native_k3h4_infrastructure_create_domain_port(void);
 
 #ifdef __cplusplus

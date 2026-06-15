@@ -2,6 +2,7 @@ import {useCallback, useEffect, useState} from 'react';
 
 import {fetchK3h4ScalingBenchmark, type K3h4ScalingBenchmarkResponse, resolveApiBaseUrl,} from '../../../lib/api';
 
+/** UI state machine for the optional native k3h4 scaling benchmark artifact. */
 export type K3h4ScalingBenchmarkState =|{status: 'idle'}|{status: 'loading'}|{
   status: 'ok';
   data: K3h4ScalingBenchmarkResponse
@@ -11,6 +12,10 @@ export type K3h4ScalingBenchmarkState =|{status: 'idle'}|{status: 'loading'}|{
   message: string
 };
 
+/**
+ * Loads the benchmark artifact through the API and normalizes absent artifacts
+ * into a dedicated not_found state for the notebook visualization.
+ */
 export function useK3h4ScalingBenchmark():
     {state: K3h4ScalingBenchmarkState; refresh: () => void;} {
   const [state, setState] =

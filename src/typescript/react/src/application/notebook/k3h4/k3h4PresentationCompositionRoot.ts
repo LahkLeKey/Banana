@@ -2,6 +2,7 @@ import {createK3h4PresentationMapperAdapter,} from '../../../infrastructure/note
 
 import {createK3h4PresentationApplicationService, type K3h4PresentationApplicationService,} from './k3h4PresentationApplicationService';
 
+/** Composes the notebook presentation mapper service for k3h4 screens. */
 export function composeK3h4PresentationApplicationService():
     K3h4PresentationApplicationService {
   const mapperPort = createK3h4PresentationMapperAdapter();

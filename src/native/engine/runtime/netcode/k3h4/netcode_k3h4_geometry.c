@@ -8,6 +8,11 @@
 #define BANANA_PI 3.14159265358979323846f
 #endif
 
+/*
+ * Geometry is the presentation-facing companion to the Q16 clustering core.
+ * This file normalizes vectors, projects them into a compact 3D view, and
+ * derives coherence/alignment summaries for notebook consumers.
+ */
 static int clamp_percent(int value)
 {
     if (value < 0) return 0;
@@ -17,6 +22,12 @@ static int clamp_percent(int value)
 
 static void normalize_vector(const float *vector, int dimensions, float *out)
 {
+    /*
+     * L2 normalization:
+     *   out = vector / ||vector||_2
+     *
+     * Zero-length vectors collapse to the zero vector rather than producing NaN.
+     */
     int i;
     float sum = 0.0f;
     float magnitude;
@@ -36,6 +47,7 @@ static void normalize_vector(const float *vector, int dimensions, float *out)
 
 static float dot(const float *a, const float *b, int dimensions)
 {
+    /* Standard inner product used for coherence against the centroid axis. */
     int i;
     float result = 0.0f;
     for (i = 0; i < dimensions; i++)
@@ -45,6 +57,7 @@ static float dot(const float *a, const float *b, int dimensions)
 
 static float euclidean_distance(const float *a, const float *b, int dimensions)
 {
+    /* Euclidean distance in normalized real-space coordinates. */
     int i;
     float sum = 0.0f;
     for (i = 0; i < dimensions; i++)
@@ -61,6 +74,11 @@ static void project_vector(const float *vector,
                            float *out_y,
                            float *out_z)
 {
+    /*
+     * Wrap the high-dimensional vector around the unit circle using evenly
+     * spaced angular bins, then lift the remaining energy into z so the final
+     * point stays on or inside the unit hemisphere.
+     */
     int i;
     float x = 0.0f;
     float y = 0.0f;
@@ -92,6 +110,10 @@ static void project_vector(const float *vector,
 void runtime_netcode_k3h4_prepare_geometry(
     RuntimeNetcodeK3h4PipelineContext *context)
 {
+    /*
+     * Normalize every node vector, convert the normalized coordinates to Q16,
+     * then compute the normalized centroid direction used for coherence.
+     */
     int i;
     int j;
 
@@ -116,6 +138,12 @@ void runtime_netcode_k3h4_prepare_geometry(
 void runtime_netcode_k3h4_build_projection_nodes(
     RuntimeNetcodeK3h4PipelineContext *context)
 {
+    /*
+     * For each node:
+     *   1. project normalized coordinates into (x, y, z)
+     *   2. compute coherence = ((dot(v, centroid) + 1) / 2) * 100
+     *   3. estimate inradius as half the nearest-neighbor distance
+     */
     int i;
 
     for (i = 0; i < RUNTIME_NETCODE_VECTOR_NODE_COUNT; i++)
@@ -163,6 +191,12 @@ void runtime_netcode_k3h4_build_projection_nodes(
 void runtime_netcode_k3h4_finalize_geometry(
     RuntimeNetcodeK3h4PipelineContext *context)
 {
+    /*
+     * Alignment is the mean node coherence in percent.
+     * Radial stability penalizes the square root of the radius variance:
+     *   stability = (1 - sqrt(var(radius))) * 100
+     * and is then clamped into [0, 100].
+     */
     float average_radius = context->total_radius / (float)RUNTIME_NETCODE_VECTOR_NODE_COUNT;
     int i;
 

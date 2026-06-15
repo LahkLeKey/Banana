@@ -4,6 +4,10 @@ import {composeK3h4ApplicationService,} from '../composition/k3h4/k3h4Compositio
 import type {NativeNetcodeService} from './nativeNetcode.ts';
 import type {NetcodeAnalyticsAuthoritativeRequest, NetcodeAnalyticsAuthoritativeResult, NetcodeK3h4Rollout,} from './netcodeAuthoritativeComputeOrchestrator.ts';
 
+/**
+ * Service-layer entry point used by API code that wants the composed k3h4
+ * application flow without reaching directly into the composition root.
+ */
 export interface K3h4ApplicationOrchestrationLayer {
   compute(
       request: NetcodeAnalyticsAuthoritativeRequest,

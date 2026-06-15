@@ -8,6 +8,11 @@ extern "C"
 {
 #endif
 
+    /*
+     * Application-layer forwarding helpers for the native k3h4 metrics flow.
+     * Each function validates the supplied domain port and then delegates the
+     * actual stage build to the bound implementation.
+     */
     int banana_native_k3h4_application_build_learning(
         const BananaNativeK3h4DomainPort *domain_port,
         RuntimeK3h4SignalInput signal_input,

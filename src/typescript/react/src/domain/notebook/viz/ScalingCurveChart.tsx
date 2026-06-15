@@ -1,9 +1,11 @@
+/** One sampled point from the scaling-benchmark artifact. */
 export type ScalingSeriesEntry = {
     readonly n: number;
     readonly k3h4Ns: number;
     readonly attentionNs: number;
 };
 
+/** Benchmark payload rendered by the scaling-curve notebook chart. */
 export type K3h4ScalingBenchmarkPayload = {
     readonly contractVersion: number;
     readonly schemaVersion: number;
@@ -14,6 +16,7 @@ export type K3h4ScalingBenchmarkPayload = {
     };
 };
 
+/** Props for the log-log benchmark chart. */
 export type ScalingCurveChartProps = {
     readonly data: K3h4ScalingBenchmarkPayload;
     readonly width?: number;
@@ -24,6 +27,7 @@ type Point = { readonly x: number; readonly y: number };
 
 const CHART_MARGIN = { top: 32, right: 32, bottom: 56, left: 72 };
 
+/* Maps a strictly positive value from one log domain into screen space. */
 function logScale(
     domain: readonly [number, number],
     range: readonly [number, number],
@@ -52,6 +56,7 @@ function formatN(n: number): string {
     return String(n);
 }
 
+/* Computes least-squares slopes for the two log-log benchmark series. */
 function logLogSlope(series: readonly ScalingSeriesEntry[]): {
     k3h4: number;
     attention: number;
@@ -74,6 +79,10 @@ function logLogSlope(series: readonly ScalingSeriesEntry[]): {
     return { k3h4: slope(logK), attention: slope(logA) };
 }
 
+/**
+ * Renders the native k3h4 benchmark against the quadratic attention baseline
+ * using shared log scales so slope differences remain visually comparable.
+ */
 export function ScalingCurveChart({
     data,
     width = 640,

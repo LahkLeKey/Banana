@@ -8,6 +8,12 @@ extern "C"
 {
 #endif
 
+    /*
+     * Finalizes the observability block after all geometry, radius, spectral,
+     * and score fields are populated. This stage copies convergence metadata
+     * from the upstream vector contract and computes the deterministic hash over
+     * the finished k3h4 payload.
+     */
     void runtime_netcode_k3h4_finalize_observability(
         RuntimeNetcodeK3h4PipelineContext *context);
 

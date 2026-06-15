@@ -37,6 +37,11 @@ export type NetcodeK3h4Mode = 'multiplicative'|'power';
 
 export type NetcodeK3h4SpectralMode = 'disabled'|'affinity-graph';
 
+/**
+ * Input contract shared by the vector builder and the full k3h4 projection
+ * builder. Optional hardware tags are carried through so the native layer can
+ * validate envelope compatibility for callers that persist payloads.
+ */
 export type NetcodeVectorInput =
     {
       readonly callDensity: number; readonly questPercent: number; readonly playerLevel: number; readonly comboStreak: number; readonly branchPressure: number; readonly dependencyPulse: number; readonly workflowDepth: 1 | 2 | 3; readonly neuralRelevanceScore: number; readonly networkDimensions: number; readonly modelConfidence: number; readonly policyMomentum:
@@ -74,23 +79,50 @@ export type NetcodeK3h4SpectralState = 'ok'|'radius-floor-applied'|'disabled';
 
 export type NetcodeK3h4EndiannessDecodePath = 'little-endian'|'byte-swapped';
 
+/**
+ * Q16 fixed-point vector.
+ *
+ * Decode each component with:
+ *   real = q16 / 65536
+ *
+ * The native layer uses Q16 here so cluster centers and derived scores survive
+ * ABI transport and hashing without float-rounding drift.
+ */
 type NetcodeQ16Vector = readonly number[];
 
+/** Native cluster center with each coordinate stored in Q16. */
 export type NetcodeK3h4Center = {
   readonly clusterId: number; readonly memberCount: number; readonly centerQ16:
                                                                          NetcodeQ16Vector;
 };
 
+/**
+ * Radius summary in Q16 units.
+ * nearestNeighborDistanceQ16 is the closest center-to-center distance and
+ * inscribedRadiusQ16 is approximately half of that distance after floor clamps.
+ */
 export type NetcodeK3h4Radius = {
   readonly clusterId: number; readonly nearestNeighborDistanceQ16: number; readonly inscribedRadiusQ16: number; readonly radiusState:
                                                                                                                              NetcodeK3h4RadiusState;
 };
 
+/**
+ * Per-vector score against one cluster.
+ *
+ * distanceToCenterQ16 is the Mahalanobis distance in Q16 form. The native
+ * builder then computes weightedScoreQ16 as either distance/radius
+ * (multiplicative mode) or distance^2 - radius^2 (power mode).
+ */
 export type NetcodeK3h4WeightedVoronoiScore = {
   readonly vectorId: number; readonly clusterId: number; readonly distanceToCenterQ16: number; readonly weightedScoreQ16: number; readonly scoreValidity:
                                                                                                                                                NetcodeK3h4ScoreValidity;
 };
 
+/**
+ * Spectral proxy emitted from the cluster radius model.
+ * frequencyProxyQ16 approximates 1/radius and amplitudeProxyQ16 approximates
+ * memberCount/vectorCount, both encoded in Q16.
+ */
 export type NetcodeK3h4SpectralProxy = {
   readonly clusterId: number; readonly frequencyProxyQ16: number; readonly amplitudeProxyQ16: number; readonly spectralState:
                                                                                                                    NetcodeK3h4SpectralState;
@@ -180,6 +212,14 @@ function computeCrc32(payload: Buffer): number {
   return (~crc) >>> 0;
 }
 
+/**
+ * Decodes the fixed-width native k3h4 payload into a typed API object.
+ *
+ * The native contract appends a 20-byte envelope after the payload body. This
+ * decoder validates the envelope first so the API fails early on version,
+ * payload length, CRC, or non-finite value mismatches before exposing partial
+ * projection data to higher layers.
+ */
 export function __decodeK3h4BufferForTests(outputBuffer: Buffer):
     NetcodeK3h4Output {
   if (outputBuffer.length < BANANA_NETCODE_K3H4_BUFFER_BYTES) {

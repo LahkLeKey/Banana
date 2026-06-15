@@ -5,12 +5,24 @@
 #include "netcode_k3h4_pipeline_internal.h"
 #include "netcode_k3h4_pipeline_setup.h"
 
+/*
+ * Pipeline order matters:
+ *   1. setup picks configuration and zeroes output
+ *   2. geometry normalizes/project vectors and builds centroid summaries
+ *   3. cluster models publish centers plus inverse covariances
+ *   4. radii/spectral derive neighborhood structure
+ *   5. weighted scores evaluate every vector/cluster pair
+ *   6. finalizers emit display summaries and deterministic observability
+ */
 int runtime_netcode_k3h4_pipeline_execute(
     const RuntimeNetcodeVectorOutput *input,
     RuntimeNetcodeK3h4Output *out_output)
 {
     RuntimeNetcodeK3h4PipelineContext context;
 
+    /* Default execution resolves assignment/spectral configuration from the
+     * pipeline setup layer before running the fixed stage sequence.
+     */
     if (runtime_netcode_k3h4_initialize_pipeline_context(
             &context,
             input,
@@ -36,6 +48,9 @@ int runtime_netcode_k3h4_pipeline_execute_with_config(
 {
     RuntimeNetcodeK3h4PipelineContext context;
 
+    /* Explicit execution keeps the stage order identical while swapping the
+     * two runtime knobs that affect score and spectral semantics.
+     */
     if (runtime_netcode_k3h4_initialize_pipeline_context_with_config(
             &context,
             input,

@@ -5,6 +5,9 @@
 BananaNativeK3h4DomainPort banana_native_k3h4_infrastructure_create_domain_port(void)
 {
     BananaNativeK3h4DomainPort port;
+    /* Bind each domain port slot to the direct ABI facade so the layered path
+     * preserves exactly the same numerical behavior as the non-layered path.
+     */
     port.build_learning = banana_native_k3h4_build_learning;
     port.build_reward = banana_native_k3h4_build_reward;
     port.build_link = banana_native_k3h4_build_link;

@@ -16,6 +16,7 @@ typedef enum RuntimeNetcodeK3h4Backend
     RUNTIME_NETCODE_K3H4_BACKEND_BLAS = 1
 } RuntimeNetcodeK3h4Backend;
 
+/* Clamp helper for cluster count and iteration-related bounds. */
 static int clamp(int value, int min_value, int max_value)
 {
     if (value < min_value) return min_value;
@@ -29,6 +30,9 @@ static void float_vectors_to_q16(
     int dimensions,
     int out_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS])
 {
+    /* Every vector component is moved into Q16 once up front so later passes
+     * can work in a deterministic fixed-point domain.
+     */
     int vector_index;
     int dim;
 
@@ -46,6 +50,7 @@ static int64_t squared_distance_q16(
     const int *rhs_q16,
     int dimensions)
 {
+    /* Returns sum_k (lhs[k] - rhs[k])^2 with all operands already in Q16. */
     int dim;
     int64_t sum = 0;
 
@@ -80,6 +85,7 @@ static int64_t squared_distance_q16_blas(
 
 static RuntimeNetcodeK3h4Backend resolve_backend(void)
 {
+    /* BLAS changes the implementation strategy, not the mathematical contract. */
     const char *backend_env = getenv("BANANA_NETCODE_K3H4_BACKEND");
     if (!backend_env || backend_env[0] == '\0' || strcmp(backend_env, "auto") == 0)
     {
@@ -127,6 +133,7 @@ static int choose_cluster(
     int dimensions,
     const int centers_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS])
 {
+    /* Argmin over squared distances in fixed-point space. */
     int cluster_index;
     int selected_cluster = 0;
     int64_t selected_distance = LLONG_MAX;
@@ -201,6 +208,7 @@ int runtime_netcode_k3h4_compute(
         int64_t sums[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS] = {{0}};
         int max_center_shift = 0;
 
+        /* Step 1: assign each vector to its nearest current center. */
         memset(member_counts, 0, sizeof(member_counts));
 
         for (vector_index = 0; vector_index < vector_count; vector_index++)
@@ -230,6 +238,7 @@ int runtime_netcode_k3h4_compute(
                 continue;
             }
 
+            /* Step 2: recompute each center as the component-wise mean in Q16. */
             for (dim = 0; dim < dimensions; dim++)
             {
                 updated_centers_q16[cluster_index][dim] =
@@ -237,6 +246,7 @@ int runtime_netcode_k3h4_compute(
             }
         }
 
+        /* Step 3: track the largest per-component center movement in Q16. */
         for (cluster_index = 0; cluster_index < cluster_count; cluster_index++)
         {
             for (dim = 0; dim < dimensions; dim++)

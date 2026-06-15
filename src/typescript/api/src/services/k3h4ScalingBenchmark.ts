@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+/** One measured point from the native k3h4 vs attention benchmark artifact. */
 export type K3h4ScalingBenchmarkEntry = {
   readonly n: number; readonly k3h4Ns: number; readonly attentionNs: number;
 };
 
+/** Parsed benchmark artifact returned to API consumers. */
 export type K3h4ScalingBenchmarkResult = {
   readonly contractVersion: 1; readonly schemaVersion: number; readonly series: readonly K3h4ScalingBenchmarkEntry[]; readonly metadata: {
     readonly calibratedSizes: readonly number[]; readonly extrapolatedAbove:
@@ -28,6 +30,8 @@ const SEARCH_ROOTS = [
   '/workspace',
 ];
 
+/* Searches a few common workspace roots because the API can run from nested
+ * packages. */
 function resolveArtifactPath(): string|null {
   for (const root of SEARCH_ROOTS) {
     const candidate = path.join(root, ARTIFACT_RELATIVE_PATH);
@@ -38,6 +42,7 @@ function resolveArtifactPath(): string|null {
   return null;
 }
 
+/** Loader result for the optional benchmark artifact exposed by the API. */
 export type K3h4ScalingBenchmarkStatus =|{
   kind: 'ok';
   result: K3h4ScalingBenchmarkResult
@@ -47,6 +52,10 @@ export type K3h4ScalingBenchmarkStatus =|{
   reason: string
 };
 
+/**
+ * Loads the generated native benchmark artifact, if present, and normalizes
+ * missing or unreadable artifact states into explicit API status variants.
+ */
 export function loadK3h4ScalingBenchmark(): K3h4ScalingBenchmarkStatus {
   const artifactPath = resolveArtifactPath();
   if (!artifactPath) {

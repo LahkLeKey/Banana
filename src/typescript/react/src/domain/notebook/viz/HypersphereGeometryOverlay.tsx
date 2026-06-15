@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 
+/** 2D point in notebook geometry-overlay space. */
 export type GeometryPoint2d = {
     readonly x: number;
     readonly y: number;
 };
 
+/** One rendered cluster cell plus centroid and inradius geometry. */
 export type GeometryCluster = {
     readonly clusterId: number;
     readonly centroid: GeometryPoint2d;
@@ -12,6 +14,7 @@ export type GeometryCluster = {
     readonly polygon: readonly GeometryPoint2d[];
 };
 
+/** One token projected into the geometry overlay. */
 export type GeometryToken = {
     readonly tokenId: string;
     readonly x: number;
@@ -20,12 +23,14 @@ export type GeometryToken = {
     readonly weightedScore: number;
 };
 
+/** Metadata describing the projection that produced the overlay coordinates. */
 export type GeometryProjectionMetadata = {
     readonly method: string;
     readonly components: number;
     readonly explainedVariance: number;
 };
 
+/** Full overlay payload for one k3h4 epoch snapshot. */
 export type EpochGeometryPayload = {
     readonly epoch: number;
     readonly mode: 'multiplicative' | 'power';
@@ -34,6 +39,7 @@ export type EpochGeometryPayload = {
     readonly projectionMetadata: GeometryProjectionMetadata;
 };
 
+/** Props for the interactive hypersphere geometry overlay. */
 export type HypersphereGeometryOverlayProps = {
     readonly geometry: EpochGeometryPayload;
     readonly width?: number;
@@ -42,6 +48,7 @@ export type HypersphereGeometryOverlayProps = {
 
 const MARGIN = 36;
 
+/* Projects one axis from geometry space into the SVG viewport. */
 function scaleToViewport(
     value: number,
     min: number,
@@ -82,6 +89,10 @@ function boundsFromGeometry(geometry: EpochGeometryPayload): {
     };
 }
 
+/**
+ * Renders cluster cells, inradius guides, and token positions for one k3h4
+ * epoch, with click-to-inspect selection on cluster membership.
+ */
 export function HypersphereGeometryOverlay({
     geometry,
     width = 720,

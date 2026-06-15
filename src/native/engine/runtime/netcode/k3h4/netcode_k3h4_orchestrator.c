@@ -4,6 +4,13 @@
 
 #include <string.h>
 
+/*
+ * This file is the native bridge between scalar request surfaces and the
+ * lower-level learning/reward/link/vector/k3h4 builders. It does three things:
+ *   1. reshape a combined request into stage-specific input structs,
+ *   2. run the stages in canonical order, and
+ *   3. keep default-vs-explicit k3h4 configuration choices centralized.
+ */
 int runtime_netcode_k3h4_orchestrate_full(const RuntimeNetcodeK3h4Request *request,
                                           RuntimeNetcodeK3h4FullOutput *out_output)
 {
@@ -14,8 +21,14 @@ int runtime_netcode_k3h4_orchestrate_full(const RuntimeNetcodeK3h4Request *reque
     if (!request || !out_output)
         return -1;
 
+    /* The orchestration output is fully zeroed first so partial failures never
+     * leak stale data from previous stack contents.
+     */
     memset(out_output, 0, sizeof(*out_output));
 
+    /* Reshape the aggregate request into the narrower structs expected by each
+     * stage-specific builder.
+     */
     signal_input.call_density = request->call_density;
     signal_input.quest_percent = request->quest_percent;
     signal_input.combo_streak = request->combo_streak;
@@ -47,6 +60,7 @@ int runtime_netcode_k3h4_orchestrate_full(const RuntimeNetcodeK3h4Request *reque
     vector_input.hardware_dtype_tag = request->hardware_dtype_tag;
     vector_input.hardware_alignment_bytes = request->hardware_alignment_bytes;
 
+    /* Run the layers in the same order exposed to higher API consumers. */
     if (runtime_netcode_k3h4_build_learning(&request->ledger, &signal_input, &out_output->learning) != 0)
         return -1;
 
@@ -75,6 +89,7 @@ int runtime_netcode_k3h4_build_learning(const RuntimeNetcodeInteractionLedger *l
 {
     RuntimeNetcodeLearningInput learning_input;
 
+    /* Learning is the only stage that consumes the interaction ledger. */
     if (!ledger || !input || !out_output)
         return -1;
 
@@ -95,6 +110,7 @@ int runtime_netcode_k3h4_build_reward(const RuntimeNetcodeK3h4SignalInput *input
 {
     RuntimeNetcodeRewardInput reward_input;
 
+    /* Reward derives only from scalar signals plus the chosen interaction term. */
     if (!input || !out_output)
         return -1;
 
@@ -114,6 +130,7 @@ int runtime_netcode_k3h4_build_link(const RuntimeNetcodeK3h4LinkSignalInput *inp
 {
     RuntimeNetcodeLinkInput link_input;
 
+    /* Link computation repacks the caller-facing struct into the core link ABI. */
     if (!input || !out_output)
         return -1;
 
@@ -134,6 +151,9 @@ int runtime_netcode_k3h4_build_vector(const RuntimeNetcodeK3h4VectorSignalInput 
 {
     RuntimeNetcodeVectorInput vector_input;
 
+    /* The vector builder consumes the pre-k3h4 scalar contract only; assignment
+     * family and spectral mode are applied later by the k3h4 projection stage.
+     */
     if (!input || !out_output)
         return -1;
 
@@ -156,6 +176,10 @@ int runtime_netcode_k3h4_build_vector(const RuntimeNetcodeK3h4VectorSignalInput 
 int runtime_netcode_k3h4_orchestrate(const RuntimeNetcodeVectorInput *input,
                                      RuntimeNetcodeK3h4OrchestrationOutput *out_output)
 {
+    /* This convenience path hard-codes the default policy:
+     *   assignment_family = multiplicative
+     *   spectral_mode     = disabled
+     */
     if (!input || !out_output)
         return -1;
 
@@ -180,6 +204,9 @@ int runtime_netcode_k3h4_build_k3h4(const RuntimeNetcodeK3h4VectorSignalInput *i
     RuntimeNetcodeVectorInput vector_input;
     RuntimeNetcodeK3h4OrchestrationOutput orchestration_output;
 
+    /* Build the vector contract first, then feed it into the explicit k3h4
+     * projection path using the caller-provided assignment and spectral modes.
+     */
     if (!input || !out_output)
         return -1;
 
@@ -206,6 +233,7 @@ int runtime_netcode_k3h4_build_k3h4(const RuntimeNetcodeK3h4VectorSignalInput *i
             input->spectral_mode) != 0)
         return -1;
 
+    /* Only the final k3h4 payload is surfaced back to the caller here. */
     *out_output = orchestration_output.k3h4;
     return 0;
 }

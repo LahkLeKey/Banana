@@ -4,8 +4,17 @@
 
 #include <math.h>
 
+/*
+ * This file turns clustered centers into the quantitative k3h4 contract:
+ * radii, spectral proxies, weighted Voronoi scores, and the deterministic
+ * hash. The underlying geometry is still driven by Q16-valued centers so the
+ * exported ordering and thresholds remain reproducible across ABI boundaries.
+ */
 static int distance_q16_between_vectors(const int *lhs_q16, const int *rhs_q16, int dimensions)
 {
+    /* Euclidean distance in Q16 coordinates:
+     *   d_q16 ~= sqrt(sum_k (lhs_q16[k] - rhs_q16[k])^2)
+     */
     int d;
     double sum = 0.0;
     for (d = 0; d < dimensions; d++)
@@ -20,6 +29,7 @@ static void set_identity_matrix(float matrix[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIO
                                 int dimensions,
                                 float diagonal_value)
 {
+    /* Utility for covariance initialization and isotropic fallback inversion. */
     int row;
     int column;
     for (row = 0; row < dimensions; row++)
@@ -33,6 +43,7 @@ static int invert_matrix(const float input[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS
                          int dimensions,
                          float output[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS])
 {
+    /* Gauss-Jordan elimination on [A | I] to obtain A^{-1}. */
     double augmented[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS * 2];
     int row;
     int column;
@@ -122,6 +133,11 @@ static void build_cluster_inverse_covariance(
     int column;
     const float regularization = 0.001f;
 
+    /* Estimate the sample covariance around the current cluster center:
+     *   Sigma = 1/(n-1) * sum_i (x_i - mu)(x_i - mu)^T
+     * then add a small diagonal regularizer so near-singular clusters still
+     * produce a usable inverse for Mahalanobis scoring.
+     */
     set_identity_matrix(covariance, dimensions, 0.0f);
 
     for (row = 0; row < dimensions; row++)
@@ -164,6 +180,9 @@ static void build_cluster_inverse_covariance(
     if (invert_matrix(covariance, dimensions, out_inverse_covariance) == 0)
         return;
 
+    /* If inversion fails, fall back to an isotropic covariance model with
+     * variance equal to the average diagonal energy.
+     */
     for (row = 0; row < dimensions; row++)
         variance_sum += covariance[row][row];
 
@@ -183,6 +202,13 @@ static float mahalanobis_squared_between_vectors(
     const float inverse_covariance[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
     int dimensions)
 {
+    /*
+     * Mahalanobis distance squared:
+     *   d_M^2(x, mu) = (x - mu)^T Sigma^{-1} (x - mu)
+     *
+     * lhs_q16 and rhs_q16 are first decoded back into real-space floats before
+     * applying the covariance metric.
+     */
     float delta[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
     float transformed[RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
     float result = 0.0f;
@@ -223,11 +249,13 @@ static unsigned int hash_append_u32(unsigned int hash, unsigned int value)
 
 static int score_multiplicative_q16(int distance_q16, int radius_q16)
 {
+    /* Ratio-style score: distance / radius, kept in Q16. */
     return runtime_netcode_q16_div(distance_q16, radius_q16);
 }
 
 static int score_power_q16(int distance_q16, int radius_q16)
 {
+    /* Power-style score: distance^2 - radius^2, still represented in Q16. */
     int distance_sq_q16 = runtime_netcode_q16_mul(distance_q16, distance_q16);
     int radius_sq_q16 = runtime_netcode_q16_mul(radius_q16, radius_q16);
     return distance_sq_q16 - radius_sq_q16;
@@ -236,6 +264,9 @@ static int score_power_q16(int distance_q16, int radius_q16)
 void runtime_netcode_k3h4_build_cluster_models(
     RuntimeNetcodeK3h4PipelineContext *context)
 {
+    /* Materialize center/member-count output and precompute Sigma^{-1} per
+     * cluster so later score calculations can reuse the same metric tensor.
+     */
     int i;
     int j;
 
@@ -260,6 +291,14 @@ void runtime_netcode_k3h4_build_cluster_models(
 void runtime_netcode_k3h4_build_cluster_radii_and_spectral(
     RuntimeNetcodeK3h4PipelineContext *context)
 {
+    /*
+     * Radii are driven by center spacing:
+     *   nearest_q16   = min_{j != i} ||c_i - c_j||
+     *   inscribed_q16 = max(radius_floor_q16, nearest_q16 / 2)
+     *
+     * The spectral proxy reuses those radii to approximate local frequency as
+     * 1/radius and local amplitude as member_count/vector_count.
+     */
     int i;
 
     for (i = 0; i < context->cluster_count; i++)
@@ -332,6 +371,9 @@ void runtime_netcode_k3h4_build_cluster_radii_and_spectral(
 void runtime_netcode_k3h4_build_weighted_voronoi_scores(
     RuntimeNetcodeK3h4PipelineContext *context)
 {
+    /* Emit one score for every vector/cluster pair, so consumers can compare
+     * both winning and non-winning cluster assignments from the same lattice.
+     */
     int i;
 
     for (i = 0; i < context->output->vector_count; i++)
@@ -349,6 +391,7 @@ void runtime_netcode_k3h4_build_weighted_voronoi_scores(
                 context->output->centers[j].center_q16,
                 context->cluster_inverse_covariance[j],
                 context->dimensions);
+            /* Store d_M itself in Q16 after taking the square root of d_M^2. */
             mahalanobis_q16 = runtime_netcode_q16_from_float(sqrtf(mahalanobis_squared));
 
             context->output->weighted_voronoi_scores[score_index].vector_id = i;
@@ -385,6 +428,7 @@ void runtime_netcode_k3h4_build_weighted_voronoi_scores(
 int runtime_netcode_k3h4_build_deterministic_hash(
     const RuntimeNetcodeK3h4Output *output)
 {
+    /* FNV-style accumulation over the exported deterministic fields. */
     unsigned int hash = 2166136261u;
     int i;
     int j;
