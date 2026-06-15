@@ -65,18 +65,32 @@ export async function fetchNotebookManifestWithSource(
     apiBaseUrl = resolveNotebookApiBaseUrl()):
     Promise<{payload: NotebookManifest; source: string}> {
   if (apiBaseUrl.length === 0) {
-    throw new Error(
-        'Notebook API base URL is unavailable. Configure VITE_BANANA_API_BASE_URL.');
+    const payload = await fetchNotebookManifestFromAssets();
+    return {payload, source: '/notebooks/catalog-index.json'};
   }
-  return fetchFirstJson<NotebookManifest>(manifestCandidates(apiBaseUrl));
+
+  try {
+    return await fetchFirstJson<NotebookManifest>(
+        manifestCandidates(apiBaseUrl));
+  } catch {
+    const payload = await fetchNotebookManifestFromAssets();
+    return {payload, source: '/notebooks/catalog-index.json'};
+  }
 }
 
 export async function fetchNotebookDocumentWithSource(
     apiBaseUrl = resolveNotebookApiBaseUrl()):
     Promise<{payload: NotebookDocument; source: string}> {
   if (apiBaseUrl.length === 0) {
-    throw new Error(
-        'Notebook API base URL is unavailable. Configure VITE_BANANA_API_BASE_URL.');
+    const payload = await fetchNotebookDocumentFromAssets();
+    return {payload, source: '/notebooks/native-c-catalog.ipynb'};
   }
-  return fetchFirstJson<NotebookDocument>(notebookCandidates(apiBaseUrl));
+
+  try {
+    return await fetchFirstJson<NotebookDocument>(
+        notebookCandidates(apiBaseUrl));
+  } catch {
+    const payload = await fetchNotebookDocumentFromAssets();
+    return {payload, source: '/notebooks/native-c-catalog.ipynb'};
+  }
 }

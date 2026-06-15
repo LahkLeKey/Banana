@@ -1125,11 +1125,12 @@ export async function fetchK3h4EpochGeometry(
     baseUrl: string,
     sessionId: string,
     epoch: number,
-    mode: 'multiplicative' | 'power' = 'power',
-): Promise<K3h4EpochGeometryResponse> {
+    mode: 'multiplicative'|'power' = 'power',
+    ): Promise<K3h4EpochGeometryResponse> {
   const query = new URLSearchParams({mode}).toString();
   return fetchApiJson<K3h4EpochGeometryResponse>(
       baseUrl,
-      `/api/netcode/k3h4/training-session/${encodeURIComponent(sessionId)}/epoch/${epoch}/geometry?${query}`,
+      `/api/netcode/k3h4/training-session/${
+          encodeURIComponent(sessionId)}/epoch/${epoch}/geometry?${query}`,
   );
 }

@@ -10,6 +10,7 @@ export type ModeDifferentiationViewProps = {
     readonly multiplicativeScores: readonly TokenScore[];
     readonly powerScores: readonly TokenScore[];
     readonly title?: string;
+    readonly comparisonMode?: 'observed' | 'synthetic';
 };
 
 type TokenScorePair = {
@@ -65,6 +66,7 @@ export function ModeDifferentiationView({
     multiplicativeScores,
     powerScores,
     title = 'Mode Differentiation',
+    comparisonMode = 'observed',
 }: ModeDifferentiationViewProps) {
     const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
     const tokenPairs = useMemo(
@@ -73,7 +75,7 @@ export function ModeDifferentiationView({
     const maxScore = useMemo(
         () => computeMaxScore(multiplicativeScores, powerScores),
         [multiplicativeScores, powerScores]);
-    const isDegenerate = tokenPairs.length > 0 && tokenPairs.every((pair) => {
+    const isDegenerate = comparisonMode === 'observed' && tokenPairs.length > 0 && tokenPairs.every((pair) => {
         const multiplicative = pair.multiplicative;
         const power = pair.power;
         if (!multiplicative || !power) {
@@ -91,6 +93,14 @@ export function ModeDifferentiationView({
                 <p className="text-sm text-slate-500">
                     Side-by-side score distributions for the same token order and x-axis scale.
                 </p>
+                {comparisonMode === 'synthetic' ? (
+                    <div
+                        role="status"
+                        className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900"
+                    >
+                        single-mode snapshot - cross-mode separation unavailable until both mode outputs are exported
+                    </div>
+                ) : null}
                 {isDegenerate ? (
                     <div
                         role="status"

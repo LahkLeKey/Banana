@@ -59,6 +59,35 @@ type NotebookGameplaySurfaceProps = {
         analyticsCohort: string;
         k3h4Clusters: number;
         k3h4Convergence: string;
+        k3h4RuntimeMode: 'multiplicative' | 'power';
+        k3h4ProjectionNodes: readonly {
+            id: ContractNodeId;
+            x: number;
+            y: number;
+            z: number;
+            coherence: number;
+            inradius: number;
+            nearestNeighborDistance: number;
+        }[];
+        k3h4Centers: readonly {
+            clusterId: number;
+            centerQ16: readonly number[];
+            memberVectorIds: readonly number[];
+            memberCount: number;
+        }[];
+        k3h4Radii: readonly {
+            clusterId: number;
+            nearestNeighborDistanceQ16: number;
+            inscribedRadiusQ16: number;
+            radiusState: 'ok' | 'degenerate' | 'invalid';
+        }[];
+        k3h4WeightedVoronoiScores: readonly {
+            vectorId: number;
+            clusterId: number;
+            distanceToCenterQ16: number;
+            weightedScoreQ16: number;
+            scoreValidity: 'valid' | 'clamped' | 'invalid';
+        }[];
         abiCoveragePresent: number;
         abiCoverageExpected: number;
         abiCoveragePercent: number;
@@ -384,6 +413,16 @@ export function NotebookGameplaySurface({
             analyticsCohort: analyticsAvailability.rollout.cohort,
             k3h4Clusters: k3h4ClusterCount,
             k3h4Convergence,
+            k3h4RuntimeMode: k3h4.runtime.mode,
+            k3h4ProjectionNodes: k3h4Projection.nodes.map((node) => ({ ...node })),
+            k3h4Centers: k3h4.centers.map((center) => ({
+                clusterId: center.clusterId,
+                centerQ16: [...center.centerQ16],
+                memberVectorIds: [...center.memberVectorIds],
+                memberCount: center.memberCount,
+            })),
+            k3h4Radii: k3h4.radii.map((radius) => ({ ...radius })),
+            k3h4WeightedVoronoiScores: k3h4.weightedVoronoiScores.map((score) => ({ ...score })),
             abiCoveragePresent,
             abiCoverageExpected,
             abiCoveragePercent,
@@ -398,6 +437,11 @@ export function NotebookGameplaySurface({
         abiCoveragePresent,
         analyticsAvailability.available,
         analyticsAvailability.rollout.cohort,
+        k3h4.runtime.mode,
+        k3h4.centers,
+        k3h4.radii,
+        k3h4.weightedVoronoiScores,
+        k3h4Projection.nodes,
         k3h4ClusterCount,
         k3h4Convergence,
         onAnalyticsTelemetryChange,
