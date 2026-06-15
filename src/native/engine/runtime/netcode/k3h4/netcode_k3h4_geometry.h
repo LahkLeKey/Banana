@@ -8,12 +8,21 @@ extern "C"
 {
 #endif
 
+    /*
+     * Normalizes node vectors, stores their Q16 mirrors, and computes the
+     * centroid direction that later coherence calculations use.
+     */
     void runtime_netcode_k3h4_prepare_geometry(
         RuntimeNetcodeK3h4PipelineContext *context);
 
+    /*
+     * Emits per-node projection coordinates, coherence, inradius, and
+     * nearest-neighbor distance for notebook-facing geometry views.
+     */
     void runtime_netcode_k3h4_build_projection_nodes(
         RuntimeNetcodeK3h4PipelineContext *context);
 
+    /* Collapses accumulated node geometry into alignment and radial stability. */
     void runtime_netcode_k3h4_finalize_geometry(
         RuntimeNetcodeK3h4PipelineContext *context);
 
