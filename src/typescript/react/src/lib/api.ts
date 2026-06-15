@@ -3,6 +3,7 @@ type ErrorPayload = {
 };
 
 import type {LaunchGateReasonCode, LaunchGateStatusResponse, LaunchGateVerifyResponse} from './launchGateTypes';
+import type {K3h4EpochGeometryResponse} from './k3h4GeometryTypes.ts';
 import type {NetcodeAbiLayerCoverage, NetcodeAbiLayerKind, NetcodeAbiLayerLedger, NetcodeAbiLayerSnapshot} from '@banana/ui';
 
 type BananaSummaryResponse = {
@@ -1062,5 +1063,39 @@ export async function completeAccountLinkRemediationTicket(
         method: 'POST',
         headers: withOptionalBearerAuth(token),
       },
+  );
+}
+
+export type K3h4ScalingSeriesEntry = {
+  readonly n: number; readonly k3h4Ns: number; readonly attentionNs: number;
+};
+
+export type K3h4ScalingBenchmarkResponse = {
+  readonly contractVersion: number; readonly schemaVersion: number; readonly series: readonly K3h4ScalingSeriesEntry[]; readonly metadata: {
+    readonly calibratedSizes: readonly number[]; readonly extrapolatedAbove:
+                                                              number | null;
+  };
+};
+
+export async function fetchK3h4ScalingBenchmark(
+    baseUrl: string,
+    ): Promise<K3h4ScalingBenchmarkResponse> {
+  return fetchApiJson<K3h4ScalingBenchmarkResponse>(
+      baseUrl,
+      '/api/netcode/k3h4/scaling-benchmark',
+  );
+}
+
+export async function fetchK3h4EpochGeometry(
+    baseUrl: string,
+    sessionId: string,
+    epoch: number,
+    mode: 'multiplicative'|'power' = 'power',
+    ): Promise<K3h4EpochGeometryResponse> {
+  const query = new URLSearchParams({mode}).toString();
+  return fetchApiJson<K3h4EpochGeometryResponse>(
+      baseUrl,
+      `/api/netcode/k3h4/training-session/${
+          encodeURIComponent(sessionId)}/epoch/${epoch}/geometry?${query}`,
   );
 }

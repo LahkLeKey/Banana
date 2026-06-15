@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "series": [
+    { "n": 64, "k3h4_ns": 1549775, "attention_ns": 22554 },
+    { "n": 256, "k3h4_ns": 5517800, "attention_ns": 382006 },
+    { "n": 1024, "k3h4_ns": 22536001, "attention_ns": 6153999 },
+    { "n": 4096, "k3h4_ns": 91981900, "attention_ns": 94132299 },
+    { "n": 16384, "k3h4_ns": 372277500, "attention_ns": 1555099200 }
+  ]
+}

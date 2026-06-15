@@ -151,3 +151,55 @@ target_include_directories(banana_runtime_netcode_abi_error_contract_test PRIVAT
 add_test(NAME banana_runtime_netcode_abi_error_contract_test
 	COMMAND banana_runtime_netcode_abi_error_contract_test
 )
+# ---------------------------------------------------------------------------
+# 036-k3h4-transformer-viz: scaling benchmark
+# ---------------------------------------------------------------------------
+
+add_executable(banana_k3h4_scaling_benchmark_test
+        ${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_scaling_benchmark_test.c
+)
+
+target_link_libraries(banana_k3h4_scaling_benchmark_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_k3h4_scaling_benchmark_test PRIVATE
+        ${BANANA_ENGINE_DIR}
+        ${BANANA_ENGINE_DIR}/runtime
+)
+
+if(MSVC)
+    target_compile_options(banana_k3h4_scaling_benchmark_test PRIVATE /W3)
+    target_compile_definitions(banana_k3h4_scaling_benchmark_test PRIVATE _CRT_SECURE_NO_WARNINGS)
+else()
+    target_compile_options(banana_k3h4_scaling_benchmark_test PRIVATE -Wall -Wextra)
+    target_link_libraries(banana_k3h4_scaling_benchmark_test PRIVATE m)
+endif()
+
+add_test(NAME banana_k3h4_scaling_benchmark_test
+        COMMAND banana_k3h4_scaling_benchmark_test
+                "${CMAKE_CURRENT_LIST_DIR}/../../artifacts/native/k3h4-scaling-benchmark.json"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../.."
+)
+
+# 036-k3h4-transformer-viz: training artifact export
+add_executable(banana_k3h4_export_test
+        ${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_export_test.c
+)
+
+target_link_libraries(banana_k3h4_export_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_k3h4_export_test PRIVATE
+        ${BANANA_ENGINE_DIR}
+        ${BANANA_ENGINE_DIR}/runtime
+)
+
+if(MSVC)
+    target_compile_options(banana_k3h4_export_test PRIVATE /W3)
+    target_compile_definitions(banana_k3h4_export_test PRIVATE _CRT_SECURE_NO_WARNINGS)
+else()
+    target_compile_options(banana_k3h4_export_test PRIVATE -Wall -Wextra)
+endif()
+
+add_test(NAME banana_k3h4_export_test
+        COMMAND banana_k3h4_export_test
+        WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../.."
+)

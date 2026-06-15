@@ -1,6 +1,5 @@
 import { RoutePill as Pill, RouteSubActionBar } from '@banana/ui';
 import { useMemo, useState } from 'react';
-
 import { NotebookHealthPanel } from './NotebookHealthPanel';
 import { HudIcon, HudRailButton, HudStatusChip } from './HudPrimitives';
 import { TrainingOperationsPanel } from './TrainingOperationsPanel';

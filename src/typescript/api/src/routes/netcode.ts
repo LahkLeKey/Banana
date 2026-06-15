@@ -1,6 +1,8 @@
 import type {FastifyInstance, FastifyReply} from 'fastify';
 
 import {createK3h4ApplicationOrchestrationLayer, type K3h4ApplicationOrchestrationLayer,} from '../services/k3h4ApplicationOrchestrationLayer.ts';
+import {loadK3h4ScalingBenchmark} from '../services/k3h4ScalingBenchmark.ts';
+import type {K3h4ScalingBenchmarkStatus} from '../services/k3h4ScalingBenchmark.ts';
 import {getNativeNetcodeService, type NativeNetcodeService,} from '../services/nativeNetcode.ts';
 import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, type NetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError, type NetcodeK3h4Rollout,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
 
@@ -9,6 +11,10 @@ type NetcodeRouteOptions = {
       NetcodeAnalyticsAuthoritativeComputeOrchestrator;
   k3h4ApplicationOrchestrationLayer?: K3h4ApplicationOrchestrationLayer;
   netcodeService?: NativeNetcodeService;
+};
+
+type NetcodeRouteOptionsExtended = NetcodeRouteOptions&{
+  scalingBenchmarkLoader?: () => K3h4ScalingBenchmarkStatus;
 };
 
 function isFiniteNumber(value: unknown): value is number {
@@ -93,7 +99,7 @@ function isValidOrchestratedComputePayload(
 
 export async function registerNetcodeRoutes(
     app: FastifyInstance,
-    options: NetcodeRouteOptions = {},
+    options: NetcodeRouteOptionsExtended = {},
     ): Promise<void> {
   const netcode = options.netcodeService ?? getNativeNetcodeService();
   const netcodeAuthoritativeComputeOrchestrator =
@@ -108,6 +114,9 @@ export async function registerNetcodeRoutes(
                      request, rollout),
            } :
            createK3h4ApplicationOrchestrationLayer(netcode));
+
+  const benchmarkLoader =
+      options.scalingBenchmarkLoader ?? loadK3h4ScalingBenchmark;
 
   type OrchestratedNetcodeResult =
       Awaited<ReturnType<K3h4ApplicationOrchestrationLayer['compute']>>;
@@ -342,5 +351,29 @@ export async function registerNetcodeRoutes(
     if (!orchestratedAnalytics) return;
 
     return {k3h4: orchestratedAnalytics.k3h4Projection};
+  });
+
+  /* ------------------------------------------------------------------
+   * GET /api/netcode/k3h4/scaling-benchmark
+   *
+   * Returns the measured O(n) vs O(n²) scaling series produced by the
+   * native banana_k3h4_scaling_benchmark_test CTest.
+   * ------------------------------------------------------------------ */
+  app.get('/api/netcode/k3h4/scaling-benchmark', async (_request, reply) => {
+    const status = benchmarkLoader();
+    if (status.kind === 'not_found') {
+      return reply.status(404).send({
+        error: 'benchmark_not_found',
+        message:
+            'Scaling benchmark artifact not found. Run the native CTest benchmark first.',
+      });
+    }
+    if (status.kind === 'unavailable') {
+      return reply.status(503).send({
+        error: 'benchmark_unavailable',
+        message: `Failed to read scaling benchmark artifact: ${status.reason}`,
+      });
+    }
+    return status.result;
   });
 }

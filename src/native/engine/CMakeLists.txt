@@ -145,6 +145,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/netcode/k3h4/netcode_k3h4_geometry.c
   runtime/netcode/k3h4/netcode_k3h4_cluster_scoring.c
   runtime/netcode/k3h4/netcode_k3h4_observability.c
+  runtime/netcode/k3h4/netcode_k3h4_export.c
   runtime/netcode/contract/netcode_contract.c
   runtime/abi/netcode/netcode_abi.c
   runtime/abi/physics/physics_abi.c

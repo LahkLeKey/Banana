@@ -9,6 +9,7 @@ import { NotebookExplorerPanel } from '../components/notebook-client/NotebookExp
 import { NotebookGameplaySurface } from '../components/notebook-client/NotebookGameplaySurface';
 import { NotebookHealthPanel } from '../components/notebook-client/NotebookHealthPanel';
 import { NotebookOperationsPanel } from '../components/notebook-client/NotebookOperationsPanel';
+import { NotebookVisualizationsPanel } from '../components/notebook-client/NotebookVisualizationsPanel';
 import { RouteModePanel } from '../components/notebook-client/RouteModePanel';
 import { withErrorBoundary } from '../components/errors/withErrorBoundary';
 import {
@@ -44,6 +45,9 @@ const SafeNotebookHealthPanel = withErrorBoundary(NotebookHealthPanel, {
 const SafeNotebookOperationsPanel = withErrorBoundary(NotebookOperationsPanel, {
     componentName: 'NotebookOperationsPanel',
 });
+const SafeNotebookVisualizationsPanel = withErrorBoundary(NotebookVisualizationsPanel, {
+    componentName: 'NotebookVisualizationsPanel',
+});
 
 const shellStyle: CSSProperties = {
     height: '100dvh',
@@ -67,6 +71,7 @@ const panelResetDefaults: Record<NotebookHudPanelId, number> = {
     menu: 0,
     status: 0,
     operations: 0,
+    visualizations: 0,
     intelNode: 0,
     objectiveNode: 0,
     playerNode: 0,
@@ -84,6 +89,7 @@ const panelDefaultSizes: Record<NotebookHudPanelId, { width: number; height: num
     objectiveNode: { width: 360, height: 260 },
     nodeOps: { width: 360, height: 220 },
     operations: { width: 360, height: 240 },
+    visualizations: { width: 460, height: 380 },
 };
 
 type NotebookAnalyticsTelemetry = {
@@ -91,6 +97,35 @@ type NotebookAnalyticsTelemetry = {
     analyticsCohort: string;
     k3h4Clusters: number;
     k3h4Convergence: string;
+    k3h4RuntimeMode: 'multiplicative' | 'power';
+    k3h4ProjectionNodes: readonly {
+        id: 'intel' | 'objectives' | 'player' | 'ops';
+        x: number;
+        y: number;
+        z: number;
+        coherence: number;
+        inradius: number;
+        nearestNeighborDistance: number;
+    }[];
+    k3h4Centers: readonly {
+        clusterId: number;
+        centerQ16: readonly number[];
+        memberVectorIds: readonly number[];
+        memberCount: number;
+    }[];
+    k3h4Radii: readonly {
+        clusterId: number;
+        nearestNeighborDistanceQ16: number;
+        inscribedRadiusQ16: number;
+        radiusState: 'ok' | 'degenerate' | 'invalid';
+    }[];
+    k3h4WeightedVoronoiScores: readonly {
+        vectorId: number;
+        clusterId: number;
+        distanceToCenterQ16: number;
+        weightedScoreQ16: number;
+        scoreValidity: 'valid' | 'clamped' | 'invalid';
+    }[];
     abiCoveragePresent: number;
     abiCoverageExpected: number;
     abiCoveragePercent: number;
@@ -112,6 +147,11 @@ const DEFAULT_NOTEBOOK_ANALYTICS_TELEMETRY: NotebookAnalyticsTelemetry = {
     analyticsCohort: 'default',
     k3h4Clusters: 0,
     k3h4Convergence: 'unknown',
+    k3h4RuntimeMode: 'multiplicative',
+    k3h4ProjectionNodes: [],
+    k3h4Centers: [],
+    k3h4Radii: [],
+    k3h4WeightedVoronoiScores: [],
     abiCoveragePresent: 0,
     abiCoverageExpected: 5,
     abiCoveragePercent: 0,
@@ -131,6 +171,7 @@ export function DataSciencePlaygroundPage() {
         showMenu,
         showStatus,
         showOperations,
+        showVisualizations,
         showIntelNode,
         showObjectiveNode,
         showPlayerNode,
@@ -212,6 +253,7 @@ export function DataSciencePlaygroundPage() {
             menu: previous.menu + 1,
             status: previous.status + 1,
             operations: previous.operations + 1,
+            visualizations: previous.visualizations + 1,
             intelNode: previous.intelNode + 1,
             objectiveNode: previous.objectiveNode + 1,
             playerNode: previous.playerNode + 1,
@@ -475,6 +517,28 @@ export function DataSciencePlaygroundPage() {
                 />
             </RouteDeckTransition>
         ),
+        visualizations: (
+            <RouteDeckTransition
+                reducedMotion={prefersReducedMotion}
+                animating={modeDeckAnimating}
+                delayMs={100}
+                inactiveOpacity={0.82}
+                inactiveTransform="translateY(9px) scale(0.992)"
+                inactiveFilter="saturate(1.05)"
+            >
+                <SafeNotebookVisualizationsPanel
+                    analyticsAvailable={analyticsTelemetry.analyticsAvailable}
+                    analyticsCohort={analyticsTelemetry.analyticsCohort}
+                    k3h4Clusters={analyticsTelemetry.k3h4Clusters}
+                    k3h4Convergence={analyticsTelemetry.k3h4Convergence}
+                    k3h4RuntimeMode={analyticsTelemetry.k3h4RuntimeMode}
+                    k3h4ProjectionNodes={analyticsTelemetry.k3h4ProjectionNodes}
+                    k3h4Centers={analyticsTelemetry.k3h4Centers}
+                    k3h4Radii={analyticsTelemetry.k3h4Radii}
+                    k3h4WeightedVoronoiScores={analyticsTelemetry.k3h4WeightedVoronoiScores}
+                />
+            </RouteDeckTransition>
+        ),
         objectiveNode: (
             <ObjectivesDockPanel
                 completedQuestCount={completedQuestCount}
@@ -585,6 +649,7 @@ export function DataSciencePlaygroundPage() {
         { id: 'explorer', corner: 'top-right', title: 'FILE EXPLORER' },
         { id: 'intelNode', corner: 'top-right', title: 'INTEL NODE' },
         { id: 'status', corner: 'bottom-left', title: 'ROUTE REGISTRY' },
+        { id: 'visualizations', corner: 'bottom-left', title: 'VISUALIZATIONS' },
         { id: 'questLog', corner: 'bottom-left', title: 'QUEST LOG' },
         { id: 'objectiveNode', corner: 'bottom-right', title: 'OBJECTIVE NODE' },
         { id: 'nodeOps', corner: 'bottom-right', title: 'NODE OPS' },
@@ -670,6 +735,7 @@ export function DataSciencePlaygroundPage() {
                     showMenu={showMenu}
                     showOperations={showOperations}
                     showStatus={showStatus}
+                    showVisualizations={showVisualizations}
                     showIntelNode={showIntelNode}
                     showObjectiveNode={showObjectiveNode}
                     showPlayerNode={showPlayerNode}
@@ -680,6 +746,7 @@ export function DataSciencePlaygroundPage() {
                     onToggleMenu={() => togglePanel('menu')}
                     onToggleOperations={() => togglePanel('operations')}
                     onToggleStatus={() => togglePanel('status')}
+                    onToggleVisualizations={() => togglePanel('visualizations')}
                     onToggleIntelNode={() => togglePanel('intelNode')}
                     onToggleObjectiveNode={() => togglePanel('objectiveNode')}
                     onTogglePlayerNode={() => togglePanel('playerNode')}

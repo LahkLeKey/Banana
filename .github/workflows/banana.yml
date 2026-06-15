@@ -221,9 +221,26 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             cmake ninja-build gcc g++
 
+      - name: Determine Neon integration eligibility
+        id: neon_gate
+        shell: bash
+        run: |
+          if [[ -n "${NEON_DATABASE_URL:-}" || -n "${DATABASE_URL:-}" || -n "${BANANA_PG_CONNECTION:-}" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "[native-neon-integration] database env detected; executing integration lane"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "[native-neon-integration] skipping integration lane because no DB URL secret is configured"
+          fi
+
       - name: Run native-to-Neon integration lane
+        if: ${{ steps.neon_gate.outputs.enabled == 'true' }}
         shell: bash
         run: bash scripts/run-native-neon-integration.sh
+
+      - name: Native-to-Neon lane skipped
+        if: ${{ steps.neon_gate.outputs.enabled != 'true' }}
+        run: echo "native neon integration skipped (no db secrets configured)"
 
   monorepo-pass-fail:
     name: Monorepo / Pass-Fail
