@@ -12,12 +12,14 @@ extern "C"
 {
 #endif
 
+    /* Contract constants shared by native, API, and persisted artifacts. */
     #define RUNTIME_K3H4_CONTRACT_VERSION 1
     #define RUNTIME_K3H4_BYTE_ORDER_TAG 0x01020304
     #define RUNTIME_K3H4_BYTE_ORDER_TAG_SWAPPED 0x04030201
     #define RUNTIME_K3H4_DTYPE_TAG_F32_Q16_MIXED 1
     #define RUNTIME_K3H4_ALIGNMENT_BYTES_4 4
 
+    /* Envelope validation result codes surfaced back through API decoders. */
     typedef enum RuntimeK3h4ContractStatus
     {
         RUNTIME_K3H4_CONTRACT_OK = 0,
@@ -27,6 +29,7 @@ extern "C"
         RUNTIME_K3H4_CONTRACT_CRC_MISMATCH = -3004
     } RuntimeK3h4ContractStatus;
 
+    /* Envelope footer appended after the fixed-width k3h4 payload body. */
     typedef struct RuntimeK3h4ContractEnvelopeHeader
     {
         int contract_version;
@@ -118,12 +121,15 @@ extern "C"
     int runtime_netcode_abi_build_k3h4(RuntimeNetcodeVectorSignalInput signal_input,
                                        RuntimeNetcodeK3h4Output *out_output);
 
+    /* Returns the payload size before envelope metadata is appended. */
     int runtime_netcode_abi_k3h4_payload_bytes(void);
 
+    /* Computes the envelope header for a completed k3h4 payload. */
     int runtime_netcode_abi_encode_k3h4_envelope(
         const RuntimeNetcodeK3h4Output *payload,
         RuntimeNetcodeContractEnvelopeHeader *out_header);
 
+    /* Validates version, endianness, payload size, CRC, and finiteness. */
     RuntimeNetcodeContractStatus runtime_netcode_abi_validate_k3h4_envelope(
         const RuntimeNetcodeContractEnvelopeHeader *header,
         const RuntimeNetcodeK3h4Output *payload,

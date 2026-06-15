@@ -8,11 +8,13 @@ extern "C"
 {
 #endif
 
+    /* Initializes pipeline scratch state using environment-default config. */
     int runtime_netcode_k3h4_initialize_pipeline_context(
         RuntimeNetcodeK3h4PipelineContext *context,
         const RuntimeNetcodeVectorOutput *input,
         RuntimeNetcodeK3h4Output *out_output);
 
+    /* Initializes pipeline scratch state with explicit assignment/spectral config. */
     int runtime_netcode_k3h4_initialize_pipeline_context_with_config(
         RuntimeNetcodeK3h4PipelineContext *context,
         const RuntimeNetcodeVectorOutput *input,

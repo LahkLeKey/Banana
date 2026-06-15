@@ -2,6 +2,10 @@ import {createK3h4ApplicationService, type K3h4ApplicationService,} from '../../
 import {createNativeK3h4AuthoritativeAnalyticsAdapter,} from '../../infrastructure/k3h4/nativeK3h4AuthoritativeAnalyticsAdapter.ts';
 import type {NativeNetcodeService} from '../../services/nativeNetcode.ts';
 
+/**
+ * Wires the authoritative k3h4 application service from its native-backed
+ * adapter and application facade.
+ */
 export function composeK3h4ApplicationService(
     netcode: NativeNetcodeService,
     ): K3h4ApplicationService {

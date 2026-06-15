@@ -12,6 +12,7 @@ extern "C"
 {
 #endif
 
+    /* Shared signal shape for the learning and reward stages. */
     typedef struct RuntimeNetcodeK3h4SignalInput
     {
         int call_density;
@@ -21,6 +22,7 @@ extern "C"
         int workflow_depth;
     } RuntimeNetcodeK3h4SignalInput;
 
+    /* Signal shape for the link stage, including interaction metadata. */
     typedef struct RuntimeNetcodeK3h4LinkSignalInput
     {
         int call_density;
@@ -32,6 +34,10 @@ extern "C"
         int interaction_signal;
     } RuntimeNetcodeK3h4LinkSignalInput;
 
+    /*
+     * Signal shape for vector and k3h4 projection builds.
+     * Hardware fields are forwarded into envelope validation at the ABI edge.
+     */
     typedef struct RuntimeNetcodeK3h4VectorSignalInput
     {
         int call_density;
@@ -52,12 +58,14 @@ extern "C"
         int hardware_alignment_bytes;
     } RuntimeNetcodeK3h4VectorSignalInput;
 
+    /* Combined vector + k3h4 result used by direct native callers. */
     typedef struct RuntimeNetcodeK3h4OrchestrationOutput
     {
         RuntimeNetcodeVectorOutput vector;
         RuntimeNetcodeK3h4Output k3h4;
     } RuntimeNetcodeK3h4OrchestrationOutput;
 
+    /* End-to-end native request for the authoritative k3h4 pipeline. */
     typedef struct RuntimeNetcodeK3h4Request
     {
         RuntimeNetcodeInteractionLedger ledger;
@@ -80,6 +88,7 @@ extern "C"
         int hardware_alignment_bytes;
     } RuntimeNetcodeK3h4Request;
 
+    /* Full native pipeline output before API shaping trims the payload. */
     typedef struct RuntimeNetcodeK3h4FullOutput
     {
         RuntimeNetcodeLearningOutput learning;
@@ -89,6 +98,7 @@ extern "C"
         RuntimeNetcodeK3h4Output k3h4;
     } RuntimeNetcodeK3h4FullOutput;
 
+    /* Runs the full native learning -> reward -> link -> vector -> k3h4 flow. */
     int runtime_netcode_k3h4_orchestrate_full(const RuntimeNetcodeK3h4Request *request,
                                               RuntimeNetcodeK3h4FullOutput *out_output);
 
@@ -109,6 +119,7 @@ extern "C"
     int runtime_netcode_k3h4_orchestrate(const RuntimeNetcodeVectorInput *input,
                                          RuntimeNetcodeK3h4OrchestrationOutput *out_output);
 
+    /* Builds only the final k3h4 projection layer from vector-stage inputs. */
     int runtime_netcode_k3h4_build_k3h4(const RuntimeNetcodeK3h4VectorSignalInput *input,
                                                RuntimeNetcodeK3h4Output *out_output);
 

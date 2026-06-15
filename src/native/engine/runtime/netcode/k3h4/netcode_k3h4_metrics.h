@@ -8,6 +8,7 @@ extern "C"
 {
 #endif
 
+    /* Projected notebook node coordinates plus local geometry metadata. */
     typedef struct RuntimeNetcodeProjectionNode
     {
         float x;
@@ -18,6 +19,7 @@ extern "C"
         float nearest_neighbor_distance;
     } RuntimeNetcodeProjectionNode;
 
+    /* Radius-state flags consumed by API and frontend normalization layers. */
     typedef enum RuntimeNetcodeRadiusState
     {
         RUNTIME_NETCODE_RADIUS_OK = 0,
@@ -106,6 +108,7 @@ extern "C"
         int contract_status;
     } RuntimeNetcodeEnvelopeMetadata;
 
+    /* Full k3h4 payload that crosses the native ABI boundary. */
     typedef struct RuntimeNetcodeK3h4Output
     {
         int dimensions;
@@ -123,9 +126,11 @@ extern "C"
         RuntimeNetcodeEnvelopeMetadata envelope;
     } RuntimeNetcodeK3h4Output;
 
+    /* Builds the default k3h4 payload using environment-selected pipeline config. */
     int runtime_netcode_k3h4_build(const RuntimeNetcodeVectorOutput *input,
                                           RuntimeNetcodeK3h4Output *out_output);
 
+    /* Builds the k3h4 payload with explicit assignment and spectral settings. */
     int runtime_netcode_k3h4_build_with_config(
         const RuntimeNetcodeVectorOutput *input,
         RuntimeNetcodeK3h4Output *out_output,

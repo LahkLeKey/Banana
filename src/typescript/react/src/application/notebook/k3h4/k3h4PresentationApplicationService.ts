@@ -2,6 +2,11 @@ import type {K3h4PresentationMapperPort} from '../../../domain/notebook/k3h4/k3h
 import type {K3h4AnalyticsPresentationState} from '../../../domain/notebook/k3h4AnalyticsOrchestrationLayer';
 import type {NetcodeAnalyticsResponse} from '../../../lib/api';
 
+/**
+ * Application-facing mapper for notebook k3h4 presentation state.
+ * It keeps notebook UI code dependent on one narrow mapping interface rather
+ * than on the lower-level domain transformation directly.
+ */
 export interface K3h4PresentationApplicationService {
   map(analytics: NetcodeAnalyticsResponse): K3h4AnalyticsPresentationState;
 }
