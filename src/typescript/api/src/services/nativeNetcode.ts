@@ -333,7 +333,8 @@ export function __decodeK3h4BufferForTests(outputBuffer: Buffer):
 
   const spectralProxy: NetcodeK3h4SpectralProxy[] = [];
   for (let cluster = 0; cluster < clusterCount; cluster += 1) {
-    /* Spectral proxies reuse the cluster index ordering from the native payload. */
+    /* Spectral proxies reuse the cluster index ordering from the native
+     * payload. */
     const base = 788 + cluster * 16;
     spectralProxy.push({
       clusterId: outputBuffer.readInt32LE(base + 0),
