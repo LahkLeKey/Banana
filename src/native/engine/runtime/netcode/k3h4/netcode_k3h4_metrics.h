@@ -177,11 +177,21 @@ extern "C"
         RuntimeNetcodeEnvelopeMetadata envelope;
     } RuntimeNetcodeK3h4Output;
 
-    /* Builds the default k3h4 payload using environment-selected pipeline config. */
+    /*
+     * Builds the default k3h4 payload using environment-selected pipeline config.
+     * This path preserves the same Q16 geometry/radius/score math as the
+     * explicit variant, but resolves assignment and spectral mode from env.
+     */
     int runtime_netcode_k3h4_build(const RuntimeNetcodeVectorOutput *input,
                                           RuntimeNetcodeK3h4Output *out_output);
 
-    /* Builds the k3h4 payload with explicit assignment and spectral settings. */
+    /*
+     * Builds the k3h4 payload with explicit assignment and spectral settings.
+     *
+     * assignment_family selects the score equation applied to each
+     * vector/cluster pair, while spectral_mode controls whether the radius-
+     * derived affinity proxy is materialized.
+     */
     int runtime_netcode_k3h4_build_with_config(
         const RuntimeNetcodeVectorOutput *input,
         RuntimeNetcodeK3h4Output *out_output,

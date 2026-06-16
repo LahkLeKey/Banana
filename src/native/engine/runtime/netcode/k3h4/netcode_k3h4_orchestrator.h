@@ -120,11 +120,19 @@ extern "C"
     int runtime_netcode_k3h4_build_vector(const RuntimeNetcodeK3h4VectorSignalInput *input,
                                           RuntimeNetcodeVectorOutput *out_output);
 
-    /* Convenience path: vector build followed by default k3h4 projection config. */
+    /*
+     * Convenience path: vector build followed by default k3h4 projection
+     * config. This hard-codes the same score/radius math as the default
+     * pipeline entry point while keeping the wrapper surface minimal.
+     */
     int runtime_netcode_k3h4_orchestrate(const RuntimeNetcodeVectorInput *input,
                                          RuntimeNetcodeK3h4OrchestrationOutput *out_output);
 
-    /* Builds only the final k3h4 projection layer from vector-stage inputs. */
+    /*
+     * Builds only the final k3h4 projection layer from vector-stage inputs.
+     * The caller still controls assignment-family and spectral mode, but the
+     * upstream vector contract is always rebuilt first to preserve Q16 parity.
+     */
     int runtime_netcode_k3h4_build_k3h4(const RuntimeNetcodeK3h4VectorSignalInput *input,
                                                RuntimeNetcodeK3h4Output *out_output);
 
