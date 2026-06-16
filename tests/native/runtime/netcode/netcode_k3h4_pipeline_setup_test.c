@@ -14,6 +14,7 @@ static void seed_valid_vector_output(RuntimeNetcodeVectorOutput *output)
 {
     memset(output, 0, sizeof(*output));
     output->dimensions = 6;
+    /* Deliberately overspecify cluster count to verify upper-bound clamping. */
     output->k3h4_cluster_count = 99;
 }
 
@@ -21,6 +22,7 @@ static void seed_low_cluster_vector_output(RuntimeNetcodeVectorOutput *output)
 {
     memset(output, 0, sizeof(*output));
     output->dimensions = 6;
+    /* Negative values should collapse to the minimum supported cluster count. */
     output->k3h4_cluster_count = -5;
 }
 
@@ -78,6 +80,9 @@ int main(void)
     if (context.cluster_count != RUNTIME_NETCODE_VECTOR_NODE_COUNT)
         return fail("expected cluster count to be clamped to node count");
 
+    /* 64 Q16 units is the radius floor that prevents divide-by-near-zero
+     * score blowups in multiplicative mode.
+     */
     if (context.radius_floor_q16 != 64)
         return fail("expected q16 radius floor default");
 

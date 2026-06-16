@@ -81,6 +81,10 @@ static RuntimeK3h4VectorSignalInput make_k3h4_input(void)
 
 /* ---- Measure k3h4 cost for n vectors ----
  * Runs ceil(n / RUNTIME_NETCODE_VECTOR_NODE_COUNT) pipeline invocations.
+ *
+ * The benchmark intentionally measures the power-mode projection path because
+ * it exercises the same Q16 distance/radius lattice as the runtime contract
+ * while remaining deterministic enough for slope estimation.
  * Returns total nanoseconds (repeats until >= BENCH_MIN_WALL_NS).
  */
 static int64_t measure_k3h4_ns(int n)
@@ -119,6 +123,8 @@ static int64_t measure_k3h4_ns(int n)
 /* ---- Measure synthetic O(n²) attention reference ----
  * Performs n*n volatile double multiply-add operations to model attention
  * cost without requiring a real transformer model.
+ *
+ * The reference exists purely to compare slope class, not absolute latency.
  */
 static int64_t measure_attention_ns(int n)
 {
@@ -150,6 +156,9 @@ static int64_t measure_attention_ns(int n)
 /* ---- Log-log slope via least-squares ---- */
 static double log_log_slope(const int *ns, const int64_t *costs, int count)
 {
+    /* If cost grows like n^p, then log(cost) is approximately linear in
+     * log(n) with slope p. This turns asymptotic growth into a simple fit.
+     */
     double sum_xy = 0.0, sum_x = 0.0, sum_y = 0.0, sum_x2 = 0.0;
     int i;
     for (i = 0; i < count; i++)

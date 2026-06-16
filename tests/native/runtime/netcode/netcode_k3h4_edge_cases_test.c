@@ -16,6 +16,10 @@ static void write_uniform_input(RuntimeNetcodeVectorOutput *output, int dimensio
     int dim;
     memset(output, 0, sizeof(*output));
     output->dimensions = dimensions;
+    /* Uniform inputs stress the degenerate geometry path where every node is
+     * geometrically identical and the radius floor is what keeps the contract
+     * numerically meaningful.
+     */
     for (node = 0; node < RUNTIME_NETCODE_VECTOR_NODE_COUNT; node++)
     {
         for (dim = 0; dim < dimensions; dim++)
@@ -41,6 +45,9 @@ int main(void)
     if (runtime_netcode_k3h4_build(&vector_output, &k3h4_output) != 0)
         return fail("failed to build single-cluster k3h4 output");
 
+    /* A single cluster has no neighbor spacing, so the radius model must fall
+     * back to the explicit single-cluster state instead of fabricating geometry.
+     */
     if (k3h4_output.radii[0].radius_state != RUNTIME_NETCODE_RADIUS_SINGLE_CLUSTER)
         return fail("single-cluster radius state mismatch");
     if (k3h4_output.weighted_voronoi_scores[0].score_validity != RUNTIME_NETCODE_SCORE_INVALID_RADIUS)
@@ -60,6 +67,9 @@ int main(void)
     if (runtime_netcode_k3h4_build(&vector_output, &k3h4_output) != 0)
         return fail("failed to build near-zero-radius k3h4 output");
 
+    /* Identical centers should trigger the near-zero clamp path, exercising
+     * the same Q16 floor that protects the scoring equations.
+     */
     if (k3h4_output.radii[0].radius_state != RUNTIME_NETCODE_RADIUS_NEAR_ZERO_CLAMPED)
         return fail("expected near-zero clamp state for cluster 0");
     if (k3h4_output.radii[0].inscribed_radius_q16 <= 0)
