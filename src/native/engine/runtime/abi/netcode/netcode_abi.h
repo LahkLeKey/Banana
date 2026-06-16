@@ -29,7 +29,13 @@ extern "C"
         RUNTIME_K3H4_CONTRACT_CRC_MISMATCH = -3004
     } RuntimeK3h4ContractStatus;
 
-    /* Envelope footer appended after the fixed-width k3h4 payload body. */
+    /*
+     * Envelope footer appended after the fixed-width k3h4 payload body.
+     *
+     * payload_bytes identifies the exact byte prefix covered by CRC32, so the
+     * envelope can validate the deterministic Q16 payload without re-encoding
+     * or recomputing the k3h4 math contract itself.
+     */
     typedef struct RuntimeK3h4ContractEnvelopeHeader
     {
         int contract_version;
@@ -217,9 +223,11 @@ extern "C"
     }
 
     /*
-     * RuntimeNetcodeK3h4Output now carries deterministic K-means
-     * sections (centers/radii/scores/spectral/observability) through the ABI
-     * bridge. The bridge keeps these fields as plain data pass-through.
+     * RuntimeNetcodeK3h4Output carries the complete deterministic clustering
+     * contract through the ABI bridge. The bridge is intentionally
+     * pass-through: the Q16 geometry, radius floor, score family, and
+     * observability hash are all computed by the native runtime before this
+     * header is consulted.
      */
 
 #ifdef __cplusplus
