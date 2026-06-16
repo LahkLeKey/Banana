@@ -233,7 +233,10 @@ BananaK3h4ExportStatus banana_k3h4_export_training_artifact(
         int vec;
 
         /* center[d] is persisted as float32 even though the runtime contract is
-         * Q16-based; the artifact preserves the decoded real-space coordinates.
+         * Q16-based; decode follows:
+         *   center_f32 = center_q16 / 2^16
+         * so artifacts remain human-auditable without recovering fixed-point
+         * integers during offline analysis.
          */
         for (dim = 0; dim < dimension; dim++)
         {
@@ -241,12 +244,17 @@ BananaK3h4ExportStatus banana_k3h4_export_training_artifact(
             pos = write_le_f32(buf, pos, cv);
         }
 
-        /* Radius is likewise emitted in decoded real-space units. */
+        /* Radius uses the same decode rule:
+         *   radius_f32 = inscribed_radius_q16 / 2^16
+         */
         radius_f32 = (float)r->inscribed_radius_q16 / 65536.0f;
         pos = write_le_f32(buf, pos, radius_f32);
 
         /* The artifact stores representative cluster scores from the Q16 score
-         * table; callers that need the full score lattice should read the full
+         * table. In multiplicative family these entries behave like ratio-Q16
+         * scores; in power family they encode signed difference-of-squares.
+         *
+         * Callers needing the full vector x cluster score lattice should read
          * RuntimeNetcodeK3h4Output instead of this summarized bundle.
          */
         for (vec = 0; vec < state->vector_count; vec++)
