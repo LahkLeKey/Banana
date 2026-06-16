@@ -12,6 +12,9 @@ static int64_t clamp_i64(int64_t value, int64_t min_value, int64_t max_value)
 
 int32_t runtime_netcode_q16_round_div(int64_t numerator, int64_t denominator)
 {
+    /* Round-to-nearest with ties away from zero to keep sign-symmetric
+     * behavior around zero for Q16 scale transforms.
+     */
     int64_t quotient;
     int64_t remainder;
     int64_t abs_remainder_twice;
@@ -43,12 +46,16 @@ int32_t runtime_netcode_q16_round_div(int64_t numerator, int64_t denominator)
         }
     }
 
+    /* Saturate into int32 ABI range so overflow is deterministic. */
     quotient = clamp_i64(quotient, (int64_t)INT32_MIN, (int64_t)INT32_MAX);
     return (int32_t)quotient;
 }
 
 int32_t runtime_netcode_q16_from_float(float value)
 {
+    /* Q16 encode with half-away-from-zero behavior:
+     *   q16 = round(real * 2^16)
+     */
     double scaled = (double)value * (double)NETCODE_Q16_ONE;
     double adjusted = scaled >= 0.0 ? scaled + 0.5 : scaled - 0.5;
     int64_t rounded = (int64_t)adjusted;
@@ -60,17 +67,22 @@ int32_t runtime_netcode_q16_from_float(float value)
 
 float runtime_netcode_q16_to_float(int32_t value_q16)
 {
+    /* Q16 decode:
+     *   real = q16 / 2^16
+     */
     return (float)value_q16 / (float)NETCODE_Q16_ONE;
 }
 
 int32_t runtime_netcode_q16_mul(int32_t lhs_q16, int32_t rhs_q16)
 {
+    /* (lhs * rhs) carries Q32 scale before rounding back to Q16. */
     int64_t product = (int64_t)lhs_q16 * (int64_t)rhs_q16;
     return runtime_netcode_q16_round_div(product, NETCODE_Q16_ONE);
 }
 
 int32_t runtime_netcode_q16_div(int32_t numerator_q16, int32_t denominator_q16)
 {
+    /* Pre-shift numerator by 2^16 so the quotient remains in Q16 units. */
     int64_t shifted;
 
     if (denominator_q16 == 0)

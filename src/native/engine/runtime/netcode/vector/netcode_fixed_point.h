@@ -27,10 +27,28 @@ extern "C"
 #define NETCODE_Q16_SHIFT 16
 #define NETCODE_Q16_ONE (1 << NETCODE_Q16_SHIFT)
 
+    /* Encodes a real scalar into signed Q16 with nearest-integer rounding. */
     int32_t runtime_netcode_q16_from_float(float value);
+
+    /* Decodes signed Q16 back to real-space scalar units. */
     float runtime_netcode_q16_to_float(int32_t value_q16);
+
+    /*
+     * Multiplies two Q16 values while preserving Q16 scale:
+     *   q16_mul(a, b) = round((a * b) / 2^16)
+     */
     int32_t runtime_netcode_q16_mul(int32_t lhs_q16, int32_t rhs_q16);
+
+    /*
+     * Divides one Q16 value by another and returns Q16:
+     *   q16_div(a, b) = round((a * 2^16) / b)
+     */
     int32_t runtime_netcode_q16_div(int32_t numerator_q16, int32_t denominator_q16);
+
+    /*
+     * Signed integer division with half-away-from-zero rounding and int32
+     * saturation; used by Q16 helpers to keep deterministic edge handling.
+     */
     int32_t runtime_netcode_q16_round_div(int64_t numerator, int64_t denominator);
 
 #ifdef __cplusplus
