@@ -11,7 +11,10 @@
  *   2. geometry normalizes/project vectors and builds centroid summaries
  *   3. cluster models publish centers plus inverse covariances
  *   4. radii/spectral derive neighborhood structure
+ *      r_q16 = max(radius_floor_q16, nearest_neighbor_q16 / 2)
  *   5. weighted scores evaluate every vector/cluster pair
+ *      multiplicative: score_q16 ~= d_q16 / r_q16
+ *      power:          score_q16 = d_q16^2 - r_q16^2
  *   6. finalizers emit display summaries and deterministic observability
  */
 int runtime_netcode_k3h4_pipeline_execute(
@@ -21,7 +24,9 @@ int runtime_netcode_k3h4_pipeline_execute(
     RuntimeNetcodeK3h4PipelineContext context;
 
     /* Default execution resolves assignment/spectral configuration from the
-     * pipeline setup layer before running the fixed stage sequence.
+     * pipeline setup layer before running the fixed stage sequence. Stage
+     * order is intentionally stable so deterministic hash outputs remain
+     * reproducible for equivalent inputs and config.
      */
     if (runtime_netcode_k3h4_initialize_pipeline_context(
             &context,
@@ -49,7 +54,8 @@ int runtime_netcode_k3h4_pipeline_execute_with_config(
     RuntimeNetcodeK3h4PipelineContext context;
 
     /* Explicit execution keeps the stage order identical while swapping the
-     * two runtime knobs that affect score and spectral semantics.
+     * two runtime knobs that affect score and spectral semantics, so callers
+     * can compare families without changing geometry or payload layout.
      */
     if (runtime_netcode_k3h4_initialize_pipeline_context_with_config(
             &context,

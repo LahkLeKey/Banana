@@ -34,6 +34,9 @@ static uint32_t crc32_compute(const uint8_t *bytes, size_t length)
 
 int runtime_netcode_abi_k3h4_payload_bytes(void)
 {
+    /* The payload length stops at the envelope field so CRC32 only covers the
+     * deterministic native contract body, not the metadata appended after it.
+     */
     return (int)offsetof(RuntimeNetcodeK3h4Output, envelope);
 }
 
@@ -99,10 +102,16 @@ RuntimeNetcodeContractStatus runtime_netcode_abi_validate_k3h4_envelope(
     if (header->payload_bytes != expected_payload_bytes)
         return RUNTIME_NETCODE_CONTRACT_INVALID_PAYLOAD;
 
+    /* CRC is computed over the exact serialized body bytes, so any change in
+     * Q16 centers, radii, scores, or observability trips validation.
+     */
     expected_crc = crc32_compute((const uint8_t *)payload, (size_t)header->payload_bytes);
     if ((int)expected_crc != header->payload_crc32)
         return RUNTIME_NETCODE_CONTRACT_CRC_MISMATCH;
 
+    /* Non-finite geometry is rejected after CRC so the validator reports the
+     * precise structural error rather than a checksum-only mismatch.
+     */
     if (k3h4_has_nonfinite(payload))
         return RUNTIME_NETCODE_CONTRACT_NONFINITE_VALUE;
 

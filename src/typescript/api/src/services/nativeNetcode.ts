@@ -133,6 +133,13 @@ export type NetcodeK3h4Observability = {
                                                                                                                                                                          NetcodeK3h4EndiannessDecodePath;
 };
 
+/**
+ * Native k3h4 payload decoded into API-friendly objects.
+ *
+ * The shape mirrors the native ABI exactly: Q16 fields remain numeric so the
+ * API can preserve ordering, thresholds, and deterministic hashes without
+ * re-running the clustering math.
+ */
 export type NetcodeK3h4Output = {
   readonly dimensions: number;
   readonly nodes: readonly [
@@ -265,6 +272,9 @@ export function __decodeK3h4BufferForTests(outputBuffer: Buffer):
 
   const nodes: NetcodeK3h4Node[] = [];
   for (let node = 0; node < 4; node += 1) {
+    /* Node records are 24-byte structs laid out as x/y/z/coherence/inradius/
+     * nearest-neighbor distance in that order.
+     */
     const base = 4 + node * 24;
     nodes.push({
       x: outputBuffer.readFloatLE(base + 0),
@@ -282,6 +292,9 @@ export function __decodeK3h4BufferForTests(outputBuffer: Buffer):
 
   const centers: NetcodeK3h4Center[] = [];
   for (let cluster = 0; cluster < clusterCount; cluster += 1) {
+    /* Each center record packs cluster metadata followed by one Q16 value per
+     * active dimension, so the decoder only materializes the prefix in use.
+     */
     const base = 116 + cluster * 72;
     const centerQ16: number[] = [];
     for (let dim = 0; dim < Math.max(0, Math.min(16, dimensions)); dim += 1) {
@@ -307,6 +320,7 @@ export function __decodeK3h4BufferForTests(outputBuffer: Buffer):
 
   const weightedVoronoiScores: NetcodeK3h4WeightedVoronoiScore[] = [];
   for (let index = 0; index < vectorCount * clusterCount; index += 1) {
+    /* Score rows are dense: one vector-cluster pair per 20-byte record. */
     const base = 468 + index * 20;
     weightedVoronoiScores.push({
       vectorId: outputBuffer.readInt32LE(base + 0),
@@ -319,6 +333,8 @@ export function __decodeK3h4BufferForTests(outputBuffer: Buffer):
 
   const spectralProxy: NetcodeK3h4SpectralProxy[] = [];
   for (let cluster = 0; cluster < clusterCount; cluster += 1) {
+    /* Spectral proxies reuse the cluster index ordering from the native
+     * payload. */
     const base = 788 + cluster * 16;
     spectralProxy.push({
       clusterId: outputBuffer.readInt32LE(base + 0),

@@ -19,6 +19,7 @@ typedef enum RuntimeNetcodeK3h4Backend
 /* Clamp helper for cluster count and iteration-related bounds. */
 static int clamp(int value, int min_value, int max_value)
 {
+    /* Keep cluster_count and iteration bounds inside the ABI-supported range. */
     if (value < min_value) return min_value;
     if (value > max_value) return max_value;
     return value;
@@ -182,6 +183,13 @@ int runtime_netcode_k3h4_compute(
         return -1;
     }
 
+    /* This is a bounded Lloyd-style loop:
+     *   1. encode inputs into Q16
+     *   2. assign each vector to its nearest center
+     *   3. recompute centers as Q16 means of the assigned members
+     *   4. stop when assignments stabilize or the largest center shift is
+     *      no larger than the Q16 convergence threshold
+     */
     cluster_count = clamp(cluster_count, 1, vector_count);
     max_iterations = max_iterations <= 0 ? 32 : max_iterations;
     convergence_threshold_q16 = convergence_threshold_q16 <= 0 ? 8 : convergence_threshold_q16;
@@ -197,6 +205,7 @@ int runtime_netcode_k3h4_compute(
         }
     }
 
+    /* Zero the output before iteration so aborted runs never leak stale data. */
     memset(out_result, 0, sizeof(*out_result));
     out_result->cluster_count = cluster_count;
     out_result->vector_count = vector_count;
@@ -208,7 +217,7 @@ int runtime_netcode_k3h4_compute(
         int64_t sums[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS] = {{0}};
         int max_center_shift = 0;
 
-        /* Step 1: assign each vector to its nearest current center. */
+        /* Step 1: argmin over squared Q16 distance against the current centers. */
         memset(member_counts, 0, sizeof(member_counts));
 
         for (vector_index = 0; vector_index < vector_count; vector_index++)
@@ -238,7 +247,10 @@ int runtime_netcode_k3h4_compute(
                 continue;
             }
 
-            /* Step 2: recompute each center as the component-wise mean in Q16. */
+            /* Step 2: recompute each center as the component-wise mean in Q16.
+             * Empty clusters retain their previous coordinates so the loop stays
+             * deterministic even when a partition temporarily disappears.
+             */
             for (dim = 0; dim < dimensions; dim++)
             {
                 updated_centers_q16[cluster_index][dim] =
@@ -246,7 +258,9 @@ int runtime_netcode_k3h4_compute(
             }
         }
 
-        /* Step 3: track the largest per-component center movement in Q16. */
+        /* Step 3: track the largest per-component center movement in Q16.
+         * This is an L-infinity bound over the center-shift tensor.
+         */
         for (cluster_index = 0; cluster_index < cluster_count; cluster_index++)
         {
             for (dim = 0; dim < dimensions; dim++)
@@ -261,6 +275,9 @@ int runtime_netcode_k3h4_compute(
         out_result->iteration_count = iteration + 1;
         out_result->assignment_changes_last_iteration = assignment_changes;
 
+        /* Stop when the assignment lattice no longer changes or when center
+         * motion falls below the caller-provided Q16 threshold.
+         */
         if (assignment_changes == 0 || max_center_shift <= convergence_threshold_q16)
         {
             out_result->convergence_status = RUNTIME_NETCODE_K3H4_CONVERGED;

@@ -10,6 +10,10 @@ void runtime_netcode_k3h4_finalize_observability(
      * (iterations, convergence status, assignment churn) with a downstream hash
      * over the final exported k3h4 payload. The decode path is currently always
      * little-endian because the runtime writes native-order payloads locally.
+     *
+     * The deterministic hash is computed after geometry/radii/scores are fully
+     * materialized, so it fingerprints the exact Q16-valued contract sections
+     * consumed by API/frontend parity checks.
      */
     context->output->observability.convergence_status = context->input->k3h4_convergence_status;
     context->output->observability.iteration_count = context->input->k3h4_iteration_count;

@@ -11,6 +11,9 @@ static int fail(const char *message)
 
 int main(void)
 {
+    /* Repeated calls with the same Q16-bearing inputs should yield bytewise
+     * identical outputs, including the deterministic hash.
+     */
     RuntimeK3h4VectorSignalInput input = {
         .call_density = 48,
         .quest_percent = 55,
@@ -44,6 +47,9 @@ int main(void)
         return fail("cluster count out of range");
     if (first_output.vector_count != 4)
         return fail("vector count mismatch");
+    /* A non-zero hash confirms the exported Q16 contract actually contributed
+     * entropy; zero would usually indicate an uninitialized or degenerate path.
+     */
     if (first_output.observability.deterministic_hash == 0)
         return fail("deterministic hash should be non-zero");
     if (first_output.observability.iteration_count <= 0)
