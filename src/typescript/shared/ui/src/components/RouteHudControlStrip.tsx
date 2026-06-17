@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-type PanelId = 'explorer' | 'menu' | 'operations' | 'status' | 'visualizations' | 'intelNode' | 'objectiveNode' | 'playerNode' | 'questLog' | 'nodeOps';
+type PanelId = 'explorer' | 'menu' | 'operations' | 'status' | 'visualizations' | 'training' | 'intelNode' | 'objectiveNode' | 'playerNode' | 'questLog' | 'nodeOps';
 
 type RouteHudControlStripProps = {
     readonly routeLabel: string;
@@ -10,6 +10,7 @@ type RouteHudControlStripProps = {
     readonly showOperations: boolean;
     readonly showStatus: boolean;
     readonly showVisualizations?: boolean;
+    readonly showTraining?: boolean;
     readonly showIntelNode?: boolean;
     readonly showObjectiveNode?: boolean;
     readonly showPlayerNode?: boolean;
@@ -20,6 +21,7 @@ type RouteHudControlStripProps = {
     readonly onToggleOperations: () => void;
     readonly onToggleStatus: () => void;
     readonly onToggleVisualizations?: () => void;
+    readonly onToggleTraining?: () => void;
     readonly onToggleIntelNode?: () => void;
     readonly onToggleObjectiveNode?: () => void;
     readonly onTogglePlayerNode?: () => void;
@@ -107,6 +109,14 @@ function PanelIcon({ id }: { readonly id: PanelId }) {
                     <path d="M2 13.5h12" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
             );
+        case 'training':
+            return (
+                <svg viewBox="0 0 16 16" aria-hidden="true" style={svgStyle}>
+                    <path d="M3 12.5 6.4 8.8l2.1 1.8L13 4.5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M11.1 4.5H13v1.9" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M2.5 13.5h11" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+            );
         case 'intelNode':
             return (
                 <svg viewBox="0 0 16 16" aria-hidden="true" style={svgStyle}>
@@ -177,6 +187,7 @@ export function RouteHudControlStrip({
     showOperations,
     showStatus,
     showVisualizations = false,
+    showTraining = false,
     showIntelNode = false,
     showObjectiveNode = false,
     showPlayerNode = false,
@@ -186,12 +197,13 @@ export function RouteHudControlStrip({
     onToggleOperations,
     onToggleStatus,
     onToggleVisualizations,
+    onToggleTraining,
     onToggleIntelNode,
     onToggleObjectiveNode,
     onTogglePlayerNode,
     onToggleQuestLog,
     onToggleNodeOps,
-    pinnedPanels = ['explorer', 'menu', 'operations', 'status', 'visualizations', 'intelNode', 'objectiveNode', 'playerNode', 'questLog', 'nodeOps'],
+    pinnedPanels = ['explorer', 'menu', 'operations', 'status', 'visualizations', 'training', 'intelNode', 'objectiveNode', 'playerNode', 'questLog', 'nodeOps'],
     onTogglePanelPin,
     onResetPanel,
     onFocusViewport,
@@ -236,6 +248,12 @@ export function RouteHudControlStrip({
                 label: 'Visualizations',
                 active: showVisualizations,
                 onClick: onToggleVisualizations ?? (() => { }),
+            },
+            {
+                id: 'training',
+                label: 'Training',
+                active: showTraining,
+                onClick: onToggleTraining ?? (() => { }),
             },
             {
                 id: 'intelNode',

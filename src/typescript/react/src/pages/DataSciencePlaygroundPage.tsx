@@ -11,6 +11,7 @@ import { NotebookHealthPanel } from '../components/notebook-client/NotebookHealt
 import { NotebookOperationsPanel } from '../components/notebook-client/NotebookOperationsPanel';
 import { NotebookVisualizationsPanel } from '../components/notebook-client/NotebookVisualizationsPanel';
 import { RouteModePanel } from '../components/notebook-client/RouteModePanel';
+import { NotebookTrainingPanel } from '../domain/notebook/viz/NotebookTrainingPanel';
 import { withErrorBoundary } from '../components/errors/withErrorBoundary';
 import {
     buildQuestProgress,
@@ -48,6 +49,9 @@ const SafeNotebookOperationsPanel = withErrorBoundary(NotebookOperationsPanel, {
 const SafeNotebookVisualizationsPanel = withErrorBoundary(NotebookVisualizationsPanel, {
     componentName: 'NotebookVisualizationsPanel',
 });
+const SafeNotebookTrainingPanel = withErrorBoundary(NotebookTrainingPanel, {
+    componentName: 'NotebookTrainingPanel',
+});
 
 const shellStyle: CSSProperties = {
     height: '100dvh',
@@ -72,6 +76,7 @@ const panelResetDefaults: Record<NotebookHudPanelId, number> = {
     status: 0,
     operations: 0,
     visualizations: 0,
+    training: 0,
     intelNode: 0,
     objectiveNode: 0,
     playerNode: 0,
@@ -90,6 +95,7 @@ const panelDefaultSizes: Record<NotebookHudPanelId, { width: number; height: num
     nodeOps: { width: 360, height: 220 },
     operations: { width: 360, height: 240 },
     visualizations: { width: 460, height: 380 },
+    training: { width: 440, height: 420 },
 };
 
 type NotebookAnalyticsTelemetry = {
@@ -172,6 +178,7 @@ export function DataSciencePlaygroundPage() {
         showStatus,
         showOperations,
         showVisualizations,
+        showTraining,
         showIntelNode,
         showObjectiveNode,
         showPlayerNode,
@@ -254,6 +261,7 @@ export function DataSciencePlaygroundPage() {
             status: previous.status + 1,
             operations: previous.operations + 1,
             visualizations: previous.visualizations + 1,
+            training: previous.training + 1,
             intelNode: previous.intelNode + 1,
             objectiveNode: previous.objectiveNode + 1,
             playerNode: previous.playerNode + 1,
@@ -539,6 +547,18 @@ export function DataSciencePlaygroundPage() {
                 />
             </RouteDeckTransition>
         ),
+        training: (
+            <RouteDeckTransition
+                reducedMotion={prefersReducedMotion}
+                animating={modeDeckAnimating}
+                delayMs={120}
+                inactiveOpacity={0.84}
+                inactiveTransform="translateY(9px) scale(0.992)"
+                inactiveFilter="saturate(1.04)"
+            >
+                <SafeNotebookTrainingPanel />
+            </RouteDeckTransition>
+        ),
         objectiveNode: (
             <ObjectivesDockPanel
                 completedQuestCount={completedQuestCount}
@@ -650,6 +670,7 @@ export function DataSciencePlaygroundPage() {
         { id: 'intelNode', corner: 'top-right', title: 'INTEL NODE' },
         { id: 'status', corner: 'bottom-left', title: 'ROUTE REGISTRY' },
         { id: 'visualizations', corner: 'bottom-left', title: 'VISUALIZATIONS' },
+        { id: 'training', corner: 'bottom-left', title: 'TRAINING' },
         { id: 'questLog', corner: 'bottom-left', title: 'QUEST LOG' },
         { id: 'objectiveNode', corner: 'bottom-right', title: 'OBJECTIVE NODE' },
         { id: 'nodeOps', corner: 'bottom-right', title: 'NODE OPS' },
@@ -736,6 +757,7 @@ export function DataSciencePlaygroundPage() {
                     showOperations={showOperations}
                     showStatus={showStatus}
                     showVisualizations={showVisualizations}
+                    showTraining={showTraining}
                     showIntelNode={showIntelNode}
                     showObjectiveNode={showObjectiveNode}
                     showPlayerNode={showPlayerNode}
@@ -747,6 +769,7 @@ export function DataSciencePlaygroundPage() {
                     onToggleOperations={() => togglePanel('operations')}
                     onToggleStatus={() => togglePanel('status')}
                     onToggleVisualizations={() => togglePanel('visualizations')}
+                    onToggleTraining={() => togglePanel('training')}
                     onToggleIntelNode={() => togglePanel('intelNode')}
                     onToggleObjectiveNode={() => togglePanel('objectiveNode')}
                     onTogglePlayerNode={() => togglePanel('playerNode')}

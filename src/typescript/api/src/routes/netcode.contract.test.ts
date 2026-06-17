@@ -3,8 +3,10 @@ import Fastify from 'fastify';
 
 import {registerFastifyErrorMapper} from '../lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from '../middleware/requestContext.ts';
-import type {K3h4ScalingBenchmarkStatus} from '../services/k3h4ScalingBenchmark.ts';
 import type {K3h4ApplicationOrchestrationLayer} from '../services/k3h4ApplicationOrchestrationLayer.ts';
+import type {K3h4ScalingBenchmarkStatus} from '../services/k3h4ScalingBenchmark.ts';
+import {K3h4VizServiceError} from '../services/k3h4TrainingService.ts';
+import type {EpochGeometry, K3h4TrainingService} from '../services/k3h4TrainingService.ts';
 import type {NativeNetcodeService} from '../services/nativeNetcode.ts';
 import {type NetcodeAnalyticsAuthoritativeResult, NetcodeAnalyticsOrchestrationError,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
 
@@ -395,11 +397,21 @@ function createFakeNetcode(captured: CapturedArgs): NativeNetcodeService {
   };
 }
 
-async function createApp(netcodeService: NativeNetcodeService) {
+async function createApp(
+    netcodeService: NativeNetcodeService,
+    options: {
+      scalingBenchmarkLoader?: () => K3h4ScalingBenchmarkStatus;
+      k3h4TrainingService?: K3h4TrainingService;
+    } = {},
+) {
   const app = Fastify({logger: false});
   await registerRequestContextMiddleware(app);
   registerFastifyErrorMapper(app);
-  await registerNetcodeRoutes(app, {netcodeService});
+  await registerNetcodeRoutes(app, {
+    netcodeService,
+    scalingBenchmarkLoader: options.scalingBenchmarkLoader,
+    k3h4TrainingService: options.k3h4TrainingService,
+  });
   await app.ready();
   return app;
 }
@@ -964,73 +976,77 @@ describe('netcode analytics contract', () => {
 
 async function buildScalingBenchmarkApp(
     benchmarkStatus: K3h4ScalingBenchmarkStatus,
-        ) {
-          const app = Fastify();
-          registerFastifyErrorMapper(app);
-          await registerRequestContextMiddleware(app);
-          await registerNetcodeRoutes(app, {
-            netcodeAuthoritativeComputeOrchestrator: undefined,
-            k3h4ApplicationOrchestrationLayer: undefined,
-            netcodeService: undefined,
-            scalingBenchmarkLoader: () => benchmarkStatus,
-          });
-          return app;
-        }
+) {
+  const app = Fastify();
+  registerFastifyErrorMapper(app);
+  await registerRequestContextMiddleware(app);
+  await registerNetcodeRoutes(app, {
+    netcodeAuthoritativeComputeOrchestrator: undefined,
+    k3h4ApplicationOrchestrationLayer: undefined,
+    netcodeService: undefined,
+    scalingBenchmarkLoader: () => benchmarkStatus,
+  });
+  return app;
+}
 
-        const CANONICAL_BENCHMARK_RESULT = {
-          contractVersion: 1 as const,
-          schemaVersion: 1,
-          series: [
-            {n: 64, k3h4Ns: 1000, attentionNs: 4000},
-            {n: 256, k3h4Ns: 4000, attentionNs: 65000},
-            {n: 1024, k3h4Ns: 16000, attentionNs: 1048000},
-            {n: 4096, k3h4Ns: 64000, attentionNs: 16777000},
-            {n: 16384, k3h4Ns: 256000, attentionNs: 268435000},
-          ],
-          metadata: {
-            calibratedSizes: [64, 256, 1024, 4096, 16384],
-            extrapolatedAbove: null,
-          },
-        } as const;
+const CANONICAL_BENCHMARK_RESULT = {
+  contractVersion: 1 as const,
+  schemaVersion: 1,
+  series: [
+    {n: 64, k3h4Ns: 1000, attentionNs: 4000},
+    {n: 256, k3h4Ns: 4000, attentionNs: 65000},
+    {n: 1024, k3h4Ns: 16000, attentionNs: 1048000},
+    {n: 4096, k3h4Ns: 64000, attentionNs: 16777000},
+    {n: 16384, k3h4Ns: 256000, attentionNs: 268435000},
+  ],
+  metadata: {
+    calibratedSizes: [64, 256, 1024, 4096, 16384],
+    extrapolatedAbove: null,
+  },
+} as const;
 
 describe('GET /api/netcode/k3h4/scaling-benchmark', () => {
-  test('returns 200 with scaling series when artifact is available', async () => {
-    const app = await buildScalingBenchmarkApp({
-      kind: 'ok',
-      result: CANONICAL_BENCHMARK_RESULT,
-    });
+  test(
+      'returns 200 with scaling series when artifact is available',
+      async () => {
+        const app = await buildScalingBenchmarkApp({
+          kind: 'ok',
+          result: CANONICAL_BENCHMARK_RESULT,
+        });
 
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/netcode/k3h4/scaling-benchmark',
-    });
+        const response = await app.inject({
+          method: 'GET',
+          url: '/api/netcode/k3h4/scaling-benchmark',
+        });
 
-    expect(response.statusCode).toBe(200);
-    const body = response.json();
-    expect(body.contractVersion).toBe(1);
-    expect(Array.isArray(body.series)).toBe(true);
-    expect(body.series).toHaveLength(5);
-    expect(body.series[0]).toMatchObject({n: 64});
-    expect(body.series[4]).toMatchObject({n: 16384});
-    expect(body.metadata.calibratedSizes).toHaveLength(5);
-    expect(body.metadata.extrapolatedAbove).toBeNull();
+        expect(response.statusCode).toBe(200);
+        const body = response.json();
+        expect(body.contractVersion).toBe(1);
+        expect(Array.isArray(body.series)).toBe(true);
+        expect(body.series).toHaveLength(5);
+        expect(body.series[0]).toMatchObject({n: 64});
+        expect(body.series[4]).toMatchObject({n: 16384});
+        expect(body.metadata.calibratedSizes).toHaveLength(5);
+        expect(body.metadata.extrapolatedAbove).toBeNull();
 
-    await app.close();
-  });
+        await app.close();
+      });
 
-  test('returns 404 with benchmark_not_found when artifact is missing', async () => {
-    const app = await buildScalingBenchmarkApp({kind: 'not_found'});
+  test(
+      'returns 404 with benchmark_not_found when artifact is missing',
+      async () => {
+        const app = await buildScalingBenchmarkApp({kind: 'not_found'});
 
-    const response = await app.inject({
-      method: 'GET',
-      url: '/api/netcode/k3h4/scaling-benchmark',
-    });
+        const response = await app.inject({
+          method: 'GET',
+          url: '/api/netcode/k3h4/scaling-benchmark',
+        });
 
-    expect(response.statusCode).toBe(404);
-    expect(response.json()).toMatchObject({error: 'benchmark_not_found'});
+        expect(response.statusCode).toBe(404);
+        expect(response.json()).toMatchObject({error: 'benchmark_not_found'});
 
-    await app.close();
-  });
+        await app.close();
+      });
 
   test('returns 503 with benchmark_unavailable when I/O fails', async () => {
     const app = await buildScalingBenchmarkApp({
@@ -1075,3 +1091,307 @@ describe('GET /api/netcode/k3h4/scaling-benchmark', () => {
   });
 });
 
+describe('K3H4 training integration routes', () => {
+  const CANONICAL_GEOMETRY: EpochGeometry = {
+    contractVersion: 1,
+    sessionId: 'sess-abc123',
+    epoch: 0,
+    mode: 'power',
+    spectralActive: false,
+    clusters: [
+      {
+        clusterId: 0,
+        centroid: {x: 0.5, y: 0.3},
+        inscribedRadius: 0.25,
+        weightedScore: 1.2,
+        spectralProxy: 0,
+        polygon: [
+          {x: 0.75, y: 0.3},
+          {x: 0.677, y: 0.477},
+          {x: 0.5, y: 0.55},
+          {x: 0.323, y: 0.477},
+          {x: 0.25, y: 0.3},
+          {x: 0.323, y: 0.123},
+          {x: 0.5, y: 0.05},
+          {x: 0.677, y: 0.123},
+        ],
+      },
+    ],
+    tokens: [
+      {tokenId: 'cluster-0', x: 0.5, y: 0.3, clusterId: 0, weightedScore: 1.2},
+    ],
+    projectionMetadata: {
+      method: 'pca',
+      components: 2,
+      explainedVariance: 0.9,
+      dimensionality: 3,
+    },
+  };
+
+  const createTrainingService = (): K3h4TrainingService => ({
+    async createTrainingSession(mode) {
+      return {
+        sessionId: 'sess-abc123',
+        mode,
+        createdAtUtc: '2026-06-17T00:00:00.000Z',
+      };
+    },
+    async readConfidenceTimeSeries(sessionId, mode) {
+      if (sessionId === 'missing') {
+        throw new K3h4VizServiceError(
+            'session_not_found', 'missing session', 404);
+      }
+
+      return {
+        contractVersion: 1 as const,
+        sessionId,
+        status: 'active' as const,
+        mode,
+        epochs: [
+          {epochIndex: 0, confidence: 0.41, mode},
+          {epochIndex: 1, confidence: 0.57, mode},
+        ],
+        metadata: {
+          peakEpoch: 1,
+          rollingAverage3: null,
+          defaultMode: 'power' as const,
+        },
+      };
+    },
+    async readEpochGeometry(sessionId, epochIndex, mode) {
+      if (sessionId === 'missing') {
+        throw new K3h4VizServiceError(
+            'session_not_found', `Session '${sessionId}' not found.`, 404);
+      }
+      if (epochIndex === 99) {
+        throw new K3h4VizServiceError(
+            'artifact_not_found', `Epoch ${epochIndex} not found.`, 404);
+      }
+      if (epochIndex === 42) {
+        throw new K3h4VizServiceError(
+            'artifact_incomplete', 'Artifact truncated.', 422);
+      }
+      return {...CANONICAL_GEOMETRY, sessionId, epoch: epochIndex, mode};
+    },
+  });
+
+  test('creates a training session with default power mode', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/k3h4/training-session',
+      payload: {},
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      sessionId: 'sess-abc123',
+      mode: 'power',
+    });
+
+    await app.close();
+  });
+
+  test('rejects invalid training mode for session creation', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/k3h4/training-session',
+      payload: {mode: 'invalid'},
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({error: 'invalid_mode'});
+
+    await app.close();
+  });
+
+  test('returns confidence time-series for a session', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/api/netcode/k3h4/training-session/sess-abc123/confidence?mode=multiplicative',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      contractVersion: 1,
+      sessionId: 'sess-abc123',
+      mode: 'multiplicative',
+      status: 'active',
+      epochs: [
+        {epochIndex: 0, confidence: 0.41, mode: 'multiplicative'},
+        {epochIndex: 1, confidence: 0.57, mode: 'multiplicative'},
+      ],
+      metadata: {
+        peakEpoch: 1,
+      },
+    });
+
+    await app.close();
+  });
+
+  test('maps training service errors on confidence endpoint', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/training-session/missing/confidence',
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({error: 'session_not_found'});
+
+    await app.close();
+  });
+
+  test('returns epoch geometry with PCA projection metadata', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/api/netcode/k3h4/training-session/sess-abc123/epoch/0/geometry?mode=power',
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body).toMatchObject({
+      contractVersion: 1,
+      sessionId: 'sess-abc123',
+      epoch: 0,
+      mode: 'power',
+    });
+    expect(Array.isArray(body.clusters)).toBe(true);
+    expect(body.clusters.length).toBeGreaterThan(0);
+    expect(body.clusters[0]).toMatchObject({
+      clusterId: 0,
+      centroid: expect.objectContaining(
+          {x: expect.any(Number), y: expect.any(Number)}),
+      inscribedRadius: expect.any(Number),
+      weightedScore: expect.any(Number),
+    });
+    expect(Array.isArray(body.clusters[0].polygon)).toBe(true);
+    expect(body.clusters[0].polygon.length).toBe(8);
+    expect(body.projectionMetadata).toMatchObject({
+      method: 'pca',
+      components: 2,
+      explainedVariance: expect.any(Number),
+      dimensionality: expect.any(Number),
+    });
+    expect(Array.isArray(body.tokens)).toBe(true);
+
+    await app.close();
+  });
+
+  test('defaults geometry mode to power when omitted', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/training-session/sess-abc123/epoch/0/geometry',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({mode: 'power'});
+
+    await app.close();
+  });
+
+  test('rejects invalid mode on geometry endpoint', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/api/netcode/k3h4/training-session/sess-abc123/epoch/0/geometry?mode=badmode',
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({error: 'invalid_mode'});
+
+    await app.close();
+  });
+
+  test('rejects non-integer epoch index on geometry endpoint', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/training-session/sess-abc123/epoch/foo/geometry',
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({error: 'invalid_epoch'});
+
+    await app.close();
+  });
+
+  test('maps session_not_found error from geometry endpoint', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/training-session/missing/epoch/0/geometry',
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({error: 'session_not_found'});
+
+    await app.close();
+  });
+
+  test('maps artifact_not_found error from geometry endpoint', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/training-session/sess-abc123/epoch/99/geometry',
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({error: 'artifact_not_found'});
+
+    await app.close();
+  });
+
+  test('maps artifact_incomplete error from geometry endpoint', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/netcode/k3h4/training-session/sess-abc123/epoch/42/geometry',
+    });
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json()).toMatchObject({error: 'artifact_incomplete'});
+
+    await app.close();
+  });
+});

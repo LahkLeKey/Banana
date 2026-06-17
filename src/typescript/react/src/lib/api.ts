@@ -1116,3 +1116,54 @@ export async function fetchK3h4EpochGeometry(
           encodeURIComponent(sessionId)}/epoch/${epoch}/geometry?${query}`,
   );
 }
+
+// ---------------------------------------------------------------------------
+// K3H4 training session API
+// ---------------------------------------------------------------------------
+
+export type K3h4TrainingMode = 'multiplicative'|'power';
+
+export type K3h4TrainingSession = {
+  readonly sessionId: string; readonly mode: K3h4TrainingMode; readonly createdAtUtc:
+                                                                            string;
+};
+
+export type K3h4EpochConfidence = {
+  readonly epochIndex: number; readonly confidence: number; readonly mode:
+                                                                         K3h4TrainingMode;
+};
+
+export type K3h4ConfidenceTimeSeries = {
+  readonly contractVersion: 1; readonly sessionId: string; readonly status: 'pending' | 'active' | 'completed'; readonly mode: K3h4TrainingMode; readonly epochs: readonly K3h4EpochConfidence[]; readonly metadata: {
+    readonly peakEpoch: number | null; readonly rollingAverage3: number | null; readonly defaultMode:
+                                                                                             'power';
+  };
+};
+
+export async function createK3h4TrainingSession(
+    baseUrl: string,
+    mode: K3h4TrainingMode = 'power',
+    ): Promise<K3h4TrainingSession> {
+  return fetchApiJson<K3h4TrainingSession>(
+      baseUrl,
+      '/api/netcode/k3h4/training-session',
+      {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({mode})
+      },
+  );
+}
+
+export async function fetchK3h4ConfidenceTimeSeries(
+    baseUrl: string,
+    sessionId: string,
+    mode: K3h4TrainingMode = 'power',
+    ): Promise<K3h4ConfidenceTimeSeries> {
+  const query = new URLSearchParams({mode}).toString();
+  return fetchApiJson<K3h4ConfidenceTimeSeries>(
+      baseUrl,
+      `/api/netcode/k3h4/training-session/${
+          encodeURIComponent(sessionId)}/confidence?${query}`,
+  );
+}

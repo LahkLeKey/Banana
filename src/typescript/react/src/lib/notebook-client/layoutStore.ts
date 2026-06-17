@@ -12,7 +12,8 @@ const workflowOrder: WorkflowStepId[] = ['scan', 'shape', 'commit'];
 function pickHudPanelFromPreset(preset: {
   explorer: boolean; menu: boolean; status: boolean; operations: boolean;
   visualizations: boolean;
-}): 'explorer'|'menu'|'status'|'operations'|'visualizations'|null {
+  training: boolean;
+}): 'explorer'|'menu'|'status'|'operations'|'visualizations'|'training'|null {
   if (preset.explorer) {
     return 'explorer';
   }
@@ -27,6 +28,9 @@ function pickHudPanelFromPreset(preset: {
   }
   if (preset.visualizations) {
     return 'visualizations';
+  }
+  if (preset.training) {
+    return 'training';
   }
   return null;
 }
@@ -43,9 +47,11 @@ type NotebookLayoutState = {
   showStatus: boolean;
   showOperations: boolean;
   showVisualizations: boolean;
+  showTraining: boolean;
   lastHudSnapshot: {
     explorer: boolean; menu: boolean; status: boolean; operations: boolean;
     visualizations: boolean;
+    training: boolean;
   };
   showIntelNodeWindow: boolean;
   showObjectiveNodeWindow: boolean;
@@ -72,13 +78,15 @@ type NotebookLayoutState = {
   applyHudPreset: (preset: {
     explorer: boolean; menu: boolean; status: boolean; operations: boolean;
     visualizations: boolean;
+    training: boolean;
   }) => void;
   setHudPanelVisibility: (
-      panel: 'explorer'|'menu'|'status'|'operations'|'visualizations',
+      panel: 'explorer'|'menu'|'status'|'operations'|'visualizations'|
+      'training',
       visible: boolean,
       ) => void;
-  toggleHudPanel:
-      (panel: 'explorer'|'menu'|'status'|'operations'|'visualizations') => void;
+  toggleHudPanel: (panel: 'explorer'|'menu'|'status'|'operations'|
+                   'visualizations'|'training') => void;
   closeAllHudPanels: () => void;
   reopenHudPanels: () => void;
   setGameplayWindowVisibility: (
@@ -88,7 +96,7 @@ type NotebookLayoutState = {
   closeAllGameplayWindows: () => void;
   reopenGameplayWindows: () => void;
   focusHudPanel: (panel: 'explorer'|'menu'|'status'|'operations'|
-                  'visualizations'|null) => void;
+                  'visualizations'|'training'|null) => void;
   resetHudPanels: () => void;
   resetForSector: (hasSelection: boolean) => void;
 };
@@ -102,29 +110,31 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
       activeWorkflowStep: 'scan',
       workflowDepth: 1,
       showFullSourceDump: false,
-      showExplorer: true,
-      showMenu: true,
-      showStatus: true,
-      showOperations: true,
+      showExplorer: false,
+      showMenu: false,
+      showStatus: false,
+      showOperations: false,
       showVisualizations: true,
+      showTraining: false,
       lastHudSnapshot: {
-        explorer: true,
-        menu: true,
-        status: true,
-        operations: true,
+        explorer: false,
+        menu: false,
+        status: false,
+        operations: false,
         visualizations: true,
+        training: false,
       },
-      showIntelNodeWindow: true,
-      showObjectiveNodeWindow: true,
-      showPlayerNodeWindow: true,
-      showQuestLogWindow: true,
-      showNodeOpsWindow: true,
+      showIntelNodeWindow: false,
+      showObjectiveNodeWindow: false,
+      showPlayerNodeWindow: false,
+      showQuestLogWindow: false,
+      showNodeOpsWindow: false,
       lastGameplayWindowSnapshot: {
-        intelNode: true,
-        objectiveNode: true,
-        playerNode: true,
-        questLog: true,
-        nodeOps: true,
+        intelNode: false,
+        objectiveNode: false,
+        playerNode: false,
+        questLog: false,
+        nodeOps: false,
       },
       lastGameplayDockSnapshot: 'intel',
       explorerDropupOpen: false,
@@ -155,6 +165,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
         showStatus: pickHudPanelFromPreset(preset) === 'status',
         showOperations: pickHudPanelFromPreset(preset) === 'operations',
         showVisualizations: pickHudPanelFromPreset(preset) === 'visualizations',
+        showTraining: pickHudPanelFromPreset(preset) === 'training',
         explorerDropupOpen: false,
       }),
       setHudPanelVisibility: (panel, visible) => set(
@@ -166,6 +177,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                                                      state.showOperations,
             showVisualizations:
                 panel === 'visualizations' ? visible : state.showVisualizations,
+            showTraining: panel === 'training' ? visible : state.showTraining,
           })),
       toggleHudPanel: (panel) =>
           set((state) => ({
@@ -179,6 +191,8 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                 showVisualizations: panel === 'visualizations' ?
                     !state.showVisualizations :
                     state.showVisualizations,
+                showTraining: panel === 'training' ? !state.showTraining :
+                                                     state.showTraining,
                 explorerDropupOpen: false,
               })),
       closeAllHudPanels: () => set((state) => ({
@@ -188,12 +202,14 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                                        status: state.showStatus,
                                        operations: state.showOperations,
                                        visualizations: state.showVisualizations,
+                                       training: state.showTraining,
                                      },
                                      showExplorer: false,
                                      showMenu: false,
                                      showStatus: false,
                                      showOperations: false,
                                      showVisualizations: false,
+                                     showTraining: false,
                                      explorerDropupOpen: false,
                                    })),
       reopenHudPanels: () =>
@@ -203,6 +219,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                 showStatus: state.lastHudSnapshot.status,
                 showOperations: state.lastHudSnapshot.operations,
                 showVisualizations: state.lastHudSnapshot.visualizations,
+                showTraining: state.lastHudSnapshot.training,
                 explorerDropupOpen: false,
               })),
       setGameplayWindowVisibility: (window, visible) => set(
@@ -253,6 +270,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                 showStatus: panel === 'status',
                 showOperations: panel === 'operations',
                 showVisualizations: panel === 'visualizations',
+                showTraining: panel === 'training',
                 explorerDropupOpen: false,
               })),
       resetHudPanels: () => set({
@@ -261,6 +279,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
         showStatus: false,
         showOperations: false,
         showVisualizations: false,
+        showTraining: false,
         explorerDropupOpen: false,
       }),
       resetForSector: (hasSelection) => set({

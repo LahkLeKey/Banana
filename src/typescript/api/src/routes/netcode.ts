@@ -3,6 +3,7 @@ import type {FastifyInstance, FastifyReply} from 'fastify';
 import {createK3h4ApplicationOrchestrationLayer, type K3h4ApplicationOrchestrationLayer,} from '../services/k3h4ApplicationOrchestrationLayer.ts';
 import {loadK3h4ScalingBenchmark} from '../services/k3h4ScalingBenchmark.ts';
 import type {K3h4ScalingBenchmarkStatus} from '../services/k3h4ScalingBenchmark.ts';
+import {createFileSystemK3h4TrainingService, type K3h4TrainingService, K3h4VizServiceError, type TrainingSessionMode,} from '../services/k3h4TrainingService.ts';
 import {getNativeNetcodeService, type NativeNetcodeService,} from '../services/nativeNetcode.ts';
 import {createNetcodeAnalyticsAuthoritativeComputeOrchestrator, type NetcodeAnalyticsAuthoritativeComputeOrchestrator, NetcodeAnalyticsOrchestrationError, type NetcodeK3h4Rollout,} from '../services/netcodeAuthoritativeComputeOrchestrator.ts';
 
@@ -15,6 +16,7 @@ type NetcodeRouteOptions = {
 
 type NetcodeRouteOptionsExtended = NetcodeRouteOptions&{
   scalingBenchmarkLoader?: () => K3h4ScalingBenchmarkStatus;
+  k3h4TrainingService?: K3h4TrainingService;
 };
 
 function isFiniteNumber(value: unknown): value is number {
@@ -37,6 +39,16 @@ function isValidK3h4Mode(value: unknown): value is 'multiplicative'|'power' {
 function isValidSpectralMode(value: unknown): value is
     'disabled'|'affinity-graph' {
   return value === 'disabled' || value === 'affinity-graph';
+}
+
+function parseTrainingMode(rawMode: unknown): TrainingSessionMode|null {
+  if (rawMode === undefined || rawMode === null || rawMode === '') {
+    return 'power';
+  }
+  if (rawMode === 'multiplicative' || rawMode === 'power') {
+    return rawMode;
+  }
+  return null;
 }
 
 function resolveNetcodeK3h4Rollout(): NetcodeK3h4Rollout {
@@ -117,6 +129,8 @@ export async function registerNetcodeRoutes(
 
   const benchmarkLoader =
       options.scalingBenchmarkLoader ?? loadK3h4ScalingBenchmark;
+  const trainingService =
+      options.k3h4TrainingService ?? createFileSystemK3h4TrainingService();
 
   type OrchestratedNetcodeResult =
       Awaited<ReturnType<K3h4ApplicationOrchestrationLayer['compute']>>;
@@ -376,4 +390,84 @@ export async function registerNetcodeRoutes(
     }
     return status.result;
   });
+
+  app.post<{Body: {mode?: TrainingSessionMode}}>(
+      '/api/netcode/k3h4/training-session', async (request, reply) => {
+        const mode = parseTrainingMode(request.body?.mode);
+        if (!mode) {
+          return reply.status(400).send({
+            error: 'invalid_mode',
+            message:
+                'mode must be either multiplicative or power when provided.',
+          });
+        }
+
+        const session = await trainingService.createTrainingSession(mode);
+        return reply.status(201).send(session);
+      });
+
+  app.get<{Params: {id: string}; Querystring: {mode?: string}}>(
+      '/api/netcode/k3h4/training-session/:id/confidence',
+      async (request, reply) => {
+        const mode = parseTrainingMode(request.query.mode);
+        if (!mode) {
+          return reply.status(400).send({
+            error: 'invalid_mode',
+            message:
+                'mode must be either multiplicative or power when provided.',
+          });
+        }
+
+        try {
+          const confidence = await trainingService.readConfidenceTimeSeries(
+              request.params.id, mode);
+          return reply.send(confidence);
+        } catch (error) {
+          if (error instanceof K3h4VizServiceError) {
+            return reply.status(error.statusCode).send({
+              error: error.code,
+              message: error.message,
+            });
+          }
+          throw error;
+        }
+      },
+  );
+
+  app.get<{Params: {id: string; n: string}; Querystring: {mode?: string}}>(
+      '/api/netcode/k3h4/training-session/:id/epoch/:n/geometry',
+      async (request, reply) => {
+        const mode = parseTrainingMode(request.query.mode);
+        if (!mode) {
+          return reply.status(400).send({
+            error: 'invalid_mode',
+            message:
+                'mode must be either multiplicative or power when provided.',
+          });
+        }
+
+        const epochIndex = Number(request.params.n);
+        if (!Number.isInteger(epochIndex) || epochIndex < 0 ||
+            !Number.isFinite(epochIndex)) {
+          return reply.status(400).send({
+            error: 'invalid_epoch',
+            message: 'Epoch index must be a non-negative integer.',
+          });
+        }
+
+        try {
+          const geometry = await trainingService.readEpochGeometry(
+              request.params.id, epochIndex, mode);
+          return reply.send(geometry);
+        } catch (error) {
+          if (error instanceof K3h4VizServiceError) {
+            return reply.status(error.statusCode).send({
+              error: error.code,
+              message: error.message,
+            });
+          }
+          throw error;
+        }
+      },
+  );
 }
