@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'r
 import { useLocation } from 'react-router-dom';
 
 import { MainMenuPanel } from '../components/notebook-client/MainMenuPanel';
-import { ModeRegistryPanel } from '../components/notebook-client/ModeRegistryPanel';
 import { ObjectivesDockPanel } from '../components/notebook-client/NotebookDockPanels';
 import { NotebookExplorerPanel } from '../components/notebook-client/NotebookExplorerPanel';
 import { NotebookGameplaySurface } from '../components/notebook-client/NotebookGameplaySurface';
@@ -75,8 +74,8 @@ const panelResetDefaults: Record<NotebookHudPanelId, number> = {
     menu: 0,
     status: 0,
     operations: 0,
-    visualizations: 0,
-    training: 0,
+    visualizations: 1,
+    training: 1,
     intelNode: 0,
     objectiveNode: 0,
     playerNode: 0,
@@ -94,8 +93,8 @@ const panelDefaultSizes: Record<NotebookHudPanelId, { width: number; height: num
     objectiveNode: { width: 360, height: 260 },
     nodeOps: { width: 360, height: 220 },
     operations: { width: 360, height: 240 },
-    visualizations: { width: 460, height: 380 },
-    training: { width: 440, height: 420 },
+    visualizations: { width: 460, height: 680 },
+    training: { width: 440, height: 680 },
 };
 
 type NotebookAnalyticsTelemetry = {
@@ -198,7 +197,6 @@ export function DataSciencePlaygroundPage() {
     const setObjectivePanel = useNotebookLayoutStore((state) => state.setObjectivePanel);
     const [modeDeckAnimating, setModeDeckAnimating] = useState(false);
     const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-    const [transitionHistory, setTransitionHistory] = useState<Array<{ pathname: string; mode: NotebookRouteMode; time: string; }>>([]);
     const [capturedFiles, setCapturedFiles] = useState<string[]>([]);
     const [totalXp, setTotalXp] = useState(0);
     const [comboStreak, setComboStreak] = useState(0);
@@ -291,20 +289,6 @@ export function DataSciencePlaygroundPage() {
             window.clearTimeout(timer);
         };
     }, [routeHudPreset.mode]);
-
-    useEffect(() => {
-        const timestamp = new Date().toLocaleTimeString();
-        setTransitionHistory((previous) => {
-            const nextEntry = {
-                pathname: location.pathname,
-                mode: routeHudPreset.mode,
-                time: timestamp,
-            };
-
-            const deduped = previous.filter((entry) => !(entry.pathname === nextEntry.pathname && entry.mode === nextEntry.mode));
-            return [nextEntry, ...deduped].slice(0, 3);
-        });
-    }, [location.pathname, routeHudPreset.mode]);
 
     useEffect(() => {
         if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -664,13 +648,13 @@ export function DataSciencePlaygroundPage() {
     } as const;
 
     const dockLayout: Array<{ id: keyof typeof dockRenderers; corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; title: string; }> = [
+        { id: 'visualizations', corner: 'top-left', title: 'VISUALIZATIONS' },
         { id: 'menu', corner: 'top-left', title: 'MAIN MENU' },
         { id: 'playerNode', corner: 'top-left', title: 'PLAYER NODE' },
+        { id: 'training', corner: 'top-right', title: 'TRAINING' },
         { id: 'explorer', corner: 'top-right', title: 'FILE EXPLORER' },
         { id: 'intelNode', corner: 'top-right', title: 'INTEL NODE' },
         { id: 'status', corner: 'bottom-left', title: 'ROUTE REGISTRY' },
-        { id: 'visualizations', corner: 'bottom-left', title: 'VISUALIZATIONS' },
-        { id: 'training', corner: 'bottom-left', title: 'TRAINING' },
         { id: 'questLog', corner: 'bottom-left', title: 'QUEST LOG' },
         { id: 'objectiveNode', corner: 'bottom-right', title: 'OBJECTIVE NODE' },
         { id: 'nodeOps', corner: 'bottom-right', title: 'NODE OPS' },
@@ -679,7 +663,7 @@ export function DataSciencePlaygroundPage() {
     const dockEntries = dockLayout.map((dock) => ({
         id: dock.id,
         corner: dock.corner,
-        visible: panelVisibility[dock.id],
+        visible: dock.id === 'visualizations' || dock.id === 'training' ? true : panelVisibility[dock.id],
         content: dockRenderers[dock.id],
         title: dock.title,
         defaultWidth: panelDefaultSizes[dock.id].width,
@@ -690,20 +674,6 @@ export function DataSciencePlaygroundPage() {
     return (
         <main style={shellStyle}>
             <section style={stageStyle}>
-                {import.meta.env.DEV ? (
-                    <ModeRegistryPanel
-                        pathname={location.pathname}
-                        mode={routeHudPreset.mode}
-                        label={routeHudPreset.label}
-                        explorer={showExplorer}
-                        menu={showMenu}
-                        status={showStatus}
-                        operations={showOperations}
-                        prefersReducedMotion={prefersReducedMotion}
-                        transitions={transitionHistory}
-                    />
-                ) : null}
-
                 <RouteTopBar
                     routeLabel={routeHudPreset.label}
                     showExplorer={showExplorer}
