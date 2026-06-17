@@ -34,6 +34,9 @@ curl -i -X POST https://api.banana.engineer/api/netcode/analytics \
 
 If health is green but any contract endpoint is missing or returns 404, treat it as a deployment drift issue and re-run the main rollout workflow before validating frontend behavior.
 
+<img width="811" height="806" alt="image" src="https://github.com/user-attachments/assets/22b60e7a-a4c9-41fc-bd1a-0eb193a05fe2" />
+
+
 <img width="1681" height="911" alt="image" src="https://github.com/user-attachments/assets/6411c4e6-200c-4c11-9c56-62c7227ece81" />
 
 <img width="2116" height="1061" alt="image" src="https://github.com/user-attachments/assets/8232a49b-fcf2-4366-974b-6b2e8b5207d8" />
