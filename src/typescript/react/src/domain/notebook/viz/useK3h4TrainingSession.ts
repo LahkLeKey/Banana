@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-import {createK3h4TrainingSession, fetchK3h4ConfidenceTimeSeries, fetchK3h4EpochGeometry, fetchNetcodeAnalytics, type K3h4ConfidenceTimeSeries, type K3h4TrainingMode, type K3h4TrainingSession, type NetcodeAnalyticsRequest, resolveApiBaseUrl,} from '../../../lib/api';
+import {createK3h4TrainingSession, fetchK3h4ConfidenceTimeSeries, fetchK3h4EpochGeometry, fetchNetcodeAnalytics, type K3h4ConfidenceTimeSeries, type K3h4EpochConfidence, type K3h4TrainingMode, type K3h4TrainingSession, NetcodeAnalyticsError, type NetcodeAnalyticsRequest, type NetcodeAnalyticsResponse, recordK3h4TrainingEpoch, resolveApiBaseUrl,} from '../../../lib/api';
 import type {K3h4EpochGeometryResponse} from '../../../lib/k3h4GeometryTypes';
 
 const STORAGE_KEY = 'banana-k3h4-training-session';
@@ -53,8 +53,223 @@ const WORKFLOW_PASS_COUNT: Record<K3h4TrainingWorkflow, number> = {
   churn: 96,
 };
 
+const RATE_LIMIT_MAX_RETRIES_PER_PASS = 6;
+const RATE_LIMIT_BACKOFF_BASE_MS = 1200;
+const RATE_LIMIT_BACKOFF_MAX_MS = 20000;
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseRetryAfterMs(message: string): number|null {
+  const retryAfterMatch =
+      /retry\s*after\s*(\d+(?:\.\d+)?)\s*(ms|s|sec|secs|second|seconds|m|min|mins|minute|minutes)?/i
+          .exec(message);
+  if (!retryAfterMatch) {
+    return null;
+  }
+
+  const value = Number(retryAfterMatch[1]);
+  if (!Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  const unit = (retryAfterMatch[2] ?? 's').toLowerCase();
+  if (unit === 'ms') {
+    return Math.round(value);
+  }
+  if (unit.startsWith('m')) {
+    return Math.round(value * 60000);
+  }
+  return Math.round(value * 1000);
+}
+
+function computeRateLimitBackoffMs(attemptIndex: number): number {
+  const exponential = Math.min(
+      RATE_LIMIT_BACKOFF_MAX_MS,
+      RATE_LIMIT_BACKOFF_BASE_MS * (2 ** Math.max(0, attemptIndex)),
+  );
+  const jitter = Math.floor(Math.random() * 350);
+  return Math.min(RATE_LIMIT_BACKOFF_MAX_MS, exponential + jitter);
+}
+
+function resolveRateLimitWaitMs(
+    error: unknown,
+    attemptIndex: number,
+    ): number|null {
+  if (error instanceof NetcodeAnalyticsError) {
+    if (error.status !== 429) {
+      return null;
+    }
+
+    const payloadMessage = typeof error.payload.message === 'string' ?
+        error.payload.message :
+        typeof error.payload.error === 'string' ? error.payload.error :
+                                                  '';
+    const fromPayload = parseRetryAfterMs(payloadMessage);
+    if (fromPayload !== null) {
+      return fromPayload;
+    }
+    const fromMessage = parseRetryAfterMs(error.message);
+    if (fromMessage !== null) {
+      return fromMessage;
+    }
+
+    return computeRateLimitBackoffMs(attemptIndex);
+  }
+
+  const message = extractErrorMessage(error);
+  if (!/rate\s*limit|too\s*many\s*requests|throttl/i.test(message)) {
+    return null;
+  }
+
+  const hintedWait = parseRetryAfterMs(message);
+  if (hintedWait !== null) {
+    return hintedWait;
+  }
+
+  return computeRateLimitBackoffMs(attemptIndex);
+}
+
+function clampUnit(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.min(1, Math.max(0, value));
+}
+
+function clampSigned(value: number, magnitude: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.min(magnitude, Math.max(-magnitude, value));
+}
+
+type K3h4FeatureVector = {
+  readonly scoreSignal: number; readonly stabilitySignal: number; readonly spectralSignal: number; readonly convergenceSignal: number; readonly clusterCount:
+                                                                                                                                                    number;
+};
+
+type K3h4AdaptiveState = {
+  readonly modelConfidenceBias: number; readonly policyMomentumBias: number; readonly callDensityBias: number; readonly dependencyPulseBias: number; readonly interactionSignalBias: number; readonly stagnantPasses: number; readonly previousFeature:
+                                                                                                                                                                                                                                           K3h4FeatureVector |
+      null;
+};
+
+function createInitialAdaptiveState(): K3h4AdaptiveState {
+  return {
+    modelConfidenceBias: 0,
+    policyMomentumBias: 0,
+    callDensityBias: 0,
+    dependencyPulseBias: 0,
+    interactionSignalBias: 0,
+    stagnantPasses: 0,
+    previousFeature: null,
+  };
+}
+
+function extractK3h4FeatureVector(analytics: NetcodeAnalyticsResponse):
+    K3h4FeatureVector {
+  const weighted = analytics.k3h4.weightedVoronoiScores;
+  const radii = analytics.k3h4.radii;
+  const spectral = analytics.k3h4.spectralProxy;
+
+  const validScoreCount =
+      weighted.filter((score) => score.scoreValidity === 'valid').length;
+  const validScoreRatio =
+      weighted.length > 0 ? validScoreCount / weighted.length : 0;
+
+  const stableRadiusCount =
+      radii.filter((radius) => radius.radiusState === 'ok').length;
+  const stableRadiusRatio =
+      radii.length > 0 ? stableRadiusCount / radii.length : 0;
+
+  const spectralStrength = spectral.length > 0 ?
+      spectral.reduce(
+          (sum, entry) => sum + Math.abs(entry.frequencyProxyQ16) +
+              Math.abs(entry.amplitudeProxyQ16),
+          0,
+          ) /
+          (spectral.length * 131072) :
+      0;
+
+  const alignmentSignal = clampUnit(analytics.k3h4Projection.alignment / 100);
+  const radialStabilitySignal =
+      clampUnit(analytics.k3h4Projection.radialStability / 100);
+  const scoreSignal =
+      clampUnit(validScoreRatio * 0.55 + alignmentSignal * 0.45);
+  const stabilitySignal =
+      clampUnit(stableRadiusRatio * 0.5 + radialStabilitySignal * 0.5);
+
+  const convergenceSignal =
+      analytics.k3h4.observability.convergenceStatus === 'converged' ? 1 :
+      analytics.k3h4.observability.convergenceStatus === 'max-iterations' ?
+                                                                       0.5 :
+                                                                       0;
+
+  return {
+    scoreSignal,
+    stabilitySignal,
+    spectralSignal: clampUnit(spectralStrength),
+    convergenceSignal,
+    clusterCount: analytics.k3h4.centers.length,
+  };
+}
+
+function evolveAdaptiveState(
+    previous: K3h4AdaptiveState,
+    nextFeature: K3h4FeatureVector,
+    ): K3h4AdaptiveState {
+  const previousComposite = previous.previousFeature ?
+      previous.previousFeature.scoreSignal * 0.45 +
+          previous.previousFeature.stabilitySignal * 0.35 +
+          previous.previousFeature.convergenceSignal * 0.20 :
+      nextFeature.scoreSignal * 0.45 + nextFeature.stabilitySignal * 0.35 +
+          nextFeature.convergenceSignal * 0.20;
+  const nextComposite = nextFeature.scoreSignal * 0.45 +
+      nextFeature.stabilitySignal * 0.35 + nextFeature.convergenceSignal * 0.20;
+  const delta = nextComposite - previousComposite;
+
+  const stagnantPasses =
+      Math.abs(delta) < 0.01 ? previous.stagnantPasses + 1 : 0;
+  const plateauBoost = Math.min(1, stagnantPasses / 4) * 0.03;
+
+  const directionalAdjust = clampSigned(delta * 0.35, 0.04);
+  const scoreTargetBias =
+      clampSigned((nextFeature.scoreSignal - 0.62) * 0.20, 0.05);
+  const stabilityTargetBias =
+      clampSigned((nextFeature.stabilitySignal - 0.58) * 0.18, 0.05);
+  const spectralTargetBias =
+      clampSigned((nextFeature.spectralSignal - 0.52) * 0.12, 0.04);
+
+  return {
+    modelConfidenceBias: clampSigned(
+        previous.modelConfidenceBias + directionalAdjust + scoreTargetBias -
+            plateauBoost,
+        0.12,
+        ),
+    policyMomentumBias: clampSigned(
+        previous.policyMomentumBias + directionalAdjust * 0.75 +
+            stabilityTargetBias,
+        0.12,
+        ),
+    callDensityBias: clampSigned(
+        previous.callDensityBias + plateauBoost + spectralTargetBias,
+        0.10,
+        ),
+    dependencyPulseBias: clampSigned(
+        previous.dependencyPulseBias + plateauBoost * 0.7 +
+            (nextFeature.clusterCount >= 4 ? 0.01 : -0.005),
+        0.10,
+        ),
+    interactionSignalBias: clampSigned(
+        previous.interactionSignalBias + directionalAdjust * 0.5 +
+            spectralTargetBias,
+        0.08,
+        ),
+    stagnantPasses,
+    previousFeature: nextFeature,
+  };
 }
 
 function extractErrorMessage(error: unknown): string {
@@ -111,10 +326,51 @@ function extractErrorMessage(error: unknown): string {
   return 'Unknown error';
 }
 
+function isSessionNotFoundMessage(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes('session_not_found') ||
+      normalized.includes('training session not found') ||
+      normalized.includes('session not found');
+}
+
+function computeEpochConfidenceFromFeature(feature: K3h4FeatureVector): number {
+  const blended = feature.scoreSignal * 0.46 + feature.stabilitySignal * 0.34 +
+      feature.convergenceSignal * 0.20;
+  return clampUnit(blended);
+}
+
+function deriveMetadataFromEpochs(epochs: readonly K3h4EpochConfidence[]): {
+  readonly peakEpoch: number|null; readonly rollingAverage3: number | null; readonly defaultMode:
+                                                                                         'power';
+} {
+  if (epochs.length === 0) {
+    return {peakEpoch: null, rollingAverage3: null, defaultMode: 'power'};
+  }
+
+  const peak = epochs.reduce(
+      (best, current) => current.confidence > best.confidence ? current : best,
+      epochs[0]!,
+  );
+  const rollingAverage3 = epochs.length >= 3 ?
+      Number(
+          (epochs[epochs.length - 1]!.confidence +
+           epochs[epochs.length - 2]!.confidence +
+           epochs[epochs.length - 3]!.confidence) /
+          3) :
+      null;
+
+  return {
+    peakEpoch: peak.epochIndex,
+    rollingAverage3,
+    defaultMode: 'power',
+  };
+}
+
 function buildAnalyticsPayload(params: {
   workflow: K3h4TrainingWorkflow; mode: K3h4TrainingMode; passIndex: number;
+  adaptive: K3h4AdaptiveState;
 }): NetcodeAnalyticsRequest {
-  const {workflow, mode, passIndex} = params;
+  const {workflow, mode, passIndex, adaptive} = params;
   const wave = Math.sin(passIndex / 3);
   const sweep = Math.cos(passIndex / 5);
   const workflowDepth = workflow === 'bootstrap' ? 1 :
@@ -122,17 +378,22 @@ function buildAnalyticsPayload(params: {
                                                    3;
 
   return {
-    callDensity: 0.42 + (wave + 1) * 0.14,
+    callDensity: clampUnit(0.42 + (wave + 1) * 0.14 + adaptive.callDensityBias),
     questPercent: 0.38 + (sweep + 1) * 0.18,
     playerLevel: 7 + (passIndex % 18),
     comboStreak: 2 + (passIndex % 9),
     branchPressure: 0.32 + (Math.abs(wave) * 0.36),
-    dependencyPulse: 0.34 + (Math.abs(sweep) * 0.34),
+    dependencyPulse: clampUnit(
+        0.34 + (Math.abs(sweep) * 0.34) + adaptive.dependencyPulseBias),
     workflowDepth,
     networkDimensions: workflow === 'churn' ? 4 : 3,
-    modelConfidence: 0.35 + (Math.abs(wave) * 0.55),
-    policyMomentum: 0.33 + (Math.abs(sweep) * 0.58),
-    interactionSignal: 0.44 + ((wave + sweep + 2) / 4) * 0.45,
+    modelConfidence: clampUnit(
+        0.35 + (Math.abs(wave) * 0.55) + adaptive.modelConfidenceBias),
+    policyMomentum: clampUnit(
+        0.33 + (Math.abs(sweep) * 0.58) + adaptive.policyMomentumBias),
+    interactionSignal: clampUnit(
+        0.44 + ((wave + sweep + 2) / 4) * 0.45 +
+        adaptive.interactionSignalBias),
     k3h4Mode: mode,
     spectralMode: workflow === 'relations' || workflow === 'churn' ?
         'affinity-graph' :
@@ -355,6 +616,8 @@ export function useK3h4TrainingSession(): UseK3h4TrainingSessionResult {
     }
 
     void (async () => {
+      let adaptiveState = createInitialAdaptiveState();
+
       for (let passIndex = 0; passIndex < totalPasses; passIndex += 1) {
         if (workflowRunIdRef.current !== runId) {
           return;
@@ -364,37 +627,178 @@ export function useK3h4TrainingSession(): UseK3h4TrainingSessionResult {
           workflow,
           mode: session.mode,
           passIndex,
+          adaptive: adaptiveState,
         });
 
-        try {
-          const analytics = await fetchNetcodeAnalytics(baseUrl, payload);
-          appendWorkflowLog({
-            level: 'info',
-            message: `Pass ${passIndex + 1}/${totalPasses} complete`,
-            details: `depth=${payload.workflowDepth} density=${
-                payload.callDensity.toFixed(3)} confidence=${
-                payload.modelConfidence.toFixed(
-                    3)} clusters=${analytics.k3h4.centers.length} convergence=${
-                analytics.k3h4.observability.convergenceStatus}`,
-          });
-        } catch (error) {
+        let completedPass = false;
+        let rateLimitRetries = 0;
+
+        while (!completedPass) {
           if (workflowRunIdRef.current !== runId) {
             return;
           }
-          const message = extractErrorMessage(error);
-          setWorkflowState({
-            status: 'error',
-            workflow,
-            totalPasses,
-            completedPasses: passIndex,
-            errorMessage: message,
-          });
-          appendWorkflowLog({
-            level: 'error',
-            message: `Workflow error at pass ${passIndex + 1}/${totalPasses}`,
-            details: message,
-          });
-          return;
+
+          try {
+            const analytics = await fetchNetcodeAnalytics(baseUrl, payload);
+            const featureVector = extractK3h4FeatureVector(analytics);
+            adaptiveState = evolveAdaptiveState(adaptiveState, featureVector);
+
+            appendWorkflowLog({
+              level: 'info',
+              message: `Pass ${passIndex + 1}/${totalPasses} complete`,
+              details: `depth=${payload.workflowDepth} density=${
+                  payload.callDensity.toFixed(3)} confidence=${
+                  payload.modelConfidence.toFixed(3)} clusters=${
+                  analytics.k3h4.centers.length} convergence=${
+                  analytics.k3h4.observability
+                      .convergenceStatus} featureScore=${
+                  featureVector.scoreSignal.toFixed(3)} stability=${
+                  featureVector.stabilitySignal.toFixed(3)}`,
+            });
+
+            const derivedConfidence =
+                computeEpochConfidenceFromFeature(featureVector);
+
+            const persisted = await recordK3h4TrainingEpoch(
+                baseUrl,
+                session.sessionId,
+                {
+                  mode: session.mode,
+                  confidence: derivedConfidence,
+                  analytics: {
+                    k3h4Projection: {
+                      alignment: analytics.k3h4Projection.alignment,
+                      radialStability: analytics.k3h4Projection.radialStability,
+                      nodes: analytics.k3h4Projection.nodes.map((node) => ({
+                                                                  x: node.x,
+                                                                  y: node.y,
+                                                                })),
+                    },
+                    k3h4: {
+                      centers: analytics.k3h4.centers.map(
+                          (center) => ({
+                            clusterId: center.clusterId,
+                          })),
+                      radii: analytics.k3h4.radii.map(
+                          (radius) => ({
+                            clusterId: radius.clusterId,
+                            inscribedRadiusQ16: radius.inscribedRadiusQ16,
+                          })),
+                      weightedVoronoiScores:
+                          analytics.k3h4.weightedVoronoiScores.map(
+                              (score) => ({
+                                clusterId: score.clusterId,
+                                weightedScoreQ16: score.weightedScoreQ16,
+                              })),
+                      spectralProxy: analytics.k3h4.spectralProxy.map(
+                          (spectral) => ({
+                            clusterId: spectral.clusterId,
+                            amplitudeProxyQ16: spectral.amplitudeProxyQ16,
+                          })),
+                    },
+                    k3h4Runtime: {
+                      spectralActivation:
+                          analytics.k3h4Runtime.spectralActivation,
+                    },
+                  },
+                },
+            );
+
+            setConfidence((existing) => {
+              const baseSeries: K3h4ConfidenceTimeSeries = existing ?? {
+                contractVersion: 1,
+                sessionId: session.sessionId,
+                status: 'pending',
+                mode: session.mode,
+                epochs: [],
+                metadata: {
+                  peakEpoch: null,
+                  rollingAverage3: null,
+                  defaultMode: 'power',
+                },
+              };
+              const mergedByEpoch = new Map<number, K3h4EpochConfidence>();
+              for (const epoch of baseSeries.epochs) {
+                mergedByEpoch.set(epoch.epochIndex, epoch);
+              }
+              mergedByEpoch.set(persisted.epochIndex, {
+                epochIndex: persisted.epochIndex,
+                confidence: derivedConfidence,
+                mode: session.mode,
+              });
+              const mergedEpochs =
+                  Array.from(mergedByEpoch.values())
+                      .sort((a, b) => a.epochIndex - b.epochIndex);
+              return {
+                ...baseSeries,
+                status: mergedEpochs.length > 0 ? 'active' : baseSeries.status,
+                epochs: mergedEpochs,
+                metadata: deriveMetadataFromEpochs(mergedEpochs),
+              };
+            });
+
+            completedPass = true;
+          } catch (error) {
+            if (workflowRunIdRef.current !== runId) {
+              return;
+            }
+
+            const message = extractErrorMessage(error);
+            if (isSessionNotFoundMessage(message)) {
+              writeStoredSession(null);
+              setSession(null);
+              setConfidence(null);
+              setLatestGeometry(null);
+              setPhase('idle');
+              setErrorMessage(
+                  'Training session expired on server. Start a new session and rerun workflow.',
+              );
+              setWorkflowState({
+                status: 'error',
+                workflow,
+                totalPasses,
+                completedPasses: passIndex,
+                errorMessage:
+                    'Training session expired on server. Start a new session and rerun workflow.',
+              });
+              appendWorkflowLog({
+                level: 'warn',
+                message:
+                    'Workflow stopped: server session was not found; local session has been reset',
+                details: message,
+              });
+              return;
+            }
+
+            const waitMs = resolveRateLimitWaitMs(error, rateLimitRetries);
+            if (waitMs !== null &&
+                rateLimitRetries < RATE_LIMIT_MAX_RETRIES_PER_PASS) {
+              rateLimitRetries += 1;
+              appendWorkflowLog({
+                level: 'warn',
+                message: `Rate limit detected at pass ${passIndex + 1}/${
+                    totalPasses}; waiting before retry`,
+                details: `retry=${rateLimitRetries}/${
+                    RATE_LIMIT_MAX_RETRIES_PER_PASS} waitMs=${waitMs}`,
+              });
+              await delay(waitMs);
+              continue;
+            }
+
+            setWorkflowState({
+              status: 'error',
+              workflow,
+              totalPasses,
+              completedPasses: passIndex,
+              errorMessage: message,
+            });
+            appendWorkflowLog({
+              level: 'error',
+              message: `Workflow error at pass ${passIndex + 1}/${totalPasses}`,
+              details: message,
+            });
+            return;
+          }
         }
 
         if (workflowRunIdRef.current !== runId) {

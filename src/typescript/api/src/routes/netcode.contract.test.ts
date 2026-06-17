@@ -1173,6 +1173,16 @@ describe('K3H4 training integration routes', () => {
       }
       return {...CANONICAL_GEOMETRY, sessionId, epoch: epochIndex, mode};
     },
+    async recordEpochFromAnalytics(sessionId) {
+      if (sessionId === 'missing') {
+        throw new K3h4VizServiceError(
+            'session_not_found', `Session '${sessionId}' not found.`, 404);
+      }
+      return {
+        epochIndex: 2,
+        persistedAtUtc: '2026-06-17T00:02:00.000Z',
+      };
+    },
   });
 
   test('creates a training session with default power mode', async () => {
@@ -1237,6 +1247,66 @@ describe('K3H4 training integration routes', () => {
         peakEpoch: 1,
       },
     });
+
+    await app.close();
+  });
+
+  test('records a persisted training epoch snapshot', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/k3h4/training-session/sess-abc123/epoch',
+      payload: {
+        mode: 'power',
+        confidence: 0.61,
+        analytics: {
+          k3h4Projection: {
+            alignment: 62,
+            radialStability: 58,
+            nodes: [{x: 0.5, y: 0.2}],
+          },
+          k3h4: {
+            centers: [{clusterId: 0}],
+            radii: [{clusterId: 0, inscribedRadiusQ16: 32768}],
+            weightedVoronoiScores: [{clusterId: 0, weightedScoreQ16: 65536}],
+            spectralProxy: [{clusterId: 0, amplitudeProxyQ16: 4096}],
+          },
+          k3h4Runtime: {
+            spectralActivation: 'affinity-graph',
+          },
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      contractVersion: 1,
+      sessionId: 'sess-abc123',
+      mode: 'power',
+      epochIndex: 2,
+    });
+
+    await app.close();
+  });
+
+  test('rejects invalid payload for persisted epoch recording', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/k3h4/training-session/sess-abc123/epoch',
+      payload: {
+        mode: 'power',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({error: 'invalid_epoch_payload'});
 
     await app.close();
   });

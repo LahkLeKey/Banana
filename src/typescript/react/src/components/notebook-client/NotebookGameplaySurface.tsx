@@ -917,58 +917,6 @@ export function NotebookGameplaySurface({
                     </div>
                 ) : null}
 
-                {!analyticsAvailability.available ? (
-                    <div style={{
-                        position: 'absolute',
-                        top: 16,
-                        right: 16,
-                        zIndex: 5,
-                        borderRadius: 12,
-                        border: '1px solid rgba(244, 63, 94, 0.55)',
-                        background: 'linear-gradient(140deg, rgba(76, 5, 25, 0.92), rgba(67, 20, 7, 0.85))',
-                        color: '#fecdd3',
-                        padding: '10px 12px',
-                        fontSize: 11,
-                        letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        fontWeight: 700,
-                        boxShadow: '0 12px 24px rgba(76, 5, 25, 0.35)',
-                    }}>
-                        Analytics unavailable · {analyticsAvailability.reason} · cohort {analyticsAvailability.rollout.cohort}
-                    </div>
-                ) : null}
-
-                {analyticsAvailability.available ? (
-                    <div style={{
-                        position: 'absolute',
-                        top: 16,
-                        right: 16,
-                        zIndex: 5,
-                        borderRadius: 12,
-                        border: `1px solid ${abiLayerCoverage.complete ? 'rgba(16, 185, 129, 0.52)' : 'rgba(251, 191, 36, 0.55)'}`,
-                        background: abiLayerCoverage.complete
-                            ? 'linear-gradient(140deg, rgba(6, 78, 59, 0.9), rgba(6, 95, 70, 0.82))'
-                            : 'linear-gradient(140deg, rgba(120, 53, 15, 0.9), rgba(146, 64, 14, 0.82))',
-                        color: abiLayerCoverage.complete ? '#d1fae5' : '#fef3c7',
-                        padding: '10px 12px',
-                        fontSize: 11,
-                        letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        fontWeight: 700,
-                        boxShadow: abiLayerCoverage.complete
-                            ? '0 12px 24px rgba(6, 78, 59, 0.35)'
-                            : '0 12px 24px rgba(120, 53, 15, 0.35)',
-                        display: 'grid',
-                        gap: 4,
-                        maxWidth: 340,
-                    }}>
-                        <span>ABI coverage {abiCoverageSummary} · {abiCoveragePercent}% · {abiCoverageState}</span>
-                        <span style={{ fontSize: 10, color: abiLayerCoverage.complete ? 'rgba(187, 247, 208, 0.92)' : 'rgba(254, 240, 138, 0.92)' }}>
-                            missing: {abiCoverageMissing}
-                        </span>
-                    </div>
-                ) : null}
-
                 <GameplayTopHud
                     selectedFile={selectedFile}
                     missionCode={missionSector.code}

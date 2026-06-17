@@ -59,8 +59,44 @@ export type EpochGeometry = {
                                                                                                                                                                                                                                                                             ProjectionMetadata;
 };
 
+export type EpochPersistenceAnalyticsSnapshot = {
+  readonly k3h4Projection: {
+    readonly alignment: number;
+    readonly radialStability: number;
+    readonly nodes: ReadonlyArray<{readonly x: number; readonly y: number;}>;
+  };
+  readonly k3h4: {
+    readonly centers: ReadonlyArray<{readonly clusterId: number}>;
+    readonly radii: ReadonlyArray<{
+      readonly clusterId: number;
+      readonly inscribedRadiusQ16: number;
+    }>;
+    readonly weightedVoronoiScores: ReadonlyArray<{
+      readonly clusterId: number;
+      readonly weightedScoreQ16: number;
+    }>;
+    readonly spectralProxy: ReadonlyArray<{
+      readonly clusterId: number;
+      readonly amplitudeProxyQ16: number;
+    }>;
+  };
+  readonly k3h4Runtime: {
+    readonly spectralActivation: 'disabled'|'affinity-graph';
+  };
+};
+
+export type RecordedEpochResult = {
+  readonly epochIndex: number; readonly persistedAtUtc: string;
+};
+
 export interface K3h4TrainingService {
   createTrainingSession(mode: TrainingSessionMode): Promise<TrainingSession>;
+  recordEpochFromAnalytics?(
+      sessionId: string,
+      mode: TrainingSessionMode,
+      confidence: number,
+      analytics: EpochPersistenceAnalyticsSnapshot,
+      ): Promise<RecordedEpochResult>;
   readConfidenceTimeSeries(sessionId: string, mode: TrainingSessionMode):
       Promise<ConfidenceTimeSeries>;
   readEpochGeometry(
@@ -174,6 +210,17 @@ function computeRollingAverage3(values: readonly number[]): number|null {
   if (values.length < 3) return null;
   const slice = values.slice(values.length - 3);
   return Number((slice[0] + slice[1] + slice[2]) / 3);
+}
+
+function clampUnit(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.min(1, Math.max(0, value));
+}
+
+function q16ToFloat(value: number): number {
+  return Number.isFinite(value) ? value / 65536 : 0;
 }
 
 /** Build a regular octagon centred at (cx, cy) with the given radius. */
@@ -412,6 +459,138 @@ function decodeArtifactGeometry(
   };
 }
 
+type PersistedEpochOverlay = {
+  readonly contractVersion: 1; readonly sessionId: string; readonly epochIndex: number; readonly mode: TrainingSessionMode; readonly confidence: number; readonly persistedAtUtc: string; readonly geometry: {
+    readonly spectralActive: boolean; readonly clusters: ReadonlyArray<ClusterGeometry2d>; readonly tokens: ReadonlyArray<TokenGeometry2d>; readonly projectionMetadata:
+                                                                                                                                                         ProjectionMetadata;
+  };
+};
+
+function buildGeometryFromSnapshot(
+    sessionId: string,
+    epochIndex: number,
+    mode: TrainingSessionMode,
+    analytics: EpochPersistenceAnalyticsSnapshot,
+    ): EpochGeometry {
+  const weightedByCluster = new Map < number, {
+    sum: number;
+    count: number
+  }
+  >();
+  for (const score of analytics.k3h4.weightedVoronoiScores) {
+    const current =
+        weightedByCluster.get(score.clusterId) ?? {sum: 0, count: 0};
+    weightedByCluster.set(score.clusterId, {
+      sum: current.sum + q16ToFloat(score.weightedScoreQ16),
+      count: current.count + 1,
+    });
+  }
+
+  const radiusByCluster = new Map<number, number>();
+  for (const radius of analytics.k3h4.radii) {
+    radiusByCluster.set(
+        radius.clusterId, q16ToFloat(radius.inscribedRadiusQ16));
+  }
+
+  const spectralByCluster = new Map<number, number>();
+  for (const spectral of analytics.k3h4.spectralProxy) {
+    spectralByCluster.set(
+        spectral.clusterId, q16ToFloat(spectral.amplitudeProxyQ16));
+  }
+
+  const clusters: ClusterGeometry2d[] = analytics.k3h4.centers.map((center) => {
+    const centroid =
+        analytics.k3h4Projection.nodes[center.clusterId] ?? {x: 0, y: 0};
+    const radius = radiusByCluster.get(center.clusterId) ?? 0;
+    const scoreStats = weightedByCluster.get(center.clusterId);
+    const weightedScore = scoreStats && scoreStats.count > 0 ?
+        scoreStats.sum / scoreStats.count :
+        0;
+    const spectralProxy = spectralByCluster.get(center.clusterId) ?? 0;
+
+    return {
+      clusterId: center.clusterId,
+      centroid,
+      inscribedRadius: radius,
+      weightedScore,
+      spectralProxy,
+      polygon: octagonPolygon(centroid.x, centroid.y, radius),
+    };
+  });
+
+  const tokens: TokenGeometry2d[] =
+      clusters.map((cluster) => ({
+                     tokenId: `cluster-${cluster.clusterId}`,
+                     x: cluster.centroid.x,
+                     y: cluster.centroid.y,
+                     clusterId: cluster.clusterId,
+                     weightedScore: cluster.weightedScore,
+                   }));
+
+  return {
+    contractVersion: 1,
+    sessionId,
+    epoch: epochIndex,
+    mode,
+    spectralActive: analytics.k3h4Runtime.spectralActivation !== 'disabled',
+    clusters,
+    tokens,
+    projectionMetadata: {
+      method: 'pca',
+      components: 2,
+      explainedVariance: clampUnit(analytics.k3h4Projection.alignment / 100),
+      dimensionality: 3,
+    },
+  };
+}
+
+async function readEpochOverlay(
+    sessionDir: string,
+    epochIndex: number,
+    ): Promise<PersistedEpochOverlay|null> {
+  const overlayPath = path.join(sessionDir, `epoch-${epochIndex}.overlay.json`);
+  try {
+    const raw = await fs.readFile(overlayPath, 'utf8');
+    return JSON.parse(raw) as PersistedEpochOverlay;
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') {
+      return null;
+    }
+    throw new K3h4VizServiceError(
+        'training_unavailable',
+        `Failed to read persisted epoch overlay: ${
+            error instanceof Error ? error.message : String(error)}`,
+        503,
+    );
+  }
+}
+
+async function listEpochOverlays(sessionDir: string):
+    Promise<PersistedEpochOverlay[]> {
+  let entries: string[];
+  try {
+    entries = await fs.readdir(sessionDir);
+  } catch {
+    return [];
+  }
+
+  const overlays: PersistedEpochOverlay[] = [];
+  for (const entry of entries) {
+    const match = /^epoch-(\d+)\.overlay\.json$/.exec(entry);
+    if (!match) {
+      continue;
+    }
+    const epochIndex = Number(match[1]);
+    const overlay = await readEpochOverlay(sessionDir, epochIndex);
+    if (overlay) {
+      overlays.push(overlay);
+    }
+  }
+  overlays.sort((a, b) => a.epochIndex - b.epochIndex);
+  return overlays;
+}
+
 export function createFileSystemK3h4TrainingService(): K3h4TrainingService {
   const artifactRoot = resolveTrainingArtifactRoot();
 
@@ -431,6 +610,55 @@ export function createFileSystemK3h4TrainingService(): K3h4TrainingService {
 
           return {sessionId, mode, createdAtUtc};
         },
+
+    async recordEpochFromAnalytics(
+        sessionId: string,
+        mode: TrainingSessionMode,
+        confidence: number,
+        analytics: EpochPersistenceAnalyticsSnapshot,
+        ): Promise<RecordedEpochResult> {
+      validateSessionId(sessionId);
+      const sessionDir = path.join(artifactRoot, sessionId);
+
+      try {
+        await fs.access(sessionDir);
+      } catch {
+        throw new K3h4VizServiceError(
+            'session_not_found',
+            `Training session '${sessionId}' was not found.`,
+            404,
+        );
+      }
+
+      const overlayRecords = await listEpochOverlays(sessionDir);
+      const nextEpochIndex = overlayRecords.length === 0 ?
+          0 :
+          overlayRecords[overlayRecords.length - 1]!.epochIndex + 1;
+
+      const geometry =
+          buildGeometryFromSnapshot(sessionId, nextEpochIndex, mode, analytics);
+      const persistedAtUtc = new Date().toISOString();
+      const record: PersistedEpochOverlay = {
+        contractVersion: 1,
+        sessionId,
+        epochIndex: nextEpochIndex,
+        mode,
+        confidence: clampUnit(confidence),
+        persistedAtUtc,
+        geometry: {
+          spectralActive: geometry.spectralActive,
+          clusters: geometry.clusters,
+          tokens: geometry.tokens,
+          projectionMetadata: geometry.projectionMetadata,
+        },
+      };
+
+      const outPath =
+          path.join(sessionDir, `epoch-${nextEpochIndex}.overlay.json`);
+      await fs.writeFile(outPath, JSON.stringify(record), 'utf8');
+
+      return {epochIndex: nextEpochIndex, persistedAtUtc};
+    },
 
     async readConfidenceTimeSeries(
         sessionId: string,
@@ -495,11 +723,27 @@ export function createFileSystemK3h4TrainingService(): K3h4TrainingService {
         }
       }
 
-      const status: SessionStatus = epochs.length === 0 ? 'pending' : 'active';
-      const confidences = epochs.map((epoch) => epoch.confidence);
-      const peakEpoch = epochs.length === 0 ?
+      const overlays = await listEpochOverlays(sessionDir);
+      for (const overlay of overlays) {
+        epochs.push({
+          epochIndex: overlay.epochIndex,
+          confidence: overlay.confidence,
+          mode,
+        });
+      }
+
+      const dedupedEpochs =
+          Array
+              .from(new Map(epochs.map((epoch) => [epoch.epochIndex, epoch]))
+                        .values())
+              .sort((a, b) => a.epochIndex - b.epochIndex);
+
+      const status: SessionStatus =
+          dedupedEpochs.length === 0 ? 'pending' : 'active';
+      const confidences = dedupedEpochs.map((epoch) => epoch.confidence);
+      const peakEpoch = dedupedEpochs.length === 0 ?
           null :
-          epochs
+          dedupedEpochs
               .reduce(
                   (best, current) =>
                       current.confidence > best.confidence ? current : best)
@@ -510,7 +754,7 @@ export function createFileSystemK3h4TrainingService(): K3h4TrainingService {
         sessionId,
         status,
         mode,
-        epochs,
+        epochs: dedupedEpochs,
         metadata: {
           peakEpoch,
           rollingAverage3: computeRollingAverage3(confidences),
@@ -549,6 +793,21 @@ export function createFileSystemK3h4TrainingService(): K3h4TrainingService {
                 'session_not_found',
                 `Training session '${sessionId}' was not found.`, 404);
           }
+
+          const overlay = await readEpochOverlay(sessionDir, epochIndex);
+          if (overlay) {
+            return {
+              contractVersion: 1,
+              sessionId,
+              epoch: overlay.epochIndex,
+              mode,
+              spectralActive: overlay.geometry.spectralActive,
+              clusters: overlay.geometry.clusters,
+              tokens: overlay.geometry.tokens,
+              projectionMetadata: overlay.geometry.projectionMetadata,
+            };
+          }
+
           throw new K3h4VizServiceError(
               'artifact_not_found',
               `Epoch ${epochIndex} artifact not found for session '${

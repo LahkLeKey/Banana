@@ -51,6 +51,59 @@ function parseTrainingMode(rawMode: unknown): TrainingSessionMode|null {
   return null;
 }
 
+type RecordTrainingEpochPayload = {
+  mode?: TrainingSessionMode;
+  confidence?: number;
+  analytics?: {
+    k3h4Projection?: {
+      alignment?: number;
+      radialStability?: number;
+      nodes?: Array<{x?: number; y?: number}>;
+    };
+    k3h4?: {
+      centers?: Array<{clusterId?: number}>;
+      radii?: Array<{clusterId?: number; inscribedRadiusQ16?: number}>;
+      weightedVoronoiScores?:
+          Array<{clusterId?: number; weightedScoreQ16?: number}>;
+      spectralProxy?: Array<{clusterId?: number; amplitudeProxyQ16?: number}>;
+    };
+    k3h4Runtime?: {spectralActivation?: 'disabled' | 'affinity-graph';};
+  };
+};
+
+function isRecordTrainingEpochPayload(body: unknown):
+    body is Required<RecordTrainingEpochPayload> {
+  if (!body || typeof body !== 'object') {
+    return false;
+  }
+
+  const payload = body as RecordTrainingEpochPayload;
+  if (!isFiniteNumber(payload.confidence) || !payload.analytics) {
+    return false;
+  }
+
+  const projection = payload.analytics.k3h4Projection;
+  const k3h4 = payload.analytics.k3h4;
+  const runtime = payload.analytics.k3h4Runtime;
+
+  if (!projection || !k3h4 || !runtime) {
+    return false;
+  }
+
+  if (!isFiniteNumber(projection.alignment) ||
+      !isFiniteNumber(projection.radialStability) ||
+      !Array.isArray(projection.nodes) || !Array.isArray(k3h4.centers) ||
+      !Array.isArray(k3h4.radii) ||
+      !Array.isArray(k3h4.weightedVoronoiScores) ||
+      !Array.isArray(k3h4.spectralProxy) ||
+      (runtime.spectralActivation !== 'disabled' &&
+       runtime.spectralActivation !== 'affinity-graph')) {
+    return false;
+  }
+
+  return true;
+}
+
 function resolveNetcodeK3h4Rollout(): NetcodeK3h4Rollout {
   const enabledRaw =
       (process.env.BANANA_NETCODE_K3H4_ENABLED ?? 'true').trim().toLowerCase();
@@ -405,6 +458,113 @@ export async function registerNetcodeRoutes(
         const session = await trainingService.createTrainingSession(mode);
         return reply.status(201).send(session);
       });
+
+  app.post<{Params: {id: string}; Body: RecordTrainingEpochPayload}>(
+      '/api/netcode/k3h4/training-session/:id/epoch',
+      async (request, reply) => {
+        const mode = parseTrainingMode(request.body?.mode);
+        if (!mode) {
+          return reply.status(400).send({
+            error: 'invalid_mode',
+            message:
+                'mode must be either multiplicative or power when provided.',
+          });
+        }
+
+        if (!isRecordTrainingEpochPayload(request.body)) {
+          return reply.status(400).send({
+            error: 'invalid_epoch_payload',
+            message:
+                'Epoch payload must include confidence and analytics snapshot fields.',
+          });
+        }
+
+        if (!trainingService.recordEpochFromAnalytics) {
+          return reply.status(503).send({
+            error: 'training_unavailable',
+            message: 'Epoch recording is not available for current runtime.',
+          });
+        }
+
+        try {
+          const persisted = await trainingService.recordEpochFromAnalytics(
+              request.params.id,
+              mode,
+              request.body.confidence,
+              {
+                k3h4Projection: {
+                  alignment: request.body.analytics.k3h4Projection.alignment,
+                  radialStability:
+                      request.body.analytics.k3h4Projection.radialStability,
+                  nodes: request.body.analytics.k3h4Projection.nodes.map(
+                      (node) => ({
+                        x: isFiniteNumber(node.x) ? node.x : 0,
+                        y: isFiniteNumber(node.y) ? node.y : 0,
+                      })),
+                },
+                k3h4: {
+                  centers: request.body.analytics.k3h4.centers.map(
+                      (center) => ({
+                        clusterId: isFiniteNumber(center.clusterId) ?
+                            center.clusterId :
+                            0,
+                      })),
+                  radii: request.body.analytics.k3h4.radii.map(
+                      (radius) => ({
+                        clusterId: isFiniteNumber(radius.clusterId) ?
+                            radius.clusterId :
+                            0,
+                        inscribedRadiusQ16:
+                            isFiniteNumber(radius.inscribedRadiusQ16) ?
+                            radius.inscribedRadiusQ16 :
+                            0,
+                      })),
+                  weightedVoronoiScores:
+                      request.body.analytics.k3h4.weightedVoronoiScores.map(
+                          (score) => ({
+                            clusterId: isFiniteNumber(score.clusterId) ?
+                                score.clusterId :
+                                0,
+                            weightedScoreQ16:
+                                isFiniteNumber(score.weightedScoreQ16) ?
+                                score.weightedScoreQ16 :
+                                0,
+                          })),
+                  spectralProxy: request.body.analytics.k3h4.spectralProxy.map(
+                      (spectral) => ({
+                        clusterId: isFiniteNumber(spectral.clusterId) ?
+                            spectral.clusterId :
+                            0,
+                        amplitudeProxyQ16:
+                            isFiniteNumber(spectral.amplitudeProxyQ16) ?
+                            spectral.amplitudeProxyQ16 :
+                            0,
+                      })),
+                },
+                k3h4Runtime: {
+                  spectralActivation:
+                      request.body.analytics.k3h4Runtime.spectralActivation,
+                },
+              },
+          );
+          return reply.status(201).send({
+            contractVersion: 1,
+            sessionId: request.params.id,
+            mode,
+            epochIndex: persisted.epochIndex,
+            persistedAtUtc: persisted.persistedAtUtc,
+          });
+        } catch (error) {
+          if (error instanceof K3h4VizServiceError) {
+            return reply.status(error.statusCode).send({
+              error: error.code,
+              message: error.message,
+            });
+          }
+          throw error;
+        }
+      },
+  );
 
   app.get<{Params: {id: string}; Querystring: {mode?: string}}>(
       '/api/netcode/k3h4/training-session/:id/confidence',

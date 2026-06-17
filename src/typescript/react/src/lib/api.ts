@@ -1,5 +1,6 @@
 type ErrorPayload = {
-  error?: {message?: string};
+  error?: {message?: string}|string;
+  message?: string;
 };
 
 import type {LaunchGateReasonCode, LaunchGateStatusResponse, LaunchGateVerifyResponse} from './launchGateTypes';
@@ -487,7 +488,19 @@ export function resolveGameSessionWebSocketUrl(
 async function parseApiError(response: Response): Promise<string> {
   try {
     const payload = (await response.json()) as ErrorPayload;
-    return payload.error?.message ?? `request failed (${response.status})`;
+    if (typeof payload.message === 'string' &&
+        payload.message.trim().length > 0) {
+      return payload.message;
+    }
+    if (typeof payload.error === 'string' && payload.error.trim().length > 0) {
+      return payload.error;
+    }
+    if (payload.error && typeof payload.error === 'object' &&
+        typeof payload.error.message === 'string' &&
+        payload.error.message.trim().length > 0) {
+      return payload.error.message;
+    }
+    return `request failed (${response.status})`;
   } catch {
     return `request failed (${response.status})`;
   }
@@ -1140,6 +1153,41 @@ export type K3h4ConfidenceTimeSeries = {
   };
 };
 
+export type K3h4RecordEpochRequest = {
+  readonly mode: K3h4TrainingMode;
+  readonly confidence: number;
+  readonly analytics: {
+    readonly k3h4Projection: {
+      readonly alignment: number;
+      readonly radialStability: number;
+      readonly nodes: ReadonlyArray<{readonly x: number; readonly y: number}>;
+    };
+    readonly k3h4: {
+      readonly centers: ReadonlyArray<{readonly clusterId: number}>;
+      readonly radii: ReadonlyArray<{
+        readonly clusterId: number;
+        readonly inscribedRadiusQ16: number;
+      }>;
+      readonly weightedVoronoiScores: ReadonlyArray<{
+        readonly clusterId: number;
+        readonly weightedScoreQ16: number;
+      }>;
+      readonly spectralProxy: ReadonlyArray<{
+        readonly clusterId: number;
+        readonly amplitudeProxyQ16: number;
+      }>;
+    };
+    readonly k3h4Runtime: {
+      readonly spectralActivation: 'disabled'|'affinity-graph';
+    };
+  };
+};
+
+export type K3h4RecordEpochResponse = {
+  readonly contractVersion: 1; readonly sessionId: string; readonly mode: K3h4TrainingMode; readonly epochIndex: number; readonly persistedAtUtc:
+                                                                                                                                      string;
+};
+
 export async function createK3h4TrainingSession(
     baseUrl: string,
     mode: K3h4TrainingMode = 'power',
@@ -1165,5 +1213,22 @@ export async function fetchK3h4ConfidenceTimeSeries(
       baseUrl,
       `/api/netcode/k3h4/training-session/${
           encodeURIComponent(sessionId)}/confidence?${query}`,
+  );
+}
+
+export async function recordK3h4TrainingEpoch(
+    baseUrl: string,
+    sessionId: string,
+    payload: K3h4RecordEpochRequest,
+    ): Promise<K3h4RecordEpochResponse> {
+  return fetchApiJson<K3h4RecordEpochResponse>(
+      baseUrl,
+      `/api/netcode/k3h4/training-session/${
+          encodeURIComponent(sessionId)}/epoch`,
+      {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(payload),
+      },
   );
 }
