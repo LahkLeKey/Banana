@@ -36,20 +36,24 @@ if ! grep -q "internal_port = 8081" fly.toml; then
   exit 1
 fi
 
-if ! banana_require_database_aliases "fly-deploy"; then
-  exit 1
+DATABASE_URL_VALUE=""
+
+if banana_sync_database_aliases; then
+  DATABASE_URL_VALUE="${NEON_DATABASE_URL}"
+
+  echo "[fly-deploy] applying self-hosted Neon database secrets"
+  fly secrets set -a "${APP_NAME}" \
+    NEON_DATABASE_URL="${DATABASE_URL_VALUE}" \
+    DATABASE_URL="${DATABASE_URL_VALUE}" \
+    BANANA_PG_CONNECTION="${DATABASE_URL_VALUE}" >/dev/null
+else
+  echo "[fly-deploy] WARN: local database aliases are unset; skipping secret sync and using existing Fly secrets."
 fi
 
-DATABASE_URL_VALUE="${NEON_DATABASE_URL}"
+cd "${ROOT_DIR}"
 
-echo "[fly-deploy] applying self-hosted Neon database secrets"
-fly secrets set -a "${APP_NAME}" \
-  NEON_DATABASE_URL="${DATABASE_URL_VALUE}" \
-  DATABASE_URL="${DATABASE_URL_VALUE}" \
-  BANANA_PG_CONNECTION="${DATABASE_URL_VALUE}" >/dev/null
-
-echo "[fly-deploy] deploying ${APP_NAME} from ${API_DIR}"
-fly deploy -a "${APP_NAME}" --config fly.toml
+echo "[fly-deploy] deploying ${APP_NAME} from ${ROOT_DIR}"
+fly deploy . -a "${APP_NAME}" -c "${API_DIR}/fly.toml" --dockerfile "${API_DIR}/Dockerfile"
 
 echo "[fly-deploy] readiness contract complete"
 echo "[fly-deploy] rollback hint: fly releases -a ${APP_NAME} && fly releases rollback <version> -a ${APP_NAME}"
