@@ -205,7 +205,6 @@ jobs:
     needs:
       - pre-commit
       - native-build
-    if: ${{ secrets.NEON_DATABASE_URL != '' || secrets.DATABASE_URL != '' || secrets.BANANA_PG_CONNECTION != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
