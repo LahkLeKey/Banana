@@ -30,7 +30,7 @@ extern "C"
     void combat_controller_debug_snapshot(const ControllerInstance *controller,
                                          CombatControllerDebugSnapshot *snapshot);
 
-    /* Restore the previously snapshot debug state for regression tests. */
+    /* Restore the previously snapshotted debug state for regression tests. */
     void combat_controller_debug_restore(ControllerInstance *controller,
                                         const CombatControllerDebugSnapshot *snapshot);
 
