@@ -118,24 +118,25 @@ static void combat_update(ControllerInstance *self, float dt)
         float dx = state->target[0] - self->position[0];
         float dz = state->target[2] - self->position[2];
         float distance_sq = (dx * dx) + (dz * dz);
+        float distance = 0.0f;
+        float step = 8.0f * dt;
+        float orchestration_bias = state->k3h4_bias;
+
+        /* Drain the cooldown timer on every update tick so cached k3h4 bias stays fresh
+         * even when the combatant is already at the target or movement is otherwise suppressed. */
+        state->k3h4_bias_cooldown -= dt;
+        if (state->k3h4_bias_cooldown <= 0.0f)
+        {
+            state->k3h4_bias_cooldown = 0.25f;
+            orchestration_bias = combat_controller_compute_bias(state);
+            state->k3h4_bias = orchestration_bias;
+        }
 
         /* Only move when the target is meaningfully far away.
          * This avoids tiny numerical jitter when the combatant is already in range. */
         if (distance_sq > 0.0001f)
         {
-            float distance = sqrtf(distance_sq);
-            float step = 8.0f * dt;  /* Base movement speed for the combat update. */
-            float orchestration_bias = state->k3h4_bias;  /* Reuse the last cached bias value. */
-
-            /* Drain the cooldown timer to decide when the next k3h4 bias refresh is allowed.
-             * This keeps the controller responsive without recalculating on every tick. */
-            state->k3h4_bias_cooldown -= dt;
-            if (state->k3h4_bias_cooldown <= 0.0f)
-            {
-                state->k3h4_bias_cooldown = 0.25f;
-                orchestration_bias = combat_controller_compute_bias(state);
-                state->k3h4_bias = orchestration_bias;
-            }
+            distance = sqrtf(distance_sq);
 
             /* Give high-bias engagements a stronger movement push.
              * This is the gameplay-facing effect of the k3h4 signal. */
@@ -275,11 +276,10 @@ void combat_controller_debug_snapshot(const ControllerInstance *controller,
     if (!controller || !snapshot)
         return;
 
+    memset(snapshot, 0, sizeof(*snapshot));
+
     if (!combat_controller_is_combat_type(controller))
-    {
-        memset(snapshot, 0, sizeof(*snapshot));
         return;
-    }
 
     state = (const CombatControllerState *)controller->state;
     if (!state)
