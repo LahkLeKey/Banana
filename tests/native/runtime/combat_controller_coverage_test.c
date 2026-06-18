@@ -285,6 +285,67 @@ static int test_update_moves_toward_target(ControllerInstance *controller)
  * Verify that a valid "combat" identity is accepted even when the type_name buffer contains
  * non-zero trailing bytes after the NUL terminator.
  */
+static int test_debug_snapshot_captures_cached_state(ControllerInstance *controller, const float target[3])
+{
+    CombatControllerDebugSnapshot snapshot;
+
+    if (!controller)
+        return 1;
+
+    controller_signal(controller, "battle_engage", target);
+    combat_controller_debug_snapshot(controller, &snapshot);
+
+    if (fail_if(snapshot.mode == NULL || strcmp(snapshot.mode, "combat") != 0,
+               "debug snapshot should report the active combat mode"))
+        return 1;
+
+    if (fail_if(!(snapshot.target[0] == target[0] &&
+                  snapshot.target[1] == target[1] &&
+                  snapshot.target[2] == target[2]),
+               "debug snapshot should capture the engaged target coordinates"))
+        return 1;
+
+    return fail_if(!(snapshot.k3h4_bias >= 0.0f && snapshot.k3h4_bias <= 1.0f &&
+                     snapshot.k3h4_bias_cooldown > 0.0f),
+                   "debug snapshot should expose bounded bias and an active cooldown window");
+}
+
+static int test_debug_restore_rehydrates_state(ControllerInstance *controller)
+{
+    CombatControllerDebugSnapshot snapshot;
+
+    if (!controller)
+        return 1;
+
+    snapshot.target[0] = 3.0f;
+    snapshot.target[1] = -2.0f;
+    snapshot.target[2] = 5.0f;
+    snapshot.combat_timer = 2.5f;
+    snapshot.mode = "combat";
+    snapshot.k3h4_bias = 0.42f;
+    snapshot.k3h4_bias_cooldown = 0.75f;
+
+    combat_controller_debug_restore(controller, &snapshot);
+
+    combat_controller_debug_snapshot(controller, &snapshot);
+    if (fail_if(!(snapshot.target[0] == 3.0f &&
+                  snapshot.target[1] == -2.0f &&
+                  snapshot.target[2] == 5.0f),
+               "debug restore should rehydrate the target coordinates"))
+        return 1;
+
+    if (fail_if(!(snapshot.combat_timer == 2.5f),
+               "debug restore should rehydrate the engagement timer"))
+        return 1;
+
+    if (fail_if(!(snapshot.k3h4_bias == 0.42f && snapshot.k3h4_bias_cooldown == 0.75f),
+               "debug restore should rehydrate cached bias and cooldown state"))
+        return 1;
+
+    return fail_if(snapshot.mode == NULL || strcmp(snapshot.mode, "combat") != 0,
+                   "debug restore should restore the combat mode label");
+}
+
 static int test_exact_identity_with_trailing_bytes_is_accepted(ControllerInstance *controller)
 {
     CombatControllerDebugSnapshot snapshot;
@@ -381,6 +442,12 @@ static int run_update_contract(ControllerInstance *controller)
 /*
  * Orchestrate the fail-closed and cleanup invariants with a dedicated helper.
  */
+static int run_debug_contract(ControllerInstance *controller, const float target[3])
+{
+    return test_debug_snapshot_captures_cached_state(controller, target) ||
+           test_debug_restore_rehydrates_state(controller);
+}
+
 static int run_identity_contract(ControllerInstance *controller)
 {
     return test_exact_identity_with_trailing_bytes_is_accepted(controller) ||
@@ -406,6 +473,7 @@ int main(void)
         test_initial_bias_is_bounded(controller) ||
         run_engage_contract(controller, target) ||
         run_update_contract(controller) ||
+        run_debug_contract(controller, target) ||
         run_identity_contract(controller) ||
         test_death_resets_mode(controller))
     {
