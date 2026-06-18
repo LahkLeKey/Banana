@@ -144,7 +144,9 @@ static void snapshot_controller_state(ControllerInstance *controller,
                                       float previous_target[3],
                                       float previous_position[3],
                                       float *previous_timer,
-                                      CombatControllerModeTest *previous_mode)
+                                      CombatControllerModeTest *previous_mode,
+                                      float *previous_bias,
+                                      float *previous_cooldown)
 {
     if (!controller || !state)
         return;
@@ -157,6 +159,8 @@ static void snapshot_controller_state(ControllerInstance *controller,
     previous_position[2] = controller->position[2];
     *previous_timer = state->combat_timer;
     *previous_mode = state->mode;
+    *previous_bias = state->k3h4_bias;
+    *previous_cooldown = state->k3h4_bias_cooldown;
 }
 
 /*
@@ -167,7 +171,9 @@ static void restore_controller_state(ControllerInstance *controller,
                                     const float previous_target[3],
                                     const float previous_position[3],
                                     float previous_timer,
-                                    CombatControllerModeTest previous_mode)
+                                    CombatControllerModeTest previous_mode,
+                                    float previous_bias,
+                                    float previous_cooldown)
 {
     if (!controller || !state)
         return;
@@ -180,6 +186,8 @@ static void restore_controller_state(ControllerInstance *controller,
     controller->position[2] = previous_position[2];
     state->combat_timer = previous_timer;
     state->mode = previous_mode;
+    state->k3h4_bias = previous_bias;
+    state->k3h4_bias_cooldown = previous_cooldown;
 }
 
 /*
@@ -234,13 +242,16 @@ static int test_bias_cache_is_throttled(ControllerInstance *controller)
     float previous_position[3] = {0.0f, 0.0f, 0.0f};
     float previous_timer = 0.0f;
     CombatControllerModeTest previous_mode = COMBAT_CONTROLLER_MODE_TEST_IDLE;
+    float previous_bias = 0.0f;
+    float previous_cooldown = 0.0f;
 
     if (!controller || !controller->state)
         return 1;
 
     state = (CombatControllerStateTest *)controller->state;
     snapshot_controller_state(controller, state, previous_target, previous_position,
-                              &previous_timer, &previous_mode);
+                              &previous_timer, &previous_mode,
+                              &previous_bias, &previous_cooldown);
 
     if (prime_cache_throttle_scenario(controller, state) != 0)
         return 1;
@@ -254,12 +265,14 @@ static int test_bias_cache_is_throttled(ControllerInstance *controller)
         assert_cooldown_is_consumed(state, initial_cooldown))
     {
         restore_controller_state(controller, state, previous_target, previous_position,
-                                 previous_timer, previous_mode);
+                                 previous_timer, previous_mode,
+                                 previous_bias, previous_cooldown);
         return 1;
     }
 
     restore_controller_state(controller, state, previous_target, previous_position,
-                             previous_timer, previous_mode);
+                             previous_timer, previous_mode,
+                             previous_bias, previous_cooldown);
     return 0;
 }
 
