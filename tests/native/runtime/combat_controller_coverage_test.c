@@ -6,25 +6,6 @@
 #include <string.h>                 /* strcmp/strcpy for mode and identity checks. */
 
 /*
- * Mirror the internal combat-controller state layout so the regression test can
- * inspect the cached k3h4 bias and cooldown fields used by gameplay updates.
- */
-typedef enum CombatControllerModeTest
-{
-    COMBAT_CONTROLLER_MODE_TEST_IDLE = 0,
-    COMBAT_CONTROLLER_MODE_TEST_COMBAT = 1,
-} CombatControllerModeTest;
-
-typedef struct CombatControllerStateTest
-{
-    float target[3];
-    float combat_timer;
-    CombatControllerModeTest mode;
-    float k3h4_bias;
-    float k3h4_bias_cooldown;
-} CombatControllerStateTest;
-
-/*
  * This file is a gameplay-oriented regression test for the combat controller.
  * It covers: controller creation, bias safety, combat engagement, movement update,
  * and fail-closed behavior after a type-name mutation that should invalidate the
@@ -117,21 +98,21 @@ static int test_engaged_bias_is_bounded(ControllerInstance *controller)
  */
 static int test_engage_initializes_cache(ControllerInstance *controller, const float target[3])
 {
-    CombatControllerStateTest *state = NULL;
+    CombatControllerDebugSnapshot snapshot;
     float bias = 0.0f;
 
-    if (!controller || !controller->state)
+    if (!controller)
         return 1;
 
     controller_signal(controller, "battle_engage", target);
-    state = (CombatControllerStateTest *)controller->state;
+    combat_controller_debug_snapshot(controller, &snapshot);
     bias = combat_controller_k3h4_bias(controller);
 
-    if (fail_if(!(state->k3h4_bias == bias),
+    if (fail_if(!(snapshot.k3h4_bias == bias),
                "engage should keep the cached getter aligned with the stored bias"))
         return 1;
 
-    return fail_if(!(state->k3h4_bias_cooldown > 0.0f),
+    return fail_if(!(snapshot.k3h4_bias_cooldown > 0.0f),
                    "engage should start the cached-bias cooldown window immediately");
 }
 
@@ -140,92 +121,105 @@ static int test_engage_initializes_cache(ControllerInstance *controller, const f
  * restored after each assertion without leaking state between helper checks.
  */
 static void snapshot_controller_state(ControllerInstance *controller,
-                                      CombatControllerStateTest *state,
+                                      CombatControllerDebugSnapshot *snapshot,
                                       float previous_target[3],
                                       float previous_position[3],
                                       float *previous_timer,
-                                      CombatControllerModeTest *previous_mode,
+                                      const char **previous_mode,
                                       float *previous_bias,
                                       float *previous_cooldown)
 {
-    if (!controller || !state)
+    if (!controller || !snapshot)
         return;
 
-    previous_target[0] = state->target[0];
-    previous_target[1] = state->target[1];
-    previous_target[2] = state->target[2];
+    previous_target[0] = snapshot->target[0];
+    previous_target[1] = snapshot->target[1];
+    previous_target[2] = snapshot->target[2];
     previous_position[0] = controller->position[0];
     previous_position[1] = controller->position[1];
     previous_position[2] = controller->position[2];
-    *previous_timer = state->combat_timer;
-    *previous_mode = state->mode;
-    *previous_bias = state->k3h4_bias;
-    *previous_cooldown = state->k3h4_bias_cooldown;
+    *previous_timer = snapshot->combat_timer;
+    *previous_mode = snapshot->mode;
+    *previous_bias = snapshot->k3h4_bias;
+    *previous_cooldown = snapshot->k3h4_bias_cooldown;
 }
 
 /*
  * Reset the combat state back to its snapshot after a cache-throttle assertion.
  */
 static void restore_controller_state(ControllerInstance *controller,
-                                    CombatControllerStateTest *state,
                                     const float previous_target[3],
                                     const float previous_position[3],
                                     float previous_timer,
-                                    CombatControllerModeTest previous_mode,
+                                    const char *previous_mode,
                                     float previous_bias,
                                     float previous_cooldown)
 {
-    if (!controller || !state)
+    CombatControllerDebugSnapshot snapshot;
+
+    if (!controller)
         return;
 
-    state->target[0] = previous_target[0];
-    state->target[1] = previous_target[1];
-    state->target[2] = previous_target[2];
+    snapshot.target[0] = previous_target[0];
+    snapshot.target[1] = previous_target[1];
+    snapshot.target[2] = previous_target[2];
+    snapshot.combat_timer = previous_timer;
+    snapshot.mode = previous_mode;
+    snapshot.k3h4_bias = previous_bias;
+    snapshot.k3h4_bias_cooldown = previous_cooldown;
+
     controller->position[0] = previous_position[0];
     controller->position[1] = previous_position[1];
     controller->position[2] = previous_position[2];
-    state->combat_timer = previous_timer;
-    state->mode = previous_mode;
-    state->k3h4_bias = previous_bias;
-    state->k3h4_bias_cooldown = previous_cooldown;
+
+    combat_controller_debug_restore(controller, &snapshot);
 }
 
 /*
  * Prepare the controller for a cache-throttle regression scenario.
  */
-static int prime_cache_throttle_scenario(ControllerInstance *controller,
-                                         CombatControllerStateTest *state)
+static int prime_cache_throttle_scenario(ControllerInstance *controller)
 {
-    if (!controller || !state)
+    CombatControllerDebugSnapshot snapshot;
+
+    if (!controller)
         return 1;
 
-    state->mode = COMBAT_CONTROLLER_MODE_TEST_COMBAT;
-    state->target[0] = 10.0f;
-    state->target[1] = 0.0f;
-    state->target[2] = 10.0f;
-    state->combat_timer = 1.0f;
-    state->k3h4_bias = 1.0f;
-    state->k3h4_bias_cooldown = 1.0f;
+    snapshot.target[0] = 10.0f;
+    snapshot.target[1] = 0.0f;
+    snapshot.target[2] = 10.0f;
+    snapshot.combat_timer = 1.0f;
+    snapshot.mode = "combat";
+    snapshot.k3h4_bias = 1.0f;
+    snapshot.k3h4_bias_cooldown = 1.0f;
+
+    combat_controller_debug_restore(controller, &snapshot);
     return 0;
 }
 
 /*
  * Assert that cached bias remains stable while the cooldown window is active.
  */
-static int assert_cached_bias_remains_stable(CombatControllerStateTest *state,
+static int assert_cached_bias_remains_stable(ControllerInstance *controller,
                                             float initial_bias)
 {
-    return fail_if(!(state->k3h4_bias == initial_bias),
+    CombatControllerDebugSnapshot snapshot;
+
+    combat_controller_debug_snapshot(controller, &snapshot);
+    return fail_if(!(snapshot.k3h4_bias == initial_bias),
                    "update should keep the cached bias value while the cooldown window is active");
 }
 
 /*
  * Assert that the cooldown timer is consumed during the update tick.
  */
-static int assert_cooldown_is_consumed(CombatControllerStateTest *state,
+static int assert_cooldown_is_consumed(ControllerInstance *controller,
                                        float initial_cooldown)
 {
-    return fail_if(!(state->k3h4_bias_cooldown < initial_cooldown),
+    CombatControllerDebugSnapshot snapshot;
+
+    combat_controller_debug_snapshot(controller, &snapshot);
+    return fail_if(!(snapshot.k3h4_bias_cooldown < initial_cooldown),
                    "update should consume the cached-bias cooldown timer");
 }
 
@@ -235,42 +229,43 @@ static int assert_cooldown_is_consumed(CombatControllerStateTest *state,
  */
 static int test_bias_cache_is_throttled(ControllerInstance *controller)
 {
-    CombatControllerStateTest *state = NULL;
+    CombatControllerDebugSnapshot snapshot;
     float initial_bias = 0.0f;
     float initial_cooldown = 0.0f;
     float previous_target[3] = {0.0f, 0.0f, 0.0f};
     float previous_position[3] = {0.0f, 0.0f, 0.0f};
     float previous_timer = 0.0f;
-    CombatControllerModeTest previous_mode = COMBAT_CONTROLLER_MODE_TEST_IDLE;
+    const char *previous_mode = NULL;
     float previous_bias = 0.0f;
     float previous_cooldown = 0.0f;
 
-    if (!controller || !controller->state)
+    if (!controller)
         return 1;
 
-    state = (CombatControllerStateTest *)controller->state;
-    snapshot_controller_state(controller, state, previous_target, previous_position,
+    combat_controller_debug_snapshot(controller, &snapshot);
+    snapshot_controller_state(controller, &snapshot, previous_target, previous_position,
                               &previous_timer, &previous_mode,
                               &previous_bias, &previous_cooldown);
 
-    if (prime_cache_throttle_scenario(controller, state) != 0)
+    if (prime_cache_throttle_scenario(controller) != 0)
         return 1;
 
-    initial_bias = state->k3h4_bias;
-    initial_cooldown = state->k3h4_bias_cooldown;
+    combat_controller_debug_snapshot(controller, &snapshot);
+    initial_bias = snapshot.k3h4_bias;
+    initial_cooldown = snapshot.k3h4_bias_cooldown;
 
     controller_update(controller, 0.1f);
 
-    if (assert_cached_bias_remains_stable(state, initial_bias) ||
-        assert_cooldown_is_consumed(state, initial_cooldown))
+    if (assert_cached_bias_remains_stable(controller, initial_bias) ||
+        assert_cooldown_is_consumed(controller, initial_cooldown))
     {
-        restore_controller_state(controller, state, previous_target, previous_position,
+        restore_controller_state(controller, previous_target, previous_position,
                                  previous_timer, previous_mode,
                                  previous_bias, previous_cooldown);
         return 1;
     }
 
-    restore_controller_state(controller, state, previous_target, previous_position,
+    restore_controller_state(controller, previous_target, previous_position,
                              previous_timer, previous_mode,
                              previous_bias, previous_cooldown);
     return 0;
@@ -290,6 +285,35 @@ static int test_update_moves_toward_target(ControllerInstance *controller)
  * Simulate a stale or corrupted controller identity and confirm the helpers fail closed.
  * This guards memory-safety and intent integrity when gameplay state is mutated unexpectedly.
  */
+static int test_exact_identity_with_trailing_bytes_is_accepted(ControllerInstance *controller)
+{
+    CombatControllerDebugSnapshot snapshot;
+    const char *mode = NULL;
+
+    if (!controller)
+        return 1;
+
+    snapshot.target[0] = 0.0f;
+    snapshot.target[1] = 0.0f;
+    snapshot.target[2] = 0.0f;
+    snapshot.combat_timer = 0.0f;
+    snapshot.mode = "idle";
+    snapshot.k3h4_bias = 0.0f;
+    snapshot.k3h4_bias_cooldown = 0.0f;
+    combat_controller_debug_restore(controller, &snapshot);
+
+    memset(controller->type_name, 0, sizeof(controller->type_name));
+    strncpy(controller->type_name, "combat", sizeof(controller->type_name) - 1);
+    controller->type_name[7] = 'x';
+
+    mode = combat_controller_debug_mode(controller);
+    if (fail_if(mode == NULL, "exact combat identity must be accepted when the buffer has trailing bytes"))
+        return 1;
+
+    return fail_if(strcmp(mode, "idle") != 0,
+                   "exact combat identity should still resolve to the idle mode label");
+}
+
 static int test_mutated_identity_fails_closed(ControllerInstance *controller)
 {
     float bias = 0.0f;
@@ -359,7 +383,8 @@ static int run_update_contract(ControllerInstance *controller)
  */
 static int run_identity_contract(ControllerInstance *controller)
 {
-    return test_mutated_identity_fails_closed(controller) ||
+    return test_exact_identity_with_trailing_bytes_is_accepted(controller) ||
+           test_mutated_identity_fails_closed(controller) ||
            test_mutated_destroy_is_safe();
 }
 

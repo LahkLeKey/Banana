@@ -38,6 +38,12 @@ typedef struct CombatControllerState
  * engagement, while keeping the output bounded to the [0, 1] range expected by
  * the caller.
  */
+static int combat_controller_is_combat_type(const ControllerInstance *controller)
+{
+    return controller != NULL &&
+           strncmp(controller->type_name, "combat", sizeof("combat")) == 0;
+}
+
 static float combat_controller_compute_bias(const CombatControllerState *state)
 {
     RuntimeK3h4VectorSignalInput input;
@@ -101,7 +107,7 @@ static void combat_update(ControllerInstance *self, float dt)
     /* Only the combat controller type is allowed to enter this update path.
      * This protects tests and gameplay code from accidentally mutating a different
      * controller implementation through the same callback entry point. */
-    if (strncmp(self->type_name, "combat", sizeof(self->type_name)) != 0)
+    if (!combat_controller_is_combat_type(self))
         return;
 
     state = (CombatControllerState *)self->state;
@@ -168,7 +174,7 @@ static void combat_signal(ControllerInstance *self, const char *signal, const vo
         return;
 
     /* Only the combat controller instance may process these gameplay signals. */
-    if (strncmp(self->type_name, "combat", sizeof(self->type_name)) != 0)
+    if (!combat_controller_is_combat_type(self))
         return;
 
     state = (CombatControllerState *)self->state;
@@ -264,6 +270,52 @@ void combat_controller_register(void)
  * Return the cached k3h4 bias for a combat controller instance.
  * The helper intentionally fails closed for unknown or mutated controller types.
  */
+void combat_controller_debug_snapshot(const ControllerInstance *controller,
+                                      CombatControllerDebugSnapshot *snapshot)
+{
+    const CombatControllerState *state = NULL;
+
+    if (!controller || !snapshot)
+        return;
+
+    state = (const CombatControllerState *)controller->state;
+    if (!state)
+        return;
+
+    snapshot->target[0] = state->target[0];
+    snapshot->target[1] = state->target[1];
+    snapshot->target[2] = state->target[2];
+    snapshot->combat_timer = state->combat_timer;
+    snapshot->mode = combat_controller_debug_mode(controller);
+    snapshot->k3h4_bias = state->k3h4_bias;
+    snapshot->k3h4_bias_cooldown = state->k3h4_bias_cooldown;
+}
+
+void combat_controller_debug_restore(ControllerInstance *controller,
+                                     const CombatControllerDebugSnapshot *snapshot)
+{
+    CombatControllerState *state = NULL;
+
+    if (!controller || !snapshot)
+        return;
+
+    state = (CombatControllerState *)controller->state;
+    if (!state)
+        return;
+
+    state->target[0] = snapshot->target[0];
+    state->target[1] = snapshot->target[1];
+    state->target[2] = snapshot->target[2];
+    state->combat_timer = snapshot->combat_timer;
+    state->k3h4_bias = snapshot->k3h4_bias;
+    state->k3h4_bias_cooldown = snapshot->k3h4_bias_cooldown;
+
+    if (snapshot->mode && strcmp(snapshot->mode, "combat") == 0)
+        state->mode = COMBAT_CONTROLLER_MODE_COMBAT;
+    else
+        state->mode = COMBAT_CONTROLLER_MODE_IDLE;
+}
+
 float combat_controller_k3h4_bias(const ControllerInstance *controller)
 {
     const CombatControllerState *state = NULL;
@@ -271,7 +323,7 @@ float combat_controller_k3h4_bias(const ControllerInstance *controller)
     if (!controller || !controller->state)
         return 0.0f;
 
-    if (strncmp(controller->type_name, "combat", sizeof(controller->type_name)) != 0)
+    if (!combat_controller_is_combat_type(controller))
         return 0.0f;
 
     state = (const CombatControllerState *)controller->state;
@@ -290,7 +342,7 @@ const char *combat_controller_debug_mode(const ControllerInstance *controller)
     if (!controller)
         return NULL;
 
-    if (strncmp(controller->type_name, "combat", sizeof(controller->type_name)) != 0)
+    if (!combat_controller_is_combat_type(controller))
         return NULL;
 
     state = (const CombatControllerState *)controller->state;

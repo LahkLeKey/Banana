@@ -17,6 +17,23 @@ extern "C"
     /* Debug helper for tests/instrumentation. Returns NULL when controller is not combat. */
     const char *combat_controller_debug_mode(const ControllerInstance *controller);
 
+    typedef struct CombatControllerDebugSnapshot
+    {
+        float target[3];
+        float combat_timer;
+        const char *mode;
+        float k3h4_bias;
+        float k3h4_bias_cooldown;
+    } CombatControllerDebugSnapshot;
+
+    /* Snapshot the combat controller's current debug state for regression tests. */
+    void combat_controller_debug_snapshot(const ControllerInstance *controller,
+                                         CombatControllerDebugSnapshot *snapshot);
+
+    /* Restore the previously snapshot debug state for regression tests. */
+    void combat_controller_debug_restore(ControllerInstance *controller,
+                                        const CombatControllerDebugSnapshot *snapshot);
+
 #ifdef __cplusplus
 }
 #endif
