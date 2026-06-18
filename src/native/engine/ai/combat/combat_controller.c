@@ -144,11 +144,11 @@ static void combat_destroy(ControllerInstance *self)
     if (!self)
         return;
 
-    if (strncmp(self->type_name, "combat", sizeof(self->type_name)) != 0)
-        return;
-
-    free(self->state);
-    self->state = NULL;
+    if (self->state)
+    {
+        free(self->state);
+        self->state = NULL;
+    }
 }
 
 static ControllerInstance *combat_factory(float x, float y, float z)
