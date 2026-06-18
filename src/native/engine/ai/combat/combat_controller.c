@@ -194,7 +194,7 @@ float combat_controller_k3h4_bias(const ControllerInstance *controller)
         return 0.0f;
 
     state = (const CombatControllerState *)controller->state;
-    return combat_controller_compute_bias(state);
+    return state->k3h4_bias;
 }
 
 const char *combat_controller_debug_mode(const ControllerInstance *controller)
