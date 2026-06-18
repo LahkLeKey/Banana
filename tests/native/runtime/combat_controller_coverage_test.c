@@ -282,8 +282,8 @@ static int test_update_moves_toward_target(ControllerInstance *controller)
 }
 
 /*
- * Verify that a valid "combat" identity is accepted even when the type_name buffer contains
- * non-zero trailing bytes after the NUL terminator.
+ * Verify that the debug snapshot captures engaged combat state, including the
+ * engaged target coordinates and bounded cached bias/cooldown values.
  */
 static int test_debug_snapshot_captures_cached_state(ControllerInstance *controller, const float target[3])
 {
