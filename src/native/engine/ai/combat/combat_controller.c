@@ -18,6 +18,8 @@ typedef struct CombatControllerState
     float target[3];
     float combat_timer;
     CombatControllerMode mode;
+    float k3h4_bias;
+    float k3h4_bias_cooldown;
 } CombatControllerState;
 
 static float combat_controller_compute_bias(const CombatControllerState *state)
@@ -63,6 +65,9 @@ static void combat_update(ControllerInstance *self, float dt)
     if (!self || !self->state)
         return;
 
+    if (strncmp(self->type_name, "combat", sizeof(self->type_name)) != 0)
+        return;
+
     state = (CombatControllerState *)self->state;
     if (state->mode != COMBAT_CONTROLLER_MODE_COMBAT)
         return;
@@ -76,7 +81,15 @@ static void combat_update(ControllerInstance *self, float dt)
         {
             float distance = sqrtf(distance_sq);
             float step = 8.0f * dt;
-            float orchestration_bias = combat_controller_compute_bias(state);
+            float orchestration_bias = state->k3h4_bias;
+
+            state->k3h4_bias_cooldown -= dt;
+            if (state->k3h4_bias_cooldown <= 0.0f)
+            {
+                state->k3h4_bias_cooldown = 0.25f;
+                orchestration_bias = combat_controller_compute_bias(state);
+                state->k3h4_bias = orchestration_bias;
+            }
 
             if (orchestration_bias > 0.5f)
                 step += orchestration_bias * 2.0f;
@@ -101,6 +114,9 @@ static void combat_signal(ControllerInstance *self, const char *signal, const vo
     if (!self || !self->state || !signal)
         return;
 
+    if (strncmp(self->type_name, "combat", sizeof(self->type_name)) != 0)
+        return;
+
     state = (CombatControllerState *)self->state;
 
     if (strcmp(signal, "battle_engage") == 0 && data)
@@ -111,17 +127,24 @@ static void combat_signal(ControllerInstance *self, const char *signal, const vo
         state->target[2] = target[2];
         state->combat_timer = 6.0f;
         state->mode = COMBAT_CONTROLLER_MODE_COMBAT;
+        state->k3h4_bias = 0.0f;
+        state->k3h4_bias_cooldown = 0.0f;
     }
     else if (strcmp(signal, "death") == 0)
     {
         state->mode = COMBAT_CONTROLLER_MODE_IDLE;
         state->combat_timer = 0.0f;
+        state->k3h4_bias = 0.0f;
+        state->k3h4_bias_cooldown = 0.0f;
     }
 }
 
 static void combat_destroy(ControllerInstance *self)
 {
     if (!self)
+        return;
+
+    if (strncmp(self->type_name, "combat", sizeof(self->type_name)) != 0)
         return;
 
     free(self->state);
@@ -165,6 +188,9 @@ float combat_controller_k3h4_bias(const ControllerInstance *controller)
     const CombatControllerState *state = NULL;
 
     if (!controller || !controller->state)
+        return 0.0f;
+
+    if (strncmp(controller->type_name, "combat", sizeof(controller->type_name)) != 0)
         return 0.0f;
 
     state = (const CombatControllerState *)controller->state;
