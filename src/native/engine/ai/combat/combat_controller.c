@@ -81,7 +81,15 @@ static void combat_update(ControllerInstance *self, float dt)
         {
             float distance = sqrtf(distance_sq);
             float step = 8.0f * dt;
-            float orchestration_bias = combat_controller_compute_bias(state);
+            float orchestration_bias = state->k3h4_bias;
+
+            state->k3h4_bias_cooldown -= dt;
+            if (state->k3h4_bias_cooldown <= 0.0f)
+            {
+                state->k3h4_bias_cooldown = 0.25f;
+                orchestration_bias = combat_controller_compute_bias(state);
+                state->k3h4_bias = orchestration_bias;
+            }
 
             if (orchestration_bias > 0.5f)
                 step += orchestration_bias * 2.0f;
@@ -180,6 +188,9 @@ float combat_controller_k3h4_bias(const ControllerInstance *controller)
     const CombatControllerState *state = NULL;
 
     if (!controller || !controller->state)
+        return 0.0f;
+
+    if (strncmp(controller->type_name, "combat", sizeof(controller->type_name)) != 0)
         return 0.0f;
 
     state = (const CombatControllerState *)controller->state;
