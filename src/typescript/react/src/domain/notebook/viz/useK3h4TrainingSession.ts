@@ -493,10 +493,17 @@ export function useK3h4TrainingSession(): UseK3h4TrainingSessionResult {
             }
           }
         } catch (err) {
-          // 404 means session was pruned server-side — surface but keep going.
+          // If server no longer knows the session, clear stale local state.
           const msg = extractErrorMessage(err);
-          if (msg.includes('session_not_found') || msg.includes('404')) {
-            setErrorMessage('Training session not found on server.');
+          if (isSessionNotFoundMessage(msg) || msg.includes('404')) {
+            writeStoredSession(null);
+            setSession(null);
+            setConfidence(null);
+            setLatestGeometry(null);
+            setPhase('idle');
+            setErrorMessage(
+                'Training session expired on server. Start a new session and rerun workflow.',
+            );
             stopPolling();
           }
           // Other transient errors are swallowed; next tick will retry.
