@@ -1,9 +1,5 @@
 #include "runtime/controller/runtime/controller_runtime.h"
-
-#include <cmocka.h>
-#include <setjmp.h>
-#include <stdarg.h>
-#include <stddef.h>
+#include "../../support/test_support.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -126,18 +122,15 @@ static void test_runtime_controller_war_signal(void **state)
     assert_int_equal(g_signal_calls, 2);
 }
 
-int main(void)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test_setup_teardown(
-            test_runtime_controller_basic_ops,
-            controller_fixture_setup,
-            controller_fixture_teardown),
-        cmocka_unit_test_setup_teardown(
-            test_runtime_controller_war_signal,
-            controller_fixture_setup,
-            controller_fixture_teardown),
-    };
-
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+BANANA_TEST_MAIN_WITH_GROUP(
+    NULL,
+    NULL,
+    BANANA_TEST_CASE_SETUP_TEARDOWN(
+        test_runtime_controller_basic_ops,
+        controller_fixture_setup,
+        controller_fixture_teardown),
+    BANANA_TEST_CASE_SETUP_TEARDOWN(
+        test_runtime_controller_war_signal,
+        controller_fixture_setup,
+        controller_fixture_teardown)
+)
