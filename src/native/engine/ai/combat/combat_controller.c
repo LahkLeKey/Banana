@@ -33,10 +33,8 @@ typedef struct CombatControllerState
 } CombatControllerState;
 
 /*
- * Build a deterministic k3h4-derived bias from the current combat context.
- * This feeds the gameplay hint used to slightly alter movement intensity during
- * engagement, while keeping the output bounded to the [0, 1] range expected by
- * the caller.
+ * Helper: return non-zero when the controller instance identifies as the "combat" controller.
+ * Uses a bounded compare so the check stays safe even if type_name is not null-terminated.
  */
 static int combat_controller_is_combat_type(const ControllerInstance *controller)
 {
