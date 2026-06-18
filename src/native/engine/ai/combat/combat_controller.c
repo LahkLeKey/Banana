@@ -275,10 +275,15 @@ void combat_controller_debug_snapshot(const ControllerInstance *controller,
     if (!controller || !snapshot)
         return;
 
+    if (!combat_controller_is_combat_type(controller))
+    {
+        memset(snapshot, 0, sizeof(*snapshot));
+        return;
+    }
+
     state = (const CombatControllerState *)controller->state;
     if (!state)
         return;
-
     snapshot->target[0] = state->target[0];
     snapshot->target[1] = state->target[1];
     snapshot->target[2] = state->target[2];
