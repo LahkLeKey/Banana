@@ -160,9 +160,29 @@ add_executable(banana_runtime_combat_controller_k3h4_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/combat_controller_k3h4_test.c
 )
 
+# Build the dedicated combat-controller coverage test binary.
+# This target isolates the gameplay mutation and fail-closed safety checks from
+# the older smoke test and keeps the combat path easier to diagnose in CI.
+add_executable(banana_runtime_combat_controller_coverage_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/combat_controller_coverage_test.c
+)
+
+# Register the new binary in ctest so it runs as part of the native suite.
+# The name matches the combat-controller scenario we want to track in reports.
+add_test(NAME banana_runtime_combat_controller_coverage_test
+	COMMAND banana_runtime_combat_controller_coverage_test
+)
+
 target_link_libraries(banana_runtime_combat_controller_k3h4_test PRIVATE banana_engine_core)
 
+target_link_libraries(banana_runtime_combat_controller_coverage_test PRIVATE banana_engine_core)
+
 target_include_directories(banana_runtime_combat_controller_k3h4_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+target_include_directories(banana_runtime_combat_controller_coverage_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
