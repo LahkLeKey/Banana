@@ -301,10 +301,12 @@ void combat_controller_debug_restore(ControllerInstance *controller,
     if (!controller || !snapshot)
         return;
 
+    if (!combat_controller_is_combat_type(controller))
+        return;
+
     state = (CombatControllerState *)controller->state;
     if (!state)
         return;
-
     state->target[0] = snapshot->target[0];
     state->target[1] = snapshot->target[1];
     state->target[2] = snapshot->target[2];
