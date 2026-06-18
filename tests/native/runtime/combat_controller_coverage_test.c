@@ -6,6 +6,25 @@
 #include <string.h>                 /* strcmp/strcpy for mode and identity checks. */
 
 /*
+ * Mirror the internal combat-controller state layout so the regression test can
+ * inspect the cached k3h4 bias and cooldown fields used by gameplay updates.
+ */
+typedef enum CombatControllerModeTest
+{
+    COMBAT_CONTROLLER_MODE_TEST_IDLE = 0,
+    COMBAT_CONTROLLER_MODE_TEST_COMBAT = 1,
+} CombatControllerModeTest;
+
+typedef struct CombatControllerStateTest
+{
+    float target[3];
+    float combat_timer;
+    CombatControllerModeTest mode;
+    float k3h4_bias;
+    float k3h4_bias_cooldown;
+} CombatControllerStateTest;
+
+/*
  * This file is a gameplay-oriented regression test for the combat controller.
  * It covers: controller creation, bias safety, combat engagement, movement update,
  * and fail-closed behavior after a type-name mutation that should invalidate the
@@ -92,6 +111,87 @@ static int test_engaged_bias_is_bounded(ControllerInstance *controller)
 }
 
 /*
+ * Verify the cached bias and cooldown fields are actually consumed during combat updates.
+ * The test sets the cache to a known value, advances the controller, and checks that
+ * the cooldown is consumed while the cached bias remains the active gameplay input.
+ */
+static int test_bias_cache_is_throttled(ControllerInstance *controller)
+{
+    CombatControllerStateTest *state = NULL;
+    float initial_bias = 0.0f;
+    float initial_cooldown = 0.0f;
+    float previous_target[3] = {0.0f, 0.0f, 0.0f};
+    float previous_position[3] = {0.0f, 0.0f, 0.0f};
+    float previous_timer = 0.0f;
+    CombatControllerModeTest previous_mode = COMBAT_CONTROLLER_MODE_TEST_IDLE;
+
+    if (!controller || !controller->state)
+        return 1;
+
+    state = (CombatControllerStateTest *)controller->state;
+    previous_target[0] = state->target[0];
+    previous_target[1] = state->target[1];
+    previous_target[2] = state->target[2];
+    previous_position[0] = controller->position[0];
+    previous_position[1] = controller->position[1];
+    previous_position[2] = controller->position[2];
+    previous_timer = state->combat_timer;
+    previous_mode = state->mode;
+
+    state->mode = COMBAT_CONTROLLER_MODE_TEST_COMBAT;
+    state->target[0] = 10.0f;
+    state->target[1] = 0.0f;
+    state->target[2] = 10.0f;
+    state->combat_timer = 1.0f;
+    state->k3h4_bias = 1.0f;
+    state->k3h4_bias_cooldown = 1.0f;
+
+    initial_bias = state->k3h4_bias;
+    initial_cooldown = state->k3h4_bias_cooldown;
+
+    controller_update(controller, 0.1f);
+
+    if (fail_if(!(state->k3h4_bias == initial_bias),
+               "update should keep the cached bias value while the cooldown window is active"))
+    {
+        state->target[0] = previous_target[0];
+        state->target[1] = previous_target[1];
+        state->target[2] = previous_target[2];
+        controller->position[0] = previous_position[0];
+        controller->position[1] = previous_position[1];
+        controller->position[2] = previous_position[2];
+        state->combat_timer = previous_timer;
+        state->mode = previous_mode;
+        return 1;
+    }
+
+    if (fail_if(!(state->k3h4_bias_cooldown < initial_cooldown),
+               "update should consume the cached-bias cooldown timer"))
+    {
+        state->target[0] = previous_target[0];
+        state->target[1] = previous_target[1];
+        state->target[2] = previous_target[2];
+        controller->position[0] = previous_position[0];
+        controller->position[1] = previous_position[1];
+        controller->position[2] = previous_position[2];
+        state->combat_timer = previous_timer;
+        state->mode = previous_mode;
+        return 1;
+    }
+
+    state->target[0] = previous_target[0];
+    state->target[1] = previous_target[1];
+    state->target[2] = previous_target[2];
+    controller->position[0] = previous_position[0];
+    controller->position[1] = previous_position[1];
+    controller->position[2] = previous_position[2];
+    state->combat_timer = previous_timer;
+    state->mode = previous_mode;
+
+    return 0;
+}
+
+/*
  * Confirm that one update tick moves the controller toward its combat target.
  * This makes the test exercise real gameplay movement rather than only state mutation.
  */
@@ -116,6 +216,22 @@ static int test_mutated_identity_fails_closed(ControllerInstance *controller)
 
     return fail_if(combat_controller_debug_mode(controller) != NULL,
                    "mutated controller identity must fail closed for debug mode");
+}
+
+/*
+ * Verify the destroy path still frees owned state after the controller identity
+ * has been corrupted. This guards the real ownership contract used by cleanup.
+ */
+static int test_mutated_destroy_is_safe(void)
+{
+    ControllerInstance *controller = controller_create("combat", 0.0f, 0.0f, 0.0f);
+
+    if (!controller)
+        return 1;
+
+    strcpy(controller->type_name, "other");
+    controller_destroy(controller);
+    return 0;
 }
 
 /*
@@ -151,8 +267,10 @@ int main(void)
         test_initial_bias_is_bounded(controller) ||
         test_engage_transition(controller, target) ||
         test_engaged_bias_is_bounded(controller) ||
+        test_bias_cache_is_throttled(controller) ||
         test_update_moves_toward_target(controller) ||
         test_mutated_identity_fails_closed(controller) ||
+        test_mutated_destroy_is_safe() ||
         test_death_resets_mode(controller))
     {
         controller_destroy(controller);

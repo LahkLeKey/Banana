@@ -199,7 +199,9 @@ static void combat_signal(ControllerInstance *self, const char *signal, const vo
 
 /*
  * Free the per-instance combat state.
- * This keeps the controller object and its heap-owned AI state symmetric.
+ * This must stay safe even if the controller instance has been mutated or
+ * miswired with a mismatched type_name, because the outer destroy path owns the
+ * instance lifetime and should not leak heap state on cleanup.
  */
 static void combat_destroy(ControllerInstance *self)
 {
