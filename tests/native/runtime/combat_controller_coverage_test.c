@@ -282,8 +282,8 @@ static int test_update_moves_toward_target(ControllerInstance *controller)
 }
 
 /*
- * Simulate a stale or corrupted controller identity and confirm the helpers fail closed.
- * This guards memory-safety and intent integrity when gameplay state is mutated unexpectedly.
+ * Verify that a valid "combat" identity is accepted even when the type_name buffer contains
+ * non-zero trailing bytes after the NUL terminator.
  */
 static int test_exact_identity_with_trailing_bytes_is_accepted(ControllerInstance *controller)
 {
