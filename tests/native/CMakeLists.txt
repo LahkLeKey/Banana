@@ -456,6 +456,21 @@ target_include_directories(banana_runtime_state_machine_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_ai_controller_team_navigation_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/controller/controller_team_navigation_test.c
+)
+
+add_test(NAME banana_runtime_ai_controller_team_navigation_test
+	COMMAND banana_runtime_ai_controller_team_navigation_test
+)
+
+target_link_libraries(banana_runtime_ai_controller_team_navigation_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_ai_controller_team_navigation_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_combat_controller_k3h4_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/combat/combat_controller_k3h4_test.c
 )

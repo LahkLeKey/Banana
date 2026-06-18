@@ -31,3 +31,4 @@ Thumbs.db
 /src/typescript/api/artifacts/native/k3h4-training
 /src/typescript/react/test-results
 *.stackdump
+/.tools/vcpkg

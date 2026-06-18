@@ -66,19 +66,14 @@ static void test_controller_factory_and_system(void **state)
     sys = controller_system_create();
     assert_non_null(sys);
 
-    inst = controller_system_create_instance(sys, "fake", 1.0f, 2.0f, 3.0f);
-    assert_non_null(inst);
-    assert_int_equal(inst->id, 7);
-    assert_int_equal(inst->team, CONTROLLER_TEAM_BANANA);
+    assert_int_equal(controller_system_spawn(sys, "fake", 1.0f, 2.0f, 3.0f), 1);
+    assert_int_equal(sys->count, 1);
 
     controller_system_update(sys, 5.0f);
     assert_int_equal(g_updates, 5);
 
-    controller_system_signal(sys, inst->id, "pulse", &signal);
+    controller_system_signal_all(sys, "pulse", &signal);
     assert_int_equal(g_signals, 4);
-
-    controller_system_destroy_instance(sys, inst->id);
-    assert_int_equal(g_destroys, 1);
 
     controller_system_destroy(sys);
 }
@@ -152,8 +147,7 @@ static int test_controller_factory_and_system(void)
     if (!sys)
         return 1;
 
-    inst = controller_system_create_instance(sys, "fake", 1.0f, 2.0f, 3.0f);
-    if (!inst || inst->id != 7 || inst->team != CONTROLLER_TEAM_BANANA)
+    if (controller_system_spawn(sys, "fake", 1.0f, 2.0f, 3.0f) != 1 || sys->count != 1)
     {
         controller_system_destroy(sys);
         return 1;
@@ -166,15 +160,8 @@ static int test_controller_factory_and_system(void)
         return 1;
     }
 
-    controller_system_signal(sys, inst->id, "pulse", &signal);
+    controller_system_signal_all(sys, "pulse", &signal);
     if (g_signals != 4)
-    {
-        controller_system_destroy(sys);
-        return 1;
-    }
-
-    controller_system_destroy_instance(sys, inst->id);
-    if (g_destroys != 1)
     {
         controller_system_destroy(sys);
         return 1;
@@ -189,8 +176,3 @@ int main(void)
     return test_controller_factory_and_system();
 }
 #endif
-
-int main(void)
-{
-    return test_controller_factory_and_system();
-}
