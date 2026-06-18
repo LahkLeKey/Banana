@@ -183,8 +183,12 @@ static void combat_signal(ControllerInstance *self, const char *signal, const vo
         state->target[2] = target[2];
         state->combat_timer = 6.0f;
         state->mode = COMBAT_CONTROLLER_MODE_COMBAT;
-        state->k3h4_bias = 0.0f;
-        state->k3h4_bias_cooldown = 0.0f;
+
+        /* Prime the cached bias at engage time so callers observe the current
+         * k3h4 hint immediately, rather than a misleading zero until the next
+         * update tick refreshes the cache. */
+        state->k3h4_bias = combat_controller_compute_bias(state);
+        state->k3h4_bias_cooldown = 0.25f;
     }
     /* Clear the active engagement when the unit dies.
      * This resets the controller to idle and removes any stale bias state. */

@@ -111,9 +111,119 @@ static int test_engaged_bias_is_bounded(ControllerInstance *controller)
 }
 
 /*
+ * Verify that engagement initializes the cached bias and cooldown immediately.
+ * This guards the production contract that callers should not observe a dead
+ * zero-bias state just because the controller has entered combat.
+ */
+static int test_engage_initializes_cache(ControllerInstance *controller, const float target[3])
+{
+    CombatControllerStateTest *state = NULL;
+    float bias = 0.0f;
+
+    if (!controller || !controller->state)
+        return 1;
+
+    controller_signal(controller, "battle_engage", target);
+    state = (CombatControllerStateTest *)controller->state;
+    bias = combat_controller_k3h4_bias(controller);
+
+    if (fail_if(!(state->k3h4_bias == bias),
+               "engage should keep the cached getter aligned with the stored bias"))
+        return 1;
+
+    return fail_if(!(state->k3h4_bias_cooldown > 0.0f),
+                   "engage should start the cached-bias cooldown window immediately");
+}
+
+/*
+ * Snapshot the mutable combat state so the cache-throttle scenario can be
+ * restored after each assertion without leaking state between helper checks.
+ */
+static void snapshot_controller_state(ControllerInstance *controller,
+                                      CombatControllerStateTest *state,
+                                      float previous_target[3],
+                                      float previous_position[3],
+                                      float *previous_timer,
+                                      CombatControllerModeTest *previous_mode)
+{
+    if (!controller || !state)
+        return;
+
+    previous_target[0] = state->target[0];
+    previous_target[1] = state->target[1];
+    previous_target[2] = state->target[2];
+    previous_position[0] = controller->position[0];
+    previous_position[1] = controller->position[1];
+    previous_position[2] = controller->position[2];
+    *previous_timer = state->combat_timer;
+    *previous_mode = state->mode;
+}
+
+/*
+ * Reset the combat state back to its snapshot after a cache-throttle assertion.
+ */
+static void restore_controller_state(ControllerInstance *controller,
+                                    CombatControllerStateTest *state,
+                                    const float previous_target[3],
+                                    const float previous_position[3],
+                                    float previous_timer,
+                                    CombatControllerModeTest previous_mode)
+{
+    if (!controller || !state)
+        return;
+
+    state->target[0] = previous_target[0];
+    state->target[1] = previous_target[1];
+    state->target[2] = previous_target[2];
+    controller->position[0] = previous_position[0];
+    controller->position[1] = previous_position[1];
+    controller->position[2] = previous_position[2];
+    state->combat_timer = previous_timer;
+    state->mode = previous_mode;
+}
+
+/*
+ * Prepare the controller for a cache-throttle regression scenario.
+ */
+static int prime_cache_throttle_scenario(ControllerInstance *controller,
+                                         CombatControllerStateTest *state)
+{
+    if (!controller || !state)
+        return 1;
+
+    state->mode = COMBAT_CONTROLLER_MODE_TEST_COMBAT;
+    state->target[0] = 10.0f;
+    state->target[1] = 0.0f;
+    state->target[2] = 10.0f;
+    state->combat_timer = 1.0f;
+    state->k3h4_bias = 1.0f;
+    state->k3h4_bias_cooldown = 1.0f;
+    return 0;
+}
+
+/*
+ * Assert that cached bias remains stable while the cooldown window is active.
+ */
+static int assert_cached_bias_remains_stable(CombatControllerStateTest *state,
+                                            float initial_bias)
+{
+    return fail_if(!(state->k3h4_bias == initial_bias),
+                   "update should keep the cached bias value while the cooldown window is active");
+}
+
+/*
+ * Assert that the cooldown timer is consumed during the update tick.
+ */
+static int assert_cooldown_is_consumed(CombatControllerStateTest *state,
+                                       float initial_cooldown)
+{
+    return fail_if(!(state->k3h4_bias_cooldown < initial_cooldown),
+                   "update should consume the cached-bias cooldown timer");
+}
+
+/*
  * Verify the cached bias and cooldown fields are actually consumed during combat updates.
- * The test sets the cache to a known value, advances the controller, and checks that
- * the cooldown is consumed while the cached bias remains the active gameplay input.
+ * The helper now orchestrates smaller assertion blocks so the scenario is easier to read.
  */
 static int test_bias_cache_is_throttled(ControllerInstance *controller)
 {
@@ -129,65 +239,27 @@ static int test_bias_cache_is_throttled(ControllerInstance *controller)
         return 1;
 
     state = (CombatControllerStateTest *)controller->state;
-    previous_target[0] = state->target[0];
-    previous_target[1] = state->target[1];
-    previous_target[2] = state->target[2];
-    previous_position[0] = controller->position[0];
-    previous_position[1] = controller->position[1];
-    previous_position[2] = controller->position[2];
-    previous_timer = state->combat_timer;
-    previous_mode = state->mode;
+    snapshot_controller_state(controller, state, previous_target, previous_position,
+                              &previous_timer, &previous_mode);
 
-    state->mode = COMBAT_CONTROLLER_MODE_TEST_COMBAT;
-    state->target[0] = 10.0f;
-    state->target[1] = 0.0f;
-    state->target[2] = 10.0f;
-    state->combat_timer = 1.0f;
-    state->k3h4_bias = 1.0f;
-    state->k3h4_bias_cooldown = 1.0f;
+    if (prime_cache_throttle_scenario(controller, state) != 0)
+        return 1;
 
     initial_bias = state->k3h4_bias;
     initial_cooldown = state->k3h4_bias_cooldown;
 
     controller_update(controller, 0.1f);
 
-    if (fail_if(!(state->k3h4_bias == initial_bias),
-               "update should keep the cached bias value while the cooldown window is active"))
+    if (assert_cached_bias_remains_stable(state, initial_bias) ||
+        assert_cooldown_is_consumed(state, initial_cooldown))
     {
-        state->target[0] = previous_target[0];
-        state->target[1] = previous_target[1];
-        state->target[2] = previous_target[2];
-        controller->position[0] = previous_position[0];
-        controller->position[1] = previous_position[1];
-        controller->position[2] = previous_position[2];
-        state->combat_timer = previous_timer;
-        state->mode = previous_mode;
+        restore_controller_state(controller, state, previous_target, previous_position,
+                                 previous_timer, previous_mode);
         return 1;
     }
 
-    if (fail_if(!(state->k3h4_bias_cooldown < initial_cooldown),
-               "update should consume the cached-bias cooldown timer"))
-    {
-        state->target[0] = previous_target[0];
-        state->target[1] = previous_target[1];
-        state->target[2] = previous_target[2];
-        controller->position[0] = previous_position[0];
-        controller->position[1] = previous_position[1];
-        controller->position[2] = previous_position[2];
-        state->combat_timer = previous_timer;
-        state->mode = previous_mode;
-        return 1;
-    }
-
-    state->target[0] = previous_target[0];
-    state->target[1] = previous_target[1];
-    state->target[2] = previous_target[2];
-    controller->position[0] = previous_position[0];
-    controller->position[1] = previous_position[1];
-    controller->position[2] = previous_position[2];
-    state->combat_timer = previous_timer;
-    state->mode = previous_mode;
-
+    restore_controller_state(controller, state, previous_target, previous_position,
+                             previous_timer, previous_mode);
     return 0;
 }
 
@@ -250,8 +322,37 @@ static int test_death_resets_mode(ControllerInstance *controller)
 }
 
 /*
+ * Orchestrate the engage-related combat contract with small, readable helpers.
+ * Each helper covers one gameplay invariant so the larger scenario stays easy to reason about.
+ */
+static int run_engage_contract(ControllerInstance *controller, const float target[3])
+{
+    return test_engage_transition(controller, target) ||
+           test_engaged_bias_is_bounded(controller) ||
+           test_engage_initializes_cache(controller, target);
+}
+
+/*
+ * Orchestrate the movement and cache-throttle behavior with a dedicated helper.
+ */
+static int run_update_contract(ControllerInstance *controller)
+{
+    return test_bias_cache_is_throttled(controller) ||
+           test_update_moves_toward_target(controller);
+}
+
+/*
+ * Orchestrate the fail-closed and cleanup invariants with a dedicated helper.
+ */
+static int run_identity_contract(ControllerInstance *controller)
+{
+    return test_mutated_identity_fails_closed(controller) ||
+           test_mutated_destroy_is_safe();
+}
+
+/*
  * Main orchestration path for the combat-controller test.
- * The body now reads as a sequence of unit-style checks rather than one monolithic block.
+ * The body now reads as a sequence of thin helper-driven checks rather than one monolithic block.
  */
 int main(void)
 {
@@ -265,12 +366,9 @@ int main(void)
 
     if (test_null_bias_is_safe() ||
         test_initial_bias_is_bounded(controller) ||
-        test_engage_transition(controller, target) ||
-        test_engaged_bias_is_bounded(controller) ||
-        test_bias_cache_is_throttled(controller) ||
-        test_update_moves_toward_target(controller) ||
-        test_mutated_identity_fails_closed(controller) ||
-        test_mutated_destroy_is_safe() ||
+        run_engage_contract(controller, target) ||
+        run_update_contract(controller) ||
+        run_identity_contract(controller) ||
         test_death_resets_mode(controller))
     {
         controller_destroy(controller);
