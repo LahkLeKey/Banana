@@ -1,6 +1,40 @@
 #include "runtime/abi/netcode/netcode_abi.h"
 #include "runtime/netcode/model/netcode_model.h"
 
+#if defined(BANANA_USE_CMOCKA)
+#include <cmocka.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+
+static void test_netcode_model(void **state)
+{
+    (void)state;
+    RuntimeNetcodeLearningOutput output;
+    RuntimeK3h4SignalInput input = {
+        .call_density = 54,
+        .quest_percent = 62,
+        .combo_streak = 3,
+        .branch_pressure = 28,
+        .workflow_depth = 2,
+    };
+
+    runtime_k3h4_abi_reset();
+    runtime_k3h4_abi_record_node_tap(RUNTIME_NETCODE_NODE_INTEL);
+    runtime_k3h4_abi_record_action(RUNTIME_NETCODE_ACTION_SNAPSHOT);
+
+    assert_int_equal(runtime_k3h4_abi_build_learning(input, &output), 0);
+    assert_true(output.model_confidence >= 0 && output.model_confidence <= 100);
+}
+
+int main(void)
+{
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(test_netcode_model),
+    };
+    return cmocka_run_group_tests(tests, NULL, NULL);
+}
+#else
 #include <stdio.h>
 
 static int assert_true(int condition, const char *message)
@@ -174,3 +208,4 @@ int main(void)
 
     return 0;
 }
+#endif

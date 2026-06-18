@@ -1,6 +1,13 @@
 #include "ai/combat_controller.h"   /* Combat controller API under test. */
 #include "ai/controller.h"          /* Generic controller registry/update/signal seam. */
 
+#if defined(BANANA_USE_CMOCKA)
+#include <cmocka.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+#endif
+
 #include <math.h>                   /* fabsf for numeric delta checks. */
 #include <stdio.h>                  /* fprintf for assertion diagnostics. */
 #include <string.h>                 /* strcmp/strcpy for mode and identity checks. */
@@ -459,7 +466,7 @@ static int run_identity_contract(ControllerInstance *controller)
  * Main orchestration path for the combat-controller test.
  * The body now reads as a sequence of thin helper-driven checks rather than one monolithic block.
  */
-int main(void)
+static int run_all_combat_tests(void)
 {
     ControllerInstance *controller = NULL;
     float target[3] = {4.0f, 0.0f, 6.0f};
@@ -484,3 +491,25 @@ int main(void)
     controller_destroy(controller);
     return 0;
 }
+
+#if defined(BANANA_USE_CMOCKA)
+static void test_combat_controller_coverage(void **state)
+{
+    (void)state;
+    assert_int_equal(run_all_combat_tests(), 0);
+}
+
+int main(void)
+{
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(test_combat_controller_coverage),
+    };
+
+    return cmocka_run_group_tests(tests, NULL, NULL);
+}
+#else
+int main(void)
+{
+    return run_all_combat_tests();
+}
+#endif

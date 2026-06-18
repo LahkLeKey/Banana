@@ -1,6 +1,40 @@
 #include "ai/combat_controller.h"
 #include "ai/controller.h"
 
+#if defined(BANANA_USE_CMOCKA)
+#include <cmocka.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+
+static void test_combat_bias_and_engagement(void **state)
+{
+    (void)state;
+    ControllerInstance *controller = NULL;
+    float target[3] = {10.0f, 0.0f, 10.0f};
+    float bias = 0.0f;
+
+    combat_controller_register();
+    controller = controller_create("combat", 0.0f, 0.0f, 0.0f);
+    assert_non_null(controller);
+
+    controller_signal(controller, "battle_engage", target);
+    bias = combat_controller_k3h4_bias(controller);
+
+    assert_true(bias >= 0.0f && bias <= 1.0f);
+
+    controller_destroy(controller);
+}
+
+int main(void)
+{
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(test_combat_bias_and_engagement),
+    };
+
+    return cmocka_run_group_tests(tests, NULL, NULL);
+}
+#else
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -37,3 +71,4 @@ int main(void)
     controller_destroy(controller);
     return 0;
 }
+#endif
