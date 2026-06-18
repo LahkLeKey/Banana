@@ -28,3 +28,6 @@ Thumbs.db
 .idea/
 /artifacts/steam-build/dev-candidate/http-upload
 /artifacts/native/human-feedback/
+/src/typescript/api/artifacts/native/k3h4-training
+/src/typescript/react/test-results
+*.stackdump

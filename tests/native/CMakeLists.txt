@@ -141,6 +141,36 @@ add_executable(banana_runtime_netcode_abi_error_contract_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_abi_error_contract_test.c
 )
 
+add_executable(banana_runtime_netcode_abi_combat_integration_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_abi_combat_integration_test.c
+)
+
+target_link_libraries(banana_runtime_netcode_abi_combat_integration_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_netcode_abi_combat_integration_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_netcode_abi_combat_integration_test
+	COMMAND banana_runtime_netcode_abi_combat_integration_test
+)
+
+add_executable(banana_runtime_combat_controller_k3h4_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/combat_controller_k3h4_test.c
+)
+
+target_link_libraries(banana_runtime_combat_controller_k3h4_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_combat_controller_k3h4_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_combat_controller_k3h4_test
+	COMMAND banana_runtime_combat_controller_k3h4_test
+)
+
 target_link_libraries(banana_runtime_netcode_abi_error_contract_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_netcode_abi_error_contract_test PRIVATE
