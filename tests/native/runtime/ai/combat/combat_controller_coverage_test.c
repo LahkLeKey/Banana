@@ -1,5 +1,6 @@
 #include "ai/combat_controller.h"   /* Combat controller API under test. */
 #include "ai/controller.h"          /* Generic controller registry/update/signal seam. */
+#include "../../support/test_support.h"
 
 #include <math.h>                   /* fabsf for numeric delta checks. */
 #include <stdio.h>                  /* fprintf for assertion diagnostics. */
@@ -13,22 +14,6 @@
  */
 
 /*
- * Assertion helper for the combat controller regression test.
- * It keeps the expected gameplay invariants readable in the test body and prints
- * a concrete error message when a scenario regresses.
- */
-static int fail_if(int condition, const char *message)
-{
-    if (condition)
-    {
-        /* Print the failing gameplay invariant to stderr so CI output points to the issue. */
-        fprintf(stderr, "%s\n", message);
-        return 1;
-    }
-    return 0;
-}
-
-/*
  * Verify that the update loop changes the combatant position.
  * This is a gameplay-level proof that the controller is not just changing timers
  * or cached state; it is actually advancing the actor toward its target.
@@ -40,9 +25,10 @@ static int expect_position_delta(const ControllerInstance *controller, float exp
 
     /* Compare the current coordinates to the expected target position with a tiny epsilon.
      * This avoids false negatives from floating-point noise while still catching real regressions. */
-    return fail_if(!(fabsf(controller->position[0] - expected_x) < 0.0001f &&
-                     fabsf(controller->position[2] - expected_z) < 0.0001f),
-                   "controller position did not move to the engagement target");
+    BANANA_TEST_ASSERT_TRUE(fabsf(controller->position[0] - expected_x) < 0.0001f &&
+                            fabsf(controller->position[2] - expected_z) < 0.0001f,
+                            "controller position did not move to the engagement target");
+    return 0;
 }
 
 /*
@@ -51,8 +37,9 @@ static int expect_position_delta(const ControllerInstance *controller, float exp
  */
 static int test_null_bias_is_safe(void)
 {
-    return fail_if(!(combat_controller_k3h4_bias(NULL) == 0.0f),
-                   "null controller should yield a safe zero bias");
+    BANANA_TEST_ASSERT_TRUE(combat_controller_k3h4_bias(NULL) == 0.0f,
+                            "null controller should yield a safe zero bias");
+    return 0;
 }
 
 /*
@@ -62,8 +49,9 @@ static int test_null_bias_is_safe(void)
 static int test_initial_bias_is_bounded(ControllerInstance *controller)
 {
     float bias = combat_controller_k3h4_bias(controller);
-    return fail_if(!(bias >= 0.0f && bias <= 1.0f),
-                   "initial combat bias must stay in [0, 1]");
+    BANANA_TEST_ASSERT_TRUE(bias >= 0.0f && bias <= 1.0f,
+                            "initial combat bias must stay in [0, 1]");
+    return 0;
 }
 
 /*
@@ -76,8 +64,9 @@ static int test_engage_transition(ControllerInstance *controller, const float ta
 
     controller_signal(controller, "battle_engage", target);
     mode = combat_controller_debug_mode(controller);
-    return fail_if(mode == NULL || strcmp(mode, "combat") != 0,
-                   "battle_engage must switch debug mode to combat");
+    BANANA_TEST_ASSERT_TRUE(mode != NULL && strcmp(mode, "combat") == 0,
+                            "battle_engage must switch debug mode to combat");
+    return 0;
 }
 
 /*
@@ -87,8 +76,9 @@ static int test_engage_transition(ControllerInstance *controller, const float ta
 static int test_engaged_bias_is_bounded(ControllerInstance *controller)
 {
     float bias = combat_controller_k3h4_bias(controller);
-    return fail_if(!(bias >= 0.0f && bias <= 1.0f),
-                   "engaged combat bias must stay in [0, 1]");
+    BANANA_TEST_ASSERT_TRUE(bias >= 0.0f && bias <= 1.0f,
+                            "engaged combat bias must stay in [0, 1]");
+    return 0;
 }
 
 /*
@@ -108,12 +98,11 @@ static int test_engage_initializes_cache(ControllerInstance *controller, const f
     combat_controller_debug_snapshot(controller, &snapshot);
     bias = combat_controller_k3h4_bias(controller);
 
-    if (fail_if(!(snapshot.k3h4_bias == bias),
-               "engage should keep the cached getter aligned with the stored bias"))
-        return 1;
-
-    return fail_if(!(snapshot.k3h4_bias_cooldown > 0.0f),
-                   "engage should start the cached-bias cooldown window immediately");
+    BANANA_TEST_ASSERT_TRUE(snapshot.k3h4_bias == bias,
+                            "engage should keep cached getter aligned with stored bias");
+    BANANA_TEST_ASSERT_TRUE(snapshot.k3h4_bias_cooldown > 0.0f,
+                            "engage should start cached-bias cooldown immediately");
+    return 0;
 }
 
 /*
@@ -206,8 +195,9 @@ static int assert_cached_bias_remains_stable(ControllerInstance *controller,
     CombatControllerDebugSnapshot snapshot;
 
     combat_controller_debug_snapshot(controller, &snapshot);
-    return fail_if(!(snapshot.k3h4_bias == initial_bias),
-                   "update should keep the cached bias value while the cooldown window is active");
+    BANANA_TEST_ASSERT_TRUE(snapshot.k3h4_bias == initial_bias,
+                            "update should keep cached bias during cooldown window");
+    return 0;
 }
 
 /*
@@ -219,8 +209,9 @@ static int assert_cooldown_is_consumed(ControllerInstance *controller,
     CombatControllerDebugSnapshot snapshot;
 
     combat_controller_debug_snapshot(controller, &snapshot);
-    return fail_if(!(snapshot.k3h4_bias_cooldown < initial_cooldown),
-                   "update should consume the cached-bias cooldown timer");
+    BANANA_TEST_ASSERT_TRUE(snapshot.k3h4_bias_cooldown < initial_cooldown,
+                            "update should consume cached-bias cooldown timer");
+    return 0;
 }
 
 /*
@@ -295,19 +286,18 @@ static int test_debug_snapshot_captures_cached_state(ControllerInstance *control
     controller_signal(controller, "battle_engage", target);
     combat_controller_debug_snapshot(controller, &snapshot);
 
-    if (fail_if(snapshot.mode == NULL || strcmp(snapshot.mode, "combat") != 0,
-               "debug snapshot should report the active combat mode"))
-        return 1;
+    BANANA_TEST_ASSERT_TRUE(snapshot.mode != NULL && strcmp(snapshot.mode, "combat") == 0,
+                            "debug snapshot should report active combat mode");
 
-    if (fail_if(!(snapshot.target[0] == target[0] &&
-                  snapshot.target[1] == target[1] &&
-                  snapshot.target[2] == target[2]),
-               "debug snapshot should capture the engaged target coordinates"))
-        return 1;
+    BANANA_TEST_ASSERT_TRUE(snapshot.target[0] == target[0] &&
+                            snapshot.target[1] == target[1] &&
+                            snapshot.target[2] == target[2],
+                            "debug snapshot should capture engaged target coordinates");
 
-    return fail_if(!(snapshot.k3h4_bias >= 0.0f && snapshot.k3h4_bias <= 1.0f &&
-                     snapshot.k3h4_bias_cooldown > 0.0f),
-                   "debug snapshot should expose bounded bias and an active cooldown window");
+    BANANA_TEST_ASSERT_TRUE(snapshot.k3h4_bias >= 0.0f && snapshot.k3h4_bias <= 1.0f &&
+                            snapshot.k3h4_bias_cooldown > 0.0f,
+                            "debug snapshot should expose bounded bias and active cooldown");
+    return 0;
 }
 
 static int test_debug_restore_rehydrates_state(ControllerInstance *controller)
@@ -328,22 +318,20 @@ static int test_debug_restore_rehydrates_state(ControllerInstance *controller)
     combat_controller_debug_restore(controller, &snapshot);
 
     combat_controller_debug_snapshot(controller, &snapshot);
-    if (fail_if(!(snapshot.target[0] == 3.0f &&
-                  snapshot.target[1] == -2.0f &&
-                  snapshot.target[2] == 5.0f),
-               "debug restore should rehydrate the target coordinates"))
-        return 1;
+    BANANA_TEST_ASSERT_TRUE(snapshot.target[0] == 3.0f &&
+                            snapshot.target[1] == -2.0f &&
+                            snapshot.target[2] == 5.0f,
+                            "debug restore should rehydrate target coordinates");
 
-    if (fail_if(!(snapshot.combat_timer == 2.5f),
-               "debug restore should rehydrate the engagement timer"))
-        return 1;
+    BANANA_TEST_ASSERT_TRUE(snapshot.combat_timer == 2.5f,
+                            "debug restore should rehydrate engagement timer");
 
-    if (fail_if(!(snapshot.k3h4_bias == 0.42f && snapshot.k3h4_bias_cooldown == 0.75f),
-               "debug restore should rehydrate cached bias and cooldown state"))
-        return 1;
+    BANANA_TEST_ASSERT_TRUE(snapshot.k3h4_bias == 0.42f && snapshot.k3h4_bias_cooldown == 0.75f,
+                            "debug restore should rehydrate cached bias and cooldown");
 
-    return fail_if(snapshot.mode == NULL || strcmp(snapshot.mode, "combat") != 0,
-                   "debug restore should restore the combat mode label");
+    BANANA_TEST_ASSERT_TRUE(snapshot.mode != NULL && strcmp(snapshot.mode, "combat") == 0,
+                            "debug restore should restore combat mode label");
+    return 0;
 }
 
 static int test_exact_identity_with_trailing_bytes_is_accepted(ControllerInstance *controller)
@@ -368,11 +356,11 @@ static int test_exact_identity_with_trailing_bytes_is_accepted(ControllerInstanc
     controller->type_name[7] = 'x';
 
     mode = combat_controller_debug_mode(controller);
-    if (fail_if(mode == NULL, "exact combat identity must be accepted when the buffer has trailing bytes"))
-        return 1;
-
-    return fail_if(strcmp(mode, "idle") != 0,
-                   "exact combat identity should still resolve to the idle mode label");
+    BANANA_TEST_ASSERT_TRUE(mode != NULL,
+                            "exact combat identity must be accepted with trailing bytes");
+    BANANA_TEST_ASSERT_TRUE(strcmp(mode, "idle") == 0,
+                            "exact combat identity should still resolve to idle mode");
+    return 0;
 }
 
 static int test_mutated_identity_fails_closed(ControllerInstance *controller)
@@ -381,11 +369,11 @@ static int test_mutated_identity_fails_closed(ControllerInstance *controller)
 
     strcpy(controller->type_name, "other");
     bias = combat_controller_k3h4_bias(controller);
-    if (fail_if(!(bias == 0.0f), "mutated controller identity must fail closed for k3h4 bias"))
-        return 1;
-
-    return fail_if(combat_controller_debug_mode(controller) != NULL,
-                   "mutated controller identity must fail closed for debug mode");
+    BANANA_TEST_ASSERT_TRUE(bias == 0.0f,
+                            "mutated controller identity must fail closed for k3h4 bias");
+    BANANA_TEST_ASSERT_TRUE(combat_controller_debug_mode(controller) == NULL,
+                            "mutated controller identity must fail closed for debug mode");
+    return 0;
 }
 
 /*
@@ -415,8 +403,9 @@ static int test_death_resets_mode(ControllerInstance *controller)
     strcpy(controller->type_name, "combat");
     controller_signal(controller, "death", NULL);
     mode = combat_controller_debug_mode(controller);
-    return fail_if(mode == NULL || strcmp(mode, "idle") != 0,
-                   "death must switch debug mode to idle");
+    BANANA_TEST_ASSERT_TRUE(mode != NULL && strcmp(mode, "idle") == 0,
+                            "death must switch debug mode to idle");
+    return 0;
 }
 
 /*
@@ -459,7 +448,7 @@ static int run_identity_contract(ControllerInstance *controller)
  * Main orchestration path for the combat-controller test.
  * The body now reads as a sequence of thin helper-driven checks rather than one monolithic block.
  */
-int main(void)
+static int run_all_combat_tests(void)
 {
     ControllerInstance *controller = NULL;
     float target[3] = {4.0f, 0.0f, 6.0f};
@@ -484,3 +473,14 @@ int main(void)
     controller_destroy(controller);
     return 0;
 }
+
+static void test_combat_controller_coverage(void **state)
+{
+    (void)state;
+    BANANA_TEST_ASSERT_INT_EQ(run_all_combat_tests(), 0,
+                              "combat controller coverage contract must pass");
+}
+
+BANANA_TEST_MAIN(
+    BANANA_TEST_CASE(test_combat_controller_coverage)
+)

@@ -1,15 +1,9 @@
 #include "runtime/abi/netcode/netcode_abi.h"
+#include "../support/test_support.h"
 
-#include <stdio.h>
-
-static int fail(const char *message)
+static void test_netcode_abi_envelope_endianness(void **state)
 {
-    fprintf(stderr, "[netcode-abi-endianness] %s\n", message);
-    return 1;
-}
-
-int main(void)
-{
+    (void)state;
     RuntimeK3h4VectorSignalInput input = {
         .call_density = 42,
         .quest_percent = 58,
@@ -32,11 +26,10 @@ int main(void)
     RuntimeK3h4ContractEnvelopeHeader swapped_header;
     RuntimeK3h4ContractStatus status;
 
-    if (runtime_k3h4_abi_build_k3h4(input, &output) != RUNTIME_K3H4_CONTRACT_OK)
-        return fail("failed to build baseline k3h4 output");
-
-    if (output.envelope.contract_status != RUNTIME_K3H4_CONTRACT_OK)
-        return fail("expected runtime envelope status to be OK");
+    BANANA_TEST_ASSERT_INT_EQ(runtime_k3h4_abi_build_k3h4(input, &output), RUNTIME_K3H4_CONTRACT_OK,
+                              "failed to build baseline k3h4 output");
+    BANANA_TEST_ASSERT_INT_EQ(output.envelope.contract_status, RUNTIME_K3H4_CONTRACT_OK,
+                              "expected runtime envelope status to be OK");
 
     swapped_header.contract_version = output.envelope.contract_version;
     swapped_header.byte_order_tag = RUNTIME_K3H4_BYTE_ORDER_TAG_SWAPPED;
@@ -44,12 +37,14 @@ int main(void)
     swapped_header.payload_crc32 = output.envelope.payload_crc32;
 
     status = runtime_k3h4_abi_validate_k3h4_envelope(&swapped_header, &output, 1);
-    if (status != RUNTIME_K3H4_CONTRACT_OK)
-        return fail("expected byte-swapped tag to validate when allowed");
+    BANANA_TEST_ASSERT_INT_EQ(status, RUNTIME_K3H4_CONTRACT_OK,
+                              "expected byte-swapped tag to validate when allowed");
 
     status = runtime_k3h4_abi_validate_k3h4_envelope(&swapped_header, &output, 0);
-    if (status != RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD)
-        return fail("expected byte-swapped tag to fail when not allowed");
-
-    return 0;
+    BANANA_TEST_ASSERT_INT_EQ(status, RUNTIME_K3H4_CONTRACT_INVALID_PAYLOAD,
+                              "expected byte-swapped tag to fail when not allowed");
 }
+
+BANANA_TEST_MAIN(
+    BANANA_TEST_CASE(test_netcode_abi_envelope_endianness)
+)
