@@ -265,8 +265,7 @@ void combat_controller_register(void)
 }
 
 /*
- * Return the cached k3h4 bias for a combat controller instance.
- * The helper intentionally fails closed for unknown or mutated controller types.
+ * Snapshot the combat controller's debug-visible state for regression tests/instrumentation.
  */
 void combat_controller_debug_snapshot(const ControllerInstance *controller,
                                       CombatControllerDebugSnapshot *snapshot)
