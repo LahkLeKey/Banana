@@ -5,10 +5,10 @@
 #include <string.h>
 
 #if defined(BANANA_USE_CMOCKA)
-#include <cmocka.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <cmocka.h>
 #else
 #include <stddef.h>
 #endif

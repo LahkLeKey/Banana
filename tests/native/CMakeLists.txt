@@ -452,6 +452,9 @@ target_include_directories(banana_runtime_controller_system_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+if(BANANA_ENABLE_CMOCKA_TESTS AND cmocka_FOUND)
+	banana_enable_cmocka_native(banana_runtime_controller_system_test)
+endif()
 add_executable(banana_runtime_state_machine_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/state/state_machine_test.c
 )

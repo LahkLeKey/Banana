@@ -499,15 +499,8 @@ static int run_all_combat_tests(void)
 static void test_combat_controller_coverage(void **state)
 {
     (void)state;
-
-    if (run_all_combat_tests() != 0)
-    {
-#if defined(BANANA_USE_CMOCKA)
-        fail_msg("%s", "combat controller coverage contract must pass");
-#else
-        banana_native_record_failure("combat controller coverage contract must pass", __FILE__, __LINE__);
-#endif
-    }
+    BANANA_TEST_ASSERT_INT_EQ(run_all_combat_tests(), 0,
+                              "combat controller coverage contract must pass");
 }
 
 BANANA_TEST_MAIN(
