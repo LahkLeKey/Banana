@@ -41,13 +41,15 @@ function(banana_enable_cmocka_native target)
 	target_compile_definitions(${target} PRIVATE BANANA_USE_CMOCKA=1)
 	target_link_libraries(${target} PRIVATE cmocka::cmocka)
 
-	add_custom_command(TARGET ${target} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-			$<TARGET_RUNTIME_DLLS:${target}>
-			$<TARGET_FILE_DIR:${target}>
-		COMMAND_EXPAND_LISTS
-		COMMENT "Copying runtime DLLs next to ${target}"
-	)
+	if(WIN32)
+		add_custom_command(TARGET ${target} POST_BUILD
+			COMMAND ${CMAKE_COMMAND}
+				-Dbanana_runtime_dlls=$<JOIN:$<TARGET_RUNTIME_DLLS:${target}>,|>
+				-Dbanana_target_dir=$<TARGET_FILE_DIR:${target}>
+				-P ${CMAKE_CURRENT_LIST_DIR}/runtime/support/copy_runtime_dlls.cmake
+			COMMENT "Copying runtime DLLs next to ${target}"
+		)
+	endif()
 endfunction()
 
 add_executable(banana_runtime_netcode_model_test
@@ -453,7 +455,6 @@ target_include_directories(banana_runtime_controller_system_test PRIVATE
 if(BANANA_ENABLE_CMOCKA_TESTS AND cmocka_FOUND)
 	banana_enable_cmocka_native(banana_runtime_controller_system_test)
 endif()
-
 add_executable(banana_runtime_state_machine_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/state/state_machine_test.c
 )

@@ -52,7 +52,7 @@ static void test_runtime_controller_helpers(void **state)
     ControllerInstance *alpha = make_controller(1, CONTROLLER_TEAM_BANANA, 0.0f, 0.0f, 0.0f);
     ControllerInstance *beta = make_controller(2, CONTROLLER_TEAM_BEAN, 0.2f, 0.0f, 0.0f);
     ControllerInstance *controllers[] = { alpha, beta };
-    int signal_value = 7;
+    float signal_position[3] = { 0.7f, 0.0f, 0.0f };
 
     BANANA_TEST_ASSERT_TRUE(alpha != NULL && beta != NULL,
                             "controller runtime fixtures must allocate cleanly");
@@ -71,7 +71,7 @@ static void test_runtime_controller_helpers(void **state)
     BANANA_TEST_ASSERT_INT_EQ(g_update_calls, 2,
                               "update-by-id must forward dt through callback");
 
-    BANANA_TEST_ASSERT_TRUE(runtime_controller_signal_by_id(controllers, 2, 2, "enemy_spotted", &signal_value),
+    BANANA_TEST_ASSERT_TRUE(runtime_controller_signal_by_id(controllers, 2, 2, "enemy_spotted", signal_position),
                             "signal-by-id must dispatch to matched controller");
     BANANA_TEST_ASSERT_INT_EQ(g_signal_calls, 1,
                               "signal-by-id must trigger controller callback");
