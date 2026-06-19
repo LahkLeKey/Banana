@@ -6,6 +6,28 @@
 #include <stdio.h>                  /* fprintf for assertion diagnostics. */
 #include <string.h>                 /* strcmp/strcpy for mode and identity checks. */
 
+#if defined(BANANA_USE_CMOCKA)
+#define COMBAT_TEST_ASSERT_TRUE(condition, message)                                                \
+    do                                                                                              \
+    {                                                                                               \
+        if (!(condition))                                                                           \
+            fail_msg("%s", (message));                                                             \
+    } while (0)
+#else
+#define COMBAT_TEST_ASSERT_TRUE(condition, message)                                                \
+    do                                                                                              \
+    {                                                                                               \
+        if (!(condition))                                                                           \
+        {                                                                                           \
+            fprintf(stderr, "%s\n", (message));                                                    \
+            return 1;                                                                                \
+        }                                                                                           \
+    } while (0)
+#endif
+
+#undef BANANA_TEST_ASSERT_TRUE
+#define BANANA_TEST_ASSERT_TRUE COMBAT_TEST_ASSERT_TRUE
+
 /*
  * This file is a gameplay-oriented regression test for the combat controller.
  * It covers: controller creation, bias safety, combat engagement, movement update,
@@ -477,8 +499,15 @@ static int run_all_combat_tests(void)
 static void test_combat_controller_coverage(void **state)
 {
     (void)state;
-    BANANA_TEST_ASSERT_INT_EQ(run_all_combat_tests(), 0,
-                              "combat controller coverage contract must pass");
+
+    if (run_all_combat_tests() != 0)
+    {
+#if defined(BANANA_USE_CMOCKA)
+        fail_msg("%s", "combat controller coverage contract must pass");
+#else
+        banana_native_record_failure("combat controller coverage contract must pass", __FILE__, __LINE__);
+#endif
+    }
 }
 
 BANANA_TEST_MAIN(
