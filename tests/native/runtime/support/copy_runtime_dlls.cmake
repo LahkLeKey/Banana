@@ -1,3 +1,7 @@
+if(NOT DEFINED banana_target_dir OR banana_target_dir STREQUAL "")
+	message(FATAL_ERROR "banana_target_dir must be set when invoking copy_runtime_dlls.cmake")
+endif()
+
 if(NOT DEFINED banana_runtime_dlls OR banana_runtime_dlls STREQUAL "")
 	return()
 endif()
