@@ -222,29 +222,26 @@ jobs:
         if: always()
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import os
-          import re
-          html_path = Path('artifacts/native/coverage-ci/coverage-files-summary.html')
-          md_path = Path('artifacts/native/coverage-ci/coverage-summary.md')
-          if not html_path.exists():
-              print('::warning::Native inventory coverage summary page was not generated.')
-              raise SystemExit(0)
-          text = html_path.read_text(encoding='utf-8', errors='ignore')
-          match = re.search(r'Overall coverage across the current inventory: <strong>([0-9.]+)%</strong>', text)
-          if match:
-              pct = match.group(1)
-              print(f"::notice::Native source inventory coverage: {pct}%")
-              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as fh:
-                  fh.write(f"## Native source inventory coverage\n\n- Overall inventory coverage: {pct}%\n- Report: [coverage-files-summary.html](artifacts/native/coverage-ci/coverage-files-summary.html)\n- Detailed report: [index.html](artifacts/native/coverage-ci/index.html)\n")
-          else:
-              print('::warning::Native inventory coverage summary page did not contain an overall percentage.')
-          if md_path.exists():
-              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as fh:
-                  fh.write('\n### Coverage run note\n\n')
-                  fh.write(md_path.read_text(encoding='utf-8'))
-          PY
+          set -euo pipefail
+          mkdir -p "$GITHUB_STEP_SUMMARY_DIR"
+          summary_path="artifacts/native/coverage-ci/coverage-summary.md"
+          html_path="artifacts/native/coverage-ci/coverage-files-summary.html"
+          if [[ -f "$summary_path" ]]; then
+            cat "$summary_path" >> "$GITHUB_STEP_SUMMARY"
+          else
+            cat <<'EOF_SUMMARY' >> "$GITHUB_STEP_SUMMARY"
+          ## Native source inventory coverage
+
+          - Summary report was not generated; the coverage job still completed with warnings.
+          - Artifact path: [artifacts/native/coverage-ci](artifacts/native/coverage-ci)
+          EOF_SUMMARY
+          fi
+
+          if [[ -f "$html_path" ]]; then
+            echo "::notice::Native inventory summary report available at $html_path"
+          else
+            echo "::warning::Native inventory coverage summary page was not generated."
+          fi
 
       - name: Upload native coverage artifacts
         if: always()

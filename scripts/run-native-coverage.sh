@@ -90,7 +90,8 @@ fi
 mkdir -p "$OUTPUT_DIR"
 coverage_status="ok"
 
-if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* || "$OS" == "Windows_NT" ]]; then
+os_name="${OSTYPE:-}"
+if [[ "$os_name" == msys* || "$os_name" == cygwin* || "${OS:-}" == "Windows_NT" ]]; then
   if command -v OpenCppCoverage.exe >/dev/null 2>&1; then
     SOURCE_ROOT_W="$(cygpath -w "$ROOT_DIR/src/native" 2>/dev/null || printf '%s' "$ROOT_DIR/src/native")"
     OUTPUT_DIR_W="$(cygpath -w "$OUTPUT_DIR" 2>/dev/null || printf '%s' "$OUTPUT_DIR")"
@@ -130,7 +131,7 @@ else
   fi
 fi
 
-BANANA_NATIVE_COVERAGE_REPORT_DIR="$OUTPUT_DIR" python - <<'PY'
+BANANA_NATIVE_COVERAGE_ROOT_DIR="$ROOT_DIR" BANANA_NATIVE_COVERAGE_REPORT_DIR="$OUTPUT_DIR" BANANA_NATIVE_COVERAGE_STATUS="$coverage_status" python - <<'PY'
 import os
 import re
 import html
@@ -143,7 +144,8 @@ report_dir = report_dir.resolve() if report_dir.exists() else Path(report_dir)
 if not report_dir.exists():
     raise SystemExit(f"coverage report directory does not exist: {report_dir}")
 
-source_root = (Path(os.getcwd()) / 'src' / 'native').resolve()
+root_dir = Path(os.environ.get('BANANA_NATIVE_COVERAGE_ROOT_DIR', os.getcwd())).resolve()
+source_root = (root_dir / 'src' / 'native').resolve()
 if not source_root.exists():
     raise SystemExit(f"native source root does not exist: {source_root}")
 
@@ -241,7 +243,7 @@ summary_md.write_text(f"# Native source inventory coverage\n\n- Overall inventor
 
 print(f"[coverage] wrote source inventory summary to {summary_path}")
 print(f"[coverage] overall inventory coverage: {overall_pct:.1f}%")
-if coverage_status != 'ok':
+if os.environ.get('BANANA_NATIVE_COVERAGE_STATUS', 'ok') != 'ok':
     print(f"[coverage] warning: coverage tool reported a problem; fallback inventory summary was written")
 PY
 
