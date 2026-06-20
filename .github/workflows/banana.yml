@@ -232,11 +232,28 @@ jobs:
           ## Native source inventory coverage
 
           - Summary report was not generated; the coverage job still completed with warnings.
-          - Artifact path: [artifacts/native/coverage-ci](artifacts/native/coverage-ci)
+          - Artifact path: artifacts/native/coverage-ci
           EOF_SUMMARY
           fi
 
           if [[ -f "$html_path" ]]; then
+            python - <<'PY'
+            from pathlib import Path
+            import os
+            import re
+            html_path = Path('artifacts/native/coverage-ci/coverage-files-summary.html')
+            summary_path = Path(os.environ['GITHUB_STEP_SUMMARY'])
+            if html_path.exists():
+                text = html_path.read_text(encoding='utf-8', errors='ignore')
+                style_match = re.search(r'<style>(.*?)</style>', text, re.S | re.I)
+                body_match = re.search(r'<body>(.*?)</body>', text, re.S | re.I)
+                body = body_match.group(1) if body_match else text
+                style = f'<style>{style_match.group(1)}</style>' if style_match else ''
+                with summary_path.open('a', encoding='utf-8') as fh:
+                    fh.write('\n')
+                    fh.write(style)
+                    fh.write(body)
+            PY
             echo "::notice::Native inventory summary report available at $html_path"
           else
             echo "::warning::Native inventory coverage summary page was not generated."
