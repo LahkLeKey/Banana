@@ -207,7 +207,7 @@ covered_total = 0
 uncovered_total = 0
 for path in all_sources:
     rel = path.relative_to(source_root).as_posix()
-    entry = coverage_by_file.get(path.name)
+    entry = coverage_by_file.get(rel) or coverage_by_file.get(path.name)
     if entry is None:
         line_count = sum(1 for _ in path.read_text(encoding='utf-8', errors='ignore').splitlines())
         covered = 0
