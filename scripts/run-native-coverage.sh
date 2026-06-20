@@ -121,6 +121,7 @@ else
       --filter "$ROOT_DIR/src/native/" \
       --html-details "$OUTPUT_DIR/index.html" \
       --txt "$OUTPUT_DIR/coverage-summary.txt" \
+      --json-summary "$OUTPUT_DIR/gcovr.json" \
       --print-summary \
       --sort uncovered \
       --exclude '.*tests.*' \
@@ -148,6 +149,19 @@ root_dir = Path(os.environ.get('BANANA_NATIVE_COVERAGE_ROOT_DIR', os.getcwd())).
 source_root = (root_dir / 'src' / 'native').resolve()
 if not source_root.exists():
     raise SystemExit(f"native source root does not exist: {source_root}")
+
+
+def parse_overall_percentage(report_dir: Path):
+    summary_txt = report_dir / 'coverage-summary.txt'
+    if not summary_txt.exists():
+        return None
+    for line in summary_txt.read_text(encoding='utf-8', errors='ignore').splitlines():
+        if not line.strip().startswith('TOTAL'):
+            continue
+        match = re.search(r'([0-9.]+)%\s*$', line)
+        if match:
+            return float(match.group(1))
+    return None
 
 modules_candidates = [report_dir / 'Modules', report_dir / 'coverage-report-msvc' / 'Modules']
 coverage_by_file = {}
@@ -231,7 +245,9 @@ for path in all_sources:
 rows.sort(key=lambda item: (item[2] == 0, item[2], item[0]), reverse=False)
 
 summary_path = report_dir / 'coverage-files-summary.html'
-overall_pct = (100.0 * covered_total / (covered_total + uncovered_total)) if (covered_total + uncovered_total) else 0.0
+overall_pct = parse_overall_percentage(report_dir)
+if overall_pct is None:
+    overall_pct = (100.0 * covered_total / (covered_total + uncovered_total)) if (covered_total + uncovered_total) else 0.0
 summary_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -257,7 +273,13 @@ summary_html = f'''<!DOCTYPE html>
 '''
 summary_path.write_text(summary_html, encoding='utf-8')
 summary_md = report_dir / 'coverage-summary.md'
-summary_md.write_text(f"# Native source inventory coverage\n\n- Overall inventory coverage: {overall_pct:.1f}%\n- Source inventory summary: [coverage-files-summary.html](coverage-files-summary.html)\n- Detailed report: [index.html](index.html)\n", encoding='utf-8')
+summary_md.write_text(
+    f"# Native source inventory coverage\n\n"
+    f"- Overall inventory coverage: {overall_pct:.1f}%\n"
+    f"- Source inventory summary: artifacts/native/coverage-ci/coverage-files-summary.html\n"
+    f"- Detailed report: artifacts/native/coverage-ci/index.html\n",
+    encoding='utf-8'
+)
 
 print(f"[coverage] wrote source inventory summary to {summary_path}")
 print(f"[coverage] overall inventory coverage: {overall_pct:.1f}%")
