@@ -392,6 +392,96 @@ target_include_directories(banana_runtime_render_camera_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_camera_basis_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/camera/basis/camera_basis_test.c
+)
+
+add_test(NAME banana_runtime_camera_basis_test
+	COMMAND banana_runtime_camera_basis_test
+)
+
+target_link_libraries(banana_runtime_camera_basis_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_camera_basis_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_terrain_generation_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/terrain/terrain_generation_test.c
+)
+
+add_test(NAME banana_runtime_terrain_generation_test
+	COMMAND banana_runtime_terrain_generation_test
+)
+
+target_link_libraries(banana_runtime_terrain_generation_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_terrain_generation_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_player_builds_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/player/build/player_builds_test.c
+)
+
+add_test(NAME banana_runtime_player_builds_test
+	COMMAND banana_runtime_player_builds_test
+)
+
+target_link_libraries(banana_runtime_player_builds_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_player_builds_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_player_registry_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/player/registry/player_registry_test.c
+)
+
+add_test(NAME banana_runtime_player_registry_test
+	COMMAND banana_runtime_player_registry_test
+)
+
+target_link_libraries(banana_runtime_player_registry_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_player_registry_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_resource_domain_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/resource/resource_domain_test.c
+)
+
+add_test(NAME banana_runtime_resource_domain_test
+	COMMAND banana_runtime_resource_domain_test
+)
+
+target_link_libraries(banana_runtime_resource_domain_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_resource_domain_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_move_target_service_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/input/move_target/move_target_service_test.c
+)
+
+add_test(NAME banana_runtime_move_target_service_test
+	COMMAND banana_runtime_move_target_service_test
+)
+
+target_link_libraries(banana_runtime_move_target_service_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_move_target_service_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_navigation_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/navigation/navigation_test.c
 )
