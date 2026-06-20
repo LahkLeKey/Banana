@@ -362,6 +362,21 @@ target_include_directories(banana_runtime_input_click_policy_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_tick_budget_policy_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/tick/tick_budget_policy_test.c
+)
+
+add_test(NAME banana_runtime_tick_budget_policy_test
+	COMMAND banana_runtime_tick_budget_policy_test
+)
+
+target_link_libraries(banana_runtime_tick_budget_policy_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_tick_budget_policy_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_render_camera_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/render/camera/camera_test.c
 )
