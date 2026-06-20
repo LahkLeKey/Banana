@@ -63,6 +63,17 @@ typedef int (*banana_native_test_teardown_fn)(void **state);
             fail_msg("%s", (message));                                                             \
     } while (0)
 
+/* For helpers that return a value: asserts condition and returns ret on failure. */
+#define BANANA_TEST_ASSERT_TRUE_RET(condition, message, ret)                                        \
+    do                                                                                              \
+    {                                                                                               \
+        if (!(condition))                                                                           \
+        {                                                                                           \
+            fail_msg("%s", (message));                                                             \
+            return (ret);                                                                           \
+        }                                                                                           \
+    } while (0)
+
 #define BANANA_TEST_ASSERT_INT_EQ(actual, expected, message)                                        \
     do                                                                                              \
     {                                                                                               \
@@ -182,6 +193,17 @@ static inline int banana_native_run_tests(const BananaNativeTestCase *tests,
         {                                                                                            \
             banana_native_record_failure((message), __FILE__, __LINE__);                            \
             return;                                                                                  \
+        }                                                                                            \
+    } while (0)
+
+/* For helpers that return a value: records failure and returns ret without aborting the process. */
+#define BANANA_TEST_ASSERT_TRUE_RET(condition, message, ret)                                         \
+    do                                                                                               \
+    {                                                                                                \
+        if (!(condition))                                                                            \
+        {                                                                                            \
+            banana_native_record_failure((message), __FILE__, __LINE__);                            \
+            return (ret);                                                                            \
         }                                                                                            \
     } while (0)
 

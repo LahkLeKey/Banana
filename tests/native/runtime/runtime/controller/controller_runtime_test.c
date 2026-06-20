@@ -75,6 +75,8 @@ static void test_runtime_controller_helpers(void **state)
                             "signal-by-id must dispatch to matched controller");
     BANANA_TEST_ASSERT_INT_EQ(g_signal_calls, 1,
                               "signal-by-id must trigger controller callback");
+    BANANA_TEST_ASSERT_INT_EQ(g_last_signal_value, 7,
+                              "signal-by-id must forward payload through callback");
 
     BANANA_TEST_ASSERT_TRUE(runtime_controller_assign_team_by_id(controllers, 2, 2, CONTROLLER_TEAM_NEUTRAL),
                             "assign-team-by-id must update team membership");
