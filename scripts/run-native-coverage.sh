@@ -60,7 +60,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-mkdir -p "$ROOT_DIR"
+cd "$ROOT_DIR"
 
 if [[ "$SKIP_BUILD" -eq 0 ]]; then
   if [[ -f "$BUILD_DIR/CMakeCache.txt" ]]; then
