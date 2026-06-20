@@ -1,5 +1,8 @@
 #include "physics/world.h"
+#include "physics/dynamics.h"
 #include "../../support/test_support.h"
+
+#include <string.h>
 
 static void test_physics_world_lifecycle_and_raycast(void **state)
 {
@@ -25,6 +28,27 @@ static void test_physics_world_lifecycle_and_raycast(void **state)
     physics_world_destroy(world);
 }
 
+static void test_dynamics_guard_paths_for_physics_world_module(void **state)
+{
+    PhysicsBody body;
+
+    (void)state;
+    memset(&body, 0, sizeof(body));
+
+    body.is_static = 1;
+    body.mass = 1.0f;
+    body.force_accum[1] = 9.0f;
+
+    dynamics_set_gravity(-8.0f);
+    dynamics_integrate(&body, 0.016f);
+
+    BANANA_TEST_ASSERT_FLOAT_EQ(body.force_accum[1],
+                                9.0f,
+                                0.0001f,
+                                "dynamics integrate must early-return for static-body guard path");
+}
+
 BANANA_TEST_MAIN(
-    BANANA_TEST_CASE(test_physics_world_lifecycle_and_raycast)
+    BANANA_TEST_CASE(test_physics_world_lifecycle_and_raycast),
+    BANANA_TEST_CASE(test_dynamics_guard_paths_for_physics_world_module)
 )

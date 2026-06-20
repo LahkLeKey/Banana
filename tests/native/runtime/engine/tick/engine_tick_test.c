@@ -1,6 +1,9 @@
 #include "runtime/engine/tick/engine_tick.h"
+#include "physics/dynamics.h"
 
 #include "../../support/test_support.h"
+
+#include <string.h>
 
 static void test_engine_tick_execute_rejects_null_window(void **state)
 {
@@ -29,6 +32,27 @@ static void test_engine_tick_execute_rejects_null_window(void **state)
                               "engine tick must return -1 when window context is missing");
 }
 
+static void test_dynamics_guard_paths_for_engine_tick_module(void **state)
+{
+    PhysicsBody body;
+
+    (void)state;
+    memset(&body, 0, sizeof(body));
+
+    body.is_static = 1;
+    body.mass = 1.0f;
+    body.force_accum[1] = 6.0f;
+
+    dynamics_set_gravity(-12.0f);
+    dynamics_integrate(&body, 0.033f);
+
+    BANANA_TEST_ASSERT_FLOAT_EQ(body.force_accum[1],
+                                6.0f,
+                                0.0001f,
+                                "dynamics integrate must early-return for static-body guard path");
+}
+
 BANANA_TEST_MAIN(
-    BANANA_TEST_CASE(test_engine_tick_execute_rejects_null_window)
+    BANANA_TEST_CASE(test_engine_tick_execute_rejects_null_window),
+    BANANA_TEST_CASE(test_dynamics_guard_paths_for_engine_tick_module)
 )

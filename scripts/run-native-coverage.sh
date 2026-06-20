@@ -160,7 +160,36 @@ def parse_overall_percentage(report_dir: Path):
             return float(match.group(1))
     return None
 
-modules_candidates = [report_dir / 'Modules', report_dir / 'coverage-report-msvc' / 'Modules']
+
+def strip_c_comments(text: str) -> str:
+    text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)
+    text = re.sub(r'//.*?$', '', text, flags=re.M)
+    return text
+
+
+def is_declaration_only_header(path: Path) -> bool:
+    if path.suffix.lower() not in {'.h', '.hpp'}:
+        return False
+
+    text = path.read_text(encoding='utf-8', errors='ignore')
+    text = strip_c_comments(text)
+
+    if re.search(r'\b(static\s+inline|inline)\b', text):
+        return False
+
+    if re.search(r'\)\s*\{', text):
+        return False
+
+    return True
+
+primary_modules_dir = report_dir / 'Modules'
+legacy_modules_dir = report_dir / 'coverage-report-msvc' / 'Modules'
+if primary_modules_dir.exists():
+  modules_candidates = [primary_modules_dir]
+elif legacy_modules_dir.exists():
+  modules_candidates = [legacy_modules_dir]
+else:
+  modules_candidates = []
 coverage_by_file = {}
 
 gcovr_json_path = report_dir / 'gcovr.json'
@@ -216,30 +245,47 @@ for path in sorted(source_root.rglob('*')):
 
 covered_total = 0
 uncovered_total = 0
+declaration_only_count = 0
 for path in all_sources:
     rel = path.relative_to(source_root).as_posix()
     entry = coverage_by_file.get(rel) or coverage_by_file.get(path.name)
+    actionable = True
+    coverage_display = '0.0%'
     if entry is None:
         line_count = sum(1 for _ in path.read_text(encoding='utf-8', errors='ignore').splitlines())
-        covered = 0
-        uncovered = line_count
-        status = 'not observed'
-        observed = False
+        if is_declaration_only_header(path):
+            covered = 0
+            uncovered = 0
+            status = 'declaration-only'
+            observed = False
+            actionable = False
+            declaration_only_count += 1
+        else:
+            covered = 0
+            uncovered = line_count
+            status = 'not observed'
+            observed = False
     else:
         line_count = entry['total'] if entry['total'] > 0 else sum(1 for _ in path.read_text(encoding='utf-8', errors='ignore').splitlines())
         covered = entry['covered']
         uncovered = entry['uncovered']
         status = 'partial' if covered and uncovered else ('fully covered' if covered else 'no observed lines')
         observed = True
+
     if covered + uncovered > 0:
         pct = 100.0 * covered / (covered + uncovered)
+        coverage_display = f'{pct:.1f}%'
     else:
         pct = 0.0
-    covered_total += covered
-    uncovered_total += uncovered
-    rows.append((rel, covered, uncovered, covered + uncovered, pct, status, observed))
+        coverage_display = 'n/a' if not actionable else '0.0%'
 
-rows.sort(key=lambda item: (item[2] == 0, item[2], item[0]), reverse=False)
+    if actionable:
+        covered_total += covered
+        uncovered_total += uncovered
+
+    rows.append((rel, covered, uncovered, covered + uncovered, pct, status, observed, actionable, coverage_display))
+
+rows.sort(key=lambda item: (not item[7], item[2] == 0, item[2], item[0]), reverse=False)
 
 summary_path = report_dir / 'coverage-files-summary.html'
 overall_pct = parse_overall_percentage(report_dir)
@@ -254,15 +300,17 @@ summary_html = f'''<!DOCTYPE html>
 </head>
 <body>
 <h1>Native source inventory coverage</h1>
-<p class="meta">This view enumerates every native source file under src/native. Files that were not observed in the current coverage run are shown as <strong>not observed</strong> and are treated as uncovered so the inventory is representative of the full native codebase.</p>
+<p class="meta">This view enumerates every native source file under src/native. Files that were not observed in the current coverage run are shown as <strong>not observed</strong> and are treated as uncovered so the inventory is representative of executable native code paths.</p>
+<p class="meta">Declaration-only headers are marked <strong>declaration-only</strong> and excluded from the actionable coverage denominator.</p>
 <p class="meta">Overall coverage across the current inventory: <strong>{overall_pct:.1f}%</strong> ({covered_total} covered lines / {covered_total + uncovered_total} total lines).</p>
+<p class="meta">Declaration-only headers detected in this run: <strong>{declaration_only_count}</strong>.</p>
 <table>
 <thead><tr><th>Source file</th><th>Status</th><th>Covered</th><th>Uncovered</th><th>Total</th><th>Coverage</th></tr></thead>
 <tbody>
 {''.join(
-    f'<tr><td><strong>{html.escape(rel)}</strong></td><td>{status}</td><td>{covered}</td><td>{uncovered}</td><td>{total}</td><td class="{cls}">{pct:.1f}%</td></tr>'
-    for rel, covered, uncovered, total, pct, status, observed in rows
-    for cls in ['low' if pct < 60 else 'good']
+    f'<tr><td><strong>{html.escape(rel)}</strong></td><td>{status}</td><td>{covered}</td><td>{uncovered}</td><td>{total}</td><td class="{cls}">{coverage_display}</td></tr>'
+    for rel, covered, uncovered, total, pct, status, observed, actionable, coverage_display in rows
+    for cls in ['low' if actionable and pct < 60 else 'good']
 )}
 </tbody></table>
 <p class="meta">Open the detailed OpenCppCoverage report at <a href="index.html">index.html</a>.</p>

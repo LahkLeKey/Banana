@@ -1,11 +1,29 @@
 #include "runtime/engine/composition/engine_composition_shutdown.h"
 #include "ai/controller.h"
 #include "ai/npc_merchant.h"
+#include "physics/dynamics.h"
+#include "render/backend.h"
 
 #include "../../support/test_support.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(_WIN32)
+static void set_env_value(const char *name, const char *value)
+{
+    if (!name || !value)
+        return;
+    _putenv_s(name, value);
+}
+#else
+static void set_env_value(const char *name, const char *value)
+{
+    if (!name || !value)
+        return;
+    setenv(name, value, 1);
+}
+#endif
 
 static int g_shutdown_destroy_calls = 0;
 
@@ -63,7 +81,52 @@ static void test_engine_composition_shutdown_cleans_controllers_and_merchants(vo
                               "shutdown must clear seeded merchants when merchant seeding is enabled");
 }
 
+static void test_dynamics_guard_paths_for_shutdown_module(void **state)
+{
+    PhysicsBody body;
+
+    (void)state;
+    memset(&body, 0, sizeof(body));
+
+    body.is_static = 1;
+    body.mass = 1.0f;
+    body.force_accum[1] = 5.0f;
+
+    dynamics_set_gravity(-9.81f);
+    dynamics_integrate(&body, 0.016f);
+
+    BANANA_TEST_ASSERT_FLOAT_EQ(body.force_accum[1],
+                                5.0f,
+                                0.0001f,
+                                "dynamics integrate must early-return for static bodies");
+}
+
+static void test_backend_fallback_and_name_paths_for_shutdown_module(void **state)
+{
+    BananaRenderBackend active_backend;
+
+    (void)state;
+
+    set_env_value("BANANA_DX12_FORCE_UNAVAILABLE", "1");
+    active_backend = banana_render_backend_active();
+
+    BANANA_TEST_ASSERT_INT_EQ((int)active_backend,
+                              (int)BANANA_RENDER_BACKEND_HEADLESS,
+                              "backend active path must fall back to headless when DX12 availability is forced off");
+    BANANA_TEST_ASSERT_STR_EQ(banana_render_backend_name(BANANA_RENDER_BACKEND_GLFW),
+                              "glfw",
+                              "backend name must map GLFW enum");
+    BANANA_TEST_ASSERT_STR_EQ(banana_render_backend_name(BANANA_RENDER_BACKEND_HEADLESS),
+                              "headless",
+                              "backend name must map headless enum");
+    BANANA_TEST_ASSERT_STR_EQ(banana_render_backend_name((BananaRenderBackend)99),
+                              "unknown",
+                              "backend name must map unknown enums to unknown string");
+}
+
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE(test_engine_composition_shutdown_rejects_null_state),
-    BANANA_TEST_CASE(test_engine_composition_shutdown_cleans_controllers_and_merchants)
+    BANANA_TEST_CASE(test_engine_composition_shutdown_cleans_controllers_and_merchants),
+    BANANA_TEST_CASE(test_dynamics_guard_paths_for_shutdown_module),
+    BANANA_TEST_CASE(test_backend_fallback_and_name_paths_for_shutdown_module)
 )

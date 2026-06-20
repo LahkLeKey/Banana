@@ -16,6 +16,23 @@ static float flat_sample_height(float x, float z)
     return 7.0f;
 }
 
+static float staged_corner_sample_height(float x, float z)
+{
+    if (x == -1.0f && z == -1.0f)
+        return 1.0f;
+
+    if (x == 1.0f && z == -1.0f)
+        return 2.0f;
+
+    if (x == -1.0f && z == 1.0f)
+        return 3.0f;
+
+    if (x == 1.0f && z == 1.0f)
+        return 2.0f;
+
+    return 0.0f;
+}
+
 static void test_spawn_hash_is_deterministic(void **state)
 {
     (void)state;
@@ -71,9 +88,23 @@ static void test_spawn_sample_max_ground_keeps_center_when_corners_are_equal(voi
                                 "spawn max-ground sampling must keep center height when all corners are equal");
 }
 
+static void test_spawn_sample_max_ground_updates_with_each_new_higher_corner(void **state)
+{
+    (void)state;
+    float sampled = runtime_engine_lifecycle_spawn_sample_max_ground(staged_corner_sample_height,
+                                                                      0.0f,
+                                                                      0.0f,
+                                                                      2.0f,
+                                                                      2.0f);
+
+    BANANA_TEST_ASSERT_FLOAT_EQ(sampled, 3.0f, 0.0001f,
+                                "spawn max-ground sampling must keep the highest value encountered across corner scans");
+}
+
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE(test_spawn_hash_is_deterministic),
     BANANA_TEST_CASE(test_spawn_jitter_stays_within_expected_range),
     BANANA_TEST_CASE(test_spawn_sample_max_ground_uses_center_and_corners),
-    BANANA_TEST_CASE(test_spawn_sample_max_ground_keeps_center_when_corners_are_equal)
+    BANANA_TEST_CASE(test_spawn_sample_max_ground_keeps_center_when_corners_are_equal),
+    BANANA_TEST_CASE(test_spawn_sample_max_ground_updates_with_each_new_higher_corner)
 )

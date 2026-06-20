@@ -41,21 +41,21 @@ int runtime_gameplay_humanoid_coordination_comeback_bonus(const EngineRuntimeSta
 {
     int per_coordination = 0;
     int bonus = 0;
+    int can_compute_bonus = 0;
 
-    if (!runtime_state)
-        return 0;
-    if (bean_team_count <= banana_team_count)
-        return 0;
+    can_compute_bonus = (runtime_state != NULL) && (bean_team_count > banana_team_count);
+    if (!can_compute_bonus)
+        per_coordination = 0;
+    else
+        per_coordination = runtime_tick_budget_policy_controller_war_sentience_comeback_bonus_per_coordination();
 
-    per_coordination = runtime_tick_budget_policy_controller_war_sentience_comeback_bonus_per_coordination();
-    if (per_coordination <= 0)
-        return 0;
+    if (per_coordination > 0)
+    {
+        bonus = runtime_state->war_sentience_coordination_level / per_coordination;
+        bonus += runtime_state->war_sentience_empathy_level / ((per_coordination * 2) + 1);
+    }
 
-    bonus = runtime_state->war_sentience_coordination_level / per_coordination;
-    bonus += runtime_state->war_sentience_empathy_level / ((per_coordination * 2) + 1);
-
-    if (bonus < 0)
-        bonus = 0;
+    bonus = (bonus < 0) ? 0 : bonus;
     if (bonus > 4)
         bonus = 4;
 
