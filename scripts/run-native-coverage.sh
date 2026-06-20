@@ -63,12 +63,8 @@ done
 cd "$ROOT_DIR"
 
 if [[ "$SKIP_BUILD" -eq 0 ]]; then
-  if [[ -f "$BUILD_DIR/CMakeCache.txt" ]]; then
-    echo "[coverage] reusing existing build tree at $BUILD_DIR"
-  else
-    echo "[coverage] configuring native coverage build in $BUILD_DIR"
-    cmake -S "$ROOT_DIR/src/native" -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBANANA_ENABLE_COVERAGE=ON
-  fi
+  echo "[coverage] configuring native coverage build in $BUILD_DIR"
+  cmake -S "$ROOT_DIR/src/native" -B "$BUILD_DIR" -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBANANA_ENABLE_COVERAGE=ON
 
   echo "[coverage] building native targets"
   cmake --build "$BUILD_DIR" --parallel
