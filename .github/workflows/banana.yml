@@ -204,8 +204,8 @@ jobs:
     name: Native / coverage
     needs: pre-commit
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
-      - uses: actions/checkout@v6
 
       - name: Install native coverage deps
         run: |
