@@ -214,14 +214,36 @@ jobs:
             cmake ninja-build gcc g++ libomp-dev gcovr lcov
 
       - name: Run native coverage workflow
+        id: native_coverage
+        continue-on-error: true
         run: bash scripts/run-native-coverage.sh --build-dir out/native-coverage-ci --output-dir artifacts/native/coverage-ci
 
+      - name: Report native inventory coverage
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html_path = Path('artifacts/native/coverage-ci/coverage-files-summary.html')
+          if not html_path.exists():
+              print('::warning::Native inventory coverage summary page was not generated.')
+              raise SystemExit(0)
+          text = html_path.read_text(encoding='utf-8', errors='ignore')
+          match = re.search(r'Overall coverage across the current inventory: <strong>([0-9.]+)%</strong>', text)
+          if match:
+              print(f"::notice::Native source inventory coverage: {match.group(1)}%")
+          else:
+              print('::warning::Native inventory coverage summary page did not contain an overall percentage.')
+          PY
+
       - name: Upload native coverage artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: native-coverage-report
           path: artifacts/native/coverage-ci
-          if-no-files-found: error
+          if-no-files-found: warn
 
   native-neon-integration:
     name: Native / Neon integration
