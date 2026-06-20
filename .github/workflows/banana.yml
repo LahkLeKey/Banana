@@ -223,7 +223,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$GITHUB_STEP_SUMMARY_DIR"
           summary_path="artifacts/native/coverage-ci/coverage-summary.md"
           html_path="artifacts/native/coverage-ci/coverage-files-summary.html"
           if [[ -f "$summary_path" ]]; then
