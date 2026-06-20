@@ -119,6 +119,7 @@ else
     if ! gcovr \
       --root "$ROOT_DIR" \
       --filter "$ROOT_DIR/src/native/" \
+      --json "$OUTPUT_DIR/gcovr.json" \
       --html-details "$OUTPUT_DIR/index.html" \
       --txt "$OUTPUT_DIR/coverage-summary.txt" \
       --json-summary "$OUTPUT_DIR/gcovr.json" \
