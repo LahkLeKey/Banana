@@ -151,29 +151,47 @@ if not source_root.exists():
 
 modules_candidates = [report_dir / 'Modules', report_dir / 'coverage-report-msvc' / 'Modules']
 coverage_by_file = {}
-for modules_dir in modules_candidates:
-    if not modules_dir.exists():
-        continue
-    for module_dir in sorted(modules_dir.iterdir()):
-        if not module_dir.is_dir():
-            continue
-        for html_file in sorted(module_dir.glob('*.html')):
-            if html_file.name == 'index.html':
-                continue
-            text = html_file.read_text(encoding='utf-8', errors='ignore')
-            title_match = re.search(r'<title>(.*?)</title>', text, re.I | re.S)
-            title = title_match.group(1).strip() if title_match else html_file.stem
-            covered = len(re.findall(r'background-color:#dfd', text))
-            uncovered = len(re.findall(r'background-color:#fdd', text))
-            total = covered + uncovered
-            if total <= 0:
-                continue
-            coverage_by_file[title] = {
-                'covered': coverage_by_file.get(title, {}).get('covered', 0) + covered,
-                'uncovered': coverage_by_file.get(title, {}).get('uncovered', 0) + uncovered,
-                'total': coverage_by_file.get(title, {}).get('total', 0) + total,
-            }
 
+gcovr_json_path = report_dir / 'gcovr.json'
+if gcovr_json_path.exists():
+    import json
+    gcovr_data = json.loads(gcovr_json_path.read_text(encoding='utf-8', errors='ignore') or '{}')
+    for entry in gcovr_data.get('files', []):
+        file_path = Path(entry.get('file', ''))
+        try:
+            key = file_path.resolve().relative_to(source_root).as_posix()
+        except Exception:
+            key = file_path.as_posix()
+        lines = (entry.get('summary') or {}).get('lines') or {}
+        coverage_by_file[key] = {
+            'covered': int(lines.get('covered', 0)),
+            'uncovered': int(lines.get('missing', 0)),
+            'total': int(lines.get('count', 0)),
+        }
+else:
+    for modules_dir in modules_candidates:
+        if not modules_dir.exists():
+            continue
+        for module_dir in sorted(modules_dir.iterdir()):
+            if not module_dir.is_dir():
+                continue
+            for html_file in sorted(module_dir.glob('*.html')):
+                if html_file.name == 'index.html':
+                    continue
+                text = html_file.read_text(encoding='utf-8', errors='ignore')
+                title_match = re.search(r'<title>(.*?)</title>', text, re.I | re.S)
+                title = title_match.group(1).strip() if title_match else html_file.stem
+                key = Path(title).name
+                covered = len(re.findall(r'background-color:#dfd', text))
+                uncovered = len(re.findall(r'background-color:#fdd', text))
+                total = covered + uncovered
+                if total <= 0:
+                    continue
+                coverage_by_file[key] = {
+                    'covered': coverage_by_file.get(key, {}).get('covered', 0) + covered,
+                    'uncovered': coverage_by_file.get(key, {}).get('uncovered', 0) + uncovered,
+                    'total': coverage_by_file.get(key, {}).get('total', 0) + total,
+                }
 rows = []
 all_sources = []
 for path in sorted(source_root.rglob('*')):
