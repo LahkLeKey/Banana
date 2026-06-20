@@ -373,8 +373,16 @@ endif()
 # ─────────────────────────────────────────────────────────────────────────────
 
 if(BANANA_ENABLE_COVERAGE)
-  target_compile_options(banana_engine_core PRIVATE -fprofile-arcs -ftest-coverage)
-  target_link_options(banana_engine_core PRIVATE -fprofile-arcs -ftest-coverage)
+  if(MSVC)
+    target_compile_options(banana_engine_core PRIVATE /Zi)
+    target_link_options(banana_engine_core PRIVATE /PROFILE /DEBUG)
+
+    target_compile_options(banana_asset_compiler PRIVATE /Zi)
+    target_link_options(banana_asset_compiler PRIVATE /PROFILE /DEBUG)
+  else()
+    target_compile_options(banana_engine_core PRIVATE -fprofile-arcs -ftest-coverage)
+    target_link_options(banana_engine_core PRIVATE -fprofile-arcs -ftest-coverage)
+  endif()
 endif()
 
 if(BUILD_TESTING)
