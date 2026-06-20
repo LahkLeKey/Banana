@@ -377,6 +377,36 @@ target_include_directories(banana_runtime_tick_budget_policy_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_tick_post_phase_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/tick/tick_post_phase_test.c
+)
+
+add_test(NAME banana_runtime_tick_post_phase_test
+	COMMAND banana_runtime_tick_post_phase_test
+)
+
+target_link_libraries(banana_runtime_tick_post_phase_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_tick_post_phase_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_terrain_tick_orchestration_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/orchestration/tick/loop/terrain_tick_orchestration_test.c
+)
+
+add_test(NAME banana_runtime_terrain_tick_orchestration_test
+	COMMAND banana_runtime_terrain_tick_orchestration_test
+)
+
+target_link_libraries(banana_runtime_terrain_tick_orchestration_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_terrain_tick_orchestration_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_render_camera_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/render/camera/camera_test.c
 )
@@ -388,6 +418,21 @@ add_test(NAME banana_runtime_render_camera_test
 target_link_libraries(banana_runtime_render_camera_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_render_camera_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_render_material_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/render/material/material_test.c
+)
+
+add_test(NAME banana_runtime_render_material_test
+	COMMAND banana_runtime_render_material_test
+)
+
+target_link_libraries(banana_runtime_render_material_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_render_material_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -407,6 +452,192 @@ target_include_directories(banana_runtime_camera_basis_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_engine_runtime_context_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/exports/engine_runtime_context_test.c
+)
+
+add_test(NAME banana_runtime_engine_runtime_context_test
+	COMMAND banana_runtime_engine_runtime_context_test
+)
+
+target_link_libraries(banana_runtime_engine_runtime_context_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_engine_runtime_context_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_application_service_ports_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/application/service/application_service_ports_test.c
+)
+
+add_test(NAME banana_runtime_application_service_ports_test
+	COMMAND banana_runtime_application_service_ports_test
+)
+
+target_link_libraries(banana_runtime_application_service_ports_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_application_service_ports_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_tick_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/tick/engine_tick_test.c
+)
+
+add_test(NAME banana_runtime_engine_tick_test
+	COMMAND banana_runtime_engine_tick_test
+)
+
+target_link_libraries(banana_runtime_engine_tick_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_engine_tick_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_lifecycle_spawn_math_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/lifecycle/engine_lifecycle_spawn_math_test.c
+)
+
+add_test(NAME banana_runtime_engine_lifecycle_spawn_math_test
+	COMMAND banana_runtime_engine_lifecycle_spawn_math_test
+)
+
+target_link_libraries(banana_runtime_engine_lifecycle_spawn_math_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_engine_lifecycle_spawn_math_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_composition_shutdown_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/composition/engine_composition_shutdown_test.c
+)
+
+add_test(NAME banana_runtime_engine_composition_shutdown_test
+	COMMAND banana_runtime_engine_composition_shutdown_test
+)
+
+target_link_libraries(banana_runtime_engine_composition_shutdown_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_engine_composition_shutdown_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_composition_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/composition/engine_composition_test.c
+)
+
+add_test(NAME banana_runtime_engine_composition_test
+	COMMAND banana_runtime_engine_composition_test
+)
+
+target_link_libraries(banana_runtime_engine_composition_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_engine_composition_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/engine_test.c
+)
+
+add_test(NAME banana_runtime_engine_test
+	COMMAND banana_runtime_engine_test
+)
+
+target_link_libraries(banana_runtime_engine_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_engine_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_native_k3h4_metrics_infrastructure_adapter_test
+	${CMAKE_CURRENT_LIST_DIR}/k3h4/infrastructure/k3h4_metrics_infrastructure_adapter_test.c
+)
+
+add_test(NAME banana_native_k3h4_metrics_infrastructure_adapter_test
+	COMMAND banana_native_k3h4_metrics_infrastructure_adapter_test
+)
+
+target_link_libraries(banana_native_k3h4_metrics_infrastructure_adapter_test PRIVATE banana_engine_core)
+target_link_libraries(banana_native_k3h4_metrics_infrastructure_adapter_test PRIVATE banana_native)
+
+if(WIN32)
+	add_custom_command(TARGET banana_native_k3h4_metrics_infrastructure_adapter_test POST_BUILD
+		COMMAND ${CMAKE_COMMAND}
+			-Dbanana_runtime_dlls=$<JOIN:$<TARGET_RUNTIME_DLLS:banana_native_k3h4_metrics_infrastructure_adapter_test>,|>
+			-Dbanana_target_dir=$<TARGET_FILE_DIR:banana_native_k3h4_metrics_infrastructure_adapter_test>
+			-P ${CMAKE_CURRENT_LIST_DIR}/runtime/support/copy_runtime_dlls.cmake
+		COMMENT "Copying runtime DLLs next to banana_native_k3h4_metrics_infrastructure_adapter_test"
+	)
+endif()
+
+target_include_directories(banana_native_k3h4_metrics_infrastructure_adapter_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+	${CMAKE_CURRENT_LIST_DIR}/../../src/native
+)
+
+add_executable(banana_native_k3h4_metrics_application_service_test
+	${CMAKE_CURRENT_LIST_DIR}/k3h4/application/k3h4_metrics_application_service_test.c
+)
+
+add_test(NAME banana_native_k3h4_metrics_application_service_test
+	COMMAND banana_native_k3h4_metrics_application_service_test
+)
+
+target_link_libraries(banana_native_k3h4_metrics_application_service_test PRIVATE banana_engine_core)
+target_link_libraries(banana_native_k3h4_metrics_application_service_test PRIVATE banana_native)
+
+if(WIN32)
+	add_custom_command(TARGET banana_native_k3h4_metrics_application_service_test POST_BUILD
+		COMMAND ${CMAKE_COMMAND}
+			-Dbanana_runtime_dlls=$<JOIN:$<TARGET_RUNTIME_DLLS:banana_native_k3h4_metrics_application_service_test>,|>
+			-Dbanana_target_dir=$<TARGET_FILE_DIR:banana_native_k3h4_metrics_application_service_test>
+			-P ${CMAKE_CURRENT_LIST_DIR}/runtime/support/copy_runtime_dlls.cmake
+		COMMENT "Copying runtime DLLs next to banana_native_k3h4_metrics_application_service_test"
+	)
+endif()
+
+target_include_directories(banana_native_k3h4_metrics_application_service_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+	${CMAKE_CURRENT_LIST_DIR}/../../src/native
+)
+
+add_executable(banana_native_k3h4_metrics_orchestration_layer_test
+	${CMAKE_CURRENT_LIST_DIR}/k3h4/k3h4_metrics_orchestration_layer_test.c
+)
+
+add_test(NAME banana_native_k3h4_metrics_orchestration_layer_test
+	COMMAND banana_native_k3h4_metrics_orchestration_layer_test
+)
+
+target_link_libraries(banana_native_k3h4_metrics_orchestration_layer_test PRIVATE banana_engine_core)
+target_link_libraries(banana_native_k3h4_metrics_orchestration_layer_test PRIVATE banana_native)
+
+if(WIN32)
+	add_custom_command(TARGET banana_native_k3h4_metrics_orchestration_layer_test POST_BUILD
+		COMMAND ${CMAKE_COMMAND}
+			-Dbanana_runtime_dlls=$<JOIN:$<TARGET_RUNTIME_DLLS:banana_native_k3h4_metrics_orchestration_layer_test>,|>
+			-Dbanana_target_dir=$<TARGET_FILE_DIR:banana_native_k3h4_metrics_orchestration_layer_test>
+			-P ${CMAKE_CURRENT_LIST_DIR}/runtime/support/copy_runtime_dlls.cmake
+		COMMENT "Copying runtime DLLs next to banana_native_k3h4_metrics_orchestration_layer_test"
+	)
+endif()
+
+target_include_directories(banana_native_k3h4_metrics_orchestration_layer_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+	${CMAKE_CURRENT_LIST_DIR}/../../src/native
+)
+
 add_executable(banana_runtime_terrain_generation_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/terrain/terrain_generation_test.c
 )
@@ -418,6 +649,21 @@ add_test(NAME banana_runtime_terrain_generation_test
 target_link_libraries(banana_runtime_terrain_generation_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_terrain_generation_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_world_abi_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/world/world_abi_test.c
+)
+
+add_test(NAME banana_runtime_world_abi_test
+	COMMAND banana_runtime_world_abi_test
+)
+
+target_link_libraries(banana_runtime_world_abi_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_world_abi_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -553,6 +799,21 @@ add_test(NAME banana_runtime_controller_system_test
 target_link_libraries(banana_runtime_controller_system_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_controller_system_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_controller_system_dispatch_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/controller/controller_system_dispatch_test.c
+)
+
+add_test(NAME banana_runtime_controller_system_dispatch_test
+	COMMAND banana_runtime_controller_system_dispatch_test
+)
+
+target_link_libraries(banana_runtime_controller_system_dispatch_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_controller_system_dispatch_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
