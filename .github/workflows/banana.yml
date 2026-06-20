@@ -239,18 +239,18 @@ jobs:
 
           if [[ -f "$html_path" ]]; then
             python - <<'PY'
-from pathlib import Path
-import os
-import re
-html_path = Path("artifacts/native/coverage-ci/coverage-files-summary.html")
-summary_path = Path(os.environ["GITHUB_STEP_SUMMARY"])
-text = html_path.read_text(encoding="utf-8", errors="ignore") if html_path.exists() else ""
-style_match = re.search(r"<style>(.*?)</style>", text, re.S | re.I)
-body_match = re.search(r"<body>(.*?)</body>", text, re.S | re.I)
-body = body_match.group(1) if body_match else text
-style = f"<style>{style_match.group(1)}</style>" if style_match else ""
-existing = summary_path.read_text(encoding="utf-8", errors="ignore") if summary_path.exists() else ""
-summary_path.write_text(existing + "\n" + style + body, encoding="utf-8")
+            from pathlib import Path
+            import os
+            import re
+            html_path = Path("artifacts/native/coverage-ci/coverage-files-summary.html")
+            summary_path = Path(os.environ["GITHUB_STEP_SUMMARY"])
+            text = html_path.read_text(encoding="utf-8", errors="ignore") if html_path.exists() else ""
+            style_match = re.search(r"<style>(.*?)</style>", text, re.S | re.I)
+            body_match = re.search(r"<body>(.*?)</body>", text, re.S | re.I)
+            body = body_match.group(1) if body_match else text
+            style = f"<style>{style_match.group(1)}</style>" if style_match else ""
+            existing = summary_path.read_text(encoding="utf-8", errors="ignore") if summary_path.exists() else ""
+            summary_path.write_text(existing + "\n" + style + body, encoding="utf-8")
 PY
             echo "::notice::Native inventory summary report available at $html_path"
           else
