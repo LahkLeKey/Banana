@@ -7,6 +7,12 @@ option(BANANA_ENABLE_POSTGRES "Enable native PostgreSQL/PgBouncer bridge paths" 
 option(BANANA_ENABLE_DETERMINISTIC_PERSISTENCE_TESTS
 	"Enable deterministic persistent-world native test targets"
 	ON)
+option(BANANA_ENABLE_COVERAGE "Enable native coverage instrumentation" OFF)
+
+if(BANANA_ENABLE_COVERAGE AND NOT MSVC)
+	add_compile_options(--coverage)
+	add_link_options(--coverage)
+endif()
 
 add_subdirectory(engine)
 

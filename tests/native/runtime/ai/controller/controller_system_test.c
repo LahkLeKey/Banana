@@ -127,7 +127,37 @@ static void test_controller_signal_type_filters_by_controller_type(void **state)
     controller_system_destroy(sys);
 }
 
+static void test_controller_system_destroy_tears_down_instances(void **state)
+{
+    (void)state;
+    ControllerSystem *sys = NULL;
+    uint32_t first_id;
+    uint32_t second_id;
+
+    g_updates = 0;
+    g_signals = 0;
+    g_destroys = 0;
+    g_alpha_signals = 0;
+    g_beta_signals = 0;
+
+    controller_register("alpha", alpha_factory);
+    controller_register("beta", beta_factory);
+    sys = controller_system_create();
+    BANANA_TEST_ASSERT_TRUE(sys != NULL, "controller system must allocate for teardown test");
+
+    first_id = controller_system_spawn(sys, "alpha", 1.0f, 2.0f, 3.0f);
+    second_id = controller_system_spawn(sys, "beta", 4.0f, 5.0f, 6.0f);
+    BANANA_TEST_ASSERT_INT_EQ(first_id, 1, "first spawned controller should receive id 1");
+    BANANA_TEST_ASSERT_INT_EQ(second_id, 2, "second spawned controller should receive id 2");
+    BANANA_TEST_ASSERT_INT_EQ(sys->count, 2, "teardown test should create two instances");
+
+    controller_system_destroy(sys);
+
+    BANANA_TEST_ASSERT_INT_EQ(g_destroys, 2, "destroying the system should invoke the destroy callback for each instance");
+}
+
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE(test_controller_factory_and_system),
-    BANANA_TEST_CASE(test_controller_signal_type_filters_by_controller_type)
+    BANANA_TEST_CASE(test_controller_signal_type_filters_by_controller_type),
+    BANANA_TEST_CASE(test_controller_system_destroy_tears_down_instances)
 )

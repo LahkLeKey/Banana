@@ -200,6 +200,63 @@ jobs:
       - name: Run native tests
         run: ctest --test-dir out/native-ci --output-on-failure
 
+  native-coverage:
+    name: Native / coverage
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install native coverage deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build gcc g++ libomp-dev gcovr lcov
+
+      - name: Run native coverage workflow
+        id: native_coverage
+        continue-on-error: true
+        run: bash scripts/run-native-coverage.sh --build-dir out/native-coverage-ci --output-dir artifacts/native/coverage-ci
+
+      - name: Report native inventory coverage
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          summary_path="artifacts/native/coverage-ci/coverage-summary.md"
+          html_path="artifacts/native/coverage-ci/coverage-files-summary.html"
+          if [[ -f "$summary_path" ]]; then
+            cat "$summary_path" >> "$GITHUB_STEP_SUMMARY"
+          else
+            cat <<'EOF_SUMMARY' >> "$GITHUB_STEP_SUMMARY"
+          ## Native source inventory coverage
+
+          - Summary report was not generated; the coverage job still completed with warnings.
+          - Artifact path: artifacts/native/coverage-ci
+          EOF_SUMMARY
+          fi
+
+          if [[ -f "$html_path" ]]; then
+            {
+              echo
+              echo "## Native source inventory coverage report"
+              echo
+              sed -n '/<body>/,/<\/body>/p' "$html_path" | sed '1d;$d'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::Native inventory summary report available at $html_path"
+          else
+            echo "::warning::Native inventory coverage summary page was not generated."
+          fi
+
+      - name: Upload native coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-coverage-report
+          path: artifacts/native/coverage-ci
+          if-no-files-found: warn
+
   native-neon-integration:
     name: Native / Neon integration
     needs:
@@ -248,6 +305,7 @@ jobs:
       - secret-scans
       - typescript-smoke
       - native-build
+      - native-coverage
       - native-neon-integration
     if: always()
     runs-on: ubuntu-latest
