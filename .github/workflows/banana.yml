@@ -200,6 +200,29 @@ jobs:
       - name: Run native tests
         run: ctest --test-dir out/native-ci --output-on-failure
 
+  native-coverage:
+    name: Native / coverage
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install native coverage deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build gcc g++ libomp-dev gcovr lcov
+
+      - name: Run native coverage workflow
+        run: bash scripts/run-native-coverage.sh --build-dir out/native-coverage-ci --output-dir artifacts/native/coverage-ci
+
+      - name: Upload native coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-coverage-report
+          path: artifacts/native/coverage-ci
+          if-no-files-found: error
+
   native-neon-integration:
     name: Native / Neon integration
     needs:
@@ -248,6 +271,7 @@ jobs:
       - secret-scans
       - typescript-smoke
       - native-build
+      - native-coverage
       - native-neon-integration
     if: always()
     runs-on: ubuntu-latest
