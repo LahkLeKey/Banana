@@ -186,6 +186,10 @@ add_test(NAME banana_runtime_netcode_vector_failure_path_test
 	COMMAND banana_runtime_netcode_vector_failure_path_test
 )
 
+if(NOT MSVC)
+	target_link_libraries(banana_runtime_netcode_vector_failure_path_test PRIVATE m)
+endif()
+
 add_executable(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_orchestrator_failure_paths_test.c
 	${BANANA_ENGINE_DIR}/runtime/netcode/k3h4/netcode_k3h4_orchestrator.c
