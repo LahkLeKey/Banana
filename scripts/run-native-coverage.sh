@@ -279,7 +279,7 @@ for path in all_sources:
     entry = coverage_by_file.get(rel) or coverage_by_file.get(path.name)
     actionable = True
     coverage_display = '0.0%'
-  if entry is None or int(entry.get('total', 0)) <= 0:
+    if entry is None or int(entry.get('total', 0)) <= 0:
         line_count = sum(1 for _ in path.read_text(encoding='utf-8', errors='ignore').splitlines())
         if is_declaration_only_header(path):
             covered = 0
@@ -294,7 +294,6 @@ for path in all_sources:
             status = 'not observed'
             observed = False
     else:
-        line_count = entry['total'] if entry['total'] > 0 else sum(1 for _ in path.read_text(encoding='utf-8', errors='ignore').splitlines())
         covered = entry['covered']
         uncovered = entry['uncovered']
         status = 'partial' if covered and uncovered else ('fully covered' if covered else 'no observed lines')
