@@ -1,5 +1,7 @@
 # Native and build outputs
 build/
+!tests/native/runtime/player/build/
+!tests/native/runtime/player/build/**
 out/
 bin/
 obj/
