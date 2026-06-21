@@ -940,6 +940,9 @@ add_executable(banana_runtime_gameplay_service_sentience_behavior_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/service/gameplay_service_sentience_behavior_test.c
 	${BANANA_ENGINE_DIR}/runtime/engine/gameplay/service/gameplay_service_sentience_behavior.c
 )
+if(NOT MSVC)
+	target_link_libraries(banana_runtime_gameplay_service_sentience_behavior_test PRIVATE m)
+endif()
 
 add_test(NAME banana_runtime_gameplay_service_sentience_behavior_test
 	COMMAND banana_runtime_gameplay_service_sentience_behavior_test
@@ -968,6 +971,9 @@ add_executable(banana_runtime_gameplay_service_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/service/gameplay_service_test.c
 	${BANANA_ENGINE_DIR}/runtime/engine/gameplay/service/gameplay_service.c
 )
+if(NOT MSVC)
+	target_link_libraries(banana_runtime_gameplay_service_test PRIVATE m)
+endif()
 
 add_test(NAME banana_runtime_gameplay_service_test
 	COMMAND banana_runtime_gameplay_service_test
@@ -1835,6 +1841,9 @@ add_executable(banana_physics_collider_narrow_phase_test
 	${BANANA_ENGINE_DIR}/physics/collider/collider_narrow_phase.c
 	${BANANA_ENGINE_DIR}/physics/collider/collider_resolve.c
 )
+if(NOT MSVC)
+	target_link_libraries(banana_physics_collider_narrow_phase_test PRIVATE m)
+endif()
 
 add_test(NAME banana_physics_collider_narrow_phase_test
 	COMMAND banana_physics_collider_narrow_phase_test
@@ -1846,11 +1855,19 @@ target_include_directories(banana_physics_collider_narrow_phase_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+if(NOT MSVC)
+	target_link_libraries(banana_runtime_combat_controller_k3h4_test PRIVATE m)
+	target_link_libraries(banana_runtime_combat_controller_coverage_test PRIVATE m)
+endif()
+
 add_executable(banana_runtime_render_submit_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/render/submit/render_submit_test.c
 	${BANANA_ENGINE_DIR}/runtime/render/submit/render_submit.c
 	${BANANA_ENGINE_DIR}/runtime/render/material/render_material.c
 )
+if(NOT MSVC)
+	target_link_libraries(banana_runtime_render_submit_test PRIVATE m)
+endif()
 
 add_test(NAME banana_runtime_render_submit_test
 	COMMAND banana_runtime_render_submit_test
@@ -2000,6 +2017,9 @@ add_executable(banana_runtime_backend_dx12_projection_policy_test
    ${CMAKE_CURRENT_LIST_DIR}/runtime/render/dx12/backend_dx12_projection_policy_test.c
    ${BANANA_ENGINE_DIR}/render/dx12/backend_dx12_projection_policy.c
 )
+if(NOT MSVC)
+	target_link_libraries(banana_runtime_backend_dx12_projection_policy_test PRIVATE m)
+endif()
 
 add_test(NAME banana_runtime_backend_dx12_projection_policy_test
    COMMAND banana_runtime_backend_dx12_projection_policy_test
