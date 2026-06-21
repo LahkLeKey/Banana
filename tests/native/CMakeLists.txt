@@ -676,6 +676,51 @@ target_compile_definitions(banana_runtime_renderer_draw_test PRIVATE
 	BANANA_ENGINE_RENDER_BACKEND_DX12=1
 )
 
+add_executable(banana_render_window_headless_stub_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/render/window/window_headless_stub_test.c
+	${BANANA_ENGINE_DIR}/render/window/window.c
+)
+
+add_test(NAME banana_render_window_headless_stub_test
+	COMMAND banana_render_window_headless_stub_test
+)
+
+target_include_directories(banana_render_window_headless_stub_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/render
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_render_shader_headless_stub_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/render/shader/shader_headless_stub_test.c
+	${BANANA_ENGINE_DIR}/render/shader/shader.c
+)
+
+add_test(NAME banana_render_shader_headless_stub_test
+	COMMAND banana_render_shader_headless_stub_test
+)
+
+target_include_directories(banana_render_shader_headless_stub_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/render
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_render_backend_headless_facade_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/render/backend/backend_headless_facade_test.c
+	${BANANA_ENGINE_DIR}/render/backend/backend.c
+)
+
+add_test(NAME banana_render_backend_headless_facade_test
+	COMMAND banana_render_backend_headless_facade_test
+)
+
+target_include_directories(banana_render_backend_headless_facade_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/render
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_camera_basis_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/camera/basis/camera_basis_test.c
 )
