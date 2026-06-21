@@ -124,7 +124,6 @@ else
       --html-details "$OUTPUT_DIR/index.html" \
       --txt "$OUTPUT_DIR/coverage-summary.txt" \
       --print-summary \
-      --sort uncovered \
       --exclude '.*tests.*' \
       --exclude '.*third_party.*'; then
       coverage_status="warn"
