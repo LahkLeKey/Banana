@@ -120,6 +120,7 @@ else
       --root "$ROOT_DIR" \
       --object-directory "$BUILD_DIR" \
       --filter "$ROOT_DIR/src/native/" \
+      --filter "src/native/" \
       --json "$OUTPUT_DIR/gcovr.json" \
       --html-details "$OUTPUT_DIR/index.html" \
       --txt "$OUTPUT_DIR/coverage-summary.txt" \
