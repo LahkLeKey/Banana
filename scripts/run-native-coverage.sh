@@ -111,14 +111,18 @@ else
     coverage_status="warn"
     echo "[coverage] warning: gcovr is required; writing fallback inventory summary"
   else
+    gcovr_version="$(gcovr --version 2>/dev/null | head -n 1 || true)"
+    if [[ -n "$gcovr_version" ]]; then
+      echo "[coverage] using $gcovr_version"
+    fi
     echo "[coverage] generating gcovr report at $OUTPUT_DIR"
     if ! gcovr \
       --root "$ROOT_DIR" \
+      --object-directory "$BUILD_DIR" \
       --filter "$ROOT_DIR/src/native/" \
       --json "$OUTPUT_DIR/gcovr.json" \
       --html-details "$OUTPUT_DIR/index.html" \
       --txt "$OUTPUT_DIR/coverage-summary.txt" \
-      --json-summary "$OUTPUT_DIR/gcovr.json" \
       --print-summary \
       --sort uncovered \
       --exclude '.*tests.*' \
