@@ -271,6 +271,12 @@ for path in all_sources:
         uncovered = entry['uncovered']
         status = 'partial' if covered and uncovered else ('fully covered' if covered else 'no observed lines')
         observed = True
+        if is_declaration_only_header(path):
+            covered = 0
+            uncovered = 0
+            status = 'declaration-only'
+            actionable = False
+            declaration_only_count += 1
 
     if covered + uncovered > 0:
         pct = 100.0 * covered / (covered + uncovered)
