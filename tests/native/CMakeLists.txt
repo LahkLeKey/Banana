@@ -52,6 +52,14 @@ function(banana_enable_cmocka_native target)
 	endif()
 endfunction()
 
+function(banana_link_libm_if_unix target)
+	# Standalone tests that compile math-using engine .c files directly need
+	# libm on Unix instead of relying on banana_engine_core to carry it transitively.
+	if(NOT MSVC)
+		target_link_libraries(${target} PRIVATE m)
+	endif()
+endfunction()
+
 add_executable(banana_runtime_netcode_model_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_model_test.c
 )
@@ -177,6 +185,8 @@ add_executable(banana_runtime_netcode_vector_failure_path_test
 	${BANANA_ENGINE_DIR}/runtime/netcode/vector/netcode_vector.c
 )
 
+banana_link_libm_if_unix(banana_runtime_netcode_vector_failure_path_test)
+
 target_include_directories(banana_runtime_netcode_vector_failure_path_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
@@ -185,10 +195,6 @@ target_include_directories(banana_runtime_netcode_vector_failure_path_test PRIVA
 add_test(NAME banana_runtime_netcode_vector_failure_path_test
 	COMMAND banana_runtime_netcode_vector_failure_path_test
 )
-
-if(NOT MSVC)
-	target_link_libraries(banana_runtime_netcode_vector_failure_path_test PRIVATE m)
-endif()
 
 add_executable(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_orchestrator_failure_paths_test.c
@@ -940,9 +946,8 @@ add_executable(banana_runtime_gameplay_service_sentience_behavior_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/service/gameplay_service_sentience_behavior_test.c
 	${BANANA_ENGINE_DIR}/runtime/engine/gameplay/service/gameplay_service_sentience_behavior.c
 )
-if(NOT MSVC)
-	target_link_libraries(banana_runtime_gameplay_service_sentience_behavior_test PRIVATE m)
-endif()
+
+banana_link_libm_if_unix(banana_runtime_gameplay_service_sentience_behavior_test)
 
 add_test(NAME banana_runtime_gameplay_service_sentience_behavior_test
 	COMMAND banana_runtime_gameplay_service_sentience_behavior_test
@@ -971,9 +976,8 @@ add_executable(banana_runtime_gameplay_service_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/service/gameplay_service_test.c
 	${BANANA_ENGINE_DIR}/runtime/engine/gameplay/service/gameplay_service.c
 )
-if(NOT MSVC)
-	target_link_libraries(banana_runtime_gameplay_service_test PRIVATE m)
-endif()
+
+banana_link_libm_if_unix(banana_runtime_gameplay_service_test)
 
 add_test(NAME banana_runtime_gameplay_service_test
 	COMMAND banana_runtime_gameplay_service_test
@@ -1534,7 +1538,7 @@ if(MSVC)
     target_compile_definitions(banana_k3h4_scaling_benchmark_test PRIVATE _CRT_SECURE_NO_WARNINGS)
 else()
     target_compile_options(banana_k3h4_scaling_benchmark_test PRIVATE -Wall -Wextra)
-    target_link_libraries(banana_k3h4_scaling_benchmark_test PRIVATE m)
+	banana_link_libm_if_unix(banana_k3h4_scaling_benchmark_test)
 endif()
 
 add_test(NAME banana_k3h4_scaling_benchmark_test
@@ -1630,13 +1634,11 @@ add_executable(banana_runtime_terrain_chunks_test
 	${BANANA_ENGINE_DIR}/runtime/terrain/terrain_chunks.c
 )
 
+banana_link_libm_if_unix(banana_runtime_terrain_chunks_test)
+
 add_test(NAME banana_runtime_terrain_chunks_test
 	COMMAND banana_runtime_terrain_chunks_test
 )
-
-if(NOT MSVC)
-	target_link_libraries(banana_runtime_terrain_chunks_test PRIVATE m)
-endif()
 
 target_include_directories(banana_runtime_terrain_chunks_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -1841,9 +1843,8 @@ add_executable(banana_physics_collider_narrow_phase_test
 	${BANANA_ENGINE_DIR}/physics/collider/collider_narrow_phase.c
 	${BANANA_ENGINE_DIR}/physics/collider/collider_resolve.c
 )
-if(NOT MSVC)
-	target_link_libraries(banana_physics_collider_narrow_phase_test PRIVATE m)
-endif()
+
+banana_link_libm_if_unix(banana_physics_collider_narrow_phase_test)
 
 add_test(NAME banana_physics_collider_narrow_phase_test
 	COMMAND banana_physics_collider_narrow_phase_test
@@ -1855,19 +1856,16 @@ target_include_directories(banana_physics_collider_narrow_phase_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
-if(NOT MSVC)
-	target_link_libraries(banana_runtime_combat_controller_k3h4_test PRIVATE m)
-	target_link_libraries(banana_runtime_combat_controller_coverage_test PRIVATE m)
-endif()
+banana_link_libm_if_unix(banana_runtime_combat_controller_k3h4_test)
+banana_link_libm_if_unix(banana_runtime_combat_controller_coverage_test)
 
 add_executable(banana_runtime_render_submit_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/render/submit/render_submit_test.c
 	${BANANA_ENGINE_DIR}/runtime/render/submit/render_submit.c
 	${BANANA_ENGINE_DIR}/runtime/render/material/render_material.c
 )
-if(NOT MSVC)
-	target_link_libraries(banana_runtime_render_submit_test PRIVATE m)
-endif()
+
+banana_link_libm_if_unix(banana_runtime_render_submit_test)
 
 add_test(NAME banana_runtime_render_submit_test
 	COMMAND banana_runtime_render_submit_test
@@ -2017,9 +2015,8 @@ add_executable(banana_runtime_backend_dx12_projection_policy_test
    ${CMAKE_CURRENT_LIST_DIR}/runtime/render/dx12/backend_dx12_projection_policy_test.c
    ${BANANA_ENGINE_DIR}/render/dx12/backend_dx12_projection_policy.c
 )
-if(NOT MSVC)
-	target_link_libraries(banana_runtime_backend_dx12_projection_policy_test PRIVATE m)
-endif()
+
+banana_link_libm_if_unix(banana_runtime_backend_dx12_projection_policy_test)
 
 add_test(NAME banana_runtime_backend_dx12_projection_policy_test
    COMMAND banana_runtime_backend_dx12_projection_policy_test
