@@ -501,6 +501,23 @@ int main(void)
         return fail("facade should reject NULL input with -1");
     if (runtime_netcode_k3h4_pipeline_execute(NULL, &pipeline_output) != -1)
         return fail("pipeline should reject NULL input with -1");
+    memset(&pipeline_output, 0x3C, sizeof(pipeline_output));
+    memcpy(&expected_pipeline_output, &pipeline_output, sizeof(expected_pipeline_output));
+    if (runtime_netcode_k3h4_pipeline_execute_with_config(
+            NULL,
+            &pipeline_output,
+            RUNTIME_NETCODE_K3H4_ASSIGNMENT_MULTIPLICATIVE,
+            RUNTIME_NETCODE_K3H4_SPECTRAL_DISABLED) != -1)
+    {
+        return fail("pipeline-with-config should reject NULL input with -1");
+    }
+    if (assert_output_unchanged(
+            &pipeline_output,
+            &expected_pipeline_output,
+            "pipeline-with-config should not mutate output on NULL-input failure"))
+    {
+        return 1;
+    }
 
     memset(&facade_output, 0x5A, sizeof(facade_output));
     memset(&pipeline_output, 0xA5, sizeof(pipeline_output));
@@ -645,6 +662,21 @@ int main(void)
 
     if (runtime_netcode_vector_build(&input, &vector_output) != 0)
         return fail("failed to rebuild vector output after failure injections");
+
+    {
+        RuntimeNetcodeVectorInput clamp_input = input;
+        RuntimeNetcodeVectorOutput clamp_output;
+
+        clamp_input.network_dimensions = RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS + 5;
+        memset(&clamp_output, 0x66, sizeof(clamp_output));
+        if (runtime_netcode_vector_build(&clamp_input, &clamp_output) != 0)
+            return fail("failed to build vector output for high-dimension clamp case");
+        if (clamp_output.dimensions != RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS)
+            return fail("expected network dimensions to clamp to the maximum supported value");
+    }
+
+    if (runtime_netcode_vector_build(&input, &vector_output) != 0)
+        return fail("failed to build vector output for high-dimension clamp case");
 
     memset(&facade_output, 0x77, sizeof(facade_output));
     memset(&pipeline_output, 0x88, sizeof(pipeline_output));

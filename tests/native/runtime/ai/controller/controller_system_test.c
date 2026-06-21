@@ -190,10 +190,26 @@ static void test_controller_system_destroy_tolerates_null_system(void **state)
                             "controller system destroy must tolerate null systems");
 }
 
+static void test_controller_register_tolerates_registry_capacity(void **state)
+{
+    (void)state;
+    char type_name[32];
+
+    for (int i = 0; i < 64; i++)
+    {
+        snprintf(type_name, sizeof(type_name), "overflow_%d", i);
+        controller_register(type_name, fake_factory);
+    }
+
+    BANANA_TEST_ASSERT_TRUE(1,
+                            "controller_register must tolerate over-capacity registrations");
+}
+
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE(test_controller_factory_and_system),
     BANANA_TEST_CASE(test_controller_signal_type_filters_by_controller_type),
     BANANA_TEST_CASE(test_controller_system_destroy_tears_down_instances),
     BANANA_TEST_CASE(test_controller_system_spawn_rejects_null_or_invalid_inputs),
-    BANANA_TEST_CASE(test_controller_system_destroy_tolerates_null_system)
+    BANANA_TEST_CASE(test_controller_system_destroy_tolerates_null_system),
+    BANANA_TEST_CASE(test_controller_register_tolerates_registry_capacity)
 )

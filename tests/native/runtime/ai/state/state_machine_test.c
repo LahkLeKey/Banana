@@ -43,6 +43,40 @@ static void test_fsm_add_state_and_trigger(void **state)
                               "fsm update should advance state context while active");
 }
 
+static void test_fsm_limits_and_none_name(void **state)
+{
+    (void)state;
+    StateMachine fsm;
+    int counter = 0;
+
+    fsm_init(&fsm, &counter);
+
+    BANANA_TEST_ASSERT_STR_EQ(fsm_current_state_name(&fsm), "none",
+                              "fsm should report none when no state is active");
+
+    for (int i = 0; i < BANANA_FSM_MAX_STATES; i++)
+    {
+        int index = fsm_add_state(&fsm, "state", NULL, NULL, NULL);
+        BANANA_TEST_ASSERT_INT_EQ(index, i,
+                                  "fsm should register states until max state limit");
+    }
+
+    BANANA_TEST_ASSERT_INT_EQ(
+        fsm_add_state(&fsm, "overflow", NULL, NULL, NULL),
+        -1,
+        "fsm should reject state registration beyond max state limit");
+    BANANA_TEST_ASSERT_INT_EQ(fsm.state_count, BANANA_FSM_MAX_STATES,
+                              "fsm state count should remain clamped at max state limit");
+
+    fsm.transition_count = BANANA_FSM_MAX_TRANSITIONS;
+    fsm_add_transition(&fsm, 0, 1, "ignored");
+    BANANA_TEST_ASSERT_INT_EQ(
+        fsm.transition_count,
+        BANANA_FSM_MAX_TRANSITIONS,
+        "fsm should ignore transition registrations beyond max transition limit");
+}
+
 BANANA_TEST_MAIN(
-    BANANA_TEST_CASE(test_fsm_add_state_and_trigger)
+    BANANA_TEST_CASE(test_fsm_add_state_and_trigger),
+    BANANA_TEST_CASE(test_fsm_limits_and_none_name)
 )

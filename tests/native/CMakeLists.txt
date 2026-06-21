@@ -346,6 +346,21 @@ target_include_directories(banana_runtime_physics_collider_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_physics_raycast_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/physics/raycast/raycast_test.c
+)
+
+add_test(NAME banana_runtime_physics_raycast_test
+	COMMAND banana_runtime_physics_raycast_test
+)
+
+target_link_libraries(banana_runtime_physics_raycast_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_physics_raycast_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_physics_world_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/physics/world/world_test.c
 )
@@ -372,6 +387,21 @@ add_test(NAME banana_runtime_controller_runtime_test
 target_link_libraries(banana_runtime_controller_runtime_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_controller_runtime_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_controller_kind_domain_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/controller/kind/controller_kind_domain_test.c
+)
+
+add_test(NAME banana_runtime_controller_kind_domain_test
+	COMMAND banana_runtime_controller_kind_domain_test
+)
+
+target_link_libraries(banana_runtime_controller_kind_domain_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_controller_kind_domain_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -457,6 +487,20 @@ target_include_directories(banana_runtime_tick_post_phase_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_tick_phases_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/tick/tick_phases_test.c
+	${BANANA_ENGINE_DIR}/runtime/tick/tick_phases.c
+)
+
+add_test(NAME banana_runtime_tick_phases_test
+	COMMAND banana_runtime_tick_phases_test
+)
+
+target_include_directories(banana_runtime_tick_phases_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_terrain_tick_orchestration_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/orchestration/tick/loop/terrain_tick_orchestration_test.c
 )
@@ -472,6 +516,20 @@ target_include_directories(banana_runtime_terrain_tick_orchestration_test PRIVAT
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_tick_orchestration_execute_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/orchestration/tick/loop/runtime_tick_orchestration_execute_test.c
+	${BANANA_ENGINE_DIR}/runtime/orchestration/tick/loop/runtime_tick_orchestration.c
+)
+
+add_test(NAME banana_runtime_tick_orchestration_execute_test
+	COMMAND banana_runtime_tick_orchestration_execute_test
+)
+
+target_include_directories(banana_runtime_tick_orchestration_execute_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_render_camera_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/render/camera/camera_test.c
 )
@@ -483,6 +541,21 @@ add_test(NAME banana_runtime_render_camera_test
 target_link_libraries(banana_runtime_render_camera_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_render_camera_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_backend_dx12_diagnostics_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/render/dx12/backend_dx12_diagnostics_test.c
+)
+
+add_test(NAME banana_runtime_backend_dx12_diagnostics_test
+	COMMAND banana_runtime_backend_dx12_diagnostics_test
+)
+
+target_link_libraries(banana_runtime_backend_dx12_diagnostics_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_backend_dx12_diagnostics_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -513,6 +586,20 @@ add_test(NAME banana_runtime_camera_basis_test
 target_link_libraries(banana_runtime_camera_basis_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_camera_basis_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_camera_follow_policy_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/camera/follow/camera_follow_policy_test.c
+	${BANANA_ENGINE_DIR}/runtime/camera/follow/camera_follow_policy.c
+)
+
+add_test(NAME banana_runtime_camera_follow_policy_test
+	COMMAND banana_runtime_camera_follow_policy_test
+)
+
+target_include_directories(banana_runtime_camera_follow_policy_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -636,6 +723,21 @@ target_include_directories(banana_runtime_engine_lifecycle_actor_spawn_test PRIV
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_engine_lifecycle_domain_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/lifecycle/engine_lifecycle_domain_test.c
+)
+
+add_test(NAME banana_runtime_engine_lifecycle_domain_test
+	COMMAND banana_runtime_engine_lifecycle_domain_test
+)
+
+target_link_libraries(banana_runtime_engine_lifecycle_domain_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_engine_lifecycle_domain_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_engine_composition_shutdown_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/composition/engine_composition_shutdown_test.c
 )
@@ -699,6 +801,7 @@ target_include_directories(banana_runtime_engine_test PRIVATE
 add_executable(banana_runtime_engine_service_ports_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/engine_service_ports_test.c
 	${BANANA_ENGINE_DIR}/engine.c
+	${BANANA_ENGINE_DIR}/runtime/terrain/terrain_abi.c
 )
 
 add_test(NAME banana_runtime_engine_service_ports_test
@@ -706,6 +809,20 @@ add_test(NAME banana_runtime_engine_service_ports_test
 )
 
 target_include_directories(banana_runtime_engine_service_ports_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_composition_init_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/composition/engine_composition_init_test.c
+	${BANANA_ENGINE_DIR}/runtime/engine/composition/engine_composition_init.c
+)
+
+add_test(NAME banana_runtime_engine_composition_init_test
+	COMMAND banana_runtime_engine_composition_init_test
+)
+
+target_include_directories(banana_runtime_engine_composition_init_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -752,6 +869,21 @@ target_include_directories(banana_runtime_gameplay_service_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_gameplay_service_reinforcement_spawn_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/service/gameplay_service_reinforcement_spawn_test.c
+)
+
+add_test(NAME banana_runtime_gameplay_service_reinforcement_spawn_test
+	COMMAND banana_runtime_gameplay_service_reinforcement_spawn_test
+)
+
+target_link_libraries(banana_runtime_gameplay_service_reinforcement_spawn_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_gameplay_service_reinforcement_spawn_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_merchant_query_abi_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/merchant/query/merchant_query_abi_test.c
 	${BANANA_ENGINE_DIR}/runtime/merchant/query/merchant_query_abi.c
@@ -762,6 +894,34 @@ add_test(NAME banana_runtime_merchant_query_abi_test
 )
 
 target_include_directories(banana_runtime_merchant_query_abi_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_merchant_trade_abi_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/merchant/trade/merchant_trade_abi_test.c
+	${BANANA_ENGINE_DIR}/runtime/merchant/trade/merchant_trade_abi.c
+)
+
+add_test(NAME banana_runtime_merchant_trade_abi_test
+	COMMAND banana_runtime_merchant_trade_abi_test
+)
+
+target_include_directories(banana_runtime_merchant_trade_abi_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_parallel_contract_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/parallel/contract/parallel_contract_test.c
+	${BANANA_ENGINE_DIR}/runtime/parallel/contract/parallel_contract.c
+)
+
+add_test(NAME banana_runtime_parallel_contract_test
+	COMMAND banana_runtime_parallel_contract_test
+)
+
+target_include_directories(banana_runtime_parallel_contract_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -926,6 +1086,48 @@ target_include_directories(banana_runtime_player_registry_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_player_sync_abi_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/player/sync/player_sync_abi_test.c
+	${BANANA_ENGINE_DIR}/runtime/player/sync/player_sync_abi.c
+)
+
+add_test(NAME banana_runtime_player_sync_abi_test
+	COMMAND banana_runtime_player_sync_abi_test
+)
+
+target_include_directories(banana_runtime_player_sync_abi_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_player_gateway_abi_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/player/gateway/player_gateway_abi_test.c
+	${BANANA_ENGINE_DIR}/runtime/player/gateway/player_gateway_abi.c
+)
+
+add_test(NAME banana_runtime_player_gateway_abi_test
+	COMMAND banana_runtime_player_gateway_abi_test
+)
+
+target_include_directories(banana_runtime_player_gateway_abi_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_player_motion_host_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/player/runtime/player_motion_host_test.c
+	${BANANA_ENGINE_DIR}/runtime/player/runtime/player_motion_host.c
+)
+
+add_test(NAME banana_runtime_player_motion_host_test
+	COMMAND banana_runtime_player_motion_host_test
+)
+
+target_include_directories(banana_runtime_player_motion_host_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_resource_domain_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/resource/resource_domain_test.c
 )
@@ -982,6 +1184,21 @@ add_test(NAME banana_runtime_wildlife_controller_test
 target_link_libraries(banana_runtime_wildlife_controller_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_wildlife_controller_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_wildlife_gameplay_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/wildlife/wildlife_gameplay_test.c
+)
+
+add_test(NAME banana_runtime_wildlife_gameplay_test
+	COMMAND banana_runtime_wildlife_gameplay_test
+)
+
+target_link_libraries(banana_runtime_wildlife_gameplay_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_wildlife_gameplay_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -1259,7 +1476,15 @@ set(BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS
 	banana_runtime_gameplay_service_sentience_decision_test
 	banana_runtime_gameplay_service_sentience_behavior_test
 	banana_runtime_gameplay_service_test
+	banana_runtime_gameplay_service_reinforcement_spawn_test
 	banana_runtime_merchant_query_abi_test
+	banana_runtime_merchant_trade_abi_test
+	banana_runtime_parallel_contract_test
+	banana_runtime_player_sync_abi_test
+	banana_runtime_player_gateway_abi_test
+	banana_runtime_player_motion_host_test
+	banana_runtime_camera_follow_policy_test
+	banana_runtime_tick_phases_test
 	banana_runtime_ui_inventory_impl_test
 	banana_runtime_ui_merchant_impl_test
 	banana_runtime_ui_abi_and_headers_smoke_test
@@ -1275,14 +1500,17 @@ banana_enable_cmocka_legacy_wrapper(banana_k3h4_scaling_benchmark_test "args")
 set(BANANA_RUNTIME_NATIVE_CMOCKA_TARGETS
 	banana_runtime_navigation_test
 	banana_runtime_wildlife_controller_test
+	banana_runtime_wildlife_gameplay_test
 	banana_runtime_npc_merchant_test
 	banana_runtime_perception_test
 	banana_runtime_state_machine_test
 	banana_runtime_controller_runtime_test
+	banana_runtime_controller_kind_domain_test
 	banana_runtime_input_contract_test
 	banana_runtime_input_click_policy_test
 	banana_runtime_physics_body_test
 	banana_runtime_physics_collider_test
+	banana_runtime_physics_raycast_test
 	banana_runtime_physics_world_test
 	banana_runtime_world_test
 	banana_runtime_world_query_test
@@ -1291,6 +1519,8 @@ set(BANANA_RUNTIME_NATIVE_CMOCKA_TARGETS
 	banana_runtime_ui_inventory_impl_test
 	banana_runtime_ui_merchant_impl_test
 	banana_runtime_ui_abi_and_headers_smoke_test
+	banana_runtime_engine_composition_init_test
+	banana_runtime_backend_dx12_diagnostics_test
 	banana_runtime_render_camera_test
 	banana_runtime_controller_system_test
 	banana_runtime_combat_controller_k3h4_test
