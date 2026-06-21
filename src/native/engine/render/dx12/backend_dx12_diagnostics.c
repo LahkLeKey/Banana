@@ -26,34 +26,33 @@ const char *banana_dx12_diagnostics_probe_status(void)
 
 const char *banana_dx12_diagnostics_runtime_telemetry(const BananaDx12DiagnosticsSnapshot *snapshot)
 {
-    if (!snapshot)
-    {
-        return banana_dx12_diagnostics_runtime_unavailable_telemetry();
-    }
+    const char *unavailable_telemetry = banana_dx12_diagnostics_runtime_unavailable_telemetry();
+    BananaDx12DiagnosticsSnapshot fallback_snapshot;
+    const BananaDx12DiagnosticsSnapshot *effective_snapshot = NULL;
+
+    memset(&fallback_snapshot, 0, sizeof(fallback_snapshot));
+    fallback_snapshot.status = "dx12-runtime-unavailable";
+
+    effective_snapshot = snapshot ? snapshot : &fallback_snapshot;
 
     snprintf(s_dx12_runtime_telemetry,
              sizeof(s_dx12_runtime_telemetry),
              "status=%s active=%d size=%dx%d frame=%llu presented=%llu draws_frame=%u draws_total=%llu interval=%u hr=0x%08lx",
-             snapshot->status ? snapshot->status : "unknown",
-             snapshot->active,
-             snapshot->width,
-             snapshot->height,
-             snapshot->frame_counter,
-             snapshot->frames_presented,
-             snapshot->scene_draw_calls_frame,
-             snapshot->scene_draw_calls_total,
-             snapshot->present_interval,
-             snapshot->last_present_result);
+             effective_snapshot->status ? effective_snapshot->status : "unknown",
+             effective_snapshot->active,
+             effective_snapshot->width,
+             effective_snapshot->height,
+             effective_snapshot->frame_counter,
+             effective_snapshot->frames_presented, effective_snapshot->scene_draw_calls_frame,
+             effective_snapshot->scene_draw_calls_total, effective_snapshot->present_interval, effective_snapshot->last_present_result);
     snprintf(s_dx12_runtime_telemetry + strlen(s_dx12_runtime_telemetry),
              sizeof(s_dx12_runtime_telemetry) - strlen(s_dx12_runtime_telemetry),
              " ui=%dx%d dirty=%d rows=%u quads=%u verts=%u",
-             snapshot->ui_overlay_width,
-             snapshot->ui_overlay_height,
-             snapshot->ui_overlay_dirty,
-             snapshot->ui_overlay_rows_last,
-             snapshot->ui_overlay_quads_last,
-             snapshot->ui_overlay_vertices_last);
-    return s_dx12_runtime_telemetry;
+             effective_snapshot->ui_overlay_width,
+             effective_snapshot->ui_overlay_height, effective_snapshot->ui_overlay_dirty,
+             effective_snapshot->ui_overlay_rows_last, effective_snapshot->ui_overlay_quads_last,
+             effective_snapshot->ui_overlay_vertices_last);
+    return snapshot ? s_dx12_runtime_telemetry : unavailable_telemetry;
 }
 
 const char *banana_dx12_diagnostics_runtime_unavailable_telemetry(void)

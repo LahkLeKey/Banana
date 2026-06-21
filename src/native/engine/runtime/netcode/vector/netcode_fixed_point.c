@@ -2,6 +2,7 @@
 
 #include <limits.h>
 #include <math.h>
+#include <stdlib.h>
 
 static int64_t clamp_i64(int64_t value, int64_t min_value, int64_t max_value)
 {

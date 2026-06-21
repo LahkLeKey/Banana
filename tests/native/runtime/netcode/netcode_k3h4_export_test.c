@@ -100,6 +100,24 @@ int main(void)
             return fail("swapped byte-order tag should return PREFLIGHT_FAILED");
     }
 
+        /* ---- metadata preflight: invalid cluster count rejected ---- */
+        {
+            RuntimeNetcodeK3h4Output bad_state = state;
+            bad_state.cluster_count = 0;
+            status = banana_k3h4_export_training_artifact("sess01", 0, &bad_state, out_dir);
+            if (status != BANANA_K3H4_EXPORT_PREFLIGHT_FAILED)
+                return fail("cluster_count=0 should return PREFLIGHT_FAILED");
+        }
+
+        /* ---- metadata preflight: invalid dimensions rejected ---- */
+        {
+            RuntimeNetcodeK3h4Output bad_state = state;
+            bad_state.dimensions = 0;
+            status = banana_k3h4_export_training_artifact("sess01", 0, &bad_state, out_dir);
+            if (status != BANANA_K3H4_EXPORT_PREFLIGHT_FAILED)
+                return fail("dimensions=0 should return PREFLIGHT_FAILED");
+        }
+
     /* ---- happy path: artifact written and readable ---- */
     BENCH_MKDIR("out");
     BENCH_MKDIR("out/v3-native");
@@ -139,6 +157,30 @@ int main(void)
     status = banana_k3h4_export_training_artifact("sess02", 0, &state, out_dir);
     if (status != BANANA_K3H4_EXPORT_OK)
         return fail("second session export failed");
+
+    /* ---- score lookup fallback: no vector score entry matches cluster id ---- */
+    {
+        RuntimeNetcodeK3h4Output fallback_state = state;
+        fallback_state.weighted_voronoi_scores[0].cluster_id = 99;
+        status = banana_k3h4_export_training_artifact("sess-no-match", 0, &fallback_state, out_dir);
+        if (status != BANANA_K3H4_EXPORT_OK)
+            return fail("export should still succeed when no weighted score entry matches cluster id");
+    }
+
+    /* ---- directory-tree failure when out_dir points to an existing file ---- */
+    {
+        const char *blocked_path = "out/v3-native/k3h4-export-blocker";
+        FILE *blocked = fopen(blocked_path, "wb");
+        if (!blocked)
+            return fail("failed to create blocker file for ensure_dir_tree error path");
+        fclose(blocked);
+
+        status = banana_k3h4_export_training_artifact("sess03", 0, &state, blocked_path);
+        if (status != BANANA_K3H4_EXPORT_WRITE_FAILED)
+            return fail("file-backed out_dir should return WRITE_FAILED when ensure_dir_tree cannot create nested directory");
+
+        remove(blocked_path);
+    }
 
     printf("[k3h4-export-test] PASS\n");
     return 0;

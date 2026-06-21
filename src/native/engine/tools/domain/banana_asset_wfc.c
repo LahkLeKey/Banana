@@ -39,115 +39,115 @@ static int banana_pick_lowest_entropy_cell(const uint32_t *wave, int cell_count,
 
 static int banana_propagate(int width, int height, uint32_t *wave, int start_cell)
 {
+    int success = 1;
     int cell_count = width * height;
     int *queue = (int *)malloc((size_t)cell_count * sizeof(int));
-    if (!queue)
-        return 0;
 
-    int head = 0;
-    int tail = 0;
-    queue[tail++] = start_cell;
-
-    while (head < tail)
+    success = (queue != NULL);
+    if (success)
     {
-        int cell = queue[head++];
-        int x = cell % width;
-        int y = cell / width;
-        uint32_t options = wave[cell];
+        int head = 0;
+        int tail = 0;
+        queue[tail++] = start_cell;
 
-        uint32_t allowed_neighbors = 0u;
-        for (int tile = 0; tile < banana_tile_count(); tile++)
+        while (head < tail && success)
         {
-            if (options & (1u << tile))
-                allowed_neighbors |= banana_neighbor_mask_for(tile);
-        }
+            int cell = queue[head++];
+            int x = cell % width;
+            int y = cell / width;
+            uint32_t options = wave[cell];
 
-        const int offsets[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-        for (int i = 0; i < 4; i++)
-        {
-            int nx = x + offsets[i][0];
-            int ny = y + offsets[i][1];
-            if (nx < 0 || nx >= width || ny < 0 || ny >= height)
-                continue;
-
-            int nindex = ny * width + nx;
-            uint32_t previous = wave[nindex];
-            uint32_t constrained = previous & allowed_neighbors;
-
-            if (constrained == 0u)
+            uint32_t allowed_neighbors = 0u;
+            for (int tile = 0; tile < banana_tile_count(); tile++)
             {
-                free(queue);
-                return 0;
+                if (options & (1u << tile))
+                    allowed_neighbors |= banana_neighbor_mask_for(tile);
             }
 
-            if (constrained != previous)
+            const int offsets[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+            for (int i = 0; i < 4 && success; i++)
             {
-                wave[nindex] = constrained;
-                queue[tail++] = nindex;
+                int nx = x + offsets[i][0];
+                int ny = y + offsets[i][1];
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height)
+                    continue;
+
+                int nindex = ny * width + nx;
+                uint32_t previous = wave[nindex];
+                uint32_t constrained = previous & allowed_neighbors;
+
+                success = (constrained != 0u);
+
+                if (constrained != previous)
+                {
+                    wave[nindex] = constrained;
+                    queue[tail++] = nindex;
+                }
             }
         }
+
+        free(queue);
     }
 
-    free(queue);
-    return 1;
+    return success;
 }
 
 int banana_generate_tiles_wfc(int width, int height, uint32_t seed, int *out_tiles)
 {
+    int success = 1;
     banana_init_neighbor_masks();
 
     int cell_count = width * height;
     uint32_t *wave = (uint32_t *)malloc((size_t)cell_count * sizeof(uint32_t));
-    if (!wave)
-        return 0;
-
     uint32_t full_mask = (1u << banana_tile_count()) - 1u;
-    {
-        int i = 0;
-#pragma omp parallel for schedule(static)
-        for (i = 0; i < cell_count; i++)
-            wave[i] = full_mask;
-    }
-
     uint32_t rng_state = seed ^ 0xBADC0DEu;
-    int iterations = 0;
-    int max_iterations = cell_count * 8;
 
-    while (iterations < max_iterations)
+    success = (wave != NULL);
+    if (success)
     {
-        iterations++;
-        int cell = banana_pick_lowest_entropy_cell(wave, cell_count, &rng_state);
-        if (cell < 0)
-            break;
+        int iterations = 0;
+        int max_iterations = cell_count * 8;
 
-        uint32_t options = wave[cell];
-        int chosen = banana_pick_weighted_tile(options, &rng_state);
-        if (chosen < 0)
         {
-            free(wave);
-            return 0;
-        }
-
-        wave[cell] = (1u << chosen);
-        if (!banana_propagate(width, height, wave, cell))
-        {
-            free(wave);
-            return 0;
-        }
-    }
-
-    {
-        int i = 0;
+            int i = 0;
 #pragma omp parallel for schedule(static)
-        for (i = 0; i < cell_count; i++)
-        {
-            int tile = banana_first_bit_index(wave[i]);
-            if (tile < 0)
-                tile = BANANA_TILE_GRASS;
-            out_tiles[i] = tile;
+            for (i = 0; i < cell_count; i++)
+                wave[i] = full_mask;
         }
+
+        while (iterations < max_iterations && success)
+        {
+            uint32_t options = 0u;
+            int chosen = -1;
+            int cell = -1;
+
+            iterations++;
+            cell = banana_pick_lowest_entropy_cell(wave, cell_count, &rng_state);
+            if (cell < 0)
+                break;
+
+            options = wave[cell];
+            chosen = banana_pick_weighted_tile(options, &rng_state);
+            success = (chosen >= 0);
+            if (success)
+            {
+                wave[cell] = (1u << chosen);
+                success = banana_propagate(width, height, wave, cell);
+            }
+        }
+
+        {
+            int i = 0;
+#pragma omp parallel for schedule(static)
+            for (i = 0; i < cell_count; i++)
+            {
+                int tile = banana_first_bit_index(wave[i]);
+                out_tiles[i] = (tile < 0) ? BANANA_TILE_GRASS : tile;
+            }
+        }
+
+        free(wave);
     }
 
-    free(wave);
-    return 1;
+    return success;
 }

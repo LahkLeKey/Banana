@@ -156,8 +156,60 @@ static void test_controller_system_destroy_tears_down_instances(void **state)
     BANANA_TEST_ASSERT_INT_EQ(g_destroys, 2, "destroying the system should invoke the destroy callback for each instance");
 }
 
+static void test_controller_system_spawn_rejects_null_or_invalid_inputs(void **state)
+{
+    (void)state;
+    ControllerSystem *sys = controller_system_create();
+
+    BANANA_TEST_ASSERT_TRUE(sys != NULL, "controller system must allocate for guard-path tests");
+
+    BANANA_TEST_ASSERT_INT_EQ(controller_system_spawn(NULL, "alpha", 0.0f, 0.0f, 0.0f),
+                              0,
+                              "controller spawn must reject null controller systems");
+
+    sys->count = BANANA_CTRL_SYS_CAPACITY;
+    BANANA_TEST_ASSERT_INT_EQ(controller_system_spawn(sys, "alpha", 0.0f, 0.0f, 0.0f),
+                              0,
+                              "controller spawn must reject requests once capacity is reached");
+
+    sys->count = 0;
+    BANANA_TEST_ASSERT_INT_EQ(controller_system_spawn(sys, "unknown-controller-type", 0.0f, 0.0f, 0.0f),
+                              0,
+                              "controller spawn must reject unknown controller types");
+
+    controller_system_destroy(sys);
+}
+
+static void test_controller_system_destroy_tolerates_null_system(void **state)
+{
+    (void)state;
+
+    controller_system_destroy(NULL);
+
+    BANANA_TEST_ASSERT_TRUE(1,
+                            "controller system destroy must tolerate null systems");
+}
+
+static void test_controller_register_tolerates_registry_capacity(void **state)
+{
+    (void)state;
+    char type_name[32];
+
+    for (int i = 0; i < 64; i++)
+    {
+        snprintf(type_name, sizeof(type_name), "overflow_%d", i);
+        controller_register(type_name, fake_factory);
+    }
+
+    BANANA_TEST_ASSERT_TRUE(1,
+                            "controller_register must tolerate over-capacity registrations");
+}
+
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE(test_controller_factory_and_system),
     BANANA_TEST_CASE(test_controller_signal_type_filters_by_controller_type),
-    BANANA_TEST_CASE(test_controller_system_destroy_tears_down_instances)
+    BANANA_TEST_CASE(test_controller_system_destroy_tears_down_instances),
+    BANANA_TEST_CASE(test_controller_system_spawn_rejects_null_or_invalid_inputs),
+    BANANA_TEST_CASE(test_controller_system_destroy_tolerates_null_system),
+    BANANA_TEST_CASE(test_controller_register_tolerates_registry_capacity)
 )

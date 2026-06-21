@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="${BANANA_NATIVE_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 BUILD_DIR="${BANANA_NATIVE_BUILD_DIR:-out/native-coverage}"
 OUTPUT_DIR="${BANANA_NATIVE_COVERAGE_OUTPUT_DIR:-artifacts/native/coverage}"
 SKIP_BUILD=0
@@ -111,16 +111,20 @@ else
     coverage_status="warn"
     echo "[coverage] warning: gcovr is required; writing fallback inventory summary"
   else
+    gcovr_version="$(gcovr --version 2>/dev/null | head -n 1 || true)"
+    if [[ -n "$gcovr_version" ]]; then
+      echo "[coverage] using $gcovr_version"
+    fi
     echo "[coverage] generating gcovr report at $OUTPUT_DIR"
     if ! gcovr \
       --root "$ROOT_DIR" \
+      --object-directory "$BUILD_DIR" \
       --filter "$ROOT_DIR/src/native/" \
+      --filter "src/native/" \
       --json "$OUTPUT_DIR/gcovr.json" \
       --html-details "$OUTPUT_DIR/index.html" \
       --txt "$OUTPUT_DIR/coverage-summary.txt" \
-      --json-summary "$OUTPUT_DIR/gcovr.json" \
       --print-summary \
-      --sort uncovered \
       --exclude '.*tests.*' \
       --exclude '.*third_party.*'; then
       coverage_status="warn"
@@ -129,7 +133,12 @@ else
   fi
 fi
 
-BANANA_NATIVE_COVERAGE_ROOT_DIR="$ROOT_DIR" BANANA_NATIVE_COVERAGE_REPORT_DIR="$OUTPUT_DIR" BANANA_NATIVE_COVERAGE_STATUS="$coverage_status" python - <<'PY'
+PYTHON_BIN="python"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+  PYTHON_BIN="python3"
+fi
+
+BANANA_NATIVE_COVERAGE_ROOT_DIR="$ROOT_DIR" BANANA_NATIVE_COVERAGE_REPORT_DIR="$OUTPUT_DIR" BANANA_NATIVE_COVERAGE_STATUS="$coverage_status" "$PYTHON_BIN" - <<'PY'
 import os
 import re
 import html
@@ -148,20 +157,68 @@ if not source_root.exists():
     raise SystemExit(f"native source root does not exist: {source_root}")
 
 
-def parse_overall_percentage(report_dir: Path):
-    summary_txt = report_dir / 'coverage-summary.txt'
-    if not summary_txt.exists():
-        return None
-    for line in summary_txt.read_text(encoding='utf-8', errors='ignore').splitlines():
-        if not line.strip().startswith('TOTAL'):
-            continue
-        match = re.search(r'([0-9.]+)%\s*$', line)
-        if match:
-            return float(match.group(1))
-    return None
+def strip_c_comments(text: str) -> str:
+    text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)
+    text = re.sub(r'//.*?$', '', text, flags=re.M)
+    return text
 
-modules_candidates = [report_dir / 'Modules', report_dir / 'coverage-report-msvc' / 'Modules']
+
+def is_declaration_only_header(path: Path) -> bool:
+    if path.suffix.lower() not in {'.h', '.hpp'}:
+        return False
+
+    text = path.read_text(encoding='utf-8', errors='ignore')
+    text = strip_c_comments(text)
+
+    if re.search(r'\b(static\s+inline|inline)\b', text):
+        return False
+
+    if re.search(r'\)\s*\{', text):
+        return False
+
+    return True
+
+primary_modules_dir = report_dir / 'Modules'
+legacy_modules_dir = report_dir / 'coverage-report-msvc' / 'Modules'
+if primary_modules_dir.exists():
+  modules_candidates = [primary_modules_dir]
+elif legacy_modules_dir.exists():
+  modules_candidates = [legacy_modules_dir]
+else:
+  modules_candidates = []
 coverage_by_file = {}
+
+
+def extract_line_totals(entry: dict):
+  # gcovr <= 6 used summary.lines, while gcovr 7 exposes executable lines in entry.lines.
+  summary_lines = (entry.get('summary') or {}).get('lines') or {}
+  if summary_lines:
+    covered = int(summary_lines.get('covered', 0))
+    total = int(summary_lines.get('count', 0))
+    return covered, max(total - covered, 0), total
+
+  lines = entry.get('lines') or []
+  if isinstance(lines, list) and lines:
+    covered = 0
+    uncovered = 0
+    for line_entry in lines:
+      count = line_entry.get('count')
+      if count is None:
+        uncovered += 1
+        continue
+      try:
+        count_value = int(count)
+      except (TypeError, ValueError):
+        uncovered += 1
+        continue
+      if count_value > 0:
+        covered += 1
+      else:
+        uncovered += 1
+    total = covered + uncovered
+    return covered, uncovered, total
+
+  return 0, 0, 0
 
 gcovr_json_path = report_dir / 'gcovr.json'
 if gcovr_json_path.exists():
@@ -173,11 +230,11 @@ if gcovr_json_path.exists():
             key = file_path.resolve().relative_to(source_root).as_posix()
         except Exception:
             key = file_path.as_posix()
-        lines = (entry.get('summary') or {}).get('lines') or {}
+        covered, uncovered, total = extract_line_totals(entry)
         coverage_by_file[key] = {
-            'covered': int(lines.get('covered', 0)),
-            'uncovered': int(lines.get('missing', 0)),
-            'total': int(lines.get('count', 0)),
+          'covered': covered,
+          'uncovered': uncovered,
+          'total': total,
         }
 else:
     for modules_dir in modules_candidates:
@@ -216,35 +273,55 @@ for path in sorted(source_root.rglob('*')):
 
 covered_total = 0
 uncovered_total = 0
+declaration_only_count = 0
 for path in all_sources:
     rel = path.relative_to(source_root).as_posix()
     entry = coverage_by_file.get(rel) or coverage_by_file.get(path.name)
-    if entry is None:
+    actionable = True
+    coverage_display = '0.0%'
+    if entry is None or int(entry.get('total', 0)) <= 0:
         line_count = sum(1 for _ in path.read_text(encoding='utf-8', errors='ignore').splitlines())
-        covered = 0
-        uncovered = line_count
-        status = 'not observed'
-        observed = False
+        if is_declaration_only_header(path):
+            covered = 0
+            uncovered = 0
+            status = 'declaration-only'
+            observed = False
+            actionable = False
+            declaration_only_count += 1
+        else:
+            covered = 0
+            uncovered = line_count
+            status = 'not observed'
+            observed = False
     else:
-        line_count = entry['total'] if entry['total'] > 0 else sum(1 for _ in path.read_text(encoding='utf-8', errors='ignore').splitlines())
         covered = entry['covered']
         uncovered = entry['uncovered']
         status = 'partial' if covered and uncovered else ('fully covered' if covered else 'no observed lines')
         observed = True
+        if is_declaration_only_header(path):
+            covered = 0
+            uncovered = 0
+            status = 'declaration-only'
+            actionable = False
+            declaration_only_count += 1
+
     if covered + uncovered > 0:
         pct = 100.0 * covered / (covered + uncovered)
+        coverage_display = f'{pct:.1f}%'
     else:
         pct = 0.0
-    covered_total += covered
-    uncovered_total += uncovered
-    rows.append((rel, covered, uncovered, covered + uncovered, pct, status, observed))
+        coverage_display = 'n/a' if not actionable else '0.0%'
 
-rows.sort(key=lambda item: (item[2] == 0, item[2], item[0]), reverse=False)
+    if actionable:
+        covered_total += covered
+        uncovered_total += uncovered
+
+    rows.append((rel, covered, uncovered, covered + uncovered, pct, status, observed, actionable, coverage_display))
+
+rows.sort(key=lambda item: (not item[7], item[2] == 0, item[2], item[0]), reverse=False)
 
 summary_path = report_dir / 'coverage-files-summary.html'
-overall_pct = parse_overall_percentage(report_dir)
-if overall_pct is None:
-    overall_pct = (100.0 * covered_total / (covered_total + uncovered_total)) if (covered_total + uncovered_total) else 0.0
+overall_pct = (100.0 * covered_total / (covered_total + uncovered_total)) if (covered_total + uncovered_total) else 0.0
 summary_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -254,15 +331,17 @@ summary_html = f'''<!DOCTYPE html>
 </head>
 <body>
 <h1>Native source inventory coverage</h1>
-<p class="meta">This view enumerates every native source file under src/native. Files that were not observed in the current coverage run are shown as <strong>not observed</strong> and are treated as uncovered so the inventory is representative of the full native codebase.</p>
+<p class="meta">This view enumerates every native source file under src/native. Files that were not observed in the current coverage run are shown as <strong>not observed</strong> and are treated as uncovered so the inventory is representative of executable native code paths.</p>
+<p class="meta">Declaration-only headers are marked <strong>declaration-only</strong> and excluded from the actionable coverage denominator.</p>
 <p class="meta">Overall coverage across the current inventory: <strong>{overall_pct:.1f}%</strong> ({covered_total} covered lines / {covered_total + uncovered_total} total lines).</p>
+<p class="meta">Declaration-only headers detected in this run: <strong>{declaration_only_count}</strong>.</p>
 <table>
 <thead><tr><th>Source file</th><th>Status</th><th>Covered</th><th>Uncovered</th><th>Total</th><th>Coverage</th></tr></thead>
 <tbody>
 {''.join(
-    f'<tr><td><strong>{html.escape(rel)}</strong></td><td>{status}</td><td>{covered}</td><td>{uncovered}</td><td>{total}</td><td class="{cls}">{pct:.1f}%</td></tr>'
-    for rel, covered, uncovered, total, pct, status, observed in rows
-    for cls in ['low' if pct < 60 else 'good']
+    f'<tr><td><strong>{html.escape(rel)}</strong></td><td>{status}</td><td>{covered}</td><td>{uncovered}</td><td>{total}</td><td class="{cls}">{coverage_display}</td></tr>'
+    for rel, covered, uncovered, total, pct, status, observed, actionable, coverage_display in rows
+    for cls in ['low' if actionable and pct < 60 else 'good']
 )}
 </tbody></table>
 <p class="meta">Open the detailed OpenCppCoverage report at <a href="index.html">index.html</a>.</p>

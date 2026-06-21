@@ -12,25 +12,43 @@ static int clamp_percent(int value)
 int runtime_netcode_link_build(const RuntimeNetcodeLinkInput *input,
                                RuntimeNetcodeLinkOutput *out_output)
 {
+    RuntimeNetcodeLinkInput fallback_input;
+    RuntimeNetcodeLinkOutput fallback_output;
+    const RuntimeNetcodeLinkInput *effective_input = NULL;
+    RuntimeNetcodeLinkOutput *effective_output = NULL;
+    int inputs_valid = 0;
     int interaction_signal;
     float player_signal;
 
-    if (!input || !out_output)
-        return -1;
+    fallback_input.call_density = 0;
+    fallback_input.quest_percent = 0;
+    fallback_input.player_level = 0;
+    fallback_input.combo_streak = 0;
+    fallback_input.branch_pressure = 0;
+    fallback_input.dependency_pulse = 0;
+    fallback_input.interaction_signal = 0;
 
-    interaction_signal = clamp_percent(input->interaction_signal);
-    player_signal = (float)input->player_level * 14.0f +
-                    (float)(input->combo_streak < 1 ? 1 : input->combo_streak) * 8.0f +
+    fallback_output.intel = 0;
+    fallback_output.objectives = 0;
+    fallback_output.player = 0;
+    fallback_output.ops = 0;
+
+    inputs_valid = (input != NULL && out_output != NULL);
+    effective_input = input ? input : &fallback_input;
+    effective_output = inputs_valid ? out_output : &fallback_output;
+    interaction_signal = clamp_percent(effective_input->interaction_signal);
+    player_signal = (float)effective_input->player_level * 14.0f +
+                    (float)(effective_input->combo_streak < 1 ? 1 : effective_input->combo_streak) * 8.0f +
                     (float)interaction_signal * 0.06f;
 
-    out_output->intel = clamp_percent((int)lroundf((float)input->call_density * 1.02f +
+    effective_output->intel = clamp_percent((int)lroundf((float)effective_input->call_density * 1.02f +
                                                    (float)interaction_signal * 0.08f));
-    out_output->objectives = clamp_percent((int)lroundf((float)input->quest_percent * 1.04f +
+    effective_output->objectives = clamp_percent((int)lroundf((float)effective_input->quest_percent * 1.04f +
                                                         (float)interaction_signal * 0.10f));
-    out_output->player = clamp_percent((int)lroundf(player_signal));
-    out_output->ops = clamp_percent((int)lroundf(((float)input->branch_pressure +
-                                                  (float)input->dependency_pulse) / 2.0f +
+    effective_output->player = clamp_percent((int)lroundf(player_signal));
+    effective_output->ops = clamp_percent((int)lroundf(((float)effective_input->branch_pressure +
+                                                  (float)effective_input->dependency_pulse) / 2.0f +
                                                  (float)interaction_signal * 0.10f));
 
-    return 0;
+    return inputs_valid ? 0 : -1;
 }

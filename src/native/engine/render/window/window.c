@@ -338,6 +338,16 @@ void window_get_size(Window *w, int *width, int *height)
     *height = w->height;
 }
 
+int window_take_right_click(Window *w, float *x, float *y)
+{
+    (void)w;
+    if (x)
+        *x = 0.0f;
+    if (y)
+        *y = 0.0f;
+    return 0;
+}
+
 void window_get_input_size(Window *w, int *width, int *height)
 {
     if (width)

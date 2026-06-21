@@ -105,6 +105,57 @@ static void test_move_target_compute_steering(void **state)
                               "compute_steering must mark close targets as reached");
 }
 
+static void test_move_target_domain_guard_paths(void **state)
+{
+    (void)state;
+    RuntimeMoveTargetState move_state = {1, {3.0f, 4.0f}};
+    RuntimeMoveTargetSteering steering = {7, 7, 7.0f, 7.0f};
+    float player_position[3] = {0.0f, 0.0f, 0.0f};
+    float camera_eye[3] = {0.0f, 10.0f, 10.0f};
+    float camera_target[3] = {0.0f, 0.0f, 0.0f};
+
+    runtime_move_target_reset(NULL);
+    BANANA_TEST_ASSERT_INT_EQ(runtime_move_target_set(NULL, (RuntimeMoveTargetPoint){1.0f, 2.0f}), 0,
+                              "set must reject null state");
+
+    BANANA_TEST_ASSERT_INT_EQ(runtime_move_target_compute_steering(&move_state,
+                                                                   player_position,
+                                                                   camera_eye,
+                                                                   camera_target,
+                                                                   1,
+                                                                   0.5f,
+                                                                   NULL),
+                              0,
+                              "compute_steering must reject null output");
+
+    BANANA_TEST_ASSERT_INT_EQ(runtime_move_target_compute_steering(NULL,
+                                                                   player_position,
+                                                                   camera_eye,
+                                                                   camera_target,
+                                                                   1,
+                                                                   0.5f,
+                                                                   &steering),
+                              1,
+                              "compute_steering must no-op successfully when state is null");
+    BANANA_TEST_ASSERT_INT_EQ(steering.has_target, 0,
+                              "null state must clear output target flag");
+
+    move_state.has_target = 1;
+    BANANA_TEST_ASSERT_INT_EQ(runtime_move_target_compute_steering(&move_state,
+                                                                   NULL,
+                                                                   camera_eye,
+                                                                   camera_target,
+                                                                   1,
+                                                                   0.5f,
+                                                                   &steering),
+                              1,
+                              "compute_steering must no-op successfully when player position is null");
+    BANANA_TEST_ASSERT_INT_EQ(steering.has_target, 1,
+                              "valid state with target must preserve has_target on no-op path");
+    BANANA_TEST_ASSERT_INT_EQ(steering.reached_target, 0,
+                              "no-op path must not mark target as reached");
+}
+
 static void test_move_target_apply_click(void **state)
 {
     (void)state;
@@ -164,5 +215,6 @@ static void test_move_target_apply_click(void **state)
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE_SETUP_TEARDOWN(test_move_target_domain_state_helpers, move_target_test_setup, move_target_test_teardown),
     BANANA_TEST_CASE_SETUP_TEARDOWN(test_move_target_compute_steering, move_target_test_setup, move_target_test_teardown),
+    BANANA_TEST_CASE_SETUP_TEARDOWN(test_move_target_domain_guard_paths, move_target_test_setup, move_target_test_teardown),
     BANANA_TEST_CASE_SETUP_TEARDOWN(test_move_target_apply_click, move_target_test_setup, move_target_test_teardown)
 )

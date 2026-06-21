@@ -60,3 +60,21 @@ Use retry tuning env vars when needed:
 - `BANANA_NEON_TEST_RETRY_ATTEMPTS`
 - `BANANA_NEON_TEST_RETRY_DELAY_MS`
 - `BANANA_NEON_CONNECT_TIMEOUT_MS`
+
+## Native Coverage CI-Parity Container
+
+Run native coverage in a local container that mirrors CI native coverage dependencies:
+
+```bash
+bash scripts/run-native-coverage-ci-container.sh
+```
+
+Reuse an already built image for faster iterations:
+
+```bash
+bash scripts/run-native-coverage-ci-container.sh --no-build-image --build-dir out/native-coverage-ci-docker --output-dir artifacts/native/coverage-ci-docker
+```
+
+Container definition:
+
+- `docker/native-coverage-ci.Dockerfile`

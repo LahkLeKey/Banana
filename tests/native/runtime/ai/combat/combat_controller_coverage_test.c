@@ -499,8 +499,10 @@ static int run_all_combat_tests(void)
 static void test_combat_controller_coverage(void **state)
 {
     (void)state;
-    BANANA_TEST_ASSERT_INT_EQ(run_all_combat_tests(), 0,
-                              "combat controller coverage contract must pass");
+    if (run_all_combat_tests() != 0)
+    {
+        BANANA_TEST_FAIL("combat controller coverage contract must pass");
+    }
 }
 
 BANANA_TEST_MAIN(

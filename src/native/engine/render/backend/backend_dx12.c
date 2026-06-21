@@ -1417,6 +1417,18 @@ cleanup:
 
 int banana_dx12_backend_is_available(void)
 {
+    const char *force_unavailable = getenv("BANANA_DX12_FORCE_UNAVAILABLE");
+
+    if (force_unavailable &&
+        (strcmp(force_unavailable, "1") == 0 ||
+         strcmp(force_unavailable, "true") == 0 ||
+         strcmp(force_unavailable, "TRUE") == 0 ||
+         strcmp(force_unavailable, "yes") == 0 ||
+         strcmp(force_unavailable, "YES") == 0))
+    {
+        return 0;
+    }
+
     banana_dx12_probe_once();
     return banana_dx12_diagnostics_probe_state() == BANANA_DX12_DIAGNOSTICS_PROBE_AVAILABLE;
 }

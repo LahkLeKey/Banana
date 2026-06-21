@@ -5,9 +5,6 @@
 static int runtime_launch_gate_mode_from_label(const char *mode_label,
                                                banana_launch_gate_mode *out_mode)
 {
-    if (!mode_label || !out_mode)
-        return -1;
-
     if (strcmp(mode_label, "development") == 0)
     {
         *out_mode = BANANA_LAUNCH_GATE_MODE_DEVELOPMENT;
@@ -34,7 +31,7 @@ int runtime_engine_aux_launch_gate_policy_resolve(const char *mode_label,
 {
     banana_launch_gate_mode mode = BANANA_LAUNCH_GATE_MODE_PRODUCTION_STEAM_PACKAGE;
 
-    if (!out_policy)
+    if (!mode_label || !out_policy)
         return -1;
 
     if (runtime_launch_gate_mode_from_label(mode_label, &mode) != 0)
@@ -45,27 +42,22 @@ int runtime_engine_aux_launch_gate_policy_resolve(const char *mode_label,
     out_policy->allow_cached_verification = 0;
     out_policy->allow_override_context = 0;
 
-    if (mode == BANANA_LAUNCH_GATE_MODE_DEVELOPMENT)
+    switch (mode)
     {
+    case BANANA_LAUNCH_GATE_MODE_DEVELOPMENT:
         out_policy->allow_non_steam_startup = 1;
         out_policy->allow_cached_verification = 1;
         out_policy->allow_override_context = 1;
-        return 0;
-    }
-
-    if (mode == BANANA_LAUNCH_GATE_MODE_STAGING_UAT)
-    {
+        break;
+    case BANANA_LAUNCH_GATE_MODE_STAGING_UAT:
         out_policy->allow_cached_verification = 1;
         out_policy->allow_override_context = 1;
-        return 0;
+        break;
+    case BANANA_LAUNCH_GATE_MODE_PRODUCTION_STEAM_PACKAGE:
+        break;
     }
 
-    if (mode == BANANA_LAUNCH_GATE_MODE_PRODUCTION_STEAM_PACKAGE)
-    {
-        return 0;
-    }
-
-    return -1;
+    return 0;
 }
 
 int runtime_engine_aux_launch_gate_decide(const banana_launch_gate_policy *policy,
