@@ -1628,6 +1628,10 @@ add_test(NAME banana_runtime_terrain_chunks_test
 	COMMAND banana_runtime_terrain_chunks_test
 )
 
+if(NOT MSVC)
+	target_link_libraries(banana_runtime_terrain_chunks_test PRIVATE m)
+endif()
+
 target_include_directories(banana_runtime_terrain_chunks_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
