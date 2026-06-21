@@ -421,6 +421,7 @@ target_include_directories(banana_runtime_physics_world_test PRIVATE
 
 add_executable(banana_runtime_controller_runtime_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/runtime/controller/controller_runtime_test.c
+	${BANANA_ENGINE_DIR}/runtime/controller/runtime/controller_runtime.c
 )
 
 add_test(NAME banana_runtime_controller_runtime_test
@@ -1293,6 +1294,7 @@ target_include_directories(banana_runtime_navigation_test PRIVATE
 
 add_executable(banana_runtime_wildlife_controller_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/wildlife/wildlife_controller_test.c
+	${BANANA_ENGINE_DIR}/ai/wildlife/wildlife_controller.c
 )
 
 add_test(NAME banana_runtime_wildlife_controller_test
@@ -1323,6 +1325,7 @@ target_include_directories(banana_runtime_wildlife_gameplay_test PRIVATE
 
 add_executable(banana_runtime_npc_merchant_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/npc/npc_merchant_test.c
+	${BANANA_ENGINE_DIR}/ai/npc/npc_merchant.c
 )
 
 add_test(NAME banana_runtime_npc_merchant_test
@@ -1456,6 +1459,7 @@ endif()
 
 add_executable(banana_runtime_combat_controller_k3h4_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/combat/combat_controller_k3h4_test.c
+	${BANANA_ENGINE_DIR}/ai/combat/combat_controller.c
 )
 
 # Build the dedicated combat-controller coverage test binary.
@@ -1463,6 +1467,7 @@ add_executable(banana_runtime_combat_controller_k3h4_test
 # the older smoke test and keeps the combat path easier to diagnose in CI.
 add_executable(banana_runtime_combat_controller_coverage_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/combat/combat_controller_coverage_test.c
+	${BANANA_ENGINE_DIR}/ai/combat/combat_controller.c
 )
 
 # Register the new binary in ctest so it runs as part of the native suite.
@@ -1682,6 +1687,414 @@ target_include_directories(banana_runtime_controller_attach_test PRIVATE
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_interlock_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/parallel/interlock/interlock_test.c
+	${BANANA_ENGINE_DIR}/runtime/parallel/interlock/interlock.c
+)
+
+add_test(NAME banana_runtime_interlock_test
+	COMMAND banana_runtime_interlock_test
+)
+
+target_link_libraries(banana_runtime_interlock_test PRIVATE OpenMP::OpenMP_C)
+
+target_include_directories(banana_runtime_interlock_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_input_binding_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/input/binding/input_binding_test.c
+	${BANANA_ENGINE_DIR}/runtime/input/binding/input_binding.c
+)
+
+add_test(NAME banana_runtime_input_binding_test
+	COMMAND banana_runtime_input_binding_test
+)
+
+target_include_directories(banana_runtime_input_binding_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_interactive_objects_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/interaction/objects/interactive_objects_test.c
+	${BANANA_ENGINE_DIR}/runtime/interaction/objects/interactive_objects.c
+)
+
+add_test(NAME banana_runtime_interactive_objects_test
+	COMMAND banana_runtime_interactive_objects_test
+)
+
+target_include_directories(banana_runtime_interactive_objects_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_terrain_features_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/terrain/terrain_features_test.c
+	${BANANA_ENGINE_DIR}/runtime/terrain/terrain_features.c
+)
+
+add_test(NAME banana_runtime_terrain_features_test
+	COMMAND banana_runtime_terrain_features_test
+)
+
+target_include_directories(banana_runtime_terrain_features_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_terrain_mutation_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/terrain/terrain_mutation_test.c
+	${BANANA_ENGINE_DIR}/runtime/terrain/terrain_mutation.c
+)
+
+add_test(NAME banana_runtime_terrain_mutation_test
+	COMMAND banana_runtime_terrain_mutation_test
+)
+
+target_include_directories(banana_runtime_terrain_mutation_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_player_resources_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/player/resource/player_resources_test.c
+	${BANANA_ENGINE_DIR}/runtime/player/resource/player_resources.c
+)
+
+add_test(NAME banana_runtime_player_resources_test
+	COMMAND banana_runtime_player_resources_test
+)
+
+target_include_directories(banana_runtime_player_resources_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_interactive_collection_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/interaction/collection/interactive_collection_test.c
+	${BANANA_ENGINE_DIR}/runtime/interaction/collection/interactive_collection.c
+	${BANANA_ENGINE_DIR}/runtime/player/resource/player_resources.c
+)
+
+add_test(NAME banana_runtime_interactive_collection_test
+	COMMAND banana_runtime_interactive_collection_test
+)
+
+target_include_directories(banana_runtime_interactive_collection_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_controller_sync_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/controller/sync/controller_sync_test.c
+	${BANANA_ENGINE_DIR}/runtime/controller/sync/controller_sync.c
+	${BANANA_ENGINE_DIR}/runtime/parallel/interlock/interlock.c
+)
+
+add_test(NAME banana_runtime_controller_sync_test
+	COMMAND banana_runtime_controller_sync_test
+)
+
+target_link_libraries(banana_runtime_controller_sync_test PRIVATE OpenMP::OpenMP_C)
+
+target_include_directories(banana_runtime_controller_sync_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+add_executable(banana_world_signals_test
+	${CMAKE_CURRENT_LIST_DIR}/world/signals_test.c
+	${BANANA_ENGINE_DIR}/world/signals/signals.c
+	${BANANA_ENGINE_DIR}/world/core/world.c
+	${BANANA_ENGINE_DIR}/world/entity/entity.c
+	${BANANA_ENGINE_DIR}/world/query/world_query.c
+)
+
+add_test(NAME banana_world_signals_test
+	COMMAND banana_world_signals_test
+)
+
+target_include_directories(banana_world_signals_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/world
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_physics_collider_narrow_phase_test
+	${CMAKE_CURRENT_LIST_DIR}/physics/collider/collider_narrow_phase_test.c
+	${BANANA_ENGINE_DIR}/physics/collider/collider_narrow_phase.c
+	${BANANA_ENGINE_DIR}/physics/collider/collider_resolve.c
+)
+
+add_test(NAME banana_physics_collider_narrow_phase_test
+	COMMAND banana_physics_collider_narrow_phase_test
+)
+
+target_include_directories(banana_physics_collider_narrow_phase_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/physics
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_render_submit_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/render/submit/render_submit_test.c
+	${BANANA_ENGINE_DIR}/runtime/render/submit/render_submit.c
+	${BANANA_ENGINE_DIR}/runtime/render/material/render_material.c
+)
+
+add_test(NAME banana_runtime_render_submit_test
+	COMMAND banana_runtime_render_submit_test
+)
+
+target_link_libraries(banana_runtime_render_submit_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_render_submit_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+add_executable(banana_render_actor_mesh_registry_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/render/registry/actor_mesh_registry_test.c
+	${BANANA_ENGINE_DIR}/render/registry/actor_mesh_registry.c
+)
+
+add_test(NAME banana_render_actor_mesh_registry_test
+	COMMAND banana_render_actor_mesh_registry_test
+)
+
+target_include_directories(banana_render_actor_mesh_registry_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/render
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_interactive_object_spawner_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/interaction/spawner/interactive_object_spawner_test.c
+	${BANANA_ENGINE_DIR}/runtime/interaction/spawner/interactive_object_spawner.c
+	${BANANA_ENGINE_DIR}/runtime/interaction/objects/interactive_objects.c
+	${BANANA_ENGINE_DIR}/runtime/interaction/collection/interactive_collection.c
+	${BANANA_ENGINE_DIR}/runtime/player/resource/player_resources.c
+)
+
+add_test(NAME banana_runtime_interactive_object_spawner_test
+	COMMAND banana_runtime_interactive_object_spawner_test
+)
+
+target_include_directories(banana_runtime_interactive_object_spawner_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+
+add_executable(banana_runtime_engine_exports_war_metrics_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/engine/exports/engine_exports_war_metrics_test.c
+   ${BANANA_ENGINE_DIR}/runtime/engine/exports/engine_exports_war_metrics.c
+)
+
+add_test(NAME banana_runtime_engine_exports_war_metrics_test
+   COMMAND banana_runtime_engine_exports_war_metrics_test
+)
+
+target_include_directories(banana_runtime_engine_exports_war_metrics_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_exports_ui_economy_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/engine/exports/engine_exports_ui_economy_test.c
+   ${BANANA_ENGINE_DIR}/runtime/engine/exports/engine_exports_ui_economy.c
+)
+
+add_test(NAME banana_runtime_engine_exports_ui_economy_test
+   COMMAND banana_runtime_engine_exports_ui_economy_test
+)
+
+target_include_directories(banana_runtime_engine_exports_ui_economy_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_exports_input_player_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/engine/exports/engine_exports_input_player_test.c
+   ${BANANA_ENGINE_DIR}/runtime/engine/exports/engine_exports_input_player.c
+)
+
+add_test(NAME banana_runtime_engine_exports_input_player_test
+   COMMAND banana_runtime_engine_exports_input_player_test
+)
+
+target_include_directories(banana_runtime_engine_exports_input_player_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_render_material_domain_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/render/material/render_material_domain_test.c
+   ${BANANA_ENGINE_DIR}/runtime/render/material/render_material.c
+)
+
+add_test(NAME banana_runtime_render_material_domain_test
+   COMMAND banana_runtime_render_material_domain_test
+)
+
+target_link_libraries(banana_runtime_render_material_domain_test PRIVATE banana_engine_core)
+
+target_include_directories(banana_runtime_render_material_domain_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_merchant_service_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/merchant/service/merchant_service_test.c
+   ${BANANA_ENGINE_DIR}/runtime/merchant/service/merchant_service.c
+)
+
+add_test(NAME banana_runtime_merchant_service_test
+   COMMAND banana_runtime_merchant_service_test
+)
+
+target_include_directories(banana_runtime_merchant_service_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_player_merchant_adapter_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/player/merchant/player_merchant_adapter_test.c
+   ${BANANA_ENGINE_DIR}/runtime/player/merchant/player_merchant_adapter.c
+)
+
+add_test(NAME banana_runtime_player_merchant_adapter_test
+   COMMAND banana_runtime_player_merchant_adapter_test
+)
+
+target_include_directories(banana_runtime_player_merchant_adapter_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_terrain_static_mesh_domain_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_domain_test.c
+   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_domain.c
+   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_routes.c
+)
+
+add_test(NAME banana_runtime_terrain_static_mesh_domain_test
+   COMMAND banana_runtime_terrain_static_mesh_domain_test
+)
+
+target_include_directories(banana_runtime_terrain_static_mesh_domain_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_backend_dx12_projection_policy_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/render/dx12/backend_dx12_projection_policy_test.c
+   ${BANANA_ENGINE_DIR}/render/dx12/backend_dx12_projection_policy.c
+)
+
+add_test(NAME banana_runtime_backend_dx12_projection_policy_test
+   COMMAND banana_runtime_backend_dx12_projection_policy_test
+)
+
+target_include_directories(banana_runtime_backend_dx12_projection_policy_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_aux_abi_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/engine/support/engine_aux_abi_test.c
+   ${BANANA_ENGINE_DIR}/runtime/engine/support/engine_aux_abi.c
+)
+
+add_test(NAME banana_runtime_engine_aux_abi_test
+   COMMAND banana_runtime_engine_aux_abi_test
+)
+
+target_include_directories(banana_runtime_engine_aux_abi_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_engine_exports_core_abi_test
+   ${CMAKE_CURRENT_LIST_DIR}/runtime/engine/exports/engine_exports_core_abi_test.c
+   ${BANANA_ENGINE_DIR}/runtime/engine/exports/engine_exports_core_abi.c
+)
+
+add_test(NAME banana_runtime_engine_exports_core_abi_test
+   COMMAND banana_runtime_engine_exports_core_abi_test
+)
+
+target_include_directories(banana_runtime_engine_exports_core_abi_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_win32_dx12_poc_continent_asset_registry_test
+   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/continent_asset_registry_test.c
+   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
+)
+
+add_test(NAME banana_win32_dx12_poc_continent_asset_registry_test
+   COMMAND banana_win32_dx12_poc_continent_asset_registry_test
+)
+
+target_include_directories(banana_win32_dx12_poc_continent_asset_registry_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_win32_dx12_poc_demo_scene_catalog_test
+   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene/demo_scene_catalog_test.c
+   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/demo_scene_catalog.c
+   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
+   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_domain.c
+   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_routes.c
+   ${BANANA_ENGINE_DIR}/runtime/engine/gameplay/model/gameplay_model_profile.c
+)
+
+add_test(NAME banana_win32_dx12_poc_demo_scene_catalog_test
+   COMMAND banana_win32_dx12_poc_demo_scene_catalog_test
+)
+
+target_include_directories(banana_win32_dx12_poc_demo_scene_catalog_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_win32_dx12_poc_scene_flow_test
+   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene_flow_test.c
+   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/scene_flow.c
+   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/demo_scene_catalog.c
+   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
+   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_domain.c
+   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_routes.c
+   ${BANANA_ENGINE_DIR}/runtime/engine/gameplay/model/gameplay_model_profile.c
+)
+
+add_test(NAME banana_win32_dx12_poc_scene_flow_test
+   COMMAND banana_win32_dx12_poc_scene_flow_test
+)
+
+target_include_directories(banana_win32_dx12_poc_scene_flow_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_win32_dx12_poc_scene_overlay_test
+   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene_overlay_test.c
+   ${BANANA_ENGINE_DIR}/win32_dx12_poc/overlay/scene_overlay.c
+)
+
+add_test(NAME banana_win32_dx12_poc_scene_overlay_test
+   COMMAND banana_win32_dx12_poc_scene_overlay_test
+)
+
+target_include_directories(banana_win32_dx12_poc_scene_overlay_test PRIVATE
+   ${BANANA_ENGINE_DIR}
+   ${BANANA_ENGINE_DIR}/runtime
+)
+
 set(BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS
 	banana_runtime_netcode_k3h4_assignment_family_test
 	banana_runtime_netcode_k3h4_orchestrator_test
@@ -1717,6 +2130,16 @@ set(BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS
 	banana_runtime_world_metrics_test
 	banana_runtime_camera_follow_test
 	banana_runtime_controller_attach_test
+	banana_runtime_interlock_test
+	banana_runtime_input_binding_test
+	banana_runtime_interactive_objects_test
+	banana_runtime_terrain_features_test
+	banana_runtime_terrain_mutation_test
+	banana_runtime_player_resources_test
+	banana_world_signals_test
+	banana_runtime_render_material_test
+	banana_physics_collider_narrow_phase_test
+	banana_runtime_render_submit_test
 )
 
 foreach(target IN LISTS BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS)
@@ -1766,6 +2189,49 @@ set(BANANA_RUNTIME_NATIVE_CMOCKA_TARGETS
 	banana_runtime_world_metrics_test
 	banana_runtime_camera_follow_test
 	banana_runtime_controller_attach_test
+	banana_runtime_interlock_test
+	banana_runtime_input_binding_test
+	banana_runtime_interactive_objects_test
+	banana_runtime_terrain_features_test
+	banana_runtime_terrain_mutation_test
+	banana_runtime_player_resources_test
+	banana_runtime_interactive_collection_test
+	banana_runtime_controller_sync_test
+	banana_runtime_engine_exports_war_metrics_test
+	banana_runtime_engine_exports_ui_economy_test
+	banana_runtime_engine_exports_input_player_test
+	banana_runtime_render_material_domain_test
+	banana_runtime_merchant_service_test
+	banana_runtime_player_merchant_adapter_test
+	banana_runtime_terrain_static_mesh_domain_test
+	banana_runtime_backend_dx12_projection_policy_test
+	banana_runtime_engine_aux_abi_test
+	banana_runtime_engine_exports_core_abi_test
+	banana_win32_dx12_poc_continent_asset_registry_test
+	banana_win32_dx12_poc_demo_scene_catalog_test
+	banana_win32_dx12_poc_scene_flow_test
+	banana_win32_dx12_poc_scene_overlay_test
+	banana_runtime_engine_exports_war_metrics_test
+	banana_runtime_engine_exports_ui_economy_test
+	banana_runtime_engine_exports_input_player_test
+	banana_runtime_render_material_domain_test
+	banana_runtime_merchant_service_test
+	banana_runtime_player_merchant_adapter_test
+	banana_runtime_terrain_static_mesh_domain_test
+	banana_runtime_backend_dx12_projection_policy_test
+	banana_runtime_engine_aux_abi_test
+	banana_runtime_engine_exports_core_abi_test
+	banana_win32_dx12_poc_continent_asset_registry_test
+	banana_win32_dx12_poc_demo_scene_catalog_test
+	banana_win32_dx12_poc_scene_flow_test
+	banana_win32_dx12_poc_scene_overlay_test
+	banana_world_signals_test
+	banana_runtime_render_material_test
+	banana_physics_collider_narrow_phase_test
+	banana_runtime_render_submit_test
+	banana_render_actor_mesh_registry_test
+	banana_runtime_interactive_object_spawner_test
+
 	banana_k3h4_export_io_failure_test
 )
 
