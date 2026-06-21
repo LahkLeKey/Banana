@@ -1,4 +1,5 @@
 #include "runtime/engine/lifecycle/engine_lifecycle.h"
+#include "runtime/engine/support/engine_aux_abi.h"
 
 #include "../../support/test_support.h"
 
@@ -113,10 +114,114 @@ static void test_launch_gate_preflight_blocks_when_verification_unavailable(void
                               "unavailable verification must map to OFFLINE_UNVERIFIABLE reason");
 }
 
+static void test_launch_gate_aux_policy_and_decision_guard_paths(void **state)
+{
+    banana_launch_gate_policy policy;
+    banana_launch_gate_reason_code reason_code;
+    int allow = 0;
+
+    (void)state;
+
+    memset(&policy, 0, sizeof(policy));
+
+    BANANA_TEST_ASSERT_INT_EQ(runtime_engine_aux_launch_gate_policy_resolve("development", NULL),
+                              -1,
+                              "launch gate policy resolve must reject null output");
+
+    BANANA_TEST_ASSERT_INT_EQ(runtime_engine_aux_launch_gate_decide(NULL,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     &reason_code,
+                                                                     &allow),
+                              -1,
+                              "launch gate decide must reject null policy");
+    BANANA_TEST_ASSERT_INT_EQ(runtime_engine_aux_launch_gate_decide(&policy,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     NULL,
+                                                                     &allow),
+                              -1,
+                              "launch gate decide must reject null reason output");
+    BANANA_TEST_ASSERT_INT_EQ(runtime_engine_aux_launch_gate_decide(&policy,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     &reason_code,
+                                                                     NULL),
+                              -1,
+                              "launch gate decide must reject null allow output");
+}
+
+static void test_launch_gate_aux_decision_block_reasons(void **state)
+{
+    banana_launch_gate_policy policy;
+    banana_launch_gate_reason_code reason_code;
+    int allow = 0;
+
+    (void)state;
+
+    memset(&policy, 0, sizeof(policy));
+    policy.mode = BANANA_LAUNCH_GATE_MODE_PRODUCTION_STEAM_PACKAGE;
+    policy.allow_non_steam_startup = 0;
+    policy.allow_cached_verification = 0;
+
+    BANANA_TEST_ASSERT_INT_EQ(runtime_engine_aux_launch_gate_decide(&policy,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     0,
+                                                                     1,
+                                                                     &reason_code,
+                                                                     &allow),
+                              0,
+                              "launch gate decide must process stale-session state");
+    BANANA_TEST_ASSERT_INT_EQ((int)reason_code,
+                              (int)BANANA_LAUNCH_GATE_REASON_STALE_SESSION,
+                              "stale verification must map to STALE_SESSION reason");
+
+    BANANA_TEST_ASSERT_INT_EQ(runtime_engine_aux_launch_gate_decide(&policy,
+                                                                     1,
+                                                                     0,
+                                                                     1,
+                                                                     1,
+                                                                     1,
+                                                                     &reason_code,
+                                                                     &allow),
+                              0,
+                              "launch gate decide must process unlinked-account state");
+    BANANA_TEST_ASSERT_INT_EQ((int)reason_code,
+                              (int)BANANA_LAUNCH_GATE_REASON_UNLINKED_ACCOUNT,
+                              "unlinked account must map to UNLINKED_ACCOUNT reason");
+
+    BANANA_TEST_ASSERT_INT_EQ(runtime_engine_aux_launch_gate_decide(&policy,
+                                                                     1,
+                                                                     1,
+                                                                     0,
+                                                                     1,
+                                                                     1,
+                                                                     &reason_code,
+                                                                     &allow),
+                              0,
+                              "launch gate decide must process suspended-account state");
+    BANANA_TEST_ASSERT_INT_EQ((int)reason_code,
+                              (int)BANANA_LAUNCH_GATE_REASON_SUSPENDED_OR_RESTRICTED,
+                              "restricted account must map to SUSPENDED_OR_RESTRICTED reason");
+}
+
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE(test_launch_gate_preflight_rejects_null_state),
     BANANA_TEST_CASE(test_launch_gate_preflight_blocks_unknown_mode),
     BANANA_TEST_CASE(test_launch_gate_preflight_allows_development_mode_with_cached_session),
     BANANA_TEST_CASE(test_launch_gate_preflight_blocks_production_without_steam_identity),
-    BANANA_TEST_CASE(test_launch_gate_preflight_blocks_when_verification_unavailable)
+    BANANA_TEST_CASE(test_launch_gate_preflight_blocks_when_verification_unavailable),
+    BANANA_TEST_CASE(test_launch_gate_aux_policy_and_decision_guard_paths),
+    BANANA_TEST_CASE(test_launch_gate_aux_decision_block_reasons)
 )

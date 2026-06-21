@@ -43,19 +43,14 @@ const char *banana_dx12_diagnostics_runtime_telemetry(const BananaDx12Diagnostic
              effective_snapshot->width,
              effective_snapshot->height,
              effective_snapshot->frame_counter,
-             effective_snapshot->frames_presented,
-             effective_snapshot->scene_draw_calls_frame,
-             effective_snapshot->scene_draw_calls_total,
-             effective_snapshot->present_interval,
-             effective_snapshot->last_present_result);
+             effective_snapshot->frames_presented, effective_snapshot->scene_draw_calls_frame,
+             effective_snapshot->scene_draw_calls_total, effective_snapshot->present_interval, effective_snapshot->last_present_result);
     snprintf(s_dx12_runtime_telemetry + strlen(s_dx12_runtime_telemetry),
              sizeof(s_dx12_runtime_telemetry) - strlen(s_dx12_runtime_telemetry),
              " ui=%dx%d dirty=%d rows=%u quads=%u verts=%u",
              effective_snapshot->ui_overlay_width,
-             effective_snapshot->ui_overlay_height,
-             effective_snapshot->ui_overlay_dirty,
-             effective_snapshot->ui_overlay_rows_last,
-             effective_snapshot->ui_overlay_quads_last,
+             effective_snapshot->ui_overlay_height, effective_snapshot->ui_overlay_dirty,
+             effective_snapshot->ui_overlay_rows_last, effective_snapshot->ui_overlay_quads_last,
              effective_snapshot->ui_overlay_vertices_last);
     return snapshot ? s_dx12_runtime_telemetry : unavailable_telemetry;
 }

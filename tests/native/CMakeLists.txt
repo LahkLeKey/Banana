@@ -172,6 +172,34 @@ add_test(NAME banana_runtime_netcode_k3h4_pipeline_equivalence_test
 	COMMAND banana_runtime_netcode_k3h4_pipeline_equivalence_test
 )
 
+add_executable(banana_runtime_netcode_vector_failure_path_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_vector_failure_path_test.c
+	${BANANA_ENGINE_DIR}/runtime/netcode/vector/netcode_vector.c
+)
+
+target_include_directories(banana_runtime_netcode_vector_failure_path_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_netcode_vector_failure_path_test
+	COMMAND banana_runtime_netcode_vector_failure_path_test
+)
+
+add_executable(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_orchestrator_failure_paths_test.c
+	${BANANA_ENGINE_DIR}/runtime/netcode/k3h4/netcode_k3h4_orchestrator.c
+)
+
+target_include_directories(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_netcode_k3h4_orchestrator_failure_paths_test
+	COMMAND banana_runtime_netcode_k3h4_orchestrator_failure_paths_test
+)
+
 add_executable(banana_runtime_netcode_abi_envelope_endianness_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_abi_envelope_endianness_test.c
 )
@@ -369,6 +397,21 @@ add_test(NAME banana_runtime_physics_world_test
 	COMMAND banana_runtime_physics_world_test
 )
 
+add_executable(banana_runtime_physics_world_collision_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/physics/world/world_collision_test.c
+	${BANANA_ENGINE_DIR}/physics/world/world_collision.c
+)
+
+target_include_directories(banana_runtime_physics_world_collision_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/physics
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_physics_world_collision_test
+	COMMAND banana_runtime_physics_world_collision_test
+)
+
 target_link_libraries(banana_runtime_physics_world_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_physics_world_test PRIVATE
@@ -382,6 +425,20 @@ add_executable(banana_runtime_controller_runtime_test
 
 add_test(NAME banana_runtime_controller_runtime_test
 	COMMAND banana_runtime_controller_runtime_test
+)
+
+add_executable(banana_runtime_chunk_stream_packet_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/chunk/chunk_stream_packet_test.c
+	${BANANA_ENGINE_DIR}/runtime/chunk/chunk_stream_packet.c
+)
+
+target_include_directories(banana_runtime_chunk_stream_packet_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_test(NAME banana_runtime_chunk_stream_packet_test
+	COMMAND banana_runtime_chunk_stream_packet_test
 )
 
 target_link_libraries(banana_runtime_controller_runtime_test PRIVATE banana_engine_core)
@@ -530,6 +587,20 @@ target_include_directories(banana_runtime_tick_orchestration_execute_test PRIVAT
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_player_tick_orchestration_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/orchestration/tick/loop/player_tick_orchestration_test.c
+	${BANANA_ENGINE_DIR}/runtime/orchestration/tick/loop/player_tick_orchestration.c
+)
+
+add_test(NAME banana_runtime_player_tick_orchestration_test
+	COMMAND banana_runtime_player_tick_orchestration_test
+)
+
+target_include_directories(banana_runtime_player_tick_orchestration_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_render_camera_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/render/camera/camera_test.c
 )
@@ -573,6 +644,25 @@ target_link_libraries(banana_runtime_render_material_test PRIVATE banana_engine_
 target_include_directories(banana_runtime_render_material_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_renderer_draw_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/render/renderer_draw_test.c
+	${BANANA_ENGINE_DIR}/render/renderer/renderer_draw.c
+)
+
+add_test(NAME banana_runtime_renderer_draw_test
+	COMMAND banana_runtime_renderer_draw_test
+)
+
+target_include_directories(banana_runtime_renderer_draw_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/render
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+target_compile_definitions(banana_runtime_renderer_draw_test PRIVATE
+	BANANA_ENGINE_RENDER_BACKEND_DX12=1
 )
 
 add_executable(banana_runtime_camera_basis_test
@@ -855,6 +945,20 @@ target_include_directories(banana_runtime_gameplay_service_sentience_behavior_te
 	${BANANA_ENGINE_DIR}/runtime
 )
 
+add_executable(banana_runtime_gameplay_service_sentience_overrides_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/service/gameplay_service_sentience_overrides_test.c
+	${BANANA_ENGINE_DIR}/runtime/engine/gameplay/service/gameplay_service_sentience_overrides.c
+)
+
+add_test(NAME banana_runtime_gameplay_service_sentience_overrides_test
+	COMMAND banana_runtime_gameplay_service_sentience_overrides_test
+)
+
+target_include_directories(banana_runtime_gameplay_service_sentience_overrides_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 add_executable(banana_runtime_gameplay_service_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/service/gameplay_service_test.c
 	${BANANA_ENGINE_DIR}/runtime/engine/gameplay/service/gameplay_service.c
@@ -880,6 +984,20 @@ add_test(NAME banana_runtime_gameplay_service_reinforcement_spawn_test
 target_link_libraries(banana_runtime_gameplay_service_reinforcement_spawn_test PRIVATE banana_engine_core)
 
 target_include_directories(banana_runtime_gameplay_service_reinforcement_spawn_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_gameplay_service_warfront_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/service/gameplay_service_warfront_test.c
+	${BANANA_ENGINE_DIR}/runtime/engine/gameplay/service/gameplay_service_warfront.c
+)
+
+add_test(NAME banana_runtime_gameplay_service_warfront_test
+	COMMAND banana_runtime_gameplay_service_warfront_test
+)
+
+target_include_directories(banana_runtime_gameplay_service_warfront_test PRIVATE
 	${BANANA_ENGINE_DIR}
 	${BANANA_ENGINE_DIR}/runtime
 )
@@ -1470,13 +1588,16 @@ set(BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS
 	banana_runtime_netcode_k3h4_covariance_ellipsoid_test
 	banana_runtime_netcode_k3h4_pipeline_setup_test
 	banana_runtime_netcode_k3h4_pipeline_equivalence_test
+	banana_runtime_netcode_vector_failure_path_test
 	banana_runtime_netcode_abi_combat_integration_test
 	banana_runtime_netcode_abi_error_contract_test
 	banana_k3h4_export_test
 	banana_runtime_gameplay_service_sentience_decision_test
 	banana_runtime_gameplay_service_sentience_behavior_test
+	banana_runtime_gameplay_service_sentience_overrides_test
 	banana_runtime_gameplay_service_test
 	banana_runtime_gameplay_service_reinforcement_spawn_test
+	banana_runtime_gameplay_service_warfront_test
 	banana_runtime_merchant_query_abi_test
 	banana_runtime_merchant_trade_abi_test
 	banana_runtime_parallel_contract_test

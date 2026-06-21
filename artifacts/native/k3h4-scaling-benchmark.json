@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "series": [
-    { "n": 64, "k3h4_ns": 1400800, "attention_ns": 22394 },
-    { "n": 256, "k3h4_ns": 5426500, "attention_ns": 360062 },
-    { "n": 1024, "k3h4_ns": 21727700, "attention_ns": 5789100 },
-    { "n": 4096, "k3h4_ns": 90146000, "attention_ns": 95016300 },
-    { "n": 16384, "k3h4_ns": 356579900, "attention_ns": 1512310900 }
+    { "n": 64, "k3h4_ns": 1520975, "attention_ns": 23088 },
+    { "n": 256, "k3h4_ns": 6115300, "attention_ns": 608800 },
+    { "n": 1024, "k3h4_ns": 39198900, "attention_ns": 21489300 },
+    { "n": 4096, "k3h4_ns": 212760700, "attention_ns": 186093500 },
+    { "n": 16384, "k3h4_ns": 538708000, "attention_ns": 1694401800 }
   ]
 }

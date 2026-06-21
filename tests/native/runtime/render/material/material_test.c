@@ -42,7 +42,33 @@ static void test_material_apply_runs_with_shader_instance(void **state)
                             "material_apply must execute without crashing when shader instance is provided");
 }
 
+static void test_shader_stub_uniform_helpers_are_callable(void **state)
+{
+    Shader *shader = shader_create(NULL, NULL);
+    const float identity[16] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+    };
+
+    (void)state;
+
+    BANANA_TEST_ASSERT_TRUE(shader != NULL,
+                            "shader_create must provide a stub shader instance");
+
+    shader_bind(shader);
+    shader_set_int(shader, "u_mode", 2);
+    shader_set_mat4(shader, "u_transform", identity);
+
+    shader_destroy(shader);
+
+    BANANA_TEST_ASSERT_TRUE(1,
+                            "shader stub helpers must be callable in headless builds");
+}
+
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE(test_material_solid_sets_default_values),
-    BANANA_TEST_CASE(test_material_apply_runs_with_shader_instance)
+    BANANA_TEST_CASE(test_material_apply_runs_with_shader_instance),
+    BANANA_TEST_CASE(test_shader_stub_uniform_helpers_are_callable)
 )

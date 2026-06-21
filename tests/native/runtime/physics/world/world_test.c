@@ -48,7 +48,56 @@ static void test_dynamics_guard_paths_for_physics_world_module(void **state)
                                 "dynamics integrate must early-return for static-body guard path");
 }
 
+static void test_world_collision_resolution_paths_for_physics_world_module(void **state)
+{
+    PhysicsWorld world;
+    CollisionList cols;
+    PhysicsBody invalid_zero;
+    PhysicsBody invalid_high;
+    PhysicsBody valid_a;
+    PhysicsBody valid_b;
+
+    (void)state;
+
+    memset(&world, 0, sizeof(world));
+    memset(&cols, 0, sizeof(cols));
+    memset(&invalid_zero, 0, sizeof(invalid_zero));
+    memset(&invalid_high, 0, sizeof(invalid_high));
+    memset(&valid_a, 0, sizeof(valid_a));
+    memset(&valid_b, 0, sizeof(valid_b));
+
+    invalid_zero.id = 0;
+    invalid_high.id = BANANA_MAX_PHYSICS_BODIES + 1;
+    valid_a.id = 8;
+    valid_b.id = 9;
+
+    world.body_count = 5;
+    world.bodies[0] = NULL;
+    world.bodies[1] = &invalid_zero;
+    world.bodies[2] = &invalid_high;
+    world.bodies[3] = &valid_a;
+    world.bodies[4] = &valid_b;
+
+    cols.count = 4;
+    cols.items[0].body_a = 0;
+    cols.items[0].body_b = valid_b.id;
+    cols.items[1].body_a = valid_a.id;
+    cols.items[1].body_b = BANANA_MAX_PHYSICS_BODIES + 1;
+    cols.items[2].body_a = valid_a.id;
+    cols.items[2].body_b = 77;
+    cols.items[3].body_a = valid_a.id;
+    cols.items[3].body_b = valid_b.id;
+
+    physics_world_resolve_collision_pairs(NULL, &cols);
+    physics_world_resolve_collision_pairs(&world, NULL);
+    physics_world_resolve_collision_pairs(&world, &cols);
+
+    BANANA_TEST_ASSERT_TRUE(1,
+                            "world collision resolve paths must execute without crashes for mixed pair lists");
+}
+
 BANANA_TEST_MAIN(
     BANANA_TEST_CASE(test_physics_world_lifecycle_and_raycast),
-    BANANA_TEST_CASE(test_dynamics_guard_paths_for_physics_world_module)
+    BANANA_TEST_CASE(test_dynamics_guard_paths_for_physics_world_module),
+    BANANA_TEST_CASE(test_world_collision_resolution_paths_for_physics_world_module)
 )
