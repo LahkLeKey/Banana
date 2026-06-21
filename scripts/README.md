@@ -7,6 +7,7 @@
 - `run-native-feedback-loop.sh`: runs the native human-feedback loop factory in scenario mode or DX12 playloop script mode (`--script`), emitting operator-readable telemetry snapshots.
 - `run-war-test-suites.sh`: scenario-suite orchestrator for the feedback loop factory (`focused`, `evidence`, `soak`, `gameplay`, `legacy`, `mmo-only`) with optional scenario overrides (`warfront`, `negotiate`, `comeback`, `flank`, `pressure`, `truce`, `rally`) and optional `--script-dir` (`<scenario>.dx12play`) execution.
 - `run-native-coverage.sh`: configures a coverage-enabled native build, runs the native test suite, and exports HTML/text coverage artifacts that can be run locally or in CI.
+- `run-native-coverage-ci-container.sh`: builds a CI-parity Ubuntu container and runs the native coverage workflow inside Docker before pushing.
 - `run-dx12-playtest-suites.sh`: launches the DX12 POC with polished demo-scene assets for interactive playtests or autotest sweeps (`playtest`, `showcase`, `metro`, `corridor`, `continent`, `all`, `features`) with optional `--feature <name>` overrides.
 - `refresh-coherent-world-evidence.sh`: refreshes 031 evidence artifacts by capturing feedback-loop suite output logs, optionally forwarding `BANANA_NATIVE_FEEDBACK_SCRIPT_DIR` into suite runs.
 - `refresh-coherent-world-api-baselines.sh`: refreshes 031 API unit/integration evidence artifacts.
@@ -14,6 +15,8 @@
 Coverage examples:
 - `bash scripts/run-native-coverage.sh`
 - `bash scripts/run-native-coverage.sh --build-dir out/native-coverage-ci --output-dir artifacts/native/coverage-ci`
+- `bash scripts/run-native-coverage-ci-container.sh`
+- `bash scripts/run-native-coverage-ci-container.sh --no-build-image --build-dir out/native-coverage-ci-docker --output-dir artifacts/native/coverage-ci-docker`
 
 Playtest examples:
 - `bash scripts/run-dx12-playtest-suites.sh --suite playtest` (interactive playtest with telemetry + auto-target defaults)

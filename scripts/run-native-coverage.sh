@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="${BANANA_NATIVE_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 BUILD_DIR="${BANANA_NATIVE_BUILD_DIR:-out/native-coverage}"
 OUTPUT_DIR="${BANANA_NATIVE_COVERAGE_OUTPUT_DIR:-artifacts/native/coverage}"
 SKIP_BUILD=0
@@ -133,7 +133,12 @@ else
   fi
 fi
 
-BANANA_NATIVE_COVERAGE_ROOT_DIR="$ROOT_DIR" BANANA_NATIVE_COVERAGE_REPORT_DIR="$OUTPUT_DIR" BANANA_NATIVE_COVERAGE_STATUS="$coverage_status" python - <<'PY'
+PYTHON_BIN="python"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+  PYTHON_BIN="python3"
+fi
+
+BANANA_NATIVE_COVERAGE_ROOT_DIR="$ROOT_DIR" BANANA_NATIVE_COVERAGE_REPORT_DIR="$OUTPUT_DIR" BANANA_NATIVE_COVERAGE_STATUS="$coverage_status" "$PYTHON_BIN" - <<'PY'
 import os
 import re
 import html
@@ -150,19 +155,6 @@ root_dir = Path(os.environ.get('BANANA_NATIVE_COVERAGE_ROOT_DIR', os.getcwd())).
 source_root = (root_dir / 'src' / 'native').resolve()
 if not source_root.exists():
     raise SystemExit(f"native source root does not exist: {source_root}")
-
-
-def parse_overall_percentage(report_dir: Path):
-    summary_txt = report_dir / 'coverage-summary.txt'
-    if not summary_txt.exists():
-        return None
-    for line in summary_txt.read_text(encoding='utf-8', errors='ignore').splitlines():
-        if not line.strip().startswith('TOTAL'):
-            continue
-        match = re.search(r'([0-9.]+)%\s*$', line)
-        if match:
-            return float(match.group(1))
-    return None
 
 
 def strip_c_comments(text: str) -> str:
@@ -196,6 +188,38 @@ else:
   modules_candidates = []
 coverage_by_file = {}
 
+
+def extract_line_totals(entry: dict):
+  # gcovr <= 6 used summary.lines, while gcovr 7 exposes executable lines in entry.lines.
+  summary_lines = (entry.get('summary') or {}).get('lines') or {}
+  if summary_lines:
+    covered = int(summary_lines.get('covered', 0))
+    total = int(summary_lines.get('count', 0))
+    return covered, max(total - covered, 0), total
+
+  lines = entry.get('lines') or []
+  if isinstance(lines, list) and lines:
+    covered = 0
+    uncovered = 0
+    for line_entry in lines:
+      count = line_entry.get('count')
+      if count is None:
+        uncovered += 1
+        continue
+      try:
+        count_value = int(count)
+      except (TypeError, ValueError):
+        uncovered += 1
+        continue
+      if count_value > 0:
+        covered += 1
+      else:
+        uncovered += 1
+    total = covered + uncovered
+    return covered, uncovered, total
+
+  return 0, 0, 0
+
 gcovr_json_path = report_dir / 'gcovr.json'
 if gcovr_json_path.exists():
     import json
@@ -206,11 +230,11 @@ if gcovr_json_path.exists():
             key = file_path.resolve().relative_to(source_root).as_posix()
         except Exception:
             key = file_path.as_posix()
-        lines = (entry.get('summary') or {}).get('lines') or {}
+        covered, uncovered, total = extract_line_totals(entry)
         coverage_by_file[key] = {
-            'covered': int(lines.get('covered', 0)),
-            'uncovered': int(lines.get('missing', 0)),
-            'total': int(lines.get('count', 0)),
+          'covered': covered,
+          'uncovered': uncovered,
+          'total': total,
         }
 else:
     for modules_dir in modules_candidates:
@@ -255,7 +279,7 @@ for path in all_sources:
     entry = coverage_by_file.get(rel) or coverage_by_file.get(path.name)
     actionable = True
     coverage_display = '0.0%'
-    if entry is None:
+  if entry is None or int(entry.get('total', 0)) <= 0:
         line_count = sum(1 for _ in path.read_text(encoding='utf-8', errors='ignore').splitlines())
         if is_declaration_only_header(path):
             covered = 0
@@ -298,9 +322,7 @@ for path in all_sources:
 rows.sort(key=lambda item: (not item[7], item[2] == 0, item[2], item[0]), reverse=False)
 
 summary_path = report_dir / 'coverage-files-summary.html'
-overall_pct = parse_overall_percentage(report_dir)
-if overall_pct is None:
-    overall_pct = (100.0 * covered_total / (covered_total + uncovered_total)) if (covered_total + uncovered_total) else 0.0
+overall_pct = (100.0 * covered_total / (covered_total + uncovered_total)) if (covered_total + uncovered_total) else 0.0
 summary_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>

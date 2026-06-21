@@ -39,3 +39,4 @@ Thumbs.db
 /artifacts/native/coverage-report-cobertura
 nul
 /artifacts/native/coverage-ci
+/artifacts/native/coverage-ci-docker
