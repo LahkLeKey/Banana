@@ -1582,6 +1582,106 @@ add_test(NAME banana_k3h4_export_io_failure_test
 	WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../.."
 )
 
+add_executable(banana_runtime_render_tick_orchestration_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/orchestration/tick/loop/render_tick_orchestration_test.c
+	${BANANA_ENGINE_DIR}/runtime/orchestration/tick/loop/render_tick_orchestration.c
+)
+
+add_test(NAME banana_runtime_render_tick_orchestration_test
+	COMMAND banana_runtime_render_tick_orchestration_test
+)
+
+target_include_directories(banana_runtime_render_tick_orchestration_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_gameplay_model_profile_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/engine/gameplay/model/gameplay_model_profile_test.c
+	${BANANA_ENGINE_DIR}/runtime/engine/gameplay/model/gameplay_model_profile.c
+)
+
+add_test(NAME banana_runtime_gameplay_model_profile_test
+	COMMAND banana_runtime_gameplay_model_profile_test
+)
+
+target_include_directories(banana_runtime_gameplay_model_profile_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_terrain_chunks_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/terrain/terrain_chunks_test.c
+	${BANANA_ENGINE_DIR}/runtime/terrain/terrain_chunks.c
+)
+
+add_test(NAME banana_runtime_terrain_chunks_test
+	COMMAND banana_runtime_terrain_chunks_test
+)
+
+target_include_directories(banana_runtime_terrain_chunks_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_parallel_model_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/parallel/model/parallel_model_test.c
+	${BANANA_ENGINE_DIR}/runtime/parallel/model/parallel_model.c
+)
+
+add_test(NAME banana_runtime_parallel_model_test
+	COMMAND banana_runtime_parallel_model_test
+)
+
+target_include_directories(banana_runtime_parallel_model_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_world_metrics_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/world/world_metrics_test.c
+	${BANANA_ENGINE_DIR}/runtime/world/world_metrics.c
+)
+
+add_test(NAME banana_runtime_world_metrics_test
+	COMMAND banana_runtime_world_metrics_test
+)
+
+target_compile_definitions(banana_runtime_world_metrics_test PRIVATE BANANA_ENGINE_HAS_OPENMP=1)
+
+target_include_directories(banana_runtime_world_metrics_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_camera_follow_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/camera/follow/camera_follow_test.c
+	${BANANA_ENGINE_DIR}/runtime/camera/follow/camera_follow.c
+)
+
+add_test(NAME banana_runtime_camera_follow_test
+	COMMAND banana_runtime_camera_follow_test
+)
+
+target_include_directories(banana_runtime_camera_follow_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
+add_executable(banana_runtime_controller_attach_test
+	${CMAKE_CURRENT_LIST_DIR}/runtime/controller/attach/controller_attach_test.c
+	${BANANA_ENGINE_DIR}/runtime/controller/attach/controller_attach.c
+)
+
+add_test(NAME banana_runtime_controller_attach_test
+	COMMAND banana_runtime_controller_attach_test
+)
+
+target_include_directories(banana_runtime_controller_attach_test PRIVATE
+	${BANANA_ENGINE_DIR}
+	${BANANA_ENGINE_DIR}/runtime
+)
+
 set(BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS
 	banana_runtime_netcode_k3h4_assignment_family_test
 	banana_runtime_netcode_k3h4_orchestrator_test
@@ -1610,6 +1710,13 @@ set(BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS
 	banana_runtime_ui_merchant_impl_test
 	banana_runtime_ui_abi_and_headers_smoke_test
 	banana_asset_algorithms_test
+	banana_runtime_render_tick_orchestration_test
+	banana_runtime_gameplay_model_profile_test
+	banana_runtime_terrain_chunks_test
+	banana_runtime_parallel_model_test
+	banana_runtime_world_metrics_test
+	banana_runtime_camera_follow_test
+	banana_runtime_controller_attach_test
 )
 
 foreach(target IN LISTS BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS)
@@ -1652,6 +1759,13 @@ set(BANANA_RUNTIME_NATIVE_CMOCKA_TARGETS
 	banana_runtime_netcode_abi_envelope_endianness_test
 	banana_runtime_merchant_query_abi_test
 	banana_asset_algorithms_test
+	banana_runtime_render_tick_orchestration_test
+	banana_runtime_gameplay_model_profile_test
+	banana_runtime_terrain_chunks_test
+	banana_runtime_parallel_model_test
+	banana_runtime_world_metrics_test
+	banana_runtime_camera_follow_test
+	banana_runtime_controller_attach_test
 	banana_k3h4_export_io_failure_test
 )
 
