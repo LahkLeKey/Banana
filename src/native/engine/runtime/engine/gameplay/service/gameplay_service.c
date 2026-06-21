@@ -60,7 +60,7 @@ void runtime_gameplay_service_tick(World *world,
                 {
                     entity->active = 0;
                     *inout_pbj_pickup_collected = 1;
-                    i = world->entity_count;
+                    break;
                 }
             }
         }
