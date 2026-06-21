@@ -35,8 +35,7 @@ int runtime_netcode_link_build(const RuntimeNetcodeLinkInput *input,
 
     inputs_valid = (input != NULL && out_output != NULL);
     effective_input = input ? input : &fallback_input;
-    effective_output = out_output ? out_output : &fallback_output;
-
+    effective_output = inputs_valid ? out_output : &fallback_output;
     interaction_signal = clamp_percent(effective_input->interaction_signal);
     player_signal = (float)effective_input->player_level * 14.0f +
                     (float)(effective_input->combo_streak < 1 ? 1 : effective_input->combo_streak) * 8.0f +
