@@ -1327,6 +1327,142 @@ describe('K3H4 training integration routes', () => {
     await app.close();
   });
 
+  test('returns bulk confidence with dedupe and partial errors', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/k3h4/training-session/confidence/bulk',
+      payload: {
+        mode: 'power',
+        sessionIds: ['sess-abc123', 'missing', 'sess-abc123'],
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json() as {
+      contractVersion: number;
+      requestedCount: number;
+      processedCount: number;
+      results: Array<{
+        sessionId: string; confidence: {sessionId: string} | null;
+        error: {code: string; statusCode: number} | null;
+      }>;
+    };
+
+    expect(body.contractVersion).toBe(1);
+    expect(body.requestedCount).toBe(3);
+    expect(body.processedCount).toBe(2);
+
+    expect(body.results).toHaveLength(2);
+    const success =
+        body.results.find((result) => result.sessionId === 'sess-abc123');
+    expect(success?.confidence?.sessionId).toBe('sess-abc123');
+    expect(success?.error).toBeNull();
+
+    const missing =
+        body.results.find((result) => result.sessionId === 'missing');
+    expect(missing?.confidence).toBeNull();
+    expect(missing?.error?.code).toBe('session_not_found');
+    expect(missing?.error?.statusCode).toBe(404);
+
+    await app.close();
+  });
+
+  test(
+      'rejects invalid sessionIds payload for bulk confidence endpoint',
+      async () => {
+        const app = await createApp(createFakeNetcode({}), {
+          k3h4TrainingService: createTrainingService(),
+        });
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/netcode/k3h4/training-session/confidence/bulk',
+          payload: {
+            mode: 'power',
+            sessionIds: [],
+          },
+        });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toMatchObject({error: 'invalid_session_ids'});
+
+        await app.close();
+      });
+
+  test('returns bulk geometry with dedupe and partial errors', async () => {
+    const app = await createApp(createFakeNetcode({}), {
+      k3h4TrainingService: createTrainingService(),
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/netcode/k3h4/training-session/geometry/bulk',
+      payload: {
+        mode: 'power',
+        requests: [
+          {sessionId: 'sess-abc123', epochIndex: 0},
+          {sessionId: 'missing', epochIndex: 0},
+          {sessionId: 'sess-abc123', epochIndex: 0},
+        ],
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json() as {
+      contractVersion: number;
+      requestedCount: number;
+      processedCount: number;
+      results: Array<{
+        sessionId: string; epochIndex: number;
+        geometry: {sessionId: string; epoch: number} | null;
+        error: {code: string; statusCode: number} | null;
+      }>;
+    };
+
+    expect(body.contractVersion).toBe(1);
+    expect(body.requestedCount).toBe(3);
+    expect(body.processedCount).toBe(2);
+
+    const success = body.results.find(
+        (r) => r.sessionId === 'sess-abc123' && r.epochIndex === 0);
+    expect(success?.geometry?.sessionId).toBe('sess-abc123');
+    expect(success?.geometry?.epoch).toBe(0);
+    expect(success?.error).toBeNull();
+
+    const missing = body.results.find((r) => r.sessionId === 'missing');
+    expect(missing?.geometry).toBeNull();
+    expect(missing?.error?.code).toBe('session_not_found');
+    expect(missing?.error?.statusCode).toBe(404);
+
+    await app.close();
+  });
+
+  test(
+      'rejects invalid requests payload for bulk geometry endpoint',
+      async () => {
+        const app = await createApp(createFakeNetcode({}), {
+          k3h4TrainingService: createTrainingService(),
+        });
+
+        const response = await app.inject({
+          method: 'POST',
+          url: '/api/netcode/k3h4/training-session/geometry/bulk',
+          payload: {
+            mode: 'power',
+            requests: [],
+          },
+        });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.json()).toMatchObject({error: 'invalid_requests'});
+
+        await app.close();
+      });
+
   test('returns epoch geometry with PCA projection metadata', async () => {
     const app = await createApp(createFakeNetcode({}), {
       k3h4TrainingService: createTrainingService(),

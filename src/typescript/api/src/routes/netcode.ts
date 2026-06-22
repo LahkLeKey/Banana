@@ -51,6 +51,27 @@ function parseTrainingMode(rawMode: unknown): TrainingSessionMode|null {
   return null;
 }
 
+function parseBulkSessionIds(rawValue: unknown): string[]|null {
+  if (!Array.isArray(rawValue) || rawValue.length < 1 ||
+      rawValue.length > 128) {
+    return null;
+  }
+
+  const normalized: string[] = [];
+  for (const item of rawValue) {
+    if (typeof item !== 'string') {
+      return null;
+    }
+    const trimmed = item.trim();
+    if (trimmed.length < 1 || trimmed.length > 64) {
+      return null;
+    }
+    normalized.push(trimmed);
+  }
+
+  return normalized;
+}
+
 type RecordTrainingEpochPayload = {
   mode?: TrainingSessionMode;
   confidence?: number;
@@ -591,6 +612,155 @@ export async function registerNetcodeRoutes(
           }
           throw error;
         }
+      },
+  );
+
+  app.post<{Body: {mode?: string; sessionIds?: string[];}}>(
+      '/api/netcode/k3h4/training-session/confidence/bulk',
+      async (request, reply) => {
+        const mode = parseTrainingMode(request.body?.mode);
+        if (!mode) {
+          return reply.status(400).send({
+            error: 'invalid_mode',
+            message:
+                'mode must be either multiplicative or power when provided.',
+          });
+        }
+
+        const requestedSessionIds =
+            parseBulkSessionIds(request.body?.sessionIds);
+        if (!requestedSessionIds) {
+          return reply.status(400).send({
+            error: 'invalid_session_ids',
+            message:
+                'sessionIds must be an array with 1-128 non-empty session identifiers.',
+          });
+        }
+
+        const dedupedSessionIds = Array.from(new Set(requestedSessionIds));
+        const results =
+            await Promise.all(dedupedSessionIds.map(async (sessionId) => {
+              try {
+                const confidence =
+                    await trainingService.readConfidenceTimeSeries(
+                        sessionId, mode);
+                return {
+                  sessionId,
+                  confidence,
+                  error: null,
+                };
+              } catch (error) {
+                if (error instanceof K3h4VizServiceError) {
+                  return {
+                    sessionId,
+                    confidence: null,
+                    error: {
+                      code: error.code,
+                      message: error.message,
+                      statusCode: error.statusCode,
+                    },
+                  };
+                }
+                throw error;
+              }
+            }));
+
+        return reply.send({
+          contractVersion: 1,
+          mode,
+          requestedCount: requestedSessionIds.length,
+          processedCount: dedupedSessionIds.length,
+          results,
+        });
+      },
+  );
+
+  app.post<{
+    Body: {
+      mode?: string;
+      requests?: Array<{sessionId: string; epochIndex: number}>;
+    }
+  }>(
+      '/api/netcode/k3h4/training-session/geometry/bulk',
+      {config: {rateLimit: {max: 600, timeWindow: '1 minute'}}},
+      async (request, reply) => {
+        const mode = parseTrainingMode(request.body?.mode);
+        if (!mode) {
+          return reply.status(400).send({
+            error: 'invalid_mode',
+            message:
+                'mode must be either multiplicative or power when provided.',
+          });
+        }
+
+        const rawRequests = request.body?.requests;
+        if (!Array.isArray(rawRequests) || rawRequests.length < 1 ||
+            rawRequests.length > 128) {
+          return reply.status(400).send({
+            error: 'invalid_requests',
+            message:
+                'requests must be an array with 1-128 {sessionId, epochIndex} entries.',
+          });
+        }
+
+        for (const item of rawRequests) {
+          if (!item || typeof item !== 'object' ||
+              typeof item.sessionId !== 'string' ||
+              item.sessionId.trim().length < 1 ||
+              item.sessionId.trim().length > 64 ||
+              !Number.isInteger(item.epochIndex) || item.epochIndex < 0) {
+            return reply.status(400).send({
+              error: 'invalid_requests',
+              message:
+                  'Each request entry must have a non-empty sessionId string and a non-negative integer epochIndex.',
+            });
+          }
+        }
+
+        const seen = new Set<string>();
+        const dedupedRequests: Array<{sessionId: string; epochIndex: number}> =
+            [];
+        for (const item of rawRequests) {
+          const key = `${item.sessionId.trim()}:${item.epochIndex}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            dedupedRequests.push({
+              sessionId: item.sessionId.trim(),
+              epochIndex: item.epochIndex
+            });
+          }
+        }
+
+        const results = await Promise.all(
+            dedupedRequests.map(async ({sessionId, epochIndex}) => {
+              try {
+                const geometry = await trainingService.readEpochGeometry(
+                    sessionId, epochIndex, mode);
+                return {sessionId, epochIndex, geometry, error: null};
+              } catch (error) {
+                if (error instanceof K3h4VizServiceError) {
+                  return {
+                    sessionId,
+                    epochIndex,
+                    geometry: null,
+                    error: {
+                      code: error.code,
+                      message: error.message,
+                      statusCode: error.statusCode,
+                    },
+                  };
+                }
+                throw error;
+              }
+            }));
+
+        return reply.send({
+          contractVersion: 1,
+          mode,
+          requestedCount: rawRequests.length,
+          processedCount: dedupedRequests.length,
+          results,
+        });
       },
   );
 

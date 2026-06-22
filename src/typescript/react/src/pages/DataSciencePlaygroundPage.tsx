@@ -10,7 +10,8 @@ import { NotebookHealthPanel } from '../components/notebook-client/NotebookHealt
 import { NotebookOperationsPanel } from '../components/notebook-client/NotebookOperationsPanel';
 import { NotebookVisualizationsPanel } from '../components/notebook-client/NotebookVisualizationsPanel';
 import { RouteModePanel } from '../components/notebook-client/RouteModePanel';
-import { NotebookTrainingPanel } from '../domain/notebook/viz/NotebookTrainingPanel';
+import { K3h4TrainingSessionProvider } from '../domain/notebook/viz/K3h4TrainingSessionContext';
+import { ViewportTrainingTelemetryOverlay } from '../domain/notebook/viz/ViewportTrainingTelemetryOverlay';
 import { withErrorBoundary } from '../components/errors/withErrorBoundary';
 import {
     buildQuestProgress,
@@ -48,8 +49,8 @@ const SafeNotebookOperationsPanel = withErrorBoundary(NotebookOperationsPanel, {
 const SafeNotebookVisualizationsPanel = withErrorBoundary(NotebookVisualizationsPanel, {
     componentName: 'NotebookVisualizationsPanel',
 });
-const SafeNotebookTrainingPanel = withErrorBoundary(NotebookTrainingPanel, {
-    componentName: 'NotebookTrainingPanel',
+const SafeViewportTrainingTelemetryOverlay = withErrorBoundary(ViewportTrainingTelemetryOverlay, {
+    componentName: 'ViewportTrainingTelemetryOverlay',
 });
 
 const shellStyle: CSSProperties = {
@@ -74,8 +75,9 @@ const panelResetDefaults: Record<NotebookHudPanelId, number> = {
     menu: 0,
     status: 0,
     operations: 0,
-    visualizations: 1,
+    visualizations: 0,
     training: 1,
+    bulkMonitor: 1,
     intelNode: 0,
     objectiveNode: 0,
     playerNode: 0,
@@ -95,6 +97,7 @@ const panelDefaultSizes: Record<NotebookHudPanelId, { width: number; height: num
     operations: { width: 360, height: 240 },
     visualizations: { width: 460, height: 680 },
     training: { width: 440, height: 680 },
+    bulkMonitor: { width: 480, height: 520 },
 };
 
 type NotebookAnalyticsTelemetry = {
@@ -136,6 +139,15 @@ type NotebookAnalyticsTelemetry = {
     abiCoveragePercent: number;
     abiCoverageComplete: boolean;
     abiCoverageMissing: readonly string[];
+    lineCount: number;
+    includeCount: number;
+    callDensity: number;
+    riskLabel: string;
+    k3h4Dimensions: number;
+    k3h4Alignment: number;
+    cFileCount: number;
+    modelConfidence: number;
+    k3h4HashPreview: string;
     abiLayerLedger: readonly {
         layer: 'learning' | 'reward' | 'link' | 'vector' | 'k3h4';
         present: boolean;
@@ -162,6 +174,15 @@ const DEFAULT_NOTEBOOK_ANALYTICS_TELEMETRY: NotebookAnalyticsTelemetry = {
     abiCoveragePercent: 0,
     abiCoverageComplete: false,
     abiCoverageMissing: [],
+    lineCount: 0,
+    includeCount: 0,
+    callDensity: 0,
+    riskLabel: 'Stable',
+    k3h4Dimensions: 0,
+    k3h4Alignment: 0,
+    cFileCount: 0,
+    modelConfidence: 0,
+    k3h4HashPreview: 'n/a',
     abiLayerLedger: [],
 };
 
@@ -178,6 +199,7 @@ export function DataSciencePlaygroundPage() {
         showOperations,
         showVisualizations,
         showTraining,
+        showBulkMonitor,
         showIntelNode,
         showObjectiveNode,
         showPlayerNode,
@@ -260,6 +282,7 @@ export function DataSciencePlaygroundPage() {
             operations: previous.operations + 1,
             visualizations: previous.visualizations + 1,
             training: previous.training + 1,
+            bulkMonitor: previous.bulkMonitor + 1,
             intelNode: previous.intelNode + 1,
             objectiveNode: previous.objectiveNode + 1,
             playerNode: previous.playerNode + 1,
@@ -531,18 +554,6 @@ export function DataSciencePlaygroundPage() {
                 />
             </RouteDeckTransition>
         ),
-        training: (
-            <RouteDeckTransition
-                reducedMotion={prefersReducedMotion}
-                animating={modeDeckAnimating}
-                delayMs={120}
-                inactiveOpacity={0.84}
-                inactiveTransform="translateY(9px) scale(0.992)"
-                inactiveFilter="saturate(1.04)"
-            >
-                <SafeNotebookTrainingPanel />
-            </RouteDeckTransition>
-        ),
         objectiveNode: (
             <ObjectivesDockPanel
                 completedQuestCount={completedQuestCount}
@@ -651,7 +662,6 @@ export function DataSciencePlaygroundPage() {
         { id: 'visualizations', corner: 'top-left', title: 'VISUALIZATIONS' },
         { id: 'menu', corner: 'top-left', title: 'MAIN MENU' },
         { id: 'playerNode', corner: 'top-left', title: 'PLAYER NODE' },
-        { id: 'training', corner: 'top-right', title: 'TRAINING' },
         { id: 'explorer', corner: 'top-right', title: 'FILE EXPLORER' },
         { id: 'intelNode', corner: 'top-right', title: 'INTEL NODE' },
         { id: 'status', corner: 'bottom-left', title: 'ROUTE REGISTRY' },
@@ -663,7 +673,7 @@ export function DataSciencePlaygroundPage() {
     const dockEntries = dockLayout.map((dock) => ({
         id: dock.id,
         corner: dock.corner,
-        visible: dock.id === 'visualizations' || dock.id === 'training' ? true : panelVisibility[dock.id],
+        visible: panelVisibility[dock.id],
         content: dockRenderers[dock.id],
         title: dock.title,
         defaultWidth: panelDefaultSizes[dock.id].width,
@@ -684,41 +694,61 @@ export function DataSciencePlaygroundPage() {
                     onResetSectors={handleResetAllSectors}
                 />
 
-                <SafeNotebookGameplaySurface
-                    selectedFile={selectedFile}
-                    selectedContent={selectedContent}
-                    fullBleed
-                    routeMode={routeHudPreset.mode}
-                    allIndexedFiles={allFiles}
-                    contentByFile={cellLookup}
-                    indexedFileCount={manifest?.file_count ?? 0}
-                    notebookCellCount={notebookCellCount}
-                    selectedDomain={selectedDomain}
-                    rarityLabel={selectedRarity.label}
-                    rarityAccent={selectedRarity.accent}
-                    playerLevel={playerLevel}
-                    totalXp={totalXp}
-                    comboStreak={comboStreak}
-                    lastXpGain={lastXpGain}
-                    questProgress={questProgress}
-                    questToast={questToast}
-                    nextDomainTarget={nextDomainTarget}
-                    taskbarOwnsObjectiveAndQuestWindows
-                    taskbarOwnsIntelAndPlayerWindows
-                    taskbarOwnsNodeOpsWindow
-                    onToggleIntelNodeWindow={() => togglePanel('intelNode')}
-                    onToggleObjectiveNodeWindow={() => togglePanel('objectiveNode')}
-                    onTogglePlayerNodeWindow={() => togglePanel('playerNode')}
-                    onToggleNodeOpsWindow={() => togglePanel('nodeOps')}
-                    onAnalyticsTelemetryChange={setAnalyticsTelemetry}
-                />
+                <K3h4TrainingSessionProvider>
+                    <SafeNotebookGameplaySurface
+                        selectedFile={selectedFile}
+                        selectedContent={selectedContent}
+                        fullBleed
+                        routeMode={routeHudPreset.mode}
+                        allIndexedFiles={allFiles}
+                        contentByFile={cellLookup}
+                        indexedFileCount={manifest?.file_count ?? 0}
+                        notebookCellCount={notebookCellCount}
+                        selectedDomain={selectedDomain}
+                        rarityLabel={selectedRarity.label}
+                        rarityAccent={selectedRarity.accent}
+                        playerLevel={playerLevel}
+                        totalXp={totalXp}
+                        comboStreak={comboStreak}
+                        lastXpGain={lastXpGain}
+                        questProgress={questProgress}
+                        questToast={questToast}
+                        nextDomainTarget={nextDomainTarget}
+                        taskbarOwnsObjectiveAndQuestWindows
+                        taskbarOwnsIntelAndPlayerWindows
+                        taskbarOwnsNodeOpsWindow
+                        onToggleIntelNodeWindow={() => togglePanel('intelNode')}
+                        onToggleObjectiveNodeWindow={() => togglePanel('objectiveNode')}
+                        onTogglePlayerNodeWindow={() => togglePanel('playerNode')}
+                        onToggleNodeOpsWindow={() => togglePanel('nodeOps')}
+                        onAnalyticsTelemetryChange={setAnalyticsTelemetry}
+                    />
 
-                <ResizableDockGrid
-                    entries={dockEntries}
-                    onPanelClose={(panelId) => {
-                        closePanel(panelId as Parameters<typeof closePanel>[0]);
-                    }}
-                />
+                    <SafeViewportTrainingTelemetryOverlay
+                        analyticsAvailable={analyticsTelemetry.analyticsAvailable}
+                        analyticsCohort={analyticsTelemetry.analyticsCohort}
+                        lineCount={analyticsTelemetry.lineCount}
+                        includeCount={analyticsTelemetry.includeCount}
+                        callDensity={analyticsTelemetry.callDensity}
+                        riskLabel={analyticsTelemetry.riskLabel}
+                        k3h4Dimensions={analyticsTelemetry.k3h4Dimensions}
+                        k3h4Alignment={analyticsTelemetry.k3h4Alignment}
+                        cFileCount={analyticsTelemetry.cFileCount}
+                        modelConfidence={analyticsTelemetry.modelConfidence}
+                        k3h4Clusters={analyticsTelemetry.k3h4Clusters}
+                        k3h4Convergence={analyticsTelemetry.k3h4Convergence}
+                        abiCoverageSummary={`${analyticsTelemetry.abiCoveragePresent}/${analyticsTelemetry.abiCoverageExpected}`}
+                        abiCoveragePercent={analyticsTelemetry.abiCoveragePercent}
+                        k3h4HashPreview={analyticsTelemetry.k3h4HashPreview}
+                    />
+
+                    <ResizableDockGrid
+                        entries={dockEntries}
+                        onPanelClose={(panelId) => {
+                            closePanel(panelId as Parameters<typeof closePanel>[0]);
+                        }}
+                    />
+                </K3h4TrainingSessionProvider>
 
                 <RouteHudControlStrip
                     routeLabel={routeHudPreset.label}
@@ -728,6 +758,9 @@ export function DataSciencePlaygroundPage() {
                     showStatus={showStatus}
                     showVisualizations={showVisualizations}
                     showTraining={showTraining}
+                    showBulkMonitor={showBulkMonitor}
+                    showTrainingControl={false}
+                    showBulkMonitorControl={false}
                     showIntelNode={showIntelNode}
                     showObjectiveNode={showObjectiveNode}
                     showPlayerNode={showPlayerNode}
@@ -739,7 +772,6 @@ export function DataSciencePlaygroundPage() {
                     onToggleOperations={() => togglePanel('operations')}
                     onToggleStatus={() => togglePanel('status')}
                     onToggleVisualizations={() => togglePanel('visualizations')}
-                    onToggleTraining={() => togglePanel('training')}
                     onToggleIntelNode={() => togglePanel('intelNode')}
                     onToggleObjectiveNode={() => togglePanel('objectiveNode')}
                     onTogglePlayerNode={() => togglePanel('playerNode')}

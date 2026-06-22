@@ -38,6 +38,8 @@ echo "- /v1/player/account -> player-identity-account"
 echo "- /v1/player/progression -> progression-inventory"
 echo "- /v1/player/inventory -> progression-inventory"
 echo "- /v1/player/insights -> player-insights-web"
+echo "- /api/netcode/k3h4/training-session/confidence/bulk -> netcode-k3h4-training"
+echo "- /api/netcode/k3h4/training-session/geometry/bulk -> netcode-k3h4-training"
 
 if [[ "$INVENTORY_ONLY" == true ]]; then
   exit 0
@@ -62,6 +64,23 @@ fi
 
 if [[ ! -f "$PLAYER_ROUTE" ]]; then
   echo "[parity] missing player route module: $PLAYER_ROUTE" >&2
+  MISSING=1
+fi
+
+NETCODE_ROUTE="$API_DIR/src/routes/netcode.ts"
+
+if [[ ! -f "$NETCODE_ROUTE" ]]; then
+  echo "[parity] missing netcode route module: $NETCODE_ROUTE" >&2
+  MISSING=1
+fi
+
+if ! grep -q "training-session/confidence/bulk" "$NETCODE_ROUTE" 2>/dev/null; then
+  echo "[parity] missing bulk confidence route in $NETCODE_ROUTE" >&2
+  MISSING=1
+fi
+
+if ! grep -q "training-session/geometry/bulk" "$NETCODE_ROUTE" 2>/dev/null; then
+  echo "[parity] missing bulk geometry route in $NETCODE_ROUTE" >&2
   MISSING=1
 fi
 

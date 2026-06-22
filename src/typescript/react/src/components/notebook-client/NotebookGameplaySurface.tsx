@@ -22,7 +22,6 @@ import {
     NodeOpsConsole,
     NodeOrbCluster,
     QuestLogRail,
-    TelemetryRail,
     type OrbAnchorSet,
     type OrbitLayerSpec,
     type NodeOpsActionSpec,
@@ -93,6 +92,15 @@ type NotebookGameplaySurfaceProps = {
         abiCoveragePercent: number;
         abiCoverageComplete: boolean;
         abiCoverageMissing: readonly string[];
+        lineCount: number;
+        includeCount: number;
+        callDensity: number;
+        riskLabel: string;
+        k3h4Dimensions: number;
+        k3h4Alignment: number;
+        cFileCount: number;
+        modelConfidence: number;
+        k3h4HashPreview: string;
         abiLayerLedger: readonly {
             layer: 'learning' | 'reward' | 'link' | 'vector' | 'k3h4';
             present: boolean;
@@ -428,6 +436,15 @@ export function NotebookGameplaySurface({
             abiCoveragePercent,
             abiCoverageComplete: abiLayerCoverage.complete,
             abiCoverageMissing: [...abiLayerCoverage.missingLayers],
+            lineCount,
+            includeCount,
+            callDensity,
+            riskLabel,
+            k3h4Dimensions: k3h4Projection.dimensions,
+            k3h4Alignment: k3h4Projection.alignment,
+            cFileCount,
+            modelConfidence: learningModel.modelConfidence,
+            k3h4HashPreview,
             abiLayerLedger: abiLayerLedger.map((entry) => ({ ...entry })),
         });
     }, [
@@ -437,16 +454,25 @@ export function NotebookGameplaySurface({
         abiCoveragePresent,
         analyticsAvailability.available,
         analyticsAvailability.rollout.cohort,
+        cFileCount,
+        callDensity,
+        includeCount,
         k3h4.runtime.mode,
         k3h4.centers,
+        k3h4HashPreview,
         k3h4.radii,
         k3h4.weightedVoronoiScores,
         k3h4Projection.nodes,
+        k3h4Projection.alignment,
+        k3h4Projection.dimensions,
         k3h4ClusterCount,
         k3h4Convergence,
+        learningModel.modelConfidence,
+        lineCount,
         onAnalyticsTelemetryChange,
         abiLayerCoverage.complete,
         abiLayerCoverage.missingLayers,
+        riskLabel,
     ]);
     const laneContractCoherence = useMemo(() => {
         const coherenceMap = new Map<ContractNodeId, number>();
@@ -848,9 +874,7 @@ export function NotebookGameplaySurface({
     const dockPanelBottom = viewportBottomInset + (hasOpenDock ? 12 : 4);
     const loopRailBottom: number | string = hasOpenDock ? `calc(26dvh + ${viewportBottomInset + 44}px)` : viewportBottomInset + 72;
     const dockPanelMaxHeight = expandedDockPanel ? '48dvh' : (hasOpenDock ? '26dvh' : '34dvh');
-    const leftRailInset = isCompactViewport ? 12 : 408;
     const rightRailInset = isCompactViewport ? 12 : 408;
-    const leftTelemetryBottom = isCompactViewport ? 78 : 364;
     const questRailWidth = isCompactViewport
         ? 'min(360px, calc(100% - 24px))'
         : expandedQuestRail
@@ -862,7 +886,6 @@ export function NotebookGameplaySurface({
             ? 'min(390px, calc(100% - 24px))'
             : 'min(340px, calc(100% - 24px))';
     const showQuestRail = !isCompactViewport;
-    const showTelemetryRail = !isCompactViewport;
     const questRailBottom: number | string = expandedQuestRail
         ? viewportBottomInset + 20
         : (hasOpenDock ? `calc(24dvh + ${viewportBottomInset + 54}px)` : viewportBottomInset + 62);
@@ -1049,28 +1072,6 @@ export function NotebookGameplaySurface({
                             trainings={interactionLedger.trainings}
                             routes={interactionLedger.routes}
                             sessionXpGain={sessionXpGain}
-                        />
-                    ) : null}
-
-                    {/* ─── Side telemetry rail (left) ───────────────────────── */}
-                    {showTelemetryRail ? (
-                        <TelemetryRail
-                            leftRailInset={leftRailInset}
-                            leftTelemetryBottom={leftTelemetryBottom}
-                            lineCount={lineCount}
-                            includeCount={includeCount}
-                            callDensity={callDensity}
-                            riskLabel={riskLabel}
-                            k3h4Dimensions={k3h4Projection.dimensions}
-                            k3h4Alignment={k3h4Projection.alignment}
-                            cFileCount={cFileCount}
-                            modelConfidence={learningModel.modelConfidence}
-                            extraLines={[
-                                `K3H4: ${k3h4ClusterCount} clusters`,
-                                `Convergence: ${k3h4Convergence}`,
-                                `ABI: ${abiCoverageSummary} (${abiCoveragePercent}%)`,
-                                `Hash: ${k3h4HashPreview}`,
-                            ]}
                         />
                     ) : null}
 

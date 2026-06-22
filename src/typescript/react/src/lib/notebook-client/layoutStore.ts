@@ -48,10 +48,12 @@ type NotebookLayoutState = {
   showOperations: boolean;
   showVisualizations: boolean;
   showTraining: boolean;
+  showBulkMonitor: boolean;
   lastHudSnapshot: {
     explorer: boolean; menu: boolean; status: boolean; operations: boolean;
     visualizations: boolean;
     training: boolean;
+    bulkMonitor: boolean;
   };
   showIntelNodeWindow: boolean;
   showObjectiveNodeWindow: boolean;
@@ -82,11 +84,11 @@ type NotebookLayoutState = {
   }) => void;
   setHudPanelVisibility: (
       panel: 'explorer'|'menu'|'status'|'operations'|'visualizations'|
-      'training',
+      'training'|'bulkMonitor',
       visible: boolean,
       ) => void;
   toggleHudPanel: (panel: 'explorer'|'menu'|'status'|'operations'|
-                   'visualizations'|'training') => void;
+                   'visualizations'|'training'|'bulkMonitor') => void;
   closeAllHudPanels: () => void;
   reopenHudPanels: () => void;
   setGameplayWindowVisibility: (
@@ -96,7 +98,7 @@ type NotebookLayoutState = {
   closeAllGameplayWindows: () => void;
   reopenGameplayWindows: () => void;
   focusHudPanel: (panel: 'explorer'|'menu'|'status'|'operations'|
-                  'visualizations'|'training'|null) => void;
+                  'visualizations'|'training'|'bulkMonitor'|null) => void;
   resetHudPanels: () => void;
   resetForSector: (hasSelection: boolean) => void;
 };
@@ -114,15 +116,17 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
       showMenu: false,
       showStatus: false,
       showOperations: false,
-      showVisualizations: true,
-      showTraining: false,
+      showVisualizations: false,
+      showTraining: true,
+      showBulkMonitor: true,
       lastHudSnapshot: {
         explorer: false,
         menu: false,
         status: false,
         operations: false,
-        visualizations: true,
-        training: false,
+        visualizations: false,
+        training: true,
+        bulkMonitor: true,
       },
       showIntelNodeWindow: false,
       showObjectiveNodeWindow: false,
@@ -178,23 +182,27 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
             showVisualizations:
                 panel === 'visualizations' ? visible : state.showVisualizations,
             showTraining: panel === 'training' ? visible : state.showTraining,
+            showBulkMonitor: panel === 'bulkMonitor' ? visible :
+                                                       state.showBulkMonitor,
           })),
-      toggleHudPanel: (panel) =>
-          set((state) => ({
-                showExplorer: panel === 'explorer' ? !state.showExplorer :
-                                                     state.showExplorer,
-                showMenu: panel === 'menu' ? !state.showMenu : state.showMenu,
-                showStatus: panel === 'status' ? !state.showStatus :
-                                                 state.showStatus,
-                showOperations: panel === 'operations' ? !state.showOperations :
-                                                         state.showOperations,
-                showVisualizations: panel === 'visualizations' ?
-                    !state.showVisualizations :
-                    state.showVisualizations,
-                showTraining: panel === 'training' ? !state.showTraining :
-                                                     state.showTraining,
-                explorerDropupOpen: false,
-              })),
+      toggleHudPanel: (panel) => set(
+          (state) => ({
+            showExplorer: panel === 'explorer' ? !state.showExplorer :
+                                                 state.showExplorer,
+            showMenu: panel === 'menu' ? !state.showMenu : state.showMenu,
+            showStatus: panel === 'status' ? !state.showStatus :
+                                             state.showStatus,
+            showOperations: panel === 'operations' ? !state.showOperations :
+                                                     state.showOperations,
+            showVisualizations: panel === 'visualizations' ?
+                !state.showVisualizations :
+                state.showVisualizations,
+            showTraining: panel === 'training' ? !state.showTraining :
+                                                 state.showTraining,
+            showBulkMonitor: panel === 'bulkMonitor' ? !state.showBulkMonitor :
+                                                       state.showBulkMonitor,
+            explorerDropupOpen: false,
+          })),
       closeAllHudPanels: () => set((state) => ({
                                      lastHudSnapshot: {
                                        explorer: state.showExplorer,
@@ -203,6 +211,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                                        operations: state.showOperations,
                                        visualizations: state.showVisualizations,
                                        training: state.showTraining,
+                                       bulkMonitor: state.showBulkMonitor,
                                      },
                                      showExplorer: false,
                                      showMenu: false,
@@ -210,6 +219,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                                      showOperations: false,
                                      showVisualizations: false,
                                      showTraining: false,
+                                     showBulkMonitor: false,
                                      explorerDropupOpen: false,
                                    })),
       reopenHudPanels: () =>
@@ -220,6 +230,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                 showOperations: state.lastHudSnapshot.operations,
                 showVisualizations: state.lastHudSnapshot.visualizations,
                 showTraining: state.lastHudSnapshot.training,
+                showBulkMonitor: state.lastHudSnapshot.bulkMonitor,
                 explorerDropupOpen: false,
               })),
       setGameplayWindowVisibility: (window, visible) => set(
@@ -271,6 +282,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
                 showOperations: panel === 'operations',
                 showVisualizations: panel === 'visualizations',
                 showTraining: panel === 'training',
+                showBulkMonitor: panel === 'bulkMonitor',
                 explorerDropupOpen: false,
               })),
       resetHudPanels: () => set({
@@ -280,6 +292,7 @@ export const useNotebookLayoutStore = create<NotebookLayoutState>(
         showOperations: false,
         showVisualizations: false,
         showTraining: false,
+        showBulkMonitor: false,
         explorerDropupOpen: false,
       }),
       resetForSector: (hasSelection) => set({

@@ -4,7 +4,7 @@ import {useNotebookLayoutStore} from './layoutStore';
 
 export type NotebookHudPanelId =
     'explorer'|'menu'|'status'|'operations'|'visualizations'|'training'|
-    'intelNode'|'objectiveNode'|'playerNode'|'questLog'|'nodeOps';
+    'bulkMonitor'|'intelNode'|'objectiveNode'|'playerNode'|'questLog'|'nodeOps';
 
 type UseNotebookWindowOrchestratorOptions = {
   readonly initialPinnedPanels?: readonly NotebookHudPanelId[];
@@ -17,6 +17,7 @@ export function useNotebookWindowOrchestrator({
         'explorer',
         'visualizations',
         'training',
+        'bulkMonitor',
         'intelNode',
         'objectiveNode',
         'playerNode',
@@ -32,6 +33,8 @@ export function useNotebookWindowOrchestrator({
   const showVisualizations =
       useNotebookLayoutStore((state) => state.showVisualizations);
   const showTraining = useNotebookLayoutStore((state) => state.showTraining);
+  const showBulkMonitor =
+      useNotebookLayoutStore((state) => state.showBulkMonitor);
   const showObjectiveNode =
       useNotebookLayoutStore((state) => state.showObjectiveNodeWindow);
   const showIntelNode =
@@ -72,6 +75,7 @@ export function useNotebookWindowOrchestrator({
         operations: showOperations,
         visualizations: showVisualizations,
         training: showTraining,
+        bulkMonitor: showBulkMonitor,
         intelNode: showIntelNode,
         objectiveNode: showObjectiveNode,
         playerNode: showPlayerNode,
@@ -85,6 +89,7 @@ export function useNotebookWindowOrchestrator({
         showOperations,
         showVisualizations,
         showTraining,
+        showBulkMonitor,
         showIntelNode,
         showObjectiveNode,
         showPlayerNode,
@@ -105,7 +110,7 @@ export function useNotebookWindowOrchestrator({
   const closePanel = (panel: NotebookHudPanelId) => {
     if (panel === 'explorer' || panel === 'menu' || panel === 'status' ||
         panel === 'visualizations' || panel === 'operations' ||
-        panel === 'training') {
+        panel === 'training' || panel === 'bulkMonitor') {
       setHudPanelVisibility(panel, false);
       return;
     }
@@ -135,7 +140,7 @@ export function useNotebookWindowOrchestrator({
   const togglePanel = (panel: NotebookHudPanelId) => {
     if (panel === 'explorer' || panel === 'menu' || panel === 'status' ||
         panel === 'visualizations' || panel === 'operations' ||
-        panel === 'training') {
+        panel === 'training' || panel === 'bulkMonitor') {
       toggleHudPanel(panel);
       return;
     }
@@ -170,6 +175,7 @@ export function useNotebookWindowOrchestrator({
     setHudPanelVisibility('operations', false);
     setHudPanelVisibility('visualizations', false);
     setHudPanelVisibility('training', false);
+    setHudPanelVisibility('bulkMonitor', false);
   };
 
   const closeAllWindows = () => {
@@ -189,6 +195,7 @@ export function useNotebookWindowOrchestrator({
     showOperations,
     showVisualizations,
     showTraining,
+    showBulkMonitor,
     showIntelNode,
     showObjectiveNode,
     showPlayerNode,

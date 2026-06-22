@@ -1153,6 +1153,47 @@ export type K3h4ConfidenceTimeSeries = {
   };
 };
 
+export type K3h4BulkGeometryRequest = {
+  readonly sessionId: string; readonly epochIndex: number;
+};
+
+export type K3h4BulkGeometryResult = {
+  readonly sessionId: string;
+  readonly epochIndex: number;
+  readonly geometry: K3h4EpochGeometryResponse | null;
+  readonly error: {
+    readonly code: string;
+    readonly message: string;
+    readonly statusCode: number;
+  } | null;
+};
+
+export type K3h4BulkGeometryResponse = {
+  readonly contractVersion: 1;
+  readonly mode: K3h4TrainingMode;
+  readonly requestedCount: number;
+  readonly processedCount: number;
+  readonly results: readonly K3h4BulkGeometryResult[];
+};
+
+export type K3h4BulkConfidenceResult = {
+  readonly sessionId: string;
+  readonly confidence: K3h4ConfidenceTimeSeries | null;
+  readonly error: {
+    readonly code: string;
+    readonly message: string;
+    readonly statusCode: number;
+  } | null;
+};
+
+export type K3h4BulkConfidenceResponse = {
+  readonly contractVersion: 1;
+  readonly mode: K3h4TrainingMode;
+  readonly requestedCount: number;
+  readonly processedCount: number;
+  readonly results: readonly K3h4BulkConfidenceResult[];
+};
+
 export type K3h4RecordEpochRequest = {
   readonly mode: K3h4TrainingMode;
   readonly confidence: number;
@@ -1213,6 +1254,41 @@ export async function fetchK3h4ConfidenceTimeSeries(
       baseUrl,
       `/api/netcode/k3h4/training-session/${
           encodeURIComponent(sessionId)}/confidence?${query}`,
+  );
+}
+
+export async function fetchK3h4EpochGeometryBulk(
+    baseUrl: string,
+    requests: readonly K3h4BulkGeometryRequest[],
+    mode: K3h4TrainingMode = 'power',
+    ): Promise<K3h4BulkGeometryResponse> {
+  return fetchApiJson<K3h4BulkGeometryResponse>(
+      baseUrl,
+      '/api/netcode/k3h4/training-session/geometry/bulk',
+      {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({mode, requests}),
+      },
+  );
+}
+
+export async function fetchK3h4ConfidenceTimeSeriesBulk(
+    baseUrl: string,
+    sessionIds: readonly string[],
+    mode: K3h4TrainingMode = 'power',
+    ): Promise<K3h4BulkConfidenceResponse> {
+  return fetchApiJson<K3h4BulkConfidenceResponse>(
+      baseUrl,
+      '/api/netcode/k3h4/training-session/confidence/bulk',
+      {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify({
+          mode,
+          sessionIds,
+        }),
+      },
   );
 }
 

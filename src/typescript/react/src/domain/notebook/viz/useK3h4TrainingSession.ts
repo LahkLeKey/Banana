@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-import {createK3h4TrainingSession, fetchK3h4ConfidenceTimeSeries, fetchK3h4EpochGeometry, fetchNetcodeAnalytics, type K3h4ConfidenceTimeSeries, type K3h4EpochConfidence, type K3h4TrainingMode, type K3h4TrainingSession, NetcodeAnalyticsError, type NetcodeAnalyticsRequest, type NetcodeAnalyticsResponse, recordK3h4TrainingEpoch, resolveApiBaseUrl,} from '../../../lib/api';
+import {createK3h4TrainingSession, fetchK3h4ConfidenceTimeSeriesBulk, fetchK3h4EpochGeometryBulk, fetchNetcodeAnalytics, type K3h4ConfidenceTimeSeries, type K3h4EpochConfidence, type K3h4TrainingMode, type K3h4TrainingSession, NetcodeAnalyticsError, type NetcodeAnalyticsRequest, type NetcodeAnalyticsResponse, recordK3h4TrainingEpoch, resolveApiBaseUrl,} from '../../../lib/api';
 import type {K3h4EpochGeometryResponse} from '../../../lib/k3h4GeometryTypes';
 
 const STORAGE_KEY = 'banana-k3h4-training-session';
@@ -410,6 +410,8 @@ export type UseK3h4TrainingSessionResult = {
   workflowLogs: readonly TrainingWorkflowLogEntry[];
   startSession: (mode: K3h4TrainingMode) => void;
   runWorkflow: (workflow: K3h4TrainingWorkflow) => void;
+  orchestrateRealtimeTraining:
+      (mode: K3h4TrainingMode, workflow?: K3h4TrainingWorkflow) => void;
   stopWorkflow: () => void;
   clearWorkflowLogs: () => void;
   clearSession: () => void;
@@ -436,6 +438,11 @@ export function useK3h4TrainingSession(): UseK3h4TrainingSessionResult {
 
   const pollRef = useRef<ReturnType<typeof setInterval>|null>(null);
   const workflowRunIdRef = useRef(0);
+  const sessionRef = useRef<K3h4TrainingSession|null>(session);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const appendWorkflowLog = useCallback(
       (entry: {
@@ -473,21 +480,53 @@ export function useK3h4TrainingSession(): UseK3h4TrainingSessionResult {
       async (activeSession: K3h4TrainingSession) => {
         const baseUrl = resolveApiBaseUrl();
         try {
-          const series = await fetchK3h4ConfidenceTimeSeries(
-              baseUrl, activeSession.sessionId, activeSession.mode);
+          // Single bulk request covers both confidence and latest-epoch
+          // geometry so one poll tick costs 1 API call regardless of how many
+          // sessions the panel is tracking — keeping workloads below the prod
+          // rate limit.
+          const bulkResult = await fetchK3h4ConfidenceTimeSeriesBulk(
+              baseUrl, [activeSession.sessionId], activeSession.mode);
+
+          const sessionResult = bulkResult.results[0];
+          if (!sessionResult || sessionResult.error) {
+            const errorCode = sessionResult?.error?.code ?? 'unknown';
+            const errorMsg =
+                sessionResult?.error?.message ?? 'Confidence fetch failed';
+            if (isSessionNotFoundMessage(errorCode) ||
+                isSessionNotFoundMessage(errorMsg) ||
+                sessionResult?.error?.statusCode === 404) {
+              writeStoredSession(null);
+              setSession(null);
+              setConfidence(null);
+              setLatestGeometry(null);
+              setPhase('idle');
+              setErrorMessage(
+                  'Training session expired on server. Start a new session and rerun workflow.',
+              );
+              stopPolling();
+            }
+            return;
+          }
+
+          const series = sessionResult.confidence!;
           setConfidence(series);
 
           if (series.status === 'completed') stopPolling();
 
-          // Load geometry for the latest epoch when available.
+          // Fetch geometry for the latest epoch in the same bulk call.
           if (series.epochs.length > 0) {
             const lastEpoch =
                 series.epochs[series.epochs.length - 1]!.epochIndex;
             try {
-              const geo = await fetchK3h4EpochGeometry(
-                  baseUrl, activeSession.sessionId, lastEpoch,
-                  activeSession.mode);
-              setLatestGeometry(geo);
+              const geoBulk = await fetchK3h4EpochGeometryBulk(
+                  baseUrl,
+                  [{sessionId: activeSession.sessionId, epochIndex: lastEpoch}],
+                  activeSession.mode,
+              );
+              const geoResult = geoBulk.results[0];
+              if (geoResult?.geometry) {
+                setLatestGeometry(geoResult.geometry);
+              }
             } catch {
               // Geometry is best-effort; don't break the confidence poll.
             }
@@ -573,6 +612,269 @@ export function useK3h4TrainingSession(): UseK3h4TrainingSessionResult {
     });
   }, [appendWorkflowLog]);
 
+  const executeWorkflowForSession = useCallback(
+      (activeSession: K3h4TrainingSession, workflow: K3h4TrainingWorkflow) => {
+        const runId = workflowRunIdRef.current + 1;
+        workflowRunIdRef.current = runId;
+
+        const totalPasses = WORKFLOW_PASS_COUNT[workflow];
+        setWorkflowState({
+          status: 'running',
+          workflow,
+          totalPasses,
+          completedPasses: 0,
+          errorMessage: null,
+        });
+        appendWorkflowLog({
+          level: 'info',
+          message: `Starting ${workflow} workflow (${totalPasses} passes)`,
+          details:
+              `mode=${activeSession.mode} session=${activeSession.sessionId}`,
+        });
+
+        const baseUrl = resolveApiBaseUrl();
+        if (!baseUrl) {
+          setWorkflowState({
+            status: 'error',
+            workflow,
+            totalPasses,
+            completedPasses: 0,
+            errorMessage: 'API base URL is not configured.',
+          });
+          appendWorkflowLog({
+            level: 'error',
+            message: 'Workflow failed: API base URL is missing',
+          });
+          return;
+        }
+
+        void (async () => {
+          let adaptiveState = createInitialAdaptiveState();
+
+          for (let passIndex = 0; passIndex < totalPasses; passIndex += 1) {
+            if (workflowRunIdRef.current !== runId) {
+              return;
+            }
+
+            const payload = buildAnalyticsPayload({
+              workflow,
+              mode: activeSession.mode,
+              passIndex,
+              adaptive: adaptiveState,
+            });
+
+            let completedPass = false;
+            let rateLimitRetries = 0;
+
+            while (!completedPass) {
+              if (workflowRunIdRef.current !== runId) {
+                return;
+              }
+
+              try {
+                const analytics = await fetchNetcodeAnalytics(baseUrl, payload);
+                const featureVector = extractK3h4FeatureVector(analytics);
+                adaptiveState =
+                    evolveAdaptiveState(adaptiveState, featureVector);
+
+                appendWorkflowLog({
+                  level: 'info',
+                  message: `Pass ${passIndex + 1}/${totalPasses} complete`,
+                  details: `depth=${payload.workflowDepth} density=${
+                      payload.callDensity.toFixed(3)} confidence=${
+                      payload.modelConfidence.toFixed(3)} clusters=${
+                      analytics.k3h4.centers.length} convergence=${
+                      analytics.k3h4.observability
+                          .convergenceStatus} featureScore=${
+                      featureVector.scoreSignal.toFixed(3)} stability=${
+                      featureVector.stabilitySignal.toFixed(3)}`,
+                });
+
+                const derivedConfidence =
+                    computeEpochConfidenceFromFeature(featureVector);
+
+                const persisted = await recordK3h4TrainingEpoch(
+                    baseUrl,
+                    activeSession.sessionId,
+                    {
+                      mode: activeSession.mode,
+                      confidence: derivedConfidence,
+                      analytics: {
+                        k3h4Projection: {
+                          alignment: analytics.k3h4Projection.alignment,
+                          radialStability:
+                              analytics.k3h4Projection.radialStability,
+                          nodes: analytics.k3h4Projection.nodes.map((node) => ({
+                                                                      x: node.x,
+                                                                      y: node.y,
+                                                                    })),
+                        },
+                        k3h4: {
+                          centers: analytics.k3h4.centers.map(
+                              (center) => ({
+                                clusterId: center.clusterId,
+                              })),
+                          radii: analytics.k3h4.radii.map(
+                              (radius) => ({
+                                clusterId: radius.clusterId,
+                                inscribedRadiusQ16: radius.inscribedRadiusQ16,
+                              })),
+                          weightedVoronoiScores:
+                              analytics.k3h4.weightedVoronoiScores.map(
+                                  (score) => ({
+                                    clusterId: score.clusterId,
+                                    weightedScoreQ16: score.weightedScoreQ16,
+                                  })),
+                          spectralProxy: analytics.k3h4.spectralProxy.map(
+                              (spectral) => ({
+                                clusterId: spectral.clusterId,
+                                amplitudeProxyQ16: spectral.amplitudeProxyQ16,
+                              })),
+                        },
+                        k3h4Runtime: {
+                          spectralActivation:
+                              analytics.k3h4Runtime.spectralActivation,
+                        },
+                      },
+                    },
+                );
+
+                setConfidence((existing) => {
+                  const baseSeries: K3h4ConfidenceTimeSeries = existing ?? {
+                    contractVersion: 1,
+                    sessionId: activeSession.sessionId,
+                    status: 'pending',
+                    mode: activeSession.mode,
+                    epochs: [],
+                    metadata: {
+                      peakEpoch: null,
+                      rollingAverage3: null,
+                      defaultMode: 'power',
+                    },
+                  };
+                  const mergedByEpoch = new Map<number, K3h4EpochConfidence>();
+                  for (const epoch of baseSeries.epochs) {
+                    mergedByEpoch.set(epoch.epochIndex, epoch);
+                  }
+                  mergedByEpoch.set(persisted.epochIndex, {
+                    epochIndex: persisted.epochIndex,
+                    confidence: derivedConfidence,
+                    mode: activeSession.mode,
+                  });
+                  const mergedEpochs =
+                      Array.from(mergedByEpoch.values())
+                          .sort((a, b) => a.epochIndex - b.epochIndex);
+                  return {
+                    ...baseSeries,
+                    status: mergedEpochs.length > 0 ? 'active' :
+                                                      baseSeries.status,
+                    epochs: mergedEpochs,
+                    metadata: deriveMetadataFromEpochs(mergedEpochs),
+                  };
+                });
+
+                completedPass = true;
+              } catch (error) {
+                if (workflowRunIdRef.current !== runId) {
+                  return;
+                }
+
+                const message = extractErrorMessage(error);
+                if (isSessionNotFoundMessage(message)) {
+                  writeStoredSession(null);
+                  setSession(null);
+                  setConfidence(null);
+                  setLatestGeometry(null);
+                  setPhase('idle');
+                  setErrorMessage(
+                      'Training session expired on server. Start a new session and rerun workflow.',
+                  );
+                  setWorkflowState({
+                    status: 'error',
+                    workflow,
+                    totalPasses,
+                    completedPasses: passIndex,
+                    errorMessage:
+                        'Training session expired on server. Start a new session and rerun workflow.',
+                  });
+                  appendWorkflowLog({
+                    level: 'warn',
+                    message:
+                        'Workflow stopped: server session was not found; local session has been reset',
+                    details: message,
+                  });
+                  return;
+                }
+
+                const waitMs = resolveRateLimitWaitMs(error, rateLimitRetries);
+                if (waitMs !== null &&
+                    rateLimitRetries < RATE_LIMIT_MAX_RETRIES_PER_PASS) {
+                  rateLimitRetries += 1;
+                  appendWorkflowLog({
+                    level: 'warn',
+                    message: `Rate limit detected at pass ${passIndex + 1}/${
+                        totalPasses}; waiting before retry`,
+                    details: `retry=${rateLimitRetries}/${
+                        RATE_LIMIT_MAX_RETRIES_PER_PASS} waitMs=${waitMs}`,
+                  });
+                  await delay(waitMs);
+                  continue;
+                }
+
+                setWorkflowState({
+                  status: 'error',
+                  workflow,
+                  totalPasses,
+                  completedPasses: passIndex,
+                  errorMessage: message,
+                });
+                appendWorkflowLog({
+                  level: 'error',
+                  message:
+                      `Workflow error at pass ${passIndex + 1}/${totalPasses}`,
+                  details: message,
+                });
+                return;
+              }
+            }
+
+            if (workflowRunIdRef.current !== runId) {
+              return;
+            }
+
+            setWorkflowState({
+              status: 'running',
+              workflow,
+              totalPasses,
+              completedPasses: passIndex + 1,
+              errorMessage: null,
+            });
+
+            await delay(120);
+          }
+
+          if (workflowRunIdRef.current !== runId) {
+            return;
+          }
+
+          setWorkflowState({
+            status: 'completed',
+            workflow,
+            totalPasses,
+            completedPasses: totalPasses,
+            errorMessage: null,
+          });
+          appendWorkflowLog({
+            level: 'success',
+            message: `Workflow ${workflow} completed`,
+            details: `passes=${totalPasses} session=${activeSession.sessionId}`,
+          });
+
+          await pollConfidence(activeSession);
+        })();
+      },
+      [appendWorkflowLog, pollConfidence]);
+
   const runWorkflow = useCallback((workflow: K3h4TrainingWorkflow) => {
     if (!session) {
       setWorkflowState({
@@ -589,260 +891,48 @@ export function useK3h4TrainingSession(): UseK3h4TrainingSessionResult {
       return;
     }
 
-    const runId = workflowRunIdRef.current + 1;
-    workflowRunIdRef.current = runId;
+    executeWorkflowForSession(session, workflow);
+  }, [appendWorkflowLog, executeWorkflowForSession, session]);
 
-    const totalPasses = WORKFLOW_PASS_COUNT[workflow];
-    setWorkflowState({
-      status: 'running',
-      workflow,
-      totalPasses,
-      completedPasses: 0,
-      errorMessage: null,
-    });
-    appendWorkflowLog({
-      level: 'info',
-      message: `Starting ${workflow} workflow (${totalPasses} passes)`,
-      details: `mode=${session.mode} session=${session.sessionId}`,
-    });
-
-    const baseUrl = resolveApiBaseUrl();
-    if (!baseUrl) {
-      setWorkflowState({
-        status: 'error',
-        workflow,
-        totalPasses,
-        completedPasses: 0,
-        errorMessage: 'API base URL is not configured.',
-      });
-      appendWorkflowLog({
-        level: 'error',
-        message: 'Workflow failed: API base URL is missing',
-      });
-      return;
-    }
-
-    void (async () => {
-      let adaptiveState = createInitialAdaptiveState();
-
-      for (let passIndex = 0; passIndex < totalPasses; passIndex += 1) {
-        if (workflowRunIdRef.current !== runId) {
+  const orchestrateRealtimeTraining = useCallback(
+      (mode: K3h4TrainingMode,
+       workflow: K3h4TrainingWorkflow = 'bootstrap') => {
+        const existingSession = sessionRef.current;
+        if (existingSession) {
+          executeWorkflowForSession(existingSession, workflow);
           return;
         }
 
-        const payload = buildAnalyticsPayload({
-          workflow,
-          mode: session.mode,
-          passIndex,
-          adaptive: adaptiveState,
-        });
-
-        let completedPass = false;
-        let rateLimitRetries = 0;
-
-        while (!completedPass) {
-          if (workflowRunIdRef.current !== runId) {
-            return;
-          }
-
-          try {
-            const analytics = await fetchNetcodeAnalytics(baseUrl, payload);
-            const featureVector = extractK3h4FeatureVector(analytics);
-            adaptiveState = evolveAdaptiveState(adaptiveState, featureVector);
-
-            appendWorkflowLog({
-              level: 'info',
-              message: `Pass ${passIndex + 1}/${totalPasses} complete`,
-              details: `depth=${payload.workflowDepth} density=${
-                  payload.callDensity.toFixed(3)} confidence=${
-                  payload.modelConfidence.toFixed(3)} clusters=${
-                  analytics.k3h4.centers.length} convergence=${
-                  analytics.k3h4.observability
-                      .convergenceStatus} featureScore=${
-                  featureVector.scoreSignal.toFixed(3)} stability=${
-                  featureVector.stabilitySignal.toFixed(3)}`,
-            });
-
-            const derivedConfidence =
-                computeEpochConfidenceFromFeature(featureVector);
-
-            const persisted = await recordK3h4TrainingEpoch(
-                baseUrl,
-                session.sessionId,
-                {
-                  mode: session.mode,
-                  confidence: derivedConfidence,
-                  analytics: {
-                    k3h4Projection: {
-                      alignment: analytics.k3h4Projection.alignment,
-                      radialStability: analytics.k3h4Projection.radialStability,
-                      nodes: analytics.k3h4Projection.nodes.map((node) => ({
-                                                                  x: node.x,
-                                                                  y: node.y,
-                                                                })),
-                    },
-                    k3h4: {
-                      centers: analytics.k3h4.centers.map(
-                          (center) => ({
-                            clusterId: center.clusterId,
-                          })),
-                      radii: analytics.k3h4.radii.map(
-                          (radius) => ({
-                            clusterId: radius.clusterId,
-                            inscribedRadiusQ16: radius.inscribedRadiusQ16,
-                          })),
-                      weightedVoronoiScores:
-                          analytics.k3h4.weightedVoronoiScores.map(
-                              (score) => ({
-                                clusterId: score.clusterId,
-                                weightedScoreQ16: score.weightedScoreQ16,
-                              })),
-                      spectralProxy: analytics.k3h4.spectralProxy.map(
-                          (spectral) => ({
-                            clusterId: spectral.clusterId,
-                            amplitudeProxyQ16: spectral.amplitudeProxyQ16,
-                          })),
-                    },
-                    k3h4Runtime: {
-                      spectralActivation:
-                          analytics.k3h4Runtime.spectralActivation,
-                    },
-                  },
-                },
-            );
-
-            setConfidence((existing) => {
-              const baseSeries: K3h4ConfidenceTimeSeries = existing ?? {
-                contractVersion: 1,
-                sessionId: session.sessionId,
-                status: 'pending',
-                mode: session.mode,
-                epochs: [],
-                metadata: {
-                  peakEpoch: null,
-                  rollingAverage3: null,
-                  defaultMode: 'power',
-                },
-              };
-              const mergedByEpoch = new Map<number, K3h4EpochConfidence>();
-              for (const epoch of baseSeries.epochs) {
-                mergedByEpoch.set(epoch.epochIndex, epoch);
-              }
-              mergedByEpoch.set(persisted.epochIndex, {
-                epochIndex: persisted.epochIndex,
-                confidence: derivedConfidence,
-                mode: session.mode,
-              });
-              const mergedEpochs =
-                  Array.from(mergedByEpoch.values())
-                      .sort((a, b) => a.epochIndex - b.epochIndex);
-              return {
-                ...baseSeries,
-                status: mergedEpochs.length > 0 ? 'active' : baseSeries.status,
-                epochs: mergedEpochs,
-                metadata: deriveMetadataFromEpochs(mergedEpochs),
-              };
-            });
-
-            completedPass = true;
-          } catch (error) {
-            if (workflowRunIdRef.current !== runId) {
-              return;
-            }
-
-            const message = extractErrorMessage(error);
-            if (isSessionNotFoundMessage(message)) {
-              writeStoredSession(null);
-              setSession(null);
+        setPhase('creating');
+        setErrorMessage(null);
+        const baseUrl = resolveApiBaseUrl();
+        createK3h4TrainingSession(baseUrl, mode)
+            .then((created) => {
+              writeStoredSession(created);
+              setSession(created);
               setConfidence(null);
               setLatestGeometry(null);
-              setPhase('idle');
-              setErrorMessage(
-                  'Training session expired on server. Start a new session and rerun workflow.',
-              );
-              setWorkflowState({
-                status: 'error',
-                workflow,
-                totalPasses,
-                completedPasses: passIndex,
-                errorMessage:
-                    'Training session expired on server. Start a new session and rerun workflow.',
-              });
+              setPhase('active');
               appendWorkflowLog({
-                level: 'warn',
+                level: 'success',
                 message:
-                    'Workflow stopped: server session was not found; local session has been reset',
-                details: message,
+                    `Session ${created.sessionId} created (${created.mode})`,
               });
-              return;
-            }
-
-            const waitMs = resolveRateLimitWaitMs(error, rateLimitRetries);
-            if (waitMs !== null &&
-                rateLimitRetries < RATE_LIMIT_MAX_RETRIES_PER_PASS) {
-              rateLimitRetries += 1;
+              executeWorkflowForSession(created, workflow);
+            })
+            .catch((err) => {
+              const msg = extractErrorMessage(err);
+              setErrorMessage(msg);
+              setPhase('error');
               appendWorkflowLog({
-                level: 'warn',
-                message: `Rate limit detected at pass ${passIndex + 1}/${
-                    totalPasses}; waiting before retry`,
-                details: `retry=${rateLimitRetries}/${
-                    RATE_LIMIT_MAX_RETRIES_PER_PASS} waitMs=${waitMs}`,
+                level: 'error',
+                message: 'Failed to create training session',
+                details: msg,
               });
-              await delay(waitMs);
-              continue;
-            }
-
-            setWorkflowState({
-              status: 'error',
-              workflow,
-              totalPasses,
-              completedPasses: passIndex,
-              errorMessage: message,
             });
-            appendWorkflowLog({
-              level: 'error',
-              message: `Workflow error at pass ${passIndex + 1}/${totalPasses}`,
-              details: message,
-            });
-            return;
-          }
-        }
-
-        if (workflowRunIdRef.current !== runId) {
-          return;
-        }
-
-        setWorkflowState({
-          status: 'running',
-          workflow,
-          totalPasses,
-          completedPasses: passIndex + 1,
-          errorMessage: null,
-        });
-
-        await delay(120);
-      }
-
-      if (workflowRunIdRef.current !== runId) {
-        return;
-      }
-
-      setWorkflowState({
-        status: 'completed',
-        workflow,
-        totalPasses,
-        completedPasses: totalPasses,
-        errorMessage: null,
-      });
-      appendWorkflowLog({
-        level: 'success',
-        message: `Workflow ${workflow} completed`,
-        details: `passes=${totalPasses} session=${session.sessionId}`,
-      });
-
-      await pollConfidence(session);
-    })();
-  }, [appendWorkflowLog, pollConfidence, session]);
+      },
+      [appendWorkflowLog, executeWorkflowForSession],
+  );
 
   const clearWorkflowLogs = useCallback(() => {
     setWorkflowLogs([]);
@@ -877,6 +967,7 @@ export function useK3h4TrainingSession(): UseK3h4TrainingSessionResult {
     workflowLogs,
     startSession,
     runWorkflow,
+    orchestrateRealtimeTraining,
     stopWorkflow,
     clearWorkflowLogs,
     clearSession,

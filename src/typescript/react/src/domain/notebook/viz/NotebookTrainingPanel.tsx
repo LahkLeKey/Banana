@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { K3h4TrainingMode } from '../../../lib/api';
 import type { K3h4ClusterGeometry2d } from '../../../lib/k3h4GeometryTypes';
-import { useK3h4TrainingSession } from './useK3h4TrainingSession';
+import { useK3h4TrainingSessionContext } from './K3h4TrainingSessionContext';
+import { RadarMini } from './RadarMini';
 
 // ---------------------------------------------------------------------------
 // Small inline primitives (no new dependency)
@@ -182,7 +183,7 @@ export function NotebookTrainingPanel() {
         stopWorkflow,
         clearWorkflowLogs,
         clearSession,
-    } = useK3h4TrainingSession();
+    } = useK3h4TrainingSessionContext();
 
     const [pendingMode, setPendingMode] = useState<K3h4TrainingMode>('power');
 
@@ -200,6 +201,29 @@ export function NotebookTrainingPanel() {
             0;
     const geometryClusters = (latestGeometry?.clusters ?? []) as readonly K3h4ClusterGeometry2d[];
     const workflowLogViewportRef = useRef<HTMLDivElement | null>(null);
+
+    const latestConfidence = confidenceValues.length > 0 ? confidenceValues[confidenceValues.length - 1]! : 0;
+    const radarSessionAxes = useMemo(
+        () => [
+            { label: 'conf', value: latestConfidence },
+            { label: 'epochs', value: Math.min(epochCountFromConfidence(confidence), 24) / 24 },
+            { label: 'flow', value: workflowProgressPct / 100 },
+            { label: 'cluster', value: latestGeometry ? Math.min(latestGeometry.clusters.length, 6) / 6 : 0 },
+            { label: 'var', value: latestGeometry?.projectionMetadata.explainedVariance ?? 0 },
+        ] as const,
+        [confidence, latestConfidence, latestGeometry, workflowProgressPct],
+    );
+
+    const radarWorkflowAxes = useMemo(
+        () => [
+            { label: 'done', value: workflowProgressPct / 100 },
+            { label: 'pace', value: workflowBusy ? 1 : 0.25 },
+            { label: 'epochs', value: Math.min(epochCountFromConfidence(confidence), 18) / 18 },
+            { label: 'mode', value: session?.mode === 'power' ? 0.75 : 1 },
+            { label: 'state', value: workflowState.status === 'completed' ? 1 : workflowState.status === 'running' ? 0.8 : workflowState.status === 'error' ? 0.2 : 0.35 },
+        ] as const,
+        [confidence, session?.mode, workflowBusy, workflowProgressPct, workflowState.status],
+    );
 
     useEffect(() => {
         if (!workflowLogViewportRef.current) {
@@ -265,6 +289,9 @@ export function NotebookTrainingPanel() {
                         <Btn onClick={clearSession} variant="danger">
                             Clear Session
                         </Btn>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <RadarMini axes={radarSessionAxes} size={148} stroke="#2dd4bf" fill="rgba(45, 212, 191, 0.2)" />
+                        </div>
                     </div>
                 )}
 
@@ -283,10 +310,7 @@ export function NotebookTrainingPanel() {
                     ) : null}
 
                     {confidence !== null && confidence.epochs.length === 0 ? (
-                        <div style={MUTED}>
-                            Session is pending — no epochs recorded yet. Kick off a training
-                            workflow to generate artifact data.
-                        </div>
+                        <div style={MUTED}>Pending epochs</div>
                     ) : null}
 
                     {confidenceValues.length > 0 ? (
@@ -374,11 +398,6 @@ export function NotebookTrainingPanel() {
                 }}>
                     <div style={SECTION_LABEL}>Training Workflows</div>
 
-                    <div style={MUTED}>
-                        Run click-ops workflows to churn codebase topology signals and relation vectors.
-                        This triggers repeated analytics passes so humans do not need to handcraft starter training runs.
-                    </div>
-
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                         <Btn
                             onClick={() => runWorkflow('bootstrap')}
@@ -440,6 +459,9 @@ export function NotebookTrainingPanel() {
                                     transition: 'width 0.2s ease',
                                 }} />
                             </div>
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <RadarMini axes={radarWorkflowAxes} size={136} stroke="#38bdf8" fill="rgba(56, 189, 248, 0.18)" />
+                            </div>
                         </div>
                     ) : null}
 
@@ -447,9 +469,7 @@ export function NotebookTrainingPanel() {
                         <div style={ERROR_TEXT}>{workflowState.errorMessage}</div>
                     ) : null}
 
-                    <div style={{ ...MUTED, fontSize: 10 }}>
-                        Session {session.sessionId} is used for live polling. As epochs land, confidence and geometry refresh automatically.
-                    </div>
+                    <div style={{ ...MUTED, fontSize: 10 }}>Live poll sync active</div>
                 </div>
             ) : null}
 
@@ -471,9 +491,7 @@ export function NotebookTrainingPanel() {
                         </Btn>
                     </div>
 
-                    <div style={{ ...MUTED, fontSize: 11 }}>
-                        Watch each pass as churn executes so you can inspect what is being trained in real time.
-                    </div>
+                    <div style={{ ...MUTED, fontSize: 11 }}>Pass stream</div>
 
                     <div
                         ref={workflowLogViewportRef}
@@ -522,4 +540,10 @@ export function NotebookTrainingPanel() {
 
         </div>
     );
+}
+
+function epochCountFromConfidence(confidence: {
+    readonly epochs: readonly unknown[];
+} | null): number {
+    return confidence?.epochs.length ?? 0;
 }
