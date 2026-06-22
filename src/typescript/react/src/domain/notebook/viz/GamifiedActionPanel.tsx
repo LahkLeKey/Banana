@@ -11,6 +11,8 @@ type GamifiedActionPanelProps = {
     readonly mobile: boolean;
     readonly overlayTop: number;
     readonly mobileDrawerOpen?: boolean;
+    readonly mobileBottomOffset?: number;
+    readonly ultraShortMobileViewport?: boolean;
 };
 
 /**
@@ -28,6 +30,8 @@ export function GamifiedActionPanel({
     mobile,
     overlayTop,
     mobileDrawerOpen = false,
+    mobileBottomOffset,
+    ultraShortMobileViewport = false,
 }: GamifiedActionPanelProps) {
     // Calculate XP progress to next level
     const xpProgression = useMemo(() => {
@@ -53,70 +57,76 @@ export function GamifiedActionPanel({
     const lastInteraction = recentInteractions.length > 0 ? recentInteractions[recentInteractions.length - 1] : null;
 
     if (mobile) {
-        // Mobile: Compact stacked layout with metrics inline
+        const compactWhenDrawerOpen = mobileDrawerOpen;
+        const touchTargetBoost = ultraShortMobileViewport ? 4 : 0;
+        const actionRight = compactWhenDrawerOpen ? (ultraShortMobileViewport ? 14 : 12) : 8;
+        const actionBottomBase = mobileBottomOffset ?? (mobileDrawerOpen ? 188 : 92);
+        const actionBottom = compactWhenDrawerOpen ? actionBottomBase + (ultraShortMobileViewport ? 6 : 5) : actionBottomBase;
+
         return (
             <div
                 style={{
                     position: 'absolute',
-                    right: 8,
-                    bottom: mobileDrawerOpen ? 188 : 92,
+                    right: actionRight,
+                    bottom: actionBottom,
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
+                    flexDirection: compactWhenDrawerOpen ? 'row' : 'column',
+                    gap: compactWhenDrawerOpen ? 4 : 5,
                     pointerEvents: 'auto',
                     zIndex: 5,
+                    alignItems: 'center',
                 }}
             >
-                {/* Level & XP mini badge */}
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        fontSize: 10,
-                        color: '#cbd5e1',
-                        background: 'rgba(15, 23, 42, 0.7)',
-                        border: '1px solid rgba(125, 211, 252, 0.2)',
-                        borderRadius: 6,
-                        padding: '4px 6px',
-                        minWidth: 'max-content',
-                    }}
-                >
-                    <span style={{ fontSize: 12 }}>{levelEmoji}</span>
-                    <span style={{ fontWeight: 600, color: '#7dd3fc' }}>{metrics.level}</span>
+                {!compactWhenDrawerOpen ? (
                     <div
                         style={{
-                            width: 20,
-                            height: 3,
-                            borderRadius: 2,
-                            background: 'rgba(125, 211, 252, 0.1)',
-                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            fontSize: 9,
+                            color: '#cbd5e1',
+                            background: 'rgba(15, 23, 42, 0.7)',
+                            border: '1px solid rgba(125, 211, 252, 0.2)',
+                            borderRadius: 6,
+                            padding: '3px 5px',
+                            minWidth: 'max-content',
                         }}
                     >
+                        <span style={{ fontSize: 12 }}>{levelEmoji}</span>
+                        <span style={{ fontWeight: 600, color: '#7dd3fc' }}>{metrics.level}</span>
                         <div
                             style={{
-                                width: `${xpProgression.progressPercent}%`,
-                                height: '100%',
-                                background: '#7dd3fc',
-                                transition: 'width 0.3s ease-out',
+                                width: 16,
+                                height: 2,
+                                borderRadius: 2,
+                                background: 'rgba(125, 211, 252, 0.1)',
+                                overflow: 'hidden',
                             }}
-                        />
+                        >
+                            <div
+                                style={{
+                                    width: `${xpProgression.progressPercent}%`,
+                                    height: '100%',
+                                    background: '#7dd3fc',
+                                    transition: 'width 0.3s ease-out',
+                                }}
+                            />
+                        </div>
                     </div>
-                </div>
+                ) : null}
 
-                {/* Action buttons */}
                 <button
                     type="button"
                     onClick={onBootstrap}
                     disabled={isBootstrapActive}
                     style={{
-                        width: 40,
-                        height: 40,
+                        width: (compactWhenDrawerOpen ? 30 : 34) + touchTargetBoost,
+                        height: (compactWhenDrawerOpen ? 30 : 34) + touchTargetBoost,
                         borderRadius: 999,
                         border: '1px solid rgba(45, 212, 191, 0.5)',
                         background: 'rgba(2, 10, 20, 0.55)',
                         color: isBootstrapActive ? '#64748b' : '#99f6e4',
-                        fontSize: 14,
+                        fontSize: compactWhenDrawerOpen ? 11 : 12,
                         fontWeight: 700,
                         cursor: isBootstrapActive ? 'not-allowed' : 'pointer',
                         opacity: isBootstrapActive ? 0.6 : 1,
@@ -130,18 +140,19 @@ export function GamifiedActionPanel({
                 >
                     ▶
                 </button>
+
                 <button
                     type="button"
                     disabled={isRelationsDisabled}
                     onClick={onRelations}
                     style={{
-                        width: 40,
-                        height: 40,
+                        width: (compactWhenDrawerOpen ? 30 : 34) + touchTargetBoost,
+                        height: (compactWhenDrawerOpen ? 30 : 34) + touchTargetBoost,
                         borderRadius: 999,
                         border: '1px solid rgba(56, 189, 248, 0.5)',
                         background: 'rgba(2, 10, 20, 0.55)',
                         color: isRelationsDisabled ? '#64748b' : '#bae6fd',
-                        fontSize: 14,
+                        fontSize: compactWhenDrawerOpen ? 11 : 12,
                         fontWeight: 700,
                         cursor: isRelationsDisabled ? 'not-allowed' : 'pointer',
                         opacity: isRelationsDisabled ? 0.5 : 1,
@@ -156,14 +167,13 @@ export function GamifiedActionPanel({
                     ⟲
                 </button>
 
-                {/* Last interaction feedback */}
-                {lastInteraction && (
+                {lastInteraction && !compactWhenDrawerOpen ? (
                     <div
                         style={{
-                            fontSize: 8,
+                            fontSize: 7,
                             color: '#fbbf24',
                             textAlign: 'center',
-                            padding: '2px 4px',
+                            padding: '1px 3px',
                             borderRadius: 3,
                             background: 'rgba(251, 191, 36, 0.1)',
                             animation: 'pulse 0.6s ease-out',
@@ -171,7 +181,7 @@ export function GamifiedActionPanel({
                     >
                         +{['bootstrap', 'relations'].includes(lastInteraction.kind) ? 50 : 10}
                     </div>
-                )}
+                ) : null}
             </div>
         );
     }

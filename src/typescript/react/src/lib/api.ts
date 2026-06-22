@@ -1158,40 +1158,27 @@ export type K3h4BulkGeometryRequest = {
 };
 
 export type K3h4BulkGeometryResult = {
-  readonly sessionId: string;
-  readonly epochIndex: number;
-  readonly geometry: K3h4EpochGeometryResponse | null;
-  readonly error: {
-    readonly code: string;
-    readonly message: string;
-    readonly statusCode: number;
+  readonly sessionId: string; readonly epochIndex: number; readonly geometry: K3h4EpochGeometryResponse | null; readonly error: {
+    readonly code: string; readonly message: string; readonly statusCode:
+                                                                  number;
   } | null;
 };
 
 export type K3h4BulkGeometryResponse = {
-  readonly contractVersion: 1;
-  readonly mode: K3h4TrainingMode;
-  readonly requestedCount: number;
-  readonly processedCount: number;
-  readonly results: readonly K3h4BulkGeometryResult[];
+  readonly contractVersion: 1; readonly mode: K3h4TrainingMode; readonly requestedCount: number; readonly processedCount: number; readonly results: readonly K3h4BulkGeometryResult
+                                                                                                                                               [];
 };
 
 export type K3h4BulkConfidenceResult = {
-  readonly sessionId: string;
-  readonly confidence: K3h4ConfidenceTimeSeries | null;
-  readonly error: {
-    readonly code: string;
-    readonly message: string;
-    readonly statusCode: number;
+  readonly sessionId: string; readonly confidence: K3h4ConfidenceTimeSeries | null; readonly error: {
+    readonly code: string; readonly message: string; readonly statusCode:
+                                                                  number;
   } | null;
 };
 
 export type K3h4BulkConfidenceResponse = {
-  readonly contractVersion: 1;
-  readonly mode: K3h4TrainingMode;
-  readonly requestedCount: number;
-  readonly processedCount: number;
-  readonly results: readonly K3h4BulkConfidenceResult[];
+  readonly contractVersion: 1; readonly mode: K3h4TrainingMode; readonly requestedCount: number; readonly processedCount: number; readonly results: readonly K3h4BulkConfidenceResult
+                                                                                                                                               [];
 };
 
 export type K3h4RecordEpochRequest = {
