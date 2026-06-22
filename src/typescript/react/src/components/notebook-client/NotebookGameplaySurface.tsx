@@ -14,6 +14,7 @@ import type { NotebookRouteMode } from '../../lib/notebook-client/routeModeConfi
 import { buildWorkflowStepMap, type WorkflowStepId } from '../../domain/notebook/workflow-domain';
 import { useNotebookLayoutStore } from '../../lib/notebook-client/layoutStore';
 import { IntelDockPanel, ObjectivesDockPanel, PlayerDockPanel } from './NotebookDockPanels';
+import { NotebookXpGainToast } from './NotebookXpGainToast';
 import {
     ActiveDockShell,
     GameplayCoreNode,
@@ -920,25 +921,10 @@ export function NotebookGameplaySurface({
                 zIndex: 1,
             }}>
                 {(questToast.length > 0 || interactionToast.length > 0) ? (
-                    <div style={{
-                        position: 'absolute',
-                        left: 12,
-                        bottom: viewportBottomInset + 14,
-                        zIndex: 6,
-                        maxWidth: 'min(420px, calc(100% - 24px))',
-                        borderRadius: 12,
-                        border: '1px solid rgba(251, 191, 36, 0.6)',
-                        background: 'linear-gradient(135deg, rgba(120, 53, 15, 0.9), rgba(146, 64, 14, 0.82))',
-                        color: '#fef3c7',
-                        padding: '10px 12px',
-                        fontSize: 12,
-                        letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        fontWeight: 700,
-                        boxShadow: '0 14px 28px rgba(120, 53, 15, 0.38)',
-                    }}>
-                        {interactionToast.length > 0 ? interactionToast : questToast}
-                    </div>
+                    <NotebookXpGainToast
+                        message={interactionToast.length > 0 ? interactionToast : questToast}
+                        bottomInset={viewportBottomInset}
+                    />
                 ) : null}
 
                 <GameplayTopHud
