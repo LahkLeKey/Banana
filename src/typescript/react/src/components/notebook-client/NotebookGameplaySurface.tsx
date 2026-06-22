@@ -922,9 +922,10 @@ export function NotebookGameplaySurface({
                 {(questToast.length > 0 || interactionToast.length > 0) ? (
                     <div style={{
                         position: 'absolute',
-                        top: 16,
-                        left: 16,
-                        zIndex: 5,
+                        left: 12,
+                        bottom: viewportBottomInset + 14,
+                        zIndex: 6,
+                        maxWidth: 'min(420px, calc(100% - 24px))',
                         borderRadius: 12,
                         border: '1px solid rgba(251, 191, 36, 0.6)',
                         background: 'linear-gradient(135deg, rgba(120, 53, 15, 0.9), rgba(146, 64, 14, 0.82))',
