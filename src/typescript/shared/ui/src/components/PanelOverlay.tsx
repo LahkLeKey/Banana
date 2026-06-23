@@ -1,4 +1,14 @@
-import { type ReactNode, type CSSProperties } from 'react';
+import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
+import { PanelBase, type PanelBaseProps } from './PanelBase';
+import { composePanelStages, type PanelStageStyles } from './PanelPipeline';
+
+export type PanelOverlayPipelineStage = 'backdrop' | 'window' | 'header' | 'content';
+
+export type PanelOverlayChrome = {
+    readonly movable?: boolean;
+    readonly resizable?: boolean;
+    readonly dockable?: boolean;
+};
 
 export type PanelOverlayProps = {
     readonly isOpen: boolean;
@@ -7,6 +17,13 @@ export type PanelOverlayProps = {
     readonly onClose: () => void;
     readonly maxWidth?: string;
     readonly maxHeight?: string;
+    readonly width?: string;
+    readonly height?: string;
+    readonly variant?: PanelBaseProps['variant'];
+    readonly closeOnBackdropClick?: boolean;
+    readonly closeOnEscape?: boolean;
+    readonly chrome?: PanelOverlayChrome;
+    readonly stageStyles?: PanelStageStyles<PanelOverlayPipelineStage>;
 };
 
 export function PanelOverlay({
@@ -16,52 +33,77 @@ export function PanelOverlay({
     onClose,
     maxWidth = '70vw',
     maxHeight = '80dvh',
+    width = '90vw',
+    height = '90dvh',
+    variant = 'default',
+    closeOnBackdropClick = true,
+    closeOnEscape = true,
+    chrome,
+    stageStyles,
 }: PanelOverlayProps) {
     if (!isOpen) return null;
+    const panelTitle = title ?? 'Panel';
 
-    const backdropStyle: CSSProperties = {
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 999,
-        animation: 'fadeIn 0.2s ease-out',
-    };
+    useEffect(() => {
+        if (!closeOnEscape) {
+            return;
+        }
 
-    const modalStyle: CSSProperties = {
-        background: 'radial-gradient(circle at 20% 15%, rgba(14, 165, 233, 0.08), transparent 40%), linear-gradient(155deg, rgba(7, 19, 34, 0.95) 0%, rgba(10, 27, 45, 0.95) 100%)',
-        border: '1px solid rgba(20, 184, 166, 0.25)',
-        borderRadius: '8px',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(20, 184, 166, 0.1)',
-        maxWidth,
-        maxHeight,
-        width: '90vw',
-        height: '90dvh',
-        display: 'flex',
-        flexDirection: 'column',
-        animation: 'slideUp 0.3s ease-out',
-        overflow: 'hidden',
-    };
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
 
-    const headerStyle: CSSProperties = {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '16px 20px',
-        borderBottom: '1px solid rgba(20, 184, 166, 0.15)',
-        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    };
+        window.addEventListener('keydown', onKeyDown);
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+        };
+    }, [closeOnEscape, onClose]);
 
-    const titleStyle: CSSProperties = {
-        fontSize: '14px',
-        fontWeight: 700,
-        color: 'rgba(226, 232, 240, 0.9)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px',
-    };
+    const pipelineStyles = useMemo(
+        () => composePanelStages<PanelOverlayPipelineStage>(
+            {
+                backdrop: {
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 999,
+                    animation: 'fadeIn 0.2s ease-out',
+                },
+                window: {
+                    background: 'radial-gradient(circle at 20% 15%, rgba(14, 165, 233, 0.08), transparent 40%), linear-gradient(155deg, rgba(7, 19, 34, 0.95) 0%, rgba(10, 27, 45, 0.95) 100%)',
+                    border: '1px solid rgba(20, 184, 166, 0.25)',
+                    borderRadius: '8px',
+                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(20, 184, 166, 0.1)',
+                    maxWidth,
+                    maxHeight,
+                    width,
+                    height,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    animation: 'slideUp 0.3s ease-out',
+                    overflow: 'hidden',
+                },
+                header: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                },
+                content: {
+                    color: 'rgba(226, 232, 240, 0.85)',
+                    fontSize: '13px',
+                    lineHeight: '1.6',
+                },
+            },
+            stageStyles,
+        ),
+        [height, maxHeight, maxWidth, stageStyles, width],
+    );
 
     const closeButtonStyle: CSSProperties = {
         background: 'none',
@@ -76,62 +118,92 @@ export function PanelOverlay({
         transition: 'color 0.2s',
     };
 
-    const contentStyle: CSSProperties = {
-        flex: 1,
-        overflow: 'auto',
-        padding: '16px 20px',
-        color: 'rgba(226, 232, 240, 0.85)',
-        fontSize: '13px',
-        lineHeight: '1.6',
-    };
+    useEffect(() => {
+        if (document.head.querySelector('style[data-panel-overlay]')) {
+            return;
+        }
 
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = `
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideUp {
-            from { 
-                transform: translateY(20px); 
-                opacity: 0;
-            }
-            to { 
-                transform: translateY(0); 
-                opacity: 1;
-            }
-        }
-    `;
-    if (!document.head.querySelector('style[data-panel-overlay]')) {
+        const styleSheet = document.createElement('style');
         styleSheet.setAttribute('data-panel-overlay', '');
+        styleSheet.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from {
+                    transform: translateY(20px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+        `;
         document.head.appendChild(styleSheet);
-    }
+    }, []);
+
+    const capabilityTokens = [
+        chrome?.movable ? 'move' : null,
+        chrome?.resizable ? 'resize' : null,
+        chrome?.dockable ? 'dock' : null,
+    ].filter((token): token is string => token !== null);
+
+    const headerAction = (
+        <div style={pipelineStyles.header}>
+            {capabilityTokens.map((token) => (
+                <span
+                    key={token}
+                    style={{
+                        borderRadius: 999,
+                        border: '1px solid rgba(148, 163, 184, 0.3)',
+                        padding: '2px 6px',
+                        fontSize: '9px',
+                        letterSpacing: '0.04em',
+                        color: '#94a3b8',
+                        textTransform: 'uppercase',
+                    }}
+                >
+                    {token}
+                </span>
+            ))}
+            <button
+                onClick={onClose}
+                style={closeButtonStyle}
+                onMouseEnter={(event) => {
+                    event.currentTarget.style.color = 'rgba(226, 232, 240, 0.9)';
+                }}
+                onMouseLeave={(event) => {
+                    event.currentTarget.style.color = 'rgba(226, 232, 240, 0.6)';
+                }}
+                title="Close overlay"
+                aria-label="Close overlay"
+            >
+                x
+            </button>
+        </div>
+    );
 
     return (
-        <div style={backdropStyle} onClick={onClose}>
+        <div
+            style={pipelineStyles.backdrop}
+            onClick={closeOnBackdropClick ? onClose : undefined}
+        >
             <div
-                style={modalStyle}
-                onClick={(e) => e.stopPropagation()}
+                style={pipelineStyles.window}
+                onClick={(event) => event.stopPropagation()}
             >
-                {title && (
-                    <div style={headerStyle}>
-                        <span style={titleStyle}>{title}</span>
-                        <button
-                            onClick={onClose}
-                            style={closeButtonStyle}
-                            onMouseEnter={(e) => {
-                                if (e.currentTarget) e.currentTarget.style.color = 'rgba(226, 232, 240, 0.9)';
-                            }}
-                            onMouseLeave={(e) => {
-                                if (e.currentTarget) e.currentTarget.style.color = 'rgba(226, 232, 240, 0.6)';
-                            }}
-                            title="Close overlay"
-                        >
-                            ×
-                        </button>
-                    </div>
-                )}
-                <div style={contentStyle}>{children}</div>
+                <PanelBase
+                    title={panelTitle}
+                    variant={variant}
+                    headerAction={headerAction}
+                    isScrollable
+                    padding="16px 20px"
+                    gap="12px"
+                >
+                    <div style={pipelineStyles.content}>{children}</div>
+                </PanelBase>
             </div>
         </div>
     );

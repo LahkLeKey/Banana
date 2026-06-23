@@ -207,6 +207,16 @@ export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: 
                     isOpen={true}
                     title={entries.find((e) => e.id === expandedPanel)?.title}
                     onClose={() => setExpandedPanel(null)}
+                    chrome={{ movable: true, resizable: true, dockable: true }}
+                    stageStyles={{
+                        backdrop: { background: 'rgba(2, 6, 23, 0.64)' },
+                        window: {
+                            borderRadius: '12px',
+                            border: '1px solid rgba(45, 212, 191, 0.3)',
+                            boxShadow: '0 24px 72px rgba(2, 6, 23, 0.78)',
+                        },
+                        content: { fontSize: '12px' },
+                    }}
                 >
                     {entries.find((e) => e.id === expandedPanel)?.content}
                 </PanelOverlay>

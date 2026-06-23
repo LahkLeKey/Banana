@@ -1,5 +1,6 @@
 import { type ReactNode, type CSSProperties } from 'react';
 import { PanelBase, type PanelBaseProps } from './PanelBase';
+import { composePanelStages } from './PanelPipeline';
 
 export type EnhancedPanelProps = PanelBaseProps & {
     readonly headerTools?: ReactNode;
@@ -31,6 +32,41 @@ export function EnhancedPanel({
     padding = '8px',
     gap = '8px',
 }: Partial<EnhancedPanelProps> & Required<Pick<EnhancedPanelProps, 'title' | 'status'>>) {
+    const pipelineStyles = composePanelStages(
+        {
+            statusMessage: {
+                padding: '6px 10px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                color: status ? 'rgba(226, 232, 240, 0.5)' : 'transparent',
+                background: 'transparent',
+                borderLeft: '3px solid transparent',
+                transition: 'all 0.2s ease',
+            },
+            section: {
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                padding: '8px',
+                backgroundColor: 'rgba(7, 19, 34, 0.3)',
+                borderRadius: '4px',
+                borderLeft: '2px solid rgba(20, 184, 166, 0.2)',
+            },
+            sectionTitle: {
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.3px',
+                color: 'rgba(226, 232, 240, 0.6)',
+            },
+            headerAction: {
+                display: 'flex',
+                gap: '4px',
+                alignItems: 'center',
+            },
+        },
+    );
+
     const statusColors: Record<string, string> = {
         idle: 'rgba(226, 232, 240, 0.5)',
         loading: 'rgba(20, 184, 166, 0.6)',
@@ -46,44 +82,17 @@ export function EnhancedPanel({
     };
 
     const statusMessageStyle: CSSProperties = {
-        padding: '6px 10px',
-        borderRadius: '4px',
-        fontSize: '11px',
+        ...pipelineStyles.statusMessage,
         color: status ? statusColors[status] : 'transparent',
         background: status ? statusBgColors[status] : 'transparent',
         borderLeft: `3px solid ${status ? statusColors[status] : 'transparent'}`,
-        transition: 'all 0.2s ease',
-    };
-
-    const sectionStyle: CSSProperties = {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '4px',
-        padding: '8px',
-        backgroundColor: 'rgba(7, 19, 34, 0.3)',
-        borderRadius: '4px',
-        borderLeft: '2px solid rgba(20, 184, 166, 0.2)',
-    };
-
-    const sectionTitleStyle: CSSProperties = {
-        fontSize: '10px',
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        letterSpacing: '0.3px',
-        color: 'rgba(226, 232, 240, 0.6)',
-    };
-
-    const headerActionStyle: CSSProperties = {
-        display: 'flex',
-        gap: '4px',
-        alignItems: 'center',
     };
 
     const content = sections ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap }}>
             {sections.map((section, idx) => (
-                <div key={idx} style={sectionStyle}>
-                    {section.title && <div style={sectionTitleStyle}>{section.title}</div>}
+                <div key={idx} style={pipelineStyles.section}>
+                    {section.title && <div style={pipelineStyles.sectionTitle}>{section.title}</div>}
                     <div>{section.content}</div>
                 </div>
             ))}
@@ -102,7 +111,7 @@ export function EnhancedPanel({
             variant={variant}
             headerAction={
                 headerTools && (
-                    <div style={headerActionStyle}>{headerTools}</div>
+                    <div style={pipelineStyles.headerAction}>{headerTools}</div>
                 )
             }
             footer={footer || statusFooter}
