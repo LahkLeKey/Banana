@@ -759,8 +759,8 @@ export function DataSciencePlaygroundPage() {
                     showVisualizations={showVisualizations}
                     showTraining={showTraining}
                     showBulkMonitor={showBulkMonitor}
-                    showTrainingControl={false}
-                    showBulkMonitorControl={false}
+                    showTrainingControl
+                    showBulkMonitorControl
                     showIntelNode={showIntelNode}
                     showObjectiveNode={showObjectiveNode}
                     showPlayerNode={showPlayerNode}

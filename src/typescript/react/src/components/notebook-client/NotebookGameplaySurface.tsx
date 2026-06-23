@@ -224,7 +224,12 @@ export function NotebookGameplaySurface({
 }: NotebookGameplaySurfaceProps) {
     const [intelMode, setIntelMode] = useState<'summary' | 'raw'>('summary');
     const [developerIntelUnlocked, setDeveloperIntelUnlocked] = useState(false);
-    const [isCompactViewport, setIsCompactViewport] = useState(false);
+    const [isCompactViewport, setIsCompactViewport] = useState(
+        typeof window !== 'undefined' ? window.innerWidth <= 1100 : false,
+    );
+    const [viewportHeight, setViewportHeight] = useState(
+        typeof window !== 'undefined' ? window.innerHeight : 900,
+    );
     const [expandedQuestRail, setExpandedQuestRail] = useState(false);
     const [expandedDockPanel, setExpandedDockPanel] = useState(false);
     const [focusedNode, setFocusedNode] = useState<ContractNodeId>('intel');
@@ -757,14 +762,18 @@ export function NotebookGameplaySurface({
         }
 
         const applyViewportMode = () => {
+            const nextHeight = Math.round(window.visualViewport?.height ?? window.innerHeight);
             setIsCompactViewport(window.innerWidth <= 1100);
+            setViewportHeight((previous) => (Math.abs(previous - nextHeight) < 10 ? previous : nextHeight));
         };
 
         applyViewportMode();
         window.addEventListener('resize', applyViewportMode);
+        window.visualViewport?.addEventListener('resize', applyViewportMode);
 
         return () => {
             window.removeEventListener('resize', applyViewportMode);
+            window.visualViewport?.removeEventListener('resize', applyViewportMode);
         };
     }, []);
 
@@ -871,7 +880,10 @@ export function NotebookGameplaySurface({
         setInteractionToast(`${nodeActionLabels[action]} ${nodeTitles[focusedNode]} +${actionXp} XP · model ${learningModel.modelConfidence}%`);
     };
     const viewportTopInset = 40;
-    const viewportBottomInset = 78;
+    const compactViewportBottomInset = Math.round(
+        Math.max(82, Math.min(128, viewportHeight * 0.155)),
+    );
+    const viewportBottomInset = isCompactViewport ? compactViewportBottomInset : 78;
     const dockPanelBottom = viewportBottomInset + (hasOpenDock ? 12 : 4);
     const loopRailBottom: number | string = hasOpenDock ? `calc(26dvh + ${viewportBottomInset + 44}px)` : viewportBottomInset + 72;
     const dockPanelMaxHeight = expandedDockPanel ? '48dvh' : (hasOpenDock ? '26dvh' : '34dvh');

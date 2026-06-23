@@ -172,24 +172,24 @@ function Bar({ children, mobile, ultraShort }: { readonly children: ReactNode; r
         <div style={{
             position: 'absolute',
             left: '50%',
-            bottom: mobile ? 4 : 8,
+            bottom: mobile ? 2 : 8,
             transform: 'translateX(-50%)',
             zIndex: 5,
             pointerEvents: 'auto',
-            width: mobile ? 'min(980px, calc(100vw - 10px))' : 'min(1100px, calc(100vw - 20px))',
-            borderRadius: mobile ? 10 : 14,
-            border: mobile ? '1px solid rgba(45, 212, 191, 0.14)' : '1px solid rgba(45, 212, 191, 0.26)',
+            width: 'auto',
+            maxWidth: 'calc(100vw - 8px)',
+            borderRadius: mobile ? 8 : 14,
+            border: mobile ? '1px solid rgba(148, 163, 184, 0.26)' : '1px solid rgba(45, 212, 191, 0.26)',
             background: mobile
-                ? 'linear-gradient(180deg, rgba(2, 10, 20, 0.5), rgba(3, 20, 33, 0.56))'
+                ? 'rgba(8, 13, 28, 0.34)'
                 : 'linear-gradient(180deg, rgba(2, 10, 20, 0.74), rgba(3, 20, 33, 0.78))',
-            boxShadow: mobile ? '0 5px 14px rgba(2, 6, 23, 0.26)' : '0 10px 24px rgba(2, 6, 23, 0.38)',
-            backdropFilter: mobile ? 'blur(4px)' : 'blur(6px)',
-            padding: mobile ? (ultraShort ? '4px 6px' : '5px 7px') : '8px 12px',
-            display: mobile ? 'grid' : 'flex',
-            gridTemplateColumns: mobile ? '1fr auto' : undefined,
-            justifyContent: 'space-between',
+            boxShadow: mobile ? '0 4px 12px rgba(2, 6, 23, 0.22)' : '0 10px 24px rgba(2, 6, 23, 0.38)',
+            backdropFilter: mobile ? 'blur(2px)' : 'blur(6px)',
+            padding: mobile ? (ultraShort ? '1px 2px' : '2px 2px') : '8px 12px',
+            display: 'flex',
+            justifyContent: 'flex-start',
             alignItems: 'center',
-            gap: mobile ? 6 : 12,
+            gap: mobile ? 2 : 12,
         }}>
             {children}
         </div>
@@ -518,12 +518,12 @@ export function RouteHudControlStrip({
     return (
         <div onTouchStart={handleStripTouchStart} onTouchEnd={handleStripTouchEnd}>
             <Bar mobile={mobileViewport} ultraShort={ultraShortMobileViewport}>
-                <div ref={rootRef} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', position: 'relative' }}>
+                <div ref={rootRef} style={{ display: 'flex', gap: mobileViewport ? 4 : 6, flexWrap: 'wrap', alignItems: 'center', position: 'relative' }}>
                     <div style={{
                         borderRadius: 999,
-                        border: mobileViewport ? '1px solid rgba(148, 163, 184, 0.2)' : '1px solid rgba(148, 163, 184, 0.28)',
-                        background: mobileViewport ? 'rgba(8, 13, 28, 0.32)' : 'rgba(8, 13, 28, 0.44)',
-                        padding: mobileViewport ? 2 : 3,
+                        border: mobileViewport ? 'none' : '1px solid rgba(148, 163, 184, 0.28)',
+                        background: mobileViewport ? 'transparent' : 'rgba(8, 13, 28, 0.44)',
+                        padding: mobileViewport ? 0 : 3,
                         display: 'inline-flex',
                         gap: mobileViewport ? 3 : 4,
                         alignItems: 'center',
@@ -690,62 +690,6 @@ export function RouteHudControlStrip({
                     ) : null}
                 </div>
 
-                {!collapsedRouteBadge ? (
-                    <div style={{
-                        borderRadius: 999,
-                        border: mobileViewport ? '1px solid rgba(148, 163, 184, 0.22)' : '1px solid rgba(148, 163, 184, 0.3)',
-                        background: mobileViewport ? 'rgba(8, 13, 28, 0.34)' : 'rgba(8, 13, 28, 0.5)',
-                        color: '#93c5fd',
-                        padding: mobileViewport ? '4px 8px' : '7px 12px',
-                        fontSize: mobileViewport ? 9 : 11,
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                        whiteSpace: 'nowrap',
-                    }}>
-                        {routeLabel}
-                    </div>
-                ) : (
-                    <div
-                        aria-label={routeLabel}
-                        title={routeLabel}
-                        style={{
-                            width: ultraShortMobileViewport ? 8 : 10,
-                            height: ultraShortMobileViewport ? 8 : 10,
-                            borderRadius: 999,
-                            border: '1px solid rgba(125, 211, 252, 0.45)',
-                            background: 'rgba(56, 189, 248, 0.32)',
-                            justifySelf: 'end',
-                        }}
-                    />
-                )}
-
-                <div style={{ display: mobileViewport ? 'none' : 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {onCloseAllPanels ? (
-                        <HudButton
-                            label="Close Windows"
-                            onClick={onCloseAllPanels}
-                            muted
-                        />
-                    ) : null}
-                    {onReopenPanels ? (
-                        <HudButton
-                            label="Reopen Windows"
-                            onClick={onReopenPanels}
-                            muted
-                        />
-                    ) : null}
-                    <HudButton
-                        label="Focus Viewport"
-                        onClick={onFocusViewport}
-                        muted
-                    />
-                    <HudButton
-                        label="Reset HUD"
-                        onClick={onResetHud}
-                        muted
-                    />
-                </div>
             </Bar>
         </div>
     );
