@@ -17,6 +17,8 @@ export type {PanelOverlayProps} from './components/PanelOverlay';
 export {PanelOverlay} from './components/PanelOverlay';
 export type {PanelStageStyles} from './components/PanelPipeline';
 export {composePanelStages} from './components/PanelPipeline';
+export type {PanelBehaviorLayer, PanelBehaviorOptions, PanelBehaviorPipeline} from './components/PanelVariantPipeline';
+export {buildPanelBehaviorPipeline} from './components/PanelVariantPipeline';
 export type {ResizableDockEntry, ResizableDockGridProps} from './components/ResizableDockGrid';
 export {ResizableDockGrid} from './components/ResizableDockGrid';
 export type {ResizablePanelProps} from './components/ResizablePanel';

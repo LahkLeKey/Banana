@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import { buildPanelBehaviorPipeline } from './PanelVariantPipeline';
 
 export type ResizablePanelProps = {
     readonly id: string;
@@ -94,6 +95,15 @@ export function ResizablePanel({
     const snapThreshold = 16;
     const snapReleaseThreshold = 30;
     const snapActivationThreshold = 4;
+    const behaviorPipeline = useMemo(
+        () => buildPanelBehaviorPipeline({
+            movable: Boolean(onMove),
+            resizable: Boolean(onResize),
+            dockable: Boolean(onAnchorCommit),
+            modal: false,
+        }),
+        [onAnchorCommit, onMove, onResize],
+    );
 
     const scheduleMoveUpdate = (nextPosition: { x: number; y: number }) => {
         pendingMoveRef.current = nextPosition;
@@ -801,6 +811,7 @@ export function ResizablePanel({
                 ref={containerRef}
                 data-resizable-panel="true"
                 data-panel-id={id}
+                data-panel-behavior-pipeline={behaviorPipeline.layers.join('>')}
                 style={containerStyle}
                 onMouseDownCapture={onFocus}
             >

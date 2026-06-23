@@ -1,6 +1,7 @@
 import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
 import { PanelBase, type PanelBaseProps } from './PanelBase';
 import { composePanelStages, type PanelStageStyles } from './PanelPipeline';
+import { buildPanelBehaviorPipeline } from './PanelVariantPipeline';
 
 export type PanelOverlayPipelineStage = 'backdrop' | 'window' | 'header' | 'content';
 
@@ -144,15 +145,23 @@ export function PanelOverlay({
         document.head.appendChild(styleSheet);
     }, []);
 
-    const capabilityTokens = [
-        chrome?.movable ? 'move' : null,
-        chrome?.resizable ? 'resize' : null,
-        chrome?.dockable ? 'dock' : null,
-    ].filter((token): token is string => token !== null);
+    const behaviorPipeline = useMemo(
+        () => buildPanelBehaviorPipeline({
+            movable: chrome?.movable,
+            resizable: chrome?.resizable,
+            dockable: chrome?.dockable,
+            modal: true,
+        }),
+        [chrome?.dockable, chrome?.movable, chrome?.resizable],
+    );
+
+    const capabilityTokens = behaviorPipeline.tokens.filter(
+        (token: string) => token !== 'base' && token !== 'modal',
+    );
 
     const headerAction = (
         <div style={pipelineStyles.header}>
-            {capabilityTokens.map((token) => (
+            {capabilityTokens.map((token: string) => (
                 <span
                     key={token}
                     style={{
@@ -192,6 +201,7 @@ export function PanelOverlay({
         >
             <div
                 style={pipelineStyles.window}
+                data-panel-behavior-pipeline={behaviorPipeline.layers.join('>')}
                 onClick={(event) => event.stopPropagation()}
             >
                 <PanelBase

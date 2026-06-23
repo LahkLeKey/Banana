@@ -1165,8 +1165,8 @@ export type K3h4BulkGeometryResult = {
 };
 
 export type K3h4BulkGeometryResponse = {
-  readonly contractVersion: 1; readonly mode: K3h4TrainingMode; readonly requestedCount: number; readonly processedCount: number; readonly results: readonly K3h4BulkGeometryResult
-                                                                                                                                               [];
+  readonly contractVersion: 1; readonly mode: K3h4TrainingMode; readonly requestedCount: number; readonly processedCount: number; readonly results: ReadonlyArray<
+                                                                                                                                               K3h4BulkGeometryResult>;
 };
 
 export type K3h4BulkConfidenceResult = {
@@ -1177,8 +1177,8 @@ export type K3h4BulkConfidenceResult = {
 };
 
 export type K3h4BulkConfidenceResponse = {
-  readonly contractVersion: 1; readonly mode: K3h4TrainingMode; readonly requestedCount: number; readonly processedCount: number; readonly results: readonly K3h4BulkConfidenceResult
-                                                                                                                                               [];
+  readonly contractVersion: 1; readonly mode: K3h4TrainingMode; readonly requestedCount: number; readonly processedCount: number; readonly results: ReadonlyArray<
+                                                                                                                                               K3h4BulkConfidenceResult>;
 };
 
 export type K3h4RecordEpochRequest = {
