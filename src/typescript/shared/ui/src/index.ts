@@ -9,16 +9,21 @@ export {ErrorText} from './components/ErrorText';
 // Game Engine UI — shared components for ARPG viewport
 export type {EngineStatus, RadialDirection,} from './components/GameEngineTypes';
 export {computeMoveAxes, getDirectionFromTouch, isMovementKey, MOVEMENT_KEYS, RADIAL_CONFIG,} from './components/GameEngineTypes';
-export type {PanelBaseProps} from './components/PanelBase';
+export type {PanelBaseProps, PanelBaseStageElementProps, PanelBaseStageElements, PanelIntrinsicElement} from './components/PanelBase';
 export {PanelBase} from './components/PanelBase';
 export type {PanelGroupEntry, PanelGroupProps} from './components/PanelGroup';
 export {PanelGroup} from './components/PanelGroup';
 export type {PanelOverlayProps} from './components/PanelOverlay';
 export {PanelOverlay} from './components/PanelOverlay';
-export type {ResizableDockEntry, ResizableDockGridProps} from './components/ResizableDockGrid';
+export type {PanelStageStyles} from './components/PanelPipeline';
+export {composePanelStages} from './components/PanelPipeline';
+export type {PanelBehaviorLayer, PanelBehaviorOptions, PanelBehaviorPipeline} from './components/PanelVariantPipeline';
+export {buildPanelBehaviorPipeline} from './components/PanelVariantPipeline';
+export type {ResizableDockEntry, ResizableDockEntryIdentity, ResizableDockEntryLayout, ResizableDockEntryRender, ResizableDockGridCallbacks, ResizableDockGridProps,} from './components/ResizableDockGrid';
 export {ResizableDockGrid} from './components/ResizableDockGrid';
-export type {ResizablePanelProps} from './components/ResizablePanel';
+export type {AnchorSide, ResizablePanelDockingProps, ResizablePanelIdentityProps, ResizablePanelInteractionProps, ResizablePanelLayoutProps, ResizablePanelProps, ResizablePanelStageOverrides,} from './components/ResizablePanel';
 export {ResizablePanel} from './components/ResizablePanel';
+export type {BuildResizablePanelStylesOptions, ResizablePanelControlStyles, ResizablePanelHandleStyles, ResizablePanelStyleAnchorSide, ResizablePanelStyleDockInput, ResizablePanelStyleGeometryInput, ResizablePanelStyles, ResizablePanelStyleStateInput, ResizablePanelSurfaceStyles,} from './components/ResizablePanelStyles';
 export type {RetryButtonProps} from './components/RetryButton';
 export {RETRY_BUTTON_COPY, RetryButton} from './components/RetryButton';
 export {RouteDeckTransition} from './components/RouteDeckTransition';
@@ -36,6 +41,8 @@ export {RouteActionLinkPrimitive, RoutePill, RouteStatTile, RouteSurfaceCard} fr
 export {RouteTopBar} from './components/RouteTopBar';
 export type {TabbedPanelEntry, TabbedPanelGroupProps} from './components/TabbedPanelGroup';
 export {TabbedPanelGroup} from './components/TabbedPanelGroup';
+export type {ResizablePanelInteractionCallbacks, ResizablePanelInteractionConstraintsInput, ResizablePanelInteractionGeometryInput, ResizablePanelInteractionGroupingInput, ResizablePanelInteractionIdentityInput, ResizablePanelInteractionRefsInput, UseResizablePanelInteractionsOptions,} from './components/useResizablePanelInteractions';
+export type {ResizablePanelViewModelDockInput, ResizablePanelViewModelGeometryInput, ResizablePanelViewModelStageInput, ResizablePanelViewModelStateInput, UseResizablePanelViewModelOptions,} from './components/useResizablePanelViewModel';
 export type {WorkflowDepth, WorkflowOverlayModel, WorkflowStepOption,} from './components/WorkflowOrchestrator';
 export {WorkflowCenterToolbar, WorkflowOverlayStack,} from './components/WorkflowOrchestrator';
 // Hooks for panel state management

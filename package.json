@@ -1,0 +1,19 @@
+{
+  "name": "banana-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "src/typescript/api",
+    "src/typescript/react",
+    "src/typescript/shared/*",
+    "src/typescript/packages/*",
+    "src/typescript/packages/panels/modules/*"
+  ],
+  "scripts": {
+    "install:typescript": "bun install --cwd src/typescript",
+    "build:panels": "bun run --cwd src/typescript/packages/panels build",
+    "test:panels": "bun test --cwd src/typescript/packages/panels",
+    "pack:panels": "bash scripts/panels-packages-pack.sh",
+    "publish:panels:dry-run": "PANELS_PUBLISH_DRY_RUN=true bash scripts/panels-packages-publish.sh"
+  }
+}

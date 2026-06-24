@@ -1,0 +1,56 @@
+{
+  "name": "@banana/panels",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./panel-base": "./src/panel-base.ts",
+    "./panel-overlay": "./src/panel-overlay.ts",
+    "./panel-pipeline": "./src/panel-pipeline.ts",
+    "./panel-variant-pipeline": "./src/panel-variant-pipeline.ts",
+    "./dock-layout-store": "./src/dock-layout-store.ts",
+    "./resizable-panel": "./src/resizable-panel.ts",
+    "./resizable-dock-grid": "./src/resizable-dock-grid.ts",
+    "./chrome": "./src/chrome.ts",
+    "./header": "./src/header.ts",
+    "./host": "./src/host.ts",
+    "./refs": "./src/refs.ts",
+    "./styles": "./src/styles.ts",
+    "./stage": "./src/stage.ts",
+    "./interactions": "./src/interactions.ts",
+    "./view-model": "./src/view-model.ts",
+    "./resize": "./src/resize.ts",
+    "./drag-snap": "./src/drag-snap.ts",
+    "./raf-buffered-dispatch": "./src/raf-buffered-dispatch.ts",
+    "./tailwind/preset": "./src/tailwind/preset.ts"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --target=browser --outdir=dist",
+    "test": "bun test",
+    "storybook": "storybook dev -p 6006 --quiet",
+    "build-storybook": "storybook build"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.5.0",
+    "storybook": "^8.2.6",
+    "@storybook/react-vite": "^8.2.6",
+    "@storybook/addon-essentials": "^8.2.6",
+    "vite": "^5.4.0"
+  }
+}

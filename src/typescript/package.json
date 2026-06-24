@@ -1,0 +1,19 @@
+{
+    "name": "@banana/typescript-workspace",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "api",
+        "react",
+        "shared/*",
+        "packages/*",
+        "packages/panels/modules/*"
+    ],
+    "scripts": {
+        "install:all": "bun install --cwd .",
+        "test:panels": "bun test --cwd packages/panels",
+        "build:panels": "bun run --cwd packages/panels build",
+        "pack:panels": "bash ../scripts/panels-packages-pack.sh",
+        "publish:panels:dry-run": "PANELS_PUBLISH_DRY_RUN=true bash ../scripts/panels-packages-publish.sh"
+    }
+}
