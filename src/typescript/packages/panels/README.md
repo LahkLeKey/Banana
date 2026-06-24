@@ -47,6 +47,36 @@ Each wrapper package:
 - has its own `tailwindcss` dependency for primitive orchestration
 - can be published independently
 
+## Standalone Package Environment
+
+This package ships with a local env template:
+
+```bash
+cp .env.example .env
+```
+
+The env file is package-local so this package can run Storybook independently from other workspaces.
+
+## Storybook
+
+Run Storybook from this package directory:
+
+```bash
+bun run storybook
+```
+
+Build a static Storybook bundle:
+
+```bash
+bun run build-storybook
+```
+
+Default port is `6006`. To run multiple package Storybooks simultaneously, pass a custom port:
+
+```bash
+bun run storybook -- -p 6010
+```
+
 ## Release Automation
 
 - Pack all panel packages into tarballs:
