@@ -1,5 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type HTMLAttributes, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { buildPanelBehaviorPipeline } from './PanelVariantPipeline';
+import type { PanelIntrinsicElement } from './PanelBase';
+
+type ResizablePanelStage = 'container' | 'header' | 'content';
+type ResizablePanelStageElements = Partial<Record<ResizablePanelStage, PanelIntrinsicElement>>;
+type ResizablePanelStageElementProps = Partial<Record<ResizablePanelStage, HTMLAttributes<HTMLElement>>>;
 
 export type ResizablePanelProps = {
     readonly id: string;
@@ -28,6 +33,9 @@ export type ResizablePanelProps = {
     readonly isCollapsed?: boolean;
     readonly corner?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
     readonly zIndex?: number;
+    readonly stageElements?: ResizablePanelStageElements;
+    readonly stageElementProps?: ResizablePanelStageElementProps;
+    readonly titleElementId?: string;
 };
 
 type ResizeDirection = 'left' | 'right' | 'top' | 'bottom' | 'bottom-right';
@@ -78,8 +86,11 @@ export function ResizablePanel({
     onToggleGroupResizeLock,
     isCollapsed = false,
     zIndex,
+    stageElements,
+    stageElementProps,
+    titleElementId,
 }: ResizablePanelProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLElement>(null);
     const moveRafRef = useRef<number | null>(null);
     const resizeRafRef = useRef<number | null>(null);
     const pendingMoveRef = useRef<{ x: number; y: number } | null>(null);
@@ -572,7 +583,7 @@ export function ResizablePanel({
         };
     }, []);
 
-    const handleHeaderMouseDown = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const handleHeaderMouseDown = (event: ReactMouseEvent<HTMLElement>) => {
         const target = event.target;
         if (target instanceof Element && target.closest('button')) {
             return;
@@ -749,6 +760,43 @@ export function ResizablePanel({
         textTransform: 'uppercase',
     });
 
+    const resolvedStageElements: Record<ResizablePanelStage, PanelIntrinsicElement> = {
+        container: 'div',
+        header: 'div',
+        content: 'div',
+        ...stageElements,
+    };
+
+    const getStageProps = (
+        stage: ResizablePanelStage,
+        baseProps: HTMLAttributes<HTMLElement>,
+    ): HTMLAttributes<HTMLElement> => {
+        const providedProps = stageElementProps?.[stage];
+        if (!providedProps) {
+            return baseProps;
+        }
+
+        const mergedClassName = [baseProps.className, providedProps.className]
+            .filter(Boolean)
+            .join(' ') || undefined;
+
+        const mergedStyle = {
+            ...(baseProps.style as CSSProperties | undefined),
+            ...(providedProps.style as CSSProperties | undefined),
+        };
+
+        return {
+            ...baseProps,
+            ...providedProps,
+            className: mergedClassName,
+            style: mergedStyle,
+        };
+    };
+
+    const ContainerElement = resolvedStageElements.container;
+    const HeaderElement = resolvedStageElements.header;
+    const ContentElement = resolvedStageElements.content;
+
     if (isCollapsed) {
         return (
             <div
@@ -807,17 +855,21 @@ export function ResizablePanel({
                     }}
                 />
             ) : null}
-            <div
-                ref={containerRef}
+            <ContainerElement
+                ref={(node) => {
+                    containerRef.current = node as HTMLElement | null;
+                }}
                 data-resizable-panel="true"
                 data-panel-id={id}
                 data-panel-behavior-pipeline={behaviorPipeline.layers.join('>')}
-                style={containerStyle}
-                onMouseDownCapture={onFocus}
+                {...getStageProps('container', {
+                    style: containerStyle,
+                    onMouseDownCapture: onFocus,
+                })}
             >
                 {title && (
-                    <div style={headerStyle} onMouseDown={handleHeaderMouseDown}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <HeaderElement {...getStageProps('header', { style: headerStyle, onMouseDown: handleHeaderMouseDown })}>
+                        <span id={titleElementId} style={{ display: 'inline-flex', alignItems: 'center' }}>
                             {title}
                             {anchorSides.length > 0 ? (
                                 <span style={sideBadgeContainerStyle}>
@@ -885,15 +937,15 @@ export function ResizablePanel({
                                 </button>
                             )}
                         </div>
-                    </div>
+                    </HeaderElement>
                 )}
-                <div style={contentStyle}>{children}</div>
+                <ContentElement {...getStageProps('content', { style: contentStyle })}>{children}</ContentElement>
                 <div style={leftHandleStyle} onMouseDown={(event) => startResize('left', event)} />
                 <div style={rightHandleStyle} onMouseDown={(event) => startResize('right', event)} />
                 <div style={topHandleStyle} onMouseDown={(event) => startResize('top', event)} />
                 <div style={bottomHandleStyle} onMouseDown={(event) => startResize('bottom', event)} />
                 <div style={cornerGripStyle} onMouseDown={(event) => startResize('bottom-right', event)} title="Resize panel" />
-            </div>
+            </ContainerElement>
         </>
     );
 }

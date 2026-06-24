@@ -1,5 +1,5 @@
 import { type ReactNode, type CSSProperties } from 'react';
-import { PanelBase, type PanelBaseProps } from './PanelBase';
+import { PanelBase, type PanelBaseProps, type PanelBaseStageElements } from './PanelBase';
 import { composePanelStages } from './PanelPipeline';
 
 export type EnhancedPanelProps = PanelBaseProps & {
@@ -31,6 +31,10 @@ export function EnhancedPanel({
     isScrollable = true,
     padding = '8px',
     gap = '8px',
+    className,
+    stageStyles,
+    stageElements,
+    stageElementProps,
 }: Partial<EnhancedPanelProps> & Required<Pick<EnhancedPanelProps, 'title' | 'status'>>) {
     const pipelineStyles = composePanelStages(
         {
@@ -88,13 +92,21 @@ export function EnhancedPanel({
         borderLeft: `3px solid ${status ? statusColors[status] : 'transparent'}`,
     };
 
+    const enhancedStageElements: PanelBaseStageElements = {
+        container: 'section',
+        header: 'header',
+        content: 'section',
+        footer: 'footer',
+        ...stageElements,
+    };
+
     const content = sections ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap }}>
             {sections.map((section, idx) => (
-                <div key={idx} style={pipelineStyles.section}>
-                    {section.title && <div style={pipelineStyles.sectionTitle}>{section.title}</div>}
+                <section key={idx} style={pipelineStyles.section}>
+                    {section.title && <h3 style={pipelineStyles.sectionTitle}>{section.title}</h3>}
                     <div>{section.content}</div>
-                </div>
+                </section>
             ))}
         </div>
     ) : (
@@ -118,6 +130,10 @@ export function EnhancedPanel({
             isScrollable={isScrollable}
             padding={padding}
             gap={gap}
+            className={className}
+            stageStyles={stageStyles}
+            stageElements={enhancedStageElements}
+            stageElementProps={stageElementProps}
         >
             {content}
         </PanelBase>

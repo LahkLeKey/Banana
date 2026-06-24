@@ -9,7 +9,7 @@ export {ErrorText} from './components/ErrorText';
 // Game Engine UI — shared components for ARPG viewport
 export type {EngineStatus, RadialDirection,} from './components/GameEngineTypes';
 export {computeMoveAxes, getDirectionFromTouch, isMovementKey, MOVEMENT_KEYS, RADIAL_CONFIG,} from './components/GameEngineTypes';
-export type {PanelBaseProps} from './components/PanelBase';
+export type {PanelBaseProps, PanelBaseStageElementProps, PanelBaseStageElements, PanelIntrinsicElement} from './components/PanelBase';
 export {PanelBase} from './components/PanelBase';
 export type {PanelGroupEntry, PanelGroupProps} from './components/PanelGroup';
 export {PanelGroup} from './components/PanelGroup';

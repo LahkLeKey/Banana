@@ -1,7 +1,18 @@
-import { type ReactNode, type CSSProperties } from 'react';
+import { type ReactNode, type CSSProperties, type HTMLAttributes } from 'react';
 import { composePanelStages, type PanelStageStyles } from './PanelPipeline';
 
 export type PanelBaseStage = 'container' | 'header' | 'headerAction' | 'content' | 'footer';
+export type PanelIntrinsicElement =
+    | 'div'
+    | 'section'
+    | 'article'
+    | 'aside'
+    | 'header'
+    | 'footer'
+    | 'main'
+    | 'nav';
+export type PanelBaseStageElements = Partial<Record<PanelBaseStage, PanelIntrinsicElement>>;
+export type PanelBaseStageElementProps = Partial<Record<PanelBaseStage, HTMLAttributes<HTMLElement>>>;
 
 export type PanelBaseProps = {
     readonly title?: string;
@@ -14,6 +25,8 @@ export type PanelBaseProps = {
     readonly gap?: string;
     readonly className?: string;
     readonly stageStyles?: PanelStageStyles<PanelBaseStage>;
+    readonly stageElements?: PanelBaseStageElements;
+    readonly stageElementProps?: PanelBaseStageElementProps;
 };
 
 /**
@@ -32,6 +45,8 @@ export function PanelBase({
     gap = '8px',
     className = '',
     stageStyles,
+    stageElements,
+    stageElementProps,
 }: PanelBaseProps) {
     const pipelineStyles = composePanelStages<PanelBaseStage>(
         {
@@ -83,6 +98,47 @@ export function PanelBase({
         stageStyles,
     );
 
+    const resolvedStageElements: Record<PanelBaseStage, PanelIntrinsicElement> = {
+        container: 'div',
+        header: 'div',
+        headerAction: 'div',
+        content: 'div',
+        footer: 'div',
+        ...stageElements,
+    };
+
+    const getStageProps = (
+        stage: PanelBaseStage,
+        baseProps: HTMLAttributes<HTMLElement>,
+    ): HTMLAttributes<HTMLElement> => {
+        const providedProps = stageElementProps?.[stage];
+        if (!providedProps) {
+            return baseProps;
+        }
+
+        const mergedClassName = [baseProps.className, providedProps.className]
+            .filter(Boolean)
+            .join(' ') || undefined;
+
+        const mergedStyle = {
+            ...(baseProps.style as CSSProperties | undefined),
+            ...(providedProps.style as CSSProperties | undefined),
+        };
+
+        return {
+            ...baseProps,
+            ...providedProps,
+            className: mergedClassName,
+            style: mergedStyle,
+        };
+    };
+
+    const ContainerElement = resolvedStageElements.container;
+    const HeaderElement = resolvedStageElements.header;
+    const HeaderActionElement = resolvedStageElements.headerAction;
+    const ContentElement = resolvedStageElements.content;
+    const FooterElement = resolvedStageElements.footer;
+
     const variantClasses = {
         default: '',
         compact: 'px-2 py-1 text-xs',
@@ -90,15 +146,24 @@ export function PanelBase({
     };
 
     return (
-        <div style={pipelineStyles.container} className={`panel-base ${variantClasses[variant]} ${className}`}>
+        <ContainerElement
+            {...getStageProps('container', {
+                style: pipelineStyles.container,
+                className: `panel-base ${variantClasses[variant]} ${className}`,
+            })}
+        >
             {title && (
-                <div style={pipelineStyles.header}>
+                <HeaderElement {...getStageProps('header', { style: pipelineStyles.header })}>
                     <span>{title}</span>
-                    {headerAction && <div style={pipelineStyles.headerAction}>{headerAction}</div>}
-                </div>
+                    {headerAction && (
+                        <HeaderActionElement {...getStageProps('headerAction', { style: pipelineStyles.headerAction })}>
+                            {headerAction}
+                        </HeaderActionElement>
+                    )}
+                </HeaderElement>
             )}
-            <div style={pipelineStyles.content}>{children}</div>
-            {footer && <div style={pipelineStyles.footer}>{footer}</div>}
-        </div>
+            <ContentElement {...getStageProps('content', { style: pipelineStyles.content })}>{children}</ContentElement>
+            {footer && <FooterElement {...getStageProps('footer', { style: pipelineStyles.footer })}>{footer}</FooterElement>}
+        </ContainerElement>
     );
 }

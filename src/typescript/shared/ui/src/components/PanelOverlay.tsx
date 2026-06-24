@@ -1,5 +1,5 @@
 import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { PanelBase, type PanelBaseProps } from './PanelBase';
+import { PanelBase, type PanelBaseProps, type PanelBaseStageElements } from './PanelBase';
 import { composePanelStages, type PanelStageStyles } from './PanelPipeline';
 import { buildPanelBehaviorPipeline } from './PanelVariantPipeline';
 
@@ -159,6 +159,13 @@ export function PanelOverlay({
         (token: string) => token !== 'base' && token !== 'modal',
     );
 
+    const overlayPanelStageElements: PanelBaseStageElements = {
+        container: 'section',
+        header: 'header',
+        content: 'section',
+        footer: 'footer',
+    };
+
     const headerAction = (
         <div style={pipelineStyles.header}>
             {capabilityTokens.map((token: string) => (
@@ -211,6 +218,14 @@ export function PanelOverlay({
                     isScrollable
                     padding="16px 20px"
                     gap="12px"
+                    stageElements={overlayPanelStageElements}
+                    stageElementProps={{
+                        container: {
+                            role: 'dialog',
+                            'aria-modal': true,
+                            'aria-label': panelTitle,
+                        },
+                    }}
                 >
                     <div style={pipelineStyles.content}>{children}</div>
                 </PanelBase>

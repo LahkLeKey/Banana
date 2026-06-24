@@ -1,12 +1,17 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type CSSProperties, type HTMLAttributes } from 'react';
 import { ResizablePanel, type AnchorSide } from './ResizablePanel';
 import { PanelOverlay } from './PanelOverlay';
+import type { PanelIntrinsicElement } from './PanelBase';
 import { useResizableDockLayoutStore, type DockCorner } from '../hooks/useResizableDockLayoutStore';
 
 type AnchorLink = { id: string; side: AnchorSide; };
 type DockLayoutStoreState = ReturnType<typeof useResizableDockLayoutStore.getState>;
 
 const groupPalette = ['#22d3ee', '#f59e0b', '#a78bfa', '#34d399', '#f472b6', '#60a5fa'];
+
+type DockPanelStage = 'container' | 'header' | 'content';
+type DockPanelStageElements = Partial<Record<DockPanelStage, PanelIntrinsicElement>>;
+type DockPanelStageElementProps = Partial<Record<DockPanelStage, HTMLAttributes<HTMLElement>>>;
 
 export type ResizableDockEntry = {
     readonly id: string;
@@ -17,6 +22,8 @@ export type ResizableDockEntry = {
     readonly defaultWidth?: number;
     readonly defaultHeight?: number;
     readonly resetToken?: number;
+    readonly stageElements?: DockPanelStageElements;
+    readonly stageElementProps?: DockPanelStageElementProps;
 };
 
 export type ResizableDockGridProps = {
@@ -164,6 +171,8 @@ export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: 
                         return null;
                     }
 
+                    const titleElementId = `${layoutId}-panel-title-${entry.id}`;
+
                     const groupMembers = getAnchorGroupMembers(entry.id);
                     const groupSize = groupMembers.length;
                     const groupColor = getGroupColor(groupMembers);
@@ -195,6 +204,22 @@ export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: 
                             onToggleGroupResizeLock={() => toggleGroupResizeLock(entry.id)}
                             onCollapse={() => onPanelClose?.(entry.id)}
                             onExpand={() => setExpandedPanel(entry.id)}
+                            titleElementId={entry.title ? titleElementId : undefined}
+                            stageElements={{
+                                container: 'section',
+                                header: 'header',
+                                content: 'section',
+                                ...entry.stageElements,
+                            }}
+                            stageElementProps={{
+                                ...entry.stageElementProps,
+                                container: {
+                                    role: 'region',
+                                    'aria-labelledby': entry.title ? titleElementId : undefined,
+                                    'aria-label': entry.title ? `${entry.title} panel` : `${entry.id} panel`,
+                                    ...entry.stageElementProps?.container,
+                                },
+                            }}
                         >
                             {entry.content}
                         </ResizablePanel>
