@@ -5,7 +5,7 @@
 ## Import
 
 ```tsx
-import { PanelBase } from '@banana/panels/panel-base';
+import { PanelBase } from 'banana-panels/panel-base';
 ```
 
 ## Use It For

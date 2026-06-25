@@ -5,7 +5,7 @@
 ## Import
 
 ```tsx
-import { ResizablePanel } from '@banana/panels/resizable-panel';
+import { ResizablePanel } from 'banana-panels/resizable-panel';
 ```
 
 ## Typical Usage

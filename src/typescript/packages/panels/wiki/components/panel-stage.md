@@ -1,6 +1,6 @@
 # PanelStage
 
-`PanelStage` is the explicit host/container primitive for `@banana/panels`.
+`PanelStage` is the explicit host/container primitive for `banana-panels`.
 
 ## Why It Exists
 
@@ -9,7 +9,7 @@ It makes container-scoped panel composition intentional. Consumers should not ha
 ## Import
 
 ```tsx
-import { PanelStage } from '@banana/panels';
+import { PanelStage } from 'banana-panels';
 ```
 
 ## Example

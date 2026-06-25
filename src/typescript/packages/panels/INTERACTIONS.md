@@ -16,6 +16,14 @@ All interaction stories now live under `Panels / Interactions` with focused cate
 - `Panels / Interactions / Closable panels`
 - `Panels / Interactions / Panel relationships`
 
+Production demo base URL:
+
+- https://panels.banana.engineer/
+
+Docking labels interaction route:
+
+- https://panels.banana.engineer/?path=/story/panels-interactions-docking-labels--default
+
 ## Interaction Index
 
 Use these categories to inspect behavior intent quickly:

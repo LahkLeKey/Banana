@@ -5,7 +5,7 @@
 ## Import
 
 ```tsx
-import { PanelOverlay } from '@banana/panels/panel-overlay';
+import { PanelOverlay } from 'banana-panels/panel-overlay';
 ```
 
 ## Use It For

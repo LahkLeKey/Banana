@@ -5,7 +5,7 @@
 ## Import
 
 ```tsx
-import { ResizableDockGrid } from '@banana/panels/resizable-dock-grid';
+import { ResizableDockGrid } from 'banana-panels/resizable-dock-grid';
 ```
 
 ## Example

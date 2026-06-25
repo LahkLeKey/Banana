@@ -4,14 +4,14 @@ These lower-level exports exist for teams that need to customize panel behavior 
 
 ## Relevant Exports
 
-- `@banana/panels/panel-pipeline`
-- `@banana/panels/panel-variant-pipeline`
-- `@banana/panels/styles`
-- `@banana/panels/interactions`
-- `@banana/panels/view-model`
-- `@banana/panels/resize`
-- `@banana/panels/drag-snap`
-- `@banana/panels/raf-buffered-dispatch`
+- `banana-panels/panel-pipeline`
+- `banana-panels/panel-variant-pipeline`
+- `banana-panels/styles`
+- `banana-panels/interactions`
+- `banana-panels/view-model`
+- `banana-panels/resize`
+- `banana-panels/drag-snap`
+- `banana-panels/raf-buffered-dispatch`
 
 ## Recommendation
 

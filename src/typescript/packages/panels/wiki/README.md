@@ -1,6 +1,6 @@
-# @banana/panels Wiki
+# banana-panels Wiki
 
-This wiki is the package-level reference for `@banana/panels`.
+This wiki is the package-level reference for `banana-panels`.
 
 ## Start Here
 

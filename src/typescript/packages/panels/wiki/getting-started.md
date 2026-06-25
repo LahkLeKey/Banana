@@ -1,18 +1,18 @@
 # Getting Started
 
-`@banana/panels` is a composable panel system for building container-scoped workspaces, review surfaces, and docked operator consoles.
+`banana-panels` is a composable panel system for building container-scoped workspaces, review surfaces, and docked operator consoles.
 
 ## Install
 
 ```bash
-npm install @banana/panels react react-dom
+npm install banana-panels react react-dom
 ```
 
 ## First Panel
 
 ```tsx
-import { PanelStage } from '@banana/panels';
-import { ResizablePanel } from '@banana/panels/resizable-panel';
+import { PanelStage } from 'banana-panels';
+import { ResizablePanel } from 'banana-panels/resizable-panel';
 
 export function Demo() {
   return (
@@ -42,8 +42,8 @@ export function Demo() {
 ## First Dock Layout
 
 ```tsx
-import { PanelStage } from '@banana/panels';
-import { ResizableDockGrid } from '@banana/panels/resizable-dock-grid';
+import { PanelStage } from 'banana-panels';
+import { ResizableDockGrid } from 'banana-panels/resizable-dock-grid';
 
 export function DockDemo() {
   return (

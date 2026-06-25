@@ -1,10 +1,10 @@
-# @banana/panels
+# banana-panels
 
 Composable React panels for container-scoped workspaces, docked operator consoles, and resizable multi-panel application surfaces.
 
 ## What This Package Is For
 
-Use `@banana/panels` when your product needs one or more of these patterns:
+Use `banana-panels` when your product needs one or more of these patterns:
 
 - draggable and resizable workspace panels
 - docked context surfaces anchored to layout corners
@@ -15,8 +15,18 @@ Use `@banana/panels` when your product needs one or more of these patterns:
 ## Install
 
 ```bash
-npm install @banana/panels react react-dom
+npm install banana-panels react react-dom
 ```
+
+## Live Demo
+
+Production Storybook demo for the npm package:
+
+- https://panels.banana.engineer/
+
+Direct interaction demo route:
+
+- https://panels.banana.engineer/?path=/story/panels-interactions-docking-labels--default
 
 ## Get Started
 
@@ -27,8 +37,8 @@ The most important integration pattern is:
 3. render `ResizablePanel` and/or `ResizableDockGrid` with `hostMode="container"`
 
 ```tsx
-import { PanelStage } from '@banana/panels';
-import { ResizablePanel } from '@banana/panels/resizable-panel';
+import { PanelStage } from 'banana-panels';
+import { ResizablePanel } from 'banana-panels/resizable-panel';
 
 export function Example() {
   return (
@@ -130,14 +140,14 @@ Recommended reading order:
 
 Main entrypoints developers typically need:
 
-- `@banana/panels`
-- `@banana/panels/panel-stage`
-- `@banana/panels/resizable-panel`
-- `@banana/panels/resizable-dock-grid`
-- `@banana/panels/panel-base`
-- `@banana/panels/panel-overlay`
-- `@banana/panels/theme-pipeline`
-- `@banana/panels/tailwind/preset`
+- `banana-panels`
+- `banana-panels/panel-stage`
+- `banana-panels/resizable-panel`
+- `banana-panels/resizable-dock-grid`
+- `banana-panels/panel-base`
+- `banana-panels/panel-overlay`
+- `banana-panels/theme-pipeline`
+- `banana-panels/tailwind/preset`
 
 Lower-level APIs are available for advanced integrations, but most consumers should start with the primitives above.
 
@@ -162,4 +172,13 @@ Repository-root helper commands:
 bun run storybook:panels:build
 bun run storybook:panels:local
 PANELS_STORYBOOK_DEPLOY_USER=<ssh-user> bun run storybook:panels:deploy
+```
+
+First npm publish workflow:
+
+```bash
+cd src/typescript/packages/panels
+bun install
+bun run build
+npm publish --access public
 ```

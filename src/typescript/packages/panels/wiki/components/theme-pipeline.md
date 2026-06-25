@@ -5,7 +5,7 @@ The theme pipeline controls runtime CSS-variable styling for panel surfaces.
 ## Import
 
 ```tsx
-import { applyPanelTheme, resetPanelTheme } from '@banana/panels/theme-pipeline';
+import { applyPanelTheme, resetPanelTheme } from 'banana-panels/theme-pipeline';
 ```
 
 ## Example
