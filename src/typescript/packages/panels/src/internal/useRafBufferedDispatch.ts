@@ -38,7 +38,7 @@ export function useRafBufferedDispatch<T>(dispatch?: (payload: T) => void):
 
     const payload = pendingRef.current;
     pendingRef.current = null;
-    if (commitPending && payload) {
+    if (commitPending && payload !== null) {
       dispatch?.(payload);
     }
   }, [dispatch]);
