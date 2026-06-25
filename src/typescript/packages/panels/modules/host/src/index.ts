@@ -1,1 +1,1 @@
-export * from '@banana/panels/host';
+export * from 'banana-panels/host';

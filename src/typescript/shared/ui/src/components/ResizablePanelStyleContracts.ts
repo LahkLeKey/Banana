@@ -8,4 +8,4 @@ export type {
   ResizablePanelStyles,
   ResizablePanelStyleStateInput,
   ResizablePanelSurfaceStyles,
-} from '@banana/panels/styles';
+} from 'banana-panels/styles';

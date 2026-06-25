@@ -1,1 +1,1 @@
-export * from '@banana/panels/resizable-dock-grid';
+export * from 'banana-panels/resizable-dock-grid';

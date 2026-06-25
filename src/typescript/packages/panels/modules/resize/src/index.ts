@@ -1,1 +1,1 @@
-export * from '@banana/panels/resize';
+export * from 'banana-panels/resize';

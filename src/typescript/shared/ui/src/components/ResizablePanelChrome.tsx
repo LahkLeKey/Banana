@@ -3,4 +3,4 @@ export {
   DragGhost,
   ResizeHandles,
   type ResizeDirection,
-} from '@banana/panels/chrome';
+} from 'banana-panels/chrome';

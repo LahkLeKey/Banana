@@ -5,4 +5,4 @@ export {
   type ResizablePanelViewModelStageInput,
   type ResizablePanelViewModelStateInput,
   type UseResizablePanelViewModelOptions,
-} from '@banana/panels/view-model';
+} from 'banana-panels/view-model';

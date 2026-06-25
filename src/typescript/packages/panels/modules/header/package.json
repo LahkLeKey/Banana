@@ -19,7 +19,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@banana/panels": "workspace:*",
+    "banana-panels": "workspace:*",
     "tailwindcss": "^3.4.0"
   },
   "files": [

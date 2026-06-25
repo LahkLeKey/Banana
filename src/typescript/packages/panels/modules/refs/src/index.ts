@@ -1,1 +1,1 @@
-export * from '@banana/panels/refs';
+export * from 'banana-panels/refs';

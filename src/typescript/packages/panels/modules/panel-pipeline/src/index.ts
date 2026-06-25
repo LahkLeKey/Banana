@@ -1,1 +1,1 @@
-export * from '@banana/panels/panel-pipeline';
+export * from 'banana-panels/panel-pipeline';

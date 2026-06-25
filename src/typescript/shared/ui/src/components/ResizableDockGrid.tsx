@@ -1,4 +1,4 @@
-export {ResizableDockGrid} from '@banana/panels/resizable-dock-grid';
+export {ResizableDockGrid} from 'banana-panels/resizable-dock-grid';
 export type {
   ResizableDockEntry,
   ResizableDockEntryIdentity,
@@ -6,4 +6,4 @@ export type {
   ResizableDockEntryRender,
   ResizableDockGridCallbacks,
   ResizableDockGridProps,
-} from '@banana/panels/resizable-dock-grid';
+} from 'banana-panels/resizable-dock-grid';

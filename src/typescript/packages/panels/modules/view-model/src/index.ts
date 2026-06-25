@@ -1,1 +1,1 @@
-export * from '@banana/panels/view-model';
+export * from 'banana-panels/view-model';

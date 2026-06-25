@@ -1,1 +1,1 @@
-export * from '@banana/panels/raf-buffered-dispatch';
+export * from 'banana-panels/raf-buffered-dispatch';

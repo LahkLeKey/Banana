@@ -1,1 +1,1 @@
-export * from '@banana/panels/interactions';
+export * from 'banana-panels/interactions';

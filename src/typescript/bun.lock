@@ -26,7 +26,7 @@
       },
     },
     "packages/panels": {
-      "name": "@banana/panels",
+      "name": "banana-panels",
       "version": "0.1.0",
       "dependencies": {
         "zustand": "^5.0.8",
@@ -51,7 +51,7 @@
       "name": "@banana/panels-chrome",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -70,7 +70,7 @@
       "name": "@banana/panels-dock-layout-store",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -89,7 +89,7 @@
       "name": "@banana/panels-drag-snap",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -108,7 +108,7 @@
       "name": "@banana/panels-header",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -127,7 +127,7 @@
       "name": "@banana/panels-host",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -146,7 +146,7 @@
       "name": "@banana/panels-interactions",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -165,7 +165,7 @@
       "name": "@banana/panels-panel-base",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -184,7 +184,7 @@
       "name": "@banana/panels-panel-overlay",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -203,7 +203,7 @@
       "name": "@banana/panels-panel-pipeline",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -222,7 +222,7 @@
       "name": "@banana/panels-panel-variant-pipeline",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -241,7 +241,7 @@
       "name": "@banana/panels-raf-buffered-dispatch",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -260,7 +260,7 @@
       "name": "@banana/panels-refs",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -279,7 +279,7 @@
       "name": "@banana/panels-resizable-dock-grid",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -298,7 +298,7 @@
       "name": "@banana/panels-resizable-panel",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -317,7 +317,7 @@
       "name": "@banana/panels-resize",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -336,7 +336,7 @@
       "name": "@banana/panels-stage",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -355,7 +355,7 @@
       "name": "@banana/panels-styles",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -374,7 +374,7 @@
       "name": "@banana/panels-view-model",
       "version": "0.1.0",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "tailwindcss": "^3.4.0",
       },
       "devDependencies": {
@@ -434,7 +434,7 @@
       "name": "@banana/ui",
       "version": "2.0.1",
       "dependencies": {
-        "@banana/panels": "workspace:*",
+        "banana-panels": "workspace:*",
         "zustand": "^5.0.8",
       },
       "devDependencies": {
@@ -530,8 +530,6 @@
     "@babel/types": ["@babel/types@7.29.7", "", { "dependencies": { "@babel/helper-string-parser": "^7.29.7", "@babel/helper-validator-identifier": "^7.29.7" } }, "sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA=="],
 
     "@banana/api": ["@banana/api@workspace:api"],
-
-    "@banana/panels": ["@banana/panels@workspace:packages/panels"],
 
     "@banana/panels-chrome": ["@banana/panels-chrome@workspace:packages/panels/modules/chrome"],
 
@@ -894,6 +892,8 @@
     "avvio": ["avvio@9.2.0", "", { "dependencies": { "@fastify/error": "^4.0.0", "fastq": "^1.17.1" } }, "sha512-2t/sy01ArdHHE0vRH5Hsay+RtCZt3dLPji7W7/MMOCEgze5b7SNDC4j5H6FnVgPkI1MTNFGzHdHrVXDDl7QSSQ=="],
 
     "balanced-match": ["balanced-match@1.0.2", "", {}, "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="],
+
+    "banana-panels": ["banana-panels@workspace:packages/panels"],
 
     "baseline-browser-mapping": ["baseline-browser-mapping@2.10.38", "", { "bin": { "baseline-browser-mapping": "dist/cli.cjs" } }, "sha512-31/02mVB4yuQU6adKk5SlY6m+mxDwUq5KZkyYgnLrrKl7TEm1+3PyDtDBz2kOv/wxZz41GHsvV1A/u6RmiyBvw=="],
 
@@ -1511,7 +1511,7 @@
 
     "@banana/react/@banana/resilience": ["@banana/resilience@file:shared/resilience", { "devDependencies": { "typescript": "^5.5.0" } }],
 
-    "@banana/react/@banana/ui": ["@banana/ui@file:shared/ui", { "dependencies": { "@banana/panels": "workspace:*", "zustand": "^5.0.8" }, "devDependencies": { "@happy-dom/global-registrator": "^15.0.0", "@types/react": "^19.0.0", "@types/react-dom": "^19.0.0", "happy-dom": "^15.0.0", "react": "^19.0.0", "react-dom": "^19.0.0", "tailwindcss": "^3.4.0", "typescript": "^5.5.0", "vite": "^5.4.0" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }],
+    "@banana/react/@banana/ui": ["@banana/ui@file:shared/ui", { "dependencies": { "banana-panels": "workspace:*", "zustand": "^5.0.8" }, "devDependencies": { "@happy-dom/global-registrator": "^15.0.0", "@types/react": "^19.0.0", "@types/react-dom": "^19.0.0", "happy-dom": "^15.0.0", "react": "^19.0.0", "react-dom": "^19.0.0", "tailwindcss": "^3.4.0", "typescript": "^5.5.0", "vite": "^5.4.0" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }],
 
     "@fastify/ajv-compiler/ajv": ["ajv@8.20.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="],
 

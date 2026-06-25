@@ -1,4 +1,4 @@
-import panelTailwindPreset from '@banana/panels/tailwind/preset';
+import panelTailwindPreset from 'banana-panels/tailwind/preset';
 
 export default {
   content: ['./src/**/*.{ts,tsx}'],

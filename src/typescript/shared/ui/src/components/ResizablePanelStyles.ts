@@ -1,4 +1,4 @@
-export {buildResizablePanelStyles} from '@banana/panels/styles';
+export {buildResizablePanelStyles} from 'banana-panels/styles';
 export type {
   BuildResizablePanelStylesOptions,
   ResizablePanelControlStyles,
@@ -9,4 +9,4 @@ export type {
   ResizablePanelStyles,
   ResizablePanelStyleStateInput,
   ResizablePanelSurfaceStyles,
-} from '@banana/panels/styles';
+} from 'banana-panels/styles';

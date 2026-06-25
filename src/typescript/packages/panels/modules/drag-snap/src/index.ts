@@ -1,1 +1,1 @@
-export * from '@banana/panels/drag-snap';
+export * from 'banana-panels/drag-snap';

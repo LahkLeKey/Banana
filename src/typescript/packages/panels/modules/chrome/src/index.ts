@@ -1,1 +1,1 @@
-export * from '@banana/panels/chrome';
+export * from 'banana-panels/chrome';

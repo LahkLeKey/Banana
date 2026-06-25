@@ -1,1 +1,1 @@
-export * from '@banana/panels/panel-overlay';
+export * from 'banana-panels/panel-overlay';

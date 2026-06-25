@@ -1,4 +1,4 @@
 export {
   ResizablePanelHeader,
   type ResizablePanelHeaderProps,
-} from '@banana/panels/header';
+} from 'banana-panels/header';

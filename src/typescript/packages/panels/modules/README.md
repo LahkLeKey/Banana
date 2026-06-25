@@ -1,4 +1,4 @@
-# @banana/panels Module Packages
+# banana-panels Module Packages
 
 Public npm modules for teams that want to consume only specific panel capabilities.
 
@@ -7,7 +7,7 @@ Public npm modules for teams that want to consume only specific panel capabiliti
 Install a module package with the core dependency:
 
 ```bash
-npm install @banana/panels-<module> @banana/panels react react-dom
+npm install @banana/panels-<module> banana-panels react react-dom
 ```
 
 ## Module Catalog
@@ -36,7 +36,7 @@ npm install @banana/panels-<module> @banana/panels react react-dom
 ## Example
 
 ```bash
-npm install @banana/panels-panel-overlay @banana/panels react react-dom
+npm install @banana/panels-panel-overlay banana-panels react react-dom
 ```
 
 ```ts

@@ -1,4 +1,4 @@
-export {useResizableDockLayoutStore} from '@banana/panels/dock-layout-store';
+export {useResizableDockLayoutStore} from 'banana-panels/dock-layout-store';
 export type {
   DockAnchorLink,
   DockAnchorSide,
@@ -8,4 +8,4 @@ export type {
   DockPanelRect,
   DockPanelState,
   DockViewport,
-} from '@banana/panels/dock-layout-store';
+} from 'banana-panels/dock-layout-store';

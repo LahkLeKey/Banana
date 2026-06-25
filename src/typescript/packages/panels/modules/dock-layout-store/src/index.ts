@@ -1,1 +1,1 @@
-export * from '@banana/panels/dock-layout-store';
+export * from 'banana-panels/dock-layout-store';
