@@ -1,0 +1,109 @@
+vcpkg_minimum_required(VERSION 2024-01-01)
+
+# banana-k3h4-model DECOUPLED: vcpkg port for standalone K3H4 model artifact
+#
+# This is the DECOUPLED version that does NOT check for or assume native ABI presence.
+# The model is installable and usable standalone. Adaptation to native ABI is optional
+# and defined via CMake targets (see banana-k3h4-model-native-adapter below).
+
+set(PORT_VERSION "2026.06.14")
+set(GITHUB_OWNER "LahkLeKey")
+set(GITHUB_REPO "Banana")
+set(RELEASE_TAG "k3h4-model-v${PORT_VERSION}")
+set(TARBALL_NAME "k3h4-model-${PORT_VERSION}.tar.gz")
+
+vcpkg_download_distfile(
+    TARBALL
+    URLS "https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/download/${RELEASE_TAG}/${TARBALL_NAME}"
+    FILENAME "${TARBALL_NAME}"
+    SHA512 "PLACEHOLDER_SHA512_CHECKSUM"
+)
+
+file(ARCHIVE_EXTRACT INPUT "${TARBALL}" DESTINATION "${CURRENT_BUILDTREES_DIR}/extracted")
+set(EXTRACTED_ROOT "${CURRENT_BUILDTREES_DIR}/extracted/k3h4-model-${PORT_VERSION}")
+
+# Verify only model files exist (NOT native ABI files)
+if(NOT EXISTS "${EXTRACTED_ROOT}/MODEL_METADATA.json")
+    message(FATAL_ERROR "K3H4 release tarball missing MODEL_METADATA.json")
+endif()
+
+# These checks should NOT exist — model and ABI are decoupled
+# OLD (coupled):
+#   if(NOT EXISTS "${EXTRACTED_ROOT}/bin/libbanana_native.so" AND
+#      NOT EXISTS "${EXTRACTED_ROOT}/include/banana_native_v3.h")
+
+# NEW (decoupled): only check for model data
+if(NOT EXISTS "${EXTRACTED_ROOT}/model_weights.bin")
+    message(FATAL_ERROR "K3H4 release tarball missing model_weights.bin")
+endif()
+
+# Install model data to versioned payload directory
+set(PAYLOAD_DIR "${CURRENT_PACKAGES_DIR}/share/banana-k3h4-model/${PORT_VERSION}")
+file(MAKE_DIRECTORY "${PAYLOAD_DIR}")
+file(COPY "${EXTRACTED_ROOT}/" DESTINATION "${PAYLOAD_DIR}")
+
+# Export loader manifest
+file(
+    WRITE "${CURRENT_PACKAGES_DIR}/share/banana-k3h4-model/loader-manifest.json"
+    "{\n"
+    "  \"bundle_version\": \"${PORT_VERSION}\",\n"
+    "  \"payload_path\": \"share/banana-k3h4-model/${PORT_VERSION}\",\n"
+    "  \"native_abi_contract\": {\n"
+    "    \"required_version\": \"v3\",\n"
+    "    \"optional\": true\n"
+    "  },\n"
+    "  \"released_utc\": \"2026-06-14T00:00:00Z\"\n"
+    "}\n"
+)
+
+# Export CMake config for data-only package
+file(
+    WRITE "${CURRENT_PACKAGES_DIR}/share/banana-k3h4-model/banana-k3h4-model-config.cmake"
+    "include(\"\${CMAKE_CURRENT_LIST_DIR}/banana-k3h4-model-targets.cmake\")\n"
+)
+
+file(
+    WRITE "${CURRENT_PACKAGES_DIR}/share/banana-k3h4-model/banana-k3h4-model-targets.cmake"
+    "
+# banana-k3h4-model: data-only target (no linkage)
+add_library(banana::k3h4::model INTERFACE IMPORTED)
+set_target_properties(banana::k3h4::model PROPERTIES
+  INTERFACE_K3H4_MODEL_PATH \"\${CMAKE_CURRENT_LIST_DIR}/../../share/banana-k3h4-model/${PORT_VERSION}\"
+  INTERFACE_K3H4_LOADER_MANIFEST \"\${CMAKE_CURRENT_LIST_DIR}/../banana-k3h4-model/loader-manifest.json\"
+)
+
+# Optional adapter: link model + native ABI together
+# Enabled only if banana-native-abi package is found
+add_library(banana::k3h4::model-native-adapter INTERFACE IMPORTED)
+
+# Try to find native ABI package
+find_package(banana-native-abi CONFIG QUIET)
+
+if(banana-native-abi_FOUND)
+  target_link_libraries(banana::k3h4::model-native-adapter INTERFACE 
+    banana::k3h4::model 
+    banana::native::library
+  )
+  target_compile_definitions(banana::k3h4::model-native-adapter INTERFACE
+    BANANA_K3H4_NATIVE_ADAPTER_ENABLED=1
+  )
+else()
+  message(STATUS \"banana-native-abi not found; model-native-adapter will not link native library\")
+  target_link_libraries(banana::k3h4::model-native-adapter INTERFACE 
+    banana::k3h4::model
+  )
+  target_compile_definitions(banana::k3h4::model-native-adapter INTERFACE
+    BANANA_K3H4_NATIVE_ADAPTER_DISABLED=1
+  )
+endif()
+"
+)
+
+file(
+    WRITE "${CURRENT_PACKAGES_DIR}/share/banana-k3h4-model/copyright"
+    "K3H4 Model is part of the Banana game engine.\n"
+    "See the Banana repository for full license information.\n"
+)
+
+set(VCPKG_POLICY_EMPTY_PACKAGE enabled)
+vcpkg_install_copyright(FILE_LIST "${CURRENT_PACKAGES_DIR}/share/banana-k3h4-model/copyright")
