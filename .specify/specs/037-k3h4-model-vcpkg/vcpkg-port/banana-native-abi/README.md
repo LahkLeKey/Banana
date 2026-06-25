@@ -38,7 +38,7 @@ find_package(banana-native-abi REQUIRED CONFIG)
 target_link_libraries(my_app PRIVATE banana::native::library)
 ```
 
-At runtime, consumers can point `BANANA_NATIVE_PATH` at the installed shared library or read the `INTERFACE_BANANA_NATIVE_LIBRARY_PATH` property from the imported target.
+At runtime, consumers can point `BANANA_NATIVE_PATH` at the installed shared library or read the imported target location from `banana::native::library`.
 
 ## Package Layout
 

@@ -36,3 +36,17 @@ target_link_libraries(banana_native PRIVATE banana_engine_core)
 if(BANANA_ENABLE_POSTGRES)
 	target_compile_definitions(banana_native PRIVATE BANANA_ENABLE_POSTGRES=1)
 endif()
+
+include(GNUInstallDirs)
+
+install(TARGETS banana_native
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/include/banana_native_v3.h
+	${CMAKE_CURRENT_SOURCE_DIR}/include/banana_native_ui_abi.h
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
