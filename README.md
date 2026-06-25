@@ -2,6 +2,8 @@
 
 Banana is a multi-language monorepo with native runtime systems, TypeScript APIs, React surfaces, and delivery automation.
 
+https://banana.engineer/
+
 ## Domains
 
 - Native engine and runtime: `src/native`
