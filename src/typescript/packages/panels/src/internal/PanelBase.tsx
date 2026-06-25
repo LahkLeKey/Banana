@@ -1,16 +1,9 @@
 import { type ReactNode, type CSSProperties, type HTMLAttributes } from 'react';
 import { composePanelStages, type PanelStageStyles } from './PanelPipeline';
+import type { PanelIntrinsicElement } from './PanelIntrinsicElement';
+export type { PanelIntrinsicElement } from './PanelIntrinsicElement';
 
 export type PanelBaseStage = 'container' | 'header' | 'headerAction' | 'content' | 'footer';
-export type PanelIntrinsicElement =
-    | 'div'
-    | 'section'
-    | 'article'
-    | 'aside'
-    | 'header'
-    | 'footer'
-    | 'main'
-    | 'nav';
 export type PanelBaseStageElements = Partial<Record<PanelBaseStage, PanelIntrinsicElement>>;
 export type PanelBaseStageElementProps = Partial<Record<PanelBaseStage, HTMLAttributes<HTMLElement>>>;
 
