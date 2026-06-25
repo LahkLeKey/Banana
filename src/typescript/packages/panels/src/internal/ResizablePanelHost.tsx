@@ -16,7 +16,12 @@ export function ResizablePanelHost(
     return (
         <div
             data-resizable-panel-host="true"
-            style={{ position: hostMode === 'container' ? 'absolute' : 'fixed', inset: 0, pointerEvents: 'none' }}>
+            style={{
+                position: hostMode === 'container' ? 'absolute' : 'fixed',
+                inset: 0,
+                pointerEvents: 'none',
+                zIndex: zIndex ?? 1,
+            }}>
             {ghostRect && isDragging ?
                 <DragGhost ghostRect={ghostRect} zIndex={zIndex} /> :
                 null}

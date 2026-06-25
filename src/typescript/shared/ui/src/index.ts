@@ -23,6 +23,7 @@ export type {ResizableDockEntry, ResizableDockEntryIdentity, ResizableDockEntryL
 export {ResizableDockGrid} from './components/ResizableDockGrid';
 export type {AnchorSide, ResizablePanelDockingProps, ResizablePanelIdentityProps, ResizablePanelInteractionProps, ResizablePanelLayoutProps, ResizablePanelProps, ResizablePanelStageOverrides,} from './components/ResizablePanel';
 export {ResizablePanel} from './components/ResizablePanel';
+export {ResizablePanelHost} from './components/ResizablePanelHost';
 export type {BuildResizablePanelStylesOptions, ResizablePanelControlStyles, ResizablePanelHandleStyles, ResizablePanelStyleAnchorSide, ResizablePanelStyleDockInput, ResizablePanelStyleGeometryInput, ResizablePanelStyles, ResizablePanelStyleStateInput, ResizablePanelSurfaceStyles,} from './components/ResizablePanelStyles';
 export type {RetryButtonProps} from './components/RetryButton';
 export {RETRY_BUTTON_COPY, RetryButton} from './components/RetryButton';

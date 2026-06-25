@@ -60,6 +60,92 @@ const panelGap = 12;
 const clamp = (value: number, min: number, max: number) =>
     Math.max(min, Math.min(max, value));
 
+const arePanelsEqual = (
+    left: Record<string, DockPanelState>,
+    right: Record<string, DockPanelState>,
+    ): boolean => {
+  const leftIds = Object.keys(left);
+  const rightIds = Object.keys(right);
+  if (leftIds.length !== rightIds.length) {
+    return false;
+  }
+  for (const id of leftIds) {
+    const a = left[id];
+    const b = right[id];
+    if (!b) {
+      return false;
+    }
+    if (a.x !== b.x || a.y !== b.y || a.width !== b.width ||
+        a.height !== b.height || a.corner !== b.corner ||
+        a.zIndex !== b.zIndex || a.resetToken !== b.resetToken) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const areStringArraysEqual = (left: string[], right: string[]): boolean => {
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const areAnchorLinksEqual = (
+    left: Record<string, DockAnchorLink[]>,
+    right: Record<string, DockAnchorLink[]>,
+    ): boolean => {
+  const leftIds = Object.keys(left);
+  const rightIds = Object.keys(right);
+  if (leftIds.length !== rightIds.length) {
+    return false;
+  }
+  for (const id of leftIds) {
+    const a = left[id] ?? [];
+    const b = right[id] ?? [];
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let index = 0; index < a.length; index += 1) {
+      if (a[index].id !== b[index].id || a[index].side !== b[index].side) {
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
+const areBooleanMapsEqual = (
+    left: Record<string, boolean>,
+    right: Record<string, boolean>,
+    ): boolean => {
+  const leftIds = Object.keys(left);
+  const rightIds = Object.keys(right);
+  if (leftIds.length !== rightIds.length) {
+    return false;
+  }
+  for (const id of leftIds) {
+    if (left[id] !== right[id]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const areLayoutsEqual =
+    (left: DockLayoutState, right: DockLayoutState): boolean =>
+        left.viewport.width === right.viewport.width &&
+    left.viewport.height === right.viewport.height &&
+    arePanelsEqual(left.panels, right.panels) &&
+    areStringArraysEqual(left.focusOrder, right.focusOrder) &&
+    areAnchorLinksEqual(left.anchorLinks, right.anchorLinks) &&
+    areBooleanMapsEqual(left.resizeLockedByPanel, right.resizeLockedByPanel);
+
 const oppositeSide = (side: DockAnchorSide): DockAnchorSide => {
   if (side === 'left') return 'right';
   if (side === 'right') return 'left';
@@ -171,7 +257,7 @@ const createDockLayoutsStore: StateCreator<DockLayoutsStore> = (set) => ({
               const previous = current?.panels[entry.id];
               const resetToken = entry.resetToken ?? 0;
               const rect = !previous || previous.resetToken !== resetToken ?
-                  baseRect :
+                  clampRectToViewport(baseRect, viewport) :
                   clampRectToViewport(previous, viewport);
 
               nextPanels[entry.id] = {
@@ -217,16 +303,22 @@ const createDockLayoutsStore: StateCreator<DockLayoutsStore> = (set) => ({
               }
             }
 
+            const nextLayout: DockLayoutState = {
+              panels: nextPanels,
+              focusOrder: nextFocusOrder,
+              anchorLinks: nextAnchorLinks,
+              resizeLockedByPanel: nextResizeLocks,
+              viewport,
+            };
+
+            if (current && areLayoutsEqual(current, nextLayout)) {
+              return state;
+            }
+
             return {
               layouts: {
                 ...state.layouts,
-                [layoutId]: {
-                  panels: nextPanels,
-                  focusOrder: nextFocusOrder,
-                  anchorLinks: nextAnchorLinks,
-                  resizeLockedByPanel: nextResizeLocks,
-                  viewport,
-                },
+                [layoutId]: nextLayout,
               },
             };
           }),
