@@ -18,7 +18,7 @@ add_executable(k3h4_loader consumer-example.cpp)
 target_link_libraries(k3h4_loader PRIVATE banana::k3h4::model)
 
 # Get the payload location for use in code
-get_target_property(K3H4_PAYLOAD banana::k3h4::model INTERFACE_PAYLOAD_LOCATION)
+get_target_property(K3H4_PAYLOAD banana::k3h4::model INTERFACE_MODEL_PAYLOAD_LOCATION)
 target_compile_definitions(k3h4_loader PRIVATE 
     K3H4_MODEL_PAYLOAD_PATH="${K3H4_PAYLOAD}"
 )

@@ -13,6 +13,8 @@ This is intentional and by design. See [README.md](README.md) for context.
 
 Consumers who need native interop should depend on a separate `banana-native-abi` port.
 
+The `banana-native-abi` port maintains the shared library and public headers; this document only tracks the model package.
+
 ## Current Version: 2026.06.14
 
 **GitHub Release Tag**: `k3h4-model-v2026.06.14`
@@ -95,6 +97,22 @@ When a new K3H4 model version is released:
 - **ABI version** (e.g., `v3`) — Semantic; released when Banana native library changes
 - The loader manifest in the model port declares the ABI it expects (advisory only)
 - Consumers explicitly depend on both ports if they need native interop
+
+## Native ABI Port Maintenance
+
+The `banana-native-abi` port should be updated independently when the native ABI changes.
+
+Expected contents of that port:
+- `banana_native` shared library
+- `banana_native_v3.h`
+- `banana_native_ui_abi.h`
+- ABI manifest / CMake config for discovery
+
+When the ABI changes:
+1. Bump the ABI port version independently of the model version.
+2. Regenerate or rebuild the native shared library.
+3. Update the ABI manifest and config shim.
+4. Confirm `banana-k3h4-model` still reports the correct advisory ABI version.
 
 This means:
 - New model on June 15 can use same ABI v3 from June 14

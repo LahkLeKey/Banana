@@ -39,6 +39,17 @@ Or install directly:
 vcpkg install banana-k3h4-model
 ```
 
+If you also need the native ABI layer, install it separately:
+
+```json
+{
+  "dependencies": [
+    { "name": "banana-k3h4-model", "version": "2026.06.14" },
+    { "name": "banana-native-abi", "version": "3.0.0" }
+  ]
+}
+```
+
 ### Discover and Load
 
 Use CMake:
@@ -47,7 +58,7 @@ Use CMake:
 find_package(banana-k3h4-model REQUIRED)
 
 # Get the payload location
-get_target_property(K3H4_PAYLOAD banana::k3h4::model INTERFACE_PAYLOAD_LOCATION)
+get_target_property(K3H4_PAYLOAD banana::k3h4::model INTERFACE_MODEL_PAYLOAD_LOCATION)
 
 # Now load model data from ${K3H4_PAYLOAD}/data/...
 ```
@@ -120,7 +131,7 @@ find_package(banana-native-abi REQUIRED)
 target_link_libraries(my_app PRIVATE banana::native::library)
 ```
 
-The loader manifest's `native_abi_version` field tells you which ABI version the model expects. CMake config files can conditionally enable features based on what's installed.
+The loader manifest's `native_abi_version` field tells you which ABI version the model expects. The model port remains data-only; `banana-native-abi` is the separate seam that exposes the shared library and headers.
 
 ## Port Strategy
 

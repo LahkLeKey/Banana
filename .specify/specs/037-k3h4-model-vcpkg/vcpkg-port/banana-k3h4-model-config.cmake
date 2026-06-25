@@ -45,7 +45,7 @@ endif()
 if(NOT TARGET banana::k3h4::model)
     add_library(banana::k3h4::model INTERFACE IMPORTED)
     set_target_properties(banana::k3h4::model PROPERTIES
-        INTERFACE_PAYLOAD_LOCATION "${K3H4_MODEL_PAYLOAD_PATH}"
+        INTERFACE_MODEL_PAYLOAD_LOCATION "${K3H4_MODEL_PAYLOAD_PATH}"
     )
 endif()
 
