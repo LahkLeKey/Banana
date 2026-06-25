@@ -5,9 +5,7 @@
   "workspaces": [
     "src/typescript/api",
     "src/typescript/react",
-    "src/typescript/shared/*",
-    "src/typescript/packages/*",
-    "src/typescript/packages/panels/modules/*"
+    "src/typescript/shared/*"
   ],
   "scripts": {
     "install:typescript": "bun install --cwd src/typescript",
@@ -18,5 +16,8 @@
     "storybook:panels:deploy": "bash scripts/panels-storybook-deploy.sh",
     "pack:panels": "bash scripts/panels-packages-pack.sh",
     "publish:panels:dry-run": "PANELS_PUBLISH_DRY_RUN=true bash scripts/panels-packages-publish.sh"
+  },
+  "dependencies": {
+    "vercel": "^54.17.0"
   }
 }

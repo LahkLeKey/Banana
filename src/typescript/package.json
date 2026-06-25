@@ -5,9 +5,7 @@
     "workspaces": [
         "api",
         "react",
-        "shared/*",
-        "packages/*",
-        "packages/panels/modules/*"
+        "shared/*"
     ],
     "scripts": {
         "install:all": "bun install --cwd .",

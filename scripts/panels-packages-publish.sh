@@ -7,11 +7,24 @@ modules_root="${packages_root}/modules"
 
 dry_run="${PANELS_PUBLISH_DRY_RUN:-true}"
 access="${PANELS_PUBLISH_ACCESS:-public}"
+tmp_userconfig=""
 
-if [[ -z "${NODE_AUTH_TOKEN:-}" && -f "${repo_root}/.env" ]]; then
-  token_from_env="$(sed -n 's/^NPM_TOKEN=//p' "${repo_root}/.env" | tail -n 1 | tr -d '"\r')"
-  if [[ -n "${token_from_env}" ]]; then
-    export NODE_AUTH_TOKEN="${token_from_env}"
+if [[ -f "${repo_root}/.env" ]]; then
+  if [[ -z "${NODE_AUTH_TOKEN:-}" ]]; then
+    token_from_env="$(sed -n 's/^NODE_AUTH_TOKEN=//p' "${repo_root}/.env" | tail -n 1 | tr -d '"\r')"
+    if [[ -z "${token_from_env}" ]]; then
+      token_from_env="$(sed -n 's/^NPM_TOKEN=//p' "${repo_root}/.env" | tail -n 1 | tr -d '"\r')"
+    fi
+    if [[ -n "${token_from_env}" ]]; then
+      export NODE_AUTH_TOKEN="${token_from_env}"
+    fi
+  fi
+
+  if [[ -z "${NPM_CONFIG_OTP:-}" ]]; then
+    otp_from_env="$(sed -n 's/^NPM_OTP=//p' "${repo_root}/.env" | tail -n 1 | tr -d '"\r')"
+    if [[ -n "${otp_from_env}" ]]; then
+      export NPM_CONFIG_OTP="${otp_from_env}"
+    fi
   fi
 fi
 
@@ -23,6 +36,23 @@ fi
 if [[ "${dry_run}" == "false" && -z "${NODE_AUTH_TOKEN:-}" ]]; then
   echo "NODE_AUTH_TOKEN is required when PANELS_PUBLISH_DRY_RUN=false" >&2
   exit 1
+fi
+
+cleanup() {
+  if [[ -n "${tmp_userconfig}" && -f "${tmp_userconfig}" ]]; then
+    rm -f "${tmp_userconfig}"
+  fi
+}
+trap cleanup EXIT
+
+if [[ "${dry_run}" == "false" ]]; then
+  tmp_userconfig="$(mktemp)"
+  cat >"${tmp_userconfig}" <<EOF
+registry=https://registry.npmjs.org/
+always-auth=true
+//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+EOF
+  export NPM_CONFIG_USERCONFIG="${tmp_userconfig}"
 fi
 
 mapfile -t module_dirs < <(find "${modules_root}" -mindepth 1 -maxdepth 1 -type d | sort)
@@ -44,7 +74,11 @@ for package_dir in "${package_dirs[@]}"; do
   if [[ "${dry_run}" == "true" ]]; then
     npm publish --access "${access}" --dry-run
   else
-    npm publish --access "${access}" --provenance
+    if [[ -n "${NPM_CONFIG_OTP:-}" ]]; then
+      npm publish --access "${access}" --provenance --otp "${NPM_CONFIG_OTP}"
+    else
+      npm publish --access "${access}" --provenance
+    fi
   fi
   popd >/dev/null
 
