@@ -1,12 +1,12 @@
 {
-  "name": "banana-native-abi",
-  "version": "3.0.0",
-  "port-version": 0,
-  "description": "Banana native ABI package (shared library + public headers) for native interop consumers.",
-  "homepage": "https://github.com/LahkLeKey/Banana",
-  "documentation": "https://github.com/LahkLeKey/Banana/tree/main/.specify/specs/037-k3h4-model-vcpkg",
-  "license": "Apache-2.0",
-  "dependencies": [],
-  "supports": "native | linux | windows | macos",
-  "type": "library"
+    "name": "banana-native-abi",
+    "version": "3.0.0",
+    "port-version": 0,
+    "description": "Banana native ABI package (shared library + public headers) for native interop consumers.",
+    "homepage": "https://github.com/LahkLeKey/Banana",
+    "documentation": "https://github.com/LahkLeKey/Banana/tree/main/.specify/specs/037-k3h4-model-vcpkg",
+    "license": "Apache-2.0",
+    "dependencies": [],
+    "supports": "native | linux | windows | macos",
+    "type": "library"
 }

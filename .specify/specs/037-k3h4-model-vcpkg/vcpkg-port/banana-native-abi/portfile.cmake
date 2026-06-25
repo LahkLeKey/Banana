@@ -33,23 +33,35 @@ file(COPY "${SOURCE_ROOT}/include/banana_native_v3.h" DESTINATION "${PACKAGE_INC
 file(COPY "${SOURCE_ROOT}/include/banana_native_ui_abi.h" DESTINATION "${PACKAGE_INCLUDE_DIR}")
 
 # Copy the built shared library from the build tree.
-set(BUILT_SHARED_LIB "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/banana_native.dll")
 if(WIN32)
-    if(NOT EXISTS "${BUILT_SHARED_LIB}")
-        set(BUILT_SHARED_LIB "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg/banana_native.dll")
-    endif()
+    file(GLOB_RECURSE BUILT_SHARED_LIBS
+        "${CURRENT_BUILDTREES_DIR}/*/banana_native.dll"
+        "${CURRENT_BUILDTREES_DIR}/*/banana_native.pdb"
+    )
 else()
-    set(BUILT_SHARED_LIB "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/libbanana_native.so")
-    if(NOT EXISTS "${BUILT_SHARED_LIB}")
-        set(BUILT_SHARED_LIB "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg/libbanana_native.so")
+    file(GLOB_RECURSE BUILT_SHARED_LIBS
+        "${CURRENT_BUILDTREES_DIR}/*/libbanana_native.so"
+    )
+endif()
+
+list(FILTER BUILT_SHARED_LIBS EXCLUDE REGEX "[/\\]CMakeFiles[/\\]")
+list(LENGTH BUILT_SHARED_LIBS BUILT_SHARED_LIB_COUNT)
+if(BUILT_SHARED_LIB_COUNT EQUAL 0)
+    message(FATAL_ERROR "banana-native-abi: built shared library not found in ${CURRENT_BUILDTREES_DIR}")
+endif()
+
+list(GET BUILT_SHARED_LIBS 0 BUILT_SHARED_LIB)
+file(COPY "${BUILT_SHARED_LIB}" DESTINATION "${PACKAGE_LIB_DIR}")
+
+if(WIN32)
+    file(GLOB_RECURSE BUILT_PDBS "${CURRENT_BUILDTREES_DIR}/*/banana_native.pdb")
+    list(FILTER BUILT_PDBS EXCLUDE REGEX "[/\\]CMakeFiles[/\\]")
+    list(LENGTH BUILT_PDBS BUILT_PDB_COUNT)
+    if(BUILT_PDB_COUNT GREATER 0)
+        list(GET BUILT_PDBS 0 BUILT_PDB)
+        file(COPY "${BUILT_PDB}" DESTINATION "${PACKAGE_LIB_DIR}")
     endif()
 endif()
-
-if(NOT EXISTS "${BUILT_SHARED_LIB}")
-    message(FATAL_ERROR "banana-native-abi: built shared library not found")
-endif()
-
-file(COPY "${BUILT_SHARED_LIB}" DESTINATION "${PACKAGE_LIB_DIR}")
 
 # Write a small manifest that records the ABI package version and install layout.
 file(WRITE "${PACKAGE_SHARE_DIR}/abi-manifest.json" "{\n")
