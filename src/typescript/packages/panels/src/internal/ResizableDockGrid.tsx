@@ -54,16 +54,19 @@ export type ResizableDockGridProps = ResizableDockGridCallbacks & {
     readonly initialAnchorLinks?: readonly ResizableDockInitialAnchorLink[];
 };
 
+const EMPTY_INITIAL_ANCHOR_LINKS: readonly ResizableDockInitialAnchorLink[] = [];
+
 export function ResizableDockGrid({
     entries,
     onPanelSizeChange,
     onPanelClose,
     hostMode = 'viewport',
-    initialAnchorLinks = [],
+    initialAnchorLinks,
 }: ResizableDockGridProps) {
     const layoutIdRef = useRef(`dock-${Math.random().toString(36).slice(2)}`);
     const layoutId = layoutIdRef.current;
     const dockRootRef = useRef<HTMLDivElement>(null);
+    const lastInitializationSignatureRef = useRef<string>('');
     const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
     const initializeLayout = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.initializeLayout);
     const focusPanelInStore = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.focusPanel);
@@ -74,24 +77,40 @@ export function ResizableDockGrid({
     const toggleResizeLockInStore = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.toggleResizeLock);
     const layout = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.layouts[layoutId]);
 
-    useEffect(() => {
-        const toSeeds = () => entries.map((entry) => ({
-            id: entry.id,
-            corner: entry.corner,
-            defaultWidth: entry.defaultWidth,
-            defaultHeight: entry.defaultHeight,
-            resetToken: entry.resetToken,
-        }));
+    const anchorLinks = initialAnchorLinks ?? EMPTY_INITIAL_ANCHOR_LINKS;
+    const entrySeedKey = entries.map((entry) =>
+        `${entry.id}:${entry.corner}:${entry.defaultWidth ?? ''}:${entry.defaultHeight ?? ''}:${entry.resetToken ?? 0}`,
+    ).join('|');
+    const initialAnchorLinksKey = anchorLinks.map((link) =>
+        `${link.sourceId}:${link.targetId}:${link.sourceSide}`,
+    ).join('|');
 
+    const entrySeeds = useMemo(() => entries.map((entry) => ({
+        id: entry.id,
+        corner: entry.corner,
+        defaultWidth: entry.defaultWidth,
+        defaultHeight: entry.defaultHeight,
+        resetToken: entry.resetToken,
+    })), [entrySeedKey]);
+
+    useEffect(() => {
         const initialize = () => {
             const bounds = hostMode === 'container'
                 ? dockRootRef.current?.getBoundingClientRect()
                 : null;
-            initializeLayout(layoutId, toSeeds(), {
-                width: bounds?.width ?? window.innerWidth,
-                height: bounds?.height ?? window.innerHeight,
-            });
-            initialAnchorLinks.forEach(({ sourceId, targetId, sourceSide }) => {
+
+            const viewport = {
+                width: Math.round(bounds?.width ?? window.innerWidth),
+                height: Math.round(bounds?.height ?? window.innerHeight),
+            };
+            const initializationSignature = `${layoutId}:${entrySeedKey}:${initialAnchorLinksKey}:${viewport.width}:${viewport.height}`;
+            if (initializationSignature === lastInitializationSignatureRef.current) {
+                return;
+            }
+
+            lastInitializationSignatureRef.current = initializationSignature;
+            initializeLayout(layoutId, entrySeeds, viewport);
+            anchorLinks.forEach(({ sourceId, targetId, sourceSide }) => {
                 addAnchorLinkToStore(layoutId, sourceId, targetId, sourceSide);
             });
         };
@@ -101,7 +120,7 @@ export function ResizableDockGrid({
         return () => {
             window.removeEventListener('resize', initialize);
         };
-    }, [addAnchorLinkToStore, entries, hostMode, initialAnchorLinks, initializeLayout, layoutId]);
+    }, [addAnchorLinkToStore, entrySeedKey, entrySeeds, hostMode, initializeLayout, initialAnchorLinksKey, layoutId]);
 
     const focusPanel = (panelId: string) => {
         focusPanelInStore(layoutId, panelId);

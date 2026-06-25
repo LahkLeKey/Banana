@@ -33,7 +33,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "banana-panels": "workspace:*",
+    "banana-panels": "file:../../packages/panels",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
