@@ -36,9 +36,12 @@ The native ABI is a separate seam from the K3H4 model package. Keeping it separa
 ```cmake
 find_package(banana-native-abi REQUIRED CONFIG)
 target_link_libraries(my_app PRIVATE banana::native::library)
+
+get_target_property(BANANA_NATIVE_LIBRARY banana::native::library IMPORTED_LOCATION)
+message(STATUS "Banana native ABI library: ${BANANA_NATIVE_LIBRARY}")
 ```
 
-At runtime, consumers can point `BANANA_NATIVE_PATH` at the installed shared library or read the imported target location from `banana::native::library`.
+At runtime, consumers can point `BANANA_NATIVE_PATH` at the installed shared library or read `IMPORTED_LOCATION` from `banana::native::library`.
 
 ## Package Layout
 

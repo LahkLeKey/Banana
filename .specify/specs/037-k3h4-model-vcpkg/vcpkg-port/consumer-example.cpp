@@ -1,17 +1,17 @@
 // consumer-example.cpp
 // Example C++ code using banana-k3h4-model (model-only port)
 
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <nlohmann/json.hpp>
+#include <string>
 
-using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 int main() {
     // After CMake's find_package(banana-k3h4-model REQUIRED),
-    // the target banana::k3h4::model is available with INTERFACE_PAYLOAD_LOCATION set.
+    // the target banana::k3h4::model is available with INTERFACE_MODEL_PAYLOAD_LOCATION set.
 
     // Option 1: Access payload location from CMake (hardcoded example)
     // In real code, this comes from a CMake-generated header or CMake cache variable
@@ -31,11 +31,36 @@ int main() {
     }
 
     std::ifstream metadata_stream(metadata_file);
-    json metadata = json::parse(metadata_stream);
-    
+    std::string metadata_text((std::istreambuf_iterator<char>(metadata_stream)), std::istreambuf_iterator<char>());
+
+    auto read_field = [&](const std::string& field_name) -> std::string {
+        const std::string needle = "\"" + field_name + "\"";
+        const std::size_t key_pos = metadata_text.find(needle);
+        if (key_pos == std::string::npos) {
+            return "unknown";
+        }
+
+        const std::size_t colon_pos = metadata_text.find(':', key_pos + needle.size());
+        if (colon_pos == std::string::npos) {
+            return "unknown";
+        }
+
+        const std::size_t quote_start = metadata_text.find('"', colon_pos + 1);
+        if (quote_start == std::string::npos) {
+            return "unknown";
+        }
+
+        const std::size_t quote_end = metadata_text.find('"', quote_start + 1);
+        if (quote_end == std::string::npos) {
+            return "unknown";
+        }
+
+        return metadata_text.substr(quote_start + 1, quote_end - quote_start - 1);
+    };
+
     std::cout << "K3H4 Model Metadata:" << std::endl;
-    std::cout << "  Version: " << metadata["version"] << std::endl;
-    std::cout << "  Schema: " << metadata.value("schema_version", "unknown") << std::endl;
+    std::cout << "  Bundle version: " << read_field("bundle_version") << std::endl;
+    std::cout << "  Native ABI version: " << read_field("native_abi_version") << std::endl;
     
     // Load model data files
     fs::path data_dir = model_root / "data";
@@ -58,11 +83,9 @@ int main() {
         std::cout << "\nABI contract documentation available at: " << contracts_dir << std::endl;
     }
 
-    // If using native ABI (optional dependency):
-    // 1. Check if banana-native-abi is available
-    // 2. Load libbanana_native.so
-    // 3. Initialize clustering query interface
-    // 4. Use metadata's native_abi_version to validate compatibility
+    // If using native ABI (optional dependency), pair this model with banana-native-abi.
+    // The ABI package exposes banana::native::library and installs the shared library
+    // plus public headers separately from the model payload.
 
     std::cout << "\nModel is ready for use." << std::endl;
     return 0;
