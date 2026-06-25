@@ -172,7 +172,7 @@ export function usePanelResize({
         };
       },
       [
-        activeResize, clearDragState, containerRef, minHeight, minWidth,
+        activeResize, clearDragState, containerRef, hostMode, minHeight, minWidth,
         resizeDispatch
       ]);
 
