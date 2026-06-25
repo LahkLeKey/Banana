@@ -16,7 +16,7 @@ The following packages are currently published for external consumption.
 
 | Package | Latest | Install | Demo |
 | --- | --- | --- | --- |
-| `banana-panels` | `0.1.0` | `bun add banana-panels` or `npm install banana-panels` | https://panels.banana.engineer/ |
+| `banana-panels` | `0.1.2` | `bun add banana-panels` or `npm install banana-panels` | https://panels.banana.engineer/ |
 
 ## Package Notes
 
