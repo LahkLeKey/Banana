@@ -1,0 +1,100 @@
+name: Panels Packages Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish packages to npm (false runs dry-run only)"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+concurrency:
+  group: panels-packages-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package-and-validate:
+    name: Build and pack panel packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install TypeScript workspace dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun install --cwd src/typescript
+
+      - name: Build @banana/panels core package
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run --cwd src/typescript/packages/panels build
+
+      - name: Build module wrapper smoke package
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run --cwd src/typescript/packages/panels/modules/resizable-panel build
+
+      - name: Pack all panel packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/panels-packages-pack.sh
+
+      - name: Upload npm package tarballs
+        uses: actions/upload-artifact@v4
+        with:
+          name: panels-npm-packages
+          path: artifacts/npm-packages
+
+  publish:
+    name: Publish panel packages
+    if: inputs.publish == true
+    needs: package-and-validate
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      PANELS_PUBLISH_DRY_RUN: "false"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install TypeScript workspace dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun install --cwd src/typescript
+
+      - name: Publish panel packages to npm
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/panels-packages-publish.sh

@@ -69,6 +69,13 @@ const stageStyle: CSSProperties = {
     padding: 0,
 };
 
+const dockLayerStyle: CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 40,
+    pointerEvents: 'none',
+};
+
 const panelResetDefaults: Record<NotebookHudPanelId, number> = {
     explorer: 0,
     menu: 0,
@@ -663,7 +670,7 @@ export function DataSciencePlaygroundPage() {
     const dockEntries = dockLayout.map((dock) => ({
         id: dock.id,
         corner: dock.corner,
-        visible: dock.id === 'visualizations' || dock.id === 'training' ? true : panelVisibility[dock.id],
+        visible: panelVisibility[dock.id],
         content: dockRenderers[dock.id],
         title: dock.title,
         defaultWidth: panelDefaultSizes[dock.id].width,
@@ -713,12 +720,14 @@ export function DataSciencePlaygroundPage() {
                     onAnalyticsTelemetryChange={setAnalyticsTelemetry}
                 />
 
-                <ResizableDockGrid
-                    entries={dockEntries}
-                    onPanelClose={(panelId) => {
-                        closePanel(panelId as Parameters<typeof closePanel>[0]);
-                    }}
-                />
+                <div style={dockLayerStyle}>
+                    <ResizableDockGrid
+                        entries={dockEntries}
+                        onPanelClose={(panelId) => {
+                            closePanel(panelId as Parameters<typeof closePanel>[0]);
+                        }}
+                    />
+                </div>
 
                 <RouteHudControlStrip
                     routeLabel={routeHudPreset.label}

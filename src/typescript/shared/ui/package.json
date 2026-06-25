@@ -8,6 +8,19 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./panels/resizable-panel": "./src/components/ResizablePanel.tsx",
+    "./panels/resizable-dock-grid": "./src/components/ResizableDockGrid.tsx",
+    "./panels/styles": "./src/components/ResizablePanelStyles.ts",
+    "./panels/stage": "./src/components/ResizablePanelStage.ts",
+    "./panels/chrome": "./src/components/ResizablePanelChrome.tsx",
+    "./panels/header": "./src/components/ResizablePanelHeader.tsx",
+    "./panels/host": "./src/components/ResizablePanelHost.tsx",
+    "./panels/refs": "./src/components/ResizablePanelRefs.ts",
+    "./panels/interactions": "./src/components/useResizablePanelInteractions.ts",
+    "./panels/view-model": "./src/components/useResizablePanelViewModel.ts",
+    "./panels/drag-snap": "./src/components/usePanelDragSnap.ts",
+    "./panels/resize": "./src/components/usePanelResize.ts",
+    "./panels/raf-buffered-dispatch": "./src/components/useRafBufferedDispatch.ts",
     "./tokens/web.css": "./src/tokens/web.css"
   },
   "scripts": {
@@ -20,6 +33,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
+    "banana-panels": "file:../../packages/panels",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

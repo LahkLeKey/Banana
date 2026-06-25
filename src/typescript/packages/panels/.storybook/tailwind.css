@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --banana-panel-surface-rgb: 7 19 34;
+    --banana-panel-border-rgb: 45 212 191;
+    --banana-panel-content-rgb: 226 232 240;
+    --banana-panel-accent: #22d3ee;
+    --banana-panel-desktop-gradient: radial-gradient(circle at 20% 0%, rgba(14,165,233,0.24), transparent 38%), radial-gradient(circle at 90% 10%, rgba(16,185,129,0.15), transparent 34%), repeating-linear-gradient(0deg, rgba(148,163,184,0.05) 0 1px, transparent 1px 36px), repeating-linear-gradient(90deg, rgba(148,163,184,0.05) 0 1px, transparent 1px 36px), linear-gradient(180deg, #071122 0%, #0b1b31 100%);
+    --banana-panel-header-background: rgba(2, 6, 23, 0.5);
+    --banana-panel-taskbar-background: rgba(2, 6, 23, 0.62);
+    --banana-panel-chrome-border: rgba(56, 189, 248, 0.22);
+  }
+
+  html,
+  body,
+  #storybook-root {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: #020617;
+  }
+
+  body {
+    font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+    color: #e2e8f0;
+  }
+}
