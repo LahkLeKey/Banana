@@ -11,8 +11,8 @@ type InteractionOrigin = {
 };
 
 type UsePanelResizeOptions = {
-  x: number; y: number; width: number; height: number; minWidth: number;
-  minHeight: number;
+  x: number; y: number; width: number; height: number;
+  hostMode?: 'viewport' | 'container'; minWidth: number; minHeight: number;
   containerRef: RefObject<HTMLElement|null>;
   clearDragState: () => void;
   onFocus?: () => void;
@@ -34,6 +34,7 @@ export function usePanelResize({
   y,
   width,
   height,
+  hostMode = 'viewport',
   minWidth,
   minHeight,
   containerRef,
@@ -80,10 +81,22 @@ export function usePanelResize({
         const handleMouseMove = (event: MouseEvent) => {
           event.preventDefault();
 
+          const hostRect = hostMode === 'container' ?
+              containerRef.current?.parentElement?.getBoundingClientRect() :
+              null;
+          const bounds = hostRect ?? {
+            left: 0,
+            top: 0,
+            right: window.innerWidth,
+            bottom: window.innerHeight,
+            width: window.innerWidth,
+            height: window.innerHeight,
+          };
+
           const maxWidth =
-              Math.max(minWidth, window.innerWidth - (viewportPadding * 2));
+              Math.max(minWidth, bounds.width - (viewportPadding * 2));
           const maxHeight =
-              Math.max(minHeight, window.innerHeight - (viewportPadding * 2));
+              Math.max(minHeight, bounds.height - (viewportPadding * 2));
           const dx = event.clientX - resizeOrigin.mouseX;
           const dy = event.clientY - resizeOrigin.mouseY;
 
@@ -101,14 +114,14 @@ export function usePanelResize({
           let nextTop = originTop;
 
           if (activeResize === 'right' || activeResize === 'bottom-right') {
-            const maxRight = window.innerWidth - viewportPadding;
+            const maxRight = bounds.right - viewportPadding;
             const candidateRight = Math.min(maxRight, originRight + dx);
             nextWidth = Math.max(
                 minWidth, Math.min(maxWidth, candidateRight - originLeft));
           }
 
           if (activeResize === 'left') {
-            const minLeft = viewportPadding;
+            const minLeft = bounds.left + viewportPadding;
             const maxLeft = originRight - minWidth;
             nextLeft = Math.max(minLeft, Math.min(maxLeft, originLeft + dx));
             nextWidth =
@@ -117,14 +130,14 @@ export function usePanelResize({
           }
 
           if (activeResize === 'bottom' || activeResize === 'bottom-right') {
-            const maxBottom = window.innerHeight - viewportPadding;
+            const maxBottom = bounds.bottom - viewportPadding;
             const candidateBottom = Math.min(maxBottom, originBottom + dy);
             nextHeight = Math.max(
                 minHeight, Math.min(maxHeight, candidateBottom - originTop));
           }
 
           if (activeResize === 'top') {
-            const minTop = viewportPadding;
+            const minTop = bounds.top + viewportPadding;
             const maxTop = originBottom - minHeight;
             nextTop = Math.max(minTop, Math.min(maxTop, originTop + dy));
             nextHeight = Math.max(

@@ -1,9 +1,9 @@
 export {
   getResizablePanelStageProps,
   resolveResizablePanelStageElements,
-} from '../../../../packages/panels/src/stage';
+} from '@banana/panels/stage';
 export type {
   ResizablePanelStage,
   ResizablePanelStageElementProps,
   ResizablePanelStageElements,
-} from '../../../../packages/panels/src/stage';
+} from '@banana/panels/stage';

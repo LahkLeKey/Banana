@@ -1,1 +1,1 @@
-export {buildResizablePanelStyles} from '../../../../packages/panels/src/styles';
+export {buildResizablePanelStyles} from '@banana/panels/styles';

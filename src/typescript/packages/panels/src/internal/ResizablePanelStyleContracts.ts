@@ -5,6 +5,7 @@ export type ResizablePanelStyleAnchorSide = 'left'|'right'|'top'|'bottom';
 export type ResizablePanelStyleGeometryInput = {
   x: number; y: number; width: number; height: number;
   zIndex?: number;
+  hostMode?: 'viewport' | 'container';
 };
 
 export type ResizablePanelStyleStateInput = {

@@ -12,6 +12,7 @@ export function useResizablePanelViewModel({
   width,
   height,
   zIndex,
+  hostMode,
   isDragging,
   isResizing,
   isAnchored,
@@ -41,6 +42,7 @@ export function useResizablePanelViewModel({
             width,
             height,
             zIndex,
+            hostMode,
             isDragging,
             isResizing,
             isAnchored,
@@ -58,6 +60,7 @@ export function useResizablePanelViewModel({
             x,
             y,
             zIndex,
+            hostMode,
           ]);
 
   const resolvedStageElements = useMemo(

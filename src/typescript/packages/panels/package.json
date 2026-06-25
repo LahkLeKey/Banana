@@ -8,14 +8,18 @@
   "files": [
     "src",
     "dist",
-    "README.md"
+    "README.md",
+    "INTERACTIONS.md",
+    "wiki"
   ],
   "exports": {
     ".": "./src/index.ts",
     "./panel-base": "./src/panel-base.ts",
     "./panel-overlay": "./src/panel-overlay.ts",
+    "./panel-stage": "./src/panel-stage.tsx",
     "./panel-pipeline": "./src/panel-pipeline.ts",
     "./panel-variant-pipeline": "./src/panel-variant-pipeline.ts",
+    "./theme-pipeline": "./src/theme-pipeline.ts",
     "./dock-layout-store": "./src/dock-layout-store.ts",
     "./resizable-panel": "./src/resizable-panel.ts",
     "./resizable-dock-grid": "./src/resizable-dock-grid.ts",
@@ -51,6 +55,9 @@
     "storybook": "^8.2.6",
     "@storybook/react-vite": "^8.2.6",
     "@storybook/addon-essentials": "^8.2.6",
-    "vite": "^5.4.0"
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "vite": "^5.4.0",
+    "@storybook/react": "^8.2.6"
   }
 }

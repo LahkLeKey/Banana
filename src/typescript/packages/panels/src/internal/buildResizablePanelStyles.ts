@@ -8,6 +8,7 @@ export function buildResizablePanelStyles({
   width,
   height,
   zIndex,
+  hostMode = 'viewport',
   isDragging,
   isResizing,
   isAnchored,
@@ -20,11 +21,11 @@ export function buildResizablePanelStyles({
     flex: '0 0 auto',
     display: 'flex',
     flexDirection: 'column',
-    background: 'rgba(7, 19, 34, 0.85)',
-    border: '1px solid rgba(20, 184, 166, 0.2)',
+    background: 'rgb(var(--banana-panel-surface-rgb, 7 19 34) / 0.85)',
+    border: '1px solid rgb(var(--banana-panel-border-rgb, 20 184 166) / 0.45)',
     borderRadius: '6px',
     overflow: 'hidden',
-    position: 'fixed',
+    position: hostMode === 'container' ? 'absolute' : 'fixed',
     left: 0,
     top: 0,
     transform: `translate3d(${x}px, ${y}px, 0)`,
@@ -36,7 +37,7 @@ export function buildResizablePanelStyles({
     boxShadow: isAnchored ?
         `0 0 0 1px ${
             groupColor ??
-            'rgba(34, 211, 238, 0.65)'}, 0 12px 24px rgba(8, 47, 73, 0.35)` :
+            'var(--banana-panel-accent, #22d3ee)'}, 0 12px 24px rgba(8, 47, 73, 0.35)` :
         undefined,
   };
 
@@ -45,10 +46,11 @@ export function buildResizablePanelStyles({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '8px 12px',
-    borderBottom: '1px solid rgba(20, 184, 166, 0.15)',
+    borderBottom:
+        '1px solid rgb(var(--banana-panel-border-rgb, 20 184 166) / 0.35)',
     fontSize: '12px',
     fontWeight: 600,
-    color: 'rgba(226, 232, 240, 0.7)',
+    color: 'rgb(var(--banana-panel-content-rgb, 226 232 240) / 0.78)',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
     cursor: isDragging ? 'grabbing' : 'grab',
@@ -61,7 +63,7 @@ export function buildResizablePanelStyles({
     minHeight: 0,
     padding: '8px',
     fontSize: '12px',
-    color: 'rgba(226, 232, 240, 0.8)',
+    color: 'rgb(var(--banana-panel-content-rgb, 226 232 240) / 0.88)',
   };
 
   const resizeHandleStyle: CSSProperties = {
@@ -123,7 +125,8 @@ export function buildResizablePanelStyles({
   const unlinkButtonStyle: CSSProperties = {
     border: 'none',
     background: 'none',
-    color: isAnchored ? '#67e8f9' : 'rgba(148, 163, 184, 0.75)',
+    color: isAnchored ? 'var(--banana-panel-accent, #22d3ee)' :
+                        'rgba(148, 163, 184, 0.75)',
     cursor: 'pointer',
     padding: '2px 4px',
     display: 'inline-flex',
@@ -136,7 +139,9 @@ export function buildResizablePanelStyles({
   const lockResizeButtonStyle: CSSProperties = {
     border: 'none',
     background: 'none',
-    color: isGroupResizeLocked ? '#a7f3d0' : 'rgba(148, 163, 184, 0.75)',
+    color: isGroupResizeLocked ?
+        'rgb(var(--banana-panel-content-rgb, 226 232 240) / 0.95)' :
+        'rgba(148, 163, 184, 0.75)',
     cursor: 'pointer',
     padding: '2px 4px',
     display: 'inline-flex',
@@ -153,25 +158,26 @@ export function buildResizablePanelStyles({
     marginLeft: 8,
   };
 
-  const sideBadgeStyle =
-      (side: ResizablePanelStyleAnchorSide): CSSProperties => {
-        void side;
-        return {
-          minWidth: 16,
-          height: 16,
-          borderRadius: 999,
-          border: `1px solid ${groupColor ?? 'rgba(56, 189, 248, 0.6)'}`,
-          background: 'rgba(8, 47, 73, 0.35)',
-          color: '#bae6fd',
-          fontSize: 9,
-          fontWeight: 700,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 4px',
-          textTransform: 'uppercase',
-        };
-      };
+  const sideBadgeStyle = (side:
+                              ResizablePanelStyleAnchorSide): CSSProperties => {
+    void side;
+    return {
+      minWidth: 16,
+      height: 16,
+      borderRadius: 999,
+      border:
+          `1px solid ${groupColor ?? 'var(--banana-panel-accent, #22d3ee)'}`,
+      background: 'rgba(8, 47, 73, 0.35)',
+      color: 'rgb(var(--banana-panel-content-rgb, 226 232 240) / 0.92)',
+      fontSize: 9,
+      fontWeight: 700,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '0 4px',
+      textTransform: 'uppercase',
+    };
+  };
 
   return {
     containerStyle,

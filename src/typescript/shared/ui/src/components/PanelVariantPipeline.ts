@@ -1,6 +1,6 @@
-export {buildPanelBehaviorPipeline} from '../../../../packages/panels/src/panel-variant-pipeline';
+export {buildPanelBehaviorPipeline} from '@banana/panels/panel-variant-pipeline';
 export type {
   PanelBehaviorLayer,
   PanelBehaviorOptions,
   PanelBehaviorPipeline,
-} from '../../../../packages/panels/src/panel-variant-pipeline';
+} from '@banana/panels/panel-variant-pipeline';

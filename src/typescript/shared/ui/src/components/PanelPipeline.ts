@@ -1,2 +1,2 @@
-export {composePanelStages} from '../../../../packages/panels/src/panel-pipeline';
-export type {PanelStageStyles} from '../../../../packages/panels/src/panel-pipeline';
+export {composePanelStages} from '@banana/panels/panel-pipeline';
+export type {PanelStageStyles} from '@banana/panels/panel-pipeline';

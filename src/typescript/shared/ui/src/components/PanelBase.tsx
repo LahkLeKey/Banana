@@ -1,8 +1,8 @@
-export {PanelBase} from '../../../../packages/panels/src/panel-base';
+export {PanelBase} from '@banana/panels/panel-base';
 export type {
   PanelBaseProps,
   PanelBaseStage,
   PanelBaseStageElementProps,
   PanelBaseStageElements,
   PanelIntrinsicElement,
-} from '../../../../packages/panels/src/panel-base';
+} from '@banana/panels/panel-base';

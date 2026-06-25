@@ -12,10 +12,12 @@ type PanelResizeHandler =
 
 export type ResizablePanelInteractionIdentityInput = {
   id: string;
+  interactionScope?: string;
 };
 
 export type ResizablePanelInteractionGeometryInput = {
   x: number; y: number; width: number; height: number;
+  hostMode?: 'viewport' | 'container';
 };
 
 export type ResizablePanelInteractionConstraintsInput = {

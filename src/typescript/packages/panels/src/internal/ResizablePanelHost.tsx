@@ -7,15 +7,16 @@ type ResizablePanelHostProps = {
     isDragging: boolean;
     ghostRect: DragGhostRect | null;
     zIndex?: number;
+    hostMode?: 'viewport' | 'container';
     children: ReactNode;
 };
 
 export function ResizablePanelHost(
-    { isDragging, ghostRect, zIndex, children }: ResizablePanelHostProps) {
+    { isDragging, ghostRect, zIndex, hostMode = 'viewport', children }: ResizablePanelHostProps) {
     return (
         <div
             data-resizable-panel-host="true"
-            style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
+            style={{ position: hostMode === 'container' ? 'absolute' : 'fixed', inset: 0, pointerEvents: 'none' }}>
             {ghostRect && isDragging ?
                 <DragGhost ghostRect={ghostRect} zIndex={zIndex} /> :
                 null}

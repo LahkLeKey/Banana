@@ -11,6 +11,9 @@
 - `run-dx12-playtest-suites.sh`: launches the DX12 POC with polished demo-scene assets for interactive playtests or autotest sweeps (`playtest`, `showcase`, `metro`, `corridor`, `continent`, `all`, `features`) with optional `--feature <name>` overrides.
 - `refresh-coherent-world-evidence.sh`: refreshes 031 evidence artifacts by capturing feedback-loop suite output logs, optionally forwarding `BANANA_NATIVE_FEEDBACK_SCRIPT_DIR` into suite runs.
 - `refresh-coherent-world-api-baselines.sh`: refreshes 031 API unit/integration evidence artifacts.
+- `panels-storybook-build.sh`: builds static Storybook assets for `@banana/panels` into `artifacts/storybook/panels-static`.
+- `panels-storybook-local.sh`: builds and serves static `@banana/panels` Storybook locally (default `http://localhost:6010`).
+- `panels-storybook-deploy.sh`: deploys static `@banana/panels` Storybook to `panels.banana.engineer` over SSH (`rsync` with `scp` fallback).
 
 Coverage examples:
 - `bash scripts/run-native-coverage.sh`
@@ -22,6 +25,11 @@ Playtest examples:
 - `bash scripts/run-dx12-playtest-suites.sh --suite playtest` (interactive playtest with telemetry + auto-target defaults)
 - `bash scripts/run-dx12-playtest-suites.sh --suite playtest --autotest 6` (autotest sweep)
 - `bash scripts/run-dx12-playtest-suites.sh --suite features --autotest 6` (autotest sweep for all war-sentience feature playtests)
+
+Panels Storybook examples:
+- `bash scripts/panels-storybook-build.sh`
+- `bash scripts/panels-storybook-local.sh --port 6010`
+- `PANELS_STORYBOOK_DEPLOY_USER=<ssh-user> bash scripts/panels-storybook-deploy.sh`
 
 Notes:
 - Autotest runs with auto-target enabled inject a move target automatically by setting `BANANA_DX12_POC_AUTOTEST_ALLOW_TARGET=1`.

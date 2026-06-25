@@ -1,6 +1,6 @@
-export {PanelOverlay} from '../../../../packages/panels/src/panel-overlay';
+export {PanelOverlay} from '@banana/panels/panel-overlay';
 export type {
   PanelOverlayChrome,
   PanelOverlayPipelineStage,
   PanelOverlayProps,
-} from '../../../../packages/panels/src/panel-overlay';
+} from '@banana/panels/panel-overlay';

@@ -3,10 +3,13 @@ const panelTailwindPreset = {
     extend: {
       colors: {
         panel: {
-          surface: 'rgba(7, 19, 34, 0.85)',
-          border: 'rgba(20, 184, 166, 0.25)',
-          accent: '#22d3ee',
-          content: 'rgba(226, 232, 240, 0.85)',
+          surface:
+              'rgb(var(--banana-panel-surface-rgb, 7 19 34) / <alpha-value>)',
+          border:
+              'rgb(var(--banana-panel-border-rgb, 20 184 166) / <alpha-value>)',
+          accent: 'var(--banana-panel-accent, #22d3ee)',
+          content:
+              'rgb(var(--banana-panel-content-rgb, 226 232 240) / <alpha-value>)',
         },
       },
       boxShadow: {

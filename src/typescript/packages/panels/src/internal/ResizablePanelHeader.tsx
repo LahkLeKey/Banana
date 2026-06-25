@@ -79,11 +79,11 @@ function PanelHeaderActions({
                         border: 'none',
                         color: 'rgba(148, 163, 184, 0.8)',
                         cursor: 'pointer',
-                        padding: '2px 4px',
+                        padding: '4px 6px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '11px',
+                        fontSize: '14px',
                         lineHeight: 1,
                     }}
                     title="Expand panel">
@@ -98,10 +98,11 @@ function PanelHeaderActions({
                         border: 'none',
                         color: 'rgba(226, 232, 240, 0.5)',
                         cursor: 'pointer',
-                        padding: '2px',
+                        padding: '4px 6px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        fontSize: '14px',
                     }}
                     title="Collapse panel">
                     ×

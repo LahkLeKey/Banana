@@ -3,6 +3,7 @@ import {type ResizablePanelStageElementProps, type ResizablePanelStageElements} 
 export type ResizablePanelViewModelGeometryInput = {
   x: number; y: number; width: number; height: number;
   zIndex?: number;
+  hostMode?: 'viewport' | 'container';
 };
 
 export type ResizablePanelViewModelStateInput = {

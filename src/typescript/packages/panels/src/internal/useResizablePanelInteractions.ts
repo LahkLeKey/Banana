@@ -9,10 +9,12 @@ export {type ResizablePanelInteractionCallbacks, type ResizablePanelInteractionC
 
 export function useResizablePanelInteractions({
   id,
+  interactionScope,
   x,
   y,
   width,
   height,
+  hostMode,
   minWidth,
   minHeight,
   groupSize,
@@ -36,10 +38,12 @@ export function useResizablePanelInteractions({
   const {isDragging, ghostRect, handleHeaderMouseDown, clearDragState} =
       usePanelDragSnap({
         id,
+        interactionScope,
         x,
         y,
         width,
         height,
+        hostMode,
         groupSize,
         snapIgnoreIds,
         containerRef,
@@ -53,6 +57,7 @@ export function useResizablePanelInteractions({
     y,
     width,
     height,
+    hostMode,
     minWidth,
     minHeight,
     containerRef,

@@ -1,4 +1,4 @@
-export {ResizablePanel} from '../../../../packages/panels/src/resizable-panel';
+export {ResizablePanel} from '@banana/panels/resizable-panel';
 export type {
   AnchorSide,
   ResizablePanelDockingProps,
@@ -7,4 +7,4 @@ export type {
   ResizablePanelLayoutProps,
   ResizablePanelProps,
   ResizablePanelStageOverrides,
-} from '../../../../packages/panels/src/resizable-panel';
+} from '@banana/panels/resizable-panel';

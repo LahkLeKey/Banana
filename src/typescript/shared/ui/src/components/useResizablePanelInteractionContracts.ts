@@ -6,4 +6,4 @@ export type {
   ResizablePanelInteractionIdentityInput,
   ResizablePanelInteractionRefsInput,
   UseResizablePanelInteractionsOptions,
-} from '../../../../packages/panels/src/interactions';
+} from '@banana/panels/interactions';

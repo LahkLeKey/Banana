@@ -28,6 +28,8 @@ export type ResizablePanelLayoutProps = {
     readonly y: number;
     readonly width: number;
     readonly height: number;
+    readonly hostMode?: 'viewport' | 'container';
+    readonly interactionScope?: string;
     readonly minWidth?: number;
     readonly minHeight?: number;
     readonly zIndex?: number;
@@ -75,6 +77,8 @@ export function ResizablePanel({
     y,
     width,
     height,
+    hostMode = 'viewport',
+    interactionScope,
     minWidth = 280,
     minHeight = 200,
     onMove,
@@ -114,6 +118,8 @@ export function ResizablePanel({
         y,
         width,
         height,
+        hostMode,
+        interactionScope,
         minWidth,
         minHeight,
         groupSize,
@@ -139,6 +145,7 @@ export function ResizablePanel({
         width,
         height,
         zIndex,
+        hostMode,
         isDragging,
         isResizing: Boolean(activeResize),
         isAnchored,
@@ -212,11 +219,12 @@ export function ResizablePanel({
     }
 
     return (
-        <ResizablePanelHost isDragging={isDragging} ghostRect={ghostRect} zIndex={zIndex}>
+        <ResizablePanelHost isDragging={isDragging} ghostRect={ghostRect} zIndex={zIndex} hostMode={hostMode}>
             <ContainerElement
                 ref={setContainerRef}
                 data-resizable-panel="true"
                 data-panel-id={id}
+                data-panel-scope={interactionScope}
                 data-panel-behavior-pipeline={behaviorPipeline.layers.join('>')}
                 {...containerStageProps}
             >

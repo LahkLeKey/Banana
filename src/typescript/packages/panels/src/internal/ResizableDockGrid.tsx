@@ -42,13 +42,28 @@ export type ResizableDockGridCallbacks = {
     readonly onPanelClose?: (panelId: string) => void;
 };
 
-export type ResizableDockGridProps = ResizableDockGridCallbacks & {
-    readonly entries: ResizableDockEntry[];
+export type ResizableDockInitialAnchorLink = {
+    readonly sourceId: string;
+    readonly targetId: string;
+    readonly sourceSide: AnchorSide;
 };
 
-export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: ResizableDockGridProps) {
+export type ResizableDockGridProps = ResizableDockGridCallbacks & {
+    readonly entries: ResizableDockEntry[];
+    readonly hostMode?: 'viewport' | 'container';
+    readonly initialAnchorLinks?: readonly ResizableDockInitialAnchorLink[];
+};
+
+export function ResizableDockGrid({
+    entries,
+    onPanelSizeChange,
+    onPanelClose,
+    hostMode = 'viewport',
+    initialAnchorLinks = [],
+}: ResizableDockGridProps) {
     const layoutIdRef = useRef(`dock-${Math.random().toString(36).slice(2)}`);
     const layoutId = layoutIdRef.current;
+    const dockRootRef = useRef<HTMLDivElement>(null);
     const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
     const initializeLayout = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.initializeLayout);
     const focusPanelInStore = useResizableDockLayoutStore((state: DockLayoutStoreState) => state.focusPanel);
@@ -69,9 +84,15 @@ export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: 
         }));
 
         const initialize = () => {
+            const bounds = hostMode === 'container'
+                ? dockRootRef.current?.getBoundingClientRect()
+                : null;
             initializeLayout(layoutId, toSeeds(), {
-                width: window.innerWidth,
-                height: window.innerHeight,
+                width: bounds?.width ?? window.innerWidth,
+                height: bounds?.height ?? window.innerHeight,
+            });
+            initialAnchorLinks.forEach(({ sourceId, targetId, sourceSide }) => {
+                addAnchorLinkToStore(layoutId, sourceId, targetId, sourceSide);
             });
         };
 
@@ -80,7 +101,7 @@ export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: 
         return () => {
             window.removeEventListener('resize', initialize);
         };
-    }, [entries, initializeLayout, layoutId]);
+    }, [addAnchorLinkToStore, entries, hostMode, initialAnchorLinks, initializeLayout, layoutId]);
 
     const focusPanel = (panelId: string) => {
         focusPanelInStore(layoutId, panelId);
@@ -178,7 +199,7 @@ export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: 
 
     return (
         <>
-            <div style={dockStyle}>
+            <div ref={dockRootRef} style={dockStyle}>
                 {visibleEntries.map((entry) => {
                     const panel = layout?.panels[entry.id];
                     if (!panel) {
@@ -196,6 +217,8 @@ export function ResizableDockGrid({ entries, onPanelSizeChange, onPanelClose }: 
                             key={entry.id}
                             id={entry.id}
                             title={entry.title}
+                            hostMode={hostMode}
+                            interactionScope={layoutId}
                             x={panel.x}
                             y={panel.y}
                             width={panel.width}

@@ -1,1 +1,1 @@
-export {ResizablePanelHost} from '../../../../packages/panels/src/host';
+export {ResizablePanelHost} from '@banana/panels/host';

@@ -24,7 +24,8 @@ export type DragGhostRect = {
 
 type UsePanelDragSnapOptions = {
   id: string; x: number; y: number; width: number; height: number;
-  groupSize: number;
+  interactionScope?: string;
+  hostMode?: 'viewport' | 'container'; groupSize: number;
   snapIgnoreIds: readonly string[];
   containerRef: RefObject<HTMLElement|null>;
   moveDispatch: Pick<
@@ -47,6 +48,8 @@ export function usePanelDragSnap({
   y,
   width,
   height,
+  interactionScope,
+  hostMode = 'viewport',
   groupSize,
   snapIgnoreIds,
   containerRef,
@@ -64,35 +67,61 @@ export function usePanelDragSnap({
   const snapReleaseThreshold = 30;
   const snapActivationThreshold = 4;
 
+  const getBounds = () => {
+    const hostRect =
+        containerRef.current?.parentElement?.getBoundingClientRect();
+    if (hostMode === 'container' && hostRect) {
+      return hostRect;
+    }
+
+    return {
+      left: 0,
+      top: 0,
+      right: window.innerWidth,
+      bottom: window.innerHeight,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  };
+
   const clampLeft = (left: number, panelWidth: number) => {
-    const maxLeft = Math.max(
-        viewportPadding, window.innerWidth - viewportPadding - panelWidth);
-    return Math.max(viewportPadding, Math.min(maxLeft, left));
+    const bounds = getBounds();
+    const minLeft = bounds.left + viewportPadding;
+    const maxLeft =
+        Math.max(minLeft, bounds.right - viewportPadding - panelWidth);
+    return Math.max(minLeft, Math.min(maxLeft, left));
   };
 
   const clampTop = (top: number, panelHeight: number) => {
-    const maxTop = Math.max(
-        viewportPadding, window.innerHeight - viewportPadding - panelHeight);
-    return Math.max(viewportPadding, Math.min(maxTop, top));
+    const bounds = getBounds();
+    const minTop = bounds.top + viewportPadding;
+    const maxTop =
+        Math.max(minTop, bounds.bottom - viewportPadding - panelHeight);
+    return Math.max(minTop, Math.min(maxTop, top));
   };
 
   const resolveSnapCandidate =
       (rect: {left: number; top: number; width: number; height: number},
        preferredAxis: 'horizontal'|'vertical',
        previousCandidate: SnapCandidate|null): SnapCandidate|null => {
-        const candidates = Array
-                               .from(document.querySelectorAll<HTMLElement>(
-                                   '[data-resizable-panel="true"]'))
-                               .filter((element) => {
-                                 const panelId = element.dataset.panelId;
-                                 if (!panelId) {
-                                   return false;
-                                 }
-                                 if (panelId === id) {
-                                   return false;
-                                 }
-                                 return !snapIgnoreIds.includes(panelId);
-                               });
+        const candidates =
+            Array
+                .from(document.querySelectorAll<HTMLElement>(
+                    '[data-resizable-panel="true"]'))
+                .filter((element) => {
+                  const panelId = element.dataset.panelId;
+                  const panelScope = element.dataset.panelScope;
+                  if (!panelId) {
+                    return false;
+                  }
+                  if (panelId === id) {
+                    return false;
+                  }
+                  if ((interactionScope ?? '') !== (panelScope ?? '')) {
+                    return false;
+                  }
+                  return !snapIgnoreIds.includes(panelId);
+                });
 
         let best: (SnapCandidate&{score: number})|null = null;
         let sticky: SnapCandidate|null = null;

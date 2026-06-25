@@ -41,3 +41,4 @@ nul
 /artifacts/native/coverage-ci
 /artifacts/native/coverage-ci-docker
 /artifacts/npm-packages
+/artifacts/storybook/panels-static

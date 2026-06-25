@@ -1,1 +1,1 @@
-export {assignPanelContainerRef} from '../../../../packages/panels/src/refs';
+export {assignPanelContainerRef} from '@banana/panels/refs';

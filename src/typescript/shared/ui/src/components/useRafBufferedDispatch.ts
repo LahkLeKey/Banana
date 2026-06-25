@@ -1,4 +1,4 @@
 export {
   useRafBufferedDispatch,
   type RafBufferedDispatch,
-} from '../../../../packages/panels/src/raf-buffered-dispatch';
+} from '@banana/panels/raf-buffered-dispatch';

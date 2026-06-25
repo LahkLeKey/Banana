@@ -1,1 +1,1 @@
-export {usePanelResize} from '../../../../packages/panels/src/resize';
+export {usePanelResize} from '@banana/panels/resize';

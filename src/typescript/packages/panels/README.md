@@ -1,95 +1,165 @@
 # @banana/panels
 
-Reusable Banana panel primitives packaged as a standalone workspace library.
+Composable React panels for container-scoped workspaces, docked operator consoles, and resizable multi-panel application surfaces.
+
+## What This Package Is For
+
+Use `@banana/panels` when your product needs one or more of these patterns:
+
+- draggable and resizable workspace panels
+- docked context surfaces anchored to layout corners
+- container-scoped panel systems inside application screens
+- modal overlays that match the same panel design language
+- runtime theming for panel chrome, gradients, typography, and status accents
 
 ## Install
 
 ```bash
-npm install @banana/panels
+npm install @banana/panels react react-dom
 ```
 
-## Entry Points
+## Get Started
 
-- `@banana/panels` full panel surface
+The most important integration pattern is:
+
+1. create a relatively positioned host element
+2. mount a `PanelStage` inside it
+3. render `ResizablePanel` and/or `ResizableDockGrid` with `hostMode="container"`
+
+```tsx
+import { PanelStage } from '@banana/panels';
+import { ResizablePanel } from '@banana/panels/resizable-panel';
+
+export function Example() {
+  return (
+    <div style={{ position: 'relative', minHeight: 560 }}>
+      <PanelStage label="Example workspace">
+        <ResizablePanel
+          id="example-panel"
+          title="Example Panel"
+          hostMode="container"
+          x={16}
+          y={16}
+          width={360}
+          height={240}
+          onMove={() => {}}
+          onResize={() => {}}
+          onFocus={() => {}}
+          onAnchorCommit={() => {}}
+        >
+          Container-scoped panel content.
+        </ResizablePanel>
+      </PanelStage>
+    </div>
+  );
+}
+```
+
+## Common Usage Scenarios
+
+### Free Panel Workspace
+
+Use this for builder UIs, control rooms, inspectors, and multi-pane editing surfaces.
+
+Core primitives:
+
+- `PanelStage`
+- `ResizablePanel`
+
+### Docked Context Surface
+
+Use this when panels should seed into corners and stay grouped as supporting context around a main task.
+
+Core primitives:
+
+- `PanelStage`
+- `ResizableDockGrid`
+
+### Modal or Interruptive Step
+
+Use this when a user needs a temporary overlay that still looks and behaves like the rest of the panel system.
+
+Core primitives:
+
+- `PanelOverlay`
+- `PanelBase`
+
+### Themeable Workspace
+
+Use this when consumers need runtime theming for product skins, branded workspaces, or scenario-based visual presets.
+
+Core primitives:
+
+- `theme-pipeline`
+- `tailwind/preset`
+
+## Storybook Surfaces
+
+### Themes
+
+Theme stories show runtime styling systems, visual codenames, and container-scoped panel layouts.
+
+### Interactions
+
+Interaction stories now live under `Panels / Interactions` and are organized around behavioral categories such as drag and snap, docking labels, dialog flows, closable panels, and cross-panel relationships.
+
+Interaction guide:
+
+- [INTERACTIONS.md](./INTERACTIONS.md)
+
+## Package Wiki
+
+Use the package wiki for component-by-component guidance.
+
+Wiki index:
+
+- [wiki/README.md](./wiki/README.md)
+
+Recommended reading order:
+
+1. [wiki/getting-started.md](./wiki/getting-started.md)
+2. [wiki/components/panel-stage.md](./wiki/components/panel-stage.md)
+3. [wiki/components/resizable-panel.md](./wiki/components/resizable-panel.md)
+4. [wiki/components/resizable-dock-grid.md](./wiki/components/resizable-dock-grid.md)
+5. [wiki/components/theme-pipeline.md](./wiki/components/theme-pipeline.md)
+6. [wiki/components/panel-overlay.md](./wiki/components/panel-overlay.md)
+7. [wiki/components/panel-base.md](./wiki/components/panel-base.md)
+8. [wiki/components/composition-and-behavior.md](./wiki/components/composition-and-behavior.md)
+
+## Public API Overview
+
+Main entrypoints developers typically need:
+
+- `@banana/panels`
+- `@banana/panels/panel-stage`
 - `@banana/panels/resizable-panel`
 - `@banana/panels/resizable-dock-grid`
-- `@banana/panels/chrome`
-- `@banana/panels/header`
-- `@banana/panels/host`
-- `@banana/panels/refs`
-- `@banana/panels/styles`
-- `@banana/panels/stage`
-- `@banana/panels/interactions`
-- `@banana/panels/view-model`
-- `@banana/panels/resize`
-- `@banana/panels/drag-snap`
-- `@banana/panels/raf-buffered-dispatch`
+- `@banana/panels/panel-base`
+- `@banana/panels/panel-overlay`
+- `@banana/panels/theme-pipeline`
+- `@banana/panels/tailwind/preset`
 
-## Monorepo Workspace
+Lower-level APIs are available for advanced integrations, but most consumers should start with the primitives above.
 
-This package is part of the `src/typescript` workspaces root so it can be versioned and published independently.
+## Maintainer Notes
 
-The current frontend in `src/typescript/shared/ui` consumes this package through thin compatibility wrappers while the implementation source lives in `src/typescript/packages/panels/src/internal`.
-
-From repository root, bootstrap workspaces with:
-
-```bash
-bun install
-```
-
-## Module Packages
-
-Module-level public wrapper packages live under `src/typescript/packages/panels/modules/*`.
-
-Each wrapper package:
-
-- re-exports one module from `@banana/panels`
-- has its own `tailwindcss` dependency for primitive orchestration
-- can be published independently
-
-## Standalone Package Environment
-
-This package ships with a local env template:
+Local Storybook:
 
 ```bash
 cp .env.example .env
-```
-
-The env file is package-local so this package can run Storybook independently from other workspaces.
-
-## Storybook
-
-Run Storybook from this package directory:
-
-```bash
 bun run storybook
 ```
 
-Build a static Storybook bundle:
+Static Storybook build:
 
 ```bash
 bun run build-storybook
 ```
 
-Default port is `6006`. To run multiple package Storybooks simultaneously, pass a custom port:
+Repository-root helper commands:
 
 ```bash
-bun run storybook -- -p 6010
+bun run storybook:panels:build
+bun run storybook:panels:local
+PANELS_STORYBOOK_DEPLOY_USER=<ssh-user> bun run storybook:panels:deploy
 ```
-
-## Release Automation
-
-- Pack all panel packages into tarballs:
-
-```bash
-bun run pack:panels
-```
-
-- Dry-run npm publish across all panel packages:
-
-```bash
-bun run publish:panels:dry-run
-```
-
-- CI workflow for packing/publishing:
-	- `.github/workflows/panels-packages-release.yml`
