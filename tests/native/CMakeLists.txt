@@ -2100,71 +2100,6 @@ target_include_directories(banana_runtime_engine_exports_core_abi_test PRIVATE
    ${BANANA_ENGINE_DIR}/runtime
 )
 
-add_executable(banana_win32_dx12_poc_continent_asset_registry_test
-   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/continent_asset_registry_test.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
-)
-
-add_test(NAME banana_win32_dx12_poc_continent_asset_registry_test
-   COMMAND banana_win32_dx12_poc_continent_asset_registry_test
-)
-
-target_include_directories(banana_win32_dx12_poc_continent_asset_registry_test PRIVATE
-   ${BANANA_ENGINE_DIR}
-   ${BANANA_ENGINE_DIR}/runtime
-)
-
-add_executable(banana_win32_dx12_poc_demo_scene_catalog_test
-   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene/demo_scene_catalog_test.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/demo_scene_catalog.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
-   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_domain.c
-   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_routes.c
-   ${BANANA_ENGINE_DIR}/runtime/engine/gameplay/model/gameplay_model_profile.c
-)
-
-add_test(NAME banana_win32_dx12_poc_demo_scene_catalog_test
-   COMMAND banana_win32_dx12_poc_demo_scene_catalog_test
-)
-
-target_include_directories(banana_win32_dx12_poc_demo_scene_catalog_test PRIVATE
-   ${BANANA_ENGINE_DIR}
-   ${BANANA_ENGINE_DIR}/runtime
-)
-
-add_executable(banana_win32_dx12_poc_scene_flow_test
-   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene_flow_test.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/scene_flow.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/demo_scene_catalog.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
-   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_domain.c
-   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_routes.c
-   ${BANANA_ENGINE_DIR}/runtime/engine/gameplay/model/gameplay_model_profile.c
-)
-
-add_test(NAME banana_win32_dx12_poc_scene_flow_test
-   COMMAND banana_win32_dx12_poc_scene_flow_test
-)
-
-target_include_directories(banana_win32_dx12_poc_scene_flow_test PRIVATE
-   ${BANANA_ENGINE_DIR}
-   ${BANANA_ENGINE_DIR}/runtime
-)
-
-add_executable(banana_win32_dx12_poc_scene_overlay_test
-   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene_overlay_test.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/overlay/scene_overlay.c
-)
-
-add_test(NAME banana_win32_dx12_poc_scene_overlay_test
-   COMMAND banana_win32_dx12_poc_scene_overlay_test
-)
-
-target_include_directories(banana_win32_dx12_poc_scene_overlay_test PRIVATE
-   ${BANANA_ENGINE_DIR}
-   ${BANANA_ENGINE_DIR}/runtime
-)
-
 set(BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS
 	banana_runtime_netcode_k3h4_assignment_family_test
 	banana_runtime_netcode_k3h4_orchestrator_test
@@ -2277,10 +2212,6 @@ set(BANANA_RUNTIME_NATIVE_CMOCKA_TARGETS
 	banana_runtime_backend_dx12_projection_policy_test
 	banana_runtime_engine_aux_abi_test
 	banana_runtime_engine_exports_core_abi_test
-	banana_win32_dx12_poc_continent_asset_registry_test
-	banana_win32_dx12_poc_demo_scene_catalog_test
-	banana_win32_dx12_poc_scene_flow_test
-	banana_win32_dx12_poc_scene_overlay_test
 	banana_runtime_engine_exports_war_metrics_test
 	banana_runtime_engine_exports_ui_economy_test
 	banana_runtime_engine_exports_input_player_test
@@ -2291,10 +2222,6 @@ set(BANANA_RUNTIME_NATIVE_CMOCKA_TARGETS
 	banana_runtime_backend_dx12_projection_policy_test
 	banana_runtime_engine_aux_abi_test
 	banana_runtime_engine_exports_core_abi_test
-	banana_win32_dx12_poc_continent_asset_registry_test
-	banana_win32_dx12_poc_demo_scene_catalog_test
-	banana_win32_dx12_poc_scene_flow_test
-	banana_win32_dx12_poc_scene_overlay_test
 	banana_world_signals_test
 	banana_runtime_render_material_test
 	banana_physics_collider_narrow_phase_test

@@ -1,7 +1,0 @@
-# 009 deterministic baseline parity
-timestamp=2026-05-25T07:07:36Z
-exe=banana_runtime_terrain_generation_revisit_parity_test
-runtime_terrain_generation_revisit_parity_test: pass
-exit=0
-exe=banana_runtime_terrain_unexplored_parity_test
-exit=0

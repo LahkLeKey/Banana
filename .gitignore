@@ -18,6 +18,18 @@ compile_commands.json
 # JavaScript and TypeScript outputs
 **/node_modules/
 **/dist/
+**/coverage/
+**/.next/
+**/.nuxt/
+**/.turbo/
+**/.cache/
+**/.vite/
+**/.nyc_output/
+**/storybook-static/
+**/test-results/
+**/playwright-report/
+**/*.tsbuildinfo
+**/.eslintcache
 *.log
 .env*
 coverage/
@@ -42,6 +54,7 @@ nul
 /artifacts/native/coverage-ci-docker
 /artifacts/npm-packages
 /artifacts/storybook/panels-static
+/artifacts/
 
 .vercel
 .env*.local

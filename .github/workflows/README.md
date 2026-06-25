@@ -10,7 +10,6 @@ triage one unified graph and one pass/fail summary.
 On-demand publishing workflows may exist for operational release packaging where
 no merge-gate signal is required:
 
-- `.github/workflows/steam-publish.yml`
 - `.github/workflows/k3h4-model-release.yml`
 
 ## Scaffolding Rules (DDD + SOLID)

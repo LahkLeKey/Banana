@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
-if [[ "${1:-}" != "postgres" ]]; then
+if [ "${1:-}" != "postgres" ]; then
   exec "$@"
 fi
 
@@ -14,7 +14,7 @@ mkdir -p "$PGDATA"
 chown -R postgres:postgres /var/lib/postgresql
 chmod 700 "$PGDATA" || true
 
-if [[ ! -s "$PGDATA/PG_VERSION" ]]; then
+if [ ! -s "$PGDATA/PG_VERSION" ]; then
   tmp_pw="$(mktemp)"
   trap 'rm -f "$tmp_pw"' EXIT
   printf '%s' "$POSTGRES_PASSWORD" > "$tmp_pw"

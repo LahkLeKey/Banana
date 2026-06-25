@@ -204,11 +204,7 @@ add_library(banana_engine_core STATIC
 
 set_target_properties(banana_engine_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-if(WIN32)
-  set(BANANA_RENDER_BACKEND_DEFAULT "dx12")
-else()
-  set(BANANA_RENDER_BACKEND_DEFAULT "glfw")
-endif()
+set(BANANA_RENDER_BACKEND_DEFAULT "glfw")
 
 set(BANANA_RENDER_BACKEND "${BANANA_RENDER_BACKEND_DEFAULT}" CACHE STRING
   "Native renderer backend: glfw or dx12")
@@ -303,38 +299,6 @@ if(TRUE)
     target_link_libraries(banana_engine_core PUBLIC m)
   endif()
 
-  if(WIN32)
-    add_executable(banana_engine_win32_dx12_poc
-      win32_dx12_poc/app/main.c
-      win32_dx12_poc/objective/objective_policy.c
-      win32_dx12_poc/overlay/scene_overlay.c
-      win32_dx12_poc/scene/continent_asset_registry.c
-      win32_dx12_poc/scene/demo_scene_catalog.c
-      win32_dx12_poc/scene/scene_flow.c
-    )
-
-    target_link_libraries(banana_engine_win32_dx12_poc PRIVATE
-      banana_engine_core
-    )
-
-    if(WIN32)
-      target_link_libraries(banana_engine_win32_dx12_poc PRIVATE msimg32)
-    endif()
-
-    target_include_directories(banana_engine_win32_dx12_poc PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-
-    if(MSVC)
-      target_compile_options(banana_engine_win32_dx12_poc PRIVATE /W3)
-      target_compile_definitions(banana_engine_win32_dx12_poc PRIVATE _CRT_SECURE_NO_WARNINGS)
-    else()
-      target_compile_options(banana_engine_win32_dx12_poc PRIVATE
-        -std=c11 -O2 -Wall -Wextra -Wpedantic
-      )
-    endif()
-  endif()
-
   find_package(OpenMP QUIET)
   if(OpenMP_C_FOUND)
     target_link_libraries(banana_engine_core PUBLIC OpenMP::OpenMP_C)
@@ -408,11 +372,6 @@ if(BUILD_TESTING)
   add_test(NAME banana_native_feedback_loop_factory_smoke
     COMMAND banana_native_feedback_loop_factory
       --script ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/scripts/warfront.dx12play
-      --non-interactive
-  )
-  add_test(NAME banana_native_feedback_loop_factory_dx12_scaffold_smoke
-    COMMAND banana_native_feedback_loop_factory
-      --script ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/scripts/dx12-client-scaffold.dx12play
       --non-interactive
   )
   add_test(NAME banana_native_feedback_loop_factory_negotiate_smoke

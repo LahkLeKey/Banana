@@ -1,6 +1,0 @@
-# Steam Launch Gating Quickstart Validation
-Mon, May 25, 2026  6:13:43 AM
-
-[launch-gate] completed tasks: 36
-[launch-gate] remaining tasks: 5
-[launch-gate] setup contracts validated

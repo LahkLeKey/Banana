@@ -1,6 +1,4 @@
-// Slice 026 -- single source of truth for design tokens.
-// Contract pinned by
-// .specify/specs/021-frontend-shared-design-system-spike/analysis/token-contract.md
+// Single source of truth for design tokens.
 // Web consumes via the generated tokens/web.css.
 
 export const tokens = {

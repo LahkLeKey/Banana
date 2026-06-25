@@ -84,12 +84,10 @@ RELEASE_ROOT="$ROOT_DIR/artifacts/native/k3h4/releases/$VERSION"
 BUNDLE_DIR="$RELEASE_ROOT/k3h4-model-$VERSION"
 
 rm -rf "$BUNDLE_DIR"
-mkdir -p "$BUNDLE_DIR/bin" "$BUNDLE_DIR/include" "$BUNDLE_DIR/contracts"
+mkdir -p "$BUNDLE_DIR/bin" "$BUNDLE_DIR/include"
 
 cp "$NATIVE_LIB" "$BUNDLE_DIR/bin/libbanana_native.so"
 cp "$ROOT_DIR/src/native/include/banana_native_v3.h" "$BUNDLE_DIR/include/banana_native_v3.h"
-cp "$ROOT_DIR/.specify/specs/035-native-k3h4/contracts/native-k3h4-abi.md" "$BUNDLE_DIR/contracts/native-k3h4-abi.md"
-cp "$ROOT_DIR/.specify/specs/035-native-k3h4/contracts/api-netcode-k3h4.md" "$BUNDLE_DIR/contracts/api-netcode-k3h4.md"
 
 COMMIT_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)"
 CREATED_UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -102,10 +100,7 @@ cat > "$BUNDLE_DIR/MODEL_METADATA.json" <<EOF
   "git_commit": "$COMMIT_SHA",
   "native_library": "bin/libbanana_native.so",
   "abi_header": "include/banana_native_v3.h",
-  "contracts": [
-    "contracts/native-k3h4-abi.md",
-    "contracts/api-netcode-k3h4.md"
-  ],
+  "contracts": [],
   "standalone": true
 }
 EOF
@@ -119,15 +114,13 @@ This bundle is a standalone packaging of the Banana K3H4 native model contract.
 
 - \`bin/libbanana_native.so\`
 - \`include/banana_native_v3.h\`
-- \`contracts/native-k3h4-abi.md\`
-- \`contracts/api-netcode-k3h4.md\`
 - \`MODEL_METADATA.json\`
 
 ## Quick Use
 
 1. Extract this archive on a Linux host.
 2. Set \`BANANA_NATIVE_PATH\` to the extracted \`bin/libbanana_native.so\` path.
-3. Keep the ABI header and contract docs paired with this exact bundle version.
+3. Keep the ABI header paired with this exact bundle version.
 EOF
 
 ARCHIVE_PATH="$RELEASE_ROOT/k3h4-model-$VERSION.tar.gz"

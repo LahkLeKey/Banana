@@ -1,4 +1,0 @@
-[neon-connectivity] 2026-05-24T20:40:46Z
-database-url=missing
-status=not-run
-reason=no-neon-database-env-provided
