@@ -26,6 +26,8 @@ Production Storybook demo for the npm package:
 
 - https://panels.banana.engineer/
 
+- <img width="2559" height="968" alt="image" src="https://github.com/user-attachments/assets/41d13e6f-a9be-4f46-8233-f7d0b336fa87" />
+
 Direct interaction demo route:
 
 - https://panels.banana.engineer/?path=/story/panels-interactions-docking-labels--default
