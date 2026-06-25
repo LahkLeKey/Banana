@@ -21,7 +21,7 @@ export function useRafBufferedDispatch<T>(dispatch?: (payload: T) => void):
     rafRef.current = window.requestAnimationFrame(() => {
       rafRef.current = null;
       const nextPayload = pendingRef.current;
-      if (!nextPayload) {
+      if (nextPayload === null) {
         return;
       }
 
