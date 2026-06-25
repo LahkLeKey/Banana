@@ -4,6 +4,8 @@ Banana is a multi-language monorepo with native runtime systems, TypeScript APIs
 
 https://banana.engineer/
 
+<img width="2557" height="1270" alt="image" src="https://github.com/user-attachments/assets/7d60c581-75d4-4137-a03f-4888be440f94" />
+
 ## Domains
 
 - Native engine and runtime: `src/native`
