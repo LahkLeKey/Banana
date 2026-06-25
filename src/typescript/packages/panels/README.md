@@ -2,6 +2,8 @@
 
 Composable React panels for container-scoped workspaces, docked operator consoles, and resizable multi-panel application surfaces.
 
+<img width="2557" height="1270" alt="image" src="https://github.com/user-attachments/assets/90757942-4b17-426c-989b-73942bf01d92" />
+
 ## What This Package Is For
 
 Use `banana-panels` when your product needs one or more of these patterns:
