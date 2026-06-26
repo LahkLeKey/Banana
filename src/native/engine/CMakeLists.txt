@@ -135,7 +135,6 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/netcode/model/netcode_model.c
   runtime/netcode/reward/netcode_reward.c
   runtime/netcode/link/netcode_link.c
-  runtime/netcode/vector/netcode_fixed_point.c
   runtime/netcode/vector/netcode_vector.c
   runtime/netcode/contract/netcode_contract.c
   runtime/abi/netcode/netcode_abi.c

@@ -42,5 +42,13 @@ banana_k3h4_add_source_if_exists("src/runtime/netcode/k3h4/netcode_k3h4_export.c
 # Runtime vector bridge
 banana_k3h4_add_source_if_exists("src/runtime/netcode/vector/netcode_k3h4.c")
 
+# Keep fixed-point math with the extracted k3h4 core so static-link order on
+# Linux always resolves runtime_netcode_q16_* symbols for k3h4 call sites.
+set(_banana_k3h4_fixed_point_src
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../../src/native/engine/runtime/netcode/vector/netcode_fixed_point.c")
+if(EXISTS "${_banana_k3h4_fixed_point_src}")
+  target_sources(banana_k3h4_core PRIVATE "${_banana_k3h4_fixed_point_src}")
+endif()
+
 # Test targets are currently defined in tests/native/CMakeLists.txt.
 # Keep this module focused on core library wiring during migration.
