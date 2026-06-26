@@ -5,8 +5,39 @@ This package scaffolds the root-level Banana CLI under `cli/*` with K3H4-focused
 Current implementation status:
 
 - command router is implemented
-- `k3h4` subcommands are scaffolded stubs: sample, run, explain, export, doctor
+- `k3h4` subcommands are scaffolded: sample, run, explain, export
+- `k3h4 doctor` runs read-only preflight diagnostics for Python, native ABI, and schema checks
 - native-direct execution is planned for follow-up stories
+
+## Doctor preflight checks
+
+`banana k3h4 doctor` validates:
+
+- Python runtime compatibility (`>=3.10`)
+- native library resolution chain:
+	1. `--native-lib`
+	2. `BANANA_NATIVE_PATH`
+	3. autodiscovery under `out/v3-native`, `out/native`, then `out`
+- native ABI handshake (`banana_native_v3_abi_version`, `banana_native_v3_ping`)
+- canonical schema file presence/version (`src/typescript/api/coverage-denominator.json`, `schema_version=1`)
+
+On failures, strict mode emits JSON error envelopes to stderr (`error_code`, `message`, `field_path`) and exits non-zero.
+
+Linux is the V1 support baseline. Non-Linux platforms are reported as experimental.
+
+### Golden examples
+
+From repo root:
+
+```bash
+python -m banana_cli k3h4 doctor
+```
+
+With explicit native library override:
+
+```bash
+python -m banana_cli k3h4 doctor --native-lib out/v3-native/Debug/banana_native.dll
+```
 
 ## Local usage (no install)
 
@@ -15,6 +46,7 @@ From `cli/banana`:
 ```bash
 python -m banana_cli --help
 python -m banana_cli k3h4 --help
+python -m banana_cli k3h4 doctor --help
 ```
 
 ## Install editable script entrypoint
