@@ -125,7 +125,7 @@ jobs:
 
       - name: Install shared UI dependencies
         run: bun install --frozen-lockfile
-        working-directory: src/typescript/shared/ui
+        working-directory: src/typescript
 
       - name: UI smoke import
         run: bun -e 'import "./src/typescript/shared/ui/src/index.ts"; console.log("ui-types-ok");'
