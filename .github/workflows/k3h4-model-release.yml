@@ -35,8 +35,8 @@ jobs:
       - name: Configure native build
         run: cmake -S src/native -B out/v3-native -G Ninja -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build native library
-        run: cmake --build out/v3-native --target banana_native --parallel
+      - name: Build native targets (library + tests)
+        run: cmake --build out/v3-native --parallel
 
       - name: Run native tests
         run: ctest --test-dir out/v3-native --output-on-failure
