@@ -7,7 +7,8 @@ Current implementation status:
 - command router is implemented
 - `k3h4 sample` emits deterministic canonical JSON datasets (`schema_version=1`)
 - `k3h4 run` executes native-direct K3H4 pipeline via `ctypes` and canonical stdin JSON
-- `k3h4` remaining subcommands are scaffolded: explain, export
+- `k3h4 explain` interprets run output with field-referenced analysis records
+- `k3h4` remaining subcommands are scaffolded: export
 - `k3h4 doctor` runs read-only preflight diagnostics for Python, native ABI, and schema checks
 - native-direct execution is planned for follow-up stories
 
@@ -74,6 +75,31 @@ python -m banana_cli k3h4 sample --seed 7 --count 2 --dims 16 --preset baseline 
 python -m banana_cli k3h4 run --input-file sample.json --native-lib out/v3-native/Debug/banana_native.dll
 ```
 
+## Explain interpretation
+
+`banana k3h4 explain` transforms run output into concrete, field-referenced interpretation records.
+
+Input contract:
+
+- Primary path: run output from stdin (`sample | run | explain`)
+- Optional path: `--input-file`
+- Strict validation defaults to on and returns non-zero on invalid input
+
+Coverage of explanations:
+
+- convergence and observability fields
+- radius state interpretation
+- weighted assignment validity/score interpretation
+- spectral proxy state/frequency interpretation
+
+Golden explain example:
+
+```bash
+python -m banana_cli k3h4 sample --seed 11 --count 1 --dims 16 --preset baseline \
+	| python -m banana_cli k3h4 run --native-lib out/v3-native/Debug/banana_native.dll \
+	| python -m banana_cli k3h4 explain
+```
+
 ## Doctor preflight checks
 
 `banana k3h4 doctor` validates:
@@ -113,6 +139,7 @@ python -m banana_cli --help
 python -m banana_cli k3h4 --help
 python -m banana_cli k3h4 sample --help
 python -m banana_cli k3h4 run --help
+python -m banana_cli k3h4 explain --help
 python -m banana_cli k3h4 doctor --help
 ```
 
