@@ -1,6 +1,6 @@
 #include "ai/perception.h"
 #include "world/world.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_perception_query_handles_missing_world(void **state)
 {

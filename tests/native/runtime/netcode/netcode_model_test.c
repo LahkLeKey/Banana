@@ -1,6 +1,6 @@
 #include "runtime/abi/netcode/netcode_abi.h"
 #include "runtime/netcode/model/netcode_model.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_netcode_model(void **state)
 {

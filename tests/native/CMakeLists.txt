@@ -1,6 +1,14 @@
 # Native test extensions are wired by engine CMake includes.
 
 set(BANANA_ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../src/native/engine")
+set(BANANA_K3H4_TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/../../modules/k3h4/native/tests")
+set(BANANA_K3H4_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/../../modules/k3h4/native/src")
+
+include_directories(
+	${CMAKE_CURRENT_LIST_DIR}
+	${BANANA_K3H4_SRC_DIR}
+	${CMAKE_CURRENT_LIST_DIR}/../../modules/k3h4/native/include
+)
 
 option(BANANA_ENABLE_CMOCKA_TESTS "Enable CMocka-backed native tests" OFF)
 
@@ -76,7 +84,7 @@ add_test(NAME banana_runtime_netcode_model_test
 )
 
 add_executable(banana_runtime_netcode_k3h4_determinism_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_determinism_test.c
+	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_determinism_test.c
 )
 
 target_link_libraries(banana_runtime_netcode_k3h4_determinism_test PRIVATE banana_engine_core)
@@ -91,7 +99,7 @@ add_test(NAME banana_runtime_netcode_k3h4_determinism_test
 )
 
 add_executable(banana_runtime_netcode_k3h4_edge_cases_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_edge_cases_test.c
+	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_edge_cases_test.c
 )
 
 target_link_libraries(banana_runtime_netcode_k3h4_edge_cases_test PRIVATE banana_engine_core)
@@ -106,7 +114,7 @@ add_test(NAME banana_runtime_netcode_k3h4_edge_cases_test
 )
 
 add_executable(banana_runtime_netcode_k3h4_assignment_family_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_assignment_family_test.c
+	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_assignment_family_test.c
 )
 
 target_link_libraries(banana_runtime_netcode_k3h4_assignment_family_test PRIVATE banana_engine_core)
@@ -121,7 +129,7 @@ add_test(NAME banana_runtime_netcode_k3h4_assignment_family_test
 )
 
 add_executable(banana_runtime_netcode_k3h4_orchestrator_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_orchestrator_test.c
+	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_orchestrator_test.c
 )
 
 target_link_libraries(banana_runtime_netcode_k3h4_orchestrator_test PRIVATE banana_engine_core)
@@ -136,7 +144,7 @@ add_test(NAME banana_runtime_netcode_k3h4_orchestrator_test
 )
 
 add_executable(banana_runtime_netcode_k3h4_covariance_ellipsoid_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_covariance_ellipsoid_test.c
+	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_covariance_ellipsoid_test.c
 )
 
 target_link_libraries(banana_runtime_netcode_k3h4_covariance_ellipsoid_test PRIVATE banana_engine_core)
@@ -151,7 +159,7 @@ add_test(NAME banana_runtime_netcode_k3h4_covariance_ellipsoid_test
 )
 
 add_executable(banana_runtime_netcode_k3h4_pipeline_setup_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_pipeline_setup_test.c
+	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_pipeline_setup_test.c
 )
 
 target_link_libraries(banana_runtime_netcode_k3h4_pipeline_setup_test PRIVATE banana_engine_core)
@@ -166,7 +174,7 @@ add_test(NAME banana_runtime_netcode_k3h4_pipeline_setup_test
 )
 
 add_executable(banana_runtime_netcode_k3h4_pipeline_equivalence_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_pipeline_equivalence_test.c
+	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_pipeline_equivalence_test.c
 )
 
 target_link_libraries(banana_runtime_netcode_k3h4_pipeline_equivalence_test PRIVATE banana_engine_core)
@@ -197,8 +205,8 @@ add_test(NAME banana_runtime_netcode_vector_failure_path_test
 )
 
 add_executable(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_orchestrator_failure_paths_test.c
-	${BANANA_ENGINE_DIR}/runtime/netcode/k3h4/netcode_k3h4_orchestrator.c
+	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_orchestrator_failure_paths_test.c
+	${BANANA_K3H4_SRC_DIR}/runtime/netcode/k3h4/netcode_k3h4_orchestrator.c
 )
 
 target_include_directories(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test PRIVATE
@@ -1124,7 +1132,7 @@ target_include_directories(banana_asset_algorithms_test PRIVATE
 target_compile_definitions(banana_asset_algorithms_test PRIVATE BANANA_ENGINE_HAS_OPENMP=1)
 
 add_executable(banana_native_k3h4_metrics_infrastructure_adapter_test
-	${CMAKE_CURRENT_LIST_DIR}/k3h4/infrastructure/k3h4_metrics_infrastructure_adapter_test.c
+	   ${BANANA_K3H4_TEST_DIR}/k3h4/infrastructure/k3h4_metrics_infrastructure_adapter_test.c
 )
 
 add_test(NAME banana_native_k3h4_metrics_infrastructure_adapter_test
@@ -1150,35 +1158,41 @@ target_include_directories(banana_native_k3h4_metrics_infrastructure_adapter_tes
 	${CMAKE_CURRENT_LIST_DIR}/../../src/native
 )
 
-add_executable(banana_native_k3h4_metrics_application_service_test
-	${CMAKE_CURRENT_LIST_DIR}/k3h4/application/k3h4_metrics_application_service_test.c
+set(BANANA_K3H4_APPLICATION_SERVICE_TEST_SOURCE
+	"${BANANA_K3H4_TEST_DIR}/k3h4/application/k3h4_metrics_application_service_test.c"
 )
 
-add_test(NAME banana_native_k3h4_metrics_application_service_test
-	COMMAND banana_native_k3h4_metrics_application_service_test
-)
+if(EXISTS "${BANANA_K3H4_APPLICATION_SERVICE_TEST_SOURCE}")
+	add_executable(banana_native_k3h4_metrics_application_service_test
+		${BANANA_K3H4_APPLICATION_SERVICE_TEST_SOURCE}
+	)
 
-target_link_libraries(banana_native_k3h4_metrics_application_service_test PRIVATE banana_engine_core)
-target_link_libraries(banana_native_k3h4_metrics_application_service_test PRIVATE banana_native)
+	add_test(NAME banana_native_k3h4_metrics_application_service_test
+		COMMAND banana_native_k3h4_metrics_application_service_test
+	)
 
-if(WIN32)
-	add_custom_command(TARGET banana_native_k3h4_metrics_application_service_test POST_BUILD
-		COMMAND ${CMAKE_COMMAND}
-			-Dbanana_runtime_dlls=$<JOIN:$<TARGET_RUNTIME_DLLS:banana_native_k3h4_metrics_application_service_test>,|>
-			-Dbanana_target_dir=$<TARGET_FILE_DIR:banana_native_k3h4_metrics_application_service_test>
-			-P ${CMAKE_CURRENT_LIST_DIR}/runtime/support/copy_runtime_dlls.cmake
-		COMMENT "Copying runtime DLLs next to banana_native_k3h4_metrics_application_service_test"
+	target_link_libraries(banana_native_k3h4_metrics_application_service_test PRIVATE banana_engine_core)
+	target_link_libraries(banana_native_k3h4_metrics_application_service_test PRIVATE banana_native)
+
+	if(WIN32)
+		add_custom_command(TARGET banana_native_k3h4_metrics_application_service_test POST_BUILD
+			COMMAND ${CMAKE_COMMAND}
+				-Dbanana_runtime_dlls=$<JOIN:$<TARGET_RUNTIME_DLLS:banana_native_k3h4_metrics_application_service_test>,|>
+				-Dbanana_target_dir=$<TARGET_FILE_DIR:banana_native_k3h4_metrics_application_service_test>
+				-P ${CMAKE_CURRENT_LIST_DIR}/runtime/support/copy_runtime_dlls.cmake
+			COMMENT "Copying runtime DLLs next to banana_native_k3h4_metrics_application_service_test"
+		)
+	endif()
+
+	target_include_directories(banana_native_k3h4_metrics_application_service_test PRIVATE
+		${BANANA_ENGINE_DIR}
+		${BANANA_ENGINE_DIR}/runtime
+		${CMAKE_CURRENT_LIST_DIR}/../../src/native
 	)
 endif()
 
-target_include_directories(banana_native_k3h4_metrics_application_service_test PRIVATE
-	${BANANA_ENGINE_DIR}
-	${BANANA_ENGINE_DIR}/runtime
-	${CMAKE_CURRENT_LIST_DIR}/../../src/native
-)
-
 add_executable(banana_native_k3h4_metrics_orchestration_layer_test
-	${CMAKE_CURRENT_LIST_DIR}/k3h4/k3h4_metrics_orchestration_layer_test.c
+	   ${BANANA_K3H4_TEST_DIR}/k3h4/k3h4_metrics_orchestration_layer_test.c
 )
 
 add_test(NAME banana_native_k3h4_metrics_orchestration_layer_test
@@ -1517,7 +1531,7 @@ if(BANANA_ENABLE_CMOCKA_TESTS AND cmocka_FOUND)
 endif()
 
 add_executable(banana_runtime_combat_controller_k3h4_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/combat/combat_controller_k3h4_test.c
+	   ${BANANA_K3H4_TEST_DIR}/runtime/ai/combat/combat_controller_k3h4_test.c
 	${BANANA_ENGINE_DIR}/ai/combat/combat_controller.c
 )
 
@@ -1568,7 +1582,7 @@ add_test(NAME banana_runtime_netcode_abi_error_contract_test
 # ---------------------------------------------------------------------------
 
 add_executable(banana_k3h4_scaling_benchmark_test
-        ${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_scaling_benchmark_test.c
+		${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_scaling_benchmark_test.c
 )
 
 target_link_libraries(banana_k3h4_scaling_benchmark_test PRIVATE banana_engine_core)
@@ -1594,7 +1608,7 @@ add_test(NAME banana_k3h4_scaling_benchmark_test
 
 # 036-k3h4-transformer-viz: training artifact export
 add_executable(banana_k3h4_export_test
-        ${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_export_test.c
+		${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_export_test.c
 )
 
 target_link_libraries(banana_k3h4_export_test PRIVATE banana_engine_core)
@@ -1617,8 +1631,8 @@ add_test(NAME banana_k3h4_export_test
 )
 
 add_executable(banana_k3h4_export_io_failure_test
-	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_k3h4_export_io_failure_test.c
-	${BANANA_ENGINE_DIR}/runtime/netcode/k3h4/netcode_k3h4_export.c
+	   ${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_export_io_failure_test.c
+	   ${BANANA_K3H4_SRC_DIR}/runtime/netcode/k3h4/netcode_k3h4_export.c
 )
 
 target_compile_definitions(banana_k3h4_export_io_failure_test PRIVATE
@@ -2100,71 +2114,6 @@ target_include_directories(banana_runtime_engine_exports_core_abi_test PRIVATE
    ${BANANA_ENGINE_DIR}/runtime
 )
 
-add_executable(banana_win32_dx12_poc_continent_asset_registry_test
-   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/continent_asset_registry_test.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
-)
-
-add_test(NAME banana_win32_dx12_poc_continent_asset_registry_test
-   COMMAND banana_win32_dx12_poc_continent_asset_registry_test
-)
-
-target_include_directories(banana_win32_dx12_poc_continent_asset_registry_test PRIVATE
-   ${BANANA_ENGINE_DIR}
-   ${BANANA_ENGINE_DIR}/runtime
-)
-
-add_executable(banana_win32_dx12_poc_demo_scene_catalog_test
-   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene/demo_scene_catalog_test.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/demo_scene_catalog.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
-   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_domain.c
-   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_routes.c
-   ${BANANA_ENGINE_DIR}/runtime/engine/gameplay/model/gameplay_model_profile.c
-)
-
-add_test(NAME banana_win32_dx12_poc_demo_scene_catalog_test
-   COMMAND banana_win32_dx12_poc_demo_scene_catalog_test
-)
-
-target_include_directories(banana_win32_dx12_poc_demo_scene_catalog_test PRIVATE
-   ${BANANA_ENGINE_DIR}
-   ${BANANA_ENGINE_DIR}/runtime
-)
-
-add_executable(banana_win32_dx12_poc_scene_flow_test
-   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene_flow_test.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/scene_flow.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/demo_scene_catalog.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/scene/continent_asset_registry.c
-   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_domain.c
-   ${BANANA_ENGINE_DIR}/runtime/terrain/static_mesh/terrain_static_mesh_routes.c
-   ${BANANA_ENGINE_DIR}/runtime/engine/gameplay/model/gameplay_model_profile.c
-)
-
-add_test(NAME banana_win32_dx12_poc_scene_flow_test
-   COMMAND banana_win32_dx12_poc_scene_flow_test
-)
-
-target_include_directories(banana_win32_dx12_poc_scene_flow_test PRIVATE
-   ${BANANA_ENGINE_DIR}
-   ${BANANA_ENGINE_DIR}/runtime
-)
-
-add_executable(banana_win32_dx12_poc_scene_overlay_test
-   ${CMAKE_CURRENT_LIST_DIR}/win32_dx12_poc/scene_overlay_test.c
-   ${BANANA_ENGINE_DIR}/win32_dx12_poc/overlay/scene_overlay.c
-)
-
-add_test(NAME banana_win32_dx12_poc_scene_overlay_test
-   COMMAND banana_win32_dx12_poc_scene_overlay_test
-)
-
-target_include_directories(banana_win32_dx12_poc_scene_overlay_test PRIVATE
-   ${BANANA_ENGINE_DIR}
-   ${BANANA_ENGINE_DIR}/runtime
-)
-
 set(BANANA_RUNTIME_LEGACY_VOID_MAIN_TARGETS
 	banana_runtime_netcode_k3h4_assignment_family_test
 	banana_runtime_netcode_k3h4_orchestrator_test
@@ -2277,10 +2226,6 @@ set(BANANA_RUNTIME_NATIVE_CMOCKA_TARGETS
 	banana_runtime_backend_dx12_projection_policy_test
 	banana_runtime_engine_aux_abi_test
 	banana_runtime_engine_exports_core_abi_test
-	banana_win32_dx12_poc_continent_asset_registry_test
-	banana_win32_dx12_poc_demo_scene_catalog_test
-	banana_win32_dx12_poc_scene_flow_test
-	banana_win32_dx12_poc_scene_overlay_test
 	banana_runtime_engine_exports_war_metrics_test
 	banana_runtime_engine_exports_ui_economy_test
 	banana_runtime_engine_exports_input_player_test
@@ -2291,10 +2236,6 @@ set(BANANA_RUNTIME_NATIVE_CMOCKA_TARGETS
 	banana_runtime_backend_dx12_projection_policy_test
 	banana_runtime_engine_aux_abi_test
 	banana_runtime_engine_exports_core_abi_test
-	banana_win32_dx12_poc_continent_asset_registry_test
-	banana_win32_dx12_poc_demo_scene_catalog_test
-	banana_win32_dx12_poc_scene_flow_test
-	banana_win32_dx12_poc_scene_overlay_test
 	banana_world_signals_test
 	banana_runtime_render_material_test
 	banana_physics_collider_narrow_phase_test

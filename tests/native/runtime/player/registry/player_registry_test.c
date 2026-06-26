@@ -1,5 +1,5 @@
 #include "runtime/player/registry/player_registry.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <math.h>
 #include <stdint.h>

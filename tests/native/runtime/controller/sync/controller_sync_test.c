@@ -1,6 +1,6 @@
 #include "runtime/controller/sync/controller_sync.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

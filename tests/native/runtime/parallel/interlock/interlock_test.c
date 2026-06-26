@@ -1,6 +1,6 @@
 #include "runtime/parallel/interlock/interlock.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_interlock_init_destroy_null_guards(void **state)
 {

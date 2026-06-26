@@ -1,6 +1,6 @@
 #include "physics/collider.h"
 
-#include "../../runtime/support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_box_vs_box_no_overlap(void **state)
 {

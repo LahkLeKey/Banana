@@ -135,17 +135,7 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/netcode/model/netcode_model.c
   runtime/netcode/reward/netcode_reward.c
   runtime/netcode/link/netcode_link.c
-  runtime/netcode/k3h4/netcode_k3h4_metrics.c
-  runtime/netcode/k3h4/netcode_k3h4_orchestrator.c
-  runtime/netcode/vector/netcode_fixed_point.c
-  runtime/netcode/vector/netcode_k3h4.c
   runtime/netcode/vector/netcode_vector.c
-  runtime/netcode/k3h4/netcode_k3h4_pipeline.c
-  runtime/netcode/k3h4/netcode_k3h4_pipeline_setup.c
-  runtime/netcode/k3h4/netcode_k3h4_geometry.c
-  runtime/netcode/k3h4/netcode_k3h4_cluster_scoring.c
-  runtime/netcode/k3h4/netcode_k3h4_observability.c
-  runtime/netcode/k3h4/netcode_k3h4_export.c
   runtime/netcode/contract/netcode_contract.c
   runtime/abi/netcode/netcode_abi.c
   runtime/abi/physics/physics_abi.c
@@ -202,13 +192,11 @@ add_library(banana_engine_core STATIC
   ${ENGINE_UI_SOURCES}
 )
 
+target_link_libraries(banana_engine_core PUBLIC banana_k3h4_core)
+
 set_target_properties(banana_engine_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-if(WIN32)
-  set(BANANA_RENDER_BACKEND_DEFAULT "dx12")
-else()
-  set(BANANA_RENDER_BACKEND_DEFAULT "glfw")
-endif()
+set(BANANA_RENDER_BACKEND_DEFAULT "glfw")
 
 set(BANANA_RENDER_BACKEND "${BANANA_RENDER_BACKEND_DEFAULT}" CACHE STRING
   "Native renderer backend: glfw or dx12")
@@ -223,6 +211,8 @@ target_include_directories(banana_engine_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/ai
   ${CMAKE_CURRENT_SOURCE_DIR}/world
   ${CMAKE_CURRENT_SOURCE_DIR}/ui
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/src
 )
 
 if(MSVC)
@@ -303,38 +293,6 @@ if(TRUE)
     target_link_libraries(banana_engine_core PUBLIC m)
   endif()
 
-  if(WIN32)
-    add_executable(banana_engine_win32_dx12_poc
-      win32_dx12_poc/app/main.c
-      win32_dx12_poc/objective/objective_policy.c
-      win32_dx12_poc/overlay/scene_overlay.c
-      win32_dx12_poc/scene/continent_asset_registry.c
-      win32_dx12_poc/scene/demo_scene_catalog.c
-      win32_dx12_poc/scene/scene_flow.c
-    )
-
-    target_link_libraries(banana_engine_win32_dx12_poc PRIVATE
-      banana_engine_core
-    )
-
-    if(WIN32)
-      target_link_libraries(banana_engine_win32_dx12_poc PRIVATE msimg32)
-    endif()
-
-    target_include_directories(banana_engine_win32_dx12_poc PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-
-    if(MSVC)
-      target_compile_options(banana_engine_win32_dx12_poc PRIVATE /W3)
-      target_compile_definitions(banana_engine_win32_dx12_poc PRIVATE _CRT_SECURE_NO_WARNINGS)
-    else()
-      target_compile_options(banana_engine_win32_dx12_poc PRIVATE
-        -std=c11 -O2 -Wall -Wextra -Wpedantic
-      )
-    endif()
-  endif()
-
   find_package(OpenMP QUIET)
   if(OpenMP_C_FOUND)
     target_link_libraries(banana_engine_core PUBLIC OpenMP::OpenMP_C)
@@ -389,12 +347,8 @@ if(BUILD_TESTING)
   add_executable(banana_native_feedback_loop_factory
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/native_feedback_loop_factory.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../scaffold/native_entry.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_native_orchestrator.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_metrics_orchestration_layer.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/application/k3h4_metrics_application_service.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/infrastructure/k3h4_metrics_infrastructure_adapter.c
   )
-  target_link_libraries(banana_native_feedback_loop_factory PRIVATE banana_engine_core)
+  target_link_libraries(banana_native_feedback_loop_factory PRIVATE banana_engine_core banana_k3h4_core)
   target_include_directories(banana_native_feedback_loop_factory PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_CURRENT_SOURCE_DIR}/../include
@@ -404,15 +358,11 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/ai
     ${CMAKE_CURRENT_SOURCE_DIR}/world
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/src
   )
   add_test(NAME banana_native_feedback_loop_factory_smoke
     COMMAND banana_native_feedback_loop_factory
       --script ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/scripts/warfront.dx12play
-      --non-interactive
-  )
-  add_test(NAME banana_native_feedback_loop_factory_dx12_scaffold_smoke
-    COMMAND banana_native_feedback_loop_factory
-      --script ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/scripts/dx12-client-scaffold.dx12play
       --non-interactive
   )
   add_test(NAME banana_native_feedback_loop_factory_negotiate_smoke

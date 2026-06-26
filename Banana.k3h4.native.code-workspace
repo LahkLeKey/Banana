@@ -8,9 +8,6 @@
     },
     {
       "path": "artifacts/native"
-    },
-    {
-      "path": ".specify/specs/035-native-hypersphere-kmeans"
     }
   ],
   "settings": {

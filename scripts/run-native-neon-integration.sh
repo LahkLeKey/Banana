@@ -23,7 +23,8 @@ if ! banana_require_database_aliases "native-neon-integration"; then
 fi
 
 echo "[native-neon-integration] configuring native build with BANANA_ENABLE_POSTGRES=ON"
-cmake -S "${ROOT_DIR}/src/native" -B "${BUILD_DIR}" -DBANANA_ENABLE_POSTGRES=ON -DCMAKE_BUILD_TYPE=Release
+rm -rf "${BUILD_DIR}"
+cmake -S "${ROOT_DIR}/src/native" -B "${BUILD_DIR}" -G Ninja -DBANANA_ENABLE_POSTGRES=ON -DCMAKE_BUILD_TYPE=Release
 
 echo "[native-neon-integration] building banana_native"
 cmake --build "${BUILD_DIR}" --config Release --target banana_native

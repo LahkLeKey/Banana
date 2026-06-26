@@ -1,5 +1,5 @@
 #include "ai/navigation.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_nav_grid_defaults_to_open(void **state)
 {

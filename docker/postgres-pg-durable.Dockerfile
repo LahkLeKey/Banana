@@ -22,6 +22,7 @@ RUN set -eux; \
 COPY docker/pg-durable/initdb/010-create-extension.sh /docker-entrypoint-initdb.d/010-create-extension.sh
 RUN chmod +x /docker-entrypoint-initdb.d/010-create-extension.sh
 COPY docker/pg-durable/banana-entrypoint.sh /usr/local/bin/banana-db-v2-entrypoint.sh
+RUN sed -i 's/\r$//' /docker-entrypoint-initdb.d/010-create-extension.sh /usr/local/bin/banana-db-v2-entrypoint.sh
 RUN chmod +x /usr/local/bin/banana-db-v2-entrypoint.sh
 
 ENV PGDATA=/var/lib/postgresql/data/pgdata

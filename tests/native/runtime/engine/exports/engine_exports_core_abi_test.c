@@ -2,7 +2,7 @@
 #include "runtime/engine/support/engine_aux_abi.h"
 #include "engine.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

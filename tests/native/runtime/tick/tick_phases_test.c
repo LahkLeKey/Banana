@@ -1,6 +1,6 @@
 #include "runtime/tick/tick_phases.h"
 
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

@@ -15,7 +15,7 @@
 #include "tools/infrastructure/banana_asset_json_writer.h"
 #include "engine_serialize.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

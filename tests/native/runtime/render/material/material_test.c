@@ -1,7 +1,7 @@
 #include "render/material.h"
 #include "render/shader.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_material_solid_sets_default_values(void **state)
 {

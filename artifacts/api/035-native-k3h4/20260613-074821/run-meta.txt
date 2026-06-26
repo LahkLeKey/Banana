@@ -1,3 +1,0 @@
-timestamp=20260613-074821
-native_dir=artifacts/native/k3h4/determinism/20260613-074821
-api_dir=artifacts/api/035-native-k3h4/20260613-074821

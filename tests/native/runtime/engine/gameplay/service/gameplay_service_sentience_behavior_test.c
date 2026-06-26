@@ -1,6 +1,6 @@
 #include "runtime/engine/gameplay/service/gameplay_service_sentience_behavior.h"
 
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_mode_labels_cover_all_paths(void **state)
 {

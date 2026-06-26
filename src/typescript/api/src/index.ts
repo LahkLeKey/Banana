@@ -1,6 +1,4 @@
-// Banana Fastify API (spec 008). Canonical API runtime surface.
-// Per-route ownership table:
-// .specify/specs/008-typescript-api/contracts/route-ownership.md
+// Banana Fastify API. Canonical API runtime surface.
 import helmet from '@fastify/helmet';
 import Fastify from 'fastify';
 

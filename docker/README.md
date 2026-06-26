@@ -45,10 +45,23 @@ Notes:
 
 ## Native-To-Neon Integration (Containerized)
 
-Run the native + API Neon integration lane inside Docker:
+Run the full compose smoke stack, including the repo-managed PostgreSQL service:
 
 ```bash
-NEON_DATABASE_URL="postgres://..." docker compose --profile integration up --build native-neon-integration
+docker compose up --build
+```
+
+The default compose graph now includes:
+
+- `banana-postgres` for the integration database contract
+- `api-overworld` for the API runtime
+- `react-overworld` for the portal
+- `native-neon-integration` for the strict native/API Neon smoke lane
+
+If you only want the native + API Neon integration lane inside Docker:
+
+```bash
+docker compose up --build native-neon-integration
 ```
 
 This service executes `scripts/run-native-neon-integration.sh` in-container,

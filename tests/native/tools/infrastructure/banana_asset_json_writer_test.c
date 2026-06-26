@@ -1,7 +1,7 @@
 #include "tools/infrastructure/banana_asset_json_writer.h"
 #include "tools/domain/banana_asset_domain.h"
 
-#include "../../runtime/support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stdio.h>
 #include <string.h>

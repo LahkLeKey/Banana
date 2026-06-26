@@ -5,7 +5,7 @@
 #include "../../netcode/reward/netcode_reward.h"
 #include "../../netcode/link/netcode_link.h"
 #include "../../netcode/vector/netcode_vector.h"
-#include "../../netcode/k3h4/netcode_k3h4_metrics.h"
+#include "runtime/netcode/k3h4/netcode_k3h4_metrics.h"
 
 #ifdef __cplusplus
 extern "C"

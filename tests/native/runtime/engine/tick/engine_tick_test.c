@@ -1,7 +1,7 @@
 #include "runtime/engine/tick/engine_tick.h"
 #include "physics/dynamics.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

@@ -18,13 +18,17 @@ export type NativePgBouncerHealth = {
 type NativePgBouncerSymbols = {
   banana_native_v3_pgbouncer_available: () => number;
   banana_native_v3_pgbouncer_configure: (
-      connectionUri: string,
-      poolMode: string,
+      connectionUriPtr: Pointer,
+      poolModePtr: Pointer,
       defaultPoolSize: number,
       ) => number;
   banana_native_v3_pgbouncer_health_json:
       (bufferPtr: Pointer, bufferLen: number) => number;
 };
+
+function cStringPtr(value: string): Pointer {
+  return ptr(Buffer.from(`${value}\0`, 'utf8'));
+}
 
 function createNativeBinding(): NativePgBouncerSymbols {
   return loadBananaNativeSymbols<NativePgBouncerSymbols>(
@@ -34,7 +38,7 @@ function createNativeBinding(): NativePgBouncerSymbols {
           returns: FFIType.i32,
         },
         banana_native_v3_pgbouncer_configure: {
-          args: [FFIType.cstring, FFIType.cstring, FFIType.i32],
+          args: [FFIType.ptr, FFIType.ptr, FFIType.i32],
           returns: FFIType.i32,
         },
         banana_native_v3_pgbouncer_health_json: {
@@ -64,8 +68,8 @@ export class NativePgBouncerBridge {
 
   public configure(config: NativePgBouncerConfig): void {
     const result = this.symbols.banana_native_v3_pgbouncer_configure(
-        config.connectionUri,
-        config.poolMode ?? 'transaction',
+        cStringPtr(config.connectionUri),
+        cStringPtr(config.poolMode ?? 'transaction'),
         config.defaultPoolSize ?? 20,
     );
 

@@ -1,5 +1,5 @@
 #include "physics/collider.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_box_and_sphere_collisions_are_detected(void **state)
 {

@@ -1,5 +1,5 @@
 #include "runtime/terrain/terrain_generation.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stddef.h>
 #include <string.h>

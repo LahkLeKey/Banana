@@ -1,7 +1,7 @@
 #include "runtime/camera/follow/camera_follow.h"
 #include "runtime/camera/follow/camera_follow_policy.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

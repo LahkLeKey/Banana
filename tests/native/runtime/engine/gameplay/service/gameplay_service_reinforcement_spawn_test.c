@@ -2,7 +2,7 @@
 #include "runtime/engine/gameplay/service/gameplay_service_models.h"
 #include "runtime/engine/gameplay/service/gameplay_service_reinforcement_metrics.h"
 #include "runtime/controller/attach/controller_attach.h"
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

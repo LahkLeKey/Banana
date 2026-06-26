@@ -1,21 +1,40 @@
 services:
+  banana-postgres:
+    build:
+      context: .
+      dockerfile: docker/postgres-pg-durable.Dockerfile
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: banana
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "5432:5432"
+    volumes:
+      - banana-postgres-data:/var/lib/postgresql/data
+
   native-neon-integration:
     image: oven/bun:1.2
-    profiles:
-      - integration
     working_dir: /workspace
     command:
       - bash
       - -lc
       - apt-get update -qq && apt-get install -y --no-install-recommends cmake ninja-build gcc g++ && sed -i 's/\r$//' /workspace/scripts/lib/database-env-aliases.sh /workspace/scripts/run-native-neon-integration.sh && bash /workspace/scripts/run-native-neon-integration.sh
     environment:
-      NEON_DATABASE_URL: ${NEON_DATABASE_URL:-}
-      DATABASE_URL: ${DATABASE_URL:-}
-      BANANA_PG_CONNECTION: ${BANANA_PG_CONNECTION:-}
+      NEON_DATABASE_URL: ${NEON_DATABASE_URL:-postgres://postgres:banana@banana-postgres:5432/postgres}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:banana@banana-postgres:5432/postgres}
+      BANANA_PG_CONNECTION: ${BANANA_PG_CONNECTION:-postgres://postgres:banana@banana-postgres:5432/postgres}
       BANANA_NEON_TEST_RETRY_ATTEMPTS: ${BANANA_NEON_TEST_RETRY_ATTEMPTS:-}
       BANANA_NEON_TEST_RETRY_DELAY_MS: ${BANANA_NEON_TEST_RETRY_DELAY_MS:-}
       BANANA_NEON_CONNECT_TIMEOUT_MS: ${BANANA_NEON_CONNECT_TIMEOUT_MS:-}
       BANANA_NATIVE_NEON_BUILD_DIR: /workspace/out/native-neon-integration
+    depends_on:
+      banana-postgres:
+        condition: service_healthy
     volumes:
       - .:/workspace
 
@@ -36,12 +55,15 @@ services:
       BANANA_TRAINING_STORE_MODE: inmemory
       BANANA_NATIVE_PATH: /workspace/out/native/bin/libbanana_native.so
       BANANA_NATIVE_BOOTSTRAP_REQUIRED: "1"
-      NEON_DATABASE_URL: ${NEON_DATABASE_URL:-}
-      DATABASE_URL: ${DATABASE_URL:-}
-      BANANA_PG_CONNECTION: ${BANANA_PG_CONNECTION:-}
+      NEON_DATABASE_URL: ${NEON_DATABASE_URL:-postgres://postgres:banana@banana-postgres:5432/postgres}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:banana@banana-postgres:5432/postgres}
+      BANANA_PG_CONNECTION: ${BANANA_PG_CONNECTION:-postgres://postgres:banana@banana-postgres:5432/postgres}
       BANANA_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
     ports:
       - "8081:8081"
+    depends_on:
+      banana-postgres:
+        condition: service_healthy
     volumes:
       - .:/workspace
 
@@ -60,3 +82,6 @@ services:
       - "5173:5173"
     volumes:
       - .:/workspace
+
+volumes:
+  banana-postgres-data:

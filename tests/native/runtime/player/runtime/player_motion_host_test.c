@@ -1,6 +1,6 @@
 #include "runtime/player/runtime/player_motion_host.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

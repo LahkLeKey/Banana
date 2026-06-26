@@ -35,6 +35,4 @@ across web frontend surfaces.
 `<group>.<scope>.<role>` with kebab-case CSS variables
 (e.g. `tokens.color.banana.bg` -> `--color-banana-bg`).
 
-The contract -- including which slices each token unblocks -- is
-pinned at
-[../../../../.specify/specs/021-frontend-shared-design-system-spike/analysis/token-contract.md](../../../../.specify/specs/021-frontend-shared-design-system-spike/analysis/token-contract.md).
+Keep token behavior and naming conventions documented directly in this package.

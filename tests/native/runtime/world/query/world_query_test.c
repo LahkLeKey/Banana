@@ -1,5 +1,5 @@
 #include "world/world.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_world_query_nearby_finds_entities(void **state)
 {

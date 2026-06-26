@@ -1,5 +1,5 @@
 #include "render/camera.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_camera_matrices_are_valid(void **state)
 {

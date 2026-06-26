@@ -1,6 +1,6 @@
 #include "runtime/engine/gameplay/model/gameplay_model_profile.h"
 
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static int profile_for(const char *model_id,
                        float *radius,

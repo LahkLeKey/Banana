@@ -2,7 +2,7 @@
 #include "runtime/engine/application/service/application_service_ports.h"
 #include "runtime/engine/gameplay/service/gameplay_service.h"
 
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

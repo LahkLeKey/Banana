@@ -1,6 +1,6 @@
 #include "ai/wildlife_controller.h"
 #include "ai/controller.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 #include <string.h>
 
 static void test_wildlife_debug_state_starts_idle(void **state)

@@ -1,6 +1,6 @@
 #include "runtime/terrain/terrain_features.h"
 
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 #include <stdint.h>

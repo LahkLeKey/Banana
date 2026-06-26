@@ -1,6 +1,6 @@
 #include "render/dx12/backend_dx12_projection_policy.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_projection_with_default_camera(void **state)
 {

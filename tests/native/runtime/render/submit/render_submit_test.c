@@ -2,7 +2,7 @@
 #include "render/material.h"
 #include "render/mesh.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 #include <math.h>

@@ -1,6 +1,6 @@
 #include "runtime/player/sync/player_sync_abi.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 
