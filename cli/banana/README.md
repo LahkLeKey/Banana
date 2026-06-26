@@ -8,7 +8,7 @@ Current implementation status:
 - `k3h4 sample` emits deterministic canonical JSON datasets (`schema_version=1`)
 - `k3h4 run` executes native-direct K3H4 pipeline via `ctypes` and canonical stdin JSON
 - `k3h4 explain` interprets run output with field-referenced analysis records
-- `k3h4` remaining subcommands are scaffolded: export
+- `k3h4 export` emits machine-consumable artifacts in canonical JSON or CSV
 - `k3h4 doctor` runs read-only preflight diagnostics for Python, native ABI, and schema checks
 - native-direct execution is planned for follow-up stories
 
@@ -100,6 +100,43 @@ python -m banana_cli k3h4 sample --seed 11 --count 1 --dims 16 --preset baseline
 	| python -m banana_cli k3h4 explain
 ```
 
+## Export artifacts
+
+`banana k3h4 export` produces machine-consumable artifacts for AI loops.
+
+Input and strict behavior:
+
+- Primary path: run output from stdin (`sample | run | export`)
+- Optional path: `--input-file`
+- Strict mode defaults on and returns non-zero on invalid input
+- Under strict failures, no partial artifact files are written
+
+Output formats:
+
+- `--format json` (default): canonical JSON with `schema_version=1`
+- `--format csv`: tabular summary rows for each run result
+
+Metadata envelope includes:
+
+- deterministic hash derived from canonical run payload
+- run configuration (sample count and native resolution path/source)
+
+Canonical export schema:
+
+- `cli/banana/schema/k3h4-export-output.v1.json`
+
+Golden export examples:
+
+```bash
+python -m banana_cli k3h4 sample --seed 11 --count 1 --dims 16 --preset baseline \
+	| python -m banana_cli k3h4 run --native-lib out/v3-native/Debug/banana_native.dll \
+	| python -m banana_cli k3h4 export
+
+python -m banana_cli k3h4 sample --seed 11 --count 1 --dims 16 --preset baseline \
+	| python -m banana_cli k3h4 run --native-lib out/v3-native/Debug/banana_native.dll \
+	| python -m banana_cli k3h4 export --format csv --output-file artifacts/k3h4-export.csv
+```
+
 ## Doctor preflight checks
 
 `banana k3h4 doctor` validates:
@@ -140,6 +177,7 @@ python -m banana_cli k3h4 --help
 python -m banana_cli k3h4 sample --help
 python -m banana_cli k3h4 run --help
 python -m banana_cli k3h4 explain --help
+python -m banana_cli k3h4 export --help
 python -m banana_cli k3h4 doctor --help
 ```
 
