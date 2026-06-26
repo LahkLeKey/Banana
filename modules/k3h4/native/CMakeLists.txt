@@ -31,6 +31,7 @@ banana_k3h4_add_source_if_exists("src/k3h4/k3h4_dialogue_template_layer.c")
 banana_k3h4_add_source_if_exists("src/k3h4/k3h4_dialogue_generative_surface_layer.c")
 banana_k3h4_add_source_if_exists("src/k3h4/k3h4_dialogue_spectral_transition_graph.c")
 banana_k3h4_add_source_if_exists("src/k3h4/k3h4_dialogue_memory_delta_store.c")
+banana_k3h4_add_source_if_exists("src/k3h4/k3h4_dialogue_abi_envelope.c")
 banana_k3h4_add_source_if_exists("src/k3h4/application/k3h4_metrics_application_service.c")
 banana_k3h4_add_source_if_exists("src/k3h4/infrastructure/k3h4_metrics_infrastructure_adapter.c")
 
