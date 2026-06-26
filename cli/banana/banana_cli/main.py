@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import random
 import sys
 from dataclasses import dataclass
 from typing import Sequence
@@ -16,6 +17,8 @@ EXPECTED_ABI_VERSION = 3
 EXPECTED_PING_STATUS = 0
 REQUIRED_PYTHON = (3, 10)
 CANONICAL_SCHEMA_RELATIVE = Path("src/typescript/api/coverage-denominator.json")
+SAMPLE_SCHEMA_VERSION = 1
+DEFAULT_SAMPLE_PRESET = "baseline"
 NATIVE_LIBRARY_FILENAMES = (
     "libbanana_native.so",
     "banana_native.so",
@@ -132,7 +135,73 @@ def _k3h4_group_help(args: argparse.Namespace) -> int:
 
 
 def _k3h4_sample(args: argparse.Namespace) -> int:
-    return _not_implemented("sample")
+    if args.count < 1:
+        finding = DoctorFinding(
+            level="error",
+            check="sample_validation",
+            error_code="BANANA_SAMPLE_COUNT_INVALID",
+            message="count must be >= 1",
+            field_path="count",
+        )
+        _emit_error_envelope(finding)
+        return 1
+
+    if args.dims < 1 or args.dims > 16:
+        finding = DoctorFinding(
+            level="error",
+            check="sample_validation",
+            error_code="BANANA_SAMPLE_DIMS_INVALID",
+            message="dims must be in range 1..16",
+            field_path="dims",
+        )
+        _emit_error_envelope(finding)
+        return 1
+
+    rng = random.Random(args.seed)
+    samples = [_build_k3h4_sample_vector(rng=rng, dims=args.dims, preset=args.preset) for _ in range(args.count)]
+    payload = {
+        "count": args.count,
+        "dims": args.dims,
+        "preset": args.preset,
+        "samples": samples,
+        "schema_version": SAMPLE_SCHEMA_VERSION,
+        "seed": args.seed,
+    }
+    print(json.dumps(payload, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+def _build_k3h4_sample_vector(*, rng: random.Random, dims: int, preset: str) -> dict[str, int]:
+    base = {
+        "call_density": rng.randint(20, 95),
+        "quest_percent": rng.randint(5, 100),
+        "player_level": rng.randint(1, 100),
+        "combo_streak": rng.randint(0, 32),
+        "branch_pressure": rng.randint(0, 100),
+        "dependency_pulse": rng.randint(0, 100),
+        "workflow_depth": rng.randint(1, 64),
+        "neural_relevance_score": rng.randint(0, 100),
+        "network_dimensions": dims,
+        "model_confidence": rng.randint(0, 100),
+        "policy_momentum": rng.randint(0, 100),
+        "assignment_family": 0,
+        "spectral_mode": 1,
+        "hardware_byte_order_tag": 0x01020304,
+        "hardware_dtype_tag": 1,
+        "hardware_alignment_bytes": 4,
+    }
+
+    if preset == "baseline":
+        return base
+
+    if preset == "combat":
+        base["call_density"] = rng.randint(70, 100)
+        base["combo_streak"] = rng.randint(8, 48)
+        base["branch_pressure"] = rng.randint(45, 100)
+        base["policy_momentum"] = rng.randint(55, 100)
+        return base
+
+    return base
 
 
 def _k3h4_run(args: argparse.Namespace) -> int:
@@ -359,7 +428,37 @@ def build_parser() -> argparse.ArgumentParser:
             configure(cmd)
         cmd.set_defaults(handler=handler)
 
-    add_k3h4_subcommand("sample", "Generate deterministic sample dataset (stub)", _k3h4_sample)
+    add_k3h4_subcommand(
+        "sample",
+        "Generate deterministic sample dataset",
+        _k3h4_sample,
+        configure=lambda cmd: (
+            cmd.add_argument(
+                "--seed",
+                type=int,
+                default=42,
+                help="Seed for deterministic sample generation",
+            ),
+            cmd.add_argument(
+                "--count",
+                type=int,
+                default=4,
+                help="Number of sample vectors to emit",
+            ),
+            cmd.add_argument(
+                "--dims",
+                type=int,
+                default=16,
+                help="network_dimensions value (1..16)",
+            ),
+            cmd.add_argument(
+                "--preset",
+                choices=("baseline", "combat"),
+                default=DEFAULT_SAMPLE_PRESET,
+                help="Distribution preset",
+            ),
+        ),
+    )
     add_k3h4_subcommand("run", "Execute K3H4 pipeline (stub)", _k3h4_run)
     add_k3h4_subcommand("explain", "Explain K3H4 outputs (stub)", _k3h4_explain)
     add_k3h4_subcommand("export", "Export K3H4 artifacts (stub)", _k3h4_export)
