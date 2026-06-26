@@ -1,0 +1,1 @@
+"""Banana CLI package."""
