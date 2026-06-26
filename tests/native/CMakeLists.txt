@@ -1286,6 +1286,40 @@ if(EXISTS "${BANANA_K3H4_DIALOGUE_TEMPLATE_LAYER_TEST_SOURCE}")
 	)
 endif()
 
+set(BANANA_K3H4_DIALOGUE_GENERATIVE_SURFACE_LAYER_TEST_SOURCE
+	"${BANANA_K3H4_TEST_DIR}/k3h4/k3h4_dialogue_generative_surface_layer_test.c"
+)
+
+if(EXISTS "${BANANA_K3H4_DIALOGUE_GENERATIVE_SURFACE_LAYER_TEST_SOURCE}")
+	add_executable(banana_native_k3h4_dialogue_generative_surface_layer_test
+		${BANANA_K3H4_DIALOGUE_GENERATIVE_SURFACE_LAYER_TEST_SOURCE}
+	)
+
+	add_test(NAME banana_native_k3h4_dialogue_generative_surface_layer_test
+		COMMAND banana_native_k3h4_dialogue_generative_surface_layer_test
+	)
+
+	target_link_libraries(banana_native_k3h4_dialogue_generative_surface_layer_test PRIVATE banana_k3h4_core)
+	target_link_libraries(banana_native_k3h4_dialogue_generative_surface_layer_test PRIVATE banana_engine_core)
+
+	if(WIN32)
+		add_custom_command(TARGET banana_native_k3h4_dialogue_generative_surface_layer_test POST_BUILD
+			COMMAND ${CMAKE_COMMAND}
+				-Dbanana_runtime_dlls=$<JOIN:$<TARGET_RUNTIME_DLLS:banana_native_k3h4_dialogue_generative_surface_layer_test>,|>
+				-Dbanana_target_dir=$<TARGET_FILE_DIR:banana_native_k3h4_dialogue_generative_surface_layer_test>
+				-P ${CMAKE_CURRENT_LIST_DIR}/runtime/support/copy_runtime_dlls.cmake
+			COMMENT "Copying runtime DLLs next to banana_native_k3h4_dialogue_generative_surface_layer_test"
+		)
+	endif()
+
+	target_include_directories(banana_native_k3h4_dialogue_generative_surface_layer_test PRIVATE
+		${BANANA_ENGINE_DIR}
+		${BANANA_ENGINE_DIR}/runtime
+		${CMAKE_CURRENT_LIST_DIR}/../../src/native
+		${BANANA_K3H4_SRC_DIR}
+	)
+endif()
+
 add_executable(banana_runtime_terrain_generation_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/terrain/terrain_generation_test.c
 )
