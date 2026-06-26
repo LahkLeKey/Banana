@@ -1,0 +1,17 @@
+[project]
+name = "banana-cli"
+version = "0.1.0"
+description = "Banana root CLI scaffold (Python, native-direct direction)"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.scripts]
+banana = "banana_cli.main:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["banana_cli*"]

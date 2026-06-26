@@ -2,6 +2,17 @@
 
 This repository includes a K3H4-first netcode analytics pipeline that flows across native, API, and frontend layers.
 
+## CLI Quickstart (Python)
+
+Root CLI scaffolding now lives under `cli/*` with a Python entrypoint in `cli/banana`.
+
+From `cli/banana`:
+
+```bash
+python -m banana_cli --help
+python -m banana_cli k3h4 --help
+```
+
 ## K3H4 Model
 
 K3H4 is the authoritative analytics model used for netcode clustering, convergence scoring, and ABI coverage reporting in the runtime UI.
