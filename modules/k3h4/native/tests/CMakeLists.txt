@@ -35,6 +35,11 @@ banana_k3h4_add_test_if_exists(
 )
 
 banana_k3h4_add_test_if_exists(
+  banana_k3h4_dialogue_template_layer_test
+  "k3h4/k3h4_dialogue_template_layer_test.c"
+)
+
+banana_k3h4_add_test_if_exists(
   banana_k3h4_metrics_infrastructure_adapter_test
   "k3h4/infrastructure/k3h4_metrics_infrastructure_adapter_test.c"
 )
