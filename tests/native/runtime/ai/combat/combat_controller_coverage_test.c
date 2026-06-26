@@ -1,6 +1,6 @@
 #include "ai/combat_controller.h"   /* Combat controller API under test. */
 #include "ai/controller.h"          /* Generic controller registry/update/signal seam. */
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <math.h>                   /* fabsf for numeric delta checks. */
 #include <stdio.h>                  /* fprintf for assertion diagnostics. */

@@ -1,6 +1,6 @@
 #include "runtime/camera/follow/camera_follow_policy.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_follow_policy_rejects_invalid_inputs(void **state)
 {

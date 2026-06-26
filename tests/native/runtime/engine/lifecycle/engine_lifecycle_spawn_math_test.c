@@ -1,6 +1,6 @@
 #include "runtime/engine/lifecycle/engine_lifecycle_spawn_math.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static float g_sample_base_height = 0.0f;
 

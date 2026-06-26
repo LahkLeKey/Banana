@@ -1,7 +1,7 @@
 #ifndef BANANA_ENGINE_RUNTIME_NETCODE_K3H4_METRICS_H
 #define BANANA_ENGINE_RUNTIME_NETCODE_K3H4_METRICS_H
 
-#include "../vector/netcode_vector.h"
+#include "runtime/netcode/vector/netcode_vector.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -1,5 +1,5 @@
 #include "physics/body.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_physics_body_lifecycle_and_forces(void **state)
 {

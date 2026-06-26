@@ -1,6 +1,6 @@
 #include "runtime/terrain/terrain_chunks.h"
 
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_terrain_chunks_identity_and_partition_helpers(void **state)
 {

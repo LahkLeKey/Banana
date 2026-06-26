@@ -1,6 +1,6 @@
 #include "runtime/player/resource/player_resources.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_init_cleanup(void **state)
 {

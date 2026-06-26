@@ -1,5 +1,5 @@
 #include "runtime/abi/netcode/netcode_abi.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 #include <string.h>
 
 static void test_netcode_k3h4_determinism(void **state)

@@ -2,7 +2,7 @@
 #include "ai/npc_merchant.h"
 #include "runtime/merchant/trade/merchant_trade_domain.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static int g_init_calls = 0;
 static int g_register_calls = 0;

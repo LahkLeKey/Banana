@@ -1,5 +1,5 @@
 #include "render/window.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_window_headless_stub_contract(void **state)
 {

@@ -1,6 +1,6 @@
 #include "tools/domain/banana_asset_algorithms.h"
 
-#include "../../runtime/support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stdint.h>
 

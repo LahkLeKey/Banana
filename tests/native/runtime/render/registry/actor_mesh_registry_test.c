@@ -1,6 +1,6 @@
 #include "render/actor_mesh_registry.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

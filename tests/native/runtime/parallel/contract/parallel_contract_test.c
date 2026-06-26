@@ -1,6 +1,6 @@
 #include "runtime/parallel/contract/parallel_contract.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_parallel_contract_entries_expose_inventory(void **state)
 {

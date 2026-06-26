@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/src/native",
+                "${workspaceFolder}/src/native/include",
+                "${workspaceFolder}/src/native/engine",
+                "${workspaceFolder}/src/native/engine/runtime",
+                "${workspaceFolder}/modules/k3h4/native/include",
+                "${workspaceFolder}/modules/k3h4/native/src",
+                "${workspaceFolder}/tests/native"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "compilerPath": "cl.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

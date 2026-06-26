@@ -1,5 +1,5 @@
 #include "runtime/tick/tick_budget_policy.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <math.h>
 #include <stddef.h>

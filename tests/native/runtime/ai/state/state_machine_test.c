@@ -1,5 +1,5 @@
 #include "ai/state_machine.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 #include <string.h>
 
 static void count_enter(void *ctx)

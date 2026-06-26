@@ -1,6 +1,6 @@
 #include "netcode_k3h4.h"
 
-#include "netcode_fixed_point.h"
+#include "runtime/netcode/vector/netcode_fixed_point.h"
 
 #include <limits.h>
 #include <stdlib.h>

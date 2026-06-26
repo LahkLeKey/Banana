@@ -1,5 +1,5 @@
 #include "runtime/camera/basis/camera_basis.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_camera_ground_basis(void **state)
 {

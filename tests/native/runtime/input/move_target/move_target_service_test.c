@@ -1,7 +1,7 @@
 #include "runtime/input/contract/input_contract.h"
 #include "runtime/input/move_target/move_target_domain.h"
 #include "runtime/input/move_target/move_target_service.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <math.h>
 

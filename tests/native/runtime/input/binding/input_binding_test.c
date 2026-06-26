@@ -1,6 +1,6 @@
 #include "runtime/input/binding/input_binding.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stdint.h>
 

@@ -1,7 +1,7 @@
 #include "runtime/engine/gameplay/service/gameplay_service_sentience_overrides.h"
 #include "runtime/engine/gameplay/service/gameplay_service_sentience_override_config.h"
 #include "runtime/engine/state/engine_state.h"
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

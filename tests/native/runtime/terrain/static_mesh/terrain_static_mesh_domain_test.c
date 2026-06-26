@@ -1,6 +1,6 @@
 #include "runtime/terrain/static_mesh/terrain_static_mesh_domain.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_profile_and_county_lookup_paths(void **state)
 {

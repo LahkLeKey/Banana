@@ -1,6 +1,6 @@
 #include "runtime/parallel/model/parallel_model.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_amdahl_speedup_and_efficiency_bounds(void **state)
 {

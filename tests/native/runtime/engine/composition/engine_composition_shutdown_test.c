@@ -4,7 +4,7 @@
 #include "physics/dynamics.h"
 #include "render/backend.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stdlib.h>
 #include <string.h>

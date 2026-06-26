@@ -2,7 +2,7 @@
 #include "physics/dynamics.h"
 #include "render/backend.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stdint.h>
 #include <string.h>

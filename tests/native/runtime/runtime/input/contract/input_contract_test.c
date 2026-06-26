@@ -1,5 +1,5 @@
 #include "runtime/input/contract/input_contract.h"
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 #include <math.h>
 
 static void test_input_contract_helpers(void **state)

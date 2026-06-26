@@ -1,6 +1,6 @@
 #include "runtime/engine/support/engine_aux_abi.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static int g_create_calls = 0;
 static int g_attach_calls = 0;

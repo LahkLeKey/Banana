@@ -1,6 +1,6 @@
 #include "runtime/merchant/query/merchant_query_abi.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

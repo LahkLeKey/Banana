@@ -1,7 +1,7 @@
 #include "k3h4/k3h4_metrics_orchestration_layer.h"
 #include "k3h4/k3h4_native_orchestrator.h"
 
-#include "../runtime/support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

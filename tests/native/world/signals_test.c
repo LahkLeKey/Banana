@@ -1,7 +1,7 @@
 #include "world/signals.h"
 #include "world/world.h"
 
-#include "../runtime/support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

@@ -1,6 +1,6 @@
 #include "runtime/interaction/collection/interactive_collection.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_init_register_collect_lifecycle(void **state)
 {

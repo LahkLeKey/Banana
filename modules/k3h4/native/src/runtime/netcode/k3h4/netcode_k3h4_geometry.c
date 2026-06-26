@@ -1,6 +1,6 @@
 #include "netcode_k3h4_geometry.h"
 
-#include "../vector/netcode_fixed_point.h"
+#include "runtime/netcode/vector/netcode_fixed_point.h"
 
 #include <math.h>
 

@@ -41,8 +41,8 @@ if ! command -v bun >/dev/null 2>&1; then
   exit 2
 fi
 
-if [[ ! -d "src/typescript/node_modules" ]] || [[ ! -d "src/typescript/node_modules/react" ]]; then
-  echo "[kickoff] PRECHECK FAIL: TypeScript workspace dependencies are missing"
+if ! bun --cwd src/typescript/react -e 'import "react/jsx-dev-runtime"; console.log("ok");' >/dev/null 2>&1; then
+  echo "[kickoff] PRECHECK FAIL: TypeScript workspace dependencies are missing or incomplete"
   if [[ "$STATUS_ONLY" == true ]]; then
     echo "[kickoff] STATUS: NOT READY"
     echo "[kickoff] SUMMARY: ATTENTION NEEDED"

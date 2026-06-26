@@ -1,6 +1,6 @@
 #include "runtime/engine/gameplay/service/gameplay_service_sentience_decision.h"
 
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

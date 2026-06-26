@@ -1,5 +1,5 @@
 #include "render/dx12/backend_dx12_diagnostics.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

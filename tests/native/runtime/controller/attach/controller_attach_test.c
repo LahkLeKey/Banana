@@ -1,6 +1,6 @@
 #include "runtime/controller/attach/controller_attach.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

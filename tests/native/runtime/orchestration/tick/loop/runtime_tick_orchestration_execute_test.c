@@ -3,7 +3,7 @@
 #include "runtime/tick/tick_input_phase.h"
 #include "runtime/tick/tick_phases.h"
 #include "runtime/tick/tick_post_phase.h"
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stdint.h>
 

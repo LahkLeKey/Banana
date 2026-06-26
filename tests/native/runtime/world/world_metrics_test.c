@@ -1,7 +1,7 @@
 #include "runtime/world/world_metrics.h"
 #include "runtime/controller/runtime/controller_runtime.h"
 
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 ControllerInstance *runtime_controller_find_by_id(ControllerInstance **controllers,
                                                   int controller_count,

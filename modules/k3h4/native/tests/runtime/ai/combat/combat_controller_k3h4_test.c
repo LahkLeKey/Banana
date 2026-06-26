@@ -1,6 +1,6 @@
 #include "ai/combat_controller.h"
 #include "ai/controller.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_combat_bias_and_engagement(void **state)
 {

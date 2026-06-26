@@ -1,7 +1,7 @@
 #include "runtime/world/world_abi.h"
 #include "world/world.h"
 
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_world_abi_guards_null_world(void **state)
 {

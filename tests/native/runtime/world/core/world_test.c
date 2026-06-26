@@ -1,5 +1,5 @@
 #include "world/world.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_world_spawn_and_lookup(void **state)
 {

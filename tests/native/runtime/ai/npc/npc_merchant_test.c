@@ -1,5 +1,5 @@
 #include "ai/npc_merchant.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_merchant_register_and_trade_flow(void **state)
 {

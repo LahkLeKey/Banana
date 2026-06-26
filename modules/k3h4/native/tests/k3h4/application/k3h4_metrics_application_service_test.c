@@ -1,6 +1,6 @@
 #include "k3h4/application/k3h4_metrics_application_service.h"
 
-#include "../../runtime/support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static RuntimeK3h4SignalInput g_last_signal_input;
 static RuntimeK3h4LinkSignalInput g_last_link_input;

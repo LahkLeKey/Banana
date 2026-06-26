@@ -1,5 +1,5 @@
 #include "runtime/engine/lifecycle/engine_lifecycle.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static float lifecycle_flat_height(float x, float z)
 {

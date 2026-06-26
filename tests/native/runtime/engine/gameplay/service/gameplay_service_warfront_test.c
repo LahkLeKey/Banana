@@ -3,7 +3,7 @@
 #include "world/entity.h"
 #include "world/world.h"
 #include "runtime/engine/gameplay/service/gameplay_service_warfront.h"
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

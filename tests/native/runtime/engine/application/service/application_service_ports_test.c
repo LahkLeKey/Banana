@@ -3,7 +3,7 @@
 #include "runtime/engine/application/service/application_service_render_port.h"
 #include "runtime/engine/application/service/application_service_terrain_port.h"
 
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_application_service_ports_resolve_expected_bindings(void **state)
 {

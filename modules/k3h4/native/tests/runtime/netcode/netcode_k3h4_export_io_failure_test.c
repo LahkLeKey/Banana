@@ -1,5 +1,5 @@
 #include "runtime/netcode/k3h4/netcode_k3h4_export.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <errno.h>
 #include <stdio.h>

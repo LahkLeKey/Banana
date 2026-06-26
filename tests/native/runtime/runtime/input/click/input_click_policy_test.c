@@ -1,5 +1,5 @@
 #include "runtime/input/click/input_click_policy.h"
-#include "../../../support/test_support.h"
+#include "runtime/support/test_support.h"
 #include <math.h>
 
 static void test_input_click_policy_normalize(void **state)

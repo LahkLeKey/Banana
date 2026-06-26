@@ -1,5 +1,5 @@
 #include "runtime/player/build/player_builds.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static int player_builds_test_setup(void **state)
 {

@@ -135,17 +135,8 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/netcode/model/netcode_model.c
   runtime/netcode/reward/netcode_reward.c
   runtime/netcode/link/netcode_link.c
-  runtime/netcode/k3h4/netcode_k3h4_metrics.c
-  runtime/netcode/k3h4/netcode_k3h4_orchestrator.c
   runtime/netcode/vector/netcode_fixed_point.c
-  runtime/netcode/vector/netcode_k3h4.c
   runtime/netcode/vector/netcode_vector.c
-  runtime/netcode/k3h4/netcode_k3h4_pipeline.c
-  runtime/netcode/k3h4/netcode_k3h4_pipeline_setup.c
-  runtime/netcode/k3h4/netcode_k3h4_geometry.c
-  runtime/netcode/k3h4/netcode_k3h4_cluster_scoring.c
-  runtime/netcode/k3h4/netcode_k3h4_observability.c
-  runtime/netcode/k3h4/netcode_k3h4_export.c
   runtime/netcode/contract/netcode_contract.c
   runtime/abi/netcode/netcode_abi.c
   runtime/abi/physics/physics_abi.c
@@ -202,6 +193,8 @@ add_library(banana_engine_core STATIC
   ${ENGINE_UI_SOURCES}
 )
 
+target_link_libraries(banana_engine_core PUBLIC banana_k3h4_core)
+
 set_target_properties(banana_engine_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 set(BANANA_RENDER_BACKEND_DEFAULT "glfw")
@@ -219,6 +212,8 @@ target_include_directories(banana_engine_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/ai
   ${CMAKE_CURRENT_SOURCE_DIR}/world
   ${CMAKE_CURRENT_SOURCE_DIR}/ui
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/src
 )
 
 if(MSVC)
@@ -353,12 +348,8 @@ if(BUILD_TESTING)
   add_executable(banana_native_feedback_loop_factory
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/native/feedback/native_feedback_loop_factory.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../scaffold/native_entry.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_native_orchestrator.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/k3h4_metrics_orchestration_layer.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/application/k3h4_metrics_application_service.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../k3h4/infrastructure/k3h4_metrics_infrastructure_adapter.c
   )
-  target_link_libraries(banana_native_feedback_loop_factory PRIVATE banana_engine_core)
+  target_link_libraries(banana_native_feedback_loop_factory PRIVATE banana_engine_core banana_k3h4_core)
   target_include_directories(banana_native_feedback_loop_factory PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_CURRENT_SOURCE_DIR}/../include
@@ -368,6 +359,7 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/ai
     ${CMAKE_CURRENT_SOURCE_DIR}/world
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/src
   )
   add_test(NAME banana_native_feedback_loop_factory_smoke
     COMMAND banana_native_feedback_loop_factory

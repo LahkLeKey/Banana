@@ -1,6 +1,6 @@
 #include "runtime/player/merchant/player_merchant_adapter.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static int g_get_calls = 0;
 static int g_add_calls = 0;

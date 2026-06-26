@@ -1,5 +1,5 @@
 #include "runtime/wildlife/wildlife_gameplay.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

@@ -1,11 +1,11 @@
 #ifndef BANANA_ENGINE_RUNTIME_NETCODE_K3H4_ORCHESTRATOR_H
 #define BANANA_ENGINE_RUNTIME_NETCODE_K3H4_ORCHESTRATOR_H
 
-#include "../link/netcode_link.h"
-#include "../model/netcode_model.h"
-#include "../reward/netcode_reward.h"
+#include "runtime/netcode/link/netcode_link.h"
+#include "runtime/netcode/model/netcode_model.h"
+#include "runtime/netcode/reward/netcode_reward.h"
 #include "netcode_k3h4_metrics.h"
-#include "../vector/netcode_vector.h"
+#include "runtime/netcode/vector/netcode_vector.h"
 
 #ifdef __cplusplus
 extern "C"

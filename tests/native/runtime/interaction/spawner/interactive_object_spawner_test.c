@@ -1,7 +1,7 @@
 #include "runtime/interaction/spawner/interactive_object_spawner.h"
 #include "runtime/terrain/terrain_chunks.h"
 
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

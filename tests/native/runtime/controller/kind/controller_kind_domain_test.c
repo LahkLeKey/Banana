@@ -1,5 +1,5 @@
 #include "runtime/controller/kind/controller_kind_domain.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <string.h>
 

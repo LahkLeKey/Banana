@@ -1,6 +1,6 @@
 #include "runtime/netcode/k3h4/netcode_k3h4_metrics.h"
 #include "runtime/netcode/vector/netcode_fixed_point.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 #include <string.h>
 
 static void write_uniform_input(RuntimeNetcodeVectorOutput *output, int dimensions, float value)

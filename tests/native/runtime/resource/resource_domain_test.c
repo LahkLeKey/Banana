@@ -1,5 +1,5 @@
 #include "runtime/resource/resource_domain.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_resource_domain_parse_and_name(void **state)
 {

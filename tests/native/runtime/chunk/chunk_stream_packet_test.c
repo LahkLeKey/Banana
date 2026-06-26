@@ -1,5 +1,5 @@
 #include "runtime/chunk/chunk_stream_packet.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stdint.h>
 #include <string.h>

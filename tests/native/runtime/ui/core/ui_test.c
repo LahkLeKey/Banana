@@ -1,6 +1,6 @@
 #include "ui/ui.h"
 #include "ui/ui_internal.h"
-#include "../../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 #include <stdlib.h>
 

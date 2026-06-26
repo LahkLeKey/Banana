@@ -1,5 +1,5 @@
 #include "runtime/abi/netcode/netcode_abi.h"
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 static void test_netcode_abi_envelope_endianness(void **state)
 {

@@ -30,3 +30,24 @@ The following packages are currently published for external consumption.
 - API smoke: `API: smoke (v3)` task
 - Shared UI smoke: `UI: smoke (v3)` task
 - Panels package build: `cd src/typescript/packages/panels && bun run build`
+
+## Agent Tooling
+
+Use these files and commands for a fast return-to-work flow.
+
+- Agent entrypoint and conventions: `AGENTS.md`
+- Domain routing map: `CONTEXT-MAP.md`
+- Return checklist: `docs/agents/return-to-work-checklist.md`
+- Issue tracker rules: `docs/agents/issue-tracker.md`
+- Triage vocabulary: `docs/agents/triage-labels.md`
+- Domain doc rules: `docs/agents/domain.md`
+
+Kickoff commands from repo root:
+
+- Readiness snapshot: `npm run kickoff:status`
+- Full kickoff (API + UI smoke): `npm run kickoff:return`
+- Auto-fix deps + kickoff: `npm run kickoff:return:auto-fix`
+
+Issue template:
+
+- `.github/ISSUE_TEMPLATE/implementation-intake.md`

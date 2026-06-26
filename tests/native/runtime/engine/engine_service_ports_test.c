@@ -3,7 +3,7 @@
 #include "runtime/engine/state/engine_state.h"
 #include "runtime/terrain/terrain_abi.h"
 
-#include "../support/test_support.h"
+#include "runtime/support/test_support.h"
 
 int engine_init(int width, int height);
 
