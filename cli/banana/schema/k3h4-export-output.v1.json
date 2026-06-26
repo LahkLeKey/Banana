@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "description": "Canonical output contract for banana k3h4 export (V1)",
+  "required_top_level": [
+    "artifact_type",
+    "metadata",
+    "results",
+    "schema_version",
+    "summary"
+  ]
+}

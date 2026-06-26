@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import hashlib
 import json
 import os
 from pathlib import Path
 import platform
 import random
+import csv
+import io
 import sys
 from dataclasses import dataclass
 from typing import Sequence
@@ -18,8 +21,10 @@ EXPECTED_PING_STATUS = 0
 REQUIRED_PYTHON = (3, 10)
 CANONICAL_SCHEMA_RELATIVE = Path("src/typescript/api/coverage-denominator.json")
 RUN_OUTPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-run-output.v1.json")
+EXPORT_OUTPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-export-output.v1.json")
 SAMPLE_SCHEMA_VERSION = 1
 EXPLAIN_SCHEMA_VERSION = 1
+EXPORT_SCHEMA_VERSION = 1
 DEFAULT_SAMPLE_PRESET = "baseline"
 RUN_FLOAT_PRECISION = 6
 NATIVE_K3H4_CONTRACT_OK = 0
@@ -1060,7 +1065,325 @@ def _interpret_spectral_states(spectral_states: list[int]) -> str:
 
 
 def _k3h4_export(args: argparse.Namespace) -> int:
-    return _not_implemented("export")
+    repo_root = _resolve_repo_root(Path.cwd().resolve())
+    payload, input_error = _load_export_input_payload(args)
+    if input_error is not None:
+        if args.strict:
+            _emit_error_envelope(input_error)
+        return 1
+
+    validation_error = _validate_export_input_payload(payload)
+    if validation_error is not None:
+        if args.strict:
+            _emit_error_envelope(validation_error)
+        return 1
+
+    export_payload = _build_export_payload(payload)
+
+    schema_path = _resolve_export_schema_path(args, repo_root)
+    schema_error = _validate_export_output_payload(export_payload, schema_path)
+    if schema_error is not None:
+        if args.strict:
+            _emit_error_envelope(schema_error)
+        return 1
+
+    artifact_text = (
+        json.dumps(export_payload, sort_keys=True, separators=(",", ":"))
+        if args.format == "json"
+        else _build_export_csv(export_payload)
+    )
+
+    return _write_or_print_artifact(artifact_text, args.output_file)
+
+
+def _load_export_input_payload(args: argparse.Namespace) -> tuple[dict[str, object] | None, DoctorFinding | None]:
+    raw = ""
+    if args.input_file:
+        input_path = Path(args.input_file).expanduser()
+        if not input_path.is_absolute():
+            input_path = (Path.cwd() / input_path).resolve()
+        if not input_path.exists() or not input_path.is_file():
+            return None, DoctorFinding(
+                level="error",
+                check="export_input",
+                error_code="BANANA_EXPORT_INPUT_FILE_NOT_FOUND",
+                message=f"Input file not found: {input_path}",
+                field_path="input_file",
+            )
+        try:
+            raw = input_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            return None, DoctorFinding(
+                level="error",
+                check="export_input",
+                error_code="BANANA_EXPORT_INPUT_FILE_READ_FAILED",
+                message=f"Failed to read input file: {exc}",
+                field_path="input_file",
+            )
+    else:
+        raw = sys.stdin.read()
+
+    if raw.strip() == "":
+        return None, DoctorFinding(
+            level="error",
+            check="export_input",
+            error_code="BANANA_EXPORT_INPUT_EMPTY",
+            message="No run output JSON was provided via stdin or --input-file.",
+            field_path="stdin",
+        )
+
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return None, DoctorFinding(
+            level="error",
+            check="export_input",
+            error_code="BANANA_EXPORT_INPUT_JSON_INVALID",
+            message=f"Input is not valid JSON: {exc}",
+            field_path="stdin",
+        )
+
+    if not isinstance(payload, dict):
+        return None, DoctorFinding(
+            level="error",
+            check="export_input",
+            error_code="BANANA_EXPORT_INPUT_SHAPE_INVALID",
+            message="Input JSON must be an object.",
+            field_path="stdin",
+        )
+
+    return payload, None
+
+
+def _validate_export_input_payload(payload: dict[str, object]) -> DoctorFinding | None:
+    schema_version = payload.get("schema_version")
+    if schema_version != SAMPLE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="export_input",
+            error_code="BANANA_EXPORT_SCHEMA_VERSION_MISMATCH",
+            message=f"Expected run schema_version=1, found {schema_version!r}.",
+            field_path="schema_version",
+        )
+
+    required_top = {
+        "input_sample_count",
+        "native_library_path",
+        "native_resolution_source",
+        "results",
+    }
+    missing_top = sorted(required_top - set(payload.keys()))
+    if missing_top:
+        return DoctorFinding(
+            level="error",
+            check="export_input",
+            error_code="BANANA_EXPORT_INPUT_FIELDS_MISSING",
+            message=f"Run payload missing required fields: {missing_top}",
+            field_path="input",
+        )
+
+    results = payload.get("results")
+    if not isinstance(results, list) or len(results) == 0:
+        return DoctorFinding(
+            level="error",
+            check="export_input",
+            error_code="BANANA_EXPORT_RESULTS_MISSING",
+            message="Run payload must include non-empty results array.",
+            field_path="results",
+        )
+
+    for index, result in enumerate(results):
+        if not isinstance(result, dict):
+            return DoctorFinding(
+                level="error",
+                check="export_input",
+                error_code="BANANA_EXPORT_RESULT_SHAPE_INVALID",
+                message="Each result must be an object.",
+                field_path=f"results[{index}]",
+            )
+
+    return None
+
+
+def _build_export_payload(run_payload: dict[str, object]) -> dict[str, object]:
+    canonical_input = json.dumps(run_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    deterministic_hash = hashlib.sha256(canonical_input).hexdigest()
+
+    results = run_payload["results"]
+    assert isinstance(results, list)
+
+    alignments = [int(item.get("alignment", 0)) for item in results if isinstance(item, dict)]
+    radial_stabilities = [int(item.get("radial_stability", 0)) for item in results if isinstance(item, dict)]
+    cluster_counts = [int(item.get("cluster_count", 0)) for item in results if isinstance(item, dict)]
+
+    contract_failures = 0
+    for item in results:
+        if isinstance(item, dict) and int(item.get("contract_status", 1)) != 0:
+            contract_failures += 1
+
+    summary = {
+        "average_alignment": _fixed_float(sum(alignments) / len(alignments)) if alignments else _fixed_float(0.0),
+        "average_radial_stability": (
+            _fixed_float(sum(radial_stabilities) / len(radial_stabilities)) if radial_stabilities else _fixed_float(0.0)
+        ),
+        "contract_failures": contract_failures,
+        "result_count": len(results),
+        "max_cluster_count": max(cluster_counts) if cluster_counts else 0,
+    }
+
+    return {
+        "artifact_type": "k3h4_export",
+        "metadata": {
+            "deterministic_hash": deterministic_hash,
+            "run_configuration": {
+                "input_sample_count": int(run_payload.get("input_sample_count", len(results))),
+                "native_library_path": str(run_payload.get("native_library_path", "")),
+                "native_resolution_source": str(run_payload.get("native_resolution_source", "")),
+            },
+        },
+        "results": results,
+        "schema_version": EXPORT_SCHEMA_VERSION,
+        "summary": summary,
+    }
+
+
+def _resolve_export_schema_path(args: argparse.Namespace, repo_root: Path) -> Path:
+    requested = Path(args.schema_path).expanduser()
+    if requested.is_absolute():
+        return requested
+    return (repo_root / requested).resolve()
+
+
+def _validate_export_output_payload(payload: dict[str, object], schema_path: Path) -> DoctorFinding | None:
+    if not schema_path.exists() or not schema_path.is_file():
+        return DoctorFinding(
+            level="error",
+            check="export_schema",
+            error_code="BANANA_EXPORT_SCHEMA_NOT_FOUND",
+            message=f"Export schema file not found: {schema_path}",
+            field_path="schema.path",
+        )
+
+    try:
+        schema_payload = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return DoctorFinding(
+            level="error",
+            check="export_schema",
+            error_code="BANANA_EXPORT_SCHEMA_UNREADABLE",
+            message=f"Export schema could not be parsed: {exc}",
+            field_path="schema.path",
+        )
+
+    expected_version = schema_payload.get("schema_version")
+    if expected_version != EXPORT_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="export_schema",
+            error_code="BANANA_EXPORT_SCHEMA_VERSION_UNSUPPORTED",
+            message=f"Expected export schema version 1, found {expected_version!r}.",
+            field_path="schema.schema_version",
+        )
+
+    required_top_level = schema_payload.get("required_top_level", [])
+    if not isinstance(required_top_level, list):
+        return DoctorFinding(
+            level="error",
+            check="export_schema",
+            error_code="BANANA_EXPORT_SCHEMA_INVALID",
+            message="required_top_level must be an array in export schema.",
+            field_path="schema.required_top_level",
+        )
+
+    for key in required_top_level:
+        if key not in payload:
+            return DoctorFinding(
+                level="error",
+                check="export_schema",
+                error_code="BANANA_EXPORT_SCHEMA_VALIDATION_FAILED",
+                message=f"Export output missing required top-level key {key!r}.",
+                field_path=f"output.{key}",
+            )
+
+    return None
+
+
+def _build_export_csv(export_payload: dict[str, object]) -> str:
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=[
+            "result_index",
+            "alignment",
+            "cluster_count",
+            "contract_status",
+            "dimensions",
+            "radial_stability",
+            "iteration_count",
+            "convergence_status",
+            "deterministic_hash",
+            "native_resolution_source",
+            "native_library_path",
+        ],
+    )
+    writer.writeheader()
+
+    metadata = export_payload.get("metadata", {})
+    deterministic_hash = ""
+    native_resolution_source = ""
+    native_library_path = ""
+    if isinstance(metadata, dict):
+        deterministic_hash = str(metadata.get("deterministic_hash", ""))
+        run_configuration = metadata.get("run_configuration", {})
+        if isinstance(run_configuration, dict):
+            native_resolution_source = str(run_configuration.get("native_resolution_source", ""))
+            native_library_path = str(run_configuration.get("native_library_path", ""))
+
+    results = export_payload.get("results", [])
+    if isinstance(results, list):
+        for index, result in enumerate(results):
+            if not isinstance(result, dict):
+                continue
+            observability = result.get("observability", {})
+            iteration_count = ""
+            convergence_status = ""
+            if isinstance(observability, dict):
+                iteration_count = observability.get("iteration_count", "")
+                convergence_status = observability.get("convergence_status", "")
+
+            writer.writerow(
+                {
+                    "result_index": index,
+                    "alignment": result.get("alignment", ""),
+                    "cluster_count": result.get("cluster_count", ""),
+                    "contract_status": result.get("contract_status", ""),
+                    "dimensions": result.get("dimensions", ""),
+                    "radial_stability": result.get("radial_stability", ""),
+                    "iteration_count": iteration_count,
+                    "convergence_status": convergence_status,
+                    "deterministic_hash": deterministic_hash,
+                    "native_resolution_source": native_resolution_source,
+                    "native_library_path": native_library_path,
+                }
+            )
+
+    return output.getvalue()
+
+
+def _write_or_print_artifact(artifact_text: str, output_file: str | None) -> int:
+    if output_file:
+        target = Path(output_file).expanduser()
+        if not target.is_absolute():
+            target = (Path.cwd() / target).resolve()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(artifact_text, encoding="utf-8")
+        print(str(target))
+        return 0
+
+    print(artifact_text, end="")
+    if not artifact_text.endswith("\n"):
+        print()
+    return 0
 
 
 def _k3h4_doctor(args: argparse.Namespace) -> int:
@@ -1352,7 +1675,41 @@ def build_parser() -> argparse.ArgumentParser:
             ),
         ),
     )
-    add_k3h4_subcommand("export", "Export K3H4 artifacts (stub)", _k3h4_export)
+    add_k3h4_subcommand(
+        "export",
+        "Export machine-consumable K3H4 artifacts",
+        _k3h4_export,
+        configure=lambda cmd: (
+            cmd.add_argument(
+                "--input-file",
+                help="Optional run-output JSON file path; stdin remains the primary input path",
+            ),
+            cmd.add_argument(
+                "--format",
+                choices=("json", "csv"),
+                default="json",
+                help="Artifact format to emit (default: json)",
+            ),
+            cmd.add_argument(
+                "--output-file",
+                help="Optional output file path; defaults to stdout",
+            ),
+            cmd.add_argument(
+                "--schema-path",
+                default=str(EXPORT_OUTPUT_SCHEMA_RELATIVE),
+                help=(
+                    "Canonical export schema path "
+                    f"(default: {EXPORT_OUTPUT_SCHEMA_RELATIVE})"
+                ),
+            ),
+            cmd.add_argument(
+                "--strict",
+                action=argparse.BooleanOptionalAction,
+                default=True,
+                help="Emit machine-readable JSON error envelopes on stderr when checks fail",
+            ),
+        ),
+    )
     add_k3h4_subcommand(
         "doctor",
         "Run read-only preflight diagnostics",
