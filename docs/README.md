@@ -6,6 +6,8 @@ This repository includes a K3H4-first netcode analytics pipeline that flows acro
 
 K3H4 is the authoritative analytics model used for netcode clustering, convergence scoring, and ABI coverage reporting in the runtime UI.
 
+- Theory notes for issue 1157: [docs/k3h4-lambda-hypersphere-notes.md](docs/k3h4-lambda-hypersphere-notes.md)
+
 ### Contract Surface
 
 - Native: deterministic K3H4 metrics and ABI envelope metadata are produced from the native runtime/netcode layer.
