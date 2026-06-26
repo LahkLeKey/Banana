@@ -17,8 +17,29 @@ EXPECTED_ABI_VERSION = 3
 EXPECTED_PING_STATUS = 0
 REQUIRED_PYTHON = (3, 10)
 CANONICAL_SCHEMA_RELATIVE = Path("src/typescript/api/coverage-denominator.json")
+RUN_OUTPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-run-output.v1.json")
 SAMPLE_SCHEMA_VERSION = 1
 DEFAULT_SAMPLE_PRESET = "baseline"
+RUN_FLOAT_PRECISION = 6
+NATIVE_K3H4_CONTRACT_OK = 0
+VECTOR_INPUT_FIELDS = (
+    "call_density",
+    "quest_percent",
+    "player_level",
+    "combo_streak",
+    "branch_pressure",
+    "dependency_pulse",
+    "workflow_depth",
+    "neural_relevance_score",
+    "network_dimensions",
+    "model_confidence",
+    "policy_momentum",
+    "assignment_family",
+    "spectral_mode",
+    "hardware_byte_order_tag",
+    "hardware_dtype_tag",
+    "hardware_alignment_bytes",
+)
 NATIVE_LIBRARY_FILENAMES = (
     "libbanana_native.so",
     "banana_native.so",
@@ -205,7 +226,509 @@ def _build_k3h4_sample_vector(*, rng: random.Random, dims: int, preset: str) -> 
 
 
 def _k3h4_run(args: argparse.Namespace) -> int:
-    return _not_implemented("run")
+    input_payload, input_error = _load_run_input_payload(args)
+    if input_error is not None:
+        if args.strict:
+            _emit_error_envelope(input_error)
+        return 1
+
+    samples_error = _validate_run_input_payload(input_payload)
+    if samples_error is not None:
+        if args.strict:
+            _emit_error_envelope(samples_error)
+        return 1
+
+    repo_root = _resolve_repo_root(Path.cwd().resolve())
+    native_path, native_source, checked_paths = _resolve_native_library(args, repo_root)
+    if native_path is None:
+        system = platform.system().lower()
+        platform_hint = ""
+        if system != "linux":
+            platform_hint = " Linux is the V1 supported platform; non-Linux is experimental."
+        finding = DoctorFinding(
+            level="error",
+            check="run_native_library_resolution",
+            error_code="BANANA_RUN_NATIVE_LIB_NOT_FOUND",
+            message=(
+                "Unable to resolve Banana native library via --native-lib, BANANA_NATIVE_PATH, or autodiscovery."
+                f" Checked paths: {checked_paths}.{platform_hint}"
+            ),
+            field_path="native.library",
+        )
+        if args.strict:
+            _emit_error_envelope(finding)
+        return 1
+
+    try:
+        native = ctypes.CDLL(str(native_path))
+    except OSError as exc:
+        system = platform.system().lower()
+        platform_hint = ""
+        if system != "linux":
+            platform_hint = " Linux is the V1 supported platform; non-Linux is experimental."
+        finding = DoctorFinding(
+            level="error",
+            check="run_native_load",
+            error_code="BANANA_RUN_NATIVE_LOAD_FAILED",
+            message=f"Failed to load native library at {native_path}: {exc}.{platform_hint}",
+            field_path="native.library",
+        )
+        if args.strict:
+            _emit_error_envelope(finding)
+        return 1
+
+    build_fn = getattr(native, "banana_native_v3_netcode_build_k3h4", None)
+    if build_fn is None:
+        finding = DoctorFinding(
+            level="error",
+            check="run_native_binding",
+            error_code="BANANA_RUN_SYMBOL_MISSING",
+            message="Missing symbol banana_native_v3_netcode_build_k3h4 in native library.",
+            field_path="native.symbols.banana_native_v3_netcode_build_k3h4",
+        )
+        if args.strict:
+            _emit_error_envelope(finding)
+        return 1
+
+    build_fn.argtypes = [ctypes.POINTER(_VectorInput), ctypes.POINTER(_K3h4Output)]
+    build_fn.restype = ctypes.c_int
+
+    results: list[dict[str, object]] = []
+    for index, sample in enumerate(input_payload["samples"]):
+        vector = _VectorInput(**sample)
+        output = _K3h4Output()
+        status = int(build_fn(ctypes.byref(vector), ctypes.byref(output)))
+        if status != NATIVE_K3H4_CONTRACT_OK:
+            finding = DoctorFinding(
+                level="error",
+                check="run_native_execute",
+                error_code="BANANA_RUN_NATIVE_CONTRACT_FAILURE",
+                message=(
+                    "banana_native_v3_netcode_build_k3h4 returned non-zero status "
+                    f"{status} for sample index {index}."
+                ),
+                field_path=f"samples[{index}]",
+            )
+            if args.strict:
+                _emit_error_envelope(finding)
+            return 1
+        results.append(_serialize_k3h4_output(output))
+
+    output_payload = {
+        "input_sample_count": len(input_payload["samples"]),
+        "native_library_path": str(native_path),
+        "native_resolution_source": native_source,
+        "results": results,
+        "schema_version": SAMPLE_SCHEMA_VERSION,
+    }
+
+    schema_path = _resolve_run_output_schema_path(args, repo_root)
+    schema_error = _validate_run_output_payload(output_payload, schema_path)
+    if schema_error is not None:
+        if args.strict:
+            _emit_error_envelope(schema_error)
+        return 1
+
+    print(json.dumps(output_payload, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+def _is_int_value(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _load_run_input_payload(args: argparse.Namespace) -> tuple[dict[str, object] | None, DoctorFinding | None]:
+    raw = ""
+    if args.input_file:
+        input_path = Path(args.input_file).expanduser()
+        if not input_path.is_absolute():
+            input_path = (Path.cwd() / input_path).resolve()
+        if not input_path.exists() or not input_path.is_file():
+            return None, DoctorFinding(
+                level="error",
+                check="run_input",
+                error_code="BANANA_RUN_INPUT_FILE_NOT_FOUND",
+                message=f"Input file not found: {input_path}",
+                field_path="input_file",
+            )
+        try:
+            raw = input_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            return None, DoctorFinding(
+                level="error",
+                check="run_input",
+                error_code="BANANA_RUN_INPUT_FILE_READ_FAILED",
+                message=f"Failed to read input file: {exc}",
+                field_path="input_file",
+            )
+    else:
+        raw = sys.stdin.read()
+
+    if raw.strip() == "":
+        return None, DoctorFinding(
+            level="error",
+            check="run_input",
+            error_code="BANANA_RUN_INPUT_EMPTY",
+            message="No input JSON was provided via stdin or --input-file.",
+            field_path="stdin",
+        )
+
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return None, DoctorFinding(
+            level="error",
+            check="run_input",
+            error_code="BANANA_RUN_INPUT_JSON_INVALID",
+            message=f"Input is not valid JSON: {exc}",
+            field_path="stdin",
+        )
+
+    if not isinstance(payload, dict):
+        return None, DoctorFinding(
+            level="error",
+            check="run_input",
+            error_code="BANANA_RUN_INPUT_SHAPE_INVALID",
+            message="Input JSON must be an object.",
+            field_path="stdin",
+        )
+
+    return payload, None
+
+
+def _validate_run_input_payload(payload: dict[str, object]) -> DoctorFinding | None:
+    schema_version = payload.get("schema_version")
+    if schema_version != SAMPLE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="run_input",
+            error_code="BANANA_RUN_SCHEMA_VERSION_MISMATCH",
+            message=f"Expected schema_version={SAMPLE_SCHEMA_VERSION}, found {schema_version!r}.",
+            field_path="schema_version",
+        )
+
+    samples = payload.get("samples")
+    if not isinstance(samples, list) or len(samples) == 0:
+        return DoctorFinding(
+            level="error",
+            check="run_input",
+            error_code="BANANA_RUN_SAMPLES_MISSING",
+            message="Input must include non-empty samples array.",
+            field_path="samples",
+        )
+
+    expected = set(VECTOR_INPUT_FIELDS)
+    for index, item in enumerate(samples):
+        if not isinstance(item, dict):
+            return DoctorFinding(
+                level="error",
+                check="run_input",
+                error_code="BANANA_RUN_SAMPLE_SHAPE_INVALID",
+                message="Each sample must be an object with exact native-aligned fields.",
+                field_path=f"samples[{index}]",
+            )
+
+        keys = set(item.keys())
+        missing = sorted(expected - keys)
+        unknown = sorted(keys - expected)
+        if missing:
+            return DoctorFinding(
+                level="error",
+                check="run_input",
+                error_code="BANANA_RUN_SAMPLE_FIELDS_MISSING",
+                message=f"Missing required fields: {missing}",
+                field_path=f"samples[{index}]",
+            )
+        if unknown:
+            return DoctorFinding(
+                level="error",
+                check="run_input",
+                error_code="BANANA_RUN_SAMPLE_FIELDS_UNKNOWN",
+                message=f"Unknown fields are not allowed in V1: {unknown}",
+                field_path=f"samples[{index}]",
+            )
+
+        for field_name in VECTOR_INPUT_FIELDS:
+            if not _is_int_value(item[field_name]):
+                return DoctorFinding(
+                    level="error",
+                    check="run_input",
+                    error_code="BANANA_RUN_SAMPLE_FIELD_TYPE_INVALID",
+                    message=f"Field {field_name} must be an integer.",
+                    field_path=f"samples[{index}].{field_name}",
+                )
+
+    return None
+
+
+def _resolve_run_output_schema_path(args: argparse.Namespace, repo_root: Path) -> Path:
+    requested = Path(args.schema_path).expanduser()
+    if requested.is_absolute():
+        return requested
+    return (repo_root / requested).resolve()
+
+
+def _validate_run_output_payload(payload: dict[str, object], schema_path: Path) -> DoctorFinding | None:
+    if not schema_path.exists() or not schema_path.is_file():
+        return DoctorFinding(
+            level="error",
+            check="run_output_schema",
+            error_code="BANANA_RUN_OUTPUT_SCHEMA_NOT_FOUND",
+            message=f"Run output schema file not found: {schema_path}",
+            field_path="schema.path",
+        )
+
+    try:
+        schema_payload = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return DoctorFinding(
+            level="error",
+            check="run_output_schema",
+            error_code="BANANA_RUN_OUTPUT_SCHEMA_UNREADABLE",
+            message=f"Run output schema could not be parsed: {exc}",
+            field_path="schema.path",
+        )
+
+    expected_version = schema_payload.get("schema_version")
+    if expected_version != SAMPLE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="run_output_schema",
+            error_code="BANANA_RUN_OUTPUT_SCHEMA_VERSION_UNSUPPORTED",
+            message=f"Expected output schema version 1, found {expected_version!r}.",
+            field_path="schema.schema_version",
+        )
+
+    required_top_level = schema_payload.get("required_top_level", [])
+    if not isinstance(required_top_level, list):
+        return DoctorFinding(
+            level="error",
+            check="run_output_schema",
+            error_code="BANANA_RUN_OUTPUT_SCHEMA_INVALID",
+            message="required_top_level must be an array in run output schema.",
+            field_path="schema.required_top_level",
+        )
+
+    for key in required_top_level:
+        if key not in payload:
+            return DoctorFinding(
+                level="error",
+                check="run_output_schema",
+                error_code="BANANA_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"Run output missing required top-level key {key!r}.",
+                field_path=f"output.{key}",
+            )
+
+    required_result_keys = schema_payload.get("required_result_keys", [])
+    if not isinstance(required_result_keys, list):
+        return DoctorFinding(
+            level="error",
+            check="run_output_schema",
+            error_code="BANANA_RUN_OUTPUT_SCHEMA_INVALID",
+            message="required_result_keys must be an array in run output schema.",
+            field_path="schema.required_result_keys",
+        )
+
+    results = payload.get("results")
+    if not isinstance(results, list):
+        return DoctorFinding(
+            level="error",
+            check="run_output_schema",
+            error_code="BANANA_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+            message="Run output results must be an array.",
+            field_path="output.results",
+        )
+
+    for index, result in enumerate(results):
+        if not isinstance(result, dict):
+            return DoctorFinding(
+                level="error",
+                check="run_output_schema",
+                error_code="BANANA_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                message="Each run output result entry must be an object.",
+                field_path=f"output.results[{index}]",
+            )
+        for key in required_result_keys:
+            if key not in result:
+                return DoctorFinding(
+                    level="error",
+                    check="run_output_schema",
+                    error_code="BANANA_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                    message=f"Result is missing required key {key!r}.",
+                    field_path=f"output.results[{index}].{key}",
+                )
+
+    return None
+
+
+def _fixed_float(value: float) -> float:
+    return float(f"{float(value):.{RUN_FLOAT_PRECISION}f}")
+
+
+def _serialize_k3h4_output(output: "_K3h4Output") -> dict[str, object]:
+    nodes: list[dict[str, object]] = []
+    for node in output.nodes:
+        nodes.append(
+            {
+                "coherence": int(node.coherence),
+                "inradius": _fixed_float(node.inradius),
+                "nearest_neighbor_distance": _fixed_float(node.nearest_neighbor_distance),
+                "x": _fixed_float(node.x),
+                "y": _fixed_float(node.y),
+                "z": _fixed_float(node.z),
+            }
+        )
+
+    centers: list[dict[str, object]] = []
+    for center in output.centers:
+        centers.append(
+            {
+                "center_q16": [int(value) for value in center.center_q16],
+                "cluster_id": int(center.cluster_id),
+                "member_count": int(center.member_count),
+            }
+        )
+
+    radii: list[dict[str, int]] = []
+    for radius in output.radii:
+        radii.append(
+            {
+                "cluster_id": int(radius.cluster_id),
+                "inscribed_radius_q16": int(radius.inscribed_radius_q16),
+                "nearest_neighbor_distance_q16": int(radius.nearest_neighbor_distance_q16),
+                "radius_state": int(radius.radius_state),
+            }
+        )
+
+    weighted_voronoi_scores: list[dict[str, int]] = []
+    for score in output.weighted_voronoi_scores:
+        weighted_voronoi_scores.append(
+            {
+                "cluster_id": int(score.cluster_id),
+                "distance_to_center_q16": int(score.distance_to_center_q16),
+                "score_validity": int(score.score_validity),
+                "vector_id": int(score.vector_id),
+                "weighted_score_q16": int(score.weighted_score_q16),
+            }
+        )
+
+    spectral_proxy: list[dict[str, int]] = []
+    for spectral in output.spectral_proxy:
+        spectral_proxy.append(
+            {
+                "amplitude_proxy_q16": int(spectral.amplitude_proxy_q16),
+                "cluster_id": int(spectral.cluster_id),
+                "frequency_proxy_q16": int(spectral.frequency_proxy_q16),
+                "spectral_state": int(spectral.spectral_state),
+            }
+        )
+
+    return {
+        "alignment": int(output.alignment),
+        "centers": centers,
+        "cluster_count": int(output.cluster_count),
+        "contract_status": int(output.contract_status),
+        "dimensions": int(output.dimensions),
+        "envelope_byte_order_tag": int(output.envelope_byte_order_tag),
+        "envelope_contract_version": int(output.envelope_contract_version),
+        "envelope_payload_bytes": int(output.envelope_payload_bytes),
+        "envelope_payload_crc32": int(output.envelope_payload_crc32),
+        "nodes": nodes,
+        "observability": {
+            "assignment_changes_last_iteration": int(output.observability.assignment_changes_last_iteration),
+            "convergence_status": int(output.observability.convergence_status),
+            "deterministic_hash": int(output.observability.deterministic_hash),
+            "endianness_decode_path": int(output.observability.endianness_decode_path),
+            "iteration_count": int(output.observability.iteration_count),
+        },
+        "radii": radii,
+        "radial_stability": int(output.radial_stability),
+        "spectral_proxy": spectral_proxy,
+        "vector_count": int(output.vector_count),
+        "weighted_voronoi_scores": weighted_voronoi_scores,
+    }
+
+
+class _VectorInput(ctypes.Structure):
+    _fields_ = [(field_name, ctypes.c_int32) for field_name in VECTOR_INPUT_FIELDS]
+
+
+class _ProjectionNode(ctypes.Structure):
+    _fields_ = [
+        ("x", ctypes.c_float),
+        ("y", ctypes.c_float),
+        ("z", ctypes.c_float),
+        ("coherence", ctypes.c_int32),
+        ("inradius", ctypes.c_float),
+        ("nearest_neighbor_distance", ctypes.c_float),
+    ]
+
+
+class _K3h4Center(ctypes.Structure):
+    _fields_ = [
+        ("cluster_id", ctypes.c_int32),
+        ("member_count", ctypes.c_int32),
+        ("center_q16", ctypes.c_int32 * 16),
+    ]
+
+
+class _K3h4Radius(ctypes.Structure):
+    _fields_ = [
+        ("cluster_id", ctypes.c_int32),
+        ("nearest_neighbor_distance_q16", ctypes.c_int32),
+        ("inscribed_radius_q16", ctypes.c_int32),
+        ("radius_state", ctypes.c_int32),
+    ]
+
+
+class _WeightedVoronoiScore(ctypes.Structure):
+    _fields_ = [
+        ("vector_id", ctypes.c_int32),
+        ("cluster_id", ctypes.c_int32),
+        ("distance_to_center_q16", ctypes.c_int32),
+        ("weighted_score_q16", ctypes.c_int32),
+        ("score_validity", ctypes.c_int32),
+    ]
+
+
+class _SpectralProxy(ctypes.Structure):
+    _fields_ = [
+        ("cluster_id", ctypes.c_int32),
+        ("frequency_proxy_q16", ctypes.c_int32),
+        ("amplitude_proxy_q16", ctypes.c_int32),
+        ("spectral_state", ctypes.c_int32),
+    ]
+
+
+class _K3h4Observability(ctypes.Structure):
+    _fields_ = [
+        ("convergence_status", ctypes.c_int32),
+        ("iteration_count", ctypes.c_int32),
+        ("assignment_changes_last_iteration", ctypes.c_int32),
+        ("deterministic_hash", ctypes.c_int32),
+        ("endianness_decode_path", ctypes.c_int32),
+    ]
+
+
+class _K3h4Output(ctypes.Structure):
+    _fields_ = [
+        ("dimensions", ctypes.c_int32),
+        ("nodes", _ProjectionNode * 4),
+        ("alignment", ctypes.c_int32),
+        ("radial_stability", ctypes.c_int32),
+        ("cluster_count", ctypes.c_int32),
+        ("vector_count", ctypes.c_int32),
+        ("centers", _K3h4Center * 4),
+        ("radii", _K3h4Radius * 4),
+        ("weighted_voronoi_scores", _WeightedVoronoiScore * 16),
+        ("spectral_proxy", _SpectralProxy * 4),
+        ("observability", _K3h4Observability),
+        ("envelope_contract_version", ctypes.c_int32),
+        ("envelope_byte_order_tag", ctypes.c_int32),
+        ("envelope_payload_bytes", ctypes.c_int32),
+        ("envelope_payload_crc32", ctypes.c_int32),
+        ("contract_status", ctypes.c_int32),
+    ]
 
 
 def _k3h4_explain(args: argparse.Namespace) -> int:
@@ -459,7 +982,35 @@ def build_parser() -> argparse.ArgumentParser:
             ),
         ),
     )
-    add_k3h4_subcommand("run", "Execute K3H4 pipeline (stub)", _k3h4_run)
+    add_k3h4_subcommand(
+        "run",
+        "Execute K3H4 pipeline via native-direct ctypes",
+        _k3h4_run,
+        configure=lambda cmd: (
+            cmd.add_argument(
+                "--input-file",
+                help="Optional JSON input file path; stdin remains the primary input path",
+            ),
+            cmd.add_argument(
+                "--native-lib",
+                help="Explicit native library path; highest precedence in resolution chain",
+            ),
+            cmd.add_argument(
+                "--schema-path",
+                default=str(RUN_OUTPUT_SCHEMA_RELATIVE),
+                help=(
+                    "Canonical run output schema path "
+                    f"(default: {RUN_OUTPUT_SCHEMA_RELATIVE})"
+                ),
+            ),
+            cmd.add_argument(
+                "--strict",
+                action=argparse.BooleanOptionalAction,
+                default=True,
+                help="Emit machine-readable JSON error envelopes on stderr when checks fail",
+            ),
+        ),
+    )
     add_k3h4_subcommand("explain", "Explain K3H4 outputs (stub)", _k3h4_explain)
     add_k3h4_subcommand("export", "Export K3H4 artifacts (stub)", _k3h4_export)
     add_k3h4_subcommand(
