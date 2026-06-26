@@ -4,6 +4,8 @@ build/
 !tests/native/runtime/player/build/**
 out/
 bin/
+!cli/banana/bin/
+!cli/banana/bin/banana.mjs
 obj/
 CMakeFiles/
 CMakeCache.txt

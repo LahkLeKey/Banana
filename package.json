@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
+    "cli/*",
     "src/typescript/api",
     "src/typescript/react",
     "src/typescript/shared/*"
   ],
   "scripts": {
+    "banana": "bun run --cwd cli/banana banana",
+    "test:banana-cli:smoke": "bun run --cwd cli/banana test:smoke",
     "kickoff:status": "bash scripts/kickoff-return-to-work.sh --status-only",
     "kickoff:return:auto-fix": "bash scripts/kickoff-return-to-work.sh --auto-fix",
     "kickoff:return": "bash scripts/kickoff-return-to-work.sh",

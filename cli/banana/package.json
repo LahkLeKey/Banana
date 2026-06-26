@@ -1,0 +1,13 @@
+{
+  "name": "@banana/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "banana": "./bin/banana.mjs"
+  },
+  "scripts": {
+    "banana": "bun ./bin/banana.mjs",
+    "test:smoke": "bun ./bin/banana.mjs --help && bun ./bin/banana.mjs k3h4 --help"
+  }
+}
