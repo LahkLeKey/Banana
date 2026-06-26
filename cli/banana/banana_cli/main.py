@@ -35,6 +35,10 @@ def _k3h4_export(args: argparse.Namespace) -> int:
     return _not_implemented("export")
 
 
+def _k3h4_doctor(args: argparse.Namespace) -> int:
+    return _not_implemented("doctor")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="banana",
@@ -60,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_k3h4_subcommand("run", "Execute K3H4 pipeline (stub)", _k3h4_run)
     add_k3h4_subcommand("explain", "Explain K3H4 outputs (stub)", _k3h4_explain)
     add_k3h4_subcommand("export", "Export K3H4 artifacts (stub)", _k3h4_export)
+    add_k3h4_subcommand("doctor", "Run read-only preflight diagnostics (stub)", _k3h4_doctor)
 
     return parser
 

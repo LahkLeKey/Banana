@@ -5,7 +5,7 @@ This package scaffolds the root-level Banana CLI under `cli/*` with K3H4-focused
 Current implementation status:
 
 - command router is implemented
-- `k3h4` subcommands are scaffolded stubs
+- `k3h4` subcommands are scaffolded stubs: sample, run, explain, export, doctor
 - native-direct execution is planned for follow-up stories
 
 ## Local usage (no install)
