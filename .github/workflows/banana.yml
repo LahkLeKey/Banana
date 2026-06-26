@@ -144,6 +144,12 @@ jobs:
         run: bun test src/services/databaseRuntime.source-of-record.test.ts
         working-directory: src/typescript/api
 
+      - name: Seed generated assets snapshot for strict verify
+        run: |
+          rm -rf artifacts/generated-assets
+          mkdir -p artifacts
+          cp -R docs/art-archive/generated-assets artifacts/generated-assets
+
       - name: Verify procedural generated assets contract (strict, no native compile)
         run: bun scripts/prepare-procedural-assets.mjs
         working-directory: src/typescript/react
