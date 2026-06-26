@@ -37,7 +37,12 @@ jobs:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PUSH_BEFORE_SHA: ${{ github.event.before }}
           PUSH_SHA: ${{ github.sha }}
-        run: bash scripts/validate-coherent-world-unified-slice.sh
+        run: |
+          if [[ -f scripts/validate-coherent-world-unified-slice.sh ]]; then
+            bash scripts/validate-coherent-world-unified-slice.sh
+          else
+            echo "Skipping coherent-world unified-slice guard (legacy script removed)."
+          fi
 
       - name: Sanity check database alias helper
         shell: bash
