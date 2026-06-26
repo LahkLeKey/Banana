@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "description": "Canonical output contract for banana k3h4 run (V1)",
+  "required_top_level": [
+    "input_sample_count",
+    "native_library_path",
+    "native_resolution_source",
+    "results",
+    "schema_version"
+  ],
+  "required_result_keys": [
+    "alignment",
+    "cluster_count",
+    "contract_status",
+    "dimensions",
+    "envelope_byte_order_tag",
+    "envelope_contract_version",
+    "envelope_payload_bytes",
+    "envelope_payload_crc32",
+    "nodes",
+    "observability",
+    "radii",
+    "radial_stability",
+    "spectral_proxy",
+    "vector_count",
+    "weighted_voronoi_scores"
+  ]
+}
