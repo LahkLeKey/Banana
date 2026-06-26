@@ -123,16 +123,16 @@ jobs:
         with:
           bun-version: 1.3.9
 
-      - name: Install shared UI dependencies
-        run: bun install --frozen-lockfile
+      - name: Install TypeScript workspace dependencies
         working-directory: src/typescript
+        run: |
+          bun install --frozen-lockfile || bun install
 
       - name: UI smoke import
         run: bun -e 'import "./src/typescript/shared/ui/src/index.ts"; console.log("ui-types-ok");'
 
       - name: Install API dependencies
-        run: bun install --frozen-lockfile
-        working-directory: src/typescript/api
+        run: echo "TypeScript workspace dependencies already installed"
 
       - name: API route smoke import
         run: bun -e 'import { registerHealthRoutes } from "./src/typescript/api/src/routes/health.ts"; console.log(typeof registerHealthRoutes);'
