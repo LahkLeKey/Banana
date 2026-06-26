@@ -19,6 +19,7 @@ REQUIRED_PYTHON = (3, 10)
 CANONICAL_SCHEMA_RELATIVE = Path("src/typescript/api/coverage-denominator.json")
 RUN_OUTPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-run-output.v1.json")
 SAMPLE_SCHEMA_VERSION = 1
+EXPLAIN_SCHEMA_VERSION = 1
 DEFAULT_SAMPLE_PRESET = "baseline"
 RUN_FLOAT_PRECISION = 6
 NATIVE_K3H4_CONTRACT_OK = 0
@@ -732,7 +733,330 @@ class _K3h4Output(ctypes.Structure):
 
 
 def _k3h4_explain(args: argparse.Namespace) -> int:
-    return _not_implemented("explain")
+    payload, input_error = _load_explain_input_payload(args)
+    if input_error is not None:
+        if args.strict:
+            _emit_error_envelope(input_error)
+        return 1
+
+    validation_error = _validate_explain_input_payload(payload)
+    if validation_error is not None:
+        if args.strict:
+            _emit_error_envelope(validation_error)
+        return 1
+
+    explanations: list[dict[str, object]] = []
+    for index, result in enumerate(payload["results"]):
+        explanations.append(_build_explain_record(index, result))
+
+    output_payload = {
+        "explanations": explanations,
+        "input_sample_count": payload.get("input_sample_count", len(explanations)),
+        "schema_version": EXPLAIN_SCHEMA_VERSION,
+    }
+    print(json.dumps(output_payload, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+def _load_explain_input_payload(args: argparse.Namespace) -> tuple[dict[str, object] | None, DoctorFinding | None]:
+    raw = ""
+    if args.input_file:
+        input_path = Path(args.input_file).expanduser()
+        if not input_path.is_absolute():
+            input_path = (Path.cwd() / input_path).resolve()
+        if not input_path.exists() or not input_path.is_file():
+            return None, DoctorFinding(
+                level="error",
+                check="explain_input",
+                error_code="BANANA_EXPLAIN_INPUT_FILE_NOT_FOUND",
+                message=f"Input file not found: {input_path}",
+                field_path="input_file",
+            )
+        try:
+            raw = input_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            return None, DoctorFinding(
+                level="error",
+                check="explain_input",
+                error_code="BANANA_EXPLAIN_INPUT_FILE_READ_FAILED",
+                message=f"Failed to read input file: {exc}",
+                field_path="input_file",
+            )
+    else:
+        raw = sys.stdin.read()
+
+    if raw.strip() == "":
+        return None, DoctorFinding(
+            level="error",
+            check="explain_input",
+            error_code="BANANA_EXPLAIN_INPUT_EMPTY",
+            message="No run output JSON was provided via stdin or --input-file.",
+            field_path="stdin",
+        )
+
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return None, DoctorFinding(
+            level="error",
+            check="explain_input",
+            error_code="BANANA_EXPLAIN_INPUT_JSON_INVALID",
+            message=f"Input is not valid JSON: {exc}",
+            field_path="stdin",
+        )
+
+    if not isinstance(payload, dict):
+        return None, DoctorFinding(
+            level="error",
+            check="explain_input",
+            error_code="BANANA_EXPLAIN_INPUT_SHAPE_INVALID",
+            message="Input JSON must be an object.",
+            field_path="stdin",
+        )
+
+    return payload, None
+
+
+def _validate_explain_input_payload(payload: dict[str, object]) -> DoctorFinding | None:
+    schema_version = payload.get("schema_version")
+    if schema_version != SAMPLE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="explain_input",
+            error_code="BANANA_EXPLAIN_SCHEMA_VERSION_MISMATCH",
+            message=f"Expected run schema_version=1, found {schema_version!r}.",
+            field_path="schema_version",
+        )
+
+    results = payload.get("results")
+    if not isinstance(results, list) or len(results) == 0:
+        return DoctorFinding(
+            level="error",
+            check="explain_input",
+            error_code="BANANA_EXPLAIN_RESULTS_MISSING",
+            message="Input must include non-empty results array.",
+            field_path="results",
+        )
+
+    required_keys = {
+        "alignment",
+        "cluster_count",
+        "contract_status",
+        "dimensions",
+        "observability",
+        "radii",
+        "spectral_proxy",
+        "weighted_voronoi_scores",
+    }
+
+    for index, result in enumerate(results):
+        if not isinstance(result, dict):
+            return DoctorFinding(
+                level="error",
+                check="explain_input",
+                error_code="BANANA_EXPLAIN_RESULT_SHAPE_INVALID",
+                message="Each run result must be an object.",
+                field_path=f"results[{index}]",
+            )
+        missing = sorted(required_keys - set(result.keys()))
+        if missing:
+            return DoctorFinding(
+                level="error",
+                check="explain_input",
+                error_code="BANANA_EXPLAIN_RESULT_FIELDS_MISSING",
+                message=f"Run result is missing required fields: {missing}",
+                field_path=f"results[{index}]",
+            )
+
+    return None
+
+
+def _build_explain_record(index: int, result: dict[str, object]) -> dict[str, object]:
+    alignment = int(result["alignment"])
+    contract_status = int(result["contract_status"])
+    radial_stability = int(result.get("radial_stability", 0))
+    observability = result["observability"]
+    if not isinstance(observability, dict):
+        observability = {}
+
+    convergence_status = int(observability.get("convergence_status", -1))
+    iteration_count = int(observability.get("iteration_count", -1))
+    assignment_changes = int(observability.get("assignment_changes_last_iteration", -1))
+    deterministic_hash = int(observability.get("deterministic_hash", 0))
+
+    observations: list[dict[str, object]] = [
+        {
+            "field_path": f"results[{index}].contract_status",
+            "interpretation": (
+                "native contract validation passed"
+                if contract_status == 0
+                else "native contract reported a failure"
+            ),
+            "value": contract_status,
+        },
+        {
+            "field_path": f"results[{index}].alignment",
+            "interpretation": _interpret_alignment(alignment),
+            "value": alignment,
+        },
+        {
+            "field_path": f"results[{index}].radial_stability",
+            "interpretation": _interpret_radial_stability(radial_stability),
+            "value": radial_stability,
+        },
+        {
+            "field_path": f"results[{index}].observability.convergence_status",
+            "interpretation": _interpret_convergence_status(convergence_status),
+            "value": convergence_status,
+        },
+        {
+            "field_path": f"results[{index}].observability.iteration_count",
+            "interpretation": "number of clustering iterations used by native run",
+            "value": iteration_count,
+        },
+        {
+            "field_path": f"results[{index}].observability.assignment_changes_last_iteration",
+            "interpretation": "cluster assignment churn during final iteration",
+            "value": assignment_changes,
+        },
+        {
+            "field_path": f"results[{index}].observability.deterministic_hash",
+            "interpretation": "deterministic fingerprint for regression and artifact tracking",
+            "value": deterministic_hash,
+        },
+    ]
+
+    radii = result["radii"]
+    if isinstance(radii, list) and radii:
+        radius_states = []
+        min_radius_q16 = None
+        for radius in radii:
+            if isinstance(radius, dict):
+                radius_states.append(int(radius.get("radius_state", -1)))
+                current = int(radius.get("inscribed_radius_q16", 0))
+                min_radius_q16 = current if min_radius_q16 is None else min(min_radius_q16, current)
+        observations.append(
+            {
+                "field_path": f"results[{index}].radii[*].radius_state",
+                "interpretation": _interpret_radius_states(radius_states),
+                "value": radius_states,
+            }
+        )
+        observations.append(
+            {
+                "field_path": f"results[{index}].radii[*].inscribed_radius_q16",
+                "interpretation": "minimum inscribed radius across clusters (Q16 fixed-point)",
+                "value": min_radius_q16,
+            }
+        )
+
+    scores = result["weighted_voronoi_scores"]
+    if isinstance(scores, list) and scores:
+        valid_count = 0
+        invalid_count = 0
+        min_score = None
+        max_score = None
+        for score in scores:
+            if not isinstance(score, dict):
+                continue
+            if int(score.get("score_validity", 1)) == 0:
+                valid_count += 1
+            else:
+                invalid_count += 1
+            current = int(score.get("weighted_score_q16", 0))
+            min_score = current if min_score is None else min(min_score, current)
+            max_score = current if max_score is None else max(max_score, current)
+        observations.append(
+            {
+                "field_path": f"results[{index}].weighted_voronoi_scores[*].score_validity",
+                "interpretation": "assignment validity across weighted Voronoi scores",
+                "value": {"invalid": invalid_count, "valid": valid_count},
+            }
+        )
+        observations.append(
+            {
+                "field_path": f"results[{index}].weighted_voronoi_scores[*].weighted_score_q16",
+                "interpretation": "assignment score range in Q16 fixed-point",
+                "value": {"max": max_score, "min": min_score},
+            }
+        )
+
+    spectral_proxy = result["spectral_proxy"]
+    if isinstance(spectral_proxy, list) and spectral_proxy:
+        spectral_states = []
+        min_frequency = None
+        max_frequency = None
+        for spectral in spectral_proxy:
+            if not isinstance(spectral, dict):
+                continue
+            spectral_states.append(int(spectral.get("spectral_state", -1)))
+            frequency = int(spectral.get("frequency_proxy_q16", 0))
+            min_frequency = frequency if min_frequency is None else min(min_frequency, frequency)
+            max_frequency = frequency if max_frequency is None else max(max_frequency, frequency)
+        observations.append(
+            {
+                "field_path": f"results[{index}].spectral_proxy[*].spectral_state",
+                "interpretation": _interpret_spectral_states(spectral_states),
+                "value": spectral_states,
+            }
+        )
+        observations.append(
+            {
+                "field_path": f"results[{index}].spectral_proxy[*].frequency_proxy_q16",
+                "interpretation": "spectral frequency proxy range in Q16 fixed-point",
+                "value": {"max": max_frequency, "min": min_frequency},
+            }
+        )
+
+    summary = (
+        f"sample {index}: contract_status={contract_status}, alignment={alignment}, "
+        f"radial_stability={radial_stability}, convergence_status={convergence_status}, "
+        f"iteration_count={iteration_count}"
+    )
+
+    return {
+        "index": index,
+        "observations": observations,
+        "summary": summary,
+    }
+
+
+def _interpret_alignment(alignment: int) -> str:
+    if alignment >= 90:
+        return "high alignment signal"
+    if alignment >= 70:
+        return "moderate alignment signal"
+    return "low alignment signal"
+
+
+def _interpret_radial_stability(radial_stability: int) -> str:
+    if radial_stability >= 90:
+        return "radius structure is highly stable"
+    if radial_stability >= 70:
+        return "radius structure is moderately stable"
+    return "radius structure may be unstable"
+
+
+def _interpret_convergence_status(convergence_status: int) -> str:
+    if convergence_status == 0:
+        return "native solver reports converged state"
+    return "native solver reports non-converged or exceptional state"
+
+
+def _interpret_radius_states(radius_states: list[int]) -> str:
+    if not radius_states:
+        return "no radius states present"
+    if all(state == 0 for state in radius_states):
+        return "all clusters report nominal radius state"
+    return "one or more clusters report clamped/single-cluster radius behavior"
+
+
+def _interpret_spectral_states(spectral_states: list[int]) -> str:
+    if not spectral_states:
+        return "no spectral proxy states present"
+    if all(state == 0 for state in spectral_states):
+        return "spectral proxy remained in nominal state"
+    return "spectral proxy includes floor-applied or disabled states"
 
 
 def _k3h4_export(args: argparse.Namespace) -> int:
@@ -1011,7 +1335,23 @@ def build_parser() -> argparse.ArgumentParser:
             ),
         ),
     )
-    add_k3h4_subcommand("explain", "Explain K3H4 outputs (stub)", _k3h4_explain)
+    add_k3h4_subcommand(
+        "explain",
+        "Interpret K3H4 run output into field-referenced analysis",
+        _k3h4_explain,
+        configure=lambda cmd: (
+            cmd.add_argument(
+                "--input-file",
+                help="Optional run-output JSON file path; stdin remains the primary input path",
+            ),
+            cmd.add_argument(
+                "--strict",
+                action=argparse.BooleanOptionalAction,
+                default=True,
+                help="Emit machine-readable JSON error envelopes on stderr when checks fail",
+            ),
+        ),
+    )
     add_k3h4_subcommand("export", "Export K3H4 artifacts (stub)", _k3h4_export)
     add_k3h4_subcommand(
         "doctor",
