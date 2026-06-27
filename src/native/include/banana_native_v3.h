@@ -259,6 +259,53 @@ typedef struct banana_native_v3_netcode_contract_envelope_header {
 	int32_t payload_crc32;
 } banana_native_v3_netcode_contract_envelope_header;
 
+typedef enum banana_native_v3_k3h4_dialogue_policy_action {
+	BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_ALLOW = 0,
+	BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_SAFE_REDIRECT = 1,
+	BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_HARD_BLOCK = 2,
+} banana_native_v3_k3h4_dialogue_policy_action;
+
+typedef enum banana_native_v3_k3h4_dialogue_turn_status {
+	BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_OK = 0,
+	BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_INVALID_ARGUMENT = -4001,
+	BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_EXECUTION_FAILED = -4002,
+} banana_native_v3_k3h4_dialogue_turn_status;
+
+typedef struct banana_native_v3_k3h4_dialogue_turn_input {
+	char npc_id[64];
+	char quest_state_id[64];
+	char region_id[64];
+	char intent_id[64];
+	char policy_category[64];
+	char policy_confidence_band[16];
+	char policy_severity[16];
+	int32_t prior_memory_trust_delta_q16;
+	int32_t prior_memory_hostility_delta_q16;
+	int32_t prior_memory_helpfulness_delta_q16;
+	int32_t sequence_tick;
+} banana_native_v3_k3h4_dialogue_turn_input;
+
+typedef struct banana_native_v3_k3h4_dialogue_turn_output {
+	int32_t schema_version;
+	int32_t route_cluster_id;
+	int32_t boundary_state;
+	int32_t transition_id;
+	int32_t response_policy;
+	int32_t deny_reason_code;
+	int32_t state_mutation_blocked;
+	int32_t memory_write_blocked;
+	int32_t memory_delta_applied;
+	int32_t policy_action_selected;
+	int32_t abi_decode_path;
+	int32_t abi_contract_version;
+	int32_t abi_payload_bytes;
+	int32_t abi_crc32;
+	int32_t abi_status;
+	char response_policy_label[32];
+	char npc_line_candidate[160];
+	char selected_template_key[64];
+} banana_native_v3_k3h4_dialogue_turn_output;
+
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_abi_version(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_ping(void);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_pgbouncer_available(void);
@@ -288,6 +335,9 @@ BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_vector(const banana_n
 						   banana_native_v3_netcode_vector_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_netcode_build_k3h4(const banana_native_v3_netcode_vector_input *signal_input,
 							banana_native_v3_netcode_k3h4_output *out_output);
+BANANA_NATIVE_V3_EXPORT int banana_native_v3_k3h4_run_dialogue_turn(
+	const banana_native_v3_k3h4_dialogue_turn_input *turn_input,
+	banana_native_v3_k3h4_dialogue_turn_output *out_output);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
 												 banana_launch_gate_policy *out_policy);
 BANANA_NATIVE_V3_EXPORT int banana_native_v3_launch_gate_decide(const char *mode_label,

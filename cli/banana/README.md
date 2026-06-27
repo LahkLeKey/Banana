@@ -6,7 +6,10 @@ Current implementation status:
 
 - command router is implemented
 - `k3h4 sample` emits deterministic canonical JSON datasets (`schema_version=1`)
+- `k3h4 dialogue-sample` emits deterministic single-turn dialogue fixture JSON (`schema_version=1`)
 - `k3h4 run` executes native-direct K3H4 pipeline via `ctypes` and canonical stdin JSON
+- `k3h4 dialogue-run` executes deterministic dialogue turn routing through native full-chain symbol binding
+- `k3h4 dialogue-export` emits machine-consumable dialogue turn artifacts in canonical JSON or CSV
 - `k3h4 explain` interprets run output with field-referenced analysis records
 - `k3h4 export` emits machine-consumable artifacts in canonical JSON or CSV
 - `k3h4 doctor` runs read-only preflight diagnostics for Python, native ABI, and schema checks
@@ -73,6 +76,82 @@ Golden run examples:
 ```bash
 python -m banana_cli k3h4 sample --seed 7 --count 2 --dims 16 --preset baseline | python -m banana_cli k3h4 run
 python -m banana_cli k3h4 run --input-file sample.json --native-lib out/v3-native/Debug/banana_native.dll
+```
+
+## Dialogue fixture generation and preflight
+
+`banana k3h4 dialogue-sample` emits canonical single-turn dialogue fixture JSON for local iteration.
+
+Flags:
+
+- `--seed` (default `42`)
+- `--preset` (`pilot-edda` or `hard-block-self-harm`)
+
+`banana k3h4 dialogue-run` validates fixture shape and executes one deterministic dialogue turn through the native full-chain symbol.
+
+Input contract:
+
+- Primary path: canonical fixture JSON from stdin (`dialogue-sample | dialogue-run`)
+- Optional path: `--input-file`
+- Required fields: `npc_id`, `quest_state_id`, `region_id`, `intent_id`, `policy_context`, `prior_memory_delta`
+- Requires `schema_version=1`
+- Validated against checked-in input schema: `cli/banana/schema/k3h4-dialogue-run-input.v1.json`
+
+Current output contract:
+
+- canonical JSON with `fixture_hash`, decision metadata, mutation flags, renderable line candidate, observability, native resolution metadata, and `status=executed`
+- Validated against checked-in output schema: `cli/banana/schema/k3h4-dialogue-run-output.v1.json`
+- Taxonomy invariants:
+	- `response_policy=hard_block` requires `deny_reason_code` in reserved range `9100..9199`, both mutation guards true, and `memory_delta_applied=0`
+	- `response_policy=safe_redirect` requires both mutation guards true and deny code outside `9100..9199`
+
+Schema override flags:
+
+- `--schema-path`: dialogue-run input schema path
+- `--output-schema-path`: dialogue-run output schema path
+
+Golden dialogue examples:
+
+```bash
+python -m banana_cli k3h4 dialogue-sample --seed 11 --preset pilot-edda \
+	| python -m banana_cli k3h4 dialogue-run --native-lib out/v3-native/Debug/banana_native.dll
+
+python -m banana_cli k3h4 dialogue-sample --seed 11 --preset hard-block-self-harm > fixture.json
+python -m banana_cli k3h4 dialogue-run --input-file fixture.json --native-lib out/v3-native/Debug/banana_native.dll
+```
+
+## Dialogue export artifacts
+
+`banana k3h4 dialogue-export` exports dialogue-run output into machine-consumable JSON or CSV.
+
+Input and strict behavior:
+
+- Primary path: dialogue-run output from stdin (`dialogue-sample | dialogue-run | dialogue-export`)
+- Optional path: `--input-file`
+- Strict mode defaults on and returns non-zero on invalid input
+- Input validated against checked-in schema: `cli/banana/schema/k3h4-dialogue-run-output.v1.json`
+- Dialogue-export also enforces dialogue-run taxonomy invariants before writing artifacts
+
+Output formats:
+
+- `--format json` (default): canonical JSON with `schema_version=1`
+- `--format csv`: single-row artifact summary
+- Export output validated against checked-in schema: `cli/banana/schema/k3h4-dialogue-export-output.v1.json`
+
+Schema override flags:
+
+- `--input-schema-path`: dialogue-export input schema path
+- `--schema-path`: dialogue-export output schema path
+
+Golden dialogue-export examples:
+
+```bash
+python -m banana_cli k3h4 dialogue-sample --seed 11 --preset pilot-edda \
+	| python -m banana_cli k3h4 dialogue-run --native-lib out/v3-native/Debug/banana_native.dll \
+	| python -m banana_cli k3h4 dialogue-export
+
+python -m banana_cli k3h4 dialogue-run --input-file fixture.json --native-lib out/v3-native/Debug/banana_native.dll \
+	| python -m banana_cli k3h4 dialogue-export --format csv --output-file artifacts/dialogue-turn.csv
 ```
 
 ## Explain interpretation
@@ -167,6 +246,20 @@ With explicit native library override:
 python -m banana_cli k3h4 doctor --native-lib out/v3-native/Debug/banana_native.dll
 ```
 
+## Dialogue taxonomy smoke script
+
+Run the local dialogue taxonomy smoke checks (standard pass, hard-block pass, fail-closed invalid deny code):
+
+```bash
+bash cli/banana/scripts/run-dialogue-taxonomy-smoke.sh
+```
+
+Optional explicit native library path:
+
+```bash
+bash cli/banana/scripts/run-dialogue-taxonomy-smoke.sh out/v3-native/Debug/banana_native.dll
+```
+
 ## Local usage (no install)
 
 From `cli/banana`:
@@ -175,7 +268,10 @@ From `cli/banana`:
 python -m banana_cli --help
 python -m banana_cli k3h4 --help
 python -m banana_cli k3h4 sample --help
+python -m banana_cli k3h4 dialogue-sample --help
 python -m banana_cli k3h4 run --help
+python -m banana_cli k3h4 dialogue-run --help
+python -m banana_cli k3h4 dialogue-export --help
 python -m banana_cli k3h4 explain --help
 python -m banana_cli k3h4 export --help
 python -m banana_cli k3h4 doctor --help

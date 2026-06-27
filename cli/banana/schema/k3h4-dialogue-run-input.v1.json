@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "description": "Canonical input contract for banana k3h4 dialogue-run (V1)",
+  "required_top_level": [
+    "intent_id",
+    "npc_id",
+    "policy_context",
+    "prior_memory_delta",
+    "quest_state_id",
+    "region_id",
+    "schema_version"
+  ],
+  "required_policy_context_keys": [
+    "category",
+    "confidence_band",
+    "severity"
+  ],
+  "required_prior_memory_delta_keys": [
+    "rapport_delta_q16",
+    "safety_flag_count",
+    "trust_bucket"
+  ]
+}

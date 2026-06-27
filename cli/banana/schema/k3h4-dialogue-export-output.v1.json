@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "description": "Canonical output contract for banana k3h4 dialogue-export (V1)",
+  "required_top_level": [
+    "artifact_type",
+    "export_hash",
+    "schema_version",
+    "turn_record"
+  ],
+  "required_turn_record_keys": [
+    "fixture_hash",
+    "native_library_path",
+    "native_resolution_source",
+    "native_symbol",
+    "status"
+  ]
+}
