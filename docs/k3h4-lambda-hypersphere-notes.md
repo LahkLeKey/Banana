@@ -89,3 +89,33 @@ This keeps the conceptual link to manifold harmonics while preserving determinis
 - Harmonic framing: useful analogy for representation and spectral structure.
 
 Together, these are complementary views of one K3H4 system rather than separate algorithms.
+
+## 7. Concept-to-contract mapping
+
+Use this map when reviewing runtime output or ABI traces.
+
+| Concept | Runtime contract surface | Why it matters |
+|---|---|---|
+| Fixed-point convergence | `RuntimeNetcodeK3h4Observability.convergence_status`, `iteration_count` | Shows whether repeated application of the operator reached a stable state. |
+| Hypersphere separation | `RuntimeNetcodeK3h4Radius.nearest_neighbor_distance_q16`, `inscribed_radius_q16` | Captures cluster separation and local scale for robust assignment. |
+| Radius-aware assignment | `RuntimeNetcodeWeightedVoronoiScore.distance_to_center_q16`, `weighted_score_q16`, `score_validity` | Encodes normalized or power-style cluster selection behavior. |
+| Spectral structure | `RuntimeNetcodeSpectralProxy.frequency_proxy_q16`, `amplitude_proxy_q16`, `spectral_state` | Provides a compact harmonic/spectral readout tied to cluster geometry. |
+| Transport integrity | Envelope `byte_order_tag`, `payload_crc32`, observability decode path | Prevents representation mismatches from silently corrupting geometry. |
+
+Primary reference: [modules/k3h4/native/src/runtime/netcode/k3h4/netcode_k3h4_metrics.h](modules/k3h4/native/src/runtime/netcode/k3h4/netcode_k3h4_metrics.h).
+
+## 8. Local verification checklist
+
+Use this short checklist before changing K3H4 clustering or export behavior.
+
+1. Build native target and run focused K3H4 tests.
+2. Confirm output envelope fields are stable (`contract_version`, `byte_order_tag`, CRC fields).
+3. Validate radius and weighted-score arrays are populated and deterministic for identical input.
+4. Confirm observability fields are present and internally consistent (`convergence_status`, `iteration_count`, decode path).
+5. If assignment family or spectral mode changes, verify both mode enums remain backward compatible.
+
+Helpful entry points:
+
+- [src/native/include/banana_native_v3.h](src/native/include/banana_native_v3.h)
+- [src/native/scaffold/native_entry.c](src/native/scaffold/native_entry.c)
+- [tests/native/CMakeLists.txt](tests/native/CMakeLists.txt)

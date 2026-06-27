@@ -22,12 +22,40 @@ REQUIRED_PYTHON = (3, 10)
 CANONICAL_SCHEMA_RELATIVE = Path("src/typescript/api/coverage-denominator.json")
 RUN_OUTPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-run-output.v1.json")
 EXPORT_OUTPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-export-output.v1.json")
+DIALOGUE_RUN_INPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-dialogue-run-input.v1.json")
+DIALOGUE_RUN_OUTPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-dialogue-run-output.v1.json")
+DIALOGUE_EXPORT_OUTPUT_SCHEMA_RELATIVE = Path("cli/banana/schema/k3h4-dialogue-export-output.v1.json")
 SAMPLE_SCHEMA_VERSION = 1
 EXPLAIN_SCHEMA_VERSION = 1
 EXPORT_SCHEMA_VERSION = 1
+DIALOGUE_FIXTURE_SCHEMA_VERSION = 1
+DIALOGUE_EXPORT_SCHEMA_VERSION = 1
+HARD_BLOCK_DENY_REASON_MIN = 9100
+HARD_BLOCK_DENY_REASON_MAX = 9199
 DEFAULT_SAMPLE_PRESET = "baseline"
 RUN_FLOAT_PRECISION = 6
 NATIVE_K3H4_CONTRACT_OK = 0
+DIALOGUE_RUN_SYMBOL_CANDIDATES = (
+    "banana_native_v3_k3h4_run_dialogue_turn",
+    "banana_native_v3_k3h4_dialogue_run_turn",
+    "banana_native_v3_netcode_run_k3h4_dialogue_turn",
+)
+DIALOGUE_FIXTURE_FIELDS = (
+    "npc_id",
+    "quest_state_id",
+    "region_id",
+    "intent_id",
+    "policy_context",
+    "prior_memory_delta",
+)
+DIALOGUE_SAMPLE_PRESETS = (
+    "pilot-edda",
+    "hard-block-self-harm",
+)
+DIALOGUE_EXPORT_FORMATS = (
+    "json",
+    "csv",
+)
 VECTOR_INPUT_FIELDS = (
     "call_density",
     "quest_percent",
@@ -229,6 +257,52 @@ def _build_k3h4_sample_vector(*, rng: random.Random, dims: int, preset: str) -> 
         return base
 
     return base
+
+
+def _k3h4_dialogue_sample(args: argparse.Namespace) -> int:
+    rng = random.Random(args.seed)
+    fixture = _build_dialogue_fixture(rng=rng, preset=args.preset)
+    print(json.dumps(fixture, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+def _build_dialogue_fixture(*, rng: random.Random, preset: str) -> dict[str, object]:
+    if preset == "hard-block-self-harm":
+        return {
+            "intent_id": "REQUEST_SELF_HARM_INSTRUCTIONS",
+            "npc_id": "edda_gatekeeper",
+            "policy_context": {
+                "category": "self_harm",
+                "confidence_band": "high",
+                "severity": "critical",
+            },
+            "prior_memory_delta": {
+                "rapport_delta_q16": -3277,
+                "safety_flag_count": 2,
+                "trust_bucket": 1,
+            },
+            "quest_state_id": "castle_entry_writ_pending",
+            "region_id": "south_gate",
+            "schema_version": DIALOGUE_FIXTURE_SCHEMA_VERSION,
+        }
+
+    return {
+        "intent_id": "ASK_CASTLE_ENTRY",
+        "npc_id": "edda_gatekeeper",
+        "policy_context": {
+            "category": "game_world_violence",
+            "confidence_band": "low",
+            "severity": "moderate",
+        },
+        "prior_memory_delta": {
+            "rapport_delta_q16": rng.randint(0, 4096),
+            "safety_flag_count": 0,
+            "trust_bucket": rng.randint(2, 4),
+        },
+        "quest_state_id": "castle_entry_writ_pending",
+        "region_id": "south_gate",
+        "schema_version": DIALOGUE_FIXTURE_SCHEMA_VERSION,
+    }
 
 
 def _k3h4_run(args: argparse.Namespace) -> int:
@@ -467,8 +541,976 @@ def _validate_run_input_payload(payload: dict[str, object]) -> DoctorFinding | N
     return None
 
 
+def _load_dialogue_input_payload(args: argparse.Namespace) -> tuple[dict[str, object] | None, DoctorFinding | None]:
+    raw = ""
+    if args.input_file:
+        input_path = Path(args.input_file).expanduser()
+        if not input_path.is_absolute():
+            input_path = (Path.cwd() / input_path).resolve()
+        if not input_path.exists() or not input_path.is_file():
+            return None, DoctorFinding(
+                level="error",
+                check="dialogue_run_input",
+                error_code="BANANA_DIALOGUE_RUN_INPUT_FILE_NOT_FOUND",
+                message=f"Input file not found: {input_path}",
+                field_path="input_file",
+            )
+        try:
+            raw = input_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            return None, DoctorFinding(
+                level="error",
+                check="dialogue_run_input",
+                error_code="BANANA_DIALOGUE_RUN_INPUT_FILE_READ_FAILED",
+                message=f"Failed to read input file: {exc}",
+                field_path="input_file",
+            )
+    else:
+        raw = sys.stdin.read()
+
+    if raw.strip() == "":
+        return None, DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_EMPTY",
+            message="No dialogue fixture JSON was provided via stdin or --input-file.",
+            field_path="stdin",
+        )
+
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return None, DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_JSON_INVALID",
+            message=f"Input is not valid JSON: {exc}",
+            field_path="stdin",
+        )
+
+    if not isinstance(payload, dict):
+        return None, DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SHAPE_INVALID",
+            message="Input JSON must be an object.",
+            field_path="stdin",
+        )
+
+    return payload, None
+
+
+def _validate_dialogue_input_payload(payload: dict[str, object]) -> DoctorFinding | None:
+    schema_version = payload.get("schema_version")
+    if schema_version != DIALOGUE_FIXTURE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_SCHEMA_VERSION_MISMATCH",
+            message=(
+                f"Expected schema_version={DIALOGUE_FIXTURE_SCHEMA_VERSION}, found {schema_version!r}."
+            ),
+            field_path="schema_version",
+        )
+
+    expected = set(DIALOGUE_FIXTURE_FIELDS)
+    keys = set(payload.keys())
+    missing = sorted(expected - keys)
+    unknown = sorted(keys - (expected | {"schema_version"}))
+    if missing:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_FIELDS_MISSING",
+            message=f"Missing required fields: {missing}",
+            field_path="fixture",
+        )
+    if unknown:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_FIELDS_UNKNOWN",
+            message=f"Unknown fields are not allowed in V1: {unknown}",
+            field_path="fixture",
+        )
+
+    for id_field in ("npc_id", "quest_state_id", "region_id", "intent_id"):
+        value = payload.get(id_field)
+        if not isinstance(value, str) or value.strip() == "":
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_input",
+                error_code="BANANA_DIALOGUE_RUN_ID_FIELD_INVALID",
+                message=f"Field {id_field} must be a non-empty string.",
+                field_path=id_field,
+            )
+
+    policy_context = payload.get("policy_context")
+    if not isinstance(policy_context, dict):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_POLICY_CONTEXT_INVALID",
+            message="Field policy_context must be a JSON object.",
+            field_path="policy_context",
+        )
+
+    required_policy_keys = {"category", "confidence_band", "severity"}
+    missing_policy = sorted(required_policy_keys - set(policy_context.keys()))
+    if missing_policy:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_POLICY_CONTEXT_FIELDS_MISSING",
+            message=f"policy_context missing required fields: {missing_policy}",
+            field_path="policy_context",
+        )
+
+    for key in required_policy_keys:
+        value = policy_context.get(key)
+        if not isinstance(value, str) or value.strip() == "":
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_input",
+                error_code="BANANA_DIALOGUE_RUN_POLICY_CONTEXT_FIELD_INVALID",
+                message=f"policy_context.{key} must be a non-empty string.",
+                field_path=f"policy_context.{key}",
+            )
+
+    prior_memory_delta = payload.get("prior_memory_delta")
+    if not isinstance(prior_memory_delta, dict):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input",
+            error_code="BANANA_DIALOGUE_RUN_MEMORY_DELTA_INVALID",
+            message="Field prior_memory_delta must be a JSON object.",
+            field_path="prior_memory_delta",
+        )
+
+    return None
+
+
+def _validate_dialogue_run_input_payload_against_schema(
+    payload: dict[str, object], schema_path: Path
+) -> DoctorFinding | None:
+    if not schema_path.exists() or not schema_path.is_file():
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input_schema",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_NOT_FOUND",
+            message=f"Dialogue run input schema file not found: {schema_path}",
+            field_path="schema.path",
+        )
+
+    try:
+        schema_payload = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input_schema",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_UNREADABLE",
+            message=f"Dialogue run input schema could not be parsed: {exc}",
+            field_path="schema.path",
+        )
+
+    expected_version = schema_payload.get("schema_version")
+    if expected_version != DIALOGUE_FIXTURE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input_schema",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_VERSION_UNSUPPORTED",
+            message=f"Expected dialogue run input schema version 1, found {expected_version!r}.",
+            field_path="schema.schema_version",
+        )
+
+    required_top_level = schema_payload.get("required_top_level", [])
+    if not isinstance(required_top_level, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input_schema",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_INVALID",
+            message="required_top_level must be an array in dialogue run input schema.",
+            field_path="schema.required_top_level",
+        )
+
+    for key in required_top_level:
+        if key not in payload:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_input_schema",
+                error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"Dialogue run input is missing required top-level key {key!r}.",
+                field_path=f"input.{key}",
+            )
+
+    required_policy_context_keys = schema_payload.get("required_policy_context_keys", [])
+    if not isinstance(required_policy_context_keys, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input_schema",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_INVALID",
+            message="required_policy_context_keys must be an array in dialogue run input schema.",
+            field_path="schema.required_policy_context_keys",
+        )
+
+    policy_context = payload.get("policy_context")
+    if not isinstance(policy_context, dict):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input_schema",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_VALIDATION_FAILED",
+            message="Dialogue run input policy_context must be an object.",
+            field_path="input.policy_context",
+        )
+    for key in required_policy_context_keys:
+        if key not in policy_context:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_input_schema",
+                error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"policy_context is missing required key {key!r}.",
+                field_path=f"input.policy_context.{key}",
+            )
+
+    required_prior_memory_delta_keys = schema_payload.get("required_prior_memory_delta_keys", [])
+    if not isinstance(required_prior_memory_delta_keys, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input_schema",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_INVALID",
+            message="required_prior_memory_delta_keys must be an array in dialogue run input schema.",
+            field_path="schema.required_prior_memory_delta_keys",
+        )
+
+    prior_memory_delta = payload.get("prior_memory_delta")
+    if not isinstance(prior_memory_delta, dict):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_input_schema",
+            error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_VALIDATION_FAILED",
+            message="Dialogue run input prior_memory_delta must be an object.",
+            field_path="input.prior_memory_delta",
+        )
+    for key in required_prior_memory_delta_keys:
+        if key not in prior_memory_delta:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_input_schema",
+                error_code="BANANA_DIALOGUE_RUN_INPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"prior_memory_delta is missing required key {key!r}.",
+                field_path=f"input.prior_memory_delta.{key}",
+            )
+
+    return None
+
+
+def _validate_dialogue_run_output_payload(payload: dict[str, object], schema_path: Path) -> DoctorFinding | None:
+    if not schema_path.exists() or not schema_path.is_file():
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_NOT_FOUND",
+            message=f"Dialogue run output schema file not found: {schema_path}",
+            field_path="schema.path",
+        )
+
+    try:
+        schema_payload = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_UNREADABLE",
+            message=f"Dialogue run output schema could not be parsed: {exc}",
+            field_path="schema.path",
+        )
+
+    expected_version = schema_payload.get("schema_version")
+    if expected_version != DIALOGUE_FIXTURE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VERSION_UNSUPPORTED",
+            message=f"Expected dialogue run output schema version 1, found {expected_version!r}.",
+            field_path="schema.schema_version",
+        )
+
+    required_top_level = schema_payload.get("required_top_level", [])
+    if not isinstance(required_top_level, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_INVALID",
+            message="required_top_level must be an array in dialogue run output schema.",
+            field_path="schema.required_top_level",
+        )
+
+    for key in required_top_level:
+        if key not in payload:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"Dialogue run output is missing required top-level key {key!r}.",
+                field_path=f"output.{key}",
+            )
+
+    if payload.get("schema_version") != DIALOGUE_FIXTURE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+            message=(
+                f"Dialogue run output schema_version must be {DIALOGUE_FIXTURE_SCHEMA_VERSION}, "
+                f"found {payload.get('schema_version')!r}."
+            ),
+            field_path="output.schema_version",
+        )
+
+    decision_metadata = payload.get("decision_metadata")
+    if not isinstance(decision_metadata, dict):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+            message="decision_metadata must be an object in dialogue run output.",
+            field_path="output.decision_metadata",
+        )
+    required_decision_metadata_keys = schema_payload.get("required_decision_metadata_keys", [])
+    if not isinstance(required_decision_metadata_keys, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_INVALID",
+            message="required_decision_metadata_keys must be an array in dialogue run output schema.",
+            field_path="schema.required_decision_metadata_keys",
+        )
+    for key in required_decision_metadata_keys:
+        if key not in decision_metadata:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"decision_metadata is missing required key {key!r}.",
+                field_path=f"output.decision_metadata.{key}",
+            )
+
+    mutation_flags = payload.get("mutation_flags")
+    if not isinstance(mutation_flags, dict):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+            message="mutation_flags must be an object in dialogue run output.",
+            field_path="output.mutation_flags",
+        )
+    required_mutation_flags_keys = schema_payload.get("required_mutation_flags_keys", [])
+    if not isinstance(required_mutation_flags_keys, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_INVALID",
+            message="required_mutation_flags_keys must be an array in dialogue run output schema.",
+            field_path="schema.required_mutation_flags_keys",
+        )
+    for key in required_mutation_flags_keys:
+        if key not in mutation_flags:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"mutation_flags is missing required key {key!r}.",
+                field_path=f"output.mutation_flags.{key}",
+            )
+
+    observability = payload.get("observability")
+    if not isinstance(observability, dict):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+            message="observability must be an object in dialogue run output.",
+            field_path="output.observability",
+        )
+    required_observability_keys = schema_payload.get("required_observability_keys", [])
+    if not isinstance(required_observability_keys, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_INVALID",
+            message="required_observability_keys must be an array in dialogue run output schema.",
+            field_path="schema.required_observability_keys",
+        )
+    for key in required_observability_keys:
+        if key not in observability:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"observability is missing required key {key!r}.",
+                field_path=f"output.observability.{key}",
+            )
+
+    response_policy_label = payload.get("decision_metadata", {}).get("response_policy")
+    deny_reason_code = payload.get("decision_metadata", {}).get("deny_reason_code")
+    mutation_flags = payload.get("mutation_flags", {})
+    memory_delta_applied = payload.get("memory_delta_applied")
+
+    if not _is_int_value(deny_reason_code):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_TAXONOMY_INVALID",
+            message="decision_metadata.deny_reason_code must be an integer.",
+            field_path="output.decision_metadata.deny_reason_code",
+        )
+
+    if not isinstance(response_policy_label, str) or response_policy_label.strip() == "":
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_TAXONOMY_INVALID",
+            message="decision_metadata.response_policy must be a non-empty string.",
+            field_path="output.decision_metadata.response_policy",
+        )
+
+    state_mutation_blocked = mutation_flags.get("state_mutation_blocked")
+    memory_write_blocked = mutation_flags.get("memory_write_blocked")
+    if not isinstance(state_mutation_blocked, bool) or not isinstance(memory_write_blocked, bool):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_run_output_schema",
+            error_code="BANANA_DIALOGUE_RUN_OUTPUT_TAXONOMY_INVALID",
+            message="mutation_flags.state_mutation_blocked and mutation_flags.memory_write_blocked must be booleans.",
+            field_path="output.mutation_flags",
+        )
+
+    if response_policy_label == "hard_block":
+        if deny_reason_code < HARD_BLOCK_DENY_REASON_MIN or deny_reason_code > HARD_BLOCK_DENY_REASON_MAX:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_TAXONOMY_INVALID",
+                message=(
+                    "hard_block response policy requires deny_reason_code in reserved range "
+                    f"{HARD_BLOCK_DENY_REASON_MIN}-{HARD_BLOCK_DENY_REASON_MAX}."
+                ),
+                field_path="output.decision_metadata.deny_reason_code",
+            )
+        if state_mutation_blocked is not True or memory_write_blocked is not True:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_TAXONOMY_INVALID",
+                message="hard_block response policy requires both mutation flags to be true.",
+                field_path="output.mutation_flags",
+            )
+        if not _is_int_value(memory_delta_applied) or memory_delta_applied != 0:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_TAXONOMY_INVALID",
+                message="hard_block response policy requires memory_delta_applied to be 0.",
+                field_path="output.memory_delta_applied",
+            )
+
+    if response_policy_label == "safe_redirect":
+        if HARD_BLOCK_DENY_REASON_MIN <= deny_reason_code <= HARD_BLOCK_DENY_REASON_MAX:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_TAXONOMY_INVALID",
+                message=(
+                    "safe_redirect response policy must not use hard_block reserved deny_reason_code range "
+                    f"{HARD_BLOCK_DENY_REASON_MIN}-{HARD_BLOCK_DENY_REASON_MAX}."
+                ),
+                field_path="output.decision_metadata.deny_reason_code",
+            )
+        if state_mutation_blocked is not True or memory_write_blocked is not True:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_run_output_schema",
+                error_code="BANANA_DIALOGUE_RUN_OUTPUT_TAXONOMY_INVALID",
+                message="safe_redirect response policy requires both mutation flags to be true.",
+                field_path="output.mutation_flags",
+            )
+
+    return None
+
+
+def _validate_dialogue_export_output_payload(payload: dict[str, object], schema_path: Path) -> DoctorFinding | None:
+    if not schema_path.exists() or not schema_path.is_file():
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_output_schema",
+            error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_NOT_FOUND",
+            message=f"Dialogue export output schema file not found: {schema_path}",
+            field_path="schema.path",
+        )
+
+    try:
+        schema_payload = json.loads(schema_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_output_schema",
+            error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_UNREADABLE",
+            message=f"Dialogue export output schema could not be parsed: {exc}",
+            field_path="schema.path",
+        )
+
+    expected_version = schema_payload.get("schema_version")
+    if expected_version != DIALOGUE_EXPORT_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_output_schema",
+            error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_VERSION_UNSUPPORTED",
+            message=f"Expected dialogue export output schema version 1, found {expected_version!r}.",
+            field_path="schema.schema_version",
+        )
+
+    required_top_level = schema_payload.get("required_top_level", [])
+    if not isinstance(required_top_level, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_output_schema",
+            error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_INVALID",
+            message="required_top_level must be an array in dialogue export output schema.",
+            field_path="schema.required_top_level",
+        )
+
+    for key in required_top_level:
+        if key not in payload:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_export_output_schema",
+                error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"Dialogue export output is missing required top-level key {key!r}.",
+                field_path=f"output.{key}",
+            )
+
+    if payload.get("schema_version") != DIALOGUE_EXPORT_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_output_schema",
+            error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_VALIDATION_FAILED",
+            message=(
+                f"Dialogue export output schema_version must be {DIALOGUE_EXPORT_SCHEMA_VERSION}, "
+                f"found {payload.get('schema_version')!r}."
+            ),
+            field_path="output.schema_version",
+        )
+
+    turn_record = payload.get("turn_record")
+    if not isinstance(turn_record, dict):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_output_schema",
+            error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_VALIDATION_FAILED",
+            message="turn_record must be an object in dialogue export output.",
+            field_path="output.turn_record",
+        )
+
+    required_turn_record_keys = schema_payload.get("required_turn_record_keys", [])
+    if not isinstance(required_turn_record_keys, list):
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_output_schema",
+            error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_INVALID",
+            message="required_turn_record_keys must be an array in dialogue export output schema.",
+            field_path="schema.required_turn_record_keys",
+        )
+
+    for key in required_turn_record_keys:
+        if key not in turn_record:
+            return DoctorFinding(
+                level="error",
+                check="dialogue_export_output_schema",
+                error_code="BANANA_DIALOGUE_EXPORT_OUTPUT_SCHEMA_VALIDATION_FAILED",
+                message=f"turn_record is missing required key {key!r}.",
+                field_path=f"output.turn_record.{key}",
+            )
+
+    return None
+
+
+def _canonical_fixture_hash(payload: dict[str, object]) -> str:
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def _resolve_dialogue_run_symbol(native: ctypes.CDLL):
+    for symbol_name in DIALOGUE_RUN_SYMBOL_CANDIDATES:
+        symbol = getattr(native, symbol_name, None)
+        if symbol is not None:
+            return symbol_name, symbol
+    return None, None
+
+
+def _as_c_text(value: object, max_len: int) -> bytes:
+    text = str(value) if value is not None else ""
+    encoded = text.encode("utf-8", errors="ignore")
+    return encoded[: max_len - 1]
+
+
+def _decode_c_text(value: bytes) -> str:
+    return bytes(value).split(b"\x00", 1)[0].decode("utf-8", errors="ignore")
+
+
+def _build_dialogue_turn_input(payload: dict[str, object]) -> "_DialogueTurnInput":
+    policy_context = payload.get("policy_context")
+    if not isinstance(policy_context, dict):
+        policy_context = {}
+
+    prior_memory_delta = payload.get("prior_memory_delta")
+    if not isinstance(prior_memory_delta, dict):
+        prior_memory_delta = {}
+
+    dialogue_input = _DialogueTurnInput()
+    dialogue_input.npc_id = _as_c_text(payload.get("npc_id", ""), 64)
+    dialogue_input.quest_state_id = _as_c_text(payload.get("quest_state_id", ""), 64)
+    dialogue_input.region_id = _as_c_text(payload.get("region_id", ""), 64)
+    dialogue_input.intent_id = _as_c_text(payload.get("intent_id", ""), 64)
+    dialogue_input.policy_category = _as_c_text(policy_context.get("category", ""), 64)
+    dialogue_input.policy_confidence_band = _as_c_text(policy_context.get("confidence_band", ""), 16)
+    dialogue_input.policy_severity = _as_c_text(policy_context.get("severity", ""), 16)
+    dialogue_input.prior_memory_trust_delta_q16 = int(prior_memory_delta.get("rapport_delta_q16", 0))
+    dialogue_input.prior_memory_hostility_delta_q16 = int(prior_memory_delta.get("safety_flag_count", 0)) * 1024
+    dialogue_input.prior_memory_helpfulness_delta_q16 = int(prior_memory_delta.get("trust_bucket", 0)) * 1024
+    dialogue_input.sequence_tick = int(payload.get("sequence_tick", 0))
+    return dialogue_input
+
+
+def _k3h4_dialogue_run(args: argparse.Namespace) -> int:
+    payload, input_error = _load_dialogue_input_payload(args)
+    if input_error is not None:
+        if args.strict:
+            _emit_error_envelope(input_error)
+        return 1
+
+    validation_error = _validate_dialogue_input_payload(payload)
+    if validation_error is not None:
+        if args.strict:
+            _emit_error_envelope(validation_error)
+        return 1
+
+    repo_root = _resolve_repo_root(Path.cwd().resolve())
+    input_schema_path = _resolve_schema_path(args, repo_root)
+    input_schema_error = _validate_dialogue_run_input_payload_against_schema(payload, input_schema_path)
+    if input_schema_error is not None:
+        if args.strict:
+            _emit_error_envelope(input_schema_error)
+        return 1
+
+    native_path, native_source, checked_paths = _resolve_native_library(args, repo_root)
+    if native_path is None:
+        finding = DoctorFinding(
+            level="error",
+            check="dialogue_run_native_library_resolution",
+            error_code="BANANA_DIALOGUE_RUN_NATIVE_LIB_NOT_FOUND",
+            message=(
+                "Unable to resolve Banana native library via --native-lib, BANANA_NATIVE_PATH, or autodiscovery."
+                f" Checked paths: {checked_paths}."
+            ),
+            field_path="native.library",
+        )
+        if args.strict:
+            _emit_error_envelope(finding)
+        return 1
+
+    try:
+        native = ctypes.CDLL(str(native_path))
+    except OSError as exc:
+        finding = DoctorFinding(
+            level="error",
+            check="dialogue_run_native_load",
+            error_code="BANANA_DIALOGUE_RUN_NATIVE_LOAD_FAILED",
+            message=f"Failed to load native library at {native_path}: {exc}",
+            field_path="native.library",
+        )
+        if args.strict:
+            _emit_error_envelope(finding)
+        return 1
+
+    symbol_name, symbol = _resolve_dialogue_run_symbol(native)
+    if symbol_name is None:
+        finding = DoctorFinding(
+            level="error",
+            check="dialogue_run_native_binding",
+            error_code="BANANA_DIALOGUE_RUN_SYMBOL_MISSING",
+            message=(
+                "Missing dialogue full-chain symbol in native library. "
+                f"Checked candidates: {list(DIALOGUE_RUN_SYMBOL_CANDIDATES)}"
+            ),
+            field_path="native.symbols",
+        )
+        if args.strict:
+            _emit_error_envelope(finding)
+        return 1
+
+    symbol.argtypes = [ctypes.POINTER(_DialogueTurnInput), ctypes.POINTER(_DialogueTurnOutput)]
+    symbol.restype = ctypes.c_int
+
+    dialogue_input = _build_dialogue_turn_input(payload)
+    dialogue_output = _DialogueTurnOutput()
+    status = int(symbol(ctypes.byref(dialogue_input), ctypes.byref(dialogue_output)))
+    if status != 0:
+        finding = DoctorFinding(
+            level="error",
+            check="dialogue_run_native_execute",
+            error_code="BANANA_DIALOGUE_RUN_NATIVE_CONTRACT_FAILURE",
+            message=f"{symbol_name} returned non-zero status {status}.",
+            field_path="native.execution",
+        )
+        if args.strict:
+            _emit_error_envelope(finding)
+        return 1
+
+    output_payload = {
+        "decision_metadata": {
+            "boundary_state": int(dialogue_output.boundary_state),
+            "deny_reason_code": int(dialogue_output.deny_reason_code),
+            "response_policy": _decode_c_text(dialogue_output.response_policy_label),
+            "route_cluster_id": int(dialogue_output.route_cluster_id),
+            "transition_id": int(dialogue_output.transition_id),
+        },
+        "fixture_hash": _canonical_fixture_hash(payload),
+        "memory_delta_applied": int(dialogue_output.memory_delta_applied),
+        "mutation_flags": {
+            "memory_write_blocked": bool(dialogue_output.memory_write_blocked),
+            "state_mutation_blocked": bool(dialogue_output.state_mutation_blocked),
+        },
+        "native_library_path": str(native_path),
+        "native_resolution_source": native_source,
+        "native_symbol": symbol_name,
+        "npc_line_candidate": _decode_c_text(dialogue_output.npc_line_candidate),
+        "observability": {
+            "abi_contract_version": int(dialogue_output.abi_contract_version),
+            "abi_crc32": int(dialogue_output.abi_crc32),
+            "abi_decode_path": int(dialogue_output.abi_decode_path),
+            "abi_payload_bytes": int(dialogue_output.abi_payload_bytes),
+            "abi_status": int(dialogue_output.abi_status),
+            "policy_action_selected": int(dialogue_output.policy_action_selected),
+            "policy_category": payload["policy_context"]["category"],
+            "policy_confidence_band": payload["policy_context"]["confidence_band"],
+            "policy_severity": payload["policy_context"]["severity"],
+            "selected_template_key": _decode_c_text(dialogue_output.selected_template_key),
+        },
+        "schema_version": DIALOGUE_FIXTURE_SCHEMA_VERSION,
+        "status": "executed",
+    }
+
+    output_schema_path = _resolve_dialogue_run_output_schema_path(args, repo_root)
+    output_schema_error = _validate_dialogue_run_output_payload(output_payload, output_schema_path)
+    if output_schema_error is not None:
+        if args.strict:
+            _emit_error_envelope(output_schema_error)
+        return 1
+
+    print(json.dumps(output_payload, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+def _k3h4_dialogue_export(args: argparse.Namespace) -> int:
+    payload, input_error = _load_dialogue_export_input_payload(args)
+    if input_error is not None:
+        if args.strict:
+            _emit_error_envelope(input_error)
+        return 1
+
+    validation_error = _validate_dialogue_export_input_payload(payload)
+    if validation_error is not None:
+        if args.strict:
+            _emit_error_envelope(validation_error)
+        return 1
+
+    repo_root = _resolve_repo_root(Path.cwd().resolve())
+    input_schema_path = _resolve_dialogue_export_input_schema_path(args, repo_root)
+    input_schema_error = _validate_dialogue_run_output_payload(payload, input_schema_path)
+    if input_schema_error is not None:
+        if args.strict:
+            _emit_error_envelope(input_schema_error)
+        return 1
+
+    export_payload = {
+        "artifact_type": "k3h4_dialogue_turn_export",
+        "export_hash": hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest(),
+        "schema_version": DIALOGUE_EXPORT_SCHEMA_VERSION,
+        "turn_record": payload,
+    }
+
+    output_schema_path = _resolve_export_schema_path(args, repo_root)
+    output_schema_error = _validate_dialogue_export_output_payload(export_payload, output_schema_path)
+    if output_schema_error is not None:
+        if args.strict:
+            _emit_error_envelope(output_schema_error)
+        return 1
+
+    artifact_text = (
+        json.dumps(export_payload, sort_keys=True, separators=(",", ":"))
+        if args.format == "json"
+        else _build_dialogue_export_csv(export_payload)
+    )
+    return _write_or_print_artifact(artifact_text, args.output_file)
+
+
+def _load_dialogue_export_input_payload(
+    args: argparse.Namespace,
+) -> tuple[dict[str, object] | None, DoctorFinding | None]:
+    raw = ""
+    if args.input_file:
+        input_path = Path(args.input_file).expanduser()
+        if not input_path.is_absolute():
+            input_path = (Path.cwd() / input_path).resolve()
+        if not input_path.exists() or not input_path.is_file():
+            return None, DoctorFinding(
+                level="error",
+                check="dialogue_export_input",
+                error_code="BANANA_DIALOGUE_EXPORT_INPUT_FILE_NOT_FOUND",
+                message=f"Input file not found: {input_path}",
+                field_path="input_file",
+            )
+        try:
+            raw = input_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            return None, DoctorFinding(
+                level="error",
+                check="dialogue_export_input",
+                error_code="BANANA_DIALOGUE_EXPORT_INPUT_FILE_READ_FAILED",
+                message=f"Failed to read input file: {exc}",
+                field_path="input_file",
+            )
+    else:
+        raw = sys.stdin.read()
+
+    if raw.strip() == "":
+        return None, DoctorFinding(
+            level="error",
+            check="dialogue_export_input",
+            error_code="BANANA_DIALOGUE_EXPORT_INPUT_EMPTY",
+            message="No dialogue-run JSON was provided via stdin or --input-file.",
+            field_path="stdin",
+        )
+
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return None, DoctorFinding(
+            level="error",
+            check="dialogue_export_input",
+            error_code="BANANA_DIALOGUE_EXPORT_INPUT_JSON_INVALID",
+            message=f"Input is not valid JSON: {exc}",
+            field_path="stdin",
+        )
+
+    if not isinstance(payload, dict):
+        return None, DoctorFinding(
+            level="error",
+            check="dialogue_export_input",
+            error_code="BANANA_DIALOGUE_EXPORT_INPUT_SHAPE_INVALID",
+            message="Input JSON must be an object.",
+            field_path="stdin",
+        )
+
+    return payload, None
+
+
+def _validate_dialogue_export_input_payload(payload: dict[str, object]) -> DoctorFinding | None:
+    schema_version = payload.get("schema_version")
+    if schema_version != DIALOGUE_FIXTURE_SCHEMA_VERSION:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_input",
+            error_code="BANANA_DIALOGUE_EXPORT_SCHEMA_VERSION_MISMATCH",
+            message=(
+                f"Expected dialogue run schema_version={DIALOGUE_FIXTURE_SCHEMA_VERSION}, "
+                f"found {schema_version!r}."
+            ),
+            field_path="schema_version",
+        )
+
+    required_fields = {
+        "fixture_hash",
+        "native_library_path",
+        "native_resolution_source",
+        "native_symbol",
+        "status",
+    }
+    missing = sorted(required_fields - set(payload.keys()))
+    if missing:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_input",
+            error_code="BANANA_DIALOGUE_EXPORT_FIELDS_MISSING",
+            message=f"Dialogue run payload missing required fields: {missing}",
+            field_path="input",
+        )
+
+    if payload.get("status") not in {"preflight_ready", "executed"}:
+        return DoctorFinding(
+            level="error",
+            check="dialogue_export_input",
+            error_code="BANANA_DIALOGUE_EXPORT_STATUS_INVALID",
+            message="Dialogue run status must be one of: preflight_ready, executed.",
+            field_path="status",
+        )
+
+    return None
+
+
+def _build_dialogue_export_csv(export_payload: dict[str, object]) -> str:
+    output = io.StringIO()
+    writer = csv.writer(output, lineterminator="\n")
+
+    turn_record = export_payload.get("turn_record")
+    if not isinstance(turn_record, dict):
+        turn_record = {}
+
+    writer.writerow(
+        [
+            "artifact_type",
+            "schema_version",
+            "fixture_hash",
+            "status",
+            "native_symbol",
+            "native_resolution_source",
+            "native_library_path",
+            "export_hash",
+        ]
+    )
+    writer.writerow(
+        [
+            export_payload.get("artifact_type", ""),
+            export_payload.get("schema_version", ""),
+            turn_record.get("fixture_hash", ""),
+            turn_record.get("status", ""),
+            turn_record.get("native_symbol", ""),
+            turn_record.get("native_resolution_source", ""),
+            turn_record.get("native_library_path", ""),
+            export_payload.get("export_hash", ""),
+        ]
+    )
+    return output.getvalue()
+
+
 def _resolve_run_output_schema_path(args: argparse.Namespace, repo_root: Path) -> Path:
     requested = Path(args.schema_path).expanduser()
+    if requested.is_absolute():
+        return requested
+    return (repo_root / requested).resolve()
+
+
+def _resolve_dialogue_run_output_schema_path(args: argparse.Namespace, repo_root: Path) -> Path:
+    requested = Path(args.output_schema_path).expanduser()
+    if requested.is_absolute():
+        return requested
+    return (repo_root / requested).resolve()
+
+
+def _resolve_dialogue_export_input_schema_path(args: argparse.Namespace, repo_root: Path) -> Path:
+    requested = Path(args.input_schema_path).expanduser()
     if requested.is_absolute():
         return requested
     return (repo_root / requested).resolve()
@@ -734,6 +1776,45 @@ class _K3h4Output(ctypes.Structure):
         ("envelope_payload_bytes", ctypes.c_int32),
         ("envelope_payload_crc32", ctypes.c_int32),
         ("contract_status", ctypes.c_int32),
+    ]
+
+
+class _DialogueTurnInput(ctypes.Structure):
+    _fields_ = [
+        ("npc_id", ctypes.c_char * 64),
+        ("quest_state_id", ctypes.c_char * 64),
+        ("region_id", ctypes.c_char * 64),
+        ("intent_id", ctypes.c_char * 64),
+        ("policy_category", ctypes.c_char * 64),
+        ("policy_confidence_band", ctypes.c_char * 16),
+        ("policy_severity", ctypes.c_char * 16),
+        ("prior_memory_trust_delta_q16", ctypes.c_int32),
+        ("prior_memory_hostility_delta_q16", ctypes.c_int32),
+        ("prior_memory_helpfulness_delta_q16", ctypes.c_int32),
+        ("sequence_tick", ctypes.c_int32),
+    ]
+
+
+class _DialogueTurnOutput(ctypes.Structure):
+    _fields_ = [
+        ("schema_version", ctypes.c_int32),
+        ("route_cluster_id", ctypes.c_int32),
+        ("boundary_state", ctypes.c_int32),
+        ("transition_id", ctypes.c_int32),
+        ("response_policy", ctypes.c_int32),
+        ("deny_reason_code", ctypes.c_int32),
+        ("state_mutation_blocked", ctypes.c_int32),
+        ("memory_write_blocked", ctypes.c_int32),
+        ("memory_delta_applied", ctypes.c_int32),
+        ("policy_action_selected", ctypes.c_int32),
+        ("abi_decode_path", ctypes.c_int32),
+        ("abi_contract_version", ctypes.c_int32),
+        ("abi_payload_bytes", ctypes.c_int32),
+        ("abi_crc32", ctypes.c_int32),
+        ("abi_status", ctypes.c_int32),
+        ("response_policy_label", ctypes.c_char * 32),
+        ("npc_line_candidate", ctypes.c_char * 160),
+        ("selected_template_key", ctypes.c_char * 64),
     ]
 
 
@@ -1630,6 +2711,25 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     add_k3h4_subcommand(
+        "dialogue-sample",
+        "Generate deterministic single-turn dialogue fixture",
+        _k3h4_dialogue_sample,
+        configure=lambda cmd: (
+            cmd.add_argument(
+                "--seed",
+                type=int,
+                default=42,
+                help="Seed for deterministic dialogue fixture generation",
+            ),
+            cmd.add_argument(
+                "--preset",
+                choices=DIALOGUE_SAMPLE_PRESETS,
+                default="pilot-edda",
+                help="Fixture preset",
+            ),
+        ),
+    )
+    add_k3h4_subcommand(
         "run",
         "Execute K3H4 pipeline via native-direct ctypes",
         _k3h4_run,
@@ -1648,6 +2748,86 @@ def build_parser() -> argparse.ArgumentParser:
                 help=(
                     "Canonical run output schema path "
                     f"(default: {RUN_OUTPUT_SCHEMA_RELATIVE})"
+                ),
+            ),
+            cmd.add_argument(
+                "--strict",
+                action=argparse.BooleanOptionalAction,
+                default=True,
+                help="Emit machine-readable JSON error envelopes on stderr when checks fail",
+            ),
+        ),
+    )
+    add_k3h4_subcommand(
+        "dialogue-run",
+        "Preflight dialogue full-chain execution contract via native symbol binding",
+        _k3h4_dialogue_run,
+        configure=lambda cmd: (
+            cmd.add_argument(
+                "--input-file",
+                help="Optional dialogue fixture JSON file path; stdin remains the primary input path",
+            ),
+            cmd.add_argument(
+                "--native-lib",
+                help="Explicit native library path; highest precedence in resolution chain",
+            ),
+            cmd.add_argument(
+                "--schema-path",
+                default=str(DIALOGUE_RUN_INPUT_SCHEMA_RELATIVE),
+                help=(
+                    "Canonical dialogue-run input schema path "
+                    f"(default: {DIALOGUE_RUN_INPUT_SCHEMA_RELATIVE})"
+                ),
+            ),
+            cmd.add_argument(
+                "--output-schema-path",
+                default=str(DIALOGUE_RUN_OUTPUT_SCHEMA_RELATIVE),
+                help=(
+                    "Canonical dialogue-run output schema path "
+                    f"(default: {DIALOGUE_RUN_OUTPUT_SCHEMA_RELATIVE})"
+                ),
+            ),
+            cmd.add_argument(
+                "--strict",
+                action=argparse.BooleanOptionalAction,
+                default=True,
+                help="Emit machine-readable JSON error envelopes on stderr when checks fail",
+            ),
+        ),
+    )
+    add_k3h4_subcommand(
+        "dialogue-export",
+        "Export machine-consumable dialogue-turn artifacts",
+        _k3h4_dialogue_export,
+        configure=lambda cmd: (
+            cmd.add_argument(
+                "--input-file",
+                help="Optional dialogue-run JSON file path; stdin remains the primary input path",
+            ),
+            cmd.add_argument(
+                "--format",
+                choices=DIALOGUE_EXPORT_FORMATS,
+                default="json",
+                help="Artifact format to emit (default: json)",
+            ),
+            cmd.add_argument(
+                "--output-file",
+                help="Optional output file path; defaults to stdout",
+            ),
+            cmd.add_argument(
+                "--input-schema-path",
+                default=str(DIALOGUE_RUN_OUTPUT_SCHEMA_RELATIVE),
+                help=(
+                    "Canonical dialogue-export input schema path "
+                    f"(default: {DIALOGUE_RUN_OUTPUT_SCHEMA_RELATIVE})"
+                ),
+            ),
+            cmd.add_argument(
+                "--schema-path",
+                default=str(DIALOGUE_EXPORT_OUTPUT_SCHEMA_RELATIVE),
+                help=(
+                    "Canonical dialogue-export output schema path "
+                    f"(default: {DIALOGUE_EXPORT_OUTPUT_SCHEMA_RELATIVE})"
                 ),
             ),
             cmd.add_argument(

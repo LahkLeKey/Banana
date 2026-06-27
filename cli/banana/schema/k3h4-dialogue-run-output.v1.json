@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "description": "Canonical output contract for banana k3h4 dialogue-run (V1)",
+  "required_top_level": [
+    "decision_metadata",
+    "fixture_hash",
+    "memory_delta_applied",
+    "mutation_flags",
+    "native_library_path",
+    "native_resolution_source",
+    "native_symbol",
+    "npc_line_candidate",
+    "observability",
+    "schema_version",
+    "status"
+  ],
+  "required_decision_metadata_keys": [
+    "boundary_state",
+    "deny_reason_code",
+    "response_policy",
+    "route_cluster_id",
+    "transition_id"
+  ],
+  "required_mutation_flags_keys": [
+    "memory_write_blocked",
+    "state_mutation_blocked"
+  ],
+  "required_observability_keys": [
+    "abi_contract_version",
+    "abi_crc32",
+    "abi_decode_path",
+    "abi_payload_bytes",
+    "abi_status",
+    "policy_action_selected",
+    "policy_category",
+    "policy_confidence_band",
+    "policy_severity",
+    "selected_template_key"
+  ]
+}

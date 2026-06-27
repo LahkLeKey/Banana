@@ -1,4 +1,10 @@
 #include "banana_native_v3.h"
+#include "k3h4/k3h4_dialogue_abi_envelope.h"
+#include "k3h4/k3h4_dialogue_cluster_router.h"
+#include "k3h4/k3h4_dialogue_generative_surface_layer.h"
+#include "k3h4/k3h4_dialogue_memory_delta_store.h"
+#include "k3h4/k3h4_dialogue_spectral_transition_graph.h"
+#include "k3h4/k3h4_dialogue_template_layer.h"
 #include "k3h4/k3h4_metrics_orchestration_layer.h"
 #include "k3h4/k3h4_native_orchestrator.h"
 #include "runtime/engine/engine_aux_abi.h"
@@ -15,6 +21,221 @@ static char s_pgbouncer_connection_uri[512];
 static char s_pgbouncer_pool_mode[32] = "transaction";
 static int s_pgbouncer_default_pool_size = 20;
 static int s_world_initialized = 0;
+static BananaK3h4DialogueMemoryStore s_dialogue_memory_store;
+static int s_dialogue_memory_initialized = 0;
+
+static void copy_text(char *target, size_t target_size, const char *source)
+{
+	if (!target || target_size == 0)
+		return;
+
+	if (!source)
+	{
+		target[0] = '\0';
+		return;
+	}
+
+	strncpy(target, source, target_size - 1);
+	target[target_size - 1] = '\0';
+}
+
+static uint32_t hash_text_seed(uint32_t seed, const char *text)
+{
+	uint32_t hash = seed;
+	const unsigned char *cursor = (const unsigned char *)text;
+
+	if (!cursor)
+		return hash;
+
+	while (*cursor)
+	{
+		hash ^= (uint32_t)(*cursor);
+		hash *= 16777619u;
+		cursor += 1;
+	}
+
+	return hash;
+}
+
+static uint32_t hash_text(const char *text)
+{
+	return hash_text_seed(2166136261u, text);
+}
+
+static int text_contains(const char *text, const char *token)
+{
+	if (!text || !token || token[0] == '\0')
+		return 0;
+	return strstr(text, token) != NULL;
+}
+
+static BananaK3h4DialogueIntent parse_dialogue_intent(const char *intent_id)
+{
+	if (!intent_id)
+		return BANANA_K3H4_DIALOGUE_INTENT_UNKNOWN;
+
+	if (strcmp(intent_id, "ASK_CASTLE_ENTRY") == 0)
+		return BANANA_K3H4_DIALOGUE_INTENT_ASK_CASTLE_ENTRY;
+	if (strcmp(intent_id, "ASK_DIRECTIONS") == 0)
+		return BANANA_K3H4_DIALOGUE_INTENT_ASK_DIRECTIONS;
+	if (strcmp(intent_id, "INSULT") == 0)
+		return BANANA_K3H4_DIALOGUE_INTENT_INSULT;
+	if (strcmp(intent_id, "REQUEST_HELP") == 0)
+		return BANANA_K3H4_DIALOGUE_INTENT_REQUEST_HELP;
+
+	return BANANA_K3H4_DIALOGUE_INTENT_UNKNOWN;
+}
+
+static int policy_category_is_hard_block(const char *policy_category)
+{
+	if (!policy_category)
+		return 0;
+
+	return strcmp(policy_category, "minor_safety") == 0 ||
+		   strcmp(policy_category, "self_harm") == 0 ||
+		   strcmp(policy_category, "real_world_violence") == 0 ||
+		   strcmp(policy_category, "hate_or_slur_severe") == 0;
+}
+
+static banana_native_v3_k3h4_dialogue_policy_action decide_policy_action(
+	const banana_native_v3_k3h4_dialogue_turn_input *turn_input)
+{
+	int is_high_confidence;
+	int is_boundary_confidence;
+
+	if (!turn_input)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_ALLOW;
+
+	is_high_confidence = strcmp(turn_input->policy_confidence_band, "high") == 0;
+	is_boundary_confidence = strcmp(turn_input->policy_confidence_band, "boundary") == 0 ||
+					 strcmp(turn_input->policy_confidence_band, "medium") == 0;
+
+	if (policy_category_is_hard_block(turn_input->policy_category) && is_high_confidence)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_HARD_BLOCK;
+
+	if (policy_category_is_hard_block(turn_input->policy_category) && is_boundary_confidence)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_SAFE_REDIRECT;
+
+	if (strcmp(turn_input->policy_category, "jailbreak_or_prompt_attack") == 0)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_SAFE_REDIRECT;
+
+	return BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_ALLOW;
+}
+
+static uint32_t proposed_fact_mask_for_intent(BananaK3h4DialogueIntent intent)
+{
+	switch (intent)
+	{
+	case BANANA_K3H4_DIALOGUE_INTENT_ASK_CASTLE_ENTRY:
+		return BANANA_K3H4_DIALOGUE_TEMPLATE_FACT_MASK_ENTRY_WRIT_STATUS;
+	case BANANA_K3H4_DIALOGUE_INTENT_ASK_DIRECTIONS:
+		return BANANA_K3H4_DIALOGUE_TEMPLATE_FACT_MASK_PUBLIC_GATE_DIRECTIONS;
+	case BANANA_K3H4_DIALOGUE_INTENT_INSULT:
+		return BANANA_K3H4_DIALOGUE_TEMPLATE_FACT_MASK_ESCALATION_WARNING;
+	case BANANA_K3H4_DIALOGUE_INTENT_REQUEST_HELP:
+		return BANANA_K3H4_DIALOGUE_TEMPLATE_FACT_MASK_HELP_GUIDANCE;
+	case BANANA_K3H4_DIALOGUE_INTENT_UNKNOWN:
+	default:
+		return BANANA_K3H4_DIALOGUE_TEMPLATE_FACT_MASK_PUBLIC_GATE_DIRECTIONS;
+	}
+}
+
+static BananaK3h4DialogueSpectralState requested_state_for_route(
+	const BananaK3h4DialogueRouteOutput *route_output)
+{
+	if (!route_output)
+		return BANANA_K3H4_DIALOGUE_SPECTRAL_STATE_ENTRY_GATE;
+
+	switch (route_output->response_contract.response_mode)
+	{
+	case BANANA_K3H4_DIALOGUE_RESPONSE_DENY:
+		return BANANA_K3H4_DIALOGUE_SPECTRAL_STATE_DENY;
+	case BANANA_K3H4_DIALOGUE_RESPONSE_REDIRECT:
+		return BANANA_K3H4_DIALOGUE_SPECTRAL_STATE_REDIRECT;
+	case BANANA_K3H4_DIALOGUE_RESPONSE_DEESCALATE:
+		return BANANA_K3H4_DIALOGUE_SPECTRAL_STATE_DEESCALATE;
+	case BANANA_K3H4_DIALOGUE_RESPONSE_ASSIST:
+		return BANANA_K3H4_DIALOGUE_SPECTRAL_STATE_ASSIST;
+	case BANANA_K3H4_DIALOGUE_RESPONSE_NEUTRAL:
+	default:
+		return BANANA_K3H4_DIALOGUE_SPECTRAL_STATE_ENTRY_GATE;
+	}
+}
+
+static void ensure_dialogue_memory_store(void)
+{
+	BananaK3h4DialogueMemoryPolicy policy;
+
+	if (s_dialogue_memory_initialized)
+		return;
+
+	policy.ttl_ticks = 16;
+	policy.delta_min = -8192;
+	policy.delta_max = 8192;
+	banana_native_k3h4_dialogue_memory_init(&s_dialogue_memory_store, policy);
+	s_dialogue_memory_initialized = 1;
+}
+
+static void select_fallback_line(const banana_native_v3_k3h4_dialogue_turn_input *turn_input,
+				 banana_native_v3_k3h4_dialogue_turn_output *out_output)
+{
+	uint32_t hash;
+	int slot;
+
+	hash = hash_text_seed(hash_text(turn_input->policy_category), turn_input->npc_id);
+	slot = (int)(hash % 3u);
+
+	if (slot == 0)
+	{
+		copy_text(out_output->npc_line_candidate,
+			  sizeof(out_output->npc_line_candidate),
+			  "I cannot help with that. We can discuss safe alternatives inside the gate protocol.");
+	}
+	else if (slot == 1)
+	{
+		copy_text(out_output->npc_line_candidate,
+			  sizeof(out_output->npc_line_candidate),
+			  "That request is blocked. I can offer lawful guidance for the South Gate instead.");
+	}
+	else
+	{
+		copy_text(out_output->npc_line_candidate,
+			  sizeof(out_output->npc_line_candidate),
+			  "I will not continue on that path. Ask for directions or entry requirements instead.");
+	}
+}
+
+static void select_allow_line(const BananaK3h4DialogueGeneratorOutput *generator_output,
+			      banana_native_v3_k3h4_dialogue_turn_output *out_output)
+{
+	if (text_contains(generator_output->selected_template_key, "assist"))
+	{
+		copy_text(out_output->npc_line_candidate,
+			  sizeof(out_output->npc_line_candidate),
+			  "Bring your writ to the registrar and I can guide you through entry.");
+		return;
+	}
+
+	if (text_contains(generator_output->selected_template_key, "deescalate"))
+	{
+		copy_text(out_output->npc_line_candidate,
+			  sizeof(out_output->npc_line_candidate),
+			  "Stand down and speak plainly. We can settle this at the checkpoint.");
+		return;
+	}
+
+	if (text_contains(generator_output->selected_template_key, "redirect"))
+	{
+		copy_text(out_output->npc_line_candidate,
+			  sizeof(out_output->npc_line_candidate),
+			  "Use the public gate road and report to the watch post for next steps.");
+		return;
+	}
+
+	copy_text(out_output->npc_line_candidate,
+		  sizeof(out_output->npc_line_candidate),
+		  "State your business at South Gate and I will review your entry status.");
+}
 
 static int32_t map_runtime_contract_status(int status)
 {
@@ -472,6 +693,132 @@ int banana_native_v3_netcode_build_k3h4(const banana_native_v3_netcode_vector_in
 	}
 
 	return 0;
+}
+
+int banana_native_v3_k3h4_run_dialogue_turn(
+	const banana_native_v3_k3h4_dialogue_turn_input *turn_input,
+	banana_native_v3_k3h4_dialogue_turn_output *out_output)
+{
+	BananaK3h4DialogueRouteInput route_input;
+	BananaK3h4DialogueRouteOutput route_output;
+	BananaK3h4DialogueTemplateInput template_input;
+	BananaK3h4DialogueTemplateOutput template_output;
+	BananaK3h4DialogueGeneratorInput generator_input;
+	BananaK3h4DialogueGeneratorOutput generator_output;
+	BananaK3h4DialogueSpectralTransitionInput spectral_input;
+	BananaK3h4DialogueSpectralTransitionOutput spectral_output;
+	banana_native_v3_k3h4_dialogue_policy_action policy_action;
+	BananaK3h4DialogueAbiEnvelope abi_envelope;
+	uint8_t abi_buffer[256];
+	size_t abi_written = 0;
+	uint32_t npc_hash;
+	int status;
+
+	if (!turn_input || !out_output)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_INVALID_ARGUMENT;
+
+	memset(out_output, 0, sizeof(*out_output));
+	out_output->schema_version = 1;
+	out_output->abi_status = BANANA_K3H4_DIALOGUE_ABI_INVALID_ARGUMENT;
+
+	route_input.intent = parse_dialogue_intent(turn_input->intent_id);
+	route_input.has_entry_writ = text_contains(turn_input->quest_state_id, "granted") ? 1 : 0;
+	route_input.mentions_secret_tunnel = text_contains(turn_input->intent_id, "SECRET_TUNNEL") ? 1 : 0;
+	route_input.ambiguity_basis_points =
+		strcmp(turn_input->policy_confidence_band, "low") == 0 ? 900 :
+		strcmp(turn_input->policy_confidence_band, "boundary") == 0 ? 1300 : 200;
+
+	status = banana_native_k3h4_route_dialogue_cluster(&route_input, &route_output);
+	if (status != 0)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_EXECUTION_FAILED;
+
+	template_input.route_output = route_output;
+	template_input.proposed_fact_mask = proposed_fact_mask_for_intent(route_input.intent);
+	status = banana_native_k3h4_resolve_dialogue_template(&template_input, &template_output);
+	if (status != 0)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_EXECUTION_FAILED;
+
+	generator_input.template_output = template_output;
+	generator_input.selected_fact_mask = template_input.proposed_fact_mask;
+	generator_input.canon_violation_mask = 0u;
+	status = banana_native_k3h4_assemble_dialogue_generator_contract(&generator_input, &generator_output);
+	if (status != 0 && status != -2)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_EXECUTION_FAILED;
+
+	spectral_input.current_state = BANANA_K3H4_DIALOGUE_SPECTRAL_STATE_ENTRY_GATE;
+	spectral_input.requested_state = requested_state_for_route(&route_output);
+	spectral_input.route_output = route_output;
+	banana_native_k3h4_resolve_spectral_transition(&spectral_input, &spectral_output);
+
+	status = banana_native_k3h4_dialogue_abi_encode(&spectral_output, abi_buffer, sizeof(abi_buffer), &abi_written);
+	if (status != BANANA_K3H4_DIALOGUE_ABI_OK)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_EXECUTION_FAILED;
+
+	status = banana_native_k3h4_dialogue_abi_decode(abi_buffer, abi_written, &abi_envelope);
+	if (status != BANANA_K3H4_DIALOGUE_ABI_OK)
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_EXECUTION_FAILED;
+
+	policy_action = decide_policy_action(turn_input);
+
+	out_output->route_cluster_id = route_output.cluster_id;
+	out_output->boundary_state = route_output.boundary_state;
+	out_output->transition_id = route_output.transition_id;
+	out_output->response_policy = route_output.response_contract.response_mode;
+	out_output->deny_reason_code = generator_output.deny_code != 0 ?
+		generator_output.deny_code : spectral_output.deny_reason_code;
+	out_output->policy_action_selected = policy_action;
+	out_output->abi_decode_path = abi_envelope.telemetry.endianness_decode_path;
+	out_output->abi_contract_version = (int32_t)abi_envelope.contract_version;
+	out_output->abi_payload_bytes = abi_envelope.telemetry.payload_bytes;
+	out_output->abi_crc32 = (int32_t)abi_envelope.crc32;
+	out_output->abi_status = BANANA_K3H4_DIALOGUE_ABI_OK;
+	copy_text(out_output->selected_template_key,
+		  sizeof(out_output->selected_template_key),
+		  generator_output.selected_template_key);
+
+	if (policy_action == BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_HARD_BLOCK)
+	{
+		out_output->state_mutation_blocked = 1;
+		out_output->memory_write_blocked = 1;
+		out_output->memory_delta_applied = 0;
+		out_output->deny_reason_code = (int32_t)(9100 + (hash_text(turn_input->policy_category) % 100u));
+		copy_text(out_output->response_policy_label,
+			  sizeof(out_output->response_policy_label),
+			  "hard_block");
+		select_fallback_line(turn_input, out_output);
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_OK;
+	}
+
+	if (policy_action == BANANA_NATIVE_V3_K3H4_DIALOGUE_POLICY_ACTION_SAFE_REDIRECT)
+	{
+		out_output->state_mutation_blocked = 1;
+		out_output->memory_write_blocked = 1;
+		out_output->memory_delta_applied = 0;
+		copy_text(out_output->response_policy_label,
+			  sizeof(out_output->response_policy_label),
+			  "safe_redirect");
+		select_fallback_line(turn_input, out_output);
+		return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_OK;
+	}
+
+	out_output->state_mutation_blocked = 0;
+	out_output->memory_write_blocked = 0;
+	copy_text(out_output->response_policy_label,
+		  sizeof(out_output->response_policy_label),
+		  generator_output.fail_closed ? "fail_closed" : "allow");
+	select_allow_line(&generator_output, out_output);
+
+	ensure_dialogue_memory_store();
+	npc_hash = hash_text(turn_input->npc_id);
+	status = banana_native_k3h4_dialogue_memory_upsert_delta(
+		&s_dialogue_memory_store,
+		npc_hash == 0 ? 1u : npc_hash,
+		BANANA_K3H4_DIALOGUE_MEMORY_FEATURE_TRUST_DELTA,
+		turn_input->prior_memory_trust_delta_q16,
+		(uint64_t)(turn_input->sequence_tick < 0 ? 0 : turn_input->sequence_tick));
+	out_output->memory_delta_applied = (status == 0) ? 1 : 0;
+
+	return BANANA_NATIVE_V3_K3H4_DIALOGUE_TURN_OK;
 }
 
 int banana_native_v3_launch_gate_policy_resolve(const char *mode_label,
