@@ -765,7 +765,7 @@ add_test(NAME banana_runtime_engine_runtime_context_test
 	COMMAND banana_runtime_engine_runtime_context_test
 )
 
-target_link_libraries(banana_runtime_engine_runtime_context_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_engine_runtime_context_test PRIVATE banana_native_render_runtime banana_engine_core)
 
 target_include_directories(banana_runtime_engine_runtime_context_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -795,7 +795,7 @@ add_test(NAME banana_runtime_application_service_render_port_test
 	COMMAND banana_runtime_application_service_render_port_test
 )
 
-target_link_libraries(banana_runtime_application_service_render_port_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_application_service_render_port_test PRIVATE banana_native_render_runtime banana_engine_core)
 
 target_include_directories(banana_runtime_application_service_render_port_test PRIVATE
 	${BANANA_ENGINE_DIR}
