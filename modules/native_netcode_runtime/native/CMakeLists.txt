@@ -22,6 +22,10 @@ target_include_directories(banana_native_netcode_runtime
 
 target_link_libraries(banana_native_netcode_runtime PUBLIC banana_k3h4_core)
 
+if(UNIX)
+  target_link_libraries(banana_native_netcode_runtime PUBLIC m)
+endif()
+
 function(banana_native_netcode_runtime_add_source_if_exists relpath)
   set(_abs "${CMAKE_CURRENT_SOURCE_DIR}/${relpath}")
   if(EXISTS "${_abs}")
