@@ -6,6 +6,8 @@
 #include "runtime/render/submit/render_submit.h"
 #include "runtime/terrain/terrain_height.h"
 
+#include <stddef.h>
+
 static EngineRuntimeState *s_render_state = NULL;
 
 static void terrain_draw_indirect(void)
