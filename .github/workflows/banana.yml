@@ -187,6 +187,9 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             cmake ninja-build gcc g++
 
+      - name: Validate native module boundaries (strict gate)
+        run: bash scripts/validate-native-module-boundaries.sh --strict
+
       - name: Configure native
         run: cmake -S src/native -B out/native-ci -G Ninja -DCMAKE_BUILD_TYPE=Release
 

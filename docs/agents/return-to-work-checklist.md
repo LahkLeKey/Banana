@@ -55,7 +55,7 @@ Use VS Code tasks first (they are the supported defaults):
 
 - Native: configure (v3)
 - Native: build (v3)
-- Native: continuity suite (v3)
+- Native: netcode suite (v3)
 - Native: war suite (focused)
 - API: smoke (v3)
 - UI: smoke (v3)

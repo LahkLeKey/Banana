@@ -21,6 +21,10 @@ extern "C" {
 
 typedef struct UIContext UIContext;
 
+typedef void *(*UiMallocFn)(size_t size);
+typedef void *(*UiCallocFn)(size_t count, size_t size);
+typedef void (*UiFreeFn)(void *ptr);
+
 /* Callback function signature: called when UI element is interacted with.
    user_data: arbitrary pointer passed at element creation
    return: 0 to consume event, non-zero to propagate */
@@ -32,6 +36,9 @@ typedef int (*UICallback)(void *user_data);
    framebuffer_width/height: dimensions of target framebuffer
    Returns NULL on failure. */
 UIContext *ui_context_create(int framebuffer_width, int framebuffer_height);
+
+void ui_set_alloc_hooks(UiMallocFn malloc_fn, UiCallocFn calloc_fn, UiFreeFn free_fn);
+void ui_reset_alloc_hooks(void);
 
 /* Destroy UI context and all queued elements. */
 void ui_context_destroy(UIContext *ctx);

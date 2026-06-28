@@ -6,7 +6,7 @@
 
 static int g_k3h4_status = 0;
 
-int runtime_netcode_k3h4_compute(
+static int failing_runtime_netcode_k3h4_compute(
     const float vectors[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
     int vector_count,
     int dimensions,
@@ -58,9 +58,12 @@ static void test_netcode_vector_build_returns_minus_one_when_k3h4_fails(void **s
     input = make_input();
     memset(&output, 0, sizeof(output));
     g_k3h4_status = -1;
+    runtime_netcode_vector_set_k3h4_compute_hook(failing_runtime_netcode_k3h4_compute);
 
     BANANA_TEST_ASSERT_INT_EQ(runtime_netcode_vector_build(&input, &output), -1,
                               "netcode vector build must fail when k3h4 compute fails");
+
+    runtime_netcode_vector_reset_k3h4_compute_hook();
 }
 
 BANANA_TEST_MAIN(

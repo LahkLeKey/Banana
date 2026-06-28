@@ -57,6 +57,12 @@ int banana_test_remove(const char *path)
     return 0;
 }
 
+/*
+ * Build export implementation in this translation unit so fopen/fwrite/rename
+ * hooks from target compile definitions apply to the implementation under test.
+ */
+#include "../../../src/runtime/netcode/k3h4/netcode_k3h4_export.c"
+
 static RuntimeNetcodeK3h4Output make_valid_export_state(void)
 {
     RuntimeNetcodeK3h4Output state;
