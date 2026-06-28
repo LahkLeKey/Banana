@@ -780,7 +780,7 @@ add_test(NAME banana_runtime_application_service_ports_test
 	COMMAND banana_runtime_application_service_ports_test
 )
 
-target_link_libraries(banana_runtime_application_service_ports_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_application_service_ports_test PRIVATE banana_native_render_runtime banana_engine_core)
 
 target_include_directories(banana_runtime_application_service_ports_test PRIVATE
 	${BANANA_ENGINE_DIR}
