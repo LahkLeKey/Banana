@@ -1,6 +1,7 @@
 #include "netcode_link.h"
 
 #include <math.h>
+#include <stddef.h>
 
 static int clamp_percent(int value)
 {
