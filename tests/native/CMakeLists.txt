@@ -291,7 +291,7 @@ add_test(NAME banana_runtime_ui_test
 	COMMAND banana_runtime_ui_test
 )
 
-target_link_libraries(banana_runtime_ui_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_ui_test PRIVATE banana_native_ui_runtime banana_engine_core)
 
 target_include_directories(banana_runtime_ui_test PRIVATE
 	${BANANA_ENGINE_DIR}
