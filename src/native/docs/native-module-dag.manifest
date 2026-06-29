@@ -1,0 +1,14 @@
+# module: direct_dependencies
+native_math_foundation:
+native_runtime_kernel: native_math_foundation
+
+native_k3h4_core: native_math_foundation native_runtime_kernel
+native_physics_core: native_math_foundation native_runtime_kernel
+native_world_core: native_math_foundation native_runtime_kernel
+native_ai_core: native_math_foundation native_runtime_kernel
+
+native_netcode_runtime: native_math_foundation native_runtime_kernel native_k3h4_core
+native_render_runtime: native_math_foundation native_runtime_kernel
+native_ui_runtime: native_math_foundation native_runtime_kernel
+
+banana_native: native_k3h4_core native_physics_core native_world_core native_ai_core native_netcode_runtime native_render_runtime native_ui_runtime

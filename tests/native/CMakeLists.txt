@@ -2,12 +2,11 @@
 
 set(BANANA_ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../src/native/engine")
 set(BANANA_K3H4_TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/../../modules/k3h4/native/tests")
-set(BANANA_K3H4_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/../../modules/k3h4/native/src")
+set(BANANA_K3H4_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../modules/k3h4/native/include")
 
 include_directories(
 	${CMAKE_CURRENT_LIST_DIR}
-	${BANANA_K3H4_SRC_DIR}
-	${CMAKE_CURRENT_LIST_DIR}/../../modules/k3h4/native/include
+	${BANANA_K3H4_INCLUDE_DIR}
 )
 
 option(BANANA_ENABLE_CMOCKA_TESTS "Enable CMocka-backed native tests" OFF)
@@ -190,10 +189,11 @@ add_test(NAME banana_runtime_netcode_k3h4_pipeline_equivalence_test
 
 add_executable(banana_runtime_netcode_vector_failure_path_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/netcode/netcode_vector_failure_path_test.c
-	${BANANA_ENGINE_DIR}/runtime/netcode/vector/netcode_vector.c
 )
 
 banana_link_libm_if_unix(banana_runtime_netcode_vector_failure_path_test)
+
+target_link_libraries(banana_runtime_netcode_vector_failure_path_test PRIVATE banana_native_netcode_runtime)
 
 target_include_directories(banana_runtime_netcode_vector_failure_path_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -206,8 +206,9 @@ add_test(NAME banana_runtime_netcode_vector_failure_path_test
 
 add_executable(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test
 	${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_orchestrator_failure_paths_test.c
-	${BANANA_K3H4_SRC_DIR}/runtime/netcode/k3h4/netcode_k3h4_orchestrator.c
 )
+
+target_link_libraries(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test PRIVATE banana_k3h4_core)
 
 target_include_directories(banana_runtime_netcode_k3h4_orchestrator_failure_paths_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -290,7 +291,7 @@ add_test(NAME banana_runtime_ui_test
 	COMMAND banana_runtime_ui_test
 )
 
-target_link_libraries(banana_runtime_ui_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_ui_test PRIVATE banana_native_ui_runtime banana_engine_core)
 
 target_include_directories(banana_runtime_ui_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -299,18 +300,13 @@ target_include_directories(banana_runtime_ui_test PRIVATE
 
 add_executable(banana_runtime_ui_alloc_failure_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ui/core/ui_alloc_failure_test.c
-	${BANANA_ENGINE_DIR}/ui/core/ui.c
 )
 
 add_test(NAME banana_runtime_ui_alloc_failure_test
 	COMMAND banana_runtime_ui_alloc_failure_test
 )
 
-target_compile_definitions(banana_runtime_ui_alloc_failure_test PRIVATE
-	malloc=banana_test_malloc
-	calloc=banana_test_calloc
-	free=banana_test_free
-)
+target_link_libraries(banana_runtime_ui_alloc_failure_test PRIVATE banana_native_ui_runtime)
 
 target_include_directories(banana_runtime_ui_alloc_failure_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -320,8 +316,9 @@ target_include_directories(banana_runtime_ui_alloc_failure_test PRIVATE
 
 add_executable(banana_runtime_ui_inventory_impl_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ui/inventory/ui_inventory_impl_test.c
-	${BANANA_ENGINE_DIR}/ui/inventory/ui_inventory.c
 )
+
+target_link_libraries(banana_runtime_ui_inventory_impl_test PRIVATE banana_native_ui_runtime)
 
 add_test(NAME banana_runtime_ui_inventory_impl_test
 	COMMAND banana_runtime_ui_inventory_impl_test
@@ -335,8 +332,9 @@ target_include_directories(banana_runtime_ui_inventory_impl_test PRIVATE
 
 add_executable(banana_runtime_ui_merchant_impl_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ui/merchant/ui_merchant_impl_test.c
-	${BANANA_ENGINE_DIR}/ui/merchant/ui_merchant.c
 )
+
+target_link_libraries(banana_runtime_ui_merchant_impl_test PRIVATE banana_native_ui_runtime)
 
 add_test(NAME banana_runtime_ui_merchant_impl_test
 	COMMAND banana_runtime_ui_merchant_impl_test
@@ -417,8 +415,9 @@ add_test(NAME banana_runtime_physics_world_test
 
 add_executable(banana_runtime_physics_world_collision_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/physics/world/world_collision_test.c
-	${BANANA_ENGINE_DIR}/physics/world/world_collision.c
 )
+
+target_link_libraries(banana_runtime_physics_world_collision_test PRIVATE banana_native_physics_core)
 
 target_include_directories(banana_runtime_physics_world_collision_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -766,7 +765,16 @@ add_test(NAME banana_runtime_engine_runtime_context_test
 	COMMAND banana_runtime_engine_runtime_context_test
 )
 
-target_link_libraries(banana_runtime_engine_runtime_context_test PRIVATE banana_engine_core)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_engine_runtime_context_test PRIVATE
+			-Wl,--start-group
+			banana_native_render_runtime
+			banana_engine_core
+			-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_engine_runtime_context_test PRIVATE banana_native_render_runtime banana_engine_core)
+endif()
 
 target_include_directories(banana_runtime_engine_runtime_context_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -781,7 +789,7 @@ add_test(NAME banana_runtime_application_service_ports_test
 	COMMAND banana_runtime_application_service_ports_test
 )
 
-target_link_libraries(banana_runtime_application_service_ports_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_application_service_ports_test PRIVATE banana_native_render_runtime banana_engine_core)
 
 target_include_directories(banana_runtime_application_service_ports_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -796,7 +804,7 @@ add_test(NAME banana_runtime_application_service_render_port_test
 	COMMAND banana_runtime_application_service_render_port_test
 )
 
-target_link_libraries(banana_runtime_application_service_render_port_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_application_service_render_port_test PRIVATE banana_native_render_runtime banana_engine_core)
 
 target_include_directories(banana_runtime_application_service_render_port_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -900,7 +908,16 @@ add_test(NAME banana_runtime_engine_composition_shutdown_test
 	COMMAND banana_runtime_engine_composition_shutdown_test
 )
 
-target_link_libraries(banana_runtime_engine_composition_shutdown_test PRIVATE banana_engine_core)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_engine_composition_shutdown_test PRIVATE
+			-Wl,--start-group
+			banana_native_render_runtime
+			banana_engine_core
+			-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_engine_composition_shutdown_test PRIVATE banana_engine_core)
+endif()
 
 target_include_directories(banana_runtime_engine_composition_shutdown_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -915,7 +932,16 @@ add_test(NAME banana_runtime_engine_composition_test
 	COMMAND banana_runtime_engine_composition_test
 )
 
-target_link_libraries(banana_runtime_engine_composition_test PRIVATE banana_engine_core)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_engine_composition_test PRIVATE
+			-Wl,--start-group
+			banana_native_render_runtime
+			banana_engine_core
+			-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_engine_composition_test PRIVATE banana_engine_core)
+endif()
 
 target_include_directories(banana_runtime_engine_composition_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -945,7 +971,16 @@ add_test(NAME banana_runtime_engine_test
 	COMMAND banana_runtime_engine_test
 )
 
-target_link_libraries(banana_runtime_engine_test PRIVATE banana_engine_core)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_engine_test PRIVATE
+			-Wl,--start-group
+			banana_native_render_runtime
+			banana_engine_core
+			-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_engine_test PRIVATE banana_engine_core)
+endif()
 
 target_include_directories(banana_runtime_engine_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -1100,8 +1135,9 @@ target_include_directories(banana_runtime_merchant_trade_abi_test PRIVATE
 
 add_executable(banana_runtime_parallel_contract_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/parallel/contract/parallel_contract_test.c
-	${BANANA_ENGINE_DIR}/runtime/parallel/contract/parallel_contract.c
 )
+
+target_link_libraries(banana_runtime_parallel_contract_test PRIVATE banana_native_runtime_kernel)
 
 add_test(NAME banana_runtime_parallel_contract_test
 	COMMAND banana_runtime_parallel_contract_test
@@ -1248,7 +1284,7 @@ if(EXISTS "${BANANA_K3H4_DIALOGUE_CLUSTER_ROUTER_TEST_SOURCE}")
 		${BANANA_ENGINE_DIR}
 		${BANANA_ENGINE_DIR}/runtime
 		${CMAKE_CURRENT_LIST_DIR}/../../src/native
-		${BANANA_K3H4_SRC_DIR}
+		${BANANA_K3H4_INCLUDE_DIR}
 	)
 endif()
 
@@ -1282,7 +1318,7 @@ if(EXISTS "${BANANA_K3H4_DIALOGUE_TEMPLATE_LAYER_TEST_SOURCE}")
 		${BANANA_ENGINE_DIR}
 		${BANANA_ENGINE_DIR}/runtime
 		${CMAKE_CURRENT_LIST_DIR}/../../src/native
-		${BANANA_K3H4_SRC_DIR}
+		${BANANA_K3H4_INCLUDE_DIR}
 	)
 endif()
 
@@ -1316,7 +1352,7 @@ if(EXISTS "${BANANA_K3H4_DIALOGUE_GENERATIVE_SURFACE_LAYER_TEST_SOURCE}")
 		${BANANA_ENGINE_DIR}
 		${BANANA_ENGINE_DIR}/runtime
 		${CMAKE_CURRENT_LIST_DIR}/../../src/native
-		${BANANA_K3H4_SRC_DIR}
+		${BANANA_K3H4_INCLUDE_DIR}
 	)
 endif()
 
@@ -1350,7 +1386,7 @@ if(EXISTS "${BANANA_K3H4_DIALOGUE_SPECTRAL_TRANSITION_GRAPH_TEST_SOURCE}")
 		${BANANA_ENGINE_DIR}
 		${BANANA_ENGINE_DIR}/runtime
 		${CMAKE_CURRENT_LIST_DIR}/../../src/native
-		${BANANA_K3H4_SRC_DIR}
+		${BANANA_K3H4_INCLUDE_DIR}
 	)
 endif()
 
@@ -1384,7 +1420,7 @@ if(EXISTS "${BANANA_K3H4_DIALOGUE_MEMORY_DELTA_STORE_TEST_SOURCE}")
 		${BANANA_ENGINE_DIR}
 		${BANANA_ENGINE_DIR}/runtime
 		${CMAKE_CURRENT_LIST_DIR}/../../src/native
-		${BANANA_K3H4_SRC_DIR}
+		${BANANA_K3H4_INCLUDE_DIR}
 	)
 endif()
 
@@ -1418,7 +1454,7 @@ if(EXISTS "${BANANA_K3H4_DIALOGUE_ABI_ENVELOPE_TEST_SOURCE}")
 		${BANANA_ENGINE_DIR}
 		${BANANA_ENGINE_DIR}/runtime
 		${CMAKE_CURRENT_LIST_DIR}/../../src/native
-		${BANANA_K3H4_SRC_DIR}
+		${BANANA_K3H4_INCLUDE_DIR}
 	)
 endif()
 
@@ -1452,7 +1488,7 @@ if(EXISTS "${BANANA_K3H4_DIALOGUE_NATIVE_ENTRY_TURN_TEST_SOURCE}")
 		${BANANA_ENGINE_DIR}
 		${BANANA_ENGINE_DIR}/runtime
 		${CMAKE_CURRENT_LIST_DIR}/../../src/native
-		${BANANA_K3H4_SRC_DIR}
+		${BANANA_K3H4_INCLUDE_DIR}
 	)
 endif()
 
@@ -1605,7 +1641,6 @@ target_include_directories(banana_runtime_navigation_test PRIVATE
 
 add_executable(banana_runtime_wildlife_controller_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/wildlife/wildlife_controller_test.c
-	${BANANA_ENGINE_DIR}/ai/wildlife/wildlife_controller.c
 )
 
 add_test(NAME banana_runtime_wildlife_controller_test
@@ -1613,6 +1648,7 @@ add_test(NAME banana_runtime_wildlife_controller_test
 )
 
 target_link_libraries(banana_runtime_wildlife_controller_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_wildlife_controller_test PRIVATE banana_native_ai_core)
 
 target_include_directories(banana_runtime_wildlife_controller_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -1636,7 +1672,6 @@ target_include_directories(banana_runtime_wildlife_gameplay_test PRIVATE
 
 add_executable(banana_runtime_npc_merchant_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/npc/npc_merchant_test.c
-	${BANANA_ENGINE_DIR}/ai/npc/npc_merchant.c
 )
 
 add_test(NAME banana_runtime_npc_merchant_test
@@ -1644,6 +1679,7 @@ add_test(NAME banana_runtime_npc_merchant_test
 )
 
 target_link_libraries(banana_runtime_npc_merchant_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_npc_merchant_test PRIVATE banana_native_ai_core)
 
 target_include_directories(banana_runtime_npc_merchant_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -1682,16 +1718,13 @@ target_include_directories(banana_runtime_controller_system_test PRIVATE
 
 add_executable(banana_runtime_controller_system_lifecycle_alloc_failure_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/controller/controller_system_lifecycle_alloc_failure_test.c
-	${BANANA_ENGINE_DIR}/ai/controller/controller_system_lifecycle.c
 )
 
 add_test(NAME banana_runtime_controller_system_lifecycle_alloc_failure_test
 	COMMAND banana_runtime_controller_system_lifecycle_alloc_failure_test
 )
 
-target_compile_definitions(banana_runtime_controller_system_lifecycle_alloc_failure_test PRIVATE
-	calloc=banana_test_calloc
-)
+target_link_libraries(banana_runtime_controller_system_lifecycle_alloc_failure_test PRIVATE banana_native_ai_core)
 
 target_include_directories(banana_runtime_controller_system_lifecycle_alloc_failure_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -1770,7 +1803,6 @@ endif()
 
 add_executable(banana_runtime_combat_controller_k3h4_test
 	   ${BANANA_K3H4_TEST_DIR}/runtime/ai/combat/combat_controller_k3h4_test.c
-	${BANANA_ENGINE_DIR}/ai/combat/combat_controller.c
 )
 
 # Build the dedicated combat-controller coverage test binary.
@@ -1778,7 +1810,6 @@ add_executable(banana_runtime_combat_controller_k3h4_test
 # the older smoke test and keeps the combat path easier to diagnose in CI.
 add_executable(banana_runtime_combat_controller_coverage_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/ai/combat/combat_controller_coverage_test.c
-	${BANANA_ENGINE_DIR}/ai/combat/combat_controller.c
 )
 
 # Register the new binary in ctest so it runs as part of the native suite.
@@ -1788,8 +1819,10 @@ add_test(NAME banana_runtime_combat_controller_coverage_test
 )
 
 target_link_libraries(banana_runtime_combat_controller_k3h4_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_combat_controller_k3h4_test PRIVATE banana_native_ai_core)
 
 target_link_libraries(banana_runtime_combat_controller_coverage_test PRIVATE banana_engine_core)
+target_link_libraries(banana_runtime_combat_controller_coverage_test PRIVATE banana_native_ai_core)
 
 target_include_directories(banana_runtime_combat_controller_k3h4_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -1870,7 +1903,6 @@ add_test(NAME banana_k3h4_export_test
 
 add_executable(banana_k3h4_export_io_failure_test
 	   ${BANANA_K3H4_TEST_DIR}/runtime/netcode/netcode_k3h4_export_io_failure_test.c
-	   ${BANANA_K3H4_SRC_DIR}/runtime/netcode/k3h4/netcode_k3h4_export.c
 )
 
 target_compile_definitions(banana_k3h4_export_io_failure_test PRIVATE
@@ -1878,7 +1910,6 @@ target_compile_definitions(banana_k3h4_export_io_failure_test PRIVATE
 	fwrite=banana_test_fwrite
 	rename=banana_test_rename
 	remove=banana_test_remove
-	_mkdir=banana_test_mkdir
 )
 
 target_include_directories(banana_k3h4_export_io_failure_test PRIVATE
@@ -1900,8 +1931,9 @@ add_test(NAME banana_k3h4_export_io_failure_test
 
 add_executable(banana_runtime_render_tick_orchestration_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/orchestration/tick/loop/render_tick_orchestration_test.c
-	${BANANA_ENGINE_DIR}/runtime/orchestration/tick/loop/render_tick_orchestration.c
 )
+
+target_link_libraries(banana_runtime_render_tick_orchestration_test PRIVATE banana_native_render_runtime)
 
 add_test(NAME banana_runtime_render_tick_orchestration_test
 	COMMAND banana_runtime_render_tick_orchestration_test
@@ -1944,8 +1976,9 @@ target_include_directories(banana_runtime_terrain_chunks_test PRIVATE
 
 add_executable(banana_runtime_parallel_model_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/parallel/model/parallel_model_test.c
-	${BANANA_ENGINE_DIR}/runtime/parallel/model/parallel_model.c
 )
+
+target_link_libraries(banana_runtime_parallel_model_test PRIVATE banana_native_runtime_kernel)
 
 add_test(NAME banana_runtime_parallel_model_test
 	COMMAND banana_runtime_parallel_model_test
@@ -2002,14 +2035,13 @@ target_include_directories(banana_runtime_controller_attach_test PRIVATE
 
 add_executable(banana_runtime_interlock_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/parallel/interlock/interlock_test.c
-	${BANANA_ENGINE_DIR}/runtime/parallel/interlock/interlock.c
 )
 
 add_test(NAME banana_runtime_interlock_test
 	COMMAND banana_runtime_interlock_test
 )
 
-target_link_libraries(banana_runtime_interlock_test PRIVATE OpenMP::OpenMP_C)
+target_link_libraries(banana_runtime_interlock_test PRIVATE banana_native_runtime_kernel OpenMP::OpenMP_C)
 
 target_include_directories(banana_runtime_interlock_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -2104,14 +2136,13 @@ target_include_directories(banana_runtime_interactive_collection_test PRIVATE
 add_executable(banana_runtime_controller_sync_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/controller/sync/controller_sync_test.c
 	${BANANA_ENGINE_DIR}/runtime/controller/sync/controller_sync.c
-	${BANANA_ENGINE_DIR}/runtime/parallel/interlock/interlock.c
 )
 
 add_test(NAME banana_runtime_controller_sync_test
 	COMMAND banana_runtime_controller_sync_test
 )
 
-target_link_libraries(banana_runtime_controller_sync_test PRIVATE OpenMP::OpenMP_C)
+target_link_libraries(banana_runtime_controller_sync_test PRIVATE banana_native_runtime_kernel OpenMP::OpenMP_C)
 
 target_include_directories(banana_runtime_controller_sync_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -2119,11 +2150,9 @@ target_include_directories(banana_runtime_controller_sync_test PRIVATE
 )
 add_executable(banana_world_signals_test
 	${CMAKE_CURRENT_LIST_DIR}/world/signals_test.c
-	${BANANA_ENGINE_DIR}/world/signals/signals.c
-	${BANANA_ENGINE_DIR}/world/core/world.c
-	${BANANA_ENGINE_DIR}/world/entity/entity.c
-	${BANANA_ENGINE_DIR}/world/query/world_query.c
 )
+
+target_link_libraries(banana_world_signals_test PRIVATE banana_native_world_core)
 
 add_test(NAME banana_world_signals_test
 	COMMAND banana_world_signals_test
@@ -2137,9 +2166,9 @@ target_include_directories(banana_world_signals_test PRIVATE
 
 add_executable(banana_physics_collider_narrow_phase_test
 	${CMAKE_CURRENT_LIST_DIR}/physics/collider/collider_narrow_phase_test.c
-	${BANANA_ENGINE_DIR}/physics/collider/collider_narrow_phase.c
-	${BANANA_ENGINE_DIR}/physics/collider/collider_resolve.c
 )
+
+target_link_libraries(banana_physics_collider_narrow_phase_test PRIVATE banana_native_physics_core)
 
 banana_link_libm_if_unix(banana_physics_collider_narrow_phase_test)
 
@@ -2158,11 +2187,11 @@ banana_link_libm_if_unix(banana_runtime_combat_controller_coverage_test)
 
 add_executable(banana_runtime_render_submit_test
 	${CMAKE_CURRENT_LIST_DIR}/runtime/render/submit/render_submit_test.c
-	${BANANA_ENGINE_DIR}/runtime/render/submit/render_submit.c
-	${BANANA_ENGINE_DIR}/runtime/render/material/render_material.c
 )
 
 banana_link_libm_if_unix(banana_runtime_render_submit_test)
+
+target_link_libraries(banana_runtime_render_submit_test PRIVATE banana_native_render_runtime)
 
 add_test(NAME banana_runtime_render_submit_test
 	COMMAND banana_runtime_render_submit_test
@@ -2251,14 +2280,23 @@ target_include_directories(banana_runtime_engine_exports_input_player_test PRIVA
 
 add_executable(banana_runtime_render_material_domain_test
    ${CMAKE_CURRENT_LIST_DIR}/runtime/render/material/render_material_domain_test.c
-   ${BANANA_ENGINE_DIR}/runtime/render/material/render_material.c
 )
 
 add_test(NAME banana_runtime_render_material_domain_test
    COMMAND banana_runtime_render_material_domain_test
 )
 
-target_link_libraries(banana_runtime_render_material_domain_test PRIVATE banana_engine_core)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_render_material_domain_test PRIVATE
+		-Wl,--start-group
+		banana_engine_core
+		banana_native_render_runtime
+		-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_render_material_domain_test PRIVATE banana_engine_core)
+	target_link_libraries(banana_runtime_render_material_domain_test PRIVATE banana_native_render_runtime)
+endif()
 
 target_include_directories(banana_runtime_render_material_domain_test PRIVATE
    ${BANANA_ENGINE_DIR}

@@ -7,6 +7,7 @@ extern "C"
 #endif
 
 #include "controller.h"
+#include <stddef.h>
 
     /* ── Controller System ───────────────────────────────────────────────────────
      * Manages a pool of active ControllerInstances.
@@ -14,6 +15,8 @@ extern "C"
      * ─────────────────────────────────────────────────────────────────────────── */
 
 #define BANANA_CTRL_SYS_CAPACITY 256
+
+    typedef void *(*ControllerSystemCallocFn)(size_t count, size_t size);
 
     typedef struct
     {
@@ -24,6 +27,10 @@ extern "C"
 
     /* Create an empty controller system. */
     ControllerSystem *controller_system_create(void);
+
+    /* Override/reset allocator hook used by controller_system_create. */
+    void controller_system_set_calloc_hook(ControllerSystemCallocFn hook);
+    void controller_system_reset_calloc_hook(void);
 
     /* Spawn a controller of given type at (x, y, z).
      * Returns the new controller's ID (0 on failure). */

@@ -32,54 +32,23 @@ set(ENGINE_RENDER_SOURCES
   render/registry/actor_mesh_registry.c
 )
 
-set(ENGINE_PHYSICS_SOURCES
-  physics/body/body.c
-  physics/collider/collider_broad_phase.c
-  physics/collider/collider_narrow_phase.c
-  physics/collider/collider_resolve.c
-  physics/dynamics/dynamics.c
-  physics/raycast/raycast.c
-  physics/world/world_collision.c
-  physics/world/world.c
-)
+set(ENGINE_PHYSICS_SOURCES)
 
-set(ENGINE_AI_SOURCES
-  ai/controller/controller.c
-  ai/controller/controller_system_dispatch.c
-  ai/controller/controller_system_lifecycle.c
-  ai/combat/combat_controller.c
-  ai/navigation/navigation.c
-  ai/npc/npc_merchant.c
-  ai/perception/perception.c
-  ai/state/state_machine.c
-  ai/wildlife/wildlife_controller.c
-)
+set(ENGINE_AI_SOURCES)
 
-set(ENGINE_WORLD_SOURCES
-  world/entity/entity.c
-  world/query/world_query.c
-  world/core/world.c
-  world/signals/signals.c
-)
+set(ENGINE_WORLD_SOURCES)
 
 set(ENGINE_UI_SOURCES
-  ui/core/ui.c
   ui/render/ui_render.c
-  ui/inventory/ui_inventory.c
-  ui/merchant/ui_merchant.c
   ui/callbacks/ui_callback_bindings.c
 )
 
 set(ENGINE_RUNTIME_SOURCES
   runtime/engine/application/service/application_service_player_port.c
-  runtime/engine/application/service/application_service_render_actor_resolver.c
-  runtime/engine/application/service/application_service_render_model_cache.c
-  runtime/engine/application/service/application_service_render_port.c
   runtime/engine/application/service/application_service_terrain_port.c
   runtime/engine/application/service/application_service_ports.c
   runtime/orchestration/tick/loop/runtime_tick_orchestration.c
   runtime/orchestration/tick/loop/player_tick_orchestration.c
-  runtime/orchestration/tick/loop/render_tick_orchestration.c
   runtime/orchestration/tick/loop/terrain_tick_orchestration.c
   runtime/controller/kind/controller_kind_domain.c
   runtime/camera/basis/camera_basis.c
@@ -118,26 +87,17 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/engine/gameplay/service/gameplay_service_warfront_expansion.c
   # Feature 005: keep extracted tick/runtime modularization seams grouped here.
   runtime/engine/gameplay/service/gameplay_service.c
-   runtime/input/abi/input_abi.c
-   runtime/input/click/input_click_policy.c
-   runtime/input/contract/input_contract.c
-   runtime/input/binding/input_binding.c
-   runtime/merchant/query/merchant_query_abi.c
-   runtime/merchant/trade/merchant_trade_abi.c
-   runtime/merchant/trade/merchant_trade_domain.c
-   runtime/merchant/service/merchant_service.c
-   runtime/interaction/objects/interactive_objects.c
-  runtime/parallel/interlock/interlock.c
-   runtime/input/move_target/move_target_service.c
-   runtime/input/move_target/move_target_domain.c
-  runtime/parallel/contract/parallel_contract.c
-  runtime/parallel/model/parallel_model.c
-  runtime/netcode/model/netcode_model.c
-  runtime/netcode/reward/netcode_reward.c
-  runtime/netcode/link/netcode_link.c
-  runtime/netcode/vector/netcode_vector.c
-  runtime/netcode/contract/netcode_contract.c
-  runtime/abi/netcode/netcode_abi.c
+  runtime/input/abi/input_abi.c
+  runtime/input/click/input_click_policy.c
+  runtime/input/contract/input_contract.c
+  runtime/input/binding/input_binding.c
+  runtime/merchant/query/merchant_query_abi.c
+  runtime/merchant/trade/merchant_trade_abi.c
+  runtime/merchant/trade/merchant_trade_domain.c
+  runtime/merchant/service/merchant_service.c
+  runtime/interaction/objects/interactive_objects.c
+  runtime/input/move_target/move_target_service.c
+  runtime/input/move_target/move_target_domain.c
   runtime/abi/physics/physics_abi.c
   runtime/player/api/player_api.c
   runtime/player/build/abi/player_build_abi.c
@@ -151,11 +111,9 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/player/registry/player_registry.c
   runtime/player/resource/player_resources.c
   runtime/player/merchant/player_merchant_adapter.c
-   runtime/interaction/collection/interactive_collection.c
-   runtime/interaction/spawner/interactive_object_spawner.c
+  runtime/interaction/collection/interactive_collection.c
+  runtime/interaction/spawner/interactive_object_spawner.c
   runtime/chunk/chunk_stream_packet.c
-  runtime/render/material/render_material.c
-  runtime/render/submit/render_submit.c
   runtime/resource/resource_domain.c
   runtime/terrain/terrain_features.c
   runtime/terrain/terrain_abi.c
@@ -164,7 +122,6 @@ set(ENGINE_RUNTIME_SOURCES
   runtime/terrain/static_mesh/terrain_static_mesh_generation.c
   runtime/terrain/static_mesh/terrain_static_mesh_routes.c
   runtime/terrain/terrain_static_mesh.c
-  runtime/abi/ui/ui_abi.c
   runtime/terrain/terrain_host.c
   runtime/terrain/terrain_height.c
   runtime/terrain/terrain_mutation.c
@@ -192,7 +149,7 @@ add_library(banana_engine_core STATIC
   ${ENGINE_UI_SOURCES}
 )
 
-target_link_libraries(banana_engine_core PUBLIC banana_k3h4_core)
+target_link_libraries(banana_engine_core PUBLIC banana_k3h4_core banana_native_runtime_kernel banana_native_physics_core banana_native_world_core banana_native_ai_core banana_native_netcode_runtime banana_native_render_runtime banana_native_ui_runtime)
 
 set_target_properties(banana_engine_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -212,7 +169,6 @@ target_include_directories(banana_engine_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/world
   ${CMAKE_CURRENT_SOURCE_DIR}/ui
   ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/src
 )
 
 if(MSVC)
@@ -358,7 +314,6 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/ai
     ${CMAKE_CURRENT_SOURCE_DIR}/world
     ${CMAKE_CURRENT_SOURCE_DIR}/runtime
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../modules/k3h4/native/src
   )
   add_test(NAME banana_native_feedback_loop_factory_smoke
     COMMAND banana_native_feedback_loop_factory

@@ -29,8 +29,12 @@ static void test_controller_system_create_returns_null_on_allocator_failure(void
 {
     (void)state;
 
+    controller_system_set_calloc_hook(banana_test_calloc);
+
     BANANA_TEST_ASSERT_TRUE(controller_system_create() == NULL,
                             "controller_system_create must return NULL when allocation fails");
+
+    controller_system_reset_calloc_hook();
 }
 
 BANANA_TEST_MAIN(

@@ -11,6 +11,8 @@
     "kickoff:status": "bash scripts/kickoff-return-to-work.sh --status-only",
     "kickoff:return:auto-fix": "bash scripts/kickoff-return-to-work.sh --auto-fix",
     "kickoff:return": "bash scripts/kickoff-return-to-work.sh",
+    "validate:native-boundaries": "bash scripts/validate-native-module-boundaries.sh --strict",
+    "validate:native-boundaries:baseline": "bash scripts/validate-native-module-boundaries.sh --baseline",
     "install:typescript": "bun install --cwd src/typescript",
     "build:panels": "bun run --cwd src/typescript/packages/panels build",
     "test:panels": "bun test --cwd src/typescript/packages/panels",

@@ -66,18 +66,33 @@ jobs:
       - name: Install clang-format
         run: sudo apt-get update -qq && sudo apt-get install -y clang-format-19
 
+      - name: Detect pre-commit config
+        id: precommit_config
+        shell: bash
+        run: |
+          if [[ -f .pre-commit-config.yaml ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install pre-commit
+        if: steps.precommit_config.outputs.present == 'true'
         run: python -m pip install pre-commit
 
+      - name: Skip pre-commit when config is absent
+        if: steps.precommit_config.outputs.present != 'true'
+        run: echo "[pre-commit] no .pre-commit-config.yaml present; skipping pre-commit lane"
+
       - name: Run pre-commit on PR diff
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.precommit_config.outputs.present == 'true'
         run: |
           pre-commit run --show-diff-on-failure --color=always \
             --from-ref "${{ github.event.pull_request.base.sha }}" \
             --to-ref "${{ github.event.pull_request.head.sha }}"
 
       - name: Run pre-commit on all files
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.precommit_config.outputs.present == 'true'
         run: pre-commit run --show-diff-on-failure --color=always --all-files
 
   secret-scans:
@@ -186,6 +201,9 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             cmake ninja-build gcc g++
+
+      - name: Validate native module boundaries (strict gate)
+        run: bash scripts/validate-native-module-boundaries.sh --strict
 
       - name: Configure native
         run: cmake -S src/native -B out/native-ci -G Ninja -DCMAKE_BUILD_TYPE=Release

@@ -8,7 +8,7 @@ static int g_resolve_calls = 0;
 static PhysicsBodyId g_last_a_id = 0;
 static PhysicsBodyId g_last_b_id = 0;
 
-void collider_resolve(const Collision *c, PhysicsBody *a, PhysicsBody *b)
+static void probe_collider_resolve(const Collision *c, PhysicsBody *a, PhysicsBody *b)
 {
     (void)c;
     g_resolve_calls += 1;
@@ -34,8 +34,10 @@ static void test_world_collision_null_guards_do_not_resolve(void **state)
     memset(&world, 0, sizeof(world));
 
     reset_probe_state();
+    physics_world_set_collision_resolve_hook(probe_collider_resolve);
     physics_world_resolve_collision_pairs(NULL, &cols);
     physics_world_resolve_collision_pairs(&world, NULL);
+    physics_world_reset_collision_resolve_hook();
 
     BANANA_TEST_ASSERT_INT_EQ(g_resolve_calls, 0,
                               "world collision must no-op on null inputs");
@@ -82,7 +84,9 @@ static void test_world_collision_skips_invalid_pairs_and_resolves_valid_pair(voi
     cols.items[3].body_b = valid_b.id;
 
     reset_probe_state();
+    physics_world_set_collision_resolve_hook(probe_collider_resolve);
     physics_world_resolve_collision_pairs(&world, &cols);
+    physics_world_reset_collision_resolve_hook();
 
     BANANA_TEST_ASSERT_INT_EQ(g_resolve_calls, 1,
                               "world collision must resolve exactly one valid pair");

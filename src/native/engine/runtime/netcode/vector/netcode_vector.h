@@ -9,6 +9,8 @@ extern "C"
 {
 #endif
 
+    typedef struct RuntimeNetcodeK3h4Result RuntimeNetcodeK3h4Result;
+
     typedef struct RuntimeNetcodeVectorInput
     {
         int call_density;
@@ -37,6 +39,18 @@ extern "C"
         int k3h4_member_counts[RUNTIME_NETCODE_VECTOR_NODE_COUNT];
         int k3h4_centers_q16[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS];
     } RuntimeNetcodeVectorOutput;
+
+    typedef int (*RuntimeNetcodeK3h4ComputeFn)(
+        const float vectors[RUNTIME_NETCODE_VECTOR_NODE_COUNT][RUNTIME_NETCODE_VECTOR_MAX_DIMENSIONS],
+        int vector_count,
+        int dimensions,
+        int cluster_count,
+        int max_iterations,
+        int convergence_threshold_q16,
+        RuntimeNetcodeK3h4Result *out_result);
+
+    void runtime_netcode_vector_set_k3h4_compute_hook(RuntimeNetcodeK3h4ComputeFn hook);
+    void runtime_netcode_vector_reset_k3h4_compute_hook(void);
 
     int runtime_netcode_vector_build(const RuntimeNetcodeVectorInput *input,
                                      RuntimeNetcodeVectorOutput *out_output);

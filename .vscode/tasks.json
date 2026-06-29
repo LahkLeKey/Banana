@@ -30,7 +30,7 @@
       "dependsOrder": "sequence"
     },
     {
-      "label": "Native: continuity suite (v3)",
+      "label": "Native: netcode suite (v3)",
       "type": "shell",
       "command": "ctest",
       "args": [
@@ -39,7 +39,7 @@
         "--test-dir",
         "out/v3-native",
         "-R",
-        "banana_runtime_demo_scene_catalog_(coherent_profile_test|transition_continuity_test|continuity_roundtrip_test)",
+        "netcode|k3h4",
         "--output-on-failure"
       ],
       "options": {

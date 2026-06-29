@@ -97,6 +97,8 @@ static void test_ui_context_create_returns_null_when_framebuffer_allocation_fail
     g_malloc_calls = 0;
     g_free_calls = 0;
 
+    ui_set_alloc_hooks(banana_test_malloc, banana_test_calloc, banana_test_free);
+
     ctx = ui_context_create(8, 8);
 
     BANANA_TEST_ASSERT_TRUE(ctx == NULL,
@@ -104,6 +106,8 @@ static void test_ui_context_create_returns_null_when_framebuffer_allocation_fail
     BANANA_TEST_ASSERT_INT_EQ(g_free_calls,
                               1,
                               "ui_context_create must free the partially initialized context on framebuffer allocation failure");
+
+    ui_reset_alloc_hooks();
 }
 
 static void test_ui_context_create_returns_null_when_element_allocation_fails(void **state)
@@ -115,6 +119,8 @@ static void test_ui_context_create_returns_null_when_element_allocation_fails(vo
     g_malloc_calls = 0;
     g_free_calls = 0;
 
+    ui_set_alloc_hooks(banana_test_malloc, banana_test_calloc, banana_test_free);
+
     ctx = ui_context_create(8, 8);
 
     BANANA_TEST_ASSERT_TRUE(ctx == NULL,
@@ -122,6 +128,8 @@ static void test_ui_context_create_returns_null_when_element_allocation_fails(vo
     BANANA_TEST_ASSERT_INT_EQ(g_free_calls,
                               2,
                               "ui_context_create must free framebuffer and context on element allocation failure");
+
+    ui_reset_alloc_hooks();
 }
 
 BANANA_TEST_MAIN(
