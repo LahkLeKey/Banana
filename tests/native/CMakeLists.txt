@@ -2286,8 +2286,17 @@ add_test(NAME banana_runtime_render_material_domain_test
    COMMAND banana_runtime_render_material_domain_test
 )
 
-target_link_libraries(banana_runtime_render_material_domain_test PRIVATE banana_engine_core)
-target_link_libraries(banana_runtime_render_material_domain_test PRIVATE banana_native_render_runtime)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_render_material_domain_test PRIVATE
+		-Wl,--start-group
+		banana_engine_core
+		banana_native_render_runtime
+		-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_render_material_domain_test PRIVATE banana_engine_core)
+	target_link_libraries(banana_runtime_render_material_domain_test PRIVATE banana_native_render_runtime)
+endif()
 
 target_include_directories(banana_runtime_render_material_domain_test PRIVATE
    ${BANANA_ENGINE_DIR}
