@@ -908,7 +908,16 @@ add_test(NAME banana_runtime_engine_composition_shutdown_test
 	COMMAND banana_runtime_engine_composition_shutdown_test
 )
 
-target_link_libraries(banana_runtime_engine_composition_shutdown_test PRIVATE banana_engine_core)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_engine_composition_shutdown_test PRIVATE
+			-Wl,--start-group
+			banana_native_render_runtime
+			banana_engine_core
+			-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_engine_composition_shutdown_test PRIVATE banana_engine_core)
+endif()
 
 target_include_directories(banana_runtime_engine_composition_shutdown_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -923,7 +932,16 @@ add_test(NAME banana_runtime_engine_composition_test
 	COMMAND banana_runtime_engine_composition_test
 )
 
-target_link_libraries(banana_runtime_engine_composition_test PRIVATE banana_engine_core)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_engine_composition_test PRIVATE
+			-Wl,--start-group
+			banana_native_render_runtime
+			banana_engine_core
+			-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_engine_composition_test PRIVATE banana_engine_core)
+endif()
 
 target_include_directories(banana_runtime_engine_composition_test PRIVATE
 	${BANANA_ENGINE_DIR}
@@ -953,7 +971,16 @@ add_test(NAME banana_runtime_engine_test
 	COMMAND banana_runtime_engine_test
 )
 
-target_link_libraries(banana_runtime_engine_test PRIVATE banana_engine_core)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(banana_runtime_engine_test PRIVATE
+			-Wl,--start-group
+			banana_native_render_runtime
+			banana_engine_core
+			-Wl,--end-group
+	)
+else()
+	target_link_libraries(banana_runtime_engine_test PRIVATE banana_engine_core)
+endif()
 
 target_include_directories(banana_runtime_engine_test PRIVATE
 	${BANANA_ENGINE_DIR}
