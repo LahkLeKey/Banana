@@ -3,6 +3,7 @@ import helmet from '@fastify/helmet';
 import Fastify from 'fastify';
 
 import {bootstrapPersistentWorldOrchestrationDomain} from './domains/persistent-world-orchestration/index.ts';
+import {buildCorsOriginMatcher} from './lib/corsOrigins.ts';
 import {assertRouteOwnershipCoverage} from './lib/domainOwnership';
 import {registerFastifyErrorMapper} from './lib/errors/fastifyErrorMapper.ts';
 import {registerRequestContextMiddleware} from './middleware/requestContext';
@@ -55,13 +56,12 @@ const persistentWorldOrchestrationDomain =
 // Spec #126 — BANANA_CORS_ORIGINS: comma-separated list of allowed origins.
 // Defaults to localhost dev servers when the env var is absent.
 const _corsOriginsEnv = process.env.BANANA_CORS_ORIGINS ??
-    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175,http://localhost:5176,http://127.0.0.1:5176,http://localhost:3000,http://127.0.0.1:3000';
-const ALLOWED_WEB_ORIGINS =
-    new Set(_corsOriginsEnv.split(',').map((o) => o.trim()).filter(Boolean));
+    'https://banana.engineer,https://www.banana.engineer,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175,http://localhost:5176,http://127.0.0.1:5176,http://localhost:3000,http://127.0.0.1:3000';
+const isAllowedWebOrigin = buildCorsOriginMatcher(_corsOriginsEnv);
 
 app.addHook('onRequest', async (request, reply) => {
   const origin = (request.headers.origin ?? '').toString();
-  if (ALLOWED_WEB_ORIGINS.has(origin)) {
+  if (isAllowedWebOrigin(origin)) {
     reply.header('Access-Control-Allow-Origin', origin);
     reply.header('Vary', 'Origin');
     reply.header(
