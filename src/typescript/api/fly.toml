@@ -12,7 +12,7 @@ kill_timeout = "5s"
   BANANA_NATIVE_PATH = "/app/src/typescript/api/libbanana_native.so"
   BANANA_ENGINE_ADAPTER = "inmemory"
   BANANA_ANTICHEAT_ADAPTER = "inmemory"
-  BANANA_CORS_ORIGINS = "https://banana.engineer,http://localhost:5173,http://127.0.0.1:5173"
+  BANANA_CORS_ORIGINS = "https://banana.engineer,https://www.banana.engineer,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173"
   NODE_ENV = "production"
   BANANA_NEON_STRICT = "true"
 
