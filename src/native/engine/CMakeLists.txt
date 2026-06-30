@@ -38,11 +38,6 @@ set(ENGINE_AI_SOURCES)
 
 set(ENGINE_WORLD_SOURCES)
 
-set(ENGINE_UI_SOURCES
-  ui/render/ui_render.c
-  ui/callbacks/ui_callback_bindings.c
-)
-
 set(ENGINE_RUNTIME_SOURCES
   runtime/engine/application/service/application_service_player_port.c
   runtime/engine/application/service/application_service_terrain_port.c
@@ -146,7 +141,6 @@ add_library(banana_engine_core STATIC
   ${ENGINE_PHYSICS_SOURCES}
   ${ENGINE_AI_SOURCES}
   ${ENGINE_WORLD_SOURCES}
-  ${ENGINE_UI_SOURCES}
 )
 
 target_link_libraries(banana_engine_core PUBLIC banana_k3h4_core banana_native_runtime_kernel banana_native_physics_core banana_native_world_core banana_native_ai_core banana_native_netcode_runtime banana_native_render_runtime banana_native_ui_runtime)
