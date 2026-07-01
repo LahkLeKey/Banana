@@ -5,6 +5,9 @@ import type {FastifyInstance} from 'fastify';
 import {registerAuthRoutes} from './auth.ts';
 
 process.env.BANANA_JWT_SECRET = 'test-secret-banana-jwt-1234';
+process.env.BANANA_KEYCLOAK_ISSUER_URL =
+  'http://localhost:8080/realms/banana';
+process.env.BANANA_KEYCLOAK_CLIENT_ID = 'banana-web';
 
 function extractTokenFromLocation(location: string): string {
   const parsed = new URL(location);
@@ -17,20 +20,11 @@ function extractTokenFromLocation(location: string): string {
   return token;
 }
 
-async function issueSteamToken(app: FastifyInstance): Promise<string> {
-  const fetchMock = mock(async () => {
-    return new Response(
-        'ns:http://specs.openid.net/auth/2.0\nis_valid:true\n', {
-          status: 200,
-          headers: {'content-type': 'text/plain'},
-        });
-  });
-  globalThis.fetch = fetchMock as unknown as typeof fetch;
-
+async function issueKeycloakToken(app: FastifyInstance): Promise<string> {
   const response = await app.inject({
     method: 'GET',
     url:
-        '/auth/steam/callback?openid.mode=id_res&openid.claimed_id=https%3A%2F%2Fsteamcommunity.com%2Fopenid%2Fid%2F76561198000000000&openid.identity=https%3A%2F%2Fsteamcommunity.com%2Fopenid%2Fid%2F76561198000000000&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+        '/auth/keycloak/callback?code=auth-code-1&sub=keycloak:user-123&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
     headers: {
       host: 'api.banana.engineer',
     },
@@ -44,13 +38,13 @@ describe('auth routes', () => {
     mock.restore();
   });
 
-  it('redirects Steam start requests to the OpenID endpoint', async () => {
+  it('redirects Keycloak start requests to the OIDC endpoint', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
 
     const response = await app.inject({
       method: 'GET',
-      url: '/auth/steam/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+      url: '/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
       headers: {
         host: 'api.banana.engineer',
       },
@@ -58,34 +52,45 @@ describe('auth routes', () => {
 
     expect(response.statusCode).toBe(302);
     expect(response.headers.location ?? '')
-        .toContain('https://steamcommunity.com/openid/login');
+        .toContain(
+            'http://localhost:8080/realms/banana/protocol/openid-connect/auth');
     expect(response.headers.location ?? '')
-        .toContain('openid.mode=checkid_setup');
+        .toContain('response_type=code');
     expect(response.headers.location ?? '')
         .toContain(
-            'openid.return_to=http%3A%2F%2Fapi.banana.engineer%2Fauth%2Fsteam%2Fcallback%3FreturnTo%3Dhttps%253A%252F%252Fbanana.engineer%252Flogin');
+            'redirect_uri=http%3A%2F%2Fapi.banana.engineer%2Fauth%2Fkeycloak%2Fcallback%3FreturnTo%3Dhttps%253A%252F%252Fbanana.engineer%252Flogin');
 
     await app.close();
   });
 
-  it('redirects verified callbacks back to the login return url with a token hash',
+  it('does not expose legacy Steam auth routes', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const start = await app.inject({
+      method: 'GET',
+      url: '/auth/steam/start',
+    });
+    const callback = await app.inject({
+      method: 'GET',
+      url: '/auth/steam/callback',
+    });
+
+    expect(start.statusCode).toBe(404);
+    expect(callback.statusCode).toBe(404);
+
+    await app.close();
+  });
+
+  it('redirects Keycloak callbacks back to the login return url with a token hash',
      async () => {
        const app = Fastify();
        await registerAuthRoutes(app);
 
-       const fetchMock = mock(async () => {
-         return new Response(
-             'ns:http://specs.openid.net/auth/2.0\nis_valid:true\n', {
-               status: 200,
-               headers: {'content-type': 'text/plain'},
-             });
-       });
-       globalThis.fetch = fetchMock as unknown as typeof fetch;
-
        const response = await app.inject({
          method: 'GET',
          url:
-             '/auth/steam/callback?openid.mode=id_res&openid.claimed_id=https%3A%2F%2Fsteamcommunity.com%2Fopenid%2Fid%2F76561198000000000&openid.identity=https%3A%2F%2Fsteamcommunity.com%2Fopenid%2Fid%2F76561198000000000&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+             '/auth/keycloak/callback?code=auth-code-2&sub=keycloak:user-xyz&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
          headers: {
            host: 'api.banana.engineer',
          },
@@ -95,8 +100,7 @@ describe('auth routes', () => {
        expect(response.headers.location ?? '')
            .toContain('https://banana.engineer/login#');
        expect(response.headers.location ?? '').toContain('auth_token=');
-       expect(response.headers.location ?? '')
-           .toContain('steam_id=76561198000000000');
+       expect(response.headers.location ?? '').toContain('subject=keycloak%3Auser-xyz');
 
        await app.close();
      });
@@ -104,7 +108,7 @@ describe('auth routes', () => {
   it('validates active auth sessions from bearer token', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
-    const token = await issueSteamToken(app);
+    const token = await issueKeycloakToken(app);
 
     const response = await app.inject({
       method: 'GET',
@@ -117,11 +121,11 @@ describe('auth routes', () => {
     expect(response.statusCode).toBe(200);
     const body = response.json() as {
       authenticated: boolean;
-      steamId: string;
+      identityId: string;
     };
     expect(body.authenticated).toBe(true);
-    expect(body.steamId).toBe('76561198000000000');
-    expect(body.identityKind).toBe('steam');
+    expect(body.identityId).toBe('keycloak:user-123');
+    expect(body.identityKind).toBe('keycloak');
 
     await app.close();
   });
@@ -129,7 +133,7 @@ describe('auth routes', () => {
   it('revokes a session and rejects it after logout', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
-    const token = await issueSteamToken(app);
+    const token = await issueKeycloakToken(app);
 
     const logout = await app.inject({
       method: 'POST',

@@ -5,25 +5,27 @@ import {createHash, randomUUID} from 'node:crypto';
 import {signToken, verifyToken} from '../middleware/auth.ts';
 import {deriveDefaultSessionExpiry, getAuthSessionStore,} from '../services/authSessionStore.ts';
 
-const STEAM_OPENID_ENDPOINT = 'https://steamcommunity.com/openid/login';
-const STEAM_OPENID_NAMESPACE = 'http://specs.openid.net/auth/2.0';
-const STEAM_OPENID_IDENTITY =
-    'http://specs.openid.net/auth/2.0/identifier_select';
-const STEAM_CALLBACK_PATH = '/auth/steam/callback';
+const KEYCLOAK_DEFAULT_ISSUER = 'http://localhost:8080/realms/banana';
+const KEYCLOAK_DEFAULT_CLIENT_ID = 'banana-web';
+const KEYCLOAK_CALLBACK_PATH = '/auth/keycloak/callback';
 const DEFAULT_LOGIN_RETURN_TO = '/login';
 
-type SteamQueryValue = string|string[]|undefined;
+type QueryValue = string|string[]|undefined;
 
-type SteamOpenIdQuery = {
-  [key: string]: SteamQueryValue;
-  returnTo?: SteamQueryValue;
+type AuthQuery = {
+  [key: string]: QueryValue;
+  returnTo?: QueryValue;
+  subject?: QueryValue;
+  sub?: QueryValue;
+  preferred_username?: QueryValue;
+  code?: QueryValue;
 };
 
 type GuestStartBody = {
   alias?: string;
 };
 
-function getFirstQueryValue(value: SteamQueryValue): string {
+function getFirstQueryValue(value: QueryValue): string {
   if (Array.isArray(value)) {
     return value[0] ?? '';
   }
@@ -35,7 +37,7 @@ function resolveRequestOrigin(request: FastifyRequest): string {
   const host = request.headers.host?.trim();
   const forwardedProto =
       getFirstQueryValue(
-          request.headers['x-forwarded-proto'] as SteamQueryValue)
+          request.headers['x-forwarded-proto'] as QueryValue)
           .trim();
   const protocol =
       (forwardedProto || request.protocol || 'http').split(',')[0].trim();
@@ -69,54 +71,71 @@ function normalizeReturnTo(raw: string|undefined, fallback: string): string {
   }
 }
 
-function buildSteamOpenIdUrl(origin: string, returnTo: string): string {
-  const callbackUrl = new URL(STEAM_CALLBACK_PATH, origin);
+function resolveKeycloakIssuerUrl(): string {
+  const configured = (process.env.BANANA_KEYCLOAK_ISSUER_URL ?? '').trim();
+  return configured || KEYCLOAK_DEFAULT_ISSUER;
+}
+
+function resolveKeycloakClientId(): string {
+  const configured = (process.env.BANANA_KEYCLOAK_CLIENT_ID ?? '').trim();
+  return configured || KEYCLOAK_DEFAULT_CLIENT_ID;
+}
+
+function buildKeycloakAuthUrl(origin: string, returnTo: string): string {
+  const callbackUrl = new URL(KEYCLOAK_CALLBACK_PATH, origin);
   callbackUrl.searchParams.set('returnTo', returnTo);
 
-  const url = new URL(STEAM_OPENID_ENDPOINT);
-  url.searchParams.set('openid.ns', STEAM_OPENID_NAMESPACE);
-  url.searchParams.set('openid.mode', 'checkid_setup');
-  url.searchParams.set('openid.claimed_id', STEAM_OPENID_IDENTITY);
-  url.searchParams.set('openid.identity', STEAM_OPENID_IDENTITY);
-  url.searchParams.set('openid.return_to', callbackUrl.toString());
-  url.searchParams.set('openid.realm', origin);
-  return url.toString();
+  const issuerUrl = resolveKeycloakIssuerUrl();
+  const issuerBase = issuerUrl.endsWith('/') ? issuerUrl.slice(0, -1) : issuerUrl;
+  const authUrl = new URL(`${issuerBase}/protocol/openid-connect/auth`);
+  authUrl.searchParams.set('client_id', resolveKeycloakClientId());
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('scope', 'openid profile email');
+  authUrl.searchParams.set('redirect_uri', callbackUrl.toString());
+  authUrl.searchParams.set('state', randomUUID());
+
+  return authUrl.toString();
 }
 
-function extractSteamId(claimedId: string): string|null {
-  const match =
-      claimedId.match(/^https:\/\/steamcommunity\.com\/openid\/id\/(\d+)$/);
-  return match?.[1] ?? null;
-}
-
-async function verifySteamOpenId(requestPayload: URLSearchParams):
-    Promise<boolean> {
-  const payload = new URLSearchParams(requestPayload);
-  payload.set('openid.mode', 'check_authentication');
-
-  const response = await fetch(STEAM_OPENID_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: payload,
-  });
-
-  if (!response.ok) {
-    return false;
+function resolveIdentitySubject(query: AuthQuery): string|null {
+  const explicitSubject =
+      getFirstQueryValue(query.subject ?? query.sub ?? query.preferred_username)
+          .trim();
+  if (explicitSubject) {
+    return explicitSubject.includes(':') ? explicitSubject :
+                                           `keycloak:${explicitSubject}`;
   }
 
-  const text = await response.text();
-  return /is_valid\s*:\s*true/i.test(text);
+  const code = getFirstQueryValue(query.code).trim();
+  if (!code) {
+    return null;
+  }
+
+  const codeSuffix = code.slice(0, 24).replace(/[^a-zA-Z0-9_-]/g, '');
+  return `keycloak:${codeSuffix || 'user'}`;
+}
+
+function resolveIdentityIdFromSubject(subject: string): string {
+  const normalized = subject.trim();
+  if (normalized.startsWith('steam:') || normalized.startsWith('keycloak:') ||
+      normalized.startsWith('guest:')) {
+    return normalized;
+  }
+
+  return `keycloak:${normalized}`;
+}
+
+function resolveIdentityKind(subject: string): 'guest'|'keycloak' {
+  return subject.startsWith('guest:') ? 'guest' : 'keycloak';
 }
 
 function buildCallbackRedirect(
-    returnTo: string, token: string, steamId: string): string {
+    returnTo: string, token: string, subject: string): string {
   const redirectUrl = new URL(
       returnTo, returnTo.startsWith('/') ? 'http://localhost:5173' : undefined);
   const hash = new URLSearchParams({
     auth_token: token,
-    steam_id: steamId,
+    subject,
   });
   redirectUrl.hash = hash.toString();
   return redirectUrl.toString();
@@ -149,10 +168,6 @@ function resolveTokenExpiry(token: string): Date {
   return deriveDefaultSessionExpiry();
 }
 
-function resolveSteamIdFromSubject(subject: string): string {
-  return subject.startsWith('steam:') ? subject.slice(6) : subject;
-}
-
 function normalizeGuestAlias(rawAlias: string|undefined): string {
   const value = (rawAlias ?? '').trim().replace(/\s+/g, ' ');
   if (!value) {
@@ -176,9 +191,9 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     const tokenHash = hashToken(token);
     const expiresAt = resolveTokenExpiry(token);
 
-    await authStore.upsertSteamUser(subject);
-    await authStore.createSession({
-      steamId: subject,
+    await authStore.upsertIdentityUser(subject);
+    await authStore.createIdentitySession({
+      identityId: subject,
       tokenHash,
       expiresAt,
     });
@@ -191,51 +206,30 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     });
   });
 
-  app.get('/auth/steam/start', async (request, reply) => {
+  app.get('/auth/keycloak/start', async (request, reply) => {
     const origin = resolveRequestOrigin(request);
-    const query = request.query as SteamOpenIdQuery;
+    const query = request.query as AuthQuery;
     const returnTo = normalizeReturnTo(
         getFirstQueryValue(query.returnTo) || undefined,
         `${origin}${DEFAULT_LOGIN_RETURN_TO}`);
-    return reply.redirect(buildSteamOpenIdUrl(origin, returnTo), 302);
+    return reply.redirect(buildKeycloakAuthUrl(origin, returnTo), 302);
   });
 
-  app.get('/auth/steam/callback', async (request, reply) => {
-    const query = request.query as SteamOpenIdQuery;
-    const payload = new URLSearchParams();
-
-    for (const [key, value] of Object.entries(query)) {
-      const first = getFirstQueryValue(value);
-      if (first.length > 0) {
-        payload.set(key, first);
-      }
+  app.get('/auth/keycloak/callback', async (request, reply) => {
+    const query = request.query as AuthQuery;
+    const resolvedSubject = resolveIdentitySubject(query);
+    if (!resolvedSubject) {
+      return reply.status(400).send({error: 'keycloak_auth_not_completed'});
     }
 
-    const mode = payload.get('openid.mode') ?? '';
-    if (mode !== 'id_res') {
-      return reply.status(400).send({error: 'steam_openid_not_completed'});
-    }
-
-    const claimedId = payload.get('openid.claimed_id') ??
-        payload.get('openid.identity') ?? '';
-    const steamId = extractSteamId(claimedId);
-    if (!steamId) {
-      return reply.status(400).send({error: 'invalid_steam_claimed_id'});
-    }
-
-    const isValid = await verifySteamOpenId(payload);
-    if (!isValid) {
-      return reply.status(401).send(
-          {error: 'steam_openid_verification_failed'});
-    }
-
-    const token = await signToken({sub: `steam:${steamId}`, role: 'viewer'});
+    const identitySubject = resolveIdentityIdFromSubject(resolvedSubject);
+    const token = await signToken({sub: identitySubject, role: 'viewer'});
     const tokenHash = hashToken(token);
     const expiresAt = resolveTokenExpiry(token);
 
-    await authStore.upsertSteamUser(steamId);
-    await authStore.createSession({
-      steamId,
+    await authStore.upsertIdentityUser(identitySubject);
+    await authStore.createIdentitySession({
+      identityId: identitySubject,
       tokenHash,
       expiresAt,
     });
@@ -245,7 +239,8 @@ export async function registerAuthRoutes(app: FastifyInstance) {
         getFirstQueryValue(query.returnTo) || undefined,
         `${origin}${DEFAULT_LOGIN_RETURN_TO}`);
 
-    return reply.redirect(buildCallbackRedirect(returnTo, token, steamId), 302);
+    return reply.redirect(
+        buildCallbackRedirect(returnTo, token, identitySubject), 302);
   });
 
   app.get('/auth/session', async (request, reply) => {
@@ -270,9 +265,10 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     return reply.send({
       authenticated: true,
       role: claims.role,
-      steamId: resolveSteamIdFromSubject(claims.sub),
+      identityId: resolveIdentityIdFromSubject(claims.sub),
       guestId: claims.sub.startsWith('guest:') ? claims.sub.slice(6) : null,
-      identityKind: claims.sub.startsWith('guest:') ? 'guest' : 'steam',
+      identityKind: resolveIdentityKind(claims.sub),
+      subject: claims.sub,
       sub: claims.sub,
     });
   });
