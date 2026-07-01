@@ -46,6 +46,43 @@ bash scripts/keycloak-local.sh check
 
 - http://localhost:8080/admin
 
+## Reproducible realm automation (dev container)
+
+Use the bootstrap script instead of manual console setup.
+
+1. Create local env file from template:
+
+```bash
+cp docs/keycloak/env.keycloak.local.example .env.keycloak.local
+```
+
+2. Fill GitHub provider credentials in `.env.keycloak.local`.
+
+3. Run bootstrap (idempotent reconcile):
+
+```bash
+bash scripts/keycloak-realm-bootstrap.sh bootstrap
+```
+
+For a full local reset and re-import:
+
+```bash
+bash scripts/keycloak-realm-bootstrap.sh reset-bootstrap
+```
+
+Status check:
+
+```bash
+bash scripts/keycloak-realm-bootstrap.sh status
+```
+
+What the script reconciles:
+
+- starts local Keycloak profile if needed
+- applies `banana-react-spa` redirect/web-origin contract
+- clears local PKCE enforcement for current API callback flow
+- upserts GitHub identity provider when credentials are present
+
 ## Identity providers
 
 Set provider credentials before startup or restart:

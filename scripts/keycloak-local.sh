@@ -50,6 +50,13 @@ check() {
   )
 }
 
+bootstrap() {
+  (
+    cd "${ROOT_DIR}"
+    bash scripts/keycloak-realm-bootstrap.sh bootstrap
+  )
+}
+
 usage() {
   cat <<'EOF'
 Usage: bash scripts/keycloak-local.sh <command>
@@ -59,6 +66,7 @@ Commands:
   down    Stop local Keycloak stack
   logs    Tail local Keycloak and Postgres logs
   check   Run local issuer readiness checks
+  bootstrap  Reconcile realm/client/github provider automation
 EOF
 }
 
@@ -68,6 +76,7 @@ case "${command}" in
   down) down ;;
   logs) logs ;;
   check) check ;;
+  bootstrap) bootstrap ;;
   *)
     usage
     exit 1
