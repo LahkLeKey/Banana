@@ -1,0 +1,39 @@
+app = "banana-keycloak"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "../../../docker/keycloak.Dockerfile"
+
+[env]
+  KC_DB = "postgres"
+  KC_HEALTH_ENABLED = "true"
+  KC_METRICS_ENABLED = "true"
+  KC_HTTP_ENABLED = "true"
+  KC_PROXY_HEADERS = "xforwarded"
+  KC_HOSTNAME_STRICT = "false"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 40
+    soft_limit = 30
+
+  [[http_service.checks]]
+    grace_period = "90s"
+    interval = "15s"
+    timeout = "3s"
+    method = "get"
+    path = "/health/ready"
+    protocol = "http"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1024mb"

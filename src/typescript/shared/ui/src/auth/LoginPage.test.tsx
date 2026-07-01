@@ -29,12 +29,15 @@ afterEach(() => {
 });
 
 describe("LoginPage", () => {
-    test("renders the Steam login prompt", () => {
+    test("renders the Keycloak login prompt", () => {
         act(() => {
             root.render(<LoginPage />);
         });
 
-        expect(container.textContent ?? "").toContain("Continue with Steam");
+        expect(container.textContent ?? "").toContain("Continue with GitHub");
+        expect(container.textContent ?? "").toContain("Continue with Google");
+        expect(container.textContent ?? "").toContain("Continue with LinkedIn");
+        expect(container.textContent ?? "").toContain("Continue with Keycloak");
         expect(container.textContent ?? "").toContain("Enter the Banana viewport.");
     });
 });

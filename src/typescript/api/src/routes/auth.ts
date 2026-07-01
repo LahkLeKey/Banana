@@ -15,10 +15,13 @@ type QueryValue = string|string[]|undefined;
 type AuthQuery = {
   [key: string]: QueryValue;
   returnTo?: QueryValue;
-  subject?: QueryValue;
-  sub?: QueryValue;
-  preferred_username?: QueryValue;
   code?: QueryValue;
+  provider?: QueryValue;
+};
+
+type KeycloakTokenResponse = {
+  access_token?: string;
+  id_token?: string;
 };
 
 type GuestStartBody = {
@@ -36,8 +39,7 @@ function getFirstQueryValue(value: QueryValue): string {
 function resolveRequestOrigin(request: FastifyRequest): string {
   const host = request.headers.host?.trim();
   const forwardedProto =
-      getFirstQueryValue(
-          request.headers['x-forwarded-proto'] as QueryValue)
+      getFirstQueryValue(request.headers['x-forwarded-proto'] as QueryValue)
           .trim();
   const protocol =
       (forwardedProto || request.protocol || 'http').split(',')[0].trim();
@@ -81,12 +83,17 @@ function resolveKeycloakClientId(): string {
   return configured || KEYCLOAK_DEFAULT_CLIENT_ID;
 }
 
+function resolveKeycloakClientSecret(): string {
+  return (process.env.BANANA_KEYCLOAK_CLIENT_SECRET ?? '').trim();
+}
+
 function buildKeycloakAuthUrl(origin: string, returnTo: string): string {
   const callbackUrl = new URL(KEYCLOAK_CALLBACK_PATH, origin);
   callbackUrl.searchParams.set('returnTo', returnTo);
 
   const issuerUrl = resolveKeycloakIssuerUrl();
-  const issuerBase = issuerUrl.endsWith('/') ? issuerUrl.slice(0, -1) : issuerUrl;
+  const issuerBase =
+      issuerUrl.endsWith('/') ? issuerUrl.slice(0, -1) : issuerUrl;
   const authUrl = new URL(`${issuerBase}/protocol/openid-connect/auth`);
   authUrl.searchParams.set('client_id', resolveKeycloakClientId());
   authUrl.searchParams.set('response_type', 'code');
@@ -97,22 +104,70 @@ function buildKeycloakAuthUrl(origin: string, returnTo: string): string {
   return authUrl.toString();
 }
 
-function resolveIdentitySubject(query: AuthQuery): string|null {
-  const explicitSubject =
-      getFirstQueryValue(query.subject ?? query.sub ?? query.preferred_username)
-          .trim();
-  if (explicitSubject) {
-    return explicitSubject.includes(':') ? explicitSubject :
-                                           `keycloak:${explicitSubject}`;
+function normalizeIdentityProvider(rawProvider: string): 'github'|'google'|
+    'linkedin'|null {
+  const normalized = rawProvider.trim().toLowerCase();
+  if (normalized === 'github' || normalized === 'google' ||
+      normalized === 'linkedin') {
+    return normalized;
   }
 
-  const code = getFirstQueryValue(query.code).trim();
-  if (!code) {
+  return null;
+}
+
+function resolveKeycloakTokenEndpoint(): string {
+  const issuerUrl = resolveKeycloakIssuerUrl();
+  const issuerBase =
+      issuerUrl.endsWith('/') ? issuerUrl.slice(0, -1) : issuerUrl;
+  return `${issuerBase}/protocol/openid-connect/token`;
+}
+
+function resolveSubjectFromJwt(rawToken: string|undefined): string|null {
+  const token = (rawToken ?? '').trim();
+  if (!token) {
     return null;
   }
 
-  const codeSuffix = code.slice(0, 24).replace(/[^a-zA-Z0-9_-]/g, '');
-  return `keycloak:${codeSuffix || 'user'}`;
+  try {
+    const payload = jose.decodeJwt(token);
+    const subject = (typeof payload.sub === 'string' ? payload.sub : '').trim();
+    if (!subject) {
+      return null;
+    }
+
+    return subject.includes(':') ? subject : `keycloak:${subject}`;
+  } catch {
+    return null;
+  }
+}
+
+async function exchangeKeycloakAuthorizationCode(
+    code: string, redirectUri: string): Promise<KeycloakTokenResponse> {
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    client_id: resolveKeycloakClientId(),
+    redirect_uri: redirectUri,
+  });
+
+  const clientSecret = resolveKeycloakClientSecret();
+  if (clientSecret) {
+    body.set('client_secret', clientSecret);
+  }
+
+  const response = await fetch(resolveKeycloakTokenEndpoint(), {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded',
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error('keycloak_token_exchange_failed');
+  }
+
+  return await response.json() as KeycloakTokenResponse;
 }
 
 function resolveIdentityIdFromSubject(subject: string): string {
@@ -212,14 +267,43 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     const returnTo = normalizeReturnTo(
         getFirstQueryValue(query.returnTo) || undefined,
         `${origin}${DEFAULT_LOGIN_RETURN_TO}`);
-    return reply.redirect(buildKeycloakAuthUrl(origin, returnTo), 302);
+    const provider =
+        normalizeIdentityProvider(getFirstQueryValue(query.provider));
+
+    const redirectUrl = new URL(buildKeycloakAuthUrl(origin, returnTo));
+    if (provider) {
+      redirectUrl.searchParams.set('kc_idp_hint', provider);
+    }
+
+    return reply.redirect(redirectUrl.toString(), 302);
   });
 
   app.get('/auth/keycloak/callback', async (request, reply) => {
     const query = request.query as AuthQuery;
-    const resolvedSubject = resolveIdentitySubject(query);
-    if (!resolvedSubject) {
+    const code = getFirstQueryValue(query.code).trim();
+    if (!code) {
       return reply.status(400).send({error: 'keycloak_auth_not_completed'});
+    }
+
+    const origin = resolveRequestOrigin(request);
+    const returnTo = normalizeReturnTo(
+        getFirstQueryValue(query.returnTo) || undefined,
+        `${origin}${DEFAULT_LOGIN_RETURN_TO}`);
+    const callbackUrl = new URL(KEYCLOAK_CALLBACK_PATH, origin);
+    callbackUrl.searchParams.set('returnTo', returnTo);
+
+    let tokenResponse: KeycloakTokenResponse;
+    try {
+      tokenResponse =
+          await exchangeKeycloakAuthorizationCode(code, callbackUrl.toString());
+    } catch {
+      return reply.status(401).send({error: 'keycloak_token_exchange_failed'});
+    }
+
+    const resolvedSubject = resolveSubjectFromJwt(tokenResponse.id_token) ??
+        resolveSubjectFromJwt(tokenResponse.access_token);
+    if (!resolvedSubject) {
+      return reply.status(401).send({error: 'keycloak_identity_not_available'});
     }
 
     const identitySubject = resolveIdentityIdFromSubject(resolvedSubject);
@@ -233,11 +317,6 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       tokenHash,
       expiresAt,
     });
-
-    const origin = resolveRequestOrigin(request);
-    const returnTo = normalizeReturnTo(
-        getFirstQueryValue(query.returnTo) || undefined,
-        `${origin}${DEFAULT_LOGIN_RETURN_TO}`);
 
     return reply.redirect(
         buildCallbackRedirect(returnTo, token, identitySubject), 302);

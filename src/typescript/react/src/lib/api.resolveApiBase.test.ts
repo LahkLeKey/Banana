@@ -4,7 +4,8 @@ import {resolveApiBaseResolution} from './api';
 
 describe('resolveApiBaseResolution', () => {
   it('keeps explicit non-vercel vite API base URL', () => {
-    const resolved = resolveApiBaseResolution('https://api.banana.engineer', '');
+    const resolved =
+        resolveApiBaseResolution('https://api.banana.engineer', '');
     expect(resolved.baseUrl).toBe('https://api.banana.engineer');
     expect(resolved.source).toBe('vite');
     expect(resolved.error).toBeNull();

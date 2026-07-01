@@ -1,22 +1,10 @@
-import { RouteActionButton, RouteActionsRow, RouteBody, RouteEyebrow, RouteFieldLabel, RoutePanel, RouteShell, RouteTextInput, RouteTitle, readStoredAuthSession, storeAuthSession } from "@banana/ui";
+import { buildAuthStartUrl, hasStoredAuthSession, parseAuthCallbackHash, readStoredAuthSession, resolveLoginReturnToUrl, storeAuthSession } from "@banana/ui";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { resolveApiBaseResolutionError, resolveApiBaseUrl, startGuestAuthSession } from "../lib/api";
-
-function createLocalGuestSession(alias: string): { token: string; steamId: string } {
-    const suffix = Math.random().toString(16).slice(2, 10);
-    const guestId = `local-${suffix}`;
-    const normalizedAlias = alias.trim().length > 0 ? alias.trim() : "Guest";
-
-    return {
-        token: `guest-local-token-${guestId}`,
-        steamId: `guest:${normalizedAlias}:${guestId}`,
-    };
-}
+import { resolveApiBaseResolutionError, resolveApiBaseUrl } from "../lib/api";
 
 export function LoginPage() {
     const navigate = useNavigate();
-    const [alias, setAlias] = useState("Guest");
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -24,57 +12,109 @@ export function LoginPage() {
     const apiBaseUrl = resolveApiBaseUrl();
 
     useEffect(() => {
-        if (readStoredAuthSession()) {
-            navigate("/game-main-menu", { replace: true });
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const callback = parseAuthCallbackHash(window.location.hash);
+        if (callback) {
+            storeAuthSession(callback);
+            window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
+            navigate("/profile", { replace: true });
+            return;
+        }
+
+        if (hasStoredAuthSession() || readStoredAuthSession()) {
+            navigate("/profile", { replace: true });
         }
     }, [navigate]);
 
-    const handleGuestLogin = async () => {
+    const handleGitHubLogin = async () => {
         setLoading(true);
         setErrorMessage(null);
 
-        const requestedAlias = alias.trim() || "Guest";
-
         try {
-            if (apiBaseUrl.trim().length > 0) {
-                const session = await startGuestAuthSession(apiBaseUrl, requestedAlias);
-                storeAuthSession({
-                    token: session.token,
-                    steamId: `guest:${session.guestId}`,
-                });
-            } else {
-                storeAuthSession(createLocalGuestSession(requestedAlias));
+            if (apiBaseError) {
+                throw new Error(apiBaseError);
             }
 
-            navigate("/game-main-menu", { replace: true });
-        } catch {
-            storeAuthSession(createLocalGuestSession(requestedAlias));
-            navigate("/game-main-menu", { replace: true });
+            const loginUrl = buildAuthStartUrl(apiBaseUrl, resolveLoginReturnToUrl(), "github");
+            window.location.assign(loginUrl);
+        } catch (cause: unknown) {
+            setErrorMessage(cause instanceof Error ? cause.message : "Unable to start Keycloak login.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <RouteShell background="radial-gradient(circle at 18% 18%, rgba(20, 184, 166, 0.2), transparent 34%), linear-gradient(155deg, #020711, #081629 56%, #0f233b)">
-            <RoutePanel width="min(920px, 100%)">
-                <RouteEyebrow color="#5eead4">Authentication Relay</RouteEyebrow>
-                <RouteTitle>Guest Login Enabled</RouteTitle>
-                <RouteBody>
-                    Steam sign-in is not required in this phase. Enter as guest and continue through main menu and character selection.
-                </RouteBody>
+        <main
+            style={{
+                minHeight: "100dvh",
+                margin: 0,
+                display: "grid",
+                placeItems: "center",
+                background: "#0d1117",
+                color: "#f0f6fc",
+                padding: "24px",
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+            }}
+        >
+            <section style={{ width: "100%", maxWidth: 340 }}>
+                <div style={{ display: "grid", justifyItems: "center", marginBottom: 16 }}>
+                    <div
+                        aria-hidden="true"
+                        style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 999,
+                            background: "#f0f6fc",
+                            color: "#0d1117",
+                            display: "grid",
+                            placeItems: "center",
+                            fontWeight: 700,
+                            fontSize: 22,
+                        }}
+                    >
+                        B
+                    </div>
+                    <h1 style={{ margin: "16px 0 0", fontSize: 24, fontWeight: 300 }}>
+                        Sign in to Banana
+                    </h1>
+                </div>
 
-                <RouteFieldLabel>Operator Alias</RouteFieldLabel>
-                <RouteTextInput value={alias} onChange={setAlias} maxLength={24} />
+                <div
+                    style={{
+                        border: "1px solid #30363d",
+                        borderRadius: 6,
+                        background: "#161b22",
+                        padding: 16,
+                    }}
+                >
+                    <button
+                        type="button"
+                        onClick={handleGitHubLogin}
+                        disabled={loading}
+                        style={{
+                            width: "100%",
+                            border: "1px solid rgba(240, 246, 252, 0.1)",
+                            borderRadius: 6,
+                            background: loading ? "#30363d" : "#238636",
+                            color: "#ffffff",
+                            fontSize: 14,
+                            fontWeight: 600,
+                            padding: "10px 14px",
+                            cursor: loading ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        {loading ? "Redirecting to GitHub..." : "Continue with GitHub"}
+                    </button>
 
-                {errorMessage ? <p style={{ margin: "12px 0 0", color: "#fca5a5" }}>{errorMessage}</p> : null}
-
-                <RouteActionsRow marginTop={18}>
-                    <RouteActionButton onClick={handleGuestLogin} disabled={loading} tone="primary">
-                        {loading ? "Starting guest session..." : "Enter as Guest"}
-                    </RouteActionButton>
-                </RouteActionsRow>
-            </RoutePanel>
-        </RouteShell>
+                    {errorMessage ? (
+                        <p style={{ margin: "12px 0 0", color: "#ff7b72", fontSize: 13 }}>{errorMessage}</p>
+                    ) : null}
+                </div>
+            </section>
+        </main>
     );
 }

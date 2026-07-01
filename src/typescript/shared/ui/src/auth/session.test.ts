@@ -3,34 +3,42 @@
 import {GlobalRegistrator} from '@happy-dom/global-registrator';
 import {describe, expect, test} from 'bun:test';
 
-import {BANANA_AUTH_STEAM_ID_STORAGE_KEY, BANANA_AUTH_TOKEN_STORAGE_KEY, buildSteamAuthStartUrl, clearStoredAuthSession, parseAuthCallbackHash, readStoredAuthSession, storeAuthSession,} from './session';
+import {BANANA_AUTH_SUBJECT_STORAGE_KEY, BANANA_AUTH_TOKEN_STORAGE_KEY, buildAuthStartUrl, clearStoredAuthSession, parseAuthCallbackHash, readStoredAuthSession, storeAuthSession,} from './session';
 
 describe('auth session helpers', () => {
-  test('parses callback hashes with token and steam id', () => {
+  test('parses callback hashes with token and subject', () => {
     const session =
-        parseAuthCallbackHash('#auth_token=abc123&steam_id=76561198000000000');
-    expect(session).toEqual({token: 'abc123', steamId: '76561198000000000'});
+        parseAuthCallbackHash('#auth_token=abc123&subject=player:abc');
+    expect(session).toEqual({token: 'abc123', subject: 'player:abc'});
   });
 
-  test('builds the Steam start url with a return target', () => {
-    const url = buildSteamAuthStartUrl(
+  test('builds the Keycloak start url with a return target', () => {
+    const url = buildAuthStartUrl(
         'https://api.banana.engineer', 'https://banana.engineer/login');
     expect(url).toBe(
-        'https://api.banana.engineer/auth/steam/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin');
+        'https://api.banana.engineer/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin');
   });
 
-  test('stores and clears auth sessions in localStorage', () => {
+  test('builds provider-aware Keycloak start url', () => {
+    const url = buildAuthStartUrl(
+        'https://api.banana.engineer', 'https://banana.engineer/login',
+        'github');
+    expect(url).toBe(
+        'https://api.banana.engineer/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin&provider=github');
+  });
+
+  test('stores and clears auth sessions in memory', () => {
     if (!(globalThis as unknown as {document?: Document}).document) {
       GlobalRegistrator.register({url: 'http://localhost:5173/'});
     }
 
-    storeAuthSession({token: 'tok-1', steamId: 'steam-1'});
+    storeAuthSession({token: 'tok-1', subject: 'player-1'});
     expect(readStoredAuthSession())
-        .toEqual({token: 'tok-1', steamId: 'steam-1'});
-    expect(window.localStorage.getItem(BANANA_AUTH_TOKEN_STORAGE_KEY))
-        .toBe('tok-1');
-    expect(window.localStorage.getItem(BANANA_AUTH_STEAM_ID_STORAGE_KEY))
-        .toBe('steam-1');
+        .toEqual({token: 'tok-1', subject: 'player-1'});
+
+    // Storage keys remain exported for compatibility across consumers.
+    expect(BANANA_AUTH_TOKEN_STORAGE_KEY).toBe('banana-auth-token');
+    expect(BANANA_AUTH_SUBJECT_STORAGE_KEY).toBe('banana-auth-subject');
 
     clearStoredAuthSession();
     expect(readStoredAuthSession()).toBeNull();
