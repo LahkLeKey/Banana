@@ -25,10 +25,21 @@ function makeUnsignedJwt(payload: Record<string, unknown>): string {
   return `header.${encoded}.signature`;
 }
 
-function mockTokenExchange(subject = 'user-123') {
+function makeAuthState(codeVerifier = 'test-code-verifier'): string {
+  return Buffer
+      .from(JSON.stringify({nonce: 'test-nonce', codeVerifier}), 'utf8')
+      .toString('base64url');
+}
+
+function mockTokenExchange(
+    subject = 'user-123', expectedVerifier = 'test-code-verifier') {
   const idToken = makeUnsignedJwt({sub: subject});
   globalThis.fetch =
-      mock(async () => {
+      mock(async (_input, init) => {
+        const body = typeof init?.body === 'string' ?
+            new URLSearchParams(init.body) :
+            new URLSearchParams(String(init?.body ?? ''));
+        expect(body.get('code_verifier') ?? '').toBe(expectedVerifier);
         return new Response(JSON.stringify({id_token: idToken}), {
           status: 200,
           headers: {'content-type': 'application/json'},
@@ -38,11 +49,12 @@ function mockTokenExchange(subject = 'user-123') {
 
 async function issueKeycloakToken(app: FastifyInstance): Promise<string> {
   mockTokenExchange('user-123');
+  const state = makeAuthState();
 
   const response = await app.inject({
     method: 'GET',
-    url:
-        '/auth/keycloak/callback?code=auth-code-1&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+    url: `/auth/keycloak/callback?code=auth-code-1&state=${
+        state}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
     headers: {
       host: 'api.banana.engineer',
     },
@@ -74,6 +86,9 @@ describe('auth routes', () => {
         .toContain(
             'http://localhost:8080/realms/banana/protocol/openid-connect/auth');
     expect(response.headers.location ?? '').toContain('response_type=code');
+    expect(response.headers.location ?? '')
+        .toContain('code_challenge_method=S256');
+    expect(response.headers.location ?? '').toContain('code_challenge=');
     expect(response.headers.location ?? '')
         .toContain(
             'redirect_uri=http%3A%2F%2Fapi.banana.engineer%2Fauth%2Fkeycloak%2Fcallback%3FreturnTo%3Dhttps%253A%252F%252Fbanana.engineer%252Flogin');
@@ -124,11 +139,12 @@ describe('auth routes', () => {
        const app = Fastify();
        await registerAuthRoutes(app);
        mockTokenExchange('user-xyz');
+       const state = makeAuthState();
 
        const response = await app.inject({
          method: 'GET',
-         url:
-             '/auth/keycloak/callback?code=auth-code-2&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+         url: `/auth/keycloak/callback?code=auth-code-2&state=${
+             state}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
          headers: {
            host: 'api.banana.engineer',
          },
@@ -173,15 +189,19 @@ describe('auth routes', () => {
 
     const response = await app.inject({
       method: 'GET',
-      url:
-          '/auth/keycloak/callback?code=bad-code&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+      url: `/auth/keycloak/callback?code=bad-code&state=${
+          makeAuthState()}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
       headers: {
         host: 'api.banana.engineer',
       },
     });
 
     expect(response.statusCode).toBe(401);
-    expect(response.json()).toEqual({error: 'keycloak_token_exchange_failed'});
+    expect(response.json()).toEqual({
+      error: 'keycloak_token_exchange_failed',
+      status: 400,
+      detail: 'invalid_grant',
+    });
 
     await app.close();
   });

@@ -1,12 +1,12 @@
 import type {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import * as jose from 'jose';
-import {createHash, randomUUID} from 'node:crypto';
+import {createHash, randomBytes, randomUUID} from 'node:crypto';
 
 import {signToken, verifyToken} from '../middleware/auth.ts';
 import {deriveDefaultSessionExpiry, getAuthSessionStore,} from '../services/authSessionStore.ts';
 
 const KEYCLOAK_DEFAULT_ISSUER = 'http://localhost:8080/realms/banana';
-const KEYCLOAK_DEFAULT_CLIENT_ID = 'banana-web';
+const KEYCLOAK_DEFAULT_CLIENT_ID = 'banana-react-spa';
 const KEYCLOAK_CALLBACK_PATH = '/auth/keycloak/callback';
 const DEFAULT_LOGIN_RETURN_TO = '/login';
 
@@ -22,6 +22,14 @@ type AuthQuery = {
 type KeycloakTokenResponse = {
   access_token?: string;
   id_token?: string;
+};
+
+type KeycloakTokenExchangeError = {
+  status: number; body: string;
+};
+
+type KeycloakAuthState = {
+  nonce: string; codeVerifier: string;
 };
 
 type GuestStartBody = {
@@ -78,6 +86,12 @@ function resolveKeycloakIssuerUrl(): string {
   return configured || KEYCLOAK_DEFAULT_ISSUER;
 }
 
+function resolveKeycloakTokenIssuerUrl(): string {
+  const configured =
+      (process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL ?? '').trim();
+  return configured || resolveKeycloakIssuerUrl();
+}
+
 function resolveKeycloakClientId(): string {
   const configured = (process.env.BANANA_KEYCLOAK_CLIENT_ID ?? '').trim();
   return configured || KEYCLOAK_DEFAULT_CLIENT_ID;
@@ -87,7 +101,42 @@ function resolveKeycloakClientSecret(): string {
   return (process.env.BANANA_KEYCLOAK_CLIENT_SECRET ?? '').trim();
 }
 
-function buildKeycloakAuthUrl(origin: string, returnTo: string): string {
+function generatePkceCodeVerifier(): string {
+  return randomBytes(32).toString('base64url');
+}
+
+function derivePkceCodeChallenge(codeVerifier: string): string {
+  return createHash('sha256').update(codeVerifier).digest('base64url');
+}
+
+function encodeKeycloakAuthState(state: KeycloakAuthState): string {
+  return Buffer.from(JSON.stringify(state), 'utf8').toString('base64url');
+}
+
+function decodeKeycloakAuthState(rawState: string): KeycloakAuthState|null {
+  const value = rawState.trim();
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(Buffer.from(value, 'base64url').toString('utf8'));
+    const nonce = typeof parsed?.nonce === 'string' ? parsed.nonce.trim() : '';
+    const codeVerifier = typeof parsed?.codeVerifier === 'string' ?
+        parsed.codeVerifier.trim() :
+        '';
+    if (!nonce || !codeVerifier) {
+      return null;
+    }
+
+    return {nonce, codeVerifier};
+  } catch {
+    return null;
+  }
+}
+
+function buildKeycloakAuthUrl(
+    origin: string, returnTo: string, codeVerifier: string): string {
   const callbackUrl = new URL(KEYCLOAK_CALLBACK_PATH, origin);
   callbackUrl.searchParams.set('returnTo', returnTo);
 
@@ -99,7 +148,13 @@ function buildKeycloakAuthUrl(origin: string, returnTo: string): string {
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('scope', 'openid profile email');
   authUrl.searchParams.set('redirect_uri', callbackUrl.toString());
-  authUrl.searchParams.set('state', randomUUID());
+  authUrl.searchParams.set('state', encodeKeycloakAuthState({
+                             nonce: randomUUID(),
+                             codeVerifier,
+                           }));
+  authUrl.searchParams.set(
+      'code_challenge', derivePkceCodeChallenge(codeVerifier));
+  authUrl.searchParams.set('code_challenge_method', 'S256');
 
   return authUrl.toString();
 }
@@ -116,7 +171,7 @@ function normalizeIdentityProvider(rawProvider: string): 'github'|'google'|
 }
 
 function resolveKeycloakTokenEndpoint(): string {
-  const issuerUrl = resolveKeycloakIssuerUrl();
+  const issuerUrl = resolveKeycloakTokenIssuerUrl();
   const issuerBase =
       issuerUrl.endsWith('/') ? issuerUrl.slice(0, -1) : issuerUrl;
   return `${issuerBase}/protocol/openid-connect/token`;
@@ -142,12 +197,14 @@ function resolveSubjectFromJwt(rawToken: string|undefined): string|null {
 }
 
 async function exchangeKeycloakAuthorizationCode(
-    code: string, redirectUri: string): Promise<KeycloakTokenResponse> {
+    code: string, redirectUri: string,
+    codeVerifier: string): Promise<KeycloakTokenResponse> {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
     client_id: resolveKeycloakClientId(),
     redirect_uri: redirectUri,
+    code_verifier: codeVerifier,
   });
 
   const clientSecret = resolveKeycloakClientSecret();
@@ -164,7 +221,12 @@ async function exchangeKeycloakAuthorizationCode(
   });
 
   if (!response.ok) {
-    throw new Error('keycloak_token_exchange_failed');
+    const bodyText = await response.text();
+    const error = new Error('keycloak_token_exchange_failed') as Error &
+        Partial<KeycloakTokenExchangeError>;
+    error.status = response.status;
+    error.body = bodyText;
+    throw error;
   }
 
   return await response.json() as KeycloakTokenResponse;
@@ -269,8 +331,10 @@ export async function registerAuthRoutes(app: FastifyInstance) {
         `${origin}${DEFAULT_LOGIN_RETURN_TO}`);
     const provider =
         normalizeIdentityProvider(getFirstQueryValue(query.provider));
+    const codeVerifier = generatePkceCodeVerifier();
 
-    const redirectUrl = new URL(buildKeycloakAuthUrl(origin, returnTo));
+    const redirectUrl =
+        new URL(buildKeycloakAuthUrl(origin, returnTo, codeVerifier));
     if (provider) {
       redirectUrl.searchParams.set('kc_idp_hint', provider);
     }
@@ -291,13 +355,22 @@ export async function registerAuthRoutes(app: FastifyInstance) {
         `${origin}${DEFAULT_LOGIN_RETURN_TO}`);
     const callbackUrl = new URL(KEYCLOAK_CALLBACK_PATH, origin);
     callbackUrl.searchParams.set('returnTo', returnTo);
+    const authState = decodeKeycloakAuthState(getFirstQueryValue(query.state));
+    if (!authState) {
+      return reply.status(400).send({error: 'keycloak_auth_state_missing'});
+    }
 
     let tokenResponse: KeycloakTokenResponse;
     try {
-      tokenResponse =
-          await exchangeKeycloakAuthorizationCode(code, callbackUrl.toString());
-    } catch {
-      return reply.status(401).send({error: 'keycloak_token_exchange_failed'});
+      tokenResponse = await exchangeKeycloakAuthorizationCode(
+          code, callbackUrl.toString(), authState.codeVerifier);
+    } catch (error) {
+      const failure = error as Error & Partial<KeycloakTokenExchangeError>;
+      return reply.status(401).send({
+        error: 'keycloak_token_exchange_failed',
+        status: failure.status ?? null,
+        detail: failure.body ?? null,
+      });
     }
 
     const resolvedSubject = resolveSubjectFromJwt(tokenResponse.id_token) ??

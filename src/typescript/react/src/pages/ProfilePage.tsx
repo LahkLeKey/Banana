@@ -65,6 +65,12 @@ export function ProfilePage() {
 
     return (
         <RouteShell background={shellStyle.background as string}>
+            <div style={profileNavStyle}>
+                <RouteActionButton onClick={() => window.location.assign('/')} tone="neutral">
+                    Back to runtime
+                </RouteActionButton>
+            </div>
+
             <RoutePanel width="min(920px, 100%)">
                 <RouteEyebrow color="#86efac">Authenticated</RouteEyebrow>
                 <RouteTitle>Basic Profile</RouteTitle>
@@ -89,9 +95,6 @@ export function ProfilePage() {
                     <RouteActionButton onClick={handleSave} tone="primary">
                         Save profile
                     </RouteActionButton>
-                    <RouteActionButton onClick={() => window.location.assign('/')} tone="neutral">
-                        Open app
-                    </RouteActionButton>
                     <RouteActionButton onClick={handleSignOut} tone="danger">
                         Sign out
                     </RouteActionButton>
@@ -111,6 +114,13 @@ const shellStyle: CSSProperties = {
     background:
         'radial-gradient(circle at 16% 14%, rgba(56, 189, 248, 0.18), transparent 34%), radial-gradient(circle at 86% 22%, rgba(132, 204, 22, 0.2), transparent 32%), linear-gradient(160deg, #050913 0%, #0b1530 56%, #14284a 100%)',
     color: '#f8fafc',
+};
+
+const profileNavStyle: CSSProperties = {
+    position: 'fixed',
+    top: 20,
+    left: 20,
+    zIndex: 20,
 };
 
 const identityBoxStyle: CSSProperties = {

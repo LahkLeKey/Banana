@@ -59,6 +59,10 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:banana@banana-postgres:5432/postgres}
       BANANA_PG_CONNECTION: ${BANANA_PG_CONNECTION:-postgres://postgres:banana@banana-postgres:5432/postgres}
       BANANA_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
+      BANANA_JWT_SECRET: banana-local-jwt-secret
+      BANANA_KEYCLOAK_CLIENT_ID: banana-react-spa
+      BANANA_KEYCLOAK_ISSUER_URL: http://localhost:8080/realms/banana
+      BANANA_KEYCLOAK_TOKEN_ISSUER_URL: http://keycloak-local:8080/realms/banana
     ports:
       - "8081:8081"
     depends_on:

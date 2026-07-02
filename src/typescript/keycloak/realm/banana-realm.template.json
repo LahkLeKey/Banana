@@ -21,17 +21,15 @@
                 "https://banana.engineer/*",
                 "https://www.banana.engineer/*",
                 "https://*.vercel.app/*",
-                "http://localhost:5173/*"
+                "http://localhost:5173/*",
+                "http://localhost:8081/auth/keycloak/callback*"
             ],
             "webOrigins": [
                 "https://banana.engineer",
                 "https://www.banana.engineer",
                 "https://*.vercel.app",
                 "http://localhost:5173"
-            ],
-            "attributes": {
-                "pkce.code.challenge.method": "S256"
-            }
+            ]
         },
         {
             "clientId": "banana-api",

@@ -46,6 +46,39 @@ bash scripts/keycloak-local.sh check
 
 - http://localhost:8080/admin
 
+## GitHub IdP manual setup walkthrough
+
+If you want a guided manual flow, use:
+
+```bash
+bash scripts/setup-github-idp-manual.sh
+```
+
+This helper script will:
+
+- create `.env.keycloak.local` from template when missing
+- print all manual setup links and required callback values
+- optionally write GitHub client credentials into `.env.keycloak.local`
+
+Direct links:
+
+- GitHub OAuth Apps: https://github.com/settings/developers
+- Keycloak Identity Providers (banana realm): http://localhost:8080/admin/master/console/#/banana/identity-providers
+
+GitHub OAuth App values:
+
+- Homepage URL: `http://localhost:5173`
+- Authorization callback URL: `http://localhost:8080/realms/banana/broker/github/endpoint`
+
+If you already have credentials, you can write and bootstrap in one command:
+
+```bash
+bash scripts/setup-github-idp-manual.sh \
+	--client-id "<github-client-id>" \
+	--client-secret "<github-client-secret>" \
+	--bootstrap
+```
+
 ## Reproducible realm automation (dev container)
 
 Use the bootstrap script instead of manual console setup.
