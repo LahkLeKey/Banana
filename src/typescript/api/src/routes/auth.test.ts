@@ -179,6 +179,25 @@ describe('auth routes', () => {
     await app.close();
   });
 
+  it('rejects callbacks when auth state is missing', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/auth/keycloak/callback?code=auth-code-3&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({error: 'keycloak_auth_state_missing'});
+
+    await app.close();
+  });
+
   it('rejects callbacks when token exchange fails', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
@@ -202,6 +221,62 @@ describe('auth routes', () => {
       status: 400,
       detail: 'invalid_grant',
     });
+
+    await app.close();
+  });
+
+  it('uses access token subject when id token is missing', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    globalThis.fetch =
+        mock(async () => {
+          return new Response(
+              JSON.stringify({access_token: makeUnsignedJwt({sub: 'user-access'})}), {
+                status: 200,
+                headers: {'content-type': 'application/json'},
+              });
+        }) as unknown as typeof fetch;
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/auth/keycloak/callback?code=auth-code-4&state=${
+          makeAuthState()}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location ?? '')
+        .toContain('subject=keycloak%3Auser-access');
+
+    await app.close();
+  });
+
+  it('rejects callbacks when identity subject is not available', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    globalThis.fetch =
+        mock(async () => {
+          return new Response(JSON.stringify({id_token: makeUnsignedJwt({})}), {
+            status: 200,
+            headers: {'content-type': 'application/json'},
+          });
+        }) as unknown as typeof fetch;
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/auth/keycloak/callback?code=auth-code-5&state=${
+          makeAuthState()}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'keycloak_identity_not_available'});
 
     await app.close();
   });
@@ -231,6 +306,39 @@ describe('auth routes', () => {
     await app.close();
   });
 
+  it('rejects /auth/session when bearer token is missing', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/auth/session',
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'missing_bearer_token'});
+
+    await app.close();
+  });
+
+  it('rejects /auth/session when bearer token is invalid', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/auth/session',
+      headers: {
+        authorization: 'Bearer not-a-valid-token',
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'invalid_or_expired_token'});
+
+    await app.close();
+  });
+
   it('revokes a session and rejects it after logout', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
@@ -254,6 +362,39 @@ describe('auth routes', () => {
       },
     });
     expect(session.statusCode).toBe(401);
+
+    await app.close();
+  });
+
+  it('rejects /auth/logout when bearer token is missing', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/auth/logout',
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'missing_bearer_token'});
+
+    await app.close();
+  });
+
+  it('rejects /auth/logout when bearer token is invalid', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/auth/logout',
+      headers: {
+        authorization: 'Bearer not-a-valid-token',
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'invalid_or_expired_token'});
 
     await app.close();
   });
@@ -295,6 +436,22 @@ describe('auth routes', () => {
     expect(sessionBody.authenticated).toBe(true);
     expect(sessionBody.identityKind).toBe('guest');
     expect(sessionBody.guestId).toBe(startBody.guestId);
+
+    await app.close();
+  });
+
+  it('normalizes empty or unsafe guest aliases to Guest', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const start = await app.inject({
+      method: 'POST',
+      url: '/auth/guest/start',
+      payload: {alias: '!!!'},
+    });
+
+    expect(start.statusCode).toBe(200);
+    expect((start.json() as {displayName: string}).displayName).toBe('Guest');
 
     await app.close();
   });
