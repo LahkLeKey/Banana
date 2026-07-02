@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, mock} from 'bun:test';
 import Fastify from 'fastify';
 import type {FastifyInstance} from 'fastify';
 
-import {registerAuthRoutes} from './auth.ts';
+import {authRouteInternals, registerAuthRoutes} from './auth.ts';
 
 process.env.BANANA_JWT_SECRET = 'test-secret-banana-jwt-1234';
 process.env.BANANA_KEYCLOAK_ISSUER_URL = 'http://localhost:8080/realms/banana';
@@ -232,7 +232,9 @@ describe('auth routes', () => {
     globalThis.fetch =
         mock(async () => {
           return new Response(
-              JSON.stringify({access_token: makeUnsignedJwt({sub: 'user-access'})}), {
+              JSON.stringify(
+                  {access_token: makeUnsignedJwt({sub: 'user-access'})}),
+              {
                 status: 200,
                 headers: {'content-type': 'application/json'},
               });
@@ -251,6 +253,39 @@ describe('auth routes', () => {
     expect(response.headers.location ?? '')
         .toContain('subject=keycloak%3Auser-access');
 
+    await app.close();
+  });
+
+  it('includes keycloak client secret during token exchange when configured', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+    process.env.BANANA_KEYCLOAK_CLIENT_SECRET = 'secret-for-test';
+
+    globalThis.fetch =
+        mock(async (_input, init) => {
+          const body = new URLSearchParams(String(init?.body ?? ''));
+          expect(body.get('client_secret')).toBe('secret-for-test');
+          return new Response(
+              JSON.stringify({id_token: makeUnsignedJwt({sub: 'secret-user'})}), {
+                status: 200,
+                headers: {'content-type': 'application/json'},
+              });
+        }) as unknown as typeof fetch;
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/auth/keycloak/callback?code=auth-code-4b&state=${
+          makeAuthState()}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location ?? '')
+        .toContain('subject=keycloak%3Asecret-user');
+
+    delete process.env.BANANA_KEYCLOAK_CLIENT_SECRET;
     await app.close();
   });
 
@@ -454,5 +489,109 @@ describe('auth routes', () => {
     expect((start.json() as {displayName: string}).displayName).toBe('Guest');
 
     await app.close();
+  });
+});
+
+describe('auth route helpers', () => {
+  beforeEach(() => {
+    mock.restore();
+    delete process.env.BANANA_KEYCLOAK_ISSUER_URL;
+    delete process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL;
+    delete process.env.BANANA_KEYCLOAK_CLIENT_ID;
+    delete process.env.BANANA_KEYCLOAK_CLIENT_SECRET;
+  });
+
+  it('covers query, origin, and returnTo normalization fallbacks', () => {
+    expect(authRouteInternals.getFirstQueryValue(['first', 'second']))
+        .toBe('first');
+    expect(authRouteInternals.resolveRequestOrigin({
+      headers: {'x-forwarded-proto': 'https, http'},
+      protocol: 'http',
+    } as never))
+        .toBe('https://localhost:8080');
+    expect(authRouteInternals.normalizeReturnTo(undefined, '/login'))
+        .toBe('/login');
+    expect(authRouteInternals.normalizeReturnTo('ftp://banana.engineer', '/login'))
+        .toBe('/login');
+    expect(authRouteInternals.normalizeReturnTo('/profile', '/login'))
+        .toBe('/profile');
+    expect(authRouteInternals.normalizeReturnTo('not a url', '/login'))
+        .toBe('/login');
+  });
+
+  it('covers keycloak env resolution helpers', () => {
+    expect(authRouteInternals.resolveKeycloakIssuerUrl())
+        .toBe('http://localhost:8080/realms/banana');
+    expect(authRouteInternals.resolveKeycloakTokenIssuerUrl())
+        .toBe('http://localhost:8080/realms/banana');
+    expect(authRouteInternals.resolveKeycloakClientId()).toBe('banana-react-spa');
+    expect(authRouteInternals.resolveKeycloakClientSecret()).toBe('');
+
+    process.env.BANANA_KEYCLOAK_ISSUER_URL = ' https://issuer.example/realm ';
+    process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL = ' https://token.example/realm ';
+    process.env.BANANA_KEYCLOAK_CLIENT_ID = ' banana-client ';
+    process.env.BANANA_KEYCLOAK_CLIENT_SECRET = ' banana-secret ';
+
+    expect(authRouteInternals.resolveKeycloakIssuerUrl())
+        .toBe('https://issuer.example/realm');
+    expect(authRouteInternals.resolveKeycloakTokenIssuerUrl())
+        .toBe('https://token.example/realm');
+    expect(authRouteInternals.resolveKeycloakClientId()).toBe('banana-client');
+    expect(authRouteInternals.resolveKeycloakClientSecret()).toBe('banana-secret');
+  });
+
+  it('covers auth state decode error branches', () => {
+    const valid = authRouteInternals.encodeKeycloakAuthState({
+      nonce: 'nonce-1',
+      codeVerifier: 'verifier-1',
+    });
+    expect(authRouteInternals.decodeKeycloakAuthState(valid)).toEqual({
+      nonce: 'nonce-1',
+      codeVerifier: 'verifier-1',
+    });
+    expect(authRouteInternals.decodeKeycloakAuthState('')).toBeNull();
+    expect(authRouteInternals.decodeKeycloakAuthState(
+               Buffer.from(JSON.stringify({nonce: 'nonce-only'}), 'utf8')
+                   .toString('base64url')))
+        .toBeNull();
+    expect(authRouteInternals.decodeKeycloakAuthState('not-base64url'))
+        .toBeNull();
+  });
+
+  it('covers provider, jwt subject, and identity normalization helpers', () => {
+    expect(authRouteInternals.normalizeIdentityProvider('LINKEDIN')).toBe('linkedin');
+    expect(authRouteInternals.normalizeIdentityProvider('discord')).toBeNull();
+
+    expect(authRouteInternals.resolveSubjectFromJwt(undefined)).toBeNull();
+    expect(authRouteInternals.resolveSubjectFromJwt(makeUnsignedJwt({sub: ''})))
+        .toBeNull();
+    expect(authRouteInternals.resolveSubjectFromJwt(makeUnsignedJwt({sub: 'steam:abc'})))
+        .toBe('steam:abc');
+    expect(authRouteInternals.resolveSubjectFromJwt('not-a-jwt')).toBeNull();
+
+    expect(authRouteInternals.resolveIdentityIdFromSubject('guest:abc'))
+        .toBe('guest:abc');
+    expect(authRouteInternals.resolveIdentityIdFromSubject('plain-subject'))
+        .toBe('keycloak:plain-subject');
+    expect(authRouteInternals.resolveIdentityKind('guest:abc')).toBe('guest');
+    expect(authRouteInternals.resolveIdentityKind('keycloak:abc')).toBe('keycloak');
+  });
+
+  it('covers bearer parsing, expiry fallback, and guest alias normalization', () => {
+    expect(authRouteInternals.parseBearerToken(undefined)).toBeNull();
+    expect(authRouteInternals.parseBearerToken('Basic abc')).toBeNull();
+    expect(authRouteInternals.parseBearerToken('Bearer   ')).toBeNull();
+    expect(authRouteInternals.parseBearerToken('Bearer token-123')).toBe('token-123');
+
+    const expDate = authRouteInternals.resolveTokenExpiry(
+        makeUnsignedJwt({sub: 'user-1', exp: 1735689600}));
+    expect(expDate.toISOString()).toBe('2025-01-01T00:00:00.000Z');
+
+    const fallbackDate = authRouteInternals.resolveTokenExpiry('not-a-jwt');
+    expect(fallbackDate instanceof Date).toBe(true);
+
+    expect(authRouteInternals.normalizeGuestAlias(undefined)).toBe('Guest');
+    expect(authRouteInternals.normalizeGuestAlias('    ')).toBe('Guest');
+    expect(authRouteInternals.normalizeGuestAlias('!!!')).toBe('Guest');
   });
 });

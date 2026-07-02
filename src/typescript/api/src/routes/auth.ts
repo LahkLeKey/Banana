@@ -295,6 +295,25 @@ function normalizeGuestAlias(rawAlias: string|undefined): string {
   return normalized.length > 0 ? normalized : 'Guest';
 }
 
+export const authRouteInternals = {
+  getFirstQueryValue,
+  resolveRequestOrigin,
+  normalizeReturnTo,
+  resolveKeycloakIssuerUrl,
+  resolveKeycloakTokenIssuerUrl,
+  resolveKeycloakClientId,
+  resolveKeycloakClientSecret,
+  encodeKeycloakAuthState,
+  decodeKeycloakAuthState,
+  normalizeIdentityProvider,
+  resolveSubjectFromJwt,
+  resolveIdentityIdFromSubject,
+  resolveIdentityKind,
+  parseBearerToken,
+  resolveTokenExpiry,
+  normalizeGuestAlias,
+};
+
 export async function registerAuthRoutes(app: FastifyInstance) {
   const authStore = await getAuthSessionStore();
 
