@@ -4,10 +4,12 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KEYCLOAK_DIR="${ROOT_DIR}/src/typescript/keycloak"
-KEYCLOAK_ENV="${BANANA_KEYCLOAK_ENV:-dev}"
+KEYCLOAK_ENV="${BANANA_KEYCLOAK_ENV:-prod}"
 APP_NAME_DEFAULT="banana-keycloak-${KEYCLOAK_ENV}"
 APP_NAME="${FLY_APP_NAME:-${APP_NAME_DEFAULT}}"
 PRIMARY_REGION="${BANANA_KEYCLOAK_REGION:-iad}"
+KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN:-zephrym}"
+KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-4xcruvfg989}"
 
 if ! command -v fly >/dev/null 2>&1; then
   echo "[keycloak-fly] ERROR: fly CLI is required but not installed or not on PATH." >&2
@@ -24,8 +26,6 @@ case "${KEYCLOAK_ENV}" in
 esac
 
 required_vars=(
-  KEYCLOAK_ADMIN
-  KEYCLOAK_ADMIN_PASSWORD
   BANANA_KEYCLOAK_DB_URL
   BANANA_KEYCLOAK_DB_USERNAME
   BANANA_KEYCLOAK_DB_PASSWORD
