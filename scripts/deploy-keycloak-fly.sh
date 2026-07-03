@@ -73,3 +73,16 @@ fly deploy . \
 echo "[keycloak-fly] deployment complete"
 echo "[keycloak-fly] issuer hint: https://${APP_NAME}.fly.dev/realms/banana"
 echo "[keycloak-fly] jwks hint: https://${APP_NAME}.fly.dev/realms/banana/protocol/openid-connect/certs"
+
+if [[ -n "${BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID:-}" && -n "${BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET:-}" ]]; then
+  echo "[keycloak-fly] syncing github idp in realm banana"
+  BANANA_KEYCLOAK_ENV="${KEYCLOAK_ENV}" \
+    FLY_APP_NAME="${APP_NAME}" \
+    KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN}" \
+    KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}" \
+    BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID="${BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID}" \
+    BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET="${BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET}" \
+    bash "${ROOT_DIR}/scripts/keycloak-fly-github-idp.sh"
+else
+  echo "[keycloak-fly] github idp sync skipped (missing BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID/SECRET)"
+fi

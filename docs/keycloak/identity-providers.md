@@ -57,6 +57,40 @@ Examples:
 - `http://localhost:8080/realms/banana/broker/google/endpoint`
 - `http://localhost:8080/realms/banana/broker/linkedin/endpoint`
 
+## Production Fly setup (GitHub)
+
+Use the Fly Keycloak app callback URI in your GitHub OAuth App for production:
+
+- `https://banana-keycloak-prod.fly.dev/realms/banana/broker/github/endpoint`
+
+Deploy and sync Keycloak + GitHub IdP in one flow:
+
+```bash
+export BANANA_KEYCLOAK_ENV=prod
+export KEYCLOAK_ADMIN="<prod-admin-user>"
+export KEYCLOAK_ADMIN_PASSWORD="<prod-admin-password>"
+export BANANA_KEYCLOAK_DB_URL="jdbc:postgresql://<prod-host>:5432/<keycloak-db>"
+export BANANA_KEYCLOAK_DB_USERNAME="<prod-db-user>"
+export BANANA_KEYCLOAK_DB_PASSWORD="<prod-db-password>"
+
+export BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID="<github-client-id>"
+export BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET="<github-client-secret>"
+
+bash scripts/deploy-keycloak-fly.sh
+```
+
+If Keycloak is already deployed, you can sync only the GitHub IdP configuration:
+
+```bash
+export BANANA_KEYCLOAK_ENV=prod
+export KEYCLOAK_ADMIN="<prod-admin-user>"
+export KEYCLOAK_ADMIN_PASSWORD="<prod-admin-password>"
+export BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID="<github-client-id>"
+export BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET="<github-client-secret>"
+
+bash scripts/keycloak-fly-github-idp.sh
+```
+
 ## LinkedIn endpoint overrides (optional)
 
 Defaults are already configured for LinkedIn OIDC. Override only if needed:
