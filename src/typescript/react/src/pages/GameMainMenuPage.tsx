@@ -20,7 +20,7 @@ export function GameMainMenuPage() {
                 <RouteBody>
                     Active operator token detected. Proceed to character selection before entering notebook sectors.
                 </RouteBody>
-                <RouteMetaText>Session: {session?.steamId || "guest"}</RouteMetaText>
+                <RouteMetaText>Session: {session?.subject || "guest"}</RouteMetaText>
 
                 <RouteActionsRow marginTop={20}>
                     <RouteActionButton onClick={() => navigate("/select-character")} tone="primary">

@@ -6,6 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_DIR="${ROOT_DIR}/src/typescript/api"
 APP_NAME="${FLY_APP_NAME:-banana-api}"
 SKIP_PARITY_GATE="${BANANA_FLY_SKIP_PARITY_GATE:-false}"
+DEPLOY_ENV="${BANANA_DEPLOY_ENV:-prod}"
 
 source "${ROOT_DIR}/scripts/lib/database-env-aliases.sh"
 
@@ -34,6 +35,28 @@ fi
 if ! grep -q "internal_port = 8081" fly.toml; then
   echo "[fly-deploy] ERROR: fly.toml must expose internal_port = 8081." >&2
   exit 1
+fi
+
+if [[ "${DEPLOY_ENV}" == "prod" ]]; then
+  if ! grep -q 'BANANA_KEYCLOAK_ISSUER_URL = "https://banana-keycloak-prod.fly.dev/realms/banana"' fly.toml; then
+    echo "[fly-deploy] ERROR: prod deploy requires BANANA_KEYCLOAK_ISSUER_URL to point at banana-keycloak-prod issuer." >&2
+    exit 1
+  fi
+
+  if ! grep -q 'BANANA_KEYCLOAK_TOKEN_ISSUER_URL = "https://banana-keycloak-prod.fly.dev/realms/banana"' fly.toml; then
+    echo "[fly-deploy] ERROR: prod deploy requires BANANA_KEYCLOAK_TOKEN_ISSUER_URL to point at banana-keycloak-prod issuer." >&2
+    exit 1
+  fi
+
+  if grep -q 'BANANA_KEYCLOAK_ISSUER_URL = "http://localhost' fly.toml; then
+    echo "[fly-deploy] ERROR: prod deploy cannot use localhost Keycloak issuer URLs." >&2
+    exit 1
+  fi
+
+  if grep -q 'BANANA_KEYCLOAK_TOKEN_ISSUER_URL = "http://localhost' fly.toml; then
+    echo "[fly-deploy] ERROR: prod deploy cannot use localhost Keycloak token issuer URLs." >&2
+    exit 1
+  fi
 fi
 
 DATABASE_URL_VALUE=""

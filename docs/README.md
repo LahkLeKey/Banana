@@ -2,6 +2,14 @@
 
 This repository includes a K3H4-first netcode analytics pipeline that flows across native, API, and frontend layers.
 
+## Authentication foundation (Keycloak)
+
+Keycloak realm configuration is the main authentication manager for Banana.
+
+- Setup and integration guide: [docs/keycloak/setup-and-integration.md](docs/keycloak/setup-and-integration.md)
+- Fly deployment contract: [docs/keycloak/fly-deployment.md](docs/keycloak/fly-deployment.md)
+- Third-party providers: [docs/keycloak/identity-providers.md](docs/keycloak/identity-providers.md)
+
 ## CLI Quickstart (Python)
 
 Root CLI scaffolding now lives under `cli/*` with a Python entrypoint in `cli/banana`.

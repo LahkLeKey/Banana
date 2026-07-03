@@ -3,13 +3,23 @@ import {randomUUID} from 'node:crypto';
 import {resolveAuthoritativeDatabaseUrl} from './databaseRuntime.ts';
 
 export type AuthSessionInsert = {
+  identityId: string; tokenHash: string; expiresAt: Date;
+  sessionId?: string;
+};
+
+export type LegacyAuthSessionInsert = {
   steamId: string; tokenHash: string; expiresAt: Date;
   sessionId?: string;
 };
 
 export type AuthSessionStore = {
+  upsertIdentityUser: (identityId: string) => Promise<void>;
+  createIdentitySession: (input: AuthSessionInsert) => Promise<void>;
+
+  // Backward-compatible aliases while non-auth routes migrate.
   upsertSteamUser: (steamId: string) => Promise<void>;
-  createSession: (input: AuthSessionInsert) => Promise<void>;
+  createSession: (input: AuthSessionInsert|LegacyAuthSessionInsert) =>
+      Promise<void>;
   touchActiveSessionByTokenHash: (tokenHash: string, seenAt: Date) =>
       Promise<boolean>;
   revokeSessionByTokenHash: (tokenHash: string, revokedAt: Date) =>
@@ -65,24 +75,33 @@ function shouldDisableSsl(databaseUrl: string): boolean {
 class MemoryAuthSessionStore implements AuthSessionStore {
   private readonly users = new Map<string, Date>();
   private readonly sessions = new Map < string, {
-    steamId: string;
+    identityId: string;
     expiresAt: Date;
     revokedAt: Date|null;
     seenAt: Date;
   }
   >();
 
-  async upsertSteamUser(steamId: string): Promise<void> {
-    this.users.set(steamId, new Date());
+  async upsertIdentityUser(identityId: string): Promise<void> {
+    this.users.set(identityId, new Date());
   }
 
-  async createSession(input: AuthSessionInsert): Promise<void> {
+  async createIdentitySession(input: AuthSessionInsert): Promise<void> {
     this.sessions.set(input.tokenHash, {
-      steamId: input.steamId,
+      identityId: input.identityId,
       expiresAt: input.expiresAt,
       revokedAt: null,
       seenAt: new Date(),
     });
+  }
+
+  async upsertSteamUser(steamId: string): Promise<void> {
+    await this.upsertIdentityUser(steamId);
+  }
+
+  async createSession(input: AuthSessionInsert|LegacyAuthSessionInsert):
+      Promise<void> {
+    await this.createIdentitySession(normalizeSessionInsert(input));
   }
 
   async touchActiveSessionByTokenHash(tokenHash: string, seenAt: Date):
@@ -147,7 +166,7 @@ class PostgresAuthSessionStore implements AuthSessionStore {
         `DELETE FROM banana_auth_sessions WHERE revoked_at IS NOT NULL OR expires_at < NOW() - INTERVAL '7 days'`);
   }
 
-  async upsertSteamUser(steamId: string): Promise<void> {
+  async upsertIdentityUser(identityId: string): Promise<void> {
     await this.pool.query(
         `
         INSERT INTO banana_auth_users (steam_id)
@@ -155,10 +174,10 @@ class PostgresAuthSessionStore implements AuthSessionStore {
         ON CONFLICT (steam_id)
         DO UPDATE SET updated_at = NOW(), last_login_at = NOW()
       `,
-        [steamId]);
+        [identityId]);
   }
 
-  async createSession(input: AuthSessionInsert): Promise<void> {
+  async createIdentitySession(input: AuthSessionInsert): Promise<void> {
     await this.pool.query(
         `
         INSERT INTO banana_auth_sessions (
@@ -171,9 +190,18 @@ class PostgresAuthSessionStore implements AuthSessionStore {
         ) VALUES ($1, $2, $3, $4, NOW(), NOW())
       `,
         [
-          input.sessionId ?? randomUUID(), input.steamId, input.tokenHash,
+          input.sessionId ?? randomUUID(), input.identityId, input.tokenHash,
           input.expiresAt.toISOString()
         ]);
+  }
+
+  async upsertSteamUser(steamId: string): Promise<void> {
+    await this.upsertIdentityUser(steamId);
+  }
+
+  async createSession(input: AuthSessionInsert|LegacyAuthSessionInsert):
+      Promise<void> {
+    await this.createIdentitySession(normalizeSessionInsert(input));
   }
 
   async touchActiveSessionByTokenHash(tokenHash: string, seenAt: Date):
@@ -225,6 +253,17 @@ async function createPostgresPool(databaseUrl: string):
     connectionTimeoutMillis:
         Number(process.env.BANANA_AUTH_STORE_CONNECT_TIMEOUT_MS ?? 8_000),
   });
+}
+
+function normalizeSessionInsert(
+    input: AuthSessionInsert|LegacyAuthSessionInsert): AuthSessionInsert {
+  const identityId = 'identityId' in input ? input.identityId : input.steamId;
+  return {
+    identityId,
+    tokenHash: input.tokenHash,
+    expiresAt: input.expiresAt,
+    sessionId: input.sessionId,
+  };
 }
 
 export async function getAuthSessionStore(): Promise<AuthSessionStore> {

@@ -2,9 +2,11 @@ import {beforeEach, describe, expect, it, mock} from 'bun:test';
 import Fastify from 'fastify';
 import type {FastifyInstance} from 'fastify';
 
-import {registerAuthRoutes} from './auth.ts';
+import {authRouteInternals, registerAuthRoutes} from './auth.ts';
 
 process.env.BANANA_JWT_SECRET = 'test-secret-banana-jwt-1234';
+process.env.BANANA_KEYCLOAK_ISSUER_URL = 'http://localhost:8080/realms/banana';
+process.env.BANANA_KEYCLOAK_CLIENT_ID = 'banana-web';
 
 function extractTokenFromLocation(location: string): string {
   const parsed = new URL(location);
@@ -17,20 +19,42 @@ function extractTokenFromLocation(location: string): string {
   return token;
 }
 
-async function issueSteamToken(app: FastifyInstance): Promise<string> {
-  const fetchMock = mock(async () => {
-    return new Response(
-        'ns:http://specs.openid.net/auth/2.0\nis_valid:true\n', {
+function makeUnsignedJwt(payload: Record<string, unknown>): string {
+  const encoded =
+      Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  return `header.${encoded}.signature`;
+}
+
+function makeAuthState(codeVerifier = 'test-code-verifier'): string {
+  return Buffer
+      .from(JSON.stringify({nonce: 'test-nonce', codeVerifier}), 'utf8')
+      .toString('base64url');
+}
+
+function mockTokenExchange(
+    subject = 'user-123', expectedVerifier = 'test-code-verifier') {
+  const idToken = makeUnsignedJwt({sub: subject});
+  globalThis.fetch =
+      mock(async (_input, init) => {
+        const body = typeof init?.body === 'string' ?
+            new URLSearchParams(init.body) :
+            new URLSearchParams(String(init?.body ?? ''));
+        expect(body.get('code_verifier') ?? '').toBe(expectedVerifier);
+        return new Response(JSON.stringify({id_token: idToken}), {
           status: 200,
-          headers: {'content-type': 'text/plain'},
+          headers: {'content-type': 'application/json'},
         });
-  });
-  globalThis.fetch = fetchMock as unknown as typeof fetch;
+      }) as unknown as typeof fetch;
+}
+
+async function issueKeycloakToken(app: FastifyInstance): Promise<string> {
+  mockTokenExchange('user-123');
+  const state = makeAuthState();
 
   const response = await app.inject({
     method: 'GET',
-    url:
-        '/auth/steam/callback?openid.mode=id_res&openid.claimed_id=https%3A%2F%2Fsteamcommunity.com%2Fopenid%2Fid%2F76561198000000000&openid.identity=https%3A%2F%2Fsteamcommunity.com%2Fopenid%2Fid%2F76561198000000000&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+    url: `/auth/keycloak/callback?code=auth-code-1&state=${
+        state}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
     headers: {
       host: 'api.banana.engineer',
     },
@@ -44,13 +68,14 @@ describe('auth routes', () => {
     mock.restore();
   });
 
-  it('redirects Steam start requests to the OpenID endpoint', async () => {
+  it('redirects Keycloak start requests to the OIDC endpoint', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
 
     const response = await app.inject({
       method: 'GET',
-      url: '/auth/steam/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+      url:
+          '/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
       headers: {
         host: 'api.banana.engineer',
       },
@@ -58,34 +83,68 @@ describe('auth routes', () => {
 
     expect(response.statusCode).toBe(302);
     expect(response.headers.location ?? '')
-        .toContain('https://steamcommunity.com/openid/login');
+        .toContain(
+            'http://localhost:8080/realms/banana/protocol/openid-connect/auth');
+    expect(response.headers.location ?? '').toContain('response_type=code');
     expect(response.headers.location ?? '')
-        .toContain('openid.mode=checkid_setup');
+        .toContain('code_challenge_method=S256');
+    expect(response.headers.location ?? '').toContain('code_challenge=');
     expect(response.headers.location ?? '')
         .toContain(
-            'openid.return_to=http%3A%2F%2Fapi.banana.engineer%2Fauth%2Fsteam%2Fcallback%3FreturnTo%3Dhttps%253A%252F%252Fbanana.engineer%252Flogin');
+            'redirect_uri=http%3A%2F%2Fapi.banana.engineer%2Fauth%2Fkeycloak%2Fcallback%3FreturnTo%3Dhttps%253A%252F%252Fbanana.engineer%252Flogin');
 
     await app.close();
   });
 
-  it('redirects verified callbacks back to the login return url with a token hash',
+  it('passes provider hint to Keycloak start redirect', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin&provider=google',
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location ?? '').toContain('kc_idp_hint=google');
+
+    await app.close();
+  });
+
+  it('does not expose legacy Steam auth routes', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const start = await app.inject({
+      method: 'GET',
+      url: '/auth/steam/start',
+    });
+    const callback = await app.inject({
+      method: 'GET',
+      url: '/auth/steam/callback',
+    });
+
+    expect(start.statusCode).toBe(404);
+    expect(callback.statusCode).toBe(404);
+
+    await app.close();
+  });
+
+  it('redirects Keycloak callbacks back to the login return url with a token hash',
      async () => {
        const app = Fastify();
        await registerAuthRoutes(app);
-
-       const fetchMock = mock(async () => {
-         return new Response(
-             'ns:http://specs.openid.net/auth/2.0\nis_valid:true\n', {
-               status: 200,
-               headers: {'content-type': 'text/plain'},
-             });
-       });
-       globalThis.fetch = fetchMock as unknown as typeof fetch;
+       mockTokenExchange('user-xyz');
+       const state = makeAuthState();
 
        const response = await app.inject({
          method: 'GET',
-         url:
-             '/auth/steam/callback?openid.mode=id_res&openid.claimed_id=https%3A%2F%2Fsteamcommunity.com%2Fopenid%2Fid%2F76561198000000000&openid.identity=https%3A%2F%2Fsteamcommunity.com%2Fopenid%2Fid%2F76561198000000000&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+         url: `/auth/keycloak/callback?code=auth-code-2&state=${
+             state}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
          headers: {
            host: 'api.banana.engineer',
          },
@@ -96,15 +155,174 @@ describe('auth routes', () => {
            .toContain('https://banana.engineer/login#');
        expect(response.headers.location ?? '').toContain('auth_token=');
        expect(response.headers.location ?? '')
-           .toContain('steam_id=76561198000000000');
+           .toContain('subject=keycloak%3Auser-xyz');
 
        await app.close();
      });
 
+  it('rejects callbacks without authorization code', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/auth/keycloak/callback?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({error: 'keycloak_auth_not_completed'});
+
+    await app.close();
+  });
+
+  it('rejects callbacks when auth state is missing', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/auth/keycloak/callback?code=auth-code-3&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin',
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({error: 'keycloak_auth_state_missing'});
+
+    await app.close();
+  });
+
+  it('rejects callbacks when token exchange fails', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    globalThis.fetch = mock(async () => {
+                         return new Response('invalid_grant', {status: 400});
+                       }) as unknown as typeof fetch;
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/auth/keycloak/callback?code=bad-code&state=${
+          makeAuthState()}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({
+      error: 'keycloak_token_exchange_failed',
+      status: 400,
+      detail: 'invalid_grant',
+    });
+
+    await app.close();
+  });
+
+  it('uses access token subject when id token is missing', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    globalThis.fetch =
+        mock(async () => {
+          return new Response(
+              JSON.stringify(
+                  {access_token: makeUnsignedJwt({sub: 'user-access'})}),
+              {
+                status: 200,
+                headers: {'content-type': 'application/json'},
+              });
+        }) as unknown as typeof fetch;
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/auth/keycloak/callback?code=auth-code-4&state=${
+          makeAuthState()}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location ?? '')
+        .toContain('subject=keycloak%3Auser-access');
+
+    await app.close();
+  });
+
+  it('includes keycloak client secret during token exchange when configured',
+     async () => {
+       const app = Fastify();
+       await registerAuthRoutes(app);
+       process.env.BANANA_KEYCLOAK_CLIENT_SECRET = 'secret-for-test';
+
+       globalThis.fetch =
+           mock(async (_input, init) => {
+             const body = new URLSearchParams(String(init?.body ?? ''));
+             expect(body.get('client_secret')).toBe('secret-for-test');
+             return new Response(
+                 JSON.stringify(
+                     {id_token: makeUnsignedJwt({sub: 'secret-user'})}),
+                 {
+                   status: 200,
+                   headers: {'content-type': 'application/json'},
+                 });
+           }) as unknown as typeof fetch;
+
+       const response = await app.inject({
+         method: 'GET',
+         url: `/auth/keycloak/callback?code=auth-code-4b&state=${
+             makeAuthState()}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
+         headers: {
+           host: 'api.banana.engineer',
+         },
+       });
+
+       expect(response.statusCode).toBe(302);
+       expect(response.headers.location ?? '')
+           .toContain('subject=keycloak%3Asecret-user');
+
+       delete process.env.BANANA_KEYCLOAK_CLIENT_SECRET;
+       await app.close();
+     });
+
+  it('rejects callbacks when identity subject is not available', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    globalThis.fetch =
+        mock(async () => {
+          return new Response(JSON.stringify({id_token: makeUnsignedJwt({})}), {
+            status: 200,
+            headers: {'content-type': 'application/json'},
+          });
+        }) as unknown as typeof fetch;
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/auth/keycloak/callback?code=auth-code-5&state=${
+          makeAuthState()}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'keycloak_identity_not_available'});
+
+    await app.close();
+  });
+
   it('validates active auth sessions from bearer token', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
-    const token = await issueSteamToken(app);
+    const token = await issueKeycloakToken(app);
 
     const response = await app.inject({
       method: 'GET',
@@ -117,11 +335,44 @@ describe('auth routes', () => {
     expect(response.statusCode).toBe(200);
     const body = response.json() as {
       authenticated: boolean;
-      steamId: string;
+      identityId: string;
     };
     expect(body.authenticated).toBe(true);
-    expect(body.steamId).toBe('76561198000000000');
-    expect(body.identityKind).toBe('steam');
+    expect(body.identityId).toBe('keycloak:user-123');
+    expect(body.identityKind).toBe('keycloak');
+
+    await app.close();
+  });
+
+  it('rejects /auth/session when bearer token is missing', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/auth/session',
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'missing_bearer_token'});
+
+    await app.close();
+  });
+
+  it('rejects /auth/session when bearer token is invalid', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/auth/session',
+      headers: {
+        authorization: 'Bearer not-a-valid-token',
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'invalid_or_expired_token'});
 
     await app.close();
   });
@@ -129,7 +380,7 @@ describe('auth routes', () => {
   it('revokes a session and rejects it after logout', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
-    const token = await issueSteamToken(app);
+    const token = await issueKeycloakToken(app);
 
     const logout = await app.inject({
       method: 'POST',
@@ -149,6 +400,39 @@ describe('auth routes', () => {
       },
     });
     expect(session.statusCode).toBe(401);
+
+    await app.close();
+  });
+
+  it('rejects /auth/logout when bearer token is missing', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/auth/logout',
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'missing_bearer_token'});
+
+    await app.close();
+  });
+
+  it('rejects /auth/logout when bearer token is invalid', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/auth/logout',
+      headers: {
+        authorization: 'Bearer not-a-valid-token',
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({error: 'invalid_or_expired_token'});
 
     await app.close();
   });
@@ -193,4 +477,134 @@ describe('auth routes', () => {
 
     await app.close();
   });
+
+  it('normalizes empty or unsafe guest aliases to Guest', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const start = await app.inject({
+      method: 'POST',
+      url: '/auth/guest/start',
+      payload: {alias: '!!!'},
+    });
+
+    expect(start.statusCode).toBe(200);
+    expect((start.json() as {displayName: string}).displayName).toBe('Guest');
+
+    await app.close();
+  });
+});
+
+describe('auth route helpers', () => {
+  beforeEach(() => {
+    mock.restore();
+    delete process.env.BANANA_KEYCLOAK_ISSUER_URL;
+    delete process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL;
+    delete process.env.BANANA_KEYCLOAK_CLIENT_ID;
+    delete process.env.BANANA_KEYCLOAK_CLIENT_SECRET;
+  });
+
+  it('covers query, origin, and returnTo normalization fallbacks', () => {
+    expect(authRouteInternals.getFirstQueryValue([
+      'first', 'second'
+    ])).toBe('first');
+    expect(authRouteInternals.resolveRequestOrigin({
+      headers: {'x-forwarded-proto': 'https, http'},
+      protocol: 'http',
+    } as never))
+        .toBe('https://localhost:8080');
+    expect(authRouteInternals.normalizeReturnTo(undefined, '/login'))
+        .toBe('/login');
+    expect(
+        authRouteInternals.normalizeReturnTo('ftp://banana.engineer', '/login'))
+        .toBe('/login');
+    expect(authRouteInternals.normalizeReturnTo('/profile', '/login'))
+        .toBe('/profile');
+    expect(authRouteInternals.normalizeReturnTo('not a url', '/login'))
+        .toBe('/login');
+  });
+
+  it('covers keycloak env resolution helpers', () => {
+    expect(authRouteInternals.resolveKeycloakIssuerUrl())
+        .toBe('http://localhost:8080/realms/banana');
+    expect(authRouteInternals.resolveKeycloakTokenIssuerUrl())
+        .toBe('http://localhost:8080/realms/banana');
+    expect(authRouteInternals.resolveKeycloakClientId())
+        .toBe('banana-react-spa');
+    expect(authRouteInternals.resolveKeycloakClientSecret()).toBe('');
+
+    process.env.BANANA_KEYCLOAK_ISSUER_URL = ' https://issuer.example/realm ';
+    process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL =
+        ' https://token.example/realm ';
+    process.env.BANANA_KEYCLOAK_CLIENT_ID = ' banana-client ';
+    process.env.BANANA_KEYCLOAK_CLIENT_SECRET = ' banana-secret ';
+
+    expect(authRouteInternals.resolveKeycloakIssuerUrl())
+        .toBe('https://issuer.example/realm');
+    expect(authRouteInternals.resolveKeycloakTokenIssuerUrl())
+        .toBe('https://token.example/realm');
+    expect(authRouteInternals.resolveKeycloakClientId()).toBe('banana-client');
+    expect(authRouteInternals.resolveKeycloakClientSecret())
+        .toBe('banana-secret');
+  });
+
+  it('covers auth state decode error branches', () => {
+    const valid = authRouteInternals.encodeKeycloakAuthState({
+      nonce: 'nonce-1',
+      codeVerifier: 'verifier-1',
+    });
+    expect(authRouteInternals.decodeKeycloakAuthState(valid)).toEqual({
+      nonce: 'nonce-1',
+      codeVerifier: 'verifier-1',
+    });
+    expect(authRouteInternals.decodeKeycloakAuthState('')).toBeNull();
+    expect(authRouteInternals.decodeKeycloakAuthState(
+               Buffer.from(JSON.stringify({nonce: 'nonce-only'}), 'utf8')
+                   .toString('base64url')))
+        .toBeNull();
+    expect(authRouteInternals.decodeKeycloakAuthState('not-base64url'))
+        .toBeNull();
+  });
+
+  it('covers provider, jwt subject, and identity normalization helpers', () => {
+    expect(authRouteInternals.normalizeIdentityProvider('LINKEDIN'))
+        .toBe('linkedin');
+    expect(authRouteInternals.normalizeIdentityProvider('discord')).toBeNull();
+
+    expect(authRouteInternals.resolveSubjectFromJwt(undefined)).toBeNull();
+    expect(authRouteInternals.resolveSubjectFromJwt(makeUnsignedJwt({sub: ''})))
+        .toBeNull();
+    expect(authRouteInternals.resolveSubjectFromJwt(makeUnsignedJwt({
+      sub: 'steam:abc'
+    }))).toBe('steam:abc');
+    expect(authRouteInternals.resolveSubjectFromJwt('not-a-jwt')).toBeNull();
+
+    expect(authRouteInternals.resolveIdentityIdFromSubject('guest:abc'))
+        .toBe('guest:abc');
+    expect(authRouteInternals.resolveIdentityIdFromSubject('plain-subject'))
+        .toBe('keycloak:plain-subject');
+    expect(authRouteInternals.resolveIdentityKind('guest:abc')).toBe('guest');
+    expect(authRouteInternals.resolveIdentityKind('keycloak:abc'))
+        .toBe('keycloak');
+  });
+
+  it('covers bearer parsing, expiry fallback, and guest alias normalization',
+     () => {
+       expect(authRouteInternals.parseBearerToken(undefined)).toBeNull();
+       expect(authRouteInternals.parseBearerToken('Basic abc')).toBeNull();
+       expect(authRouteInternals.parseBearerToken('Bearer   ')).toBeNull();
+       expect(authRouteInternals.parseBearerToken('Bearer token-123'))
+           .toBe('token-123');
+
+       const expDate = authRouteInternals.resolveTokenExpiry(
+           makeUnsignedJwt({sub: 'user-1', exp: 1735689600}));
+       expect(expDate.toISOString()).toBe('2025-01-01T00:00:00.000Z');
+
+       const fallbackDate = authRouteInternals.resolveTokenExpiry('not-a-jwt');
+       expect(fallbackDate instanceof Date).toBe(true);
+
+       expect(authRouteInternals.normalizeGuestAlias(undefined)).toBe('Guest');
+       expect(authRouteInternals.normalizeGuestAlias('    ')).toBe('Guest');
+       expect(authRouteInternals.normalizeGuestAlias('!!!')).toBe('Guest');
+     });
 });

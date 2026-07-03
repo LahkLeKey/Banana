@@ -64,5 +64,6 @@ export * from './domains/ReplicationDomain';
 export * from './domains/ViewportDomain';
 export {LoginPage} from './auth/LoginPage';
 export {SessionRoomPage} from './auth/SessionRoomPage';
-export {BANANA_AUTH_STEAM_ID_STORAGE_KEY, BANANA_AUTH_TOKEN_STORAGE_KEY, buildSteamAuthStartUrl, clearStoredAuthSession, hasStoredAuthSession, parseAuthCallbackHash, readStoredAuthSession, resolveLoginReturnToUrl, storeAuthSession,} from './auth/session';
+export type {AuthProvider} from './auth/session';
+export {BANANA_AUTH_SUBJECT_STORAGE_KEY, BANANA_AUTH_TOKEN_STORAGE_KEY, buildAuthStartUrl, buildSteamAuthStartUrl, clearStoredAuthSession, hasStoredAuthSession, parseAuthCallbackHash, readStoredAuthSession, resolveLoginReturnToUrl, storeAuthSession,} from './auth/session';
 export {logoutAuthSession, validateAuthSession} from './auth/session';

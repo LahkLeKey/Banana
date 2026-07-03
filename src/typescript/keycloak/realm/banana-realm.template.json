@@ -1,0 +1,108 @@
+{
+    "realm": "banana",
+    "enabled": true,
+    "displayName": "Banana",
+    "registrationAllowed": false,
+    "loginWithEmailAllowed": true,
+    "duplicateEmailsAllowed": false,
+    "resetPasswordAllowed": true,
+    "rememberMe": true,
+    "clients": [
+        {
+            "clientId": "banana-react-spa",
+            "name": "Banana React SPA",
+            "enabled": true,
+            "publicClient": true,
+            "standardFlowEnabled": true,
+            "directAccessGrantsEnabled": false,
+            "implicitFlowEnabled": false,
+            "serviceAccountsEnabled": false,
+            "redirectUris": [
+                "https://banana.engineer/*",
+                "https://www.banana.engineer/*",
+                "https://api.banana.engineer/auth/keycloak/callback*",
+                "https://*.vercel.app/*",
+                "http://localhost:5173/*",
+                "http://localhost:8081/auth/keycloak/callback*"
+            ],
+            "webOrigins": [
+                "https://banana.engineer",
+                "https://www.banana.engineer",
+                "https://*.vercel.app",
+                "http://localhost:5173"
+            ]
+        },
+        {
+            "clientId": "banana-api",
+            "name": "Banana API",
+            "enabled": true,
+            "publicClient": false,
+            "standardFlowEnabled": false,
+            "directAccessGrantsEnabled": false,
+            "serviceAccountsEnabled": true,
+            "protocol": "openid-connect"
+        }
+    ],
+    "identityProviders": [
+        {
+            "alias": "github",
+            "providerId": "github",
+            "enabled": true,
+            "updateProfileFirstLoginMode": "on",
+            "trustEmail": true,
+            "storeToken": false,
+            "addReadTokenRoleOnCreate": false,
+            "authenticateByDefault": false,
+            "linkOnly": false,
+            "firstBrokerLoginFlowAlias": "first broker login",
+            "config": {
+                "clientId": "${BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID:}",
+                "clientSecret": "${BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET:}",
+                "defaultScope": "read:user user:email",
+                "useJwksUrl": "true"
+            }
+        },
+        {
+            "alias": "google",
+            "providerId": "google",
+            "enabled": true,
+            "updateProfileFirstLoginMode": "on",
+            "trustEmail": true,
+            "storeToken": false,
+            "addReadTokenRoleOnCreate": false,
+            "authenticateByDefault": false,
+            "linkOnly": false,
+            "firstBrokerLoginFlowAlias": "first broker login",
+            "config": {
+                "clientId": "${BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_ID:}",
+                "clientSecret": "${BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_SECRET:}",
+                "defaultScope": "openid profile email",
+                "useJwksUrl": "true"
+            }
+        },
+        {
+            "alias": "linkedin",
+            "providerId": "oidc",
+            "enabled": true,
+            "updateProfileFirstLoginMode": "on",
+            "trustEmail": true,
+            "storeToken": false,
+            "addReadTokenRoleOnCreate": false,
+            "authenticateByDefault": false,
+            "linkOnly": false,
+            "firstBrokerLoginFlowAlias": "first broker login",
+            "config": {
+                "clientId": "${BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_ID:}",
+                "clientSecret": "${BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_SECRET:}",
+                "authorizationUrl": "${BANANA_KEYCLOAK_IDP_LINKEDIN_AUTH_URL:https://www.linkedin.com/oauth/v2/authorization}",
+                "tokenUrl": "${BANANA_KEYCLOAK_IDP_LINKEDIN_TOKEN_URL:https://www.linkedin.com/oauth/v2/accessToken}",
+                "userInfoUrl": "${BANANA_KEYCLOAK_IDP_LINKEDIN_USERINFO_URL:https://api.linkedin.com/v2/userinfo}",
+                "jwksUrl": "${BANANA_KEYCLOAK_IDP_LINKEDIN_JWKS_URL:https://www.linkedin.com/oauth/openid/jwks}",
+                "issuer": "${BANANA_KEYCLOAK_IDP_LINKEDIN_ISSUER:https://www.linkedin.com}",
+                "defaultScope": "openid profile email",
+                "validateSignature": "true",
+                "useJwksUrl": "true"
+            }
+        }
+    ]
+}

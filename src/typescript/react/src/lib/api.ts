@@ -380,6 +380,28 @@ export type ApiBaseResolution = {
   source: 'vite' | 'localhost-default' | 'unresolved';
 };
 
+function normalizeViteApiBaseUrl(viteBaseUrl: string): string {
+  const trimmed = viteBaseUrl.trim();
+  if (trimmed.length === 0) {
+    return '';
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.trim().toLowerCase();
+
+    // Guard against preview deployments accidentally targeting the frontend
+    // host itself, which serves HTML and breaks JSON API consumers.
+    if (host.endsWith('.vercel.app')) {
+      return 'https://api.banana.engineer';
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+}
+
 function resolveViteApiBaseUrl(): string {
   const importMeta = import.meta as {env?: {VITE_BANANA_API_BASE_URL?: string}};
   return importMeta.env?.VITE_BANANA_API_BASE_URL ?? '';
@@ -405,7 +427,7 @@ function resolveLocalhostDefaultApiBaseUrl(): string {
 export function resolveApiBaseResolution(
     viteBaseUrl = resolveViteApiBaseUrl(),
     localhostDefault = resolveLocalhostDefaultApiBaseUrl()): ApiBaseResolution {
-  const normalizedVite = viteBaseUrl.trim();
+  const normalizedVite = normalizeViteApiBaseUrl(viteBaseUrl);
   if (normalizedVite.length > 0) {
     return {baseUrl: normalizedVite, error: null, source: 'vite'};
   }
@@ -517,7 +539,17 @@ async function requestJson<T>(
   if (!response.ok) {
     throw new Error(await parseApiError(response));
   }
-  return (await response.json()) as T;
+
+  const cloned = response.clone();
+  try {
+    return (await response.json()) as T;
+  } catch {
+    const contentType = response.headers.get('content-type') ?? 'unknown';
+    const bodyPreview = (await cloned.text()).slice(0, 80).trim();
+    throw new Error(
+        `Expected JSON response from ${path} but received ${contentType}. ` +
+        `Body starts with: ${bodyPreview}`);
+  }
 }
 
 export async function fetchApiJson<T>(

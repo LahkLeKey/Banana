@@ -7,10 +7,8 @@ import {defineConfig, loadEnv} from 'vite';
 // Spec 133: vendor manualChunks for smaller initial JS transfer.
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
-  const resolvedApiBaseUrl = env.VITE_BANANA_API_BASE_URL?.trim() ||
-      (process.env.VERCEL_ENV === 'preview' ?
-           'https://staging-api.banana.engineer' :
-           'https://api.banana.engineer');
+  const resolvedApiBaseUrl =
+      env.VITE_BANANA_API_BASE_URL?.trim() || 'https://api.banana.engineer';
 
   const engineAssetVersion =
       process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ?? 'local-dev';

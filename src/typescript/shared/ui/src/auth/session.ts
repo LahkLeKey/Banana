@@ -1,9 +1,33 @@
 export const BANANA_AUTH_TOKEN_STORAGE_KEY = 'banana-auth-token';
-export const BANANA_AUTH_STEAM_ID_STORAGE_KEY = 'banana-auth-steam-id';
+export const BANANA_AUTH_SUBJECT_STORAGE_KEY = 'banana-auth-subject';
 
 export type AuthSession = {
-  token: string; steamId: string;
+  token: string; subject: string;
 };
+
+export type AuthProvider = 'github'|'google'|'linkedin';
+
+type BrowserWindowWithAuthSession = Window&{
+  __bananaAuthSession?: AuthSession|null;
+};
+
+function readBrowserAuthSession(): AuthSession|null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const browserWindow = window as BrowserWindowWithAuthSession;
+  return browserWindow.__bananaAuthSession ?? null;
+}
+
+function writeBrowserAuthSession(session: AuthSession|null): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const browserWindow = window as BrowserWindowWithAuthSession;
+  browserWindow.__bananaAuthSession = session;
+}
 
 function normalizeHash(rawHash: string): URLSearchParams {
   const value = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
@@ -17,31 +41,25 @@ export function parseAuthCallbackHash(rawHash: string): AuthSession|null {
     return null;
   }
 
-  const steamId =
-      (params.get('steam_id') ?? params.get('steamId') ?? '').trim();
+  const subject =
+      (params.get('subject') ?? params.get('sub') ?? params.get('player_id') ??
+       params.get('steam_id') ?? params.get('steamId') ?? 'authenticated-user')
+          .trim();
   return {
     token,
-    steamId,
+    subject,
   };
 }
 
 export function readStoredAuthSession(): AuthSession|null {
-  if (typeof window === 'undefined') {
+  const activeAuthSession = readBrowserAuthSession();
+  if (!activeAuthSession?.token) {
     return null;
   }
 
-  const token =
-      window.localStorage.getItem(BANANA_AUTH_TOKEN_STORAGE_KEY)?.trim() ?? '';
-  if (!token) {
-    return null;
-  }
-
-  const steamId =
-      window.localStorage.getItem(BANANA_AUTH_STEAM_ID_STORAGE_KEY)?.trim() ??
-      '';
   return {
-    token,
-    steamId,
+    token: activeAuthSession.token,
+    subject: activeAuthSession.subject,
   };
 }
 
@@ -50,23 +68,14 @@ export function hasStoredAuthSession(): boolean {
 }
 
 export function storeAuthSession(session: AuthSession): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(
-      BANANA_AUTH_TOKEN_STORAGE_KEY, session.token.trim());
-  window.localStorage.setItem(
-      BANANA_AUTH_STEAM_ID_STORAGE_KEY, session.steamId.trim());
+  writeBrowserAuthSession({
+    token: session.token.trim(),
+    subject: session.subject.trim(),
+  });
 }
 
 export function clearStoredAuthSession(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.removeItem(BANANA_AUTH_TOKEN_STORAGE_KEY);
-  window.localStorage.removeItem(BANANA_AUTH_STEAM_ID_STORAGE_KEY);
+  writeBrowserAuthSession(null);
 }
 
 export function resolveLoginReturnToUrl(): string {
@@ -77,12 +86,17 @@ export function resolveLoginReturnToUrl(): string {
   return `${window.location.origin}/login`;
 }
 
-export function buildSteamAuthStartUrl(
-    apiBaseUrl: string, returnTo: string): string {
-  const url = new URL('/auth/steam/start', apiBaseUrl);
+export function buildAuthStartUrl(
+    apiBaseUrl: string, returnTo: string, provider?: AuthProvider): string {
+  const url = new URL('/auth/keycloak/start', apiBaseUrl);
   url.searchParams.set('returnTo', returnTo);
+  if (provider) {
+    url.searchParams.set('provider', provider);
+  }
   return url.toString();
 }
+
+export const buildSteamAuthStartUrl = buildAuthStartUrl;
 
 export async function validateAuthSession(
     apiBaseUrl: string, token: string): Promise<boolean> {

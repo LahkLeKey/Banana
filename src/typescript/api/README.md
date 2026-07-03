@@ -102,10 +102,17 @@ fly releases rollback <version> -a banana-api
 
 ## Auth/session endpoints
 
-- `GET /auth/steam/start` starts Steam OpenID login.
-- `GET /auth/steam/callback` validates Steam OpenID and issues JWT.
+- `GET /auth/keycloak/start` starts Keycloak OIDC Authorization Code flow.
+- `GET /auth/keycloak/callback` exchanges authorization code with Keycloak and issues Banana JWT.
 - `GET /auth/session` validates active session state.
 - `POST /auth/logout` revokes active session state.
+
+Optional query parameters on `GET /auth/keycloak/start`:
+
+- `returnTo`: browser destination after callback token handoff.
+- `provider`: identity provider alias to pass through to Keycloak as `kc_idp_hint` (for example `github`, `google`, `linkedin`).
+
+Keycloak realm management is the source of truth for identity providers, user login policies, and realm-level auth behavior. API auth integration should consume that realm contract rather than duplicating provider-specific logic in this service.
 
 Session persistence uses PostgreSQL when `NEON_DATABASE_URL` (or
 `DATABASE_URL` / `BANANA_PG_CONNECTION`) is present, with a memory fallback for

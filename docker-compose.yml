@@ -59,6 +59,10 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:banana@banana-postgres:5432/postgres}
       BANANA_PG_CONNECTION: ${BANANA_PG_CONNECTION:-postgres://postgres:banana@banana-postgres:5432/postgres}
       BANANA_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
+      BANANA_JWT_SECRET: banana-local-jwt-secret
+      BANANA_KEYCLOAK_CLIENT_ID: banana-react-spa
+      BANANA_KEYCLOAK_ISSUER_URL: http://localhost:8080/realms/banana
+      BANANA_KEYCLOAK_TOKEN_ISSUER_URL: http://keycloak-local:8080/realms/banana
     ports:
       - "8081:8081"
     depends_on:
@@ -83,5 +87,59 @@ services:
     volumes:
       - .:/workspace
 
+  keycloak-postgres:
+    image: postgres:17
+    profiles:
+      - keycloak-local
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: keycloak
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "5433:5432"
+    volumes:
+      - keycloak-postgres-data:/var/lib/postgresql/data
+
+  keycloak-local:
+    build:
+      context: .
+      dockerfile: docker/keycloak.Dockerfile
+    profiles:
+      - keycloak-local
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-zephrym}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT: "false"
+      BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID: ${BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID:-}
+      BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET: ${BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET:-}
+      BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_ID: ${BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_ID:-}
+      BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_SECRET: ${BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_SECRET:-}
+      BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_ID: ${BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_ID:-}
+      BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_SECRET: ${BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_SECRET:-}
+      BANANA_KEYCLOAK_IDP_LINKEDIN_AUTH_URL: ${BANANA_KEYCLOAK_IDP_LINKEDIN_AUTH_URL:-https://www.linkedin.com/oauth/v2/authorization}
+      BANANA_KEYCLOAK_IDP_LINKEDIN_TOKEN_URL: ${BANANA_KEYCLOAK_IDP_LINKEDIN_TOKEN_URL:-https://www.linkedin.com/oauth/v2/accessToken}
+      BANANA_KEYCLOAK_IDP_LINKEDIN_USERINFO_URL: ${BANANA_KEYCLOAK_IDP_LINKEDIN_USERINFO_URL:-https://api.linkedin.com/v2/userinfo}
+      BANANA_KEYCLOAK_IDP_LINKEDIN_JWKS_URL: ${BANANA_KEYCLOAK_IDP_LINKEDIN_JWKS_URL:-https://www.linkedin.com/oauth/openid/jwks}
+      BANANA_KEYCLOAK_IDP_LINKEDIN_ISSUER: ${BANANA_KEYCLOAK_IDP_LINKEDIN_ISSUER:-https://www.linkedin.com}
+    depends_on:
+      keycloak-postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
 volumes:
   banana-postgres-data:
+  keycloak-postgres-data:

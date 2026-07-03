@@ -93,9 +93,9 @@ export function PlayerPortalPage() {
         return (
             <RouteShell background={shellStyle.background as string}>
                 <RoutePanel width="min(100%, 1100px)">
-                    <RouteTitle>Steam login required</RouteTitle>
+                    <RouteTitle>Login required</RouteTitle>
                     <RouteBody>
-                        Sign in with Steam to view your account details and gameplay stats.
+                        Sign in to view your account details and gameplay stats.
                     </RouteBody>
                     <div style={{ marginTop: 18 }}>
                         <RouteActionLink href="/login" tone="primary">Continue to login</RouteActionLink>
@@ -132,7 +132,7 @@ export function PlayerPortalPage() {
                     <RouteInfoGrid>
                         <RouteInfoCard title="Identity">
                             <dl style={dlStyle}>
-                                <div style={rowStyle}><dt style={dtStyle}>Steam ID</dt><dd style={ddStyle}>{account.playerId}</dd></div>
+                                <div style={rowStyle}><dt style={dtStyle}>Player ID</dt><dd style={ddStyle}>{account.playerId}</dd></div>
                                 <div style={rowStyle}><dt style={dtStyle}>Status</dt><dd style={ddStyle}>{account.accountStatus}</dd></div>
                                 <div style={rowStyle}><dt style={dtStyle}>Version</dt><dd style={ddStyle}>{account.version}</dd></div>
                             </dl>

@@ -50,8 +50,8 @@ export async function ensureGameSessionBootstrap(
 
   const requestedPlayerName = (options.playerName ?? '').trim();
   const fallbackPlayerName = requestedPlayerName ||
-      (authSession.steamId?.trim() ?
-           `steam-${authSession.steamId.trim().slice(-4)}` :
+      (authSession.subject?.trim() ?
+           `player-${authSession.subject.trim().slice(-4)}` :
            'player');
 
   try {

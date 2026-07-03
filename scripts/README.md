@@ -7,6 +7,7 @@
 - `run-war-test-suites.sh`: scenario-suite orchestrator for the feedback loop factory (`focused`, `evidence`, `soak`, `gameplay`, `legacy`, `mmo-only`) with optional scenario overrides (`warfront`, `negotiate`, `comeback`, `flank`, `pressure`, `truce`, `rally`) and optional `--script-dir` (`<scenario>.dx12play`) execution.
 - `run-native-coverage.sh`: configures a coverage-enabled native build, runs the native test suite, and exports HTML/text coverage artifacts that can be run locally or in CI.
 - `run-native-coverage-ci-container.sh`: builds a CI-parity Ubuntu container and runs the native coverage workflow inside Docker before pushing.
+- `keycloak-fly-github-idp.sh`: reconciles the `github` identity provider in Fly-hosted Keycloak realms using the admin REST API.
 - `refresh-coherent-world-evidence.sh`: refreshes 031 evidence artifacts by capturing feedback-loop suite output logs, optionally forwarding `BANANA_NATIVE_FEEDBACK_SCRIPT_DIR` into suite runs.
 - `refresh-coherent-world-api-baselines.sh`: refreshes 031 API unit/integration evidence artifacts.
 - `panels-storybook-build.sh`: builds static Storybook assets for `@banana/panels` into `artifacts/storybook/panels-static`.

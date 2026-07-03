@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ErrorText } from "../components/ErrorText";
 import { tokens } from "../tokens";
 import { resolveApiBaseResolutionError, resolveApiBaseUrl } from "../game-engine/api";
 import {
-    buildSteamAuthStartUrl,
+    type AuthProvider,
+    buildAuthStartUrl,
     clearStoredAuthSession,
     hasStoredAuthSession,
     parseAuthCallbackHash,
@@ -23,14 +24,6 @@ export function LoginPage() {
 
     const apiBaseError = resolveApiBaseResolutionError();
     const apiBaseUrl = resolveApiBaseUrl();
-
-    const steamStartUrl = useMemo(() => {
-        if (apiBaseError) {
-            return "";
-        }
-
-        return buildSteamAuthStartUrl(apiBaseUrl, resolveLoginReturnToUrl());
-    }, [apiBaseError, apiBaseUrl]);
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -53,7 +46,7 @@ export function LoginPage() {
         }
     }, []);
 
-    const handleSteamSignIn = () => {
+    const handleIdentitySignIn = (provider?: AuthProvider) => {
         if (apiBaseError) {
             setError(apiBaseError);
             return;
@@ -65,7 +58,8 @@ export function LoginPage() {
 
         setError(null);
         setStatus("redirecting");
-        window.location.assign(steamStartUrl);
+        const loginUrl = buildAuthStartUrl(apiBaseUrl, resolveLoginReturnToUrl(), provider);
+        window.location.assign(loginUrl);
     };
 
     const handleSignOut = () => {
@@ -219,7 +213,7 @@ export function LoginPage() {
                                     textTransform: "uppercase",
                                 }}
                             >
-                                Steam OpenID login
+                                Keycloak login
                             </div>
 
                             <h1
@@ -243,7 +237,7 @@ export function LoginPage() {
                                     color: tokens.color.text.muted,
                                 }}
                             >
-                                Sign in with Steam once and the same Neon-backed player record follows you across the web client and the native shell.
+                                Sign in with Keycloak and carry a single identity context across the web client and native shell.
                             </p>
 
                             <div
@@ -255,7 +249,7 @@ export function LoginPage() {
                                 }}
                             >
                                 {[
-                                    ["Shared auth", "One Steam identity for desktop and web."],
+                                    ["Shared auth", "One identity authority for desktop and web."],
                                     ["Neon storage", "User state and session rows live in the Neon-backed store."],
                                     ["Fast handoff", "The callback returns a signed JWT for the game viewport."],
                                 ].map(([title, body]) => (
@@ -328,7 +322,7 @@ export function LoginPage() {
                                     lineHeight: 1.04,
                                 }}
                             >
-                                Steam session ready.
+                                Identity session ready.
                             </h2>
                             <p
                                 style={{
@@ -351,10 +345,10 @@ export function LoginPage() {
                                 }}
                             >
                                 <div style={{ color: "#a7f3d0", fontWeight: tokens.font.weight.semibold }}>
-                                    Steam identity cached
+                                    Identity session cached
                                 </div>
                                 <div style={{ marginTop: 6, color: "#d1fae5", lineHeight: 1.5 }}>
-                                    Your signed token is stored locally. Launch the game viewport or sign out to swap accounts.
+                                    Your signed token is cached in memory for this tab. Launch the game viewport or sign out to swap accounts.
                                 </div>
                             </div>
                         ) : (
@@ -370,7 +364,7 @@ export function LoginPage() {
                                     Ready to connect
                                 </div>
                                 <div style={{ marginTop: 6, color: "#fef3c7", lineHeight: 1.5 }}>
-                                    Steam OpenID will hand control back to <span style={{ fontFamily: "monospace" }}>{resolveLoginReturnToUrl()}</span> after verification.
+                                    Keycloak will hand control back to <span style={{ fontFamily: "monospace" }}>{resolveLoginReturnToUrl()}</span> after verification.
                                 </div>
                             </div>
                         )}
@@ -398,7 +392,7 @@ export function LoginPage() {
 
                             <button
                                 type="button"
-                                onClick={handleSteamSignIn}
+                                onClick={() => handleIdentitySignIn("github")}
                                 disabled={Boolean(apiBaseError) || status === "redirecting"}
                                 style={{
                                     border: "none",
@@ -415,7 +409,55 @@ export function LoginPage() {
                                     boxShadow: "0 16px 30px rgba(15, 118, 110, 0.28)",
                                 }}
                             >
-                                {status === "redirecting" ? "Redirecting to Steam..." : "Continue with Steam"}
+                                {status === "redirecting" ? "Redirecting to GitHub..." : "Continue with GitHub"}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => handleIdentitySignIn("google")}
+                                disabled={Boolean(apiBaseError) || status === "redirecting"}
+                                style={{
+                                    borderRadius: 18,
+                                    padding: "14px 18px",
+                                    background: "transparent",
+                                    color: "#ffffff",
+                                    border: "1px solid rgba(148, 163, 184, 0.26)",
+                                    cursor: Boolean(apiBaseError) || status === "redirecting" ? "not-allowed" : "pointer",
+                                }}
+                            >
+                                Continue with Google
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => handleIdentitySignIn("linkedin")}
+                                disabled={Boolean(apiBaseError) || status === "redirecting"}
+                                style={{
+                                    borderRadius: 18,
+                                    padding: "14px 18px",
+                                    background: "transparent",
+                                    color: "#ffffff",
+                                    border: "1px solid rgba(148, 163, 184, 0.26)",
+                                    cursor: Boolean(apiBaseError) || status === "redirecting" ? "not-allowed" : "pointer",
+                                }}
+                            >
+                                Continue with LinkedIn
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => handleIdentitySignIn()}
+                                disabled={Boolean(apiBaseError) || status === "redirecting"}
+                                style={{
+                                    borderRadius: 18,
+                                    padding: "14px 18px",
+                                    background: "transparent",
+                                    color: tokens.color.text.muted,
+                                    border: "1px solid rgba(148, 163, 184, 0.26)",
+                                    cursor: Boolean(apiBaseError) || status === "redirecting" ? "not-allowed" : "pointer",
+                                }}
+                            >
+                                Continue with Keycloak
                             </button>
 
                             <button
@@ -446,7 +488,7 @@ export function LoginPage() {
                                 fontSize: tokens.font.size.sm,
                             }}
                         >
-                            The API deployment owns the auth redirect. Neon stores the player record while the Steam callback mints the short-lived game token.
+                            The API deployment owns the auth redirect. Neon stores the player record while the Keycloak callback mints the short-lived game token.
                         </div>
                     </aside>
                 </section>

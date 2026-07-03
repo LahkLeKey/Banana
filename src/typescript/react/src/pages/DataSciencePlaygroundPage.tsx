@@ -25,6 +25,7 @@ import { useNotebookLayoutStore } from '../lib/notebook-client/layoutStore';
 import { resolveRouteHudPreset, type NotebookRouteMode } from '../lib/notebook-client/routeModeConfig';
 import { useNotebookWindowOrchestrator, type NotebookHudPanelId } from '../lib/notebook-client/useNotebookWindowOrchestrator';
 import { useNotebookClient } from '../lib/notebook-client/useNotebookClient';
+import { clearStoredAuthSession, readStoredAuthSession } from '@banana/ui';
 
 const SafeNotebookGameplaySurface =
     withErrorBoundary(NotebookGameplaySurface, {
@@ -172,6 +173,59 @@ const DEFAULT_NOTEBOOK_ANALYTICS_TELEMETRY: NotebookAnalyticsTelemetry = {
     abiLayerLedger: [],
 };
 
+const topBarAccountStyle: CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+};
+
+const topBarIdentityPillStyle: CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 8,
+    border: '1px solid rgba(45, 212, 191, 0.18)',
+    background: 'rgba(8, 13, 28, 0.38)',
+    color: '#a7f3d0',
+    padding: '4px 8px',
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+};
+
+const topBarIconStyle: CSSProperties = {
+    fontSize: 12,
+    lineHeight: 1,
+};
+
+const topBarIdentityTextStyle: CSSProperties = {
+    lineHeight: 1,
+};
+
+const topBarIconButtonStyle: CSSProperties = {
+    borderRadius: 8,
+    border: '1px solid rgba(148, 163, 184, 0.22)',
+    background: 'rgba(8, 13, 28, 0.35)',
+    color: '#94a3b8',
+    width: 30,
+    height: 28,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    fontSize: 14,
+    lineHeight: 1,
+};
+
+const topBarIconButtonDangerStyle: CSSProperties = {
+    ...topBarIconButtonStyle,
+    borderColor: 'rgba(248, 113, 113, 0.32)',
+    background: 'rgba(127, 29, 29, 0.2)',
+    color: '#fecaca',
+};
+
 export function DataSciencePlaygroundPage() {
     const location = useLocation();
     const { loading, manifest, manifestError, manifestSource, notebookError, notebookSource, cellLookup, notebookCellCount } = useNotebookClient();
@@ -218,6 +272,7 @@ export function DataSciencePlaygroundPage() {
     );
 
     const routeHudPreset = useMemo(() => resolveRouteHudPreset(location.pathname), [location.pathname]);
+    const authSession = useMemo(() => readStoredAuthSession(), []);
 
     const allFiles = useMemo(() => manifest?.files ?? [], [manifest?.files]);
 
@@ -231,7 +286,7 @@ export function DataSciencePlaygroundPage() {
 
     const handleSelectFile = useCallback((file: string) => {
         setSelectedFile(file);
-        setRecentFiles(prev => [file, ...prev.filter(f => f !== file)].slice(0, 8));
+        setRecentFiles((previous) => [file, ...previous.filter((recentFile) => recentFile !== file)].slice(0, 8));
     }, []);
 
     const handleResetAllSectors = useCallback(() => {
@@ -678,6 +733,13 @@ export function DataSciencePlaygroundPage() {
         resetToken: panelResetTokens[dock.id],
     }));
 
+    const handleSignOut = () => {
+        clearStoredAuthSession();
+        if (typeof window !== 'undefined') {
+            window.location.assign('/login');
+        }
+    };
+
     return (
         <main style={shellStyle}>
             <section style={stageStyle}>
@@ -689,7 +751,46 @@ export function DataSciencePlaygroundPage() {
                     selectedNodeFile={selectedFile}
                     onSelectNodeFile={handleSelectFile}
                     onResetSectors={handleResetAllSectors}
-                />
+                >
+                    <div style={topBarAccountStyle} aria-label="Account actions">
+                        {authSession?.subject ? (
+                            <div style={topBarIdentityPillStyle} title={authSession.subject}>
+                                <span style={topBarIconStyle}>◉</span>
+                                <span style={topBarIdentityTextStyle}>Signed in</span>
+                            </div>
+                        ) : null}
+                        <button
+                            type="button"
+                            title="Open profile"
+                            aria-label="Open profile"
+                            style={topBarIconButtonStyle}
+                            onClick={() => window.location.assign('/profile')}
+                        >
+                            ☺
+                        </button>
+                        {authSession?.token ? (
+                            <button
+                                type="button"
+                                title="Sign out"
+                                aria-label="Sign out"
+                                style={topBarIconButtonDangerStyle}
+                                onClick={handleSignOut}
+                            >
+                                ⎋
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                title="Sign in"
+                                aria-label="Sign in"
+                                style={topBarIconButtonStyle}
+                                onClick={() => window.location.assign('/login')}
+                            >
+                                ↗
+                            </button>
+                        )}
+                    </div>
+                </RouteTopBar>
 
                 <SafeNotebookGameplaySurface
                     selectedFile={selectedFile}
