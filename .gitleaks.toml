@@ -1,5 +1,17 @@
 title = "Banana secret scan allowlist"
 
+[[rules]]
+id = "hardcoded-password-default-shell"
+description = "Flags shell env expansions that set a literal fallback for password variables"
+regex = '''(?i)\b[A-Z0-9_]*PASSWORD\b\s*=\s*"\$\{[A-Z0-9_]+:-[^}\"$][^}\"]*\}"'''
+tags = ["password", "hardcoded", "shell"]
+
+[[rules]]
+id = "hardcoded-password-default-compose"
+description = "Flags docker-compose style literal defaults for password variables"
+regex = '''(?i)\b[A-Z0-9_]*PASSWORD\b\s*:\s*\$\{[A-Z0-9_]+:-[^}\"$][^}]*\}'''
+tags = ["password", "hardcoded", "compose"]
+
 [allowlist]
 description = "Documented placeholders used in runbooks and examples"
 paths = [
