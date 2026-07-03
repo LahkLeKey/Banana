@@ -1,9 +1,11 @@
 type ParsedOriginPattern = {
-  protocol: string; host: string; port: string;
+  protocol: string;
+  host: string;
+  port: string;
   wildcardHostSuffix: string | null;
 };
 
-function parseOriginPattern(pattern: string): ParsedOriginPattern|null {
+function parseOriginPattern(pattern: string): ParsedOriginPattern | null {
   try {
     const parsed = new URL(pattern);
     if (parsed.pathname !== '/' || parsed.search.length > 0 ||
@@ -49,15 +51,12 @@ function matchesOriginPattern(
   return normalizedOriginHost === pattern.host;
 }
 
-export function buildCorsOriginMatcher(originsEnv: string): (origin: string) =>
-    boolean {
-  const patterns =
-      originsEnv.split(',')
-          .map((entry) => entry.trim())
-          .filter(Boolean)
-          .map(parseOriginPattern)
-          .filter(
-              (pattern): pattern is ParsedOriginPattern => pattern !== null);
+export function buildCorsOriginMatcher(originsEnv: string): (origin: string) => boolean {
+  const patterns = originsEnv.split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .map(parseOriginPattern)
+      .filter((pattern): pattern is ParsedOriginPattern => pattern !== null);
 
   return (origin: string) => {
     const normalizedOrigin = origin.trim();
@@ -72,8 +71,8 @@ export function buildCorsOriginMatcher(originsEnv: string): (origin: string) =>
         return false;
       }
 
-      return patterns.some(
-          (pattern) => matchesOriginPattern(parsedOrigin, pattern));
+      return patterns.some((pattern) =>
+        matchesOriginPattern(parsedOrigin, pattern));
     } catch {
       return false;
     }
