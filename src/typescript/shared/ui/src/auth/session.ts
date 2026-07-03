@@ -1,13 +1,33 @@
 export const BANANA_AUTH_TOKEN_STORAGE_KEY = 'banana-auth-token';
 export const BANANA_AUTH_SUBJECT_STORAGE_KEY = 'banana-auth-subject';
 
-let activeAuthSession: AuthSession|null = null;
-
 export type AuthSession = {
   token: string; subject: string;
 };
 
 export type AuthProvider = 'github'|'google'|'linkedin';
+
+type BrowserWindowWithAuthSession = Window & {
+  __bananaAuthSession?: AuthSession|null;
+};
+
+function readBrowserAuthSession(): AuthSession|null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const browserWindow = window as BrowserWindowWithAuthSession;
+  return browserWindow.__bananaAuthSession ?? null;
+}
+
+function writeBrowserAuthSession(session: AuthSession|null): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const browserWindow = window as BrowserWindowWithAuthSession;
+  browserWindow.__bananaAuthSession = session;
+}
 
 function normalizeHash(rawHash: string): URLSearchParams {
   const value = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
@@ -32,6 +52,7 @@ export function parseAuthCallbackHash(rawHash: string): AuthSession|null {
 }
 
 export function readStoredAuthSession(): AuthSession|null {
+  const activeAuthSession = readBrowserAuthSession();
   if (!activeAuthSession?.token) {
     return null;
   }
@@ -47,14 +68,14 @@ export function hasStoredAuthSession(): boolean {
 }
 
 export function storeAuthSession(session: AuthSession): void {
-  activeAuthSession = {
+  writeBrowserAuthSession({
     token: session.token.trim(),
     subject: session.subject.trim(),
-  };
+  });
 }
 
 export function clearStoredAuthSession(): void {
-  activeAuthSession = null;
+  writeBrowserAuthSession(null);
 }
 
 export function resolveLoginReturnToUrl(): string {

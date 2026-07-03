@@ -7,13 +7,19 @@ export type AuthSessionInsert = {
   sessionId?: string;
 };
 
+export type LegacyAuthSessionInsert = {
+  steamId: string; tokenHash: string; expiresAt: Date;
+  sessionId?: string;
+};
+
 export type AuthSessionStore = {
   upsertIdentityUser: (identityId: string) => Promise<void>;
   createIdentitySession: (input: AuthSessionInsert) => Promise<void>;
 
   // Backward-compatible aliases while non-auth routes migrate.
   upsertSteamUser: (steamId: string) => Promise<void>;
-  createSession: (input: AuthSessionInsert) => Promise<void>;
+  createSession: (input: AuthSessionInsert|LegacyAuthSessionInsert) =>
+      Promise<void>;
   touchActiveSessionByTokenHash: (tokenHash: string, seenAt: Date) =>
       Promise<boolean>;
   revokeSessionByTokenHash: (tokenHash: string, revokedAt: Date) =>
@@ -93,8 +99,9 @@ class MemoryAuthSessionStore implements AuthSessionStore {
     await this.upsertIdentityUser(steamId);
   }
 
-  async createSession(input: AuthSessionInsert): Promise<void> {
-    await this.createIdentitySession(input);
+  async createSession(input: AuthSessionInsert|LegacyAuthSessionInsert):
+      Promise<void> {
+    await this.createIdentitySession(normalizeSessionInsert(input));
   }
 
   async touchActiveSessionByTokenHash(tokenHash: string, seenAt: Date):
@@ -192,8 +199,9 @@ class PostgresAuthSessionStore implements AuthSessionStore {
     await this.upsertIdentityUser(steamId);
   }
 
-  async createSession(input: AuthSessionInsert): Promise<void> {
-    await this.createIdentitySession(input);
+  async createSession(input: AuthSessionInsert|LegacyAuthSessionInsert):
+      Promise<void> {
+    await this.createIdentitySession(normalizeSessionInsert(input));
   }
 
   async touchActiveSessionByTokenHash(tokenHash: string, seenAt: Date):
@@ -245,6 +253,17 @@ async function createPostgresPool(databaseUrl: string):
     connectionTimeoutMillis:
         Number(process.env.BANANA_AUTH_STORE_CONNECT_TIMEOUT_MS ?? 8_000),
   });
+}
+
+function normalizeSessionInsert(input: AuthSessionInsert|LegacyAuthSessionInsert):
+    AuthSessionInsert {
+  const identityId = 'identityId' in input ? input.identityId : input.steamId;
+  return {
+    identityId,
+    tokenHash: input.tokenHash,
+    expiresAt: input.expiresAt,
+    sessionId: input.sessionId,
+  };
 }
 
 export async function getAuthSessionStore(): Promise<AuthSessionStore> {

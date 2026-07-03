@@ -7,7 +7,7 @@ APP_NAME="${FLY_APP_NAME:-banana-keycloak-prod}"
 BASE_URL="${BANANA_KEYCLOAK_BASE_URL:-https://kc-idp.banana.engineer}"
 KEYCLOAK_ENV="${BANANA_KEYCLOAK_ENV:-prod}"
 KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN:-zephrym}"
-KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-4xcruvfg989}"
+KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-}"
 
 CLIENT_ID=""
 CLIENT_SECRET=""
@@ -24,7 +24,7 @@ Optional:
   --app-name <value>        Fly app name (default: banana-keycloak-prod)
   --base-url <value>        Keycloak base URL (default: https://kc-idp.banana.engineer)
   --admin-user <value>      Keycloak admin username (default: zephrym)
-  --admin-password <value>  Keycloak admin password
+  --admin-password <value>  Keycloak admin password (required)
   --help                    Show this help message
 
 What this script does:
@@ -74,6 +74,11 @@ done
 if [[ -z "${CLIENT_ID}" || -z "${CLIENT_SECRET}" ]]; then
   echo "[keycloak-prod-github-sync] ERROR: both --client-id and --client-secret are required." >&2
   print_usage
+  exit 1
+fi
+
+if [[ -z "${KEYCLOAK_ADMIN_PASSWORD}" ]]; then
+  echo "[keycloak-prod-github-sync] ERROR: set KEYCLOAK_ADMIN_PASSWORD or pass --admin-password." >&2
   exit 1
 fi
 

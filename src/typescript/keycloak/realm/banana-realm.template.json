@@ -20,6 +20,7 @@
             "redirectUris": [
                 "https://banana.engineer/*",
                 "https://www.banana.engineer/*",
+                "https://api.banana.engineer/auth/keycloak/callback*",
                 "https://*.vercel.app/*",
                 "http://localhost:5173/*",
                 "http://localhost:8081/auth/keycloak/callback*"

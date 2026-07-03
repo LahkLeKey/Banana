@@ -206,15 +206,17 @@ type RouteTextInputProps = {
     readonly onChange: (value: string) => void;
     readonly maxLength?: number;
     readonly width?: string;
+    readonly placeholder?: string;
 };
 
-export function RouteTextInput({ value, onChange, maxLength, width = 'min(420px, 100%)' }: RouteTextInputProps) {
+export function RouteTextInput({ value, onChange, maxLength, width = 'min(420px, 100%)', placeholder }: RouteTextInputProps) {
     return (
         <input
             type="text"
             value={value}
             onChange={(event) => onChange(event.target.value)}
             maxLength={maxLength}
+            placeholder={placeholder}
             style={{
                 marginTop: 8,
                 width,
