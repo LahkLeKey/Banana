@@ -24,6 +24,7 @@ Keycloak assets in this repository:
 - Local startup helper: scripts/keycloak-local.sh
 - Local readiness check: scripts/check-keycloak-local.sh
 - Fly deployment guide: docs/keycloak/fly-deployment.md
+- API Fly deployment guide: docs/keycloak/fly-api-deployment.md
 - Identity providers guide: docs/keycloak/identity-providers.md
 
 Realm-level provider and user-login behavior should be changed in the realm template and imported into Keycloak, then consumed by app code through the start/callback contract.
