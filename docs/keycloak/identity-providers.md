@@ -59,9 +59,25 @@ Examples:
 
 ## Production Fly setup (GitHub)
 
-Use the Fly Keycloak app callback URI in your GitHub OAuth App for production:
+Create a dedicated GitHub OAuth App for production and set its callback to your production Keycloak domain:
+
+- `https://kc-idp.banana.engineer/realms/banana/broker/github/endpoint`
+
+If you use the Fly app domain directly, use:
 
 - `https://banana-keycloak-prod.fly.dev/realms/banana/broker/github/endpoint`
+
+### One-command prod sync (recommended)
+
+After creating the GitHub OAuth App, run:
+
+```bash
+bash scripts/keycloak-fly-prod-github-oauth-sync.sh \
+	--client-id "<new-prod-client-id>" \
+	--client-secret "<new-prod-client-secret>"
+```
+
+This command stores credentials as Fly secrets and then updates the Keycloak GitHub IdP.
 
 Deploy and sync Keycloak + GitHub IdP in one flow:
 
@@ -90,6 +106,8 @@ export BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET="<github-client-secret>"
 
 bash scripts/keycloak-fly-github-idp.sh
 ```
+
+If you also want Fly secrets updated in this path, use the one-command prod sync above.
 
 ## LinkedIn endpoint overrides (optional)
 
