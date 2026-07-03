@@ -7,7 +7,7 @@ export type AuthSession = {
 
 export type AuthProvider = 'github'|'google'|'linkedin';
 
-type BrowserWindowWithAuthSession = Window & {
+type BrowserWindowWithAuthSession = Window&{
   __bananaAuthSession?: AuthSession|null;
 };
 

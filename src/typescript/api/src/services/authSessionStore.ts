@@ -255,8 +255,8 @@ async function createPostgresPool(databaseUrl: string):
   });
 }
 
-function normalizeSessionInsert(input: AuthSessionInsert|LegacyAuthSessionInsert):
-    AuthSessionInsert {
+function normalizeSessionInsert(
+    input: AuthSessionInsert|LegacyAuthSessionInsert): AuthSessionInsert {
   const identityId = 'identityId' in input ? input.identityId : input.steamId;
   return {
     identityId,

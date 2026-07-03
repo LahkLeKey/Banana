@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_CMD=(docker compose --profile keycloak-local)
 REALM="${BANANA_KEYCLOAK_REALM:-banana}"
 ADMIN_USER="${KEYCLOAK_ADMIN:-zephrym}"
-ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-4xcruvfg989}"
+ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-}"
 ENV_FILE="${BANANA_KEYCLOAK_ENV_FILE:-${ROOT_DIR}/.env.keycloak.local}"
 
 REDIRECT_URIS='["https://banana.engineer/*","https://www.banana.engineer/*","https://*.vercel.app/*","http://localhost:5173/*","http://localhost:8081/auth/keycloak/callback*"]'
@@ -31,6 +31,13 @@ load_env_file() {
     echo "[keycloak-bootstrap] loaded env file ${ENV_FILE}"
   else
     echo "[keycloak-bootstrap] env file not found at ${ENV_FILE}; using current shell env"
+  fi
+}
+
+ensure_admin_password() {
+  if [[ -z "${ADMIN_PASSWORD}" ]]; then
+    echo "[keycloak-bootstrap] ERROR: KEYCLOAK_ADMIN_PASSWORD is required (export it or set it in ${ENV_FILE})." >&2
+    exit 1
   fi
 }
 
@@ -125,6 +132,103 @@ upsert_github_idp() {
   echo "[keycloak-bootstrap] ensured github idp"
 }
 
+upsert_google_idp() {
+  local client_id="${BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_ID:-}"
+  local client_secret="${BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_SECRET:-}"
+
+  if [[ -z "${client_id}" || -z "${client_secret}" ]]; then
+    echo "[keycloak-bootstrap] google idp skipped (missing BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_ID/SECRET)"
+    return
+  fi
+
+  if kcadm get "identity-provider/instances/google" -r "${REALM}" >/dev/null 2>&1; then
+    kcadm update "identity-provider/instances/google" -r "${REALM}" \
+      -s enabled=true \
+      -s trustEmail=true \
+      -s updateProfileFirstLoginMode=on \
+      -s authenticateByDefault=false \
+      -s linkOnly=false \
+      -s firstBrokerLoginFlowAlias='first broker login' \
+      -s "config.clientId=${client_id}" \
+      -s "config.clientSecret=${client_secret}" \
+      -s 'config.defaultScope=openid profile email' \
+      -s 'config.useJwksUrl=true'
+  else
+    kcadm create identity-provider/instances -r "${REALM}" \
+      -s alias=google \
+      -s providerId=google \
+      -s enabled=true \
+      -s trustEmail=true \
+      -s updateProfileFirstLoginMode=on \
+      -s authenticateByDefault=false \
+      -s linkOnly=false \
+      -s firstBrokerLoginFlowAlias='first broker login' \
+      -s "config.clientId=${client_id}" \
+      -s "config.clientSecret=${client_secret}" \
+      -s 'config.defaultScope=openid profile email' \
+      -s 'config.useJwksUrl=true'
+  fi
+
+  echo "[keycloak-bootstrap] ensured google idp"
+}
+
+upsert_linkedin_idp() {
+  local client_id="${BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_ID:-}"
+  local client_secret="${BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_SECRET:-}"
+  local auth_url="${BANANA_KEYCLOAK_IDP_LINKEDIN_AUTH_URL:-https://www.linkedin.com/oauth/v2/authorization}"
+  local token_url="${BANANA_KEYCLOAK_IDP_LINKEDIN_TOKEN_URL:-https://www.linkedin.com/oauth/v2/accessToken}"
+  local userinfo_url="${BANANA_KEYCLOAK_IDP_LINKEDIN_USERINFO_URL:-https://api.linkedin.com/v2/userinfo}"
+  local jwks_url="${BANANA_KEYCLOAK_IDP_LINKEDIN_JWKS_URL:-https://www.linkedin.com/oauth/openid/jwks}"
+  local issuer="${BANANA_KEYCLOAK_IDP_LINKEDIN_ISSUER:-https://www.linkedin.com}"
+
+  if [[ -z "${client_id}" || -z "${client_secret}" ]]; then
+    echo "[keycloak-bootstrap] linkedin idp skipped (missing BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_ID/SECRET)"
+    return
+  fi
+
+  if kcadm get "identity-provider/instances/linkedin" -r "${REALM}" >/dev/null 2>&1; then
+    kcadm update "identity-provider/instances/linkedin" -r "${REALM}" \
+      -s enabled=true \
+      -s trustEmail=true \
+      -s updateProfileFirstLoginMode=on \
+      -s authenticateByDefault=false \
+      -s linkOnly=false \
+      -s firstBrokerLoginFlowAlias='first broker login' \
+      -s "config.clientId=${client_id}" \
+      -s "config.clientSecret=${client_secret}" \
+      -s 'config.defaultScope=openid profile email' \
+      -s "config.authorizationUrl=${auth_url}" \
+      -s "config.tokenUrl=${token_url}" \
+      -s "config.userInfoUrl=${userinfo_url}" \
+      -s "config.jwksUrl=${jwks_url}" \
+      -s "config.issuer=${issuer}" \
+      -s 'config.useJwksUrl=true' \
+      -s 'config.validateSignature=true'
+  else
+    kcadm create identity-provider/instances -r "${REALM}" \
+      -s alias=linkedin \
+      -s providerId=oidc \
+      -s enabled=true \
+      -s trustEmail=true \
+      -s updateProfileFirstLoginMode=on \
+      -s authenticateByDefault=false \
+      -s linkOnly=false \
+      -s firstBrokerLoginFlowAlias='first broker login' \
+      -s "config.clientId=${client_id}" \
+      -s "config.clientSecret=${client_secret}" \
+      -s 'config.defaultScope=openid profile email' \
+      -s "config.authorizationUrl=${auth_url}" \
+      -s "config.tokenUrl=${token_url}" \
+      -s "config.userInfoUrl=${userinfo_url}" \
+      -s "config.jwksUrl=${jwks_url}" \
+      -s "config.issuer=${issuer}" \
+      -s 'config.useJwksUrl=true' \
+      -s 'config.validateSignature=true'
+  fi
+
+  echo "[keycloak-bootstrap] ensured linkedin idp"
+}
+
 print_status() {
   echo "[keycloak-bootstrap] identity providers in realm ${REALM}:"
   kcadm get identity-provider/instances -r "${REALM}" || true
@@ -133,10 +237,13 @@ print_status() {
 bootstrap() {
   ensure_docker
   load_env_file
+  ensure_admin_password
   compose_up
   kcadm_login
   ensure_react_client_contract
   upsert_github_idp
+  upsert_google_idp
+  upsert_linkedin_idp
   print_status
   echo "[keycloak-bootstrap] done"
 }
@@ -149,6 +256,8 @@ reset_and_bootstrap() {
   kcadm_login
   ensure_react_client_contract
   upsert_github_idp
+  upsert_google_idp
+  upsert_linkedin_idp
   print_status
   echo "[keycloak-bootstrap] reset + bootstrap done"
 }
@@ -164,7 +273,10 @@ Commands:
 
 Notes:
   - Optional env file: .env.keycloak.local (override with BANANA_KEYCLOAK_ENV_FILE)
-  - Required for GitHub idp: BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID and _SECRET
+  - Required per provider:
+    GitHub: BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID and _SECRET
+    Google: BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_ID and _SECRET
+    LinkedIn: BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_ID and _SECRET
 EOF
 }
 
