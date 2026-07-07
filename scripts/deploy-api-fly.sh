@@ -38,13 +38,13 @@ if ! grep -q "internal_port = 8081" fly.toml; then
 fi
 
 if [[ "${DEPLOY_ENV}" == "prod" ]]; then
-  if ! grep -q 'BANANA_KEYCLOAK_ISSUER_URL = "https://banana-keycloak-prod.fly.dev/realms/banana"' fly.toml; then
-    echo "[fly-deploy] ERROR: prod deploy requires BANANA_KEYCLOAK_ISSUER_URL to point at banana-keycloak-prod issuer." >&2
+  if ! grep -q 'BANANA_KEYCLOAK_ISSUER_URL = "https://kc-idp.banana.engineer/realms/banana"' fly.toml; then
+    echo "[fly-deploy] ERROR: prod deploy requires BANANA_KEYCLOAK_ISSUER_URL to point at kc-idp.banana.engineer issuer." >&2
     exit 1
   fi
 
-  if ! grep -q 'BANANA_KEYCLOAK_TOKEN_ISSUER_URL = "https://banana-keycloak-prod.fly.dev/realms/banana"' fly.toml; then
-    echo "[fly-deploy] ERROR: prod deploy requires BANANA_KEYCLOAK_TOKEN_ISSUER_URL to point at banana-keycloak-prod issuer." >&2
+  if ! grep -q 'BANANA_KEYCLOAK_TOKEN_ISSUER_URL = "https://kc-idp.banana.engineer/realms/banana"' fly.toml; then
+    echo "[fly-deploy] ERROR: prod deploy requires BANANA_KEYCLOAK_TOKEN_ISSUER_URL to point at kc-idp.banana.engineer issuer." >&2
     exit 1
   fi
 

@@ -12,8 +12,8 @@ This guide defines the Banana API deployment contract for Fly production.
 
 The API must use Keycloak production issuer endpoints:
 
-- `BANANA_KEYCLOAK_ISSUER_URL=https://banana-keycloak-prod.fly.dev/realms/banana`
-- `BANANA_KEYCLOAK_TOKEN_ISSUER_URL=https://banana-keycloak-prod.fly.dev/realms/banana`
+- `BANANA_KEYCLOAK_ISSUER_URL=https://kc-idp.banana.engineer/realms/banana`
+- `BANANA_KEYCLOAK_TOKEN_ISSUER_URL=https://kc-idp.banana.engineer/realms/banana`
 - `BANANA_KEYCLOAK_CLIENT_ID=banana-react-spa`
 
 These values are pinned in `src/typescript/api/fly.toml` and validated by `scripts/deploy-api-fly.sh` when `BANANA_DEPLOY_ENV=prod` (default).

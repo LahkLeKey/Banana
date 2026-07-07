@@ -1,4 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react';
+import { Navigate } from 'react-router-dom';
 import {
     RouteActionButton,
     RouteActionsRow,
@@ -6,13 +7,15 @@ import {
     RouteEyebrow,
     RouteFieldLabel,
     RoutePanel,
-    RouteShell,
     RouteTextInput,
     RouteTitle,
     clearStoredAuthSession,
     readStoredAuthSession,
 } from '@banana/ui';
 
+import { GameplayShell } from '../components/gameplay/GameplayShell';
+import { buildProtectedLoginPath } from '../lib/authRouting';
+import { clearSelectedCharacter, readSelectedCharacter } from '../lib/gameClientFlow';
 const DISPLAY_NAME_KEY = 'banana-profile-display-name';
 
 function readDisplayName(): string {
@@ -25,9 +28,13 @@ function readDisplayName(): string {
 
 export function ProfilePage() {
     const session = useMemo(() => readStoredAuthSession(), []);
+    const activeOperator = readSelectedCharacter();
     const [displayName, setDisplayName] = useState<string>(readDisplayName());
     const [saved, setSaved] = useState(false);
 
+    if (!session?.token) {
+        return <Navigate to={buildProtectedLoginPath('/profile')} replace />;
+    }
     const handleSave = () => {
         if (typeof window === 'undefined') {
             return;
@@ -41,36 +48,21 @@ export function ProfilePage() {
 
     const handleSignOut = () => {
         clearStoredAuthSession();
+        clearSelectedCharacter();
         if (typeof window !== 'undefined') {
             window.location.assign('/login');
         }
     };
 
-    if (!session?.token) {
-        return (
-            <RouteShell background={shellStyle.background as string}>
-                <RoutePanel width="min(860px, 100%)">
-                    <RouteEyebrow color="#93c5fd">Profile</RouteEyebrow>
-                    <RouteTitle>Login required</RouteTitle>
-                    <RouteBody>Sign in to set up your local profile.</RouteBody>
-                    <RouteActionsRow marginTop={16}>
-                        <RouteActionButton onClick={() => window.location.assign('/login')} tone="primary">
-                            Go to login
-                        </RouteActionButton>
-                    </RouteActionsRow>
-                </RoutePanel>
-            </RouteShell>
-        );
-    }
-
     return (
-        <RouteShell background={shellStyle.background as string}>
-            <div style={profileNavStyle}>
-                <RouteActionButton onClick={() => window.location.assign('/')} tone="neutral">
-                    Back to runtime
-                </RouteActionButton>
-            </div>
-
+        <GameplayShell
+            routeLabel="Profile"
+            title="Basic profile"
+            subtitle="Local profile details for the current authenticated browser session."
+            activeOperator={activeOperator || undefined}
+            onSignOut={handleSignOut}
+            background={shellStyle.background as string}
+        >
             <RoutePanel width="min(920px, 100%)">
                 <RouteEyebrow color="#86efac">Authenticated</RouteEyebrow>
                 <RouteTitle>Basic Profile</RouteTitle>
@@ -102,25 +94,15 @@ export function ProfilePage() {
 
                 {saved ? <p style={savedStyle}>Profile saved locally.</p> : null}
             </RoutePanel>
-        </RouteShell>
+        </GameplayShell>
     );
 }
 
 const shellStyle: CSSProperties = {
     minHeight: '100dvh',
-    padding: '32px 20px',
-    display: 'grid',
-    placeItems: 'center',
     background:
         'radial-gradient(circle at 16% 14%, rgba(56, 189, 248, 0.18), transparent 34%), radial-gradient(circle at 86% 22%, rgba(132, 204, 22, 0.2), transparent 32%), linear-gradient(160deg, #050913 0%, #0b1530 56%, #14284a 100%)',
     color: '#f8fafc',
-};
-
-const profileNavStyle: CSSProperties = {
-    position: 'fixed',
-    top: 20,
-    left: 20,
-    zIndex: 20,
 };
 
 const identityBoxStyle: CSSProperties = {

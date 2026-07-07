@@ -10,11 +10,22 @@ describe("router", () => {
     expect(typeof mod.router.navigate).toBe("function");
   });
 
-  it("router has routes defined", async () => {
+  it("router has canonical routes defined", async () => {
     const mod = await import("./router");
-    // createBrowserRouter stores routes internally; verify the object shape
     expect(mod.router.routes).toBeDefined();
     expect(Array.isArray(mod.router.routes)).toBe(true);
     expect(mod.router.routes.length).toBeGreaterThan(0);
+
+    const routePaths = mod.router.routes.map((route: { path?: string }) => route.path).filter((path: string | undefined): path is string => Boolean(path));
+
+    expect(routePaths).toContain("/");
+    expect(routePaths).toContain("/characters");
+    expect(routePaths).toContain("/world-map");
+    expect(routePaths).toContain("/legacy");
+    expect(routePaths).toContain("/notebooks");
+    expect(routePaths).toContain("/banana-engine");
+    expect(routePaths).toContain("/session-room");
+    expect(routePaths).toContain("/login");
+    expect(routePaths).toContain("/profile");
   });
 });
