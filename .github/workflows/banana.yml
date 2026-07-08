@@ -29,6 +29,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Guard Keycloak issuer defaults
+        shell: bash
+        run: bash scripts/guard-no-localhost-keycloak-issuer.sh
+
       - name: Sanity check database alias helper
         shell: bash
         run: |

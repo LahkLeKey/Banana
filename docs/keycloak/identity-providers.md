@@ -19,9 +19,9 @@ End-user login path:
 
 This keeps all provider contracts in one place (Keycloak realm) while frontend/API remain thin consumers.
 
-## Local setup
+## Environment setup (Fly)
 
-Set these environment variables before starting local Keycloak:
+Set these environment variables before deploying Keycloak to Fly:
 
 ```bash
 export BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID="..."
@@ -34,18 +34,18 @@ export BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_ID="..."
 export BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_SECRET="..."
 ```
 
-Then restart local Keycloak import:
+Then deploy environment Keycloak:
 
 ```bash
-bash scripts/keycloak-local.sh down
-bash scripts/keycloak-local.sh up
+export BANANA_KEYCLOAK_ENV=dev
+bash scripts/deploy-keycloak-fly.sh
 ```
 
 ## OAuth redirect URI to register
 
 For each provider app, include this callback URI:
 
-- `http://localhost:8080/realms/banana/broker/<provider-alias>/endpoint`
+- `https://banana-keycloak-<env>.fly.dev/realms/banana/broker/<provider-alias>/endpoint`
 
 Provider aliases in this realm:
 - GitHub: `github`
@@ -53,9 +53,9 @@ Provider aliases in this realm:
 - LinkedIn: `linkedin`
 
 Examples:
-- `http://localhost:8080/realms/banana/broker/github/endpoint`
-- `http://localhost:8080/realms/banana/broker/google/endpoint`
-- `http://localhost:8080/realms/banana/broker/linkedin/endpoint`
+- `https://banana-keycloak-dev.fly.dev/realms/banana/broker/github/endpoint`
+- `https://banana-keycloak-dev.fly.dev/realms/banana/broker/google/endpoint`
+- `https://banana-keycloak-dev.fly.dev/realms/banana/broker/linkedin/endpoint`
 
 ## Production Fly setup (GitHub)
 

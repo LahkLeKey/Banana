@@ -5,7 +5,8 @@ import type {FastifyInstance} from 'fastify';
 import {authRouteInternals, registerAuthRoutes} from './auth.ts';
 
 process.env.BANANA_JWT_SECRET = 'test-secret-banana-jwt-1234';
-process.env.BANANA_KEYCLOAK_ISSUER_URL = 'http://localhost:8080/realms/banana';
+process.env.BANANA_KEYCLOAK_ISSUER_URL =
+    'https://banana-keycloak-dev.fly.dev/realms/banana';
 process.env.BANANA_KEYCLOAK_CLIENT_ID = 'banana-web';
 
 function extractTokenFromLocation(location: string): string {
@@ -84,7 +85,7 @@ describe('auth routes', () => {
     expect(response.statusCode).toBe(302);
     expect(response.headers.location ?? '')
         .toContain(
-            'http://localhost:8080/realms/banana/protocol/openid-connect/auth');
+            'https://banana-keycloak-dev.fly.dev/realms/banana/protocol/openid-connect/auth');
     expect(response.headers.location ?? '').toContain('response_type=code');
     expect(response.headers.location ?? '')
         .toContain('code_challenge_method=S256');
@@ -526,9 +527,9 @@ describe('auth route helpers', () => {
 
   it('covers keycloak env resolution helpers', () => {
     expect(authRouteInternals.resolveKeycloakIssuerUrl())
-        .toBe('http://localhost:8080/realms/banana');
+        .toBe('https://banana-keycloak-dev.fly.dev/realms/banana');
     expect(authRouteInternals.resolveKeycloakTokenIssuerUrl())
-        .toBe('http://localhost:8080/realms/banana');
+        .toBe('https://banana-keycloak-dev.fly.dev/realms/banana');
     expect(authRouteInternals.resolveKeycloakClientId())
         .toBe('banana-react-spa');
     expect(authRouteInternals.resolveKeycloakClientSecret()).toBe('');

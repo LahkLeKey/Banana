@@ -3,14 +3,14 @@
 This guide defines Banana's auth baseline:
 
 - Keycloak realm configuration is the main authentication manager.
-- Frontend and API are consumers of the Keycloak realm contract.
+- Frontend and API consume the Keycloak realm contract.
 - Third-party providers are configured in Keycloak, not in application code.
 
 ## Scope
 
 This document covers:
 
-- local Keycloak startup
+- Keycloak Fly deployment for dev/staging/prod
 - realm bootstrap and identity provider wiring
 - frontend integration points
 - API integration points
@@ -21,129 +21,38 @@ This document covers:
 Keycloak assets in this repository:
 
 - Realm template: src/typescript/keycloak/realm/banana-realm.template.json
-- Local startup helper: scripts/keycloak-local.sh
-- Local readiness check: scripts/check-keycloak-local.sh
 - Fly deployment guide: docs/keycloak/fly-deployment.md
 - API Fly deployment guide: docs/keycloak/fly-api-deployment.md
 - Identity providers guide: docs/keycloak/identity-providers.md
+- Deploy helper: scripts/deploy-keycloak-fly.sh
+- Issuer/JWKS readiness check: scripts/check-keycloak-issuer.sh
 
 Realm-level provider and user-login behavior should be changed in the realm template and imported into Keycloak, then consumed by app code through the start/callback contract.
 
-## Local setup
+## Dev setup (Fly)
 
-1. Start Keycloak and local Keycloak Postgres:
-
-```bash
-bash scripts/keycloak-local.sh up
-```
-
-2. Validate issuer/JWKS endpoints:
+1. Set deployment env vars (see docs/keycloak/fly-deployment.md).
+2. Deploy or update dev Keycloak:
 
 ```bash
-bash scripts/keycloak-local.sh check
+export BANANA_KEYCLOAK_ENV=dev
+bash scripts/deploy-keycloak-fly.sh
 ```
 
-3. Open admin console:
-
-- http://localhost:8080/admin
-
-## GitHub IdP manual setup walkthrough
-
-If you want a guided manual flow, use:
+3. Validate dev issuer/JWKS endpoints:
 
 ```bash
-bash scripts/setup-github-idp-manual.sh
+bash scripts/check-keycloak-issuer.sh banana-keycloak-dev
 ```
 
-This helper script will:
+Issuer convention:
 
-- create `.env.keycloak.local` from template when missing
-- print all manual setup links and required callback values
-- optionally write GitHub client credentials into `.env.keycloak.local`
+- https://banana-keycloak-dev.fly.dev/realms/banana
 
-Direct links:
+Current decision:
 
-- GitHub OAuth Apps: https://github.com/settings/developers
-- Keycloak Identity Providers (banana realm): http://localhost:8080/admin/master/console/#/banana/identity-providers
-
-GitHub OAuth App values:
-
-- Homepage URL: `http://localhost:5173`
-- Authorization callback URL: `http://localhost:8080/realms/banana/broker/github/endpoint`
-
-If you already have credentials, you can write and bootstrap in one command:
-
-```bash
-bash scripts/setup-github-idp-manual.sh \
-	--client-id "<github-client-id>" \
-	--client-secret "<github-client-secret>" \
-	--bootstrap
-```
-
-## Reproducible realm automation (dev container)
-
-Use the bootstrap script instead of manual console setup.
-
-1. Create local env file from template:
-
-```bash
-cp docs/keycloak/env.keycloak.local.example .env.keycloak.local
-```
-
-2. Fill GitHub provider credentials in `.env.keycloak.local`.
-
-3. Run bootstrap (idempotent reconcile):
-
-```bash
-bash scripts/keycloak-realm-bootstrap.sh bootstrap
-```
-
-For a full local reset and re-import:
-
-```bash
-bash scripts/keycloak-realm-bootstrap.sh reset-bootstrap
-```
-
-Status check:
-
-```bash
-bash scripts/keycloak-realm-bootstrap.sh status
-```
-
-What the script reconciles:
-
-- starts local Keycloak profile if needed
-- applies `banana-react-spa` redirect/web-origin contract
-- clears local PKCE enforcement for current API callback flow
-- upserts GitHub identity provider when credentials are present
-
-## Identity providers
-
-Set provider credentials before startup or restart:
-
-```bash
-export BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_ID="..."
-export BANANA_KEYCLOAK_IDP_GITHUB_CLIENT_SECRET="..."
-
-export BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_ID="..."
-export BANANA_KEYCLOAK_IDP_GOOGLE_CLIENT_SECRET="..."
-
-export BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_ID="..."
-export BANANA_KEYCLOAK_IDP_LINKEDIN_CLIENT_SECRET="..."
-```
-
-Then restart local Keycloak import:
-
-```bash
-bash scripts/keycloak-local.sh down
-bash scripts/keycloak-local.sh up
-```
-
-Provider aliases expected by frontend/API hinting:
-
-- github
-- google
-- linkedin
+- Keep dev auth on the Fly-managed `*.fly.dev` issuer.
+- Do not move dev to a custom auth domain until an explicit cutover plan is approved.
 
 ## Frontend integration contract
 
@@ -182,19 +91,19 @@ API should not contain provider-specific OAuth endpoint logic for GitHub/Google/
 - Apps consume issued tokens and subject claims.
 - New services must integrate against Keycloak realm contract instead of introducing parallel auth authorities.
 
-## Production/Fly alignment
+## Environment alignment
 
 Use one Keycloak Fly app per environment and keep issuer/JWKS aligned with app name as documented in docs/keycloak/fly-deployment.md.
 
 Before promoting environment changes:
 
-1. Validate local realm/provider behavior.
-2. Validate dev issuer/JWKS reachability.
-3. Validate frontend start/callback flow against target environment.
+1. Validate dev issuer/JWKS reachability.
+2. Validate frontend start/callback flow against target environment.
+3. Validate API protected routes using Keycloak-issued tokens.
 
 ## Troubleshooting
 
 - Missing provider credentials: login fails when selecting that provider.
 - Wrong provider alias: Keycloak hint ignored or provider not found.
 - Callback mismatch: verify provider redirect URI and Keycloak realm broker endpoint.
-- Issuer/JWKS failures: run scripts/check-keycloak-local.sh locally or scripts/check-keycloak-issuer.sh for Fly environment.
+- Issuer/JWKS failures: run scripts/check-keycloak-issuer.sh for the target Fly app.

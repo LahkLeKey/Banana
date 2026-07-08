@@ -19,6 +19,14 @@ For environment app name `<app>`:
 - Issuer: `https://<app>.fly.dev/realms/banana`
 - JWKS: `https://<app>.fly.dev/realms/banana/protocol/openid-connect/certs`
 
+## Dev domain decision
+
+Dev auth remains on the Fly-managed domain for now:
+
+- Dev issuer: `https://banana-keycloak-dev.fly.dev/realms/banana`
+
+Do not introduce a custom dev auth domain until there is a dedicated cutover issue with DNS, TLS, and rollback coverage.
+
 ## Provisioned assets
 
 - Fly config: `src/typescript/keycloak/fly.toml`
@@ -55,6 +63,8 @@ Validate issuer/JWKS reachability after deploy:
 ```bash
 bash scripts/check-keycloak-issuer.sh banana-keycloak-dev
 ```
+
+`scripts/check-keycloak-issuer.sh` expects a Fly app name, not a URL.
 
 ## Secret matrix
 

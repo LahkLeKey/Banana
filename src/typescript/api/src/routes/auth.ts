@@ -5,7 +5,8 @@ import {createHash, randomBytes, randomUUID} from 'node:crypto';
 import {signToken, verifyToken} from '../middleware/auth.ts';
 import {deriveDefaultSessionExpiry, getAuthSessionStore,} from '../services/authSessionStore.ts';
 
-const KEYCLOAK_DEFAULT_ISSUER = 'http://localhost:8080/realms/banana';
+const KEYCLOAK_DEFAULT_ISSUER =
+    'https://banana-keycloak-dev.fly.dev/realms/banana';
 const KEYCLOAK_DEFAULT_CLIENT_ID = 'banana-react-spa';
 const KEYCLOAK_CALLBACK_PATH = '/auth/keycloak/callback';
 const DEFAULT_LOGIN_RETURN_TO = '/login';
