@@ -141,7 +141,7 @@ function decodeKeycloakAuthState(rawState: string): KeycloakAuthState|null {
 
 function buildKeycloakAuthUrl(
     origin: string, returnTo: string, codeVerifier: string,
-  action?: KeycloakAuthAction|null): string {
+    action?: KeycloakAuthAction|null): string {
   const callbackUrl = new URL(KEYCLOAK_CALLBACK_PATH, origin);
   callbackUrl.searchParams.set('returnTo', returnTo);
 

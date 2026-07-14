@@ -612,7 +612,7 @@ describe('auth route helpers', () => {
     expect(authRouteInternals.normalizeIdentityProvider('discord')).toBeNull();
     expect(authRouteInternals.normalizeAuthAction('REGISTER')).toBe('register');
     expect(authRouteInternals.normalizeAuthAction('reset-password'))
-      .toBe('UPDATE_PASSWORD');
+        .toBe('UPDATE_PASSWORD');
     expect(authRouteInternals.normalizeAuthAction('login')).toBeNull();
 
     expect(authRouteInternals.resolveSubjectFromJwt(undefined)).toBeNull();
