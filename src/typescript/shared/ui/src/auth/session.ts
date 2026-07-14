@@ -6,7 +6,7 @@ export type AuthSession = {
 };
 
 export type AuthProvider = 'github'|'google'|'linkedin';
-export type AuthStartAction = 'register';
+export type AuthStartAction = 'register'|'reset-password';
 
 type BrowserWindowWithAuthSession = Window&{
   __bananaAuthSession?: AuthSession|null;

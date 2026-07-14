@@ -14,7 +14,7 @@ import { buildLoginStartUrl, resolveLoginReturnTarget } from '../lib/authRouting
 export function LoginPage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [loadingTarget, setLoadingTarget] = useState<null | 'github' | 'local-signin' | 'local-signup'>(null);
+    const [loadingTarget, setLoadingTarget] = useState<null | 'github' | 'local-signin' | 'local-signup' | 'reset-password'>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const returnToTarget = useMemo(() => resolveLoginReturnTarget(location.search), [location.search]);
 
@@ -39,7 +39,7 @@ export function LoginPage() {
         }
     }, [navigate, returnToTarget]);
 
-    const beginLoginRedirect = async (target: 'github' | 'local-signin' | 'local-signup') => {
+    const beginLoginRedirect = async (target: 'github' | 'local-signin' | 'local-signup' | 'reset-password') => {
         setLoadingTarget(target);
         setErrorMessage(null);
 
@@ -49,7 +49,7 @@ export function LoginPage() {
             }
 
             const provider = target === 'github' ? 'github' : undefined;
-            const action = target === 'local-signup' ? 'register' : undefined;
+            const action = target === 'local-signup' ? 'register' : target === 'reset-password' ? 'reset-password' : undefined;
             const loginUrl = buildAuthStartUrl(apiBaseUrl, buildLoginStartUrl(returnToTarget), provider, action);
             window.location.assign(loginUrl);
         } catch (cause: unknown) {
@@ -166,6 +166,28 @@ export function LoginPage() {
                         }}
                     >
                         {loadingTarget === 'local-signup' ? 'Redirecting to Sign Up...' : 'Create Banana Account'}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            void beginLoginRedirect('reset-password');
+                        }}
+                        disabled={loadingTarget !== null}
+                        style={{
+                            width: '100%',
+                            marginTop: 10,
+                            border: 'none',
+                            borderRadius: 6,
+                            background: 'transparent',
+                            color: '#8b949e',
+                            fontSize: 13,
+                            textDecoration: 'underline',
+                            padding: '6px 8px',
+                            cursor: loadingTarget !== null ? 'not-allowed' : 'pointer',
+                        }}
+                    >
+                        {loadingTarget === 'reset-password' ? 'Redirecting to Password Reset...' : 'Forgot Password?'}
                     </button>
 
                     {errorMessage ? (

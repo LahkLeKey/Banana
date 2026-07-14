@@ -135,6 +135,26 @@ describe('auth routes', () => {
     await app.close();
   });
 
+  it('passes reset-password action to Keycloak start redirect', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin&action=reset-password',
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location ?? '')
+        .toContain('kc_action=UPDATE_PASSWORD');
+
+    await app.close();
+  });
+
   it('does not expose legacy Steam auth routes', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
@@ -591,6 +611,8 @@ describe('auth route helpers', () => {
         .toBe('linkedin');
     expect(authRouteInternals.normalizeIdentityProvider('discord')).toBeNull();
     expect(authRouteInternals.normalizeAuthAction('REGISTER')).toBe('register');
+    expect(authRouteInternals.normalizeAuthAction('reset-password'))
+      .toBe('UPDATE_PASSWORD');
     expect(authRouteInternals.normalizeAuthAction('login')).toBeNull();
 
     expect(authRouteInternals.resolveSubjectFromJwt(undefined)).toBeNull();

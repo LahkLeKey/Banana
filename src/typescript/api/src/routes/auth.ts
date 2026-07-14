@@ -38,6 +38,8 @@ type GuestStartBody = {
   alias?: string;
 };
 
+type KeycloakAuthAction = 'register'|'UPDATE_PASSWORD';
+
 function getFirstQueryValue(value: QueryValue): string {
   if (Array.isArray(value)) {
     return value[0] ?? '';
@@ -139,7 +141,7 @@ function decodeKeycloakAuthState(rawState: string): KeycloakAuthState|null {
 
 function buildKeycloakAuthUrl(
     origin: string, returnTo: string, codeVerifier: string,
-    action?: 'register'|null): string {
+  action?: KeycloakAuthAction|null): string {
   const callbackUrl = new URL(KEYCLOAK_CALLBACK_PATH, origin);
   callbackUrl.searchParams.set('returnTo', returnTo);
 
@@ -176,10 +178,13 @@ function normalizeIdentityProvider(rawProvider: string): 'github'|'google'|
   return null;
 }
 
-function normalizeAuthAction(rawAction: string): 'register'|null {
+function normalizeAuthAction(rawAction: string): KeycloakAuthAction|null {
   const normalized = rawAction.trim().toLowerCase();
   if (normalized === 'register') {
     return 'register';
+  }
+  if (normalized === 'reset-password' || normalized === 'update-password') {
+    return 'UPDATE_PASSWORD';
   }
 
   return null;
