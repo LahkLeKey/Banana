@@ -154,7 +154,6 @@ describe('auth routes', () => {
 
     await app.close();
   });
-
   it('does not expose legacy Steam auth routes', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);

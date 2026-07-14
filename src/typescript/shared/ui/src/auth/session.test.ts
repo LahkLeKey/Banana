@@ -42,7 +42,6 @@ describe('auth session helpers', () => {
     expect(url).toBe(
         'https://api.banana.engineer/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin&action=reset-password');
   });
-
   test('stores and clears auth sessions in memory', () => {
     if (!(globalThis as unknown as {document?: Document}).document) {
       GlobalRegistrator.register({url: 'http://localhost:5173/'});
