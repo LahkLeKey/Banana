@@ -18,6 +18,7 @@ type AuthQuery = {
   returnTo?: QueryValue;
   code?: QueryValue;
   provider?: QueryValue;
+  action?: QueryValue;
 };
 
 type KeycloakTokenResponse = {
@@ -137,7 +138,8 @@ function decodeKeycloakAuthState(rawState: string): KeycloakAuthState|null {
 }
 
 function buildKeycloakAuthUrl(
-    origin: string, returnTo: string, codeVerifier: string): string {
+    origin: string, returnTo: string, codeVerifier: string,
+    action?: 'register'|null): string {
   const callbackUrl = new URL(KEYCLOAK_CALLBACK_PATH, origin);
   callbackUrl.searchParams.set('returnTo', returnTo);
 
@@ -156,6 +158,9 @@ function buildKeycloakAuthUrl(
   authUrl.searchParams.set(
       'code_challenge', derivePkceCodeChallenge(codeVerifier));
   authUrl.searchParams.set('code_challenge_method', 'S256');
+  if (action) {
+    authUrl.searchParams.set('kc_action', action);
+  }
 
   return authUrl.toString();
 }
@@ -166,6 +171,15 @@ function normalizeIdentityProvider(rawProvider: string): 'github'|'google'|
   if (normalized === 'github' || normalized === 'google' ||
       normalized === 'linkedin') {
     return normalized;
+  }
+
+  return null;
+}
+
+function normalizeAuthAction(rawAction: string): 'register'|null {
+  const normalized = rawAction.trim().toLowerCase();
+  if (normalized === 'register') {
+    return 'register';
   }
 
   return null;
@@ -307,6 +321,7 @@ export const authRouteInternals = {
   encodeKeycloakAuthState,
   decodeKeycloakAuthState,
   normalizeIdentityProvider,
+  normalizeAuthAction,
   resolveSubjectFromJwt,
   resolveIdentityIdFromSubject,
   resolveIdentityKind,
@@ -351,10 +366,11 @@ export async function registerAuthRoutes(app: FastifyInstance) {
         `${origin}${DEFAULT_LOGIN_RETURN_TO}`);
     const provider =
         normalizeIdentityProvider(getFirstQueryValue(query.provider));
+    const action = normalizeAuthAction(getFirstQueryValue(query.action));
     const codeVerifier = generatePkceCodeVerifier();
 
     const redirectUrl =
-        new URL(buildKeycloakAuthUrl(origin, returnTo, codeVerifier));
+        new URL(buildKeycloakAuthUrl(origin, returnTo, codeVerifier, action));
     if (provider) {
       redirectUrl.searchParams.set('kc_idp_hint', provider);
     }

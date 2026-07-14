@@ -6,6 +6,7 @@ export type AuthSession = {
 };
 
 export type AuthProvider = 'github'|'google'|'linkedin';
+export type AuthStartAction = 'register';
 
 type BrowserWindowWithAuthSession = Window&{
   __bananaAuthSession?: AuthSession|null;
@@ -87,11 +88,15 @@ export function resolveLoginReturnToUrl(): string {
 }
 
 export function buildAuthStartUrl(
-    apiBaseUrl: string, returnTo: string, provider?: AuthProvider): string {
+    apiBaseUrl: string, returnTo: string, provider?: AuthProvider,
+    action?: AuthStartAction): string {
   const url = new URL('/auth/keycloak/start', apiBaseUrl);
   url.searchParams.set('returnTo', returnTo);
   if (provider) {
     url.searchParams.set('provider', provider);
+  }
+  if (action) {
+    url.searchParams.set('action', action);
   }
   return url.toString();
 }
