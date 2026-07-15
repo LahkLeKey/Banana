@@ -5,8 +5,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
-EXPECTED_KEYCLOAK_HOST="${BANANA_EXPECTED_KEYCLOAK_HOST:-banana-keycloak-dev.fly.dev}"
-PROBE_HOSTS_CSV="${BANANA_AUTH_REDIRECT_SMOKE_HOSTS:-https://banana-api.fly.dev}"
+EXPECTED_KEYCLOAK_HOST="${BANANA_EXPECTED_DEV_KEYCLOAK_HOST:-banana-keycloak-dev.fly.dev}"
+PROBE_HOSTS_CSV="${BANANA_AUTH_REDIRECT_SMOKE_HOSTS:-https://api.banana.engineer,https://banana-api.fly.dev}"
 RETURN_TO_URL="${BANANA_AUTH_REDIRECT_RETURN_TO:-https://banana.engineer/login}"
 ERROR_MARKERS_REGEX='Invalid parameter: redirect_uri|invalid_redirect_uri|error=invalid_request|keycloak_auth_not_completed'
 

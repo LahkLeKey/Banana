@@ -156,7 +156,6 @@ function isProductionRuntimeForKeycloakGuard(): boolean {
   const flyAppName = normalizeEnvValue(process.env.FLY_APP_NAME);
   return flyAppName === 'banana-api';
 }
-
 function resolveAuthorityHost(rawUrl: string): string {
   try {
     return new URL(rawUrl).hostname.trim().toLowerCase();
@@ -184,7 +183,6 @@ function assertKeycloakAuthorityMapping(): void {
   if (!isDevRuntimeForKeycloakGuard()) {
     return;
   }
-
   if (issuerHost !== KEYCLOAK_PRODUCTION_AUTHORITY_HOST &&
       tokenIssuerHost !== KEYCLOAK_PRODUCTION_AUTHORITY_HOST) {
     return;

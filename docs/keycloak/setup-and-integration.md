@@ -130,8 +130,6 @@ Expected behavior:
 
 - Auth-start for provider `github` routes through `banana-keycloak-dev.fly.dev`.
 - No `Invalid parameter: redirect_uri` errors appear for approved callback hosts.
-=======
->>>>>>> 31691ac7 (chore(auth): migrate dev keycloak to fly and guard against localhost issuer drift)
 
 ## Troubleshooting
 
