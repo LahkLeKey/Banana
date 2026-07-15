@@ -9,6 +9,8 @@ const KEYCLOAK_DEFAULT_ISSUER =
     'https://banana-keycloak-dev.fly.dev/realms/banana';
 const KEYCLOAK_DEFAULT_CLIENT_ID = 'banana-react-spa';
 const KEYCLOAK_CALLBACK_PATH = '/auth/keycloak/callback';
+const KEYCLOAK_DEV_AUTHORITY_HOST = 'banana-keycloak-dev.fly.dev';
+const KEYCLOAK_PRODUCTION_AUTHORITY_HOST = 'kc-idp.banana.engineer';
 const DEFAULT_LOGIN_RETURN_TO = '/login';
 
 type QueryValue = string|string[]|undefined;
@@ -103,6 +105,63 @@ function resolveKeycloakClientId(): string {
 
 function resolveKeycloakClientSecret(): string {
   return (process.env.BANANA_KEYCLOAK_CLIENT_SECRET ?? '').trim();
+}
+
+function normalizeEnvValue(rawValue: string|undefined): string {
+  return (rawValue ?? '').trim().toLowerCase();
+}
+
+function isDevRuntimeForKeycloakGuard(): boolean {
+  const keycloakEnv = normalizeEnvValue(process.env.BANANA_KEYCLOAK_ENV);
+  if (keycloakEnv === 'dev' || keycloakEnv === 'development' ||
+      keycloakEnv === 'local') {
+    return true;
+  }
+
+  const deployEnv = normalizeEnvValue(process.env.BANANA_DEPLOY_ENV);
+  if (deployEnv === 'dev' || deployEnv === 'development' ||
+      deployEnv === 'local') {
+    return true;
+  }
+
+  const nodeEnv = normalizeEnvValue(process.env.NODE_ENV);
+  if (nodeEnv && nodeEnv !== 'production') {
+    return true;
+  }
+
+  const flyAppName = normalizeEnvValue(process.env.FLY_APP_NAME);
+  if (flyAppName && flyAppName !== 'banana-api') {
+    return true;
+  }
+
+  return nodeEnv.length === 0;
+}
+
+function resolveAuthorityHost(rawUrl: string): string {
+  try {
+    return new URL(rawUrl).hostname.trim().toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function assertKeycloakAuthorityMapping(): void {
+  if (!isDevRuntimeForKeycloakGuard()) {
+    return;
+  }
+
+  const issuerUrl = resolveKeycloakIssuerUrl();
+  const tokenIssuerUrl = resolveKeycloakTokenIssuerUrl();
+  const issuerHost = resolveAuthorityHost(issuerUrl);
+  const tokenIssuerHost = resolveAuthorityHost(tokenIssuerUrl);
+
+  if (issuerHost !== KEYCLOAK_PRODUCTION_AUTHORITY_HOST &&
+      tokenIssuerHost !== KEYCLOAK_PRODUCTION_AUTHORITY_HOST) {
+    return;
+  }
+
+  throw new Error(
+      `keycloak_authority_mapping_invalid: dev runtime requires ${KEYCLOAK_DEV_AUTHORITY_HOST}; found production authority ${KEYCLOAK_PRODUCTION_AUTHORITY_HOST} in BANANA_KEYCLOAK_ISSUER_URL or BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
 }
 
 function generatePkceCodeVerifier(): string {
@@ -323,6 +382,7 @@ export const authRouteInternals = {
   resolveKeycloakTokenIssuerUrl,
   resolveKeycloakClientId,
   resolveKeycloakClientSecret,
+  assertKeycloakAuthorityMapping,
   encodeKeycloakAuthState,
   decodeKeycloakAuthState,
   normalizeIdentityProvider,
@@ -336,6 +396,7 @@ export const authRouteInternals = {
 };
 
 export async function registerAuthRoutes(app: FastifyInstance) {
+  assertKeycloakAuthorityMapping();
   const authStore = await getAuthSessionStore();
 
   app.post('/auth/guest/start', async (request, reply) => {

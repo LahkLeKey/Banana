@@ -54,6 +54,19 @@ Current decision:
 - Keep dev auth on the Fly-managed `*.fly.dev` issuer.
 - Do not move dev to a custom auth domain until an explicit cutover plan is approved.
 
+Authority mapping contract:
+
+- Production authority host is `kc-idp.banana.engineer` (production only).
+- Canonical dev authority host is `banana-keycloak-dev.fly.dev`.
+- Dev runtime and dev callback verification must not depend on production authority host.
+
+Dev callback allowlist contract for `banana-react-spa`:
+
+- `http://localhost:8081/auth/keycloak/callback`
+- `http://127.0.0.1:8081/auth/keycloak/callback`
+- `https://api.banana.engineer/auth/keycloak/callback`
+- `https://banana-api.fly.dev/auth/keycloak/callback`
+
 ## Frontend integration contract
 
 Frontend should initiate login by calling API start endpoint:
@@ -100,6 +113,23 @@ Before promoting environment changes:
 1. Validate dev issuer/JWKS reachability.
 2. Validate frontend start/callback flow against target environment.
 3. Validate API protected routes using Keycloak-issued tokens.
+
+## Dev verification runbook
+
+Use these checks whenever auth routing or Keycloak realm allowlists change:
+
+```bash
+flyctl auth login
+flyctl apps list
+flyctl secrets list -a <dev-api-app>
+bash scripts/check-keycloak-issuer.sh banana-keycloak-dev
+bash scripts/check-auth-start-redirect-integrity.sh
+```
+
+Expected behavior:
+
+- Auth-start for provider `github` routes through `banana-keycloak-dev.fly.dev`.
+- No `Invalid parameter: redirect_uri` errors appear for approved callback hosts.
 
 ## Troubleshooting
 

@@ -542,6 +542,10 @@ describe('auth route helpers', () => {
     delete process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL;
     delete process.env.BANANA_KEYCLOAK_CLIENT_ID;
     delete process.env.BANANA_KEYCLOAK_CLIENT_SECRET;
+    delete process.env.BANANA_KEYCLOAK_ENV;
+    delete process.env.BANANA_DEPLOY_ENV;
+    delete process.env.FLY_APP_NAME;
+    delete process.env.NODE_ENV;
   });
 
   it('covers query, origin, and returnTo normalization fallbacks', () => {
@@ -586,6 +590,40 @@ describe('auth route helpers', () => {
     expect(authRouteInternals.resolveKeycloakClientId()).toBe('banana-client');
     expect(authRouteInternals.resolveKeycloakClientSecret())
         .toBe('banana-secret');
+  });
+
+  it('fails closed when dev runtime resolves production keycloak authority host',
+     () => {
+       process.env.NODE_ENV = 'development';
+       process.env.BANANA_KEYCLOAK_ISSUER_URL =
+           'https://kc-idp.banana.engineer/realms/banana';
+       process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL =
+           'https://banana-keycloak-dev.fly.dev/realms/banana';
+
+       expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
+           .toThrow(/keycloak_authority_mapping_invalid/);
+     });
+
+  it('allows production authority host outside dev runtime guard', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.BANANA_KEYCLOAK_ISSUER_URL =
+        'https://kc-idp.banana.engineer/realms/banana';
+    process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL =
+        'https://kc-idp.banana.engineer/realms/banana';
+
+    expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
+        .not.toThrow();
+  });
+
+  it('allows dev runtime when both issuer hosts are dev authority', () => {
+    process.env.NODE_ENV = 'development';
+    process.env.BANANA_KEYCLOAK_ISSUER_URL =
+        'https://banana-keycloak-dev.fly.dev/realms/banana';
+    process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL =
+        'https://banana-keycloak-dev.fly.dev/realms/banana';
+
+    expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
+        .not.toThrow();
   });
 
   it('covers auth state decode error branches', () => {
