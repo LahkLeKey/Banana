@@ -33,6 +33,10 @@ jobs:
         shell: bash
         run: bash scripts/guard-no-localhost-keycloak-issuer.sh
 
+      - name: Smoke check auth redirect integrity (provider=github)
+        shell: bash
+        run: bash scripts/check-auth-start-redirect-integrity.sh
+
       - name: Sanity check database alias helper
         shell: bash
         run: |
