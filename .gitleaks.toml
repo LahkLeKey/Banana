@@ -14,6 +14,9 @@ tags = ["password", "hardcoded", "compose"]
 
 [allowlist]
 description = "Documented placeholders used in runbooks and examples"
+commits = [
+  '''fee803c851a37ca7a06b338ec052466e34a562b5'''
+]
 paths = [
   '''docs/under-20-fly-only-postgres-runbook.md''',
   '''docs/cost-effective-under-20-db-plan.md''',
