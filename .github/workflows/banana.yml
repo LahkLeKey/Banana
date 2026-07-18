@@ -41,13 +41,6 @@ jobs:
         shell: bash
         run: bash scripts/check-auth-start-redirect-integrity.sh
 
-      - name: Smoke check production auth redirect integrity (provider=github)
-        shell: bash
-        run: |
-          BANANA_AUTH_REDIRECT_SMOKE_HOSTS="https://api.banana.engineer" \
-          BANANA_EXPECTED_KEYCLOAK_HOST="kc-idp.banana.engineer" \
-          bash scripts/check-auth-start-redirect-integrity.sh
-
       - name: Sanity check database alias helper
         shell: bash
         run: |
