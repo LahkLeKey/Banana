@@ -604,7 +604,7 @@ describe('auth route helpers', () => {
            .toThrow(/keycloak_authority_mapping_invalid/);
      });
 
-  it('allows production authority host outside dev runtime guard', () => {
+  it('allows production runtime when both issuer hosts are production authority', () => {
     process.env.NODE_ENV = 'production';
     process.env.BANANA_KEYCLOAK_ISSUER_URL =
         'https://kc-idp.banana.engineer/realms/banana';
@@ -614,6 +614,18 @@ describe('auth route helpers', () => {
     expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
         .not.toThrow();
   });
+
+    it('fails closed when production runtime resolves dev keycloak authority host',
+     () => {
+       process.env.NODE_ENV = 'production';
+       process.env.BANANA_KEYCLOAK_ISSUER_URL =
+         'https://banana-keycloak-dev.fly.dev/realms/banana';
+       process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL =
+         'https://kc-idp.banana.engineer/realms/banana';
+
+       expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
+         .toThrow(/keycloak_authority_mapping_invalid/);
+     });
 
   it('allows dev runtime when both issuer hosts are dev authority', () => {
     process.env.NODE_ENV = 'development';
