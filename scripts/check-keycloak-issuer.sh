@@ -12,6 +12,12 @@ if [[ -z "${APP_NAME}" ]]; then
   exit 1
 fi
 
+if [[ "${APP_NAME}" == http://* || "${APP_NAME}" == https://* ||
+      "${APP_NAME}" == *"/"* || "${APP_NAME}" == *"."* ]]; then
+  echo "[keycloak-check] ERROR: pass Fly app name only (for example banana-keycloak-dev), not a URL or hostname." >&2
+  exit 1
+fi
+
 if ! command -v curl >/dev/null 2>&1; then
   echo "[keycloak-check] ERROR: curl is required." >&2
   exit 1

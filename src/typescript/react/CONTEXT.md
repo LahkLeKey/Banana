@@ -34,11 +34,20 @@ Define client-facing behavior, interaction flows, and integration with backend/r
 - Operator switch policy: Rule that character changes are initiated from the Characters slice rather than implicit global controls
 - Return-to-intended-route flow: Login flow that restores the originally requested protected route after authentication
 - Public login gate: Login route that remains public and only serves as an entry point for unauthenticated users
+- Account sign-in option set: The visible list of sign-in methods offered on the public login gate
 - Identity handoff flow: Redirect-and-return authentication sequence between client and identity authority
 - Auth authority mode: Client runtime mode that determines which identity authority login flow is active
 - Bearer continuity: Client behavior that carries the active bearer token across protected API calls until expiry or sign-out
 - OIDC PKCE flow: Authorization Code flow with Proof Key for Code Exchange used by a public browser client without a client secret
 - Ephemeral token storage: In-memory bearer token handling that does not persist tokens to localStorage or sessionStorage
+- Local account sign-in flow: Email/password sign-in path mediated by Keycloak realm credentials
+- Identity linking policy: Rule that determines when two sign-in providers map to the same account profile
+- Manual provider linking: Explicit user-initiated provider connection action performed from Profile settings
+- Provider profile fallback: Identity-provider-sourced field used when no Banana profile override exists in the client view model
+- Self-service account lifecycle: User-facing sign-up, sign-in, and password reset flow for local account credentials mediated by Keycloak
+- Guest access retirement: Removal of anonymous guest entry points from active client authentication flows
+- Account rollout epic: Multi-story delivery track that introduces local account credentials and Banana-owned profile behavior incrementally
+- Thin auth entry story: Smallest user-facing slice that proves the local account path without bundling later profile-management work
 
 ## Core invariants
 
@@ -59,10 +68,18 @@ Define client-facing behavior, interaction flows, and integration with backend/r
 - Operator switching is performed from the Characters route; primary nav may display the active operator but does not mutate selection directly
 - Authentication preserves intended destination before applying route gates so login returns the user to the protected route they tried to open
 - Signed-in users are redirected away from /login immediately so the login route stays a one-way public gate
+- The public login gate presents GitHub and email/password sign-in options in the same view for phase 1
 - Stable primary-nav destinations remain visible even when gated; blocked destinations surface a locked state and route to the inline gate screen when requested
 - Login flow must map to the active identity authority mode and avoid parallel authority assumptions
 - Keycloak is the single authentication authority for active client login and bearer continuity
+- Identity linking is manual-only in phase 1; no automatic provider linking by email match
+- Phase-1 Profile exposes editable display name, bio, locale, avatar override, and notification preferences
+- Phase-1 profile rendering prefers Banana avatar override and falls back to provider profile avatar when absent
+- Phase-1 public login gate also exposes self-service sign-up and password-reset entry points for local account credentials
+- Guest login and guest continuation flows are removed from the active client auth surface in this rollout
 - Phase-1 protected API access relies on bearer continuity plus API-side token authority checks
+- The first delivery slice shows GitHub plus local-account sign-in and self-service sign-up on the public login gate
+- The first delivery slice defers password reset, profile editing UI, provider linking UI, and guest-auth removal
 - Profile is part of the authenticated gameplay shell rather than a separate application mode
 - Keycloak browser login uses OIDC Authorization Code + PKCE and does not require a frontend client secret
 - Phase-1 bearer tokens remain in ephemeral memory and are cleared on reload or sign-out

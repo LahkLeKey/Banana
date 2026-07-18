@@ -29,6 +29,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Guard Keycloak issuer defaults
+        shell: bash
+        run: bash scripts/guard-no-localhost-keycloak-issuer.sh
+
+      - name: Guard dev Keycloak authority mapping
+        shell: bash
+        run: bash scripts/guard-dev-keycloak-authority.sh
+
+      - name: Smoke check auth redirect integrity (provider=github)
+        shell: bash
+        run: bash scripts/check-auth-start-redirect-integrity.sh
+
       - name: Sanity check database alias helper
         shell: bash
         run: |

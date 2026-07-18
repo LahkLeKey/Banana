@@ -14,7 +14,7 @@ import { buildLoginStartUrl, resolveLoginReturnTarget } from '../lib/authRouting
 export function LoginPage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [loading, setLoading] = useState(false);
+    const [loadingTarget, setLoadingTarget] = useState<null | 'github' | 'local-signin' | 'local-signup' | 'reset-password'>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const returnToTarget = useMemo(() => resolveLoginReturnTarget(location.search), [location.search]);
 
@@ -39,8 +39,8 @@ export function LoginPage() {
         }
     }, [navigate, returnToTarget]);
 
-    const handleGitHubLogin = async () => {
-        setLoading(true);
+    const beginLoginRedirect = async (target: 'github' | 'local-signin' | 'local-signup' | 'reset-password') => {
+        setLoadingTarget(target);
         setErrorMessage(null);
 
         try {
@@ -48,12 +48,14 @@ export function LoginPage() {
                 throw new Error(apiBaseError);
             }
 
-            const loginUrl = buildAuthStartUrl(apiBaseUrl, buildLoginStartUrl(returnToTarget), 'github');
+            const provider = target === 'github' ? 'github' : undefined;
+            const action = target === 'local-signup' ? 'register' : target === 'reset-password' ? 'reset-password' : undefined;
+            const loginUrl = buildAuthStartUrl(apiBaseUrl, buildLoginStartUrl(returnToTarget), provider, action);
             window.location.assign(loginUrl);
         } catch (cause: unknown) {
             setErrorMessage(cause instanceof Error ? cause.message : 'Unable to start Keycloak login.');
         } finally {
-            setLoading(false);
+            setLoadingTarget(null);
         }
     };
 
@@ -103,21 +105,89 @@ export function LoginPage() {
                 >
                     <button
                         type="button"
-                        onClick={handleGitHubLogin}
-                        disabled={loading}
+                        onClick={() => {
+                            void beginLoginRedirect('github');
+                        }}
+                        disabled={loadingTarget !== null}
                         style={{
                             width: '100%',
                             border: '1px solid rgba(240, 246, 252, 0.1)',
                             borderRadius: 6,
-                            background: loading ? '#30363d' : '#238636',
+                            background: loadingTarget !== null ? '#30363d' : '#238636',
                             color: '#ffffff',
                             fontSize: 14,
                             fontWeight: 600,
                             padding: '10px 14px',
-                            cursor: loading ? 'not-allowed' : 'pointer',
+                            cursor: loadingTarget !== null ? 'not-allowed' : 'pointer',
                         }}
                     >
-                        {loading ? 'Redirecting to GitHub...' : 'Continue with GitHub'}
+                        {loadingTarget === 'github' ? 'Redirecting to GitHub...' : 'Continue with GitHub'}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            void beginLoginRedirect('local-signin');
+                        }}
+                        disabled={loadingTarget !== null}
+                        style={{
+                            width: '100%',
+                            marginTop: 10,
+                            border: '1px solid rgba(240, 246, 252, 0.22)',
+                            borderRadius: 6,
+                            background: 'transparent',
+                            color: '#f0f6fc',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            padding: '10px 14px',
+                            cursor: loadingTarget !== null ? 'not-allowed' : 'pointer',
+                        }}
+                    >
+                        {loadingTarget === 'local-signin' ? 'Redirecting...' : 'Continue with Email and Password'}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            void beginLoginRedirect('local-signup');
+                        }}
+                        disabled={loadingTarget !== null}
+                        style={{
+                            width: '100%',
+                            marginTop: 10,
+                            border: '1px dashed rgba(240, 246, 252, 0.35)',
+                            borderRadius: 6,
+                            background: 'transparent',
+                            color: '#f0f6fc',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            padding: '10px 14px',
+                            cursor: loadingTarget !== null ? 'not-allowed' : 'pointer',
+                        }}
+                    >
+                        {loadingTarget === 'local-signup' ? 'Redirecting to Sign Up...' : 'Create Banana Account'}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            void beginLoginRedirect('reset-password');
+                        }}
+                        disabled={loadingTarget !== null}
+                        style={{
+                            width: '100%',
+                            marginTop: 10,
+                            border: 'none',
+                            borderRadius: 6,
+                            background: 'transparent',
+                            color: '#8b949e',
+                            fontSize: 13,
+                            textDecoration: 'underline',
+                            padding: '6px 8px',
+                            cursor: loadingTarget !== null ? 'not-allowed' : 'pointer',
+                        }}
+                    >
+                        {loadingTarget === 'reset-password' ? 'Redirecting to Password Reset...' : 'Forgot Password?'}
                     </button>
 
                     {errorMessage ? (

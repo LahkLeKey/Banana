@@ -111,6 +111,7 @@ Optional query parameters on `GET /auth/keycloak/start`:
 
 - `returnTo`: browser destination after callback token handoff.
 - `provider`: identity provider alias to pass through to Keycloak as `kc_idp_hint` (for example `github`, `google`, `linkedin`).
+- `action`: optional Keycloak auth action (`register` for self-service sign-up, `reset-password` for Keycloak password recovery flow).
 
 Keycloak realm management is the source of truth for identity providers, user login policies, and realm-level auth behavior. API auth integration should consume that realm contract rather than duplicating provider-specific logic in this service.
 

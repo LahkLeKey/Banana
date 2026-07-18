@@ -5,7 +5,8 @@ import type {FastifyInstance} from 'fastify';
 import {authRouteInternals, registerAuthRoutes} from './auth.ts';
 
 process.env.BANANA_JWT_SECRET = 'test-secret-banana-jwt-1234';
-process.env.BANANA_KEYCLOAK_ISSUER_URL = 'http://localhost:8080/realms/banana';
+process.env.BANANA_KEYCLOAK_ISSUER_URL =
+    'https://banana-keycloak-dev.fly.dev/realms/banana';
 process.env.BANANA_KEYCLOAK_CLIENT_ID = 'banana-web';
 
 function extractTokenFromLocation(location: string): string {
@@ -84,7 +85,7 @@ describe('auth routes', () => {
     expect(response.statusCode).toBe(302);
     expect(response.headers.location ?? '')
         .toContain(
-            'http://localhost:8080/realms/banana/protocol/openid-connect/auth');
+            'https://banana-keycloak-dev.fly.dev/realms/banana/protocol/openid-connect/auth');
     expect(response.headers.location ?? '').toContain('response_type=code');
     expect(response.headers.location ?? '')
         .toContain('code_challenge_method=S256');
@@ -111,6 +112,45 @@ describe('auth routes', () => {
 
     expect(response.statusCode).toBe(302);
     expect(response.headers.location ?? '').toContain('kc_idp_hint=google');
+
+    await app.close();
+  });
+
+  it('passes register action to Keycloak start redirect', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin&action=register',
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location ?? '').toContain('kc_action=register');
+
+    await app.close();
+  });
+
+  it('passes reset-password action to Keycloak start redirect', async () => {
+    const app = Fastify();
+    await registerAuthRoutes(app);
+
+    const response = await app.inject({
+      method: 'GET',
+      url:
+          '/auth/keycloak/start?returnTo=https%3A%2F%2Fbanana.engineer%2Flogin&action=reset-password',
+      headers: {
+        host: 'api.banana.engineer',
+      },
+    });
+
+    expect(response.statusCode).toBe(302);
+    expect(response.headers.location ?? '')
+        .toContain('kc_action=UPDATE_PASSWORD');
 
     await app.close();
   });
@@ -502,6 +542,10 @@ describe('auth route helpers', () => {
     delete process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL;
     delete process.env.BANANA_KEYCLOAK_CLIENT_ID;
     delete process.env.BANANA_KEYCLOAK_CLIENT_SECRET;
+    delete process.env.BANANA_KEYCLOAK_ENV;
+    delete process.env.BANANA_DEPLOY_ENV;
+    delete process.env.FLY_APP_NAME;
+    delete process.env.NODE_ENV;
   });
 
   it('covers query, origin, and returnTo normalization fallbacks', () => {
@@ -526,9 +570,9 @@ describe('auth route helpers', () => {
 
   it('covers keycloak env resolution helpers', () => {
     expect(authRouteInternals.resolveKeycloakIssuerUrl())
-        .toBe('http://localhost:8080/realms/banana');
+        .toBe('https://banana-keycloak-dev.fly.dev/realms/banana');
     expect(authRouteInternals.resolveKeycloakTokenIssuerUrl())
-        .toBe('http://localhost:8080/realms/banana');
+        .toBe('https://banana-keycloak-dev.fly.dev/realms/banana');
     expect(authRouteInternals.resolveKeycloakClientId())
         .toBe('banana-react-spa');
     expect(authRouteInternals.resolveKeycloakClientSecret()).toBe('');
@@ -546,6 +590,40 @@ describe('auth route helpers', () => {
     expect(authRouteInternals.resolveKeycloakClientId()).toBe('banana-client');
     expect(authRouteInternals.resolveKeycloakClientSecret())
         .toBe('banana-secret');
+  });
+
+  it('fails closed when dev runtime resolves production keycloak authority host',
+     () => {
+       process.env.NODE_ENV = 'development';
+       process.env.BANANA_KEYCLOAK_ISSUER_URL =
+           'https://kc-idp.banana.engineer/realms/banana';
+       process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL =
+           'https://banana-keycloak-dev.fly.dev/realms/banana';
+
+       expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
+           .toThrow(/keycloak_authority_mapping_invalid/);
+     });
+
+  it('allows production authority host outside dev runtime guard', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.BANANA_KEYCLOAK_ISSUER_URL =
+        'https://kc-idp.banana.engineer/realms/banana';
+    process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL =
+        'https://kc-idp.banana.engineer/realms/banana';
+
+    expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
+        .not.toThrow();
+  });
+
+  it('allows dev runtime when both issuer hosts are dev authority', () => {
+    process.env.NODE_ENV = 'development';
+    process.env.BANANA_KEYCLOAK_ISSUER_URL =
+        'https://banana-keycloak-dev.fly.dev/realms/banana';
+    process.env.BANANA_KEYCLOAK_TOKEN_ISSUER_URL =
+        'https://banana-keycloak-dev.fly.dev/realms/banana';
+
+    expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
+        .not.toThrow();
   });
 
   it('covers auth state decode error branches', () => {
@@ -570,6 +648,10 @@ describe('auth route helpers', () => {
     expect(authRouteInternals.normalizeIdentityProvider('LINKEDIN'))
         .toBe('linkedin');
     expect(authRouteInternals.normalizeIdentityProvider('discord')).toBeNull();
+    expect(authRouteInternals.normalizeAuthAction('REGISTER')).toBe('register');
+    expect(authRouteInternals.normalizeAuthAction('reset-password'))
+        .toBe('UPDATE_PASSWORD');
+    expect(authRouteInternals.normalizeAuthAction('login')).toBeNull();
 
     expect(authRouteInternals.resolveSubjectFromJwt(undefined)).toBeNull();
     expect(authRouteInternals.resolveSubjectFromJwt(makeUnsignedJwt({sub: ''})))
