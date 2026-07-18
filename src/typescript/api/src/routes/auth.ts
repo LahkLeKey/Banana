@@ -137,6 +137,26 @@ function isDevRuntimeForKeycloakGuard(): boolean {
   return nodeEnv.length === 0;
 }
 
+function isProductionRuntimeForKeycloakGuard(): boolean {
+  const keycloakEnv = normalizeEnvValue(process.env.BANANA_KEYCLOAK_ENV);
+  if (keycloakEnv === 'prod' || keycloakEnv === 'production') {
+    return true;
+  }
+
+  const deployEnv = normalizeEnvValue(process.env.BANANA_DEPLOY_ENV);
+  if (deployEnv === 'prod' || deployEnv === 'production') {
+    return true;
+  }
+
+  const nodeEnv = normalizeEnvValue(process.env.NODE_ENV);
+  if (nodeEnv === 'production') {
+    return true;
+  }
+
+  const flyAppName = normalizeEnvValue(process.env.FLY_APP_NAME);
+  return flyAppName === 'banana-api';
+}
+
 function resolveAuthorityHost(rawUrl: string): string {
   try {
     return new URL(rawUrl).hostname.trim().toLowerCase();
@@ -146,14 +166,24 @@ function resolveAuthorityHost(rawUrl: string): string {
 }
 
 function assertKeycloakAuthorityMapping(): void {
-  if (!isDevRuntimeForKeycloakGuard()) {
-    return;
-  }
-
   const issuerUrl = resolveKeycloakIssuerUrl();
   const tokenIssuerUrl = resolveKeycloakTokenIssuerUrl();
   const issuerHost = resolveAuthorityHost(issuerUrl);
   const tokenIssuerHost = resolveAuthorityHost(tokenIssuerUrl);
+
+  if (isProductionRuntimeForKeycloakGuard()) {
+    if (issuerHost === KEYCLOAK_PRODUCTION_AUTHORITY_HOST &&
+        tokenIssuerHost === KEYCLOAK_PRODUCTION_AUTHORITY_HOST) {
+      return;
+    }
+
+    throw new Error(
+        `keycloak_authority_mapping_invalid: production runtime requires ${KEYCLOAK_PRODUCTION_AUTHORITY_HOST}; found ${issuerHost || 'missing'} and ${tokenIssuerHost || 'missing'} in BANANA_KEYCLOAK_ISSUER_URL and BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
+  }
+
+  if (!isDevRuntimeForKeycloakGuard()) {
+    return;
+  }
 
   if (issuerHost !== KEYCLOAK_PRODUCTION_AUTHORITY_HOST &&
       tokenIssuerHost !== KEYCLOAK_PRODUCTION_AUTHORITY_HOST) {
