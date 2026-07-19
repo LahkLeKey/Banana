@@ -76,10 +76,10 @@ Define client-facing behavior, interaction flows, and integration with backend/r
 - Phase-1 Profile exposes editable display name, bio, locale, avatar override, and notification preferences
 - Phase-1 profile rendering prefers Banana avatar override and falls back to provider profile avatar when absent
 - Phase-1 public login gate also exposes self-service sign-up and password-reset entry points for local account credentials
-- Guest login and guest continuation flows are removed from the active client auth surface in this rollout
+- Guest login and guest continuation flows are targeted for removal in this rollout and remain deferred in the first delivery slice
 - Phase-1 protected API access relies on bearer continuity plus API-side token authority checks
-- The first delivery slice shows GitHub plus local-account sign-in and self-service sign-up on the public login gate
-- The first delivery slice defers password reset, profile editing UI, provider linking UI, and guest-auth removal
+- The first delivery slice shows GitHub plus local-account sign-in, self-service sign-up, and password-reset entry points on the public login gate
+- The first delivery slice defers profile editing UI, provider linking UI, and guest-auth removal
 - Profile is part of the authenticated gameplay shell rather than a separate application mode
 - Keycloak browser login uses OIDC Authorization Code + PKCE and does not require a frontend client secret
 - Phase-1 bearer tokens remain in ephemeral memory and are cleared on reload or sign-out
