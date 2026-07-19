@@ -188,8 +188,9 @@ function assertKeycloakAuthorityMapping(): void {
     return;
   }
 
-  throw new Error(
-      `keycloak_authority_mapping_invalid: dev runtime requires ${KEYCLOAK_DEV_AUTHORITY_HOST}; found production authority ${KEYCLOAK_PRODUCTION_AUTHORITY_HOST} in BANANA_KEYCLOAK_ISSUER_URL or BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
+  throw new Error(`keycloak_authority_mapping_invalid: dev runtime requires ${
+      KEYCLOAK_DEV_AUTHORITY_HOST}; found production authority ${
+      KEYCLOAK_PRODUCTION_AUTHORITY_HOST} in BANANA_KEYCLOAK_ISSUER_URL or BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
 }
 
 function generatePkceCodeVerifier(): string {
