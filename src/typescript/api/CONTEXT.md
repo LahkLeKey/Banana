@@ -50,7 +50,7 @@ Define backend service behavior, domain use cases, and service-side integration 
 - Guest authentication is removed from the active API auth model in the generic account profile rollout
 - Phase-1 Keycloak auth accepts tokens via token authority checks without local session-store gating
 - The first delivery slice under the account rollout epic adds email/password sign-in and self-service sign-up beside GitHub
-- The first delivery slice defers password reset, advanced profile editing, provider linking UI, and guest-auth removal
+- The first delivery slice defers advanced profile editing, provider linking UI, and guest-auth removal
 - When Keycloak mode is active, protected-route authorization fails closed if issuer/JWKS/audience configuration is invalid
 - Dev auth must use dev identity authority configuration and must not rely on production authority hosts
 - Dev Keycloak client redirect allowlist must include every supported dev API callback host used by login start flows
