@@ -154,7 +154,6 @@ describe('auth routes', () => {
 
     await app.close();
   });
-
   it('does not expose legacy Steam auth routes', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
@@ -615,7 +614,7 @@ describe('auth route helpers', () => {
         .not.toThrow();
   });
 
-    it('fails closed when production runtime resolves dev keycloak authority host',
+  it('fails closed when production runtime resolves dev keycloak authority host',
      () => {
        process.env.NODE_ENV = 'production';
        process.env.BANANA_KEYCLOAK_ISSUER_URL =
@@ -626,7 +625,6 @@ describe('auth route helpers', () => {
        expect(() => authRouteInternals.assertKeycloakAuthorityMapping())
          .toThrow(/keycloak_authority_mapping_invalid/);
      });
-
   it('allows dev runtime when both issuer hosts are dev authority', () => {
     process.env.NODE_ENV = 'development';
     process.env.BANANA_KEYCLOAK_ISSUER_URL =

@@ -30,6 +30,10 @@ Define backend service behavior, domain use cases, and service-side integration 
 - Guest access retirement: Decision that anonymous guest sessions are no longer part of the active account model
 - Account rollout epic: Multi-story delivery track that introduces local account credentials and Banana-owned profiles without forcing all auth/profile changes into one slice
 - Thin auth entry story: Smallest deliverable slice that adds a new credential path while deferring profile editing and guest migration concerns
+- Environment authority mapping: Explicit rule that each runtime environment must use its own identity authority host and not cross-wire to another environment
+- Callback host allowlist: Enumerated API callback hosts that the identity authority client must accept for one environment
+- Hybrid dev runtime topology: Local API execution with Fly-hosted dev identity authority and database for persistent shared dev data
+- Redirect integrity smoke check: Automated verification that auth-start redirects resolve to expected authority and callback hosts without identity-authority error pages
 
 ## Core invariants
 
@@ -46,8 +50,14 @@ Define backend service behavior, domain use cases, and service-side integration 
 - Guest authentication is removed from the active API auth model in the generic account profile rollout
 - Phase-1 Keycloak auth accepts tokens via token authority checks without local session-store gating
 - The first delivery slice under the account rollout epic adds email/password sign-in and self-service sign-up beside GitHub
-- The first delivery slice defers password reset, advanced profile editing, provider linking UI, and guest-auth removal
+- The first delivery slice defers advanced profile editing, provider linking UI, and guest-auth removal
 - When Keycloak mode is active, protected-route authorization fails closed if issuer/JWKS/audience configuration is invalid
+- Dev auth must use dev identity authority configuration and must not rely on production authority hosts
+- Dev Keycloak client redirect allowlist must include every supported dev API callback host used by login start flows
+- Dev local API mode may authenticate against Fly-hosted dev Keycloak and dev database while preserving environment authority mapping
+- Dev callback allowlist includes local (`localhost`/`127.0.0.1`) and approved hosted API callback hosts when those hosts are used for login start
+- Auth rollout stories are blocked when environment authority mapping or redirect allowlist integrity is unresolved
+- CI must run an auth-start redirect smoke check for provider=github against approved dev hosts via `.github/workflows/banana.yml` and `scripts/check-auth-start-redirect-integrity.sh`
 
 ## Key seams
 

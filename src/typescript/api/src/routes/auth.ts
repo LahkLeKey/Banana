@@ -156,7 +156,6 @@ function isProductionRuntimeForKeycloakGuard(): boolean {
   const flyAppName = normalizeEnvValue(process.env.FLY_APP_NAME);
   return flyAppName === 'banana-api';
 }
-
 function resolveAuthorityHost(rawUrl: string): string {
   try {
     return new URL(rawUrl).hostname.trim().toLowerCase();
@@ -177,21 +176,24 @@ function assertKeycloakAuthorityMapping(): void {
       return;
     }
 
-    throw new Error(
-        `keycloak_authority_mapping_invalid: production runtime requires ${KEYCLOAK_PRODUCTION_AUTHORITY_HOST}; found ${issuerHost || 'missing'} and ${tokenIssuerHost || 'missing'} in BANANA_KEYCLOAK_ISSUER_URL and BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
+    throw new Error(`keycloak_authority_mapping_invalid: production runtime requires ${
+        KEYCLOAK_PRODUCTION_AUTHORITY_HOST}; found ${
+        issuerHost || 'missing'} and ${
+        tokenIssuerHost ||
+        'missing'} in BANANA_KEYCLOAK_ISSUER_URL and BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
   }
 
   if (!isDevRuntimeForKeycloakGuard()) {
     return;
   }
-
   if (issuerHost !== KEYCLOAK_PRODUCTION_AUTHORITY_HOST &&
       tokenIssuerHost !== KEYCLOAK_PRODUCTION_AUTHORITY_HOST) {
     return;
   }
 
-  throw new Error(
-      `keycloak_authority_mapping_invalid: dev runtime requires ${KEYCLOAK_DEV_AUTHORITY_HOST}; found production authority ${KEYCLOAK_PRODUCTION_AUTHORITY_HOST} in BANANA_KEYCLOAK_ISSUER_URL or BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
+  throw new Error(`keycloak_authority_mapping_invalid: dev runtime requires ${
+      KEYCLOAK_DEV_AUTHORITY_HOST}; found production authority ${
+      KEYCLOAK_PRODUCTION_AUTHORITY_HOST} in BANANA_KEYCLOAK_ISSUER_URL or BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
 }
 
 function generatePkceCodeVerifier(): string {
