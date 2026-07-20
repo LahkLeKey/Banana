@@ -176,8 +176,11 @@ function assertKeycloakAuthorityMapping(): void {
       return;
     }
 
-    throw new Error(
-        `keycloak_authority_mapping_invalid: production runtime requires ${KEYCLOAK_PRODUCTION_AUTHORITY_HOST}; found ${issuerHost || 'missing'} and ${tokenIssuerHost || 'missing'} in BANANA_KEYCLOAK_ISSUER_URL and BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
+    throw new Error(`keycloak_authority_mapping_invalid: production runtime requires ${
+        KEYCLOAK_PRODUCTION_AUTHORITY_HOST}; found ${
+        issuerHost || 'missing'} and ${
+        tokenIssuerHost ||
+        'missing'} in BANANA_KEYCLOAK_ISSUER_URL and BANANA_KEYCLOAK_TOKEN_ISSUER_URL`);
   }
 
   if (!isDevRuntimeForKeycloakGuard()) {

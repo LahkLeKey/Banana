@@ -58,6 +58,11 @@ async function issueKeycloakToken(app: FastifyInstance): Promise<string> {
         state}&returnTo=https%3A%2F%2Fbanana.engineer%2Flogin`,
     headers: {
       host: 'api.banana.engineer',
+    },
+  });
+
+  return extractTokenFromLocation(response.headers.location ?? '');
+}
 
 describe('auth routes', () => {
   beforeEach(() => {
@@ -149,10 +154,6 @@ describe('auth routes', () => {
 
     await app.close();
   });
-<<<<<<< HEAD
-=======
-
->>>>>>> 0df55328 (feat(auth): add Keycloak password reset entry flow (#1221))
   it('does not expose legacy Steam auth routes', async () => {
     const app = Fastify();
     await registerAuthRoutes(app);
